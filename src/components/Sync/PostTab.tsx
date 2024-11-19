@@ -2,7 +2,7 @@ import React, { useState, useRef } from 'react';
 import { Card, Button, Image, Input, Textarea, CardHeader, CardBody, CardFooter } from '@nextui-org/react';
 import { ImagePlusIcon, XIcon, DownloadIcon } from 'lucide-react';
 import Viewer from 'react-viewer';
-import type { FileData, SyncData } from '~contents/sync/common';
+import type { FileData, SyncData } from '~sync/common';
 
 interface PostTabProps {
   funcPublish: (data: SyncData) => void;

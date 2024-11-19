@@ -1,6 +1,6 @@
-import type { SyncData, DynamicData } from "./common";
+import type { SyncData, DynamicData } from "../common";
 
-export async function InstagramImage(data: SyncData) {
+export async function DynamicInstagramImage(data: SyncData) {
   console.log('InstagramImage 函数被调用');
 
   function waitForElement(selector: string, timeout = 10000): Promise<Element> {
@@ -111,7 +111,7 @@ export async function InstagramImage(data: SyncData) {
       .find(el => {
         const placeholder = el.getAttribute("aria-placeholder");
         return placeholder?.includes("输入说明文字") || placeholder?.includes("撰寫說明文字") || placeholder?.includes("Write a caption");
-      });
+      }) as HTMLElement;
 
     if (!captionEditor) {
       console.debug("未找到编辑器元素");

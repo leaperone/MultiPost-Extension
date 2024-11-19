@@ -4,17 +4,9 @@ import { ImagePlusIcon, VideoIcon, XIcon, TrashIcon } from 'lucide-react';
 import Viewer from 'react-viewer';
 import { Player } from 'video-react';
 import 'video-react/dist/video-react.css';
-// import ReactPlayer from 'react-player';
-import SyncX from './X';
-import SyncBilibiliDynamic from './BilibiliDynamic';
-import SyncRedNoteImage from './RedNoteImage';
-import SyncWeiboDynamic from './WeiboDynamic';
-import SyncXueqiuDynamic from './XueqiuDynamic';
-import SyncZhihuDynamic from './ZhihuDynamic';
-import SyncDouyinImage from './DouyinImage';
-import type { FileData, SyncData } from '~contents/sync/common';
-import { PLATFORM_NEED_IMAGE } from '~contents/sync/common';
-import SyncInstagramImage from './InstagramImage';
+import type { FileData, SyncData } from '~sync/common';
+import PlatformCheckbox from './PlatformCheckbox';
+import { getPlatformInfos } from '~sync/common';
 
 interface DynamicTabProps {
   funcPublish: (data: SyncData) => void;
@@ -73,12 +65,12 @@ const DynamicTab: React.FC<DynamicTabProps> = ({ funcPublish }) => {
       alert(chrome.i18n.getMessage('optionsSelectPublishPlatforms'));
       return;
     }
-    const needImage = PLATFORM_NEED_IMAGE.some((platform) => selectedPlatforms.includes(platform));
-    if (needImage && images.length === 0) {
-      console.log('至少一张图片');
-      alert(chrome.i18n.getMessage('optionsAtLeastOneImage'));
-      return;
-    }
+    // const needImage = PLATFORM_NEED_IMAGE.some((platform) => selectedPlatforms.includes(platform));
+    // if (needImage && images.length === 0) {
+    //   console.log('至少一张图片');
+    //   alert(chrome.i18n.getMessage('optionsAtLeastOneImage'));
+    //   return;
+    // }
     const data: SyncData = {
       platforms: selectedPlatforms,
       data: {
@@ -90,18 +82,11 @@ const DynamicTab: React.FC<DynamicTabProps> = ({ funcPublish }) => {
       auto_publish: autoPublish,
     };
     try {
-      const res = await chrome.runtime.sendMessage({
-        type: 'MUTLIPOST_EXTENSION_CHECK_SERVICE_STATUS',
-      });
-      if (res === 'success') {
-        chrome.windows.getCurrent({ populate: true }, (window) => {
-          chrome.sidePanel.open({ windowId: window.id }).then(() => {
-            funcPublish(data);
-          });
+      chrome.windows.getCurrent({ populate: true }, (window) => {
+        chrome.sidePanel.open({ windowId: window.id }).then(() => {
+          funcPublish(data);
         });
-      } else {
-        funcPublish(data);
-      }
+      });
     } catch (error) {
       console.error('检查服务状态时出错:', error);
       funcPublish(data);
@@ -250,41 +235,20 @@ const DynamicTab: React.FC<DynamicTabProps> = ({ funcPublish }) => {
         </div>
         <p className="mb-2 text-sm font-medium">{chrome.i18n.getMessage('optionsSelectPublishPlatforms')}</p>
         <div className="grid grid-cols-2 gap-2">
-          <SyncBilibiliDynamic
-            isSelected={selectedPlatforms.includes('BilibiliDynamic')}
-            onChange={handlePlatformChange}
-          />
-          <SyncRedNoteImage
-            isSelected={selectedPlatforms.includes('RedNoteImage')}
-            isDisabled={images.length === 0}
-            onChange={handlePlatformChange}
-          />
-          <SyncX
-            isSelected={selectedPlatforms.includes('XDynamic')}
-            onChange={handlePlatformChange}
-          />
-          <SyncWeiboDynamic
-            isSelected={selectedPlatforms.includes('WeiboDynamic')}
-            onChange={handlePlatformChange}
-          />
-          <SyncXueqiuDynamic
-            isSelected={selectedPlatforms.includes('XueqiuDynamic')}
-            onChange={handlePlatformChange}
-          />
-          <SyncZhihuDynamic
-            isSelected={selectedPlatforms.includes('ZhihuDynamic')}
-            onChange={handlePlatformChange}
-          />
-          <SyncDouyinImage
-            isSelected={selectedPlatforms.includes('DouyinImage')}
-            isDisabled={images.length === 0}
-            onChange={handlePlatformChange}
-          />
-          <SyncInstagramImage
-            isSelected={selectedPlatforms.includes('InstagramImage')}
-            isDisabled={images.length === 0}
-            onChange={handlePlatformChange}
-          />
+          {getPlatformInfos('DYNAMIC').map(platform => {
+            // const isDisabled = info.name.includes('IMAGE') && images.length === 0;
+            const isDisabled = false;
+            
+            return (
+              <PlatformCheckbox
+                key={platform.name}
+                platformInfo={platform}
+                isSelected={selectedPlatforms.includes(platform.name)}
+                onChange={(_, isSelected) => handlePlatformChange(platform.name, isSelected)}
+                isDisabled={isDisabled}
+              />
+            );
+          })}
         </div>
       </div>
       <Button

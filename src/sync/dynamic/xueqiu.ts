@@ -1,6 +1,6 @@
-import type { DynamicData, SyncData } from './common';
+import type { DynamicData, SyncData } from '../common';
 
-export async function XueqiuDynamic(data: SyncData) {
+export async function DynamicXueqiu(data: SyncData) {
   const { content, images, title } = data.data as DynamicData;
 
   function waitForElement(selector: string, timeout = 10000): Promise<Element> {

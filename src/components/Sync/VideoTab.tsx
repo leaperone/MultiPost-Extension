@@ -4,11 +4,8 @@ import { VideoIcon, XIcon } from 'lucide-react';
 import { Player } from 'video-react';
 import 'video-react/dist/video-react.css';
 // import ReactPlayer from 'react-player';
-import type { SyncData, FileData } from '~contents/sync/common';
-import SyncBilibiliVideo from './BilibiliVideo';
-import SyncDouyinVideo from './DouyinVideo';
-import SyncYouTubeVideo from './YoutubeVideo';
-import SyncRedNoteVideo from './RedNoteVideo';
+import { type SyncData, type FileData, getPlatformInfos } from '~sync/common';
+import PlatformCheckbox from './PlatformCheckbox';
 
 interface VideoTabProps {
   funcPublish: (data: SyncData) => void;
@@ -68,18 +65,11 @@ const VideoTab: React.FC<VideoTabProps> = ({ funcPublish }) => {
     console.log(data);
 
     try {
-      const res = await chrome.runtime.sendMessage({
-        type: 'MUTLIPOST_EXTENSION_CHECK_SERVICE_STATUS',
-      });
-      if (res === 'success') {
-        chrome.windows.getCurrent({ populate: true }, (window) => {
-          chrome.sidePanel.open({ windowId: window.id }).then(() => {
-            funcPublish(data);
-          });
+      chrome.windows.getCurrent({ populate: true }, (window) => {
+        chrome.sidePanel.open({ windowId: window.id }).then(() => {
+          funcPublish(data);
         });
-      } else {
-        funcPublish(data);
-      }
+      });
     } catch (error) {
       console.error('检查服务状态时出错:', error);
       funcPublish(data);
@@ -160,22 +150,17 @@ const VideoTab: React.FC<VideoTabProps> = ({ funcPublish }) => {
       <div className="mt-4">
         <p className="mb-2 text-sm font-medium">{chrome.i18n.getMessage('optionsSelectPublishPlatforms')}</p>
         <div className="grid grid-cols-2 gap-2">
-          <SyncBilibiliVideo
-            isSelected={selectedPlatforms.includes('BilibiliVideo')}
-            onChange={handlePlatformChange}
-          />
-          <SyncDouyinVideo
-            isSelected={selectedPlatforms.includes('DouyinVideo')}
-            onChange={handlePlatformChange}
-          />
-          <SyncYouTubeVideo
-            isSelected={selectedPlatforms.includes('YoutubeVideo')}
-            onChange={handlePlatformChange}
-          />
-          <SyncRedNoteVideo
-            isSelected={selectedPlatforms.includes('RedNoteVideo')}
-            onChange={handlePlatformChange}
-          />
+          {getPlatformInfos('VIDEO').map(platform => {
+            return (
+              <PlatformCheckbox
+                key={platform.name}
+                platformInfo={platform}
+                isSelected={selectedPlatforms.includes(platform.name)}
+                onChange={(_, isSelected) => handlePlatformChange(platform.name, isSelected)}
+                isDisabled={false}
+              />
+            );
+          })}
         </div>
       </div>
       <Button

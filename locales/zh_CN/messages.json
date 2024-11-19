@@ -1,14 +1,14 @@
 {
   "extensionName": {
-    "message": "Multipost",
+    "message": "MultiPost",
     "description": "Multipost Extension"
   },
   "extensionDisplayName": {
-    "message": "Multipost",
+    "message": "MultiPost",
     "description": "Multipost Extension"
   },
   "extensionDescription": {
-    "message": "Multipost 是一个帮助你在多个平台同步发布内容的工具。",
+    "message": "MultiPost 是一个帮助你在多个平台同步发布内容的工具。",
     "description": "Multipost 是一个帮助你在多个平台同步发布内容的工具。"
   },
   "popupSettingsTooltip": {
@@ -414,5 +414,41 @@
   },
   "dashboardSendBiliPrivateMsg": {
     "message": "发送 B 站私信"
+  },
+  "platformX": {
+    "message": "X",
+    "description": "X (Twitter) 平台名称"
+  },
+  "platformBilibili": {
+    "message": "哔哩哔哩",
+    "description": "哔哩哔哩平台名称"
+  },
+  "platformRednote": {
+    "message": "小红书",
+    "description": "小红书平台名称"
+  },
+  "platformWeibo": {
+    "message": "微博",
+    "description": "微博平台名称"
+  },
+  "platformXueqiu": {
+    "message": "雪球",
+    "description": "雪球平台名称"
+  },
+  "platformZhihu": {
+    "message": "知乎",
+    "description": "知乎平台名称"
+  },
+  "platformDouyin": {
+    "message": "抖音",
+    "description": "抖音平台名称"
+  },
+  "platformInstagram": {
+    "message": "Instagram",
+    "description": "Instagram 平台名称"
+  },
+  "platformYoutube": {
+    "message": "YouTube",
+    "description": "YouTube 平台名称"
   }
 }

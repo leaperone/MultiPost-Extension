@@ -4,11 +4,9 @@ import { NextUIProvider } from '@nextui-org/react';
 import { Tabs, Tab, Spacer } from '@nextui-org/react';
 import cssText from 'data-text:~style.css';
 import Header from '~/components/Header';
-import DynamicTab from '~/components/Sync/Dynamic/DynamicTab';
-import VideoTab from '~/components/Sync/Video/VideoTab';
-import PostTab from '~/components/Sync/Post/PostTab';
-import { type SyncData, createTabsForPlatforms, injectScriptsToTabs } from '~contents/sync/common';
-
+import DynamicTab from '~/components/Sync/DynamicTab';
+import VideoTab from '~/components/Sync/VideoTab';
+import { type SyncData, createTabsForPlatforms, injectScriptsToTabs } from '~sync/common';
 
 export function getShadowContainer() {
   return document.querySelector('#test-shadow').shadowRoot.querySelector('#plasmo-shadow-container');
@@ -44,6 +42,7 @@ const Options = () => {
   }, []);
 
   const funcPublish = async (data: SyncData) => {
+    console.log('funcPublish', data);
     if (Array.isArray(data.platforms) && data.platforms.length > 0) {
       createTabsForPlatforms(data)
         .then(async (tabs) => {
@@ -70,7 +69,7 @@ const Options = () => {
     }
   };
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unused-vars
   const funcScraper = async (url: string): Promise<any> => {
     if (!url) {
       throw new Error('未提供有效的URL');

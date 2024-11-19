@@ -1,6 +1,6 @@
-import type { DynamicData, SyncData } from './common';
+import type { DynamicData, SyncData } from '../common';
 
-export async function XDynamic(data: SyncData) {
+export async function DynamicX(data: SyncData) {
   const { content, images, title } = data.data as DynamicData;
   // 辅助函数：等待元素出现
   function waitForElement(selector: string, timeout = 10000): Promise<Element> {

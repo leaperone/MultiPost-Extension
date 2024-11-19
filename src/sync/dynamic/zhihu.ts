@@ -1,6 +1,6 @@
-import type { DynamicData, SyncData } from './common';
+import type { DynamicData, SyncData } from '../common';
 
-export async function ZhihuDynamic(data: SyncData) {
+export async function DynamicZhihu(data: SyncData) {
   const { content, images, title } = data.data as DynamicData;
 
   function waitForElement(selector: string, timeout = 10000): Promise<Element> {

@@ -1,9 +1,6 @@
-import type { SyncData, VideoData } from './common';
+import type { SyncData, VideoData } from '../common';
 
-export async function YoutubeVideo(data: SyncData) {
-  console.log('YoutubeVideo 函数被调用');
-
-
+export async function VideoYoutube(data: SyncData) {
   function waitForElement(selector: string, timeout = 10000): Promise<Element> {
     return new Promise((resolve, reject) => {
       const element = document.querySelector(selector);

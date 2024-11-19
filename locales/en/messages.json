@@ -1,15 +1,15 @@
 {
   "extensionName": {
-    "message": "Multipost",
+    "message": "MultiPost",
     "description": "Multipost Extension"
   },
   "extensionDisplayName": {
-    "message": "Multipost",
+    "message": "MultiPost",
     "description": "Multipost Extension"
   },
   "extensionDescription": {
-    "message": "Multipost is a tool to help you sync and publish content across multiple platforms.",
-    "description": "Multipost is a tool to help you sync and publish content across multiple platforms."
+    "message": "MultiPost is a tool to help you sync and publish content across multiple platforms.",
+    "description": "MultiPost is a tool to help you sync and publish content across multiple platforms."
   },
   "popupSettingsTooltip": {
     "message": "Settings",
@@ -411,5 +411,41 @@
   },
   "dashboardSendBiliPrivateMsg": {
     "message": "Send Bilibili Private Message"
+  },
+  "platformX": {
+    "message": "X",
+    "description": "Platform name for X (Twitter)"
+  },
+  "platformBilibili": {
+    "message": "Bilibili",
+    "description": "Platform name for Bilibili"
+  },
+  "platformRednote": {
+    "message": "Rednote",
+    "description": "Platform name for Rednote"
+  },
+  "platformWeibo": {
+    "message": "Weibo",
+    "description": "Platform name for Weibo"
+  },
+  "platformXueqiu": {
+    "message": "Xueqiu",
+    "description": "Platform name for Xueqiu"
+  },
+  "platformZhihu": {
+    "message": "Zhihu",
+    "description": "Platform name for Zhihu"
+  },
+  "platformDouyin": {
+    "message": "Douyin",
+    "description": "Platform name for Douyin"
+  },
+  "platformInstagram": {
+    "message": "Instagram",
+    "description": "Platform name for Instagram"
+  },
+  "platformYoutube": {
+    "message": "YouTube",
+    "description": "Platform name for YouTube"
   }
 }

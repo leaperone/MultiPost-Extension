@@ -1,4 +1,5 @@
-import { getUrl, injectScriptsToTabs, type SyncData } from '~contents/sync/common';
+import { injectScriptsToTabs, type SyncData } from '~sync/common';
+import { getDefaultPlatformInfo } from '~sync/common';
 
 // Tab Manager || 标签页管理 || START
 export interface TabManagerMessage {
@@ -42,14 +43,14 @@ export const tabsManagerMessageHandler = (request, sender, sendResponse) => {
     const tabInfo = tabGroup.tabs.find((t) => t.tab.id === tabId);
 
     if (tabInfo) {
-      const newUrl = getUrl(tabInfo.platform);
+      const platformInfo = getDefaultPlatformInfo(tabInfo.platform);
 
-      if (newUrl) {
-        chrome.tabs.update(tabId, { url: newUrl, active: true }).then(() => {
+      if (platformInfo) {
+        chrome.tabs.update(tabId, { url: platformInfo.injectUrl, active: true }).then(() => {
           injectScriptsToTabs([[tabInfo.tab, tabInfo.platform]], tabGroup.syncData);
         });
       } else {
-        console.error(`无法获取平台 ${tabInfo.platform} 的URL`);
+        console.error(`无法获取平台 ${tabInfo.platform} 的信息`);
         sendResponse('error');
         return;
       }
