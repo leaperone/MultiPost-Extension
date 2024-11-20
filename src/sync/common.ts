@@ -11,6 +11,7 @@ import { VideoBilibili } from './video/bilibili';
 import { VideoRednote } from './video/rednote';
 import { VideoDouyin } from './video/douyin';
 import { DynamicFacebook } from './dynamic/facebook';
+import { VideoTiktok } from './video/tiktok';
 
 export interface SyncData {
   platforms: string[];
@@ -79,7 +80,7 @@ export const infoMap: Record<string, PlatformInfo> = {
   DYNAMIC_REDNOTE: {
     type: 'DYNAMIC',
     name: 'DYNAMIC_REDNOTE',
-    homeUrl: 'https://creator.xiaohongshu.com/publish/publish',
+    homeUrl: 'https://creator.xiaohongshu.com/',
     // faviconUrl: 'https://creator.xiaohongshu.com/favicon.ico',
     platformName: chrome.i18n.getMessage('platformRednote'),
     injectUrl: 'https://creator.xiaohongshu.com/publish/publish',
@@ -115,7 +116,7 @@ export const infoMap: Record<string, PlatformInfo> = {
   DYNAMIC_DOUYIN_IMAGE: {
     type: 'DYNAMIC',
     name: 'DYNAMIC_DOUYIN_IMAGE',
-    homeUrl: 'https://creator.douyin.com/creator-micro/content/upload?default-tab=3',
+    homeUrl: 'https://creator.douyin.com/',
     faviconUrl: 'https://lf1-cdn-tos.bytegoofy.com/goofy/ies/douyin_web/public/favicon.ico',
     platformName: chrome.i18n.getMessage('platformDouyin'),
     injectUrl: 'https://creator.douyin.com/creator-micro/content/upload?default-tab=3',
@@ -125,7 +126,7 @@ export const infoMap: Record<string, PlatformInfo> = {
     type: 'DYNAMIC',
     name: 'DYNAMIC_INSTAGRAM_IMAGE',
     homeUrl: 'https://www.instagram.com/',
-    // faviconUrl: 'https://www.instagram.com/favicon.ico',
+    faviconUrl: 'https://static.cdninstagram.com/rsrc.php/v3/yG/r/De-Dwpd5CHc.png',
     platformName: chrome.i18n.getMessage('platformInstagram'),
     injectUrl: 'https://www.instagram.com/',
     injectFunction: DynamicInstagramImage,
@@ -142,7 +143,7 @@ export const infoMap: Record<string, PlatformInfo> = {
   VIDEO_BILIBILI: {
     type: 'VIDEO',
     name: 'VIDEO_BILIBILI',
-    homeUrl: 'https://member.bilibili.com/platform/upload/video/frame',
+    homeUrl: 'https://member.bilibili.com/',
     faviconUrl: 'https://static.hdslb.com/images/favicon.ico',
     platformName: chrome.i18n.getMessage('platformBilibili'),
     injectUrl: 'https://member.bilibili.com/platform/upload/video/frame',
@@ -151,7 +152,7 @@ export const infoMap: Record<string, PlatformInfo> = {
   VIDEO_DOUYIN: {
     type: 'VIDEO',
     name: 'VIDEO_DOUYIN',
-    homeUrl: 'https://creator.douyin.com/creator-micro/content/upload',
+    homeUrl: 'https://creator.douyin.com/',
     faviconUrl: 'https://lf1-cdn-tos.bytegoofy.com/goofy/ies/douyin_web/public/favicon.ico',
     platformName: chrome.i18n.getMessage('platformDouyin'),
     injectUrl: 'https://creator.douyin.com/creator-micro/content/upload',
@@ -169,11 +170,20 @@ export const infoMap: Record<string, PlatformInfo> = {
   VIDEO_REDNOTE: {
     type: 'VIDEO',
     name: 'VIDEO_REDNOTE',
-    homeUrl: 'https://creator.xiaohongshu.com/publish/publish',
+    homeUrl: 'https://creator.xiaohongshu.com',
     // faviconUrl: 'https://creator.xiaohongshu.com/favicon.ico',
     platformName: chrome.i18n.getMessage('platformRednote'),
     injectUrl: 'https://creator.xiaohongshu.com/publish/publish',
     injectFunction: VideoRednote,
+  },
+  VIDEO_TIKTOK: {
+    type: 'VIDEO',
+    name: 'VIDEO_TIKTOK',
+    homeUrl: 'https://www.tiktok.com/tiktokstudio',
+    faviconUrl: 'https://pic1.zhimg.com/80/v2-9ad49e8e52b473e4c366b69bc9653a45_1440w.png',
+    platformName: chrome.i18n.getMessage('platformTiktok'),
+    injectUrl: 'https://www.tiktok.com/tiktokstudio/upload',
+    injectFunction: VideoTiktok,
   },
 };
 
