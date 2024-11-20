@@ -455,5 +455,9 @@
   "platformFacebook": {
     "message": "Facebook",
     "description": "Platform name for Facebook"
+  },
+  "platformLinkedin": {
+    "message": "LinkedIn",
+    "description": "Platform name for LinkedIn"
   }
 }

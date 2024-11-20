@@ -12,6 +12,7 @@ import { VideoRednote } from './video/rednote';
 import { VideoDouyin } from './video/douyin';
 import { DynamicFacebook } from './dynamic/facebook';
 import { VideoTiktok } from './video/tiktok';
+import { DynamicLinkedin } from './dynamic/linkedin';
 
 export interface SyncData {
   platforms: string[];
@@ -139,6 +140,15 @@ export const infoMap: Record<string, PlatformInfo> = {
     platformName: chrome.i18n.getMessage('platformFacebook'),
     injectUrl: 'https://www.facebook.com/',
     injectFunction: DynamicFacebook,
+  },
+  DYNAMIC_LINKEDIN: {
+    type: 'DYNAMIC',
+    name: 'DYNAMIC_LINKEDIN',
+    homeUrl: 'https://www.linkedin.com/',
+    faviconUrl: 'https://static.licdn.com/aero-v1/sc/h/eahiplrwoq61f4uan012ia17i',
+    platformName: chrome.i18n.getMessage('platformLinkedin'),
+    injectUrl: 'https://www.linkedin.com/feed',
+    injectFunction: DynamicLinkedin,
   },
   VIDEO_BILIBILI: {
     type: 'VIDEO',

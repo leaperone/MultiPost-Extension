@@ -458,5 +458,9 @@
   "platformFacebook": {
     "message": "脸书",
     "description": "Facebook 平台名称"
+  },
+  "platformLinkedin": {
+    "message": "领英",
+    "description": "LinkedIn 平台名称"
   }
 }
