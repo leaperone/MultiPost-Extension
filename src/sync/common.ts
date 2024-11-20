@@ -10,6 +10,7 @@ import { DynamicZhihu } from './dynamic/zhihu';
 import { VideoBilibili } from './video/bilibili';
 import { VideoRednote } from './video/rednote';
 import { VideoDouyin } from './video/douyin';
+import { DynamicFacebook } from './dynamic/facebook';
 
 export interface SyncData {
   platforms: string[];
@@ -55,36 +56,8 @@ export interface PlatformInfo {
   injectFunction: (data: SyncData) => Promise<void>;
 }
 
-export const SUPPORT_PLATFORMS = [
-  'DYNAMIC_BILIBILI',
-  'DYNAMIC_X',
-  'DYNAMIC_REDNOTE',
-  'DYNAMIC_WEIBO',
-  'DYNAMIC_XUEQIU',
-  'DYNAMIC_ZHIHU',
-  'DYNAMIC_DOUYIN_IMAGE',
-  'DYNAMIC_INSTAGRAM_IMAGE',
-  'VIDEO_BILIBILI',
-  'VIDEO_DOUYIN',
-  'VIDEO_YOUTUBE',
-  'VIDEO_REDNOTE',
-];
 
-export type Platform =
-  | 'DYNAMIC_BILIBILI'
-  | 'DYNAMIC_X'
-  | 'DYNAMIC_REDNOTE'
-  | 'DYNAMIC_WEIBO'
-  | 'DYNAMIC_XUEQIU'
-  | 'DYNAMIC_ZHIHU'
-  | 'DYNAMIC_DOUYIN_IMAGE'
-  | 'DYNAMIC_INSTAGRAM_IMAGE'
-  | 'VIDEO_BILIBILI'
-  | 'VIDEO_DOUYIN'
-  | 'VIDEO_YOUTUBE'
-  | 'VIDEO_REDNOTE';
-
-export const infoMap: Record<Platform, PlatformInfo> = {
+export const infoMap: Record<string, PlatformInfo> = {
   DYNAMIC_X: {
     type: 'DYNAMIC',
     name: 'DYNAMIC_X',
@@ -156,6 +129,15 @@ export const infoMap: Record<Platform, PlatformInfo> = {
     platformName: chrome.i18n.getMessage('platformInstagram'),
     injectUrl: 'https://www.instagram.com/',
     injectFunction: DynamicInstagramImage,
+  },
+  DYNAMIC_FACEBOOK: {
+    type: 'DYNAMIC',
+    name: 'DYNAMIC_FACEBOOK',
+    homeUrl: 'https://www.facebook.com/',
+    faviconUrl: 'https://static.xx.fbcdn.net/rsrc.php/yT/r/aGT3gskzWBf.ico',
+    platformName: chrome.i18n.getMessage('platformFacebook'),
+    injectUrl: 'https://www.facebook.com/',
+    injectFunction: DynamicFacebook,
   },
   VIDEO_BILIBILI: {
     type: 'VIDEO',
