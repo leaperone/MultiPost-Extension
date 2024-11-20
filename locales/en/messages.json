@@ -447,5 +447,13 @@
   "platformYoutube": {
     "message": "YouTube",
     "description": "Platform name for YouTube"
+  },
+  "platformTiktok": {
+    "message": "Tiktok",
+    "description": "Platform name for Tiktok"
+  },
+  "platformFacebook": {
+    "message": "Facebook",
+    "description": "Platform name for Facebook"
   }
 }

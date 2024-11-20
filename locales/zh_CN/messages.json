@@ -450,5 +450,13 @@
   "platformYoutube": {
     "message": "YouTube",
     "description": "YouTube 平台名称"
+  },
+  "platformTiktok": {
+    "message": "Tiktok",
+    "description": "Tiktok 平台名称"
+  },
+  "platformFacebook": {
+    "message": "脸书",
+    "description": "Facebook 平台名称"
   }
 }
