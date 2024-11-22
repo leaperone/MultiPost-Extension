@@ -56,17 +56,6 @@ export async function VideoDouyin(data: SyncData) {
       await uploadVideo(videoFile);
       console.log('视频上传已初始化');
     }
-    //   try {
-    //     // await waitForUploadCompletion();
-    //     console.log('视频上传已完成，继续后续操作');
-    //   } catch (error) {
-    //     console.error('等待视频上传完成时出错:', error);
-    //     return;
-    //   }
-    // } else {
-    //   console.error('没有视频文件');
-    //   return;
-    // }
 
     await new Promise((resolve) => setTimeout(resolve, 5000));
 

@@ -1,7 +1,7 @@
 import type { DynamicData, SyncData } from '../common';
 
 export async function DynamicX(data: SyncData) {
-  const { content, images, title } = data.data as DynamicData;
+  const { title, content, images, videos } = data.data as DynamicData;
   // 辅助函数：等待元素出现
   function waitForElement(selector: string, timeout = 10000): Promise<Element> {
     return new Promise((resolve, reject) => {
@@ -74,8 +74,8 @@ export async function DynamicX(data: SyncData) {
     pasteEvent.clipboardData!.setData('text/plain', combinedText);
     editor.dispatchEvent(pasteEvent);
 
-    // 处理图片上传
-    if (images && images.length > 0) {
+    // 处理媒体上传（图片和视频）
+    if ((images && images.length > 0) || (videos && videos.length > 0)) {
       const fileInput = (await waitForElement('input[type="file"]')) as HTMLInputElement;
       if (!fileInput) {
         console.error('未找到文件输入元素');
@@ -83,26 +83,48 @@ export async function DynamicX(data: SyncData) {
       }
 
       const dataTransfer = new DataTransfer();
-      const uploadCount = Math.min(images.length, 4);
-      for (let i = 0; i < uploadCount; i++) {
-        const fileInfo = images[i];
-        console.log('尝试上传文件', fileInfo.url);
-        const response = await fetch(fileInfo.url);
-        const blob = await response.blob();
-        const file = new File([blob], fileInfo.name, { type: fileInfo.type });
-        dataTransfer.items.add(file);
+      let totalUploaded = 0;
+
+      if (images && images.length > 0) {
+        const remainingSlots = 4 - totalUploaded;
+        const imageUploadCount = Math.min(images.length, remainingSlots);
+        for (let i = 0; i < imageUploadCount; i++) {
+          const fileInfo = images[i];
+          console.log('尝试上传图片', fileInfo.url);
+          const response = await fetch(fileInfo.url);
+          const blob = await response.blob();
+          const file = new File([blob], fileInfo.name, { type: fileInfo.type });
+          dataTransfer.items.add(file);
+          totalUploaded++;
+        }
+      }
+
+      if (videos && videos.length > 0) {
+        const remainingSlots = 4 - totalUploaded;
+        const videoUploadCount = Math.min(videos.length, remainingSlots);
+        for (let i = 0; i < videoUploadCount; i++) {
+          const videoInfo = videos[i];
+          console.log('尝试上传视频', videoInfo.url);
+          const response = await fetch(videoInfo.url);
+          const blob = await response.blob();
+          const file = new File([blob], videoInfo.name, { type: videoInfo.type });
+          dataTransfer.items.add(file);
+          totalUploaded++;
+        }
       }
 
       fileInput.files = dataTransfer.files;
       fileInput.dispatchEvent(new Event('change', { bubbles: true }));
       fileInput.dispatchEvent(new Event('input', { bubbles: true }));
 
-      // 等待所有"Remove media"按钮出现，表示图片上传完成
+      // 等待媒体上传完成
       try {
-        const removeButtons = await waitForElements('button[aria-label="Remove media"]', uploadCount, 30000);
-        console.log(`成功上传 ${removeButtons.length} 张图片`);
+        const totalMediaCount = (images?.length || 0) + (videos?.length > 0 ? 1 : 0);
+        const uploadCount = Math.min(totalMediaCount, 4); // X 最多允许4个媒体文件
+        const removeButtons = await waitForElements('button[aria-label="Remove media"]', uploadCount, 60000); // 增加超时时间，因为视频上传可能较慢
+        console.log(`成功上传 ${removeButtons.length} 个媒体文件`);
       } catch (error) {
-        console.error('图片上传可能未完成:', error);
+        console.error('媒体上传可能未完成:', error);
       }
     }
 

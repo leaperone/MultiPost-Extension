@@ -31,29 +31,6 @@ export async function DynamicWeibo(data: SyncData) {
     });
   }
 
-  // 辅助函数：通过文本内容查找元素
-  //   async function findElementByText(
-  //     selector: string,
-  //     text: string,
-  //     maxRetries = 5,
-  //     retryInterval = 1000,
-  //   ): Promise<Element | null> {
-  //     for (let i = 0; i < maxRetries; i++) {
-  //       const elements = document.querySelectorAll(selector);
-  //       const element = Array.from(elements).find((element) => element.textContent?.includes(text));
-
-  //       if (element) {
-  //         return element;
-  //       }
-
-  //       console.log(`未找到包含文本 "${text}" 的元素，尝试次数：${i + 1}`);
-  //       await new Promise((resolve) => setTimeout(resolve, retryInterval));
-  //     }
-
-  //     console.error(`在 ${maxRetries} 次尝试后未找到包含文本 "${text}" 的元素`);
-  //     return null;
-  //   }
-
   // 辅助函数：等待多个元素出现
   function waitForElements(selector: string, count: number, timeout = 30000): Promise<Element[]> {
     return new Promise((resolve, reject) => {
@@ -134,13 +111,11 @@ export async function DynamicWeibo(data: SyncData) {
 
     // 处理自动发布
     if (data.auto_publish) {
-      const sendButtons = document.querySelectorAll("span.woo-button-content");
-      const sendButton = Array.from(sendButtons).find((button) =>
-        button.textContent?.includes("发送")
-      );
+      const sendButtons = document.querySelectorAll('span.woo-button-content');
+      const sendButton = Array.from(sendButtons).find((button) => button.textContent?.includes('发送'));
 
       if (sendButton) {
-        console.log("点击发送按钮");
+        console.log('点击发送按钮');
         (sendButton as HTMLElement).click();
         await new Promise((resolve) => setTimeout(resolve, 3000));
         window.location.reload();

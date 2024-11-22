@@ -33,10 +33,10 @@ export async function VideoYoutube(data: SyncData) {
     const { content, video, title } = data.data as VideoData;
 
     // 等待上传按钮出现并点击
-    const uploadIcon = await waitForElement("ytcp-icon-button#upload-icon");
+    const uploadIcon = await waitForElement('ytcp-icon-button#upload-icon');
     await new Promise((resolve) => setTimeout(resolve, 1000));
     if (!uploadIcon) {
-      console.error("未找到上传按钮");
+      console.error('未找到上传按钮');
       return;
     }
     (uploadIcon as HTMLElement).click();
@@ -44,9 +44,9 @@ export async function VideoYoutube(data: SyncData) {
 
     // 处理视频上传
     if (video) {
-      const fileInput = await waitForElement('input[type="file"]') as HTMLInputElement;
+      const fileInput = (await waitForElement('input[type="file"]')) as HTMLInputElement;
       if (!fileInput) {
-        console.error("未找到文件输入框");
+        console.error('未找到文件输入框');
         return;
       }
 
@@ -67,28 +67,28 @@ export async function VideoYoutube(data: SyncData) {
     }
 
     // 等待标题输入框出现
-    await waitForElement("#title-textarea");
+    await waitForElement('#title-textarea');
     await new Promise((resolve) => setTimeout(resolve, 5000));
 
     // 处理标题输入
-    const titleArea = document.querySelector("#title-textarea");
+    const titleArea = document.querySelector('#title-textarea');
     if (!titleArea) {
-      console.error("未找到标题输入区域");
+      console.error('未找到标题输入区域');
       return;
     }
-    const titleInput = titleArea.querySelector("#textbox") as HTMLElement;
+    const titleInput = titleArea.querySelector('#textbox') as HTMLElement;
     if (!titleInput) {
-      console.error("未找到标题输入框");
+      console.error('未找到标题输入框');
       return;
     }
     titleInput.innerHTML = title || content.slice(0, 20);
 
     // 处理描述输入
-    const descriptionArea = document.querySelector("#description-textarea");
+    const descriptionArea = document.querySelector('#description-textarea');
     if (descriptionArea) {
-      const descriptionInput = descriptionArea.querySelector("#textbox") as HTMLElement;
+      const descriptionInput = descriptionArea.querySelector('#textbox') as HTMLElement;
       if (descriptionInput) {
-        descriptionInput.innerHTML = content || "";
+        descriptionInput.innerHTML = content || '';
       }
     }
 
