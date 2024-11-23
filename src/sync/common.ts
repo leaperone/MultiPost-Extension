@@ -1,7 +1,7 @@
 import { DynamicBilibili } from './dynamic/bilibili';
-import { DynamicDouyinImage } from './dynamic/douyin';
-import { DynamicInstagramImage } from './dynamic/instagram';
-import { DynamicRednoteImage } from './dynamic/rednote';
+import { DynamicDouyin } from './dynamic/douyin';
+import { DynamicInstagram } from './dynamic/instagram';
+import { DynamicRednote } from './dynamic/rednote';
 import { DynamicWeibo } from './dynamic/weibo';
 import { DynamicX } from './dynamic/x';
 import { DynamicXueqiu } from './dynamic/xueqiu';
@@ -85,7 +85,7 @@ export const infoMap: Record<string, PlatformInfo> = {
     // faviconUrl: 'https://creator.xiaohongshu.com/favicon.ico',
     platformName: chrome.i18n.getMessage('platformRednote'),
     injectUrl: 'https://creator.xiaohongshu.com/publish/publish',
-    injectFunction: DynamicRednoteImage,
+    injectFunction: DynamicRednote,
   },
   DYNAMIC_WEIBO: {
     type: 'DYNAMIC',
@@ -114,23 +114,23 @@ export const infoMap: Record<string, PlatformInfo> = {
     injectUrl: 'https://www.zhihu.com',
     injectFunction: DynamicZhihu,
   },
-  DYNAMIC_DOUYIN_IMAGE: {
+  DYNAMIC_DOUYIN: {
     type: 'DYNAMIC',
-    name: 'DYNAMIC_DOUYIN_IMAGE',
+    name: 'DYNAMIC_DOUYIN',
     homeUrl: 'https://creator.douyin.com/',
     faviconUrl: 'https://lf1-cdn-tos.bytegoofy.com/goofy/ies/douyin_web/public/favicon.ico',
     platformName: chrome.i18n.getMessage('platformDouyin'),
     injectUrl: 'https://creator.douyin.com/creator-micro/content/upload?default-tab=3',
-    injectFunction: DynamicDouyinImage,
+    injectFunction: DynamicDouyin,
   },
-  DYNAMIC_INSTAGRAM_IMAGE: {
+  DYNAMIC_INSTAGRAM: {
     type: 'DYNAMIC',
-    name: 'DYNAMIC_INSTAGRAM_IMAGE',
+    name: 'DYNAMIC_INSTAGRAM',
     homeUrl: 'https://www.instagram.com/',
     faviconUrl: 'https://static.cdninstagram.com/rsrc.php/v3/yG/r/De-Dwpd5CHc.png',
     platformName: chrome.i18n.getMessage('platformInstagram'),
     injectUrl: 'https://www.instagram.com/',
-    injectFunction: DynamicInstagramImage,
+    injectFunction: DynamicInstagram,
   },
   DYNAMIC_FACEBOOK: {
     type: 'DYNAMIC',

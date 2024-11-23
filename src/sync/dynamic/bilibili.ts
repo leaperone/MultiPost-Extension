@@ -1,5 +1,6 @@
 import { type DynamicData, type SyncData } from '../common';
 
+// 不支持发布视频
 export async function DynamicBilibili(data: SyncData) {
   function waitForElement(selector: string, timeout = 10000): Promise<Element> {
     return new Promise((resolve, reject) => {

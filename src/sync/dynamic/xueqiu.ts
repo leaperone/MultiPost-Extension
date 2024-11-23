@@ -1,7 +1,8 @@
 import type { DynamicData, SyncData } from '../common';
 
+// 只支持图文，不支持视频
 export async function DynamicXueqiu(data: SyncData) {
-  const { content, images, title } = data.data as DynamicData;
+  const { title, content, images } = data.data as DynamicData;
 
   function waitForElement(selector: string, timeout = 10000): Promise<Element> {
     return new Promise((resolve, reject) => {
@@ -120,7 +121,7 @@ export async function DynamicXueqiu(data: SyncData) {
       const maxAttempts = 3;
       for (let attempt = 0; attempt < maxAttempts; attempt++) {
         try {
-          const sendButton = await waitForElement('a[class="lite-editor__submit"]', 5000) as HTMLElement;
+          const sendButton = (await waitForElement('a[class="lite-editor__submit"]', 5000)) as HTMLElement;
           sendButton.click();
           console.log('发送按钮已点击');
           await new Promise((resolve) => setTimeout(resolve, 3000));

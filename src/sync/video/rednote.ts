@@ -1,4 +1,4 @@
-import type { SyncData, VideoData } from '../common'; 
+import type { SyncData, VideoData } from '../common';
 
 export async function VideoRednote(data: SyncData) {
   const { content, video, title } = data.data as VideoData;
@@ -32,7 +32,7 @@ export async function VideoRednote(data: SyncData) {
   }
 
   // 辅助函数：上传文件
-  async function uploadFiles() {
+  async function uploadVideo() {
     const fileInput = (await waitForElement('input[type="file"]')) as HTMLInputElement;
     if (!fileInput) {
       console.error('未找到文件输入元素');
@@ -70,7 +70,7 @@ export async function VideoRednote(data: SyncData) {
   await new Promise((resolve) => setTimeout(resolve, 2000));
 
   // 上传视频
-  await uploadFiles();
+  await uploadVideo();
 
   // 填写标题
   const titleInput = (await waitForElement('input[class="el-input__inner"]')) as HTMLInputElement;
@@ -110,4 +110,3 @@ export async function VideoRednote(data: SyncData) {
   //   }
   // }
 }
-

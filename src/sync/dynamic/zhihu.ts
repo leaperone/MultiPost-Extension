@@ -1,7 +1,7 @@
 import type { DynamicData, SyncData } from '../common';
 
 export async function DynamicZhihu(data: SyncData) {
-  const { content, images, title } = data.data as DynamicData;
+  const { title, content, images } = data.data as DynamicData;
 
   function waitForElement(selector: string, timeout = 10000): Promise<Element> {
     return new Promise((resolve, reject) => {
@@ -32,7 +32,7 @@ export async function DynamicZhihu(data: SyncData) {
   }
 
   async function uploadFiles(files: File[]) {
-    const fileInput = await waitForElement('input[type="file"][accept="image/*"]') as HTMLInputElement;
+    const fileInput = (await waitForElement('input[type="file"][accept="image/*"]')) as HTMLInputElement;
     if (!fileInput) {
       console.error('未找到文件输入元素');
       return;
@@ -57,26 +57,27 @@ export async function DynamicZhihu(data: SyncData) {
   try {
     // 等待并点击"写想法"元素
     await waitForElement('div.GlobalWriteV2-topTitle');
-    const writeThoughtButton = Array.from(document.querySelectorAll('div.GlobalWriteV2-topTitle'))
-      .find(el => el.textContent?.includes('写想法'));
-    
+    const writeThoughtButton = Array.from(document.querySelectorAll('div.GlobalWriteV2-topTitle')).find(
+      (el) => el.textContent?.includes('写想法'),
+    );
+
     if (!writeThoughtButton) {
       console.debug('未找到"写想法"元素');
       return;
     }
 
     (writeThoughtButton as HTMLElement).click();
-    await new Promise(resolve => setTimeout(resolve, 1000));
+    await new Promise((resolve) => setTimeout(resolve, 1000));
 
     // 填写标题（如果有）
-    const titleInput = await waitForElement('textarea[placeholder="请输入标题（选填）"]') as HTMLTextAreaElement;
+    const titleInput = (await waitForElement('textarea[placeholder="请输入标题（选填）"]')) as HTMLTextAreaElement;
     if (titleInput && title) {
       titleInput.value = title;
       titleInput.dispatchEvent(new Event('input', { bubbles: true }));
     }
 
     // 填写内容
-    const editorElement = await waitForElement('div[data-contents="true"]') as HTMLDivElement;
+    const editorElement = (await waitForElement('div[data-contents="true"]')) as HTMLDivElement;
     if (!editorElement) {
       console.debug('未找到编辑器元素');
       return;
@@ -86,34 +87,35 @@ export async function DynamicZhihu(data: SyncData) {
     const pasteEvent = new ClipboardEvent('paste', {
       bubbles: true,
       cancelable: true,
-      clipboardData: new DataTransfer()
+      clipboardData: new DataTransfer(),
     });
     pasteEvent.clipboardData.setData('text/plain', content || '');
     editorElement.dispatchEvent(pasteEvent);
     editorElement.dispatchEvent(new Event('input', { bubbles: true }));
     editorElement.dispatchEvent(new Event('change', { bubbles: true }));
 
-    await new Promise(resolve => setTimeout(resolve, 1000));
+    await new Promise((resolve) => setTimeout(resolve, 1000));
 
     // 处理图片上传
     if (images && images.length > 0) {
-      const sendButton = Array.from(document.querySelectorAll('button'))
-        .find(el => el.textContent?.includes('发布'));
-      
+      const sendButton = Array.from(document.querySelectorAll('button')).find((el) => el.textContent?.includes('发布'));
+
       if (sendButton) {
         const uploadButton = sendButton.parentElement?.previousElementSibling?.children[1] as HTMLElement;
         if (uploadButton) {
           uploadButton.click();
-          await new Promise(resolve => setTimeout(resolve, 1000));
+          await new Promise((resolve) => setTimeout(resolve, 1000));
 
           await waitForElement('input[type="file"][accept="image/*"]');
           const fileInput = document.querySelector('input[type="file"][accept="image/*"]') as HTMLInputElement;
           if (fileInput) {
-            const imageFiles = await Promise.all(images.map(async file => {
-              const response = await fetch(file.url);
-              const blob = await response.blob();
-              return new File([blob], file.name, { type: file.type });
-            }));
+            const imageFiles = await Promise.all(
+              images.map(async (file) => {
+                const response = await fetch(file.url);
+                const blob = await response.blob();
+                return new File([blob], file.name, { type: file.type });
+              }),
+            );
             await uploadFiles(imageFiles);
 
             // 等待图片上传完成
@@ -123,7 +125,7 @@ export async function DynamicZhihu(data: SyncData) {
                 document,
                 null,
                 XPathResult.FIRST_ORDERED_NODE_TYPE,
-                null
+                null,
               ).singleNodeValue as HTMLElement;
 
               if (uploadedCountElement) {
@@ -133,11 +135,12 @@ export async function DynamicZhihu(data: SyncData) {
                   break;
                 }
               }
-              await new Promise(resolve => setTimeout(resolve, 1000));
+              await new Promise((resolve) => setTimeout(resolve, 1000));
             }
 
-            const insertButton = Array.from(document.querySelectorAll('button'))
-              .find(el => el.textContent?.includes('插入图片'));
+            const insertButton = Array.from(document.querySelectorAll('button')).find(
+              (el) => el.textContent?.includes('插入图片'),
+            );
             if (insertButton) {
               insertButton.click();
             }
@@ -152,8 +155,9 @@ export async function DynamicZhihu(data: SyncData) {
       const retryInterval = 2000; // 2秒
 
       const attemptPublish = async (): Promise<boolean> => {
-        const publishButton = Array.from(document.querySelectorAll('button'))
-          .find(el => el.textContent?.includes('发布'));
+        const publishButton = Array.from(document.querySelectorAll('button')).find(
+          (el) => el.textContent?.includes('发布'),
+        );
         if (publishButton) {
           console.debug('发布按钮被点击');
           publishButton.click();
@@ -171,7 +175,7 @@ export async function DynamicZhihu(data: SyncData) {
           break;
         }
         console.debug(`未找到"发布"按钮，重试第 ${i + 1} 次`);
-        await new Promise(resolve => setTimeout(resolve, retryInterval));
+        await new Promise((resolve) => setTimeout(resolve, retryInterval));
       }
 
       if (!isPublished) {

@@ -1,7 +1,8 @@
 import type { DynamicData, SyncData } from '../common';
 
-export async function DynamicDouyinImage(data: SyncData) {
-  const { content, images, title } = data.data as DynamicData;
+// 优先发布图文
+export async function DynamicDouyin(data: SyncData) {
+  const { title, content, images, videos } = data.data as DynamicData;
   // 辅助函数：等待元素出现
   function waitForElement(selector: string, timeout = 10000): Promise<Element> {
     return new Promise((resolve, reject) => {
@@ -54,29 +55,6 @@ export async function DynamicDouyinImage(data: SyncData) {
     return null;
   }
 
-  // 辅助函数：等待多个元素出现
-  //   function waitForElements(selector: string, count: number, timeout = 30000): Promise<Element[]> {
-  //     return new Promise((resolve, reject) => {
-  //       const checkElements = () => {
-  //         const elements = document.querySelectorAll(selector);
-  //         if (elements.length >= count) {
-  //           resolve(Array.from(elements));
-  //           return;
-  //         }
-
-  //         if (Date.now() - startTime > timeout) {
-  //           reject(new Error(`未能在 ${timeout}ms 内找到 ${count} 个 "${selector}" 元素`));
-  //           return;
-  //         }
-
-  //         setTimeout(checkElements, 100);
-  //       };
-
-  //       const startTime = Date.now();
-  //       checkElements();
-  //     });
-  //   }
-
   async function checkImagesUploaded(expectedCount: number, maxRetries = 10, retryInterval = 3000): Promise<boolean> {
     for (let i = 0; i < maxRetries; i++) {
       const viewTexts = document.querySelectorAll('span:contains("查看")');
@@ -98,7 +76,7 @@ export async function DynamicDouyinImage(data: SyncData) {
   }
 
   // 辅助函数：上传文件
-  async function uploadFiles() {
+  async function uploadImages() {
     const fileInput = (await waitForElement(
       'input[accept="image/png,image/jpeg,image/jpg,image/bmp,image/webp,image/tif"][multiple][type="file"]',
     )) as HTMLInputElement;
@@ -133,76 +111,113 @@ export async function DynamicDouyinImage(data: SyncData) {
     }
   }
 
-  // 等待页面加载
-  //   await new Promise((resolve) => setTimeout(resolve, 2000));
-  //   const imageButton = (await findElementByText('div', '上传图文')) as HTMLElement;
-  //   if (imageButton) {
-  //     imageButton.click();
-  //     await new Promise((resolve) => setTimeout(resolve, 2000));
-  //   }
+  async function uploadVideo(file: File): Promise<void> {
+    const fileInput = (await waitForElement('input[type=file][accept="video/*"]')) as HTMLInputElement;
 
-  // 上传图片
-  //   const uploadButton = (await findElementByText('span[class="title"]', '上传图文')) as HTMLElement;
-  //   if (uploadButton) {
-  //     uploadButton.click();
-  //     await new Promise((resolve) => setTimeout(resolve, 2000));
-  //   }
+    // 创建一个新的 File 对象，因为某些浏览器可能不允许直接设置 fileInput.files
+    const dataTransfer = new DataTransfer();
+    dataTransfer.items.add(file);
+    fileInput.files = dataTransfer.files;
+
+    // 触发 change 事件
+    const changeEvent = new Event('change', { bubbles: true });
+    fileInput.dispatchEvent(changeEvent);
+
+    console.log('视频上传事件已触发');
+  }
 
   await new Promise((resolve) => setTimeout(resolve, 2000));
 
-  // 上传文件
-  await uploadFiles();
+  if (images && images.length > 0) {
+    // 上传文件
+    await uploadImages();
 
-  //   填写标题
-  const titleInput = (await waitForElement('input[placeholder="添加作品标题"]')) as HTMLInputElement;
-  if (titleInput) {
-    titleInput.value = title || content.slice(0, 20);
-    titleInput.dispatchEvent(new Event('input', { bubbles: true }));
-  }
+    //   填写标题
+    const titleInput = (await waitForElement('input[placeholder="添加作品标题"]')) as HTMLInputElement;
+    if (titleInput) {
+      titleInput.value = title || content.slice(0, 20);
+      titleInput.dispatchEvent(new Event('input', { bubbles: true }));
+    }
 
-  // 填写内容
-  const contentEditor = (await waitForElement('div[data-line-wrapper="true"]')) as HTMLDivElement;
-  if (contentEditor) {
-    // 创建一个新的 ClipboardEvent
-    const pasteEvent = new ClipboardEvent('paste', {
-      bubbles: true,
-      cancelable: true,
-      clipboardData: new DataTransfer(),
-    });
+    // 填写内容
+    const contentEditor = (await waitForElement('div[data-line-wrapper="true"]')) as HTMLDivElement;
+    if (contentEditor) {
+      // 创建一个新的 ClipboardEvent
+      const pasteEvent = new ClipboardEvent('paste', {
+        bubbles: true,
+        cancelable: true,
+        clipboardData: new DataTransfer(),
+      });
 
-    // 设置剪贴板数据
-    pasteEvent.clipboardData.setData('text/plain', content);
+      // 设置剪贴板数据
+      pasteEvent.clipboardData.setData('text/plain', content);
 
-    // 触发粘贴事件
-    contentEditor.dispatchEvent(pasteEvent);
-  }
+      // 触发粘贴事件
+      contentEditor.dispatchEvent(pasteEvent);
+    }
 
-  //   // 等待内容更新
-  await new Promise((resolve) => setTimeout(resolve, 3000));
+    //   // 等待内容更新
+    await new Promise((resolve) => setTimeout(resolve, 3000));
 
-  await checkImagesUploaded(images.length);
+    await checkImagesUploaded(images.length);
 
-  if (data.auto_publish) {
-    const maxAttempts = 3;
-    for (let attempt = 0; attempt < maxAttempts; attempt++) {
-      try {
-        const publishButton = (await findElementByText('button', '发布', 5, 1000)) as HTMLButtonElement;
-        if (publishButton) {
-          publishButton.click();
-          console.log('发布按钮已点击');
-          await new Promise((resolve) => setTimeout(resolve, 3000));
-          window.location.href = 'https://creator.douyin.com/creator-micro/content/manage';
-          break; // 成功点击后退出循环
-        } else {
-          throw new Error('未找到发布按钮');
+    if (data.auto_publish) {
+      const maxAttempts = 3;
+      for (let attempt = 0; attempt < maxAttempts; attempt++) {
+        try {
+          const publishButton = (await findElementByText('button', '发布', 5, 1000)) as HTMLButtonElement;
+          if (publishButton) {
+            publishButton.click();
+            console.log('发布按钮已点击');
+            await new Promise((resolve) => setTimeout(resolve, 3000));
+            window.location.href = 'https://creator.douyin.com/creator-micro/content/manage';
+            break; // 成功点击后退出循环
+          } else {
+            throw new Error('未找到发布按钮');
+          }
+        } catch (error) {
+          console.warn(`第 ${attempt + 1} 次尝试查找发布按钮失败:`, error);
+          if (attempt === maxAttempts - 1) {
+            console.error('达到最大尝试次数，无法找到发布按钮');
+          }
+          await new Promise((resolve) => setTimeout(resolve, 2000)); // 等待2秒后重试
         }
-      } catch (error) {
-        console.warn(`第 ${attempt + 1} 次尝试查找发布按钮失败:`, error);
-        if (attempt === maxAttempts - 1) {
-          console.error('达到最大尝试次数，无法找到发布按钮');
-        }
-        await new Promise((resolve) => setTimeout(resolve, 2000)); // 等待2秒后重试
       }
+    }
+  } else if (videos && videos.length > 0) {
+    const video = videos[0];
+    const response = await fetch(video.url);
+    const blob = await response.blob();
+    const videoFile = new File([blob], video.name, { type: video.type });
+    console.log(`视频文件: ${videoFile.name} ${videoFile.type} ${videoFile.size}`);
+
+    await uploadVideo(videoFile);
+    console.log('视频上传已初始化');
+
+    await new Promise((resolve) => setTimeout(resolve, 5000));
+
+    // 处理标题输入
+    const titleInput = (await waitForElement('input[placeholder*="作品标题"]')) as HTMLInputElement;
+    if (titleInput) {
+      titleInput.value = title || content.slice(0, 20);
+      titleInput.dispatchEvent(new Event('input', { bubbles: true }));
+    }
+
+    // 填写内容
+    const contentEditor = (await waitForElement('div[data-line-wrapper="true"]')) as HTMLDivElement;
+    if (contentEditor) {
+      // 创建一个新的 ClipboardEvent
+      const pasteEvent = new ClipboardEvent('paste', {
+        bubbles: true,
+        cancelable: true,
+        clipboardData: new DataTransfer(),
+      });
+
+      // 设置剪贴板数据
+      pasteEvent.clipboardData.setData('text/plain', content);
+
+      // 触发粘贴事件
+      contentEditor.dispatchEvent(pasteEvent);
     }
   }
 }
