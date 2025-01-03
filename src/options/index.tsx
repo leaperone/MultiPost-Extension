@@ -146,6 +146,29 @@ const Options = () => {
               <VideoTab funcPublish={funcPublish} />
             </Tab>
           </Tabs>
+
+          <div className="mt-8 mb-4 text-center text-sm text-foreground/60">
+            <p>{chrome.i18n.getMessage('optionsHelpPrefix')}</p>
+            <p>{chrome.i18n.getMessage('optionsFeedbackPrefix')}</p>
+            <p>
+               {chrome.i18n.getMessage('optionsFeedbackEmail')}{' '}
+              <a
+                href="mailto:support@leaper.one"
+                className="text-primary hover:underline">
+                support@leaper.one
+              </a>
+            </p>
+            <p>
+              {chrome.i18n.getMessage('optionsOrText')}{' '}
+              <a
+                href="https://github.com/leaper-one/Multipost-Extension-Releases/issues"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-primary hover:underline">
+                GitHub Issues
+              </a>
+            </p>
+          </div>
         </div>
       </div>
     </NextUIProvider>

@@ -462,5 +462,17 @@
   "platformLinkedin": {
     "message": "领英",
     "description": "LinkedIn 平台名称"
+  },
+  "optionsFeedbackPrefix": {
+    "message": "没有你需要的平台？"
+  },
+  "optionsFeedbackEmail": {
+    "message": "发送邮件到"
+  },
+  "optionsHelpPrefix": {
+    "message": "遇到使用问题？"
+  },
+  "optionsOrText": {
+    "message": "或者到"
   }
 }

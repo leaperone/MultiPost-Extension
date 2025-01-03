@@ -459,5 +459,17 @@
   "platformLinkedin": {
     "message": "LinkedIn",
     "description": "Platform name for LinkedIn"
+  },
+  "optionsFeedbackPrefix": {
+    "message": "Missing a platform you need?"
+  },
+  "optionsFeedbackEmail": {
+    "message": "Send an email to"
+  },
+  "optionsHelpPrefix": {
+    "message": "Need help?"
+  },
+  "optionsOrText": {
+    "message": "or visit"
   }
 }

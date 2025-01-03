@@ -1,12 +1,12 @@
 {
   "name": "__MSG_extensionName__",
   "displayName": "__MSG_extensionDisplayName__",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "description": "__MSG_extensionDescription__",
   "author": "leaperone",
   "scripts": {
     "dev": "plasmo dev",
-    "build": "plasmo build --env=.env.build",
+    "build": "plasmo build && plasmo package",
     "package": "plasmo package",
     "lint": "eslint",
     "lint:fix": "eslint --fix",
