@@ -32,5 +32,6 @@
   "i18n-ally.keystyle": "nested",
   "i18n-ally.enabledParsers": [
     "json"
-  ]
+  ],
+  "Codegeex.RepoIndex": true
 }
