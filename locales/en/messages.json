@@ -421,7 +421,7 @@
     "description": "Platform name for Bilibili"
   },
   "platformRednote": {
-    "message": "Rednote",
+    "message": "rednote",
     "description": "Platform name for Rednote"
   },
   "platformWeibo": {

@@ -58,7 +58,6 @@ export interface PlatformInfo {
   injectFunction: (data: SyncData) => Promise<void>;
 }
 
-
 export const infoMap: Record<string, PlatformInfo> = {
   DYNAMIC_X: {
     type: 'DYNAMIC',
@@ -82,7 +81,7 @@ export const infoMap: Record<string, PlatformInfo> = {
     type: 'DYNAMIC',
     name: 'DYNAMIC_REDNOTE',
     homeUrl: 'https://creator.xiaohongshu.com/',
-    // faviconUrl: 'https://creator.xiaohongshu.com/favicon.ico',
+    faviconUrl: 'https://fe-video-qc.xhscdn.com/fe-platform/ed8fe781ce9e16c1bfac2cd962f0721edabe2e49.ico',
     platformName: chrome.i18n.getMessage('platformRednote'),
     injectUrl: 'https://creator.xiaohongshu.com/publish/publish',
     injectFunction: DynamicRednote,
