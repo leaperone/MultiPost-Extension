@@ -1,4 +1,4 @@
-import { Image, Checkbox, Link } from '@nextui-org/react';
+import { Image, Checkbox, Link } from "@heroui/react";
 import type { PlatformInfo } from '~sync/common';
 import React from 'react';
 import { Icon } from '@iconify/react';

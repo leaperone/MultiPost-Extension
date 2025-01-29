@@ -1,4 +1,4 @@
-import { Image } from '@nextui-org/react';
+import { Image } from '@heroui/react';
 import { BookOpenText } from 'lucide-react';
 import React from 'react';
 

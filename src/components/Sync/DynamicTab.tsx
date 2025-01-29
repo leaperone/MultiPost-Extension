@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Card, Button, Image, Input, Textarea, CardHeader, CardBody, CardFooter, Switch } from '@nextui-org/react';
+import { Card, Button, Image, Input, Textarea, CardHeader, CardBody, CardFooter, Switch } from '@heroui/react';
 import { ImagePlusIcon, VideoIcon, XIcon, TrashIcon, SendIcon } from 'lucide-react';
 import Viewer from 'react-viewer';
 import { Player } from 'video-react';

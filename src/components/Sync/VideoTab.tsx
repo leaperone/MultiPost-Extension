@@ -1,5 +1,5 @@
 import React, { useState, useRef } from 'react';
-import { Card, Button, Input, Textarea, CardHeader, CardBody, CardFooter } from '@nextui-org/react';
+import { Card, Button, Input, Textarea, CardHeader, CardBody, CardFooter } from "@heroui/react";
 import { VideoIcon, XIcon } from 'lucide-react';
 import { Player } from 'video-react';
 import 'video-react/dist/video-react.css';

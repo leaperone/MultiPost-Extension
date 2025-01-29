@@ -1,7 +1,7 @@
 import '~style.css';
 import React, { useState } from 'react';
-import { NextUIProvider } from '@nextui-org/react';
-import { Tabs, Tab, Spacer } from '@nextui-org/react';
+import { HeroUIProvider } from '@heroui/react';
+import { Tabs, Tab, Spacer } from '@heroui/react';
 import cssText from 'data-text:~style.css';
 import Header from '~/components/Header';
 import DynamicTab from '~/components/Sync/DynamicTab';
@@ -114,7 +114,7 @@ const Options = () => {
     return null;
   }
   return (
-    <NextUIProvider>
+    <HeroUIProvider>
       <div className="min-w-xl">
         <Header />
         <div className="mx-auto max-w-2xl">
@@ -167,7 +167,7 @@ const Options = () => {
           </div>
         </div>
       </div>
-    </NextUIProvider>
+    </HeroUIProvider>
   );
 };
 

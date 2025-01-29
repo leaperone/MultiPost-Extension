@@ -1,11 +1,10 @@
 import '~style.css';
-import { NextUIProvider } from '@nextui-org/react';
-import { Tabs, Tab } from '@nextui-org/react';
+import { HeroUIProvider } from '@heroui/react';
+import { Tabs, Tab } from '@heroui/react';
 import cssText from 'data-text:~style.css';
 import React, { useEffect, useState } from 'react';
 import TabsManager from '~components/Sidepanel/Tabs/TabsManager';
-import { LayoutDashboardIcon, ListIcon } from 'lucide-react';
-import CollectionManager from '~components/Sidepanel/Collection/CollectionManager';
+import { LayoutDashboardIcon } from 'lucide-react';
 
 export function getShadowContainer() {
   return document.querySelector('#test-shadow').shadowRoot.querySelector('#plasmo-shadow-container');
@@ -55,7 +54,7 @@ function SidePanel() {
   }
 
   return (
-    <NextUIProvider>
+    <HeroUIProvider>
       <div className="p-4 mx-auto min-h-screen">
         <Tabs
           selectedKey={selectedKey}
@@ -78,7 +77,7 @@ function SidePanel() {
           </Tab>
         </Tabs>
       </div>
-    </NextUIProvider>
+    </HeroUIProvider>
   );
 }
 

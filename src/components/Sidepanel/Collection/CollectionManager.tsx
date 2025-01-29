@@ -10,7 +10,7 @@ import {
   ModalFooter,
   Input,
   useDisclosure,
-} from '@nextui-org/react';
+} from "@heroui/react";
 import { Plus } from 'lucide-react';
 import type { Collection, CollectionItem } from '~background/services/collection/type';
 import { CollectionService } from '~background/services/collection/store';

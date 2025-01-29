@@ -1,5 +1,5 @@
 import React from 'react';
-import { Card, CardBody, CardFooter, Button, Link, Tooltip } from '@nextui-org/react';
+import { Card, CardBody, CardFooter, Button, Link, Tooltip } from "@heroui/react";
 import { Trash2, ExternalLink } from 'lucide-react';
 import type { CollectionItem } from '../../../background/services/collection/type';
 
