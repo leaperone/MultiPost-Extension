@@ -24,6 +24,7 @@ export const getStyle = () => {
 const Options = () => {
   const [isReady, setIsReady] = useState(false);
   const [hashParams, setHashParams] = useState<Record<string, string>>({});
+
   React.useEffect(() => {
     document.title = chrome.i18n.getMessage('extensionDisplayName');
 
@@ -115,58 +116,56 @@ const Options = () => {
   }
   return (
     <HeroUIProvider>
-      <div className="min-w-xl">
-        <Header />
-        <div className="mx-auto max-w-2xl">
-          <Spacer y={8} />
+      <Header />
+      <main className="mx-auto max-w-4xl w-full p-4">
+        <div className="flex gap-4">
           <Tabs
-            defaultSelectedKey={hashParams.tab || 'dynamic'}
             aria-label="sync publish"
-            fullWidth>
+            defaultSelectedKey={hashParams.tab || 'dynamic'}
+            isVertical
+            className="h-full">
             <Tab
               key="dynamic"
-              title={chrome.i18n.getMessage('optionsDynamicTab')}>
-              <DynamicTab funcPublish={funcPublish} />
-            </Tab>
-            {/* <Tab
-              key="post"
-              title={chrome.i18n.getMessage('optionsPostTab')}>
-              <PostTab
-                funcPublish={funcPublish}
-                funcScraper={funcScraper}
-              /> */}
-            {/* </Tab> */}
+              title={chrome.i18n.getMessage('optionsDynamicTab')}
+            />
             <Tab
               key="video"
-              title={chrome.i18n.getMessage('optionsVideoTab')}>
-              <VideoTab funcPublish={funcPublish} />
-            </Tab>
+              title={chrome.i18n.getMessage('optionsVideoTab')}
+            />
           </Tabs>
 
-          <div className="mt-8 mb-4 text-center text-sm text-foreground/60">
-            <p>{chrome.i18n.getMessage('optionsHelpPrefix')}</p>
-            <p>{chrome.i18n.getMessage('optionsFeedbackPrefix')}</p>
-            <p>
-              {chrome.i18n.getMessage('optionsFeedbackEmail')}{' '}
-              <a
-                href="mailto:support@leaper.one"
-                className="text-primary hover:underline">
-                support@leaper.one
-              </a>
-            </p>
-            <p>
-              {chrome.i18n.getMessage('optionsOrText')}{' '}
-              <a
-                href="https://github.com/leaper-one/Multipost-Extension-Releases/issues"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-primary hover:underline">
-                GitHub Issues
-              </a>
-            </p>
+          <div className="flex-1 w-full">
+            {hashParams.tab === 'video' ? (
+              <VideoTab funcPublish={funcPublish} />
+            ) : (
+              <DynamicTab funcPublish={funcPublish} />
+            )}
           </div>
         </div>
-      </div>
+      </main>
+      <Spacer y={8} />
+      <footer className="text-center text-sm text-foreground/60">
+        <p>
+          <span>{chrome.i18n.getMessage('optionsHelpPrefix')}&nbsp;</span>
+          <span>{chrome.i18n.getMessage('optionsFeedbackPrefix')}</span>
+        </p>
+        <p>
+          <span>{chrome.i18n.getMessage('optionsFeedbackEmail')}</span>
+          <a
+            href="mailto:support@leaper.one"
+            className="text-primary hover:underline">
+            support@leaper.one
+          </a>
+          <span>&nbsp;{chrome.i18n.getMessage('optionsOrText')}&nbsp;</span>
+          <a
+            href="https://github.com/leaper-one/Multipost-Extension-Releases/issues"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-primary hover:underline">
+            GitHub Issues
+          </a>
+        </p>
+      </footer>
     </HeroUIProvider>
   );
 };
