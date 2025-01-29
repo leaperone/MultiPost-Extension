@@ -1,20 +1,38 @@
-You are an expert in Chrome Extension, Plasmo, TypeScript, Node.js, Next.js App Router, React, NextUI, and Tailwind.
+You are an expert in Chrome Extension, Plasmo framework, TypeScript/JavaScript, browserextension APIs, Node.js, Next.js App Router, React, HeroUI, and Tailwind.
 
 Code Style and Structure:
 - Write concise, technical TypeScript code with accurate examples
 - Use functional and declarative programming patterns; avoid classes
-- Prefer iteration and modularization over code duplication
 - Use descriptive variable names with auxiliary verbs (e.g., isLoading, hasError)
-- Structure files: exported component, subcomponents, helpers, static content, types
+- Structure files logically: popup, background, content scripts, utils, exported component, subcomponents, helpers, static content, types
+
+Architecture and Best Practices
+- Strictly follow Manifest V3 specifications
+- Divide responsibilities between background, content scripts and popup
+- Configure permissions following the principle of least privilege
+- Use modern build tools (webpack/vite) for development
+- Implement proper version control and change management
+
+Chrome API Usage
+- Use chrome.* APIs correctly (storage, tabs, runtime, etc.)
+- Handle asynchronous operations with Promises
+- Use Service Worker for background scripts (MV3 requirement)
+- Implement chrome.alarms for scheduled tasks
+- Use chrome.action API for browser actions
+- Handle offline functionality gracefully
+
+Security and Privacy
+- Implement Content Security Policy (CSP)
+- Handle user data securely
+- Prevent XSS and injection attacks
+- Use secure messaging between components
+- Handle cross-origin requests safely
+- Implement secure data encryption
+- Follow web_accessible_resources best practices
 
 Naming Conventions:
 - Use PascalCase for directory names (e.g., components/AuthWizard)
 - Favor named exports for components
-
-TypeScript Usage:
-- Use TypeScript for all code; prefer interfaces over types
-- Avoid enums; use maps instead
-- Use functional components with TypeScript interfaces
 
 Syntax and Formatting:
 - Use the "function" keyword for pure functions
@@ -30,29 +48,26 @@ Error Handling and Validation:
 - Use error boundaries for unexpected errors
 
 UI and Styling:
-- Use NextUI(I prefer this), and Tailwind for components and styling
-- Use lucide-react for icon. Sometime @iconify/react in code base, ignore it. heroicons.
+- Use HeroUI and Tailwind for components and styling
+- Use lucide-react for icon. Sometime @iconify/react in code base, ignore it.
 - Implement responsive design with Tailwind CSS; use a mobile-first approach
 
 Performance Optimization:
 - Minimize 'useEffect', and 'setState'
 - Use dynamic loading for non-critical components
-- Optimize images: use WebP format, include size data, implement lazy loading
 
 i18n:
 - Use chrome.i18n.getMessage for all text content
 - Path: /locales/xx/messages.json
 
+Accessibility
+- Implement ARIA labels
+- Ensure sufficient color contrast
+- Support screen readers
+- Add keyboard shortcuts
+
 Third party lib:
 - Use Vercel AI SDK for AI function
 - Implement validation using Zod for schema validation
-
-Key Conventions:
-- Use 'nuqs' for URL search parameter state management
-- Optimize Web Vitals (LCP, CLS, FID)
-- Limit 'use client':
-  - Favor server components and Next.js SSR
-  - Use only for Web API access in small components
-  - Avoid for data fetching or state management
 
 Follow Plasmo docs for Shadow DOM, Manifest V3, and more.
