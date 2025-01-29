@@ -119,10 +119,6 @@ const Options = () => {
         <Header />
         <div className="mx-auto max-w-2xl">
           <Spacer y={8} />
-          <h2 className="text-2xl font-bold text-center">{chrome.i18n.getMessage('optionsSyncPublishTitle')}</h2>
-          <h3 className="mb-4 font-light text-center text-md text-foreground/50">
-            {chrome.i18n.getMessage('optionsSyncPublishDescription')}
-          </h3>
           <Tabs
             defaultSelectedKey={hashParams.tab || 'dynamic'}
             aria-label="sync publish"
@@ -151,7 +147,7 @@ const Options = () => {
             <p>{chrome.i18n.getMessage('optionsHelpPrefix')}</p>
             <p>{chrome.i18n.getMessage('optionsFeedbackPrefix')}</p>
             <p>
-               {chrome.i18n.getMessage('optionsFeedbackEmail')}{' '}
+              {chrome.i18n.getMessage('optionsFeedbackEmail')}{' '}
               <a
                 href="mailto:support@leaper.one"
                 className="text-primary hover:underline">

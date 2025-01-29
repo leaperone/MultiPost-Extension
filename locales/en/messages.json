@@ -36,7 +36,7 @@
     "description": "Options page title"
   },
   "optionsViewDocs": {
-    "message": "View Docs",
+    "message": "Docs",
     "description": "View docs button text"
   },
   "optionsAccountManagement": {
@@ -215,10 +215,6 @@
     "message": "Live Session Sync",
     "description": "Live session sync option"
   },
-  "optionsSyncPublishDescription": {
-    "message": "Input content once, public to all platform.",
-    "description": "Sync publish page description"
-  },
   "optionsAutoPublish": {
     "message": "Auto Publish",
     "description": "Auto publish switch text"
@@ -239,9 +235,6 @@
     "message": "Dashboard"
   },
   "dashboardSyncPublic": {
-    "message": "Sync Public"
-  },
-  "optionsSyncPublishTitle": {
     "message": "Sync Public"
   },
   "optionsEnterUrl": {

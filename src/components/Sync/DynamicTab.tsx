@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Card, Button, Image, Input, Textarea, CardHeader, CardBody, CardFooter, Switch } from '@nextui-org/react';
-import { ImagePlusIcon, VideoIcon, XIcon, TrashIcon } from 'lucide-react';
+import { ImagePlusIcon, VideoIcon, XIcon, TrashIcon, SendIcon } from 'lucide-react';
 import Viewer from 'react-viewer';
 import { Player } from 'video-react';
 import 'video-react/dist/video-react.css';
@@ -124,31 +124,32 @@ const DynamicTab: React.FC<DynamicTabProps> = ({ funcPublish }) => {
   };
 
   return (
-    <>
-      <Card className="shadow-none h-fit bg-default-50">
-        <CardHeader>
+    <div className="flex flex-col gap-4">
+      <Card className="shadow-none bg-default-50">
+        <CardHeader className="flex flex-col gap-4">
           <Input
+            label={chrome.i18n.getMessage('optionsEnterDynamicTitle')}
             placeholder={chrome.i18n.getMessage('optionsEnterDynamicTitle')}
             value={title}
             onChange={(e) => setTitle(e.target.value)}
+            variant="flat"
             className="w-full"
           />
-        </CardHeader>
-
-        <CardBody>
           <Textarea
+            label={chrome.i18n.getMessage('optionsEnterDynamicContent')}
             placeholder={chrome.i18n.getMessage('optionsEnterDynamicContent')}
             value={content}
             onChange={(e) => setContent(e.target.value)}
-            fullWidth
+            variant="flat"
             minRows={5}
+            className="w-full"
             autoFocus
           />
-        </CardBody>
+        </CardHeader>
 
         <CardFooter>
-          <div className="flex justify-between items-center mb-4 w-full">
-            <div className="flex">
+          <div className="flex justify-between items-center w-full">
+            <div className="flex gap-2">
               <input
                 type="file"
                 ref={imageInputRef}
@@ -161,7 +162,7 @@ const DynamicTab: React.FC<DynamicTabProps> = ({ funcPublish }) => {
                 isIconOnly
                 variant="light"
                 onPress={() => handleIconClick('image')}>
-                <ImagePlusIcon className="w-8 h-8 text-gray-600" />
+                <ImagePlusIcon className="w-5 h-5" />
               </Button>
               <input
                 type="file"
@@ -175,7 +176,7 @@ const DynamicTab: React.FC<DynamicTabProps> = ({ funcPublish }) => {
                 isIconOnly
                 variant="light"
                 onPress={() => handleIconClick('video')}>
-                <VideoIcon className="w-8 h-8 text-gray-600" />
+                <VideoIcon className="w-5 h-5" />
               </Button>
             </div>
             <Button
@@ -184,82 +185,78 @@ const DynamicTab: React.FC<DynamicTabProps> = ({ funcPublish }) => {
               color="danger"
               onPress={handleClearAll}
               title={chrome.i18n.getMessage('optionsClearAll')}>
-              <TrashIcon className="w-6 h-6" />
+              <TrashIcon className="w-5 h-5" />
             </Button>
           </div>
         </CardFooter>
       </Card>
 
-      {/* 图片预览 Card */}
-      <Card className="my-2 shadow-none bg-default-50">
-        <CardBody className="flex flex-row flex-wrap gap-2 justify-center items-center">
-          {images.map((file, index) => (
-            <div
-              key={index}
-              className="relative group">
-              <Image
-                src={file.url}
-                alt={file.name}
-                width={100}
-                height={100}
-                className="object-cover rounded-md cursor-pointer"
-                onClick={() => handleImageClick(index)}
-              />
-              <Button
-                isIconOnly
-                size="sm"
-                color="danger"
-                className="absolute top-0 right-0 z-50 m-1 opacity-0 transition-opacity group-hover:opacity-100"
-                onPress={() => handleDeleteFile(index, 'image')}>
-                <XIcon className="size-4" />
-              </Button>
-            </div>
-          ))}
-        </CardBody>
-      </Card>
+      {images.length > 0 && (
+        <Card className="shadow-none bg-default-50">
+          <CardBody className="flex flex-row flex-wrap gap-3 justify-start items-start p-4">
+            {images.map((file, index) => (
+              <div
+                key={index}
+                className="relative group">
+                <Image
+                  src={file.url}
+                  alt={file.name}
+                  width={120}
+                  height={120}
+                  className="object-cover rounded-lg cursor-pointer"
+                  onClick={() => handleImageClick(index)}
+                />
+                <Button
+                  isIconOnly
+                  size="sm"
+                  color="danger"
+                  variant="light"
+                  className="absolute top-1 right-1 z-50 opacity-0 transition-opacity duration-200 group-hover:opacity-100"
+                  onPress={() => handleDeleteFile(index, 'image')}>
+                  <XIcon className="size-4" />
+                </Button>
+              </div>
+            ))}
+          </CardBody>
+        </Card>
+      )}
 
-      <Viewer
-        visible={viewerVisible}
-        onClose={() => setViewerVisible(false)}
-        images={images.map((file) => ({ src: file.url, alt: file.name }))}
-        activeIndex={currentImage}
-      />
-
-      <div className="mb-4">
-        <div className="flex items-center">
-          <p className="mr-2 text-sm font-bold">{chrome.i18n.getMessage('optionsAutoPublish')}: </p>
+      <div className="flex flex-col gap-4 bg-default-50 p-4 rounded-lg">
+        <div className="flex items-center justify-between">
+          <span className="text-sm font-medium">{chrome.i18n.getMessage('optionsAutoPublish')}</span>
           <Switch
             isSelected={autoPublish}
             onValueChange={setAutoPublish}
+            size="sm"
           />
         </div>
-        <p className="mb-2 text-sm font-medium">{chrome.i18n.getMessage('optionsSelectPublishPlatforms')}</p>
-        <div className="grid grid-cols-2 gap-2">
-          {getPlatformInfos('DYNAMIC').map(platform => {
-            // const isDisabled = info.name.includes('IMAGE') && images.length === 0;
-            const isDisabled = false;
-            
-            return (
+
+        <div className="flex flex-col gap-2">
+          <p className="text-sm font-medium">{chrome.i18n.getMessage('optionsSelectPublishPlatforms')}</p>
+          <div className="grid grid-cols-2 gap-3">
+            {getPlatformInfos('DYNAMIC').map((platform) => (
               <PlatformCheckbox
                 key={platform.name}
                 platformInfo={platform}
                 isSelected={selectedPlatforms.includes(platform.name)}
                 onChange={(_, isSelected) => handlePlatformChange(platform.name, isSelected)}
-                isDisabled={isDisabled}
+                isDisabled={false}
               />
-            );
-          })}
+            ))}
+          </div>
         </div>
       </div>
+
       <Button
         onPress={handlePublish}
         color="primary"
-        disabled={images.length === 0 || !title || !content || selectedPlatforms.length === 0}
-        className="px-4 py-2 mb-4 w-full font-bold">
+        variant="flat"
+        disabled={!title || !content || selectedPlatforms.length === 0}
+        className="w-full font-medium shadow-none">
+        <SendIcon className="size-4 mr-2" />
         {chrome.i18n.getMessage('optionsSyncDynamic')}
       </Button>
 
-      {/* 视频预览 Card */}
       {videos.length > 0 && (
         <Card className="my-2 shadow-none bg-default-50">
           <CardBody className="flex flex-col gap-4">
@@ -276,6 +273,7 @@ const DynamicTab: React.FC<DynamicTabProps> = ({ funcPublish }) => {
                   isIconOnly
                   size="sm"
                   color="danger"
+                  variant="light"
                   className="absolute top-2 right-2 z-50 opacity-0 transition-opacity group-hover:opacity-100"
                   onPress={() => handleDeleteFile(index, 'video')}>
                   <XIcon className="size-4" />
@@ -285,7 +283,14 @@ const DynamicTab: React.FC<DynamicTabProps> = ({ funcPublish }) => {
           </CardBody>
         </Card>
       )}
-    </>
+
+      <Viewer
+        visible={viewerVisible}
+        onClose={() => setViewerVisible(false)}
+        images={images.map((file) => ({ src: file.url, alt: file.name }))}
+        activeIndex={currentImage}
+      />
+    </div>
   );
 };
 

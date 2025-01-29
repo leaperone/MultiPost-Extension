@@ -36,7 +36,7 @@
     "description": "选项页面标题"
   },
   "optionsViewDocs": {
-    "message": "查看文档",
+    "message": "文档",
     "description": "查看文档按钮文本"
   },
   "optionsAccountManagement": {
@@ -219,10 +219,6 @@
     "message": "自动发布",
     "description": "自动发布开关文本"
   },
-  "optionsSyncPublishDescription": {
-    "message": "一次输入，在多个平台同步发布",
-    "description": "同步发布页面描述"
-  },
   "optionsEnterVideoTitle": {
     "message": "输入视频标题",
     "description": "视频标题输入框占位符"
@@ -242,9 +238,6 @@
     "message": "同步发布"
   },
   "syncPublicPageTitle": {
-    "message": "同步发布"
-  },
-  "optionsSyncPublishTitle": {
     "message": "同步发布"
   },
   "optionsEnterUrl": {
