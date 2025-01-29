@@ -117,31 +117,28 @@ const Options = () => {
   return (
     <HeroUIProvider>
       <Header />
-      <main className="mx-auto max-w-4xl w-full p-4">
-        <div className="flex gap-4">
-          <Tabs
-            aria-label="sync publish"
-            defaultSelectedKey={hashParams.tab || 'dynamic'}
-            isVertical
-            className="h-full">
-            <Tab
-              key="dynamic"
-              title={chrome.i18n.getMessage('optionsDynamicTab')}
-            />
-            <Tab
-              key="video"
-              title={chrome.i18n.getMessage('optionsVideoTab')}
-            />
-          </Tabs>
-
-          <div className="flex-1 w-full">
-            {hashParams.tab === 'video' ? (
-              <VideoTab funcPublish={funcPublish} />
-            ) : (
-              <DynamicTab funcPublish={funcPublish} />
-            )}
-          </div>
-        </div>
+      <main className="mx-auto max-w-3xl w-full p-4">
+        <Tabs
+          aria-label="sync publish"
+          defaultSelectedKey={hashParams.tab || 'dynamic'}
+          isVertical
+          variant="light"
+          size="lg"
+          color="primary"
+          className="h-full">
+          <Tab
+            key="dynamic"
+            title={chrome.i18n.getMessage('gDynamic')}
+            className="w-full">
+            <DynamicTab funcPublish={funcPublish} />
+          </Tab>
+          <Tab
+            key="video"
+            title={chrome.i18n.getMessage('gVideo')}
+            className="w-full">
+            <VideoTab funcPublish={funcPublish} />
+          </Tab>
+        </Tabs>
       </main>
       <Spacer y={8} />
       <footer className="text-center text-sm text-foreground/60">

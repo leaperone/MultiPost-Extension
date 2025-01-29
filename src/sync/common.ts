@@ -75,7 +75,7 @@ export const infoMap: Record<string, PlatformInfo> = {
     name: 'DYNAMIC_BILIBILI',
     homeUrl: 'https://t.bilibili.com',
     faviconUrl: 'https://static.hdslb.com/images/favicon.ico',
-    iconifyIcon: 'simple-icons:bilibili',
+    iconifyIcon: 'ant-design:bilibili-outlined',
     platformName: chrome.i18n.getMessage('platformBilibili'),
     injectUrl: 'https://t.bilibili.com',
     injectFunction: DynamicBilibili,

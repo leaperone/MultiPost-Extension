@@ -1,6 +1,6 @@
 import React, { useState, useRef } from 'react';
-import { Card, Button, Input, Textarea, CardHeader, CardBody, CardFooter } from "@heroui/react";
-import { VideoIcon, XIcon } from 'lucide-react';
+import { Card, Button, Input, Textarea, CardHeader, CardBody, CardFooter } from '@heroui/react';
+import { VideoIcon, XIcon, TrashIcon, SendIcon } from 'lucide-react';
 import { Player } from 'video-react';
 import 'video-react/dist/video-react.css';
 // import ReactPlayer from 'react-player';
@@ -80,78 +80,105 @@ const VideoTab: React.FC<VideoTabProps> = ({ funcPublish }) => {
     fileInputRef.current?.click();
   };
 
+  const handleClearAll = () => {
+    setTitle('');
+    setContent('');
+    setVideoFile(null);
+    setSelectedPlatforms([]);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+  };
+
   return (
-    <>
-      <Card className="shadow-none h-fit bg-default-50">
-        <CardHeader>
+    <div className="flex flex-col gap-4">
+      <Card className="shadow-none bg-default-50">
+        <CardHeader className="flex flex-col gap-4">
           <Input
-            placeholder={chrome.i18n.getMessage('optionsEnterVideoTitle')}
+            isClearable
+            variant="underlined"
+            label={chrome.i18n.getMessage('optionsEnterVideoTitle')}
             value={title}
             onChange={(e) => setTitle(e.target.value)}
+            onClear={() => setTitle('')}
             className="w-full"
           />
         </CardHeader>
 
         <CardBody>
           <Textarea
-            placeholder={chrome.i18n.getMessage('optionsEnterVideoDescription')}
+            isClearable
+            label={chrome.i18n.getMessage('optionsEnterVideoDescription')}
             value={content}
             onChange={(e) => setContent(e.target.value)}
-            fullWidth
+            variant="underlined"
             minRows={5}
+            className="w-full"
             autoFocus
+            onClear={() => setContent('')}
           />
         </CardBody>
 
         <CardFooter>
-          <div className="flex flex-col items-center w-full">
-            {!videoFile ? (
-              <>
-                <input
-                  type="file"
-                  ref={fileInputRef}
-                  accept="video/*"
-                  onChange={handleFileChange}
-                  className="hidden"
-                />
-                <Button
-                  isIconOnly
-                  variant="light"
-                  onPress={handleIconClick}>
-                  <VideoIcon className="w-8 h-8 text-gray-600" />
-                </Button>
-                <p className="mt-2 text-sm text-gray-500">{chrome.i18n.getMessage('optionsUploadVideo')}</p>
-              </>
-            ) : (
-              <div className="w-full">
-                <div className="relative mb-2 w-full aspect-video">
-                  <Player
-                    playsInline
-                    src={videoFile.url}>
-                    <source src={videoFile.url} />
-                  </Player>
-                  <Button
-                    isIconOnly
-                    size="sm"
-                    color="danger"
-                    variant="flat"
-                    className="absolute top-2 right-2 z-50"
-                    onPress={handleRemoveVideo}>
-                    <XIcon size={16} />
-                  </Button>
-                </div>
-                <p className="text-sm text-gray-600">{videoFile.name}</p>
-              </div>
+          <div className="flex justify-between items-center w-full">
+            <div className="flex gap-2">
+              <input
+                type="file"
+                ref={fileInputRef}
+                accept="video/*"
+                onChange={handleFileChange}
+                className="hidden"
+              />
+              <Button
+                isIconOnly
+                variant="light"
+                onPress={handleIconClick}>
+                <VideoIcon className="w-5 h-5" />
+              </Button>
+            </div>
+            {(title || content || videoFile) && (
+              <Button
+                isIconOnly
+                variant="light"
+                color="danger"
+                onPress={handleClearAll}
+                title={chrome.i18n.getMessage('optionsClearAll')}>
+                <TrashIcon className="size-5" />
+              </Button>
             )}
           </div>
         </CardFooter>
       </Card>
 
-      <div className="mt-4">
-        <p className="mb-2 text-sm font-medium">{chrome.i18n.getMessage('optionsSelectPublishPlatforms')}</p>
-        <div className="grid grid-cols-2 gap-2">
-          {getPlatformInfos('VIDEO').map(platform => {
-            return (
+      {videoFile && (
+        <Card className="shadow-none bg-default-50">
+          <CardBody className="p-4">
+            <div className="relative w-full group aspect-video">
+              <Player
+                playsInline
+                src={videoFile.url}>
+                <source src={videoFile.url} />
+              </Player>
+              <Button
+                isIconOnly
+                size="sm"
+                color="danger"
+                variant="light"
+                className="absolute top-2 right-2 z-50 opacity-0 transition-opacity group-hover:opacity-100"
+                onPress={handleRemoveVideo}>
+                <XIcon className="size-4" />
+              </Button>
+            </div>
+            <p className="mt-2 text-sm text-gray-600">{videoFile.name}</p>
+          </CardBody>
+        </Card>
+      )}
+
+      <div className="flex flex-col gap-4 bg-default-50 p-4 rounded-lg">
+        <div className="flex flex-col gap-2">
+          <p className="text-sm font-medium">{chrome.i18n.getMessage('optionsSelectPublishPlatforms')}</p>
+          <div className="grid grid-cols-2 gap-3">
+            {getPlatformInfos('VIDEO').map((platform) => (
               <PlatformCheckbox
                 key={platform.name}
                 platformInfo={platform}
@@ -159,18 +186,21 @@ const VideoTab: React.FC<VideoTabProps> = ({ funcPublish }) => {
                 onChange={(_, isSelected) => handlePlatformChange(platform.name, isSelected)}
                 isDisabled={false}
               />
-            );
-          })}
+            ))}
+          </div>
         </div>
       </div>
+
       <Button
         onPress={handlePublish}
         color="primary"
+        variant="flat"
         disabled={!videoFile || !title || !content || selectedPlatforms.length === 0}
-        className="px-4 py-2 mt-4 w-full font-bold">
+        className="w-full font-medium shadow-none">
+        <SendIcon className="size-4 mr-2" />
         {chrome.i18n.getMessage('optionsSyncVideo')}
       </Button>
-    </>
+    </div>
   );
 };
 

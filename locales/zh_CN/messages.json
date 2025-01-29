@@ -11,6 +11,30 @@
     "message": "MultiPost 是一个帮助你在多个平台同步发布内容的工具。",
     "description": "Multipost 是一个帮助你在多个平台同步发布内容的工具。"
   },
+  "gDynamic": {
+    "message": "动态",
+    "description": "dynamic"
+  },
+  "gVideo": {
+    "message": "视频",
+    "description": "video"
+  },
+  "gArticle": {
+    "message": "文章",
+    "description": "article"
+  },
+  "gTitle": {
+    "message": "标题",
+    "description": "title"
+  },
+  "gContent": {
+    "message": "正文",
+    "description": "content"
+  },
+  "gSend": {
+    "message": "发送",
+    "description": "send"
+  },
   "popupSettingsTooltip": {
     "message": "设置",
     "description": "设置按钮的提示文本"
@@ -467,5 +491,8 @@
   },
   "optionsOrText": {
     "message": "或者到"
+  },
+  "optionsClearAll": {
+    "message": "清空"
   }
 }

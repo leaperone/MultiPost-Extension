@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Card, Button, Image, Input, Textarea, CardHeader, CardBody, CardFooter, Switch } from '@heroui/react';
-import { ImagePlusIcon, VideoIcon, XIcon, TrashIcon, SendIcon } from 'lucide-react';
+import { XIcon, TrashIcon, SendIcon, HandIcon, BotIcon, FileVideo2Icon, FileImageIcon } from 'lucide-react';
 import Viewer from 'react-viewer';
 import { Player } from 'video-react';
 import 'video-react/dist/video-react.css';
@@ -137,6 +137,9 @@ const DynamicTab: React.FC<DynamicTabProps> = ({ funcPublish }) => {
             onClear={() => setTitle('')}
             className="w-full"
           />
+        </CardHeader>
+
+        <CardBody>
           <Textarea
             isClearable
             label={chrome.i18n.getMessage('optionsEnterDynamicContent')}
@@ -149,7 +152,7 @@ const DynamicTab: React.FC<DynamicTabProps> = ({ funcPublish }) => {
             autoFocus
             onClear={() => setContent('')}
           />
-        </CardHeader>
+        </CardBody>
 
         <CardFooter>
           <div className="flex justify-between items-center w-full">
@@ -166,7 +169,7 @@ const DynamicTab: React.FC<DynamicTabProps> = ({ funcPublish }) => {
                 isIconOnly
                 variant="light"
                 onPress={() => handleIconClick('image')}>
-                <ImagePlusIcon className="w-5 h-5" />
+                <FileImageIcon className="size-5" />
               </Button>
               <input
                 type="file"
@@ -180,17 +183,19 @@ const DynamicTab: React.FC<DynamicTabProps> = ({ funcPublish }) => {
                 isIconOnly
                 variant="light"
                 onPress={() => handleIconClick('video')}>
-                <VideoIcon className="w-5 h-5" />
+                <FileVideo2Icon className="size-5" />
               </Button>
             </div>
-            <Button
-              isIconOnly
-              variant="light"
-              color="danger"
-              onPress={handleClearAll}
-              title={chrome.i18n.getMessage('optionsClearAll')}>
-              <TrashIcon className="w-5 h-5" />
-            </Button>
+            {(title || content || images.length > 0 || videos.length > 0) && (
+              <Button
+                isIconOnly
+                variant="light"
+                color="danger"
+                onPress={handleClearAll}
+                title={chrome.i18n.getMessage('optionsClearAll')}>
+                <TrashIcon className="w-5 h-5" />
+              </Button>
+            )}
           </div>
         </CardFooter>
       </Card>
@@ -226,14 +231,13 @@ const DynamicTab: React.FC<DynamicTabProps> = ({ funcPublish }) => {
       )}
 
       <div className="flex flex-col gap-4 bg-default-50 p-4 rounded-lg">
-        <div className="flex items-center justify-between">
-          <span className="text-sm font-medium">{chrome.i18n.getMessage('optionsAutoPublish')}</span>
-          <Switch
-            isSelected={autoPublish}
-            onValueChange={setAutoPublish}
-            size="sm"
-          />
-        </div>
+        <Switch
+          isSelected={autoPublish}
+          onValueChange={setAutoPublish}
+          startContent={<BotIcon className="size-4" />}
+          endContent={<HandIcon className="size-4" />}>
+          {chrome.i18n.getMessage('optionsAutoPublish')}
+        </Switch>
 
         <div className="flex flex-col gap-2">
           <p className="text-sm font-medium">{chrome.i18n.getMessage('optionsSelectPublishPlatforms')}</p>

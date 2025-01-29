@@ -11,6 +11,30 @@
     "message": "MultiPost is a tool to help you sync and publish content across multiple platforms.",
     "description": "MultiPost is a tool to help you sync and publish content across multiple platforms."
   },
+  "gDynamic": {
+    "message": "Dynamic",
+    "description": "dynamic"
+  },
+  "gVideo": {
+    "message": "Video",
+    "description": "video"
+  },
+  "gArticle": {
+    "message": "Article",
+    "description": "article"
+  },
+  "gTitle": {
+    "message": "Title",
+    "description": "title"
+  },
+  "gContent": {
+    "message": "Content",
+    "description": "content"
+  },
+  "gSend": {
+    "message": "Send",
+    "description": "send"
+  },
   "popupSettingsTooltip": {
     "message": "Settings",
     "description": "Tooltip text for the settings button"
@@ -464,5 +488,8 @@
   },
   "optionsOrText": {
     "message": "or visit"
+  },
+  "optionsClearAll": {
+    "message": "Clear All"
   }
 }
