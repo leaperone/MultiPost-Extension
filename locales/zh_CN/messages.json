@@ -56,11 +56,11 @@
     "description": "动态选项卡标题"
   },
   "optionsEnterDynamicTitle": {
-    "message": "输入动态标题",
+    "message": "标题",
     "description": "动态标题输入框占位符"
   },
   "optionsEnterDynamicContent": {
-    "message": "输入动态内容",
+    "message": "正文",
     "description": "动态内容输入框占位符"
   },
   "optionsSelectPublishPlatforms": {

@@ -56,11 +56,11 @@
     "description": "Dynamic tab title"
   },
   "optionsEnterDynamicTitle": {
-    "message": "Enter Dynamic Title",
+    "message": "Title",
     "description": "Dynamic title input placeholder"
   },
   "optionsEnterDynamicContent": {
-    "message": "Enter Dynamic Content",
+    "message": "Content",
     "description": "Dynamic content input placeholder"
   },
   "optionsSelectPublishPlatforms": {

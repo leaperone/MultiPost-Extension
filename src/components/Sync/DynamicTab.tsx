@@ -128,22 +128,26 @@ const DynamicTab: React.FC<DynamicTabProps> = ({ funcPublish }) => {
       <Card className="shadow-none bg-default-50">
         <CardHeader className="flex flex-col gap-4">
           <Input
+            isClearable
+            variant="underlined"
             label={chrome.i18n.getMessage('optionsEnterDynamicTitle')}
-            placeholder={chrome.i18n.getMessage('optionsEnterDynamicTitle')}
+            // placeholder={chrome.i18n.getMessage('optionsEnterDynamicTitle')}
             value={title}
             onChange={(e) => setTitle(e.target.value)}
-            variant="flat"
+            onClear={() => setTitle('')}
             className="w-full"
           />
           <Textarea
+            isClearable
             label={chrome.i18n.getMessage('optionsEnterDynamicContent')}
-            placeholder={chrome.i18n.getMessage('optionsEnterDynamicContent')}
+            // placeholder={chrome.i18n.getMessage('optionsEnterDynamicContent')}
             value={content}
             onChange={(e) => setContent(e.target.value)}
-            variant="flat"
+            variant="underlined"
             minRows={5}
             className="w-full"
             autoFocus
+            onClear={() => setContent('')}
           />
         </CardHeader>
 
