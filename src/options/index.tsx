@@ -1,11 +1,12 @@
 import '~style.css';
 import React, { useState } from 'react';
-import { NextUIProvider } from '@nextui-org/react';
-import { Tabs, Tab, Spacer } from '@nextui-org/react';
+import { HeroUIProvider } from '@heroui/react';
+import { Tabs, Tab, Spacer } from '@heroui/react';
 import cssText from 'data-text:~style.css';
 import Header from '~/components/Header';
 import DynamicTab from '~/components/Sync/DynamicTab';
 import VideoTab from '~/components/Sync/VideoTab';
+import AboutTab from '~/components/Sync/AboutTab';
 import { type SyncData, createTabsForPlatforms, injectScriptsToTabs } from '~sync/common';
 
 export function getShadowContainer() {
@@ -24,6 +25,7 @@ export const getStyle = () => {
 const Options = () => {
   const [isReady, setIsReady] = useState(false);
   const [hashParams, setHashParams] = useState<Record<string, string>>({});
+
   React.useEffect(() => {
     document.title = chrome.i18n.getMessage('extensionDisplayName');
 
@@ -114,64 +116,61 @@ const Options = () => {
     return null;
   }
   return (
-    <NextUIProvider>
-      <div className="min-w-xl">
-        <Header />
-        <div className="mx-auto max-w-2xl">
-          <Spacer y={8} />
-          <h2 className="text-2xl font-bold text-center">{chrome.i18n.getMessage('optionsSyncPublishTitle')}</h2>
-          <h3 className="mb-4 font-light text-center text-md text-foreground/50">
-            {chrome.i18n.getMessage('optionsSyncPublishDescription')}
-          </h3>
-          <Tabs
-            defaultSelectedKey={hashParams.tab || 'dynamic'}
-            aria-label="sync publish"
-            fullWidth>
-            <Tab
-              key="dynamic"
-              title={chrome.i18n.getMessage('optionsDynamicTab')}>
-              <DynamicTab funcPublish={funcPublish} />
-            </Tab>
-            {/* <Tab
-              key="post"
-              title={chrome.i18n.getMessage('optionsPostTab')}>
-              <PostTab
-                funcPublish={funcPublish}
-                funcScraper={funcScraper}
-              /> */}
-            {/* </Tab> */}
-            <Tab
-              key="video"
-              title={chrome.i18n.getMessage('optionsVideoTab')}>
-              <VideoTab funcPublish={funcPublish} />
-            </Tab>
-          </Tabs>
-
-          <div className="mt-8 mb-4 text-center text-sm text-foreground/60">
-            <p>{chrome.i18n.getMessage('optionsHelpPrefix')}</p>
-            <p>{chrome.i18n.getMessage('optionsFeedbackPrefix')}</p>
-            <p>
-               {chrome.i18n.getMessage('optionsFeedbackEmail')}{' '}
-              <a
-                href="mailto:support@leaper.one"
-                className="text-primary hover:underline">
-                support@leaper.one
-              </a>
-            </p>
-            <p>
-              {chrome.i18n.getMessage('optionsOrText')}{' '}
-              <a
-                href="https://github.com/leaper-one/Multipost-Extension-Releases/issues"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-primary hover:underline">
-                GitHub Issues
-              </a>
-            </p>
-          </div>
-        </div>
-      </div>
-    </NextUIProvider>
+    <HeroUIProvider>
+      <Header />
+      <main className="mx-auto max-w-3xl w-full p-4">
+        <Tabs
+          aria-label="sync publish"
+          defaultSelectedKey={hashParams.tab || 'dynamic'}
+          isVertical
+          variant="light"
+          size="lg"
+          color="primary"
+          className="h-full">
+          <Tab
+            key="dynamic"
+            title={chrome.i18n.getMessage('gDynamic')}
+            className="w-full">
+            <DynamicTab funcPublish={funcPublish} />
+          </Tab>
+          <Tab
+            key="video"
+            title={chrome.i18n.getMessage('gVideo')}
+            className="w-full">
+            <VideoTab funcPublish={funcPublish} />
+          </Tab>
+          <Tab
+            key="aboutTab"
+            title={chrome.i18n.getMessage('gAbout')}
+            className="w-full">
+            <AboutTab />
+          </Tab>
+        </Tabs>
+      </main>
+      <Spacer y={8} />
+      <footer className="text-center text-sm text-foreground/60">
+        <p>
+          <span>{chrome.i18n.getMessage('optionsHelpPrefix')}&nbsp;</span>
+          <span>{chrome.i18n.getMessage('optionsFeedbackPrefix')}</span>
+        </p>
+        <p>
+          <span>{chrome.i18n.getMessage('optionsFeedbackEmail')}&nbsp;</span>
+          <a
+            href="mailto:support@leaper.one"
+            className="text-primary hover:underline">
+            support@leaper.one
+          </a>
+          <span>&nbsp;{chrome.i18n.getMessage('optionsOrText')}&nbsp;</span>
+          <a
+            href="https://github.com/leaper-one/Multipost-Extension-Releases/issues"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-primary hover:underline">
+            GitHub Issues
+          </a>
+        </p>
+      </footer>
+    </HeroUIProvider>
   );
 };
 

@@ -51,6 +51,7 @@ export interface PlatformInfo {
   name: string;
   homeUrl: string;
   faviconUrl?: string;
+  iconifyIcon?: string;
   platformName: string;
   username?: string;
   userAvatarUrl?: string;
@@ -58,13 +59,13 @@ export interface PlatformInfo {
   injectFunction: (data: SyncData) => Promise<void>;
 }
 
-
 export const infoMap: Record<string, PlatformInfo> = {
   DYNAMIC_X: {
     type: 'DYNAMIC',
     name: 'DYNAMIC_X',
     homeUrl: 'https://x.com/home',
     faviconUrl: 'https://x.com/favicon.ico',
+    iconifyIcon: 'simple-icons:x',
     platformName: chrome.i18n.getMessage('platformX'),
     injectUrl: 'https://x.com/home',
     injectFunction: DynamicX,
@@ -74,6 +75,7 @@ export const infoMap: Record<string, PlatformInfo> = {
     name: 'DYNAMIC_BILIBILI',
     homeUrl: 'https://t.bilibili.com',
     faviconUrl: 'https://static.hdslb.com/images/favicon.ico',
+    iconifyIcon: 'ant-design:bilibili-outlined',
     platformName: chrome.i18n.getMessage('platformBilibili'),
     injectUrl: 'https://t.bilibili.com',
     injectFunction: DynamicBilibili,
@@ -82,7 +84,8 @@ export const infoMap: Record<string, PlatformInfo> = {
     type: 'DYNAMIC',
     name: 'DYNAMIC_REDNOTE',
     homeUrl: 'https://creator.xiaohongshu.com/',
-    // faviconUrl: 'https://creator.xiaohongshu.com/favicon.ico',
+    faviconUrl: 'https://fe-video-qc.xhscdn.com/fe-platform/ed8fe781ce9e16c1bfac2cd962f0721edabe2e49.ico',
+    iconifyIcon: 'simple-icons:xiaohongshu',
     platformName: chrome.i18n.getMessage('platformRednote'),
     injectUrl: 'https://creator.xiaohongshu.com/publish/publish',
     injectFunction: DynamicRednote,
@@ -128,6 +131,7 @@ export const infoMap: Record<string, PlatformInfo> = {
     name: 'DYNAMIC_INSTAGRAM',
     homeUrl: 'https://www.instagram.com/',
     faviconUrl: 'https://static.cdninstagram.com/rsrc.php/v3/yG/r/De-Dwpd5CHc.png',
+    iconifyIcon: 'simple-icons:instagram',
     platformName: chrome.i18n.getMessage('platformInstagram'),
     injectUrl: 'https://www.instagram.com/',
     injectFunction: DynamicInstagram,
@@ -137,6 +141,7 @@ export const infoMap: Record<string, PlatformInfo> = {
     name: 'DYNAMIC_FACEBOOK',
     homeUrl: 'https://www.facebook.com/',
     faviconUrl: 'https://static.xx.fbcdn.net/rsrc.php/yT/r/aGT3gskzWBf.ico',
+    iconifyIcon: 'simple-icons:facebook',
     platformName: chrome.i18n.getMessage('platformFacebook'),
     injectUrl: 'https://www.facebook.com/',
     injectFunction: DynamicFacebook,
@@ -146,6 +151,7 @@ export const infoMap: Record<string, PlatformInfo> = {
     name: 'DYNAMIC_LINKEDIN',
     homeUrl: 'https://www.linkedin.com/',
     faviconUrl: 'https://static.licdn.com/aero-v1/sc/h/eahiplrwoq61f4uan012ia17i',
+    iconifyIcon: 'simple-icons:linkedin',
     platformName: chrome.i18n.getMessage('platformLinkedin'),
     injectUrl: 'https://www.linkedin.com/feed',
     injectFunction: DynamicLinkedin,
@@ -155,6 +161,7 @@ export const infoMap: Record<string, PlatformInfo> = {
     name: 'VIDEO_BILIBILI',
     homeUrl: 'https://member.bilibili.com/',
     faviconUrl: 'https://static.hdslb.com/images/favicon.ico',
+    iconifyIcon: 'simple-icons:bilibili',
     platformName: chrome.i18n.getMessage('platformBilibili'),
     injectUrl: 'https://member.bilibili.com/platform/upload/video/frame',
     injectFunction: VideoBilibili,

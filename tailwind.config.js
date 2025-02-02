@@ -1,8 +1,8 @@
 /** @type {import('tailwindcss').Config} */
-import { nextui } from '@nextui-org/react';
+import { heroui } from "@heroui/react";
 
 module.exports = {
-  content: ['./src/**/*.{tsx,html}', './node_modules/@nextui-org/theme/dist/**/*.{js,ts,jsx,tsx}'],
+  content: ['./src/**/*.{tsx,html}', "./node_modules/@heroui/theme/dist/**/*.{js,ts,jsx,tsx}"],
   darkMode: 'class',
   // prefix: "plasmo-",
   theme: {
@@ -15,5 +15,5 @@ module.exports = {
     },
     extend: {},
   },
-  plugins: [nextui({ addCommonColors: true, defaultTheme: 'light' })],
+  plugins: [heroui({ addCommonColors: true, defaultTheme: 'light' })],
 };

@@ -11,6 +11,30 @@
     "message": "MultiPost is a tool to help you sync and publish content across multiple platforms.",
     "description": "MultiPost is a tool to help you sync and publish content across multiple platforms."
   },
+  "gDynamic": {
+    "message": "Dynamic",
+    "description": "dynamic"
+  },
+  "gVideo": {
+    "message": "Video",
+    "description": "video"
+  },
+  "gArticle": {
+    "message": "Article",
+    "description": "article"
+  },
+  "gTitle": {
+    "message": "Title",
+    "description": "title"
+  },
+  "gContent": {
+    "message": "Content",
+    "description": "content"
+  },
+  "gSend": {
+    "message": "Send",
+    "description": "send"
+  },
   "popupSettingsTooltip": {
     "message": "Settings",
     "description": "Tooltip text for the settings button"
@@ -36,7 +60,7 @@
     "description": "Options page title"
   },
   "optionsViewDocs": {
-    "message": "View Docs",
+    "message": "Docs",
     "description": "View docs button text"
   },
   "optionsAccountManagement": {
@@ -56,11 +80,11 @@
     "description": "Dynamic tab title"
   },
   "optionsEnterDynamicTitle": {
-    "message": "Enter Dynamic Title",
+    "message": "Title",
     "description": "Dynamic title input placeholder"
   },
   "optionsEnterDynamicContent": {
-    "message": "Enter Dynamic Content",
+    "message": "Content",
     "description": "Dynamic content input placeholder"
   },
   "optionsSelectPublishPlatforms": {
@@ -215,10 +239,6 @@
     "message": "Live Session Sync",
     "description": "Live session sync option"
   },
-  "optionsSyncPublishDescription": {
-    "message": "Input content once, public to all platform.",
-    "description": "Sync publish page description"
-  },
   "optionsAutoPublish": {
     "message": "Auto Publish",
     "description": "Auto publish switch text"
@@ -239,9 +259,6 @@
     "message": "Dashboard"
   },
   "dashboardSyncPublic": {
-    "message": "Sync Public"
-  },
-  "optionsSyncPublishTitle": {
     "message": "Sync Public"
   },
   "optionsEnterUrl": {
@@ -421,7 +438,7 @@
     "description": "Platform name for Bilibili"
   },
   "platformRednote": {
-    "message": "Rednote",
+    "message": "rednote",
     "description": "Platform name for Rednote"
   },
   "platformWeibo": {
@@ -471,5 +488,17 @@
   },
   "optionsOrText": {
     "message": "or visit"
+  },
+  "optionsClearAll": {
+    "message": "Clear All"
+  },
+  "aboutDescription": {
+    "message": "MultiPost Extension helps you publish content to multiple platforms simultaneously, improving your content distribution efficiency."
+  },
+  "gAbout": {
+    "message": "About"
+  },
+  "syncPublicPageTitle": {
+    "message": ""
   }
 }

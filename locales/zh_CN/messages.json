@@ -11,6 +11,30 @@
     "message": "MultiPost 是一个帮助你在多个平台同步发布内容的工具。",
     "description": "Multipost 是一个帮助你在多个平台同步发布内容的工具。"
   },
+  "gDynamic": {
+    "message": "动态",
+    "description": "dynamic"
+  },
+  "gVideo": {
+    "message": "视频",
+    "description": "video"
+  },
+  "gArticle": {
+    "message": "文章",
+    "description": "article"
+  },
+  "gTitle": {
+    "message": "标题",
+    "description": "title"
+  },
+  "gContent": {
+    "message": "正文",
+    "description": "content"
+  },
+  "gSend": {
+    "message": "发送",
+    "description": "send"
+  },
   "popupSettingsTooltip": {
     "message": "设置",
     "description": "设置按钮的提示文本"
@@ -36,7 +60,7 @@
     "description": "选项页面标题"
   },
   "optionsViewDocs": {
-    "message": "查看文档",
+    "message": "文档",
     "description": "查看文档按钮文本"
   },
   "optionsAccountManagement": {
@@ -56,11 +80,11 @@
     "description": "动态选项卡标题"
   },
   "optionsEnterDynamicTitle": {
-    "message": "输入动态标题",
+    "message": "标题",
     "description": "动态标题输入框占位符"
   },
   "optionsEnterDynamicContent": {
-    "message": "输入动态内容",
+    "message": "正文",
     "description": "动态内容输入框占位符"
   },
   "optionsSelectPublishPlatforms": {
@@ -219,10 +243,6 @@
     "message": "自动发布",
     "description": "自动发布开关文本"
   },
-  "optionsSyncPublishDescription": {
-    "message": "一次输入，在多个平台同步发布",
-    "description": "同步发布页面描述"
-  },
   "optionsEnterVideoTitle": {
     "message": "输入视频标题",
     "description": "视频标题输入框占位符"
@@ -242,9 +262,6 @@
     "message": "同步发布"
   },
   "syncPublicPageTitle": {
-    "message": "同步发布"
-  },
-  "optionsSyncPublishTitle": {
     "message": "同步发布"
   },
   "optionsEnterUrl": {
@@ -474,5 +491,14 @@
   },
   "optionsOrText": {
     "message": "或者到"
+  },
+  "optionsClearAll": {
+    "message": "清空"
+  },
+  "aboutDescription": {
+    "message": "MultiPost Extension 帮助您同时将内容发布到多个平台，提高内容分发效率。"
+  },
+  "gAbout": {
+    "message": "关于"
   }
 }
