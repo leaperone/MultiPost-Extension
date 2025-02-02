@@ -1,9 +1,16 @@
 # MultiPost
+
 This is a browser extension that helps you post content to multiple social media platform with one click.
 
 [English](README.md) | [中文](docs/README-zh.md)
 
+## Browser Extension
+
+- [Chrome Web Store](https://chromewebstore.google.com/detail/multipost/dhohkaclnjgcikfoaacfgijgjgceofih)
+- [Microsoft Edge Add-ons](https://microsoftedge.microsoft.com/addons/detail/multipost/ckoiphiceimehjkolnfffgbmihoppgjg)
+
 ## Features
+
 - Post text, images, videos to multiple social media platforms with one click.
 - Manage your social media contents in one place.
 - Schedule your posts to be published at a later time.
@@ -17,6 +24,7 @@ pnpm dev
 # or
 npm run dev
 ```
+
 ## Making production build
 
 Run the following:
@@ -26,7 +34,3 @@ pnpm build
 # or
 npm run build
 ```
-
-## WIP
-- [ ] Add more social media platforms
-- [ ] Third-party function call
