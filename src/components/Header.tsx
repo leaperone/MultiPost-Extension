@@ -13,14 +13,14 @@ const Header: React.FC = () => {
             className="mr-2 w-8 h-8 rounded-full"
           />
           <a
-            href="https://multipost.2some.one"
+            href="https://multipost.app"
             target="_blank"
             className="hover:text-blue-600">
             <h1 className="text-lg font-semibold">{chrome.i18n.getMessage('optionsTitle')}</h1>
           </a>
         </div>
         <a
-          href="https://multipost.2some.one"
+          href="https://multipost.app"
           target="_blank"
           className="flex items-center px-3 py-1 text-blue-600 bg-blue-100 rounded-full hover:bg-blue-200">
           <BookOpenText

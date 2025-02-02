@@ -6,6 +6,7 @@ import cssText from 'data-text:~style.css';
 import Header from '~/components/Header';
 import DynamicTab from '~/components/Sync/DynamicTab';
 import VideoTab from '~/components/Sync/VideoTab';
+import AboutTab from '~/components/Sync/AboutTab';
 import { type SyncData, createTabsForPlatforms, injectScriptsToTabs } from '~sync/common';
 
 export function getShadowContainer() {
@@ -138,6 +139,12 @@ const Options = () => {
             className="w-full">
             <VideoTab funcPublish={funcPublish} />
           </Tab>
+          <Tab
+            key="aboutTab"
+            title={chrome.i18n.getMessage('gAbout')}
+            className="w-full">
+            <AboutTab />
+          </Tab>
         </Tabs>
       </main>
       <Spacer y={8} />
@@ -147,7 +154,7 @@ const Options = () => {
           <span>{chrome.i18n.getMessage('optionsFeedbackPrefix')}</span>
         </p>
         <p>
-          <span>{chrome.i18n.getMessage('optionsFeedbackEmail')}</span>
+          <span>{chrome.i18n.getMessage('optionsFeedbackEmail')}&nbsp;</span>
           <a
             href="mailto:support@leaper.one"
             className="text-primary hover:underline">

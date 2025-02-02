@@ -494,5 +494,11 @@
   },
   "optionsClearAll": {
     "message": "清空"
+  },
+  "aboutDescription": {
+    "message": "MultiPost Extension 帮助您同时将内容发布到多个平台，提高内容分发效率。"
+  },
+  "gAbout": {
+    "message": "关于"
   }
 }

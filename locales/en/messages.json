@@ -491,5 +491,14 @@
   },
   "optionsClearAll": {
     "message": "Clear All"
+  },
+  "aboutDescription": {
+    "message": "MultiPost Extension helps you publish content to multiple platforms simultaneously, improving your content distribution efficiency."
+  },
+  "gAbout": {
+    "message": "About"
+  },
+  "syncPublicPageTitle": {
+    "message": ""
   }
 }
