@@ -1,0 +1,34 @@
+{
+  "title": "发布内容",
+  "description": "选择内容类型并开始跨平台发布",
+  "tabs": {
+    "dynamic": "动态",
+    "video": "视频"
+  },
+  "contact": {
+    "message": "如果您的平台未列出，请通过电子邮件联系我们",
+    "or": "或使用我们的",
+    "github": "GitHub Issues",
+    "page": "页面"
+  },
+  "dynamic": {
+    "title": "输入标题",
+    "content": "输入内容",
+    "autoPublish": "自动发布",
+    "selectPlatforms": "选择发布平台",
+    "publish": "发布",
+    "clearAll": "清除全部"
+  },
+  "video": {
+    "title": "请输入标题",
+    "description": "请输入描述",
+    "upload": "上传视频",
+    "selectPlatforms": "选择发布平台",
+    "publish": "同步视频"
+  },
+  "validation": {
+    "contentRequired": "内容不能为空",
+    "platformRequired": "请至少选择一个平台",
+    "titleAndVideoRequired": "请输入标题并上传视频"
+  }
+}

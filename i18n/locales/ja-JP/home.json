@@ -1,18 +1,6 @@
 {
-  "hero": {
-    "title": "すべてのソーシャルメディアプラットフォームで利用可能",
-    "subtitle": "世界中のコンテンツクリエイターに信頼されています",
-    "beta": "ベータ期間中は全て無料でご利用いただけます。",
-    "description": "{{platform}}で、あなたのクリエイティブ活動を支援する🎯オールインワン🚀ツール📝",
-    "platform": "あらゆるプラットフォーム",
-    "cta": "プロフィールを設定する"
-  },
-  "platforms": {
-    "followers": "{{followers}}",
-    "connect": "{{platform}}で{{followers}}のフォロワーと繋がり、急速に成長中。"
-  },
   "footer": {
-    "slogan": "人々、ライブ配信、生活",
+    "slogan": "ソーシャルメディアの作業を効率化",
     "copyright": "© 2024 LEAPERone Inc. All rights reserved.",
     "sections": {
       "services": "サービス",
@@ -22,7 +10,7 @@
     },
     "navigation": {
       "services": {
-        "bubblebox": "BubbleBox",
+        "voite": "Voite",
         "multipost": "MultiPost"
       },
       "support": {
@@ -37,6 +25,78 @@
         "privacy": "プライバシーポリシー",
         "terms": "利用規約"
       }
+    }
+  },
+  "navigation": {
+    "publish": "投稿",
+    "extension": "拡張機能"
+  },
+  "features": {
+    "title": "ソーシャルメディアワークフローを効率化",
+    "subtitle": "強力な機能で時間を節約し、すべてのソーシャルメディアプラットフォームで一貫性を維持",
+    "oneClick": {
+      "title": "ワンクリック投稿",
+      "description": "1回のクリックで複数のプラットフォームに同時投稿"
+    },
+    "noLogin": {
+      "title": "追加ログイン不要",
+      "description": "既存のブラウザセッションを使用 - 追加認証は不要"
+    },
+    "optimization": {
+      "title": "プラットフォーム最適化",
+      "description": "各プラットフォームの要件に合わせて自動的にコンテンツをフォーマット"
+    }
+  },
+  "demo": {
+    "title": "パワフルでシンプル",
+    "features": [
+      "一度の作成で、どこにでも投稿",
+      "各プラットフォームでの投稿プレビュー",
+      "最適なタイミングで投稿をスケジュール",
+      "プラットフォーム横断的な投稿パフォーマンスの追跡"
+    ],
+    "cta": "拡張機能をインストール"
+  },
+  "openSource": {
+    "badge": "オープンソース",
+    "title": "コミュニティによる、コミュニティのための開発",
+    "description": "MultiPostは永久に無料でオープンソース。ソーシャルメディア管理の未来を一緒に作りましょう。",
+    "cta": "GitHubで見る"
+  },
+  "faq": {
+    "title": "よくある質問",
+    "items": [
+      {
+        "question": "MultiPostはどのように動作しますか？",
+        "answer": "MultiPostはブラウザ拡張機能で、既存のソーシャルメディアログインを使用してコンテンツを投稿します。追加の認証やAPIキーは不要です。"
+      },
+      {
+        "question": "対応プラットフォームは？",
+        "answer": "現在、Twitter、Facebook、LinkedIn、Instagramなどに対応しています。コミュニティの貢献により、対応プラットフォームは増え続けています。"
+      },
+      {
+        "question": "本当に無料ですか？",
+        "answer": "はい！MultiPostは完全に無料でオープンソースです。すべての機能を制限なく使用できます。"
+      },
+      {
+        "question": "貢献するにはどうすればよいですか？",
+        "answer": "リポジトリにスターを付けたり、問題を報告したり、プルリクエストを提出したり、ドキュメントを改善したりすることで貢献できます。"
+      }
+    ]
+  },
+  "finalCta": {
+    "title": "今日からスマートな投稿を始めましょう",
+    "description": "成長を続けるコンテンツクリエイターと開発者のコミュニティに参加",
+    "install": "拡張機能をインストール",
+    "github": "GitHubでスターを付ける"
+  },
+  "hero": {
+    "beta": "ベータ期間中は全て無料でご利用いただけます。",
+    "description": "すべてのプラットフォームで、あなたのコンテンツ投稿を支援する🎯オールインワン🚀ツール📝",
+    "platform": "すべてのプラットフォーム",
+    "buttons": {
+      "post": "投稿する",
+      "install": "拡張機能をインストール"
     }
   }
 }

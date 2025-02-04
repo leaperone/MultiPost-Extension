@@ -1,18 +1,6 @@
 {
-  "hero": {
-    "title": "支持所有主流社交媒体平台",
-    "subtitle": "全球内容创作者的信赖之选",
-    "beta": "Beta 期间完全免费使用",
-    "description": "一站式🎯工具，在{{platform}}上助力🚀你的创作📝之路",
-    "platform": "任何平台",
-    "cta": "设置你的个人资料"
-  },
-  "platforms": {
-    "followers": "{{followers}}",
-    "connect": "在 {{platform}} 上连接 {{followers}} 粉丝，持续增长中。"
-  },
   "footer": {
-    "slogan": "连接人群，直播生活",
+    "slogan": "简化你的社交媒体工作流程",
     "copyright": "© 2024 LEAPERone Inc. 保留所有权利",
     "sections": {
       "services": "服务",
@@ -22,7 +10,7 @@
     },
     "navigation": {
       "services": {
-        "bubblebox": "BubbleBox",
+        "voite": "Voite",
         "multipost": "MultiPost"
       },
       "support": {
@@ -37,6 +25,78 @@
         "privacy": "隐私政策",
         "terms": "服务条款"
       }
+    }
+  },
+  "navigation": {
+    "publish": "发布",
+    "extension": "扩展"
+  },
+  "features": {
+    "title": "简化你的社交媒体工作流程",
+    "subtitle": "使用我们强大的功能，节省时间并在所有社交媒体平台上保持一致性",
+    "oneClick": {
+      "title": "一键发布",
+      "description": "一键同时发布到多个平台"
+    },
+    "noLogin": {
+      "title": "无需额外登录",
+      "description": "使用你现有的浏览器会话 - 无需额外认证"
+    },
+    "optimization": {
+      "title": "平台优化",
+      "description": "自动根据每个平台的要求格式化内容"
+    }
+  },
+  "demo": {
+    "title": "强大而简单",
+    "features": [
+      "一次编写，随处发布",
+      "预览每个平台上的帖子效果",
+      "安排最佳发布时间",
+      "跨平台追踪帖子表现"
+    ],
+    "cta": "安装扩展"
+  },
+  "openSource": {
+    "badge": "开源",
+    "title": "由社区构建，为社区服务",
+    "description": "MultiPost 永久开源免费。加入我们，共同构建社交媒体管理的未来。",
+    "cta": "在 GitHub 上查看"
+  },
+  "faq": {
+    "title": "常见问题",
+    "items": [
+      {
+        "question": "MultiPost 是如何工作的？",
+        "answer": "MultiPost 是一个浏览器扩展，使用你现有的社交媒体登录来发布内容。无需额外认证或 API 密钥。"
+      },
+      {
+        "question": "支持哪些平台？",
+        "answer": "我们目前支持 Twitter、Facebook、LinkedIn、Instagram 等平台。随着社区贡献，支持的平台列表还在不断增长。"
+      },
+      {
+        "question": "真的免费吗？",
+        "answer": "是的！MultiPost 完全免费且开源。你可以无限制地使用所有功能。"
+      },
+      {
+        "question": "如何贡献？",
+        "answer": "你可以通过在仓库点星标、报告问题、提交拉取请求或改进文档来贡献。"
+      }
+    ]
+  },
+  "finalCta": {
+    "title": "今天就开始更智能的发布",
+    "description": "加入我们不断增长的内容创作者和开发者社区",
+    "install": "安装扩展",
+    "github": "在 GitHub 上点星"
+  },
+  "hero": {
+    "beta": "Beta 期间完全免费使用",
+    "description": "一站式🎯工具，在所有平台上助力🚀你的内容发布📝",
+    "platform": "所有平台",
+    "buttons": {
+      "post": "开始发布",
+      "install": "安装扩展"
     }
   }
 }

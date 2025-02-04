@@ -13,8 +13,11 @@ import {
 } from '@/components/ui/navigation-menu';
 import Link from 'next/link';
 import { LayoutDashboard, PuzzleIcon } from 'lucide-react';
+import { useTranslation } from '@/i18n/client';
 
 export function HomePageNavigationMenu() {
+  const { t } = useTranslation('home');
+
   return (
     <NavigationMenu>
       <NavigationMenuList>
@@ -25,7 +28,7 @@ export function HomePageNavigationMenu() {
             passHref>
             <NavigationMenuLink className={cn(navigationMenuTriggerStyle(), 'group')}>
               <LayoutDashboard className="mr-2 size-4 transition-transform" />
-              Publish
+              {t('navigation.publish')}
             </NavigationMenuLink>
           </Link>
         </NavigationMenuItem>
@@ -36,7 +39,7 @@ export function HomePageNavigationMenu() {
             passHref>
             <NavigationMenuLink className={cn(navigationMenuTriggerStyle(), 'group')}>
               <PuzzleIcon className="mr-2 size-4 transition-transform" />
-              Extension
+              {t('navigation.extension')}
             </NavigationMenuLink>
           </Link>
         </NavigationMenuItem>

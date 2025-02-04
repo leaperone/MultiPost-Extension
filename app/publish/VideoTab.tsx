@@ -7,12 +7,14 @@ import type { FileData, SyncData } from '@/types/sync';
 import PlatformCheckbox from './PlatformCheckbox';
 import { funcPublish, getPlatformInfos } from './common';
 import type { PlatformInfo } from '@/types/platform';
+import { useTranslation } from '@/i18n/client';
 
 const ReactPlayer = dynamic(() => import('react-player'), {
   ssr: false,
 });
 
 const VideoTab: React.FC = () => {
+  const { t } = useTranslation('publish');
   const [title, setTitle] = useState<string>('');
   const [content, setContent] = useState<string>('');
   const [videoFile, setVideoFile] = useState<FileData | null>(null);
@@ -49,13 +51,13 @@ const VideoTab: React.FC = () => {
 
   const handlePublish = async () => {
     if (!title || !videoFile) {
-      console.log('Please enter a title and upload a video');
-      alert('Please enter a title and upload a video');
+      console.log(t('validation.titleAndVideoRequired'));
+      alert(t('validation.titleAndVideoRequired'));
       return;
     }
     if (selectedPlatforms.length === 0) {
-      console.log('Please select at least one platform');
-      alert('Please select at least one platform');
+      console.log(t('validation.platformRequired'));
+      alert(t('validation.platformRequired'));
       return;
     }
 
@@ -82,7 +84,7 @@ const VideoTab: React.FC = () => {
       <Card className="h-fit bg-default-50 shadow-none">
         <CardHeader>
           <Input
-            placeholder="Please enter a title"
+            placeholder={t('video.title')}
             value={title}
             onChange={(e) => setTitle(e.target.value)}
             className="w-full"
@@ -91,7 +93,7 @@ const VideoTab: React.FC = () => {
 
         <CardBody>
           <Textarea
-            placeholder="Please enter a description"
+            placeholder={t('video.description')}
             value={content}
             onChange={(e) => setContent(e.target.value)}
             fullWidth
@@ -117,7 +119,7 @@ const VideoTab: React.FC = () => {
                   onPress={handleIconClick}>
                   <VideoIcon className="size-8 text-gray-600" />
                 </Button>
-                <p className="mt-2 text-sm text-gray-500">Upload Video</p>
+                <p className="mt-2 text-sm text-gray-500">{t('video.upload')}</p>
               </>
             ) : (
               <div className="w-full">
@@ -147,7 +149,7 @@ const VideoTab: React.FC = () => {
       </Card>
 
       <div className="mt-4">
-        <p className="mb-2 text-sm font-medium">Select Publishing Platforms</p>
+        <p className="mb-2 text-sm font-medium">{t('video.selectPlatforms')}</p>
         <div className="grid grid-cols-2 gap-2">
           {platforms.map((platform: PlatformInfo) => {
             return (
@@ -167,7 +169,7 @@ const VideoTab: React.FC = () => {
         color="primary"
         disabled={!videoFile || !title || !content || selectedPlatforms.length === 0}
         className="mt-4 w-full px-4 py-2 font-bold">
-        Sync Video
+        {t('video.publish')}
       </Button>
     </>
   );

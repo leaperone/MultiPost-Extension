@@ -7,7 +7,7 @@ import { Divider, Link } from "@heroui/react";
 import { Icon } from '@iconify/react';
 import { ThemeSwitcher } from '@/components/ThemeSwitcher';
 import { useTranslation } from '@/i18n/client';
-import LanguageSwitcher from '@/components/LanguageSwitcher';
+// import LanguageSwitcher from '@/components/LanguageSwitcher';
 
 type SocialIconProps = Omit<IconProps, 'icon'>;
 
@@ -16,18 +16,9 @@ export default function FooterWithColumns() {
 
   const footerNavigation = {
     services: [
-      { name: t('footer.navigation.services.bubblebox'), href: '/dashboard/bubblebox' },
+      { name: t('footer.navigation.services.voite'), href: 'https://voite.2some.one' },
       { name: t('footer.navigation.services.multipost'), href: 'https://multipost.app' },
     ],
-    supportOptions: [
-      { name: t('footer.navigation.support.pricing'), href: '/pricing' },
-      {
-        name: t('footer.navigation.support.userManual'),
-        href: 'https://mc1cz6k4he.feishu.cn/wiki/EcU8wdd00iXieQkIQbTctNcMnFc',
-      },
-      { name: t('footer.navigation.support.devDocs'), href: 'https://doc.leaper.one' },
-    ],
-    aboutUs: [{ name: t('footer.navigation.aboutUs.team'), href: '/' }],
     legal: [
       { name: t('footer.navigation.legal.privacy'), href: '/legal/privacy' },
       { name: t('footer.navigation.legal.terms'), href: '/legal/terms' },
@@ -95,11 +86,11 @@ export default function FooterWithColumns() {
             <div className="md:grid md:grid-cols-2 md:gap-8">
               <div>{renderList({ title: 'Services', items: footerNavigation.services })}</div>
               <div className="mt-10 md:mt-0">
-                {renderList({ title: 'Support', items: footerNavigation.supportOptions })}
+                {/* {renderList({ title: 'Support', items: footerNavigation.supportOptions })} */}
               </div>
             </div>
             <div className="md:grid md:grid-cols-2 md:gap-8">
-              <div>{renderList({ title: 'About Us', items: footerNavigation.aboutUs })}</div>
+              {/* <div>{renderList({ title: 'About Us', items: footerNavigation.aboutUs })}</div> */}
               <div className="mt-10 md:mt-0">{renderList({ title: 'Legal', items: footerNavigation.legal })}</div>
             </div>
           </div>
@@ -109,9 +100,9 @@ export default function FooterWithColumns() {
           <p className="text-sm text-default-400 sm:text-center">{t('footer.copyright')}</p>
           <div className="flex items-center justify-end gap-3">
             <ThemeSwitcher isBlur={false} />
-            <div className="min-w-36">
+            {/* <div className="min-w-36">
               <LanguageSwitcher />
-            </div>
+            </div> */}
           </div>
         </div>
       </div>

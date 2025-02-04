@@ -39,4 +39,5 @@
     "[prisma]": {
       "editor.defaultFormatter": "Prisma.prisma"
     },
+    "i18n-ally.keystyle": "nested",
   }

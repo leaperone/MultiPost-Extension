@@ -5,6 +5,7 @@ import { ImagePlusIcon, VideoIcon, XIcon, TrashIcon } from 'lucide-react';
 import dynamic from 'next/dynamic';
 import React, { useState, useRef, useEffect } from 'react';
 import Viewer from 'react-viewer';
+import { useTranslation } from '@/i18n/client';
 
 import type { PlatformInfo } from '@/types/platform';
 import type { FileData, SyncData } from '@/types/sync';
@@ -17,6 +18,7 @@ const ReactPlayer = dynamic(() => import('react-player'), {
 });
 
 const DynamicTab: React.FC = () => {
+  const { t } = useTranslation('publish');
   const [images, setImages] = useState<FileData[]>([]);
   const [videos, setVideos] = useState<FileData[]>([]);
   const [title, setTitle] = useState<string>('');
@@ -69,13 +71,13 @@ const DynamicTab: React.FC = () => {
 
   const handlePublish = async () => {
     if (!content) {
-      console.log('Content is required');
-      alert('Please enter content');
+      console.log(t('validation.contentRequired'));
+      alert(t('validation.contentRequired'));
       return;
     }
     if (selectedPlatforms.length === 0) {
-      console.log('Platform selection required');
-      alert('Please select at least one platform');
+      console.log(t('validation.platformRequired'));
+      alert(t('validation.platformRequired'));
       return;
     }
 
@@ -133,7 +135,7 @@ const DynamicTab: React.FC = () => {
       <Card className="h-fit bg-default-50 shadow-none">
         <CardHeader>
           <Input
-            placeholder="Enter title"
+            placeholder={t('dynamic.title')}
             value={title}
             onChange={(e) => setTitle(e.target.value)}
             className="w-full"
@@ -142,7 +144,7 @@ const DynamicTab: React.FC = () => {
 
         <CardBody>
           <Textarea
-            placeholder="Enter content"
+            placeholder={t('dynamic.content')}
             value={content}
             onChange={(e) => setContent(e.target.value)}
             fullWidth
@@ -188,7 +190,7 @@ const DynamicTab: React.FC = () => {
               variant="light"
               color="danger"
               onPress={handleClearAll}
-              title="Clear all">
+              title={t('dynamic.clearAll')}>
               <TrashIcon className="size-6" />
             </Button>
           </div>
@@ -232,13 +234,13 @@ const DynamicTab: React.FC = () => {
 
       <div className="mb-4">
         <div className="flex items-center">
-          <p className="mr-2 text-sm font-bold">Auto Publish: </p>
+          <p className="mr-2 text-sm font-bold">{t('dynamic.autoPublish')}: </p>
           <Switch
             isSelected={autoPublish}
             onValueChange={setAutoPublish}
           />
         </div>
-        <p className="mb-2 text-sm font-medium">Select Platforms to Publish</p>
+        <p className="mb-2 text-sm font-medium">{t('dynamic.selectPlatforms')}</p>
         <div className="grid grid-cols-2 gap-2">
           {platforms.map((platform: PlatformInfo) => {
             const isDisabled = false;
@@ -260,7 +262,7 @@ const DynamicTab: React.FC = () => {
         color="primary"
         disabled={images.length === 0 || !title || !content || selectedPlatforms.length === 0}
         className="mb-4 w-full px-4 py-2 font-bold">
-        Publish
+        {t('dynamic.publish')}
       </Button>
 
       {/* 视频预览 Card */}

@@ -4,6 +4,7 @@ import { ArrowRight, Share2, Github, Zap, Globe2, Sparkles } from 'lucide-react'
 import FooterWithColumns from '@/components/HomePage/FooterWithColumns';
 import HomePageHeader from '@/components/HomePage/Header';
 import HeroSection from './hero-section';
+import { createTranslation } from '@/i18n/server';
 
 export const metadata = {
   title: 'MultiPost - Open Source Social Media Publishing Tool',
@@ -11,7 +12,19 @@ export const metadata = {
     'MultiPost is an open source browser extension that helps you publish content to multiple social media platforms with one click. Save time and boost your social media presence.',
 };
 
-export default function HomePage() {
+export default async function HomePage() {
+  const { t } = await createTranslation('home');
+
+  // 定义类型
+  interface FAQItem {
+    question: string;
+    answer: string;
+  }
+
+  // 使用类型断言来处理数组
+  const features = t('demo.features', { returnObjects: true }) as string[];
+  const faqItems = t('faq.items', { returnObjects: true }) as FAQItem[];
+
   return (
     <div className="flex min-h-screen flex-col bg-background text-foreground">
       <HomePageHeader />
@@ -23,32 +36,30 @@ export default function HomePage() {
           <div className="container mx-auto px-4">
             <div className="text-center max-w-3xl mx-auto mb-16">
               <h2 className="text-4xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-primary to-secondary mb-4">
-                Streamline Your Social Media Workflow
+                {t('features.title')}
               </h2>
-              <p className="text-xl text-foreground/80">
-                Save time and maintain consistency across all your social media platforms with our powerful features
-              </p>
+              <p className="text-xl text-foreground/80">{t('features.subtitle')}</p>
             </div>
             <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
               {[
                 {
                   icon: <Zap className="size-6 text-primary" />,
-                  title: 'One-Click Publishing',
-                  description: 'Post to multiple platforms simultaneously with a single click',
+                  title: t('features.oneClick.title'),
+                  description: t('features.oneClick.description'),
                   gradient: 'bg-primary/10',
                   textColor: 'text-primary',
                 },
                 {
                   icon: <Share2 className="size-6 text-secondary" />,
-                  title: 'No Extra Login',
-                  description: 'Uses your existing browser sessions - no additional authentication needed',
+                  title: t('features.noLogin.title'),
+                  description: t('features.noLogin.description'),
                   gradient: 'bg-secondary/10',
                   textColor: 'text-secondary',
                 },
                 {
                   icon: <Globe2 className="size-6 text-success" />,
-                  title: 'Platform Optimization',
-                  description: "Automatically formats content for each platform's requirements",
+                  title: t('features.optimization.title'),
+                  description: t('features.optimization.description'),
                   gradient: 'bg-success/10',
                   textColor: 'text-success',
                 },
@@ -81,15 +92,10 @@ export default function HomePage() {
             <div className="grid md:grid-cols-2 gap-12 items-center">
               <div>
                 <h2 className="text-4xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-primary to-secondary mb-6">
-                  Powerful Yet Simple
+                  {t('demo.title')}
                 </h2>
                 <div className="space-y-6">
-                  {[
-                    'Write once, publish everywhere',
-                    'Preview how your post will look on each platform',
-                    'Schedule posts for optimal timing',
-                    'Track post performance across platforms',
-                  ].map((feature, i) => (
+                  {features.map((feature, i) => (
                     <div
                       key={i}
                       className="flex items-center gap-3">
@@ -105,7 +111,7 @@ export default function HomePage() {
                   size="lg"
                   as={Link}
                   href="/extension">
-                  Install Extension
+                  {t('demo.cta')}
                 </Button>
               </div>
               <div className="relative">
@@ -123,14 +129,12 @@ export default function HomePage() {
             <div className="text-center max-w-3xl mx-auto mb-16">
               <div className="inline-flex items-center gap-2 bg-primary/10 text-primary px-4 py-1 rounded-full mb-4">
                 <Github className="size-4" />
-                <span className="text-sm font-semibold">Open Source</span>
+                <span className="text-sm font-semibold">{t('openSource.badge')}</span>
               </div>
               <h2 className="text-4xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-primary to-secondary mb-4">
-                Built by the Community, for the Community
+                {t('openSource.title')}
               </h2>
-              <p className="text-xl text-foreground/80">
-                MultiPost is open source and free forever. Join us in building the future of social media management.
-              </p>
+              <p className="text-xl text-foreground/80">{t('openSource.description')}</p>
             </div>
 
             <div className="mt-12 text-center">
@@ -141,7 +145,7 @@ export default function HomePage() {
                 className="bg-default-100 text-foreground hover:bg-default-200"
                 size="lg"
                 startContent={<Github className="size-5" />}>
-                View on GitHub
+                {t('openSource.cta')}
               </Button>
             </div>
           </div>
@@ -151,31 +155,10 @@ export default function HomePage() {
         <section className="py-20 bg-default-50">
           <div className="container mx-auto px-4">
             <h2 className="mb-12 text-center text-4xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-primary to-secondary">
-              Frequently Asked Questions
+              {t('faq.title')}
             </h2>
             <div className="max-w-3xl mx-auto space-y-4">
-              {[
-                {
-                  question: 'How does MultiPost work?',
-                  answer:
-                    'MultiPost is a browser extension that uses your existing social media logins to publish content. No need for additional authentication or API keys.',
-                },
-                {
-                  question: 'Which platforms are supported?',
-                  answer:
-                    'We currently support Twitter, Facebook, LinkedIn, Instagram, and more. The list is growing with community contributions.',
-                },
-                {
-                  question: 'Is it really free?',
-                  answer:
-                    'Yes! MultiPost is completely free and open source. You can use all features without any restrictions.',
-                },
-                {
-                  question: 'How can I contribute?',
-                  answer:
-                    'You can contribute by starring the repository, reporting issues, submitting pull requests, or improving documentation.',
-                },
-              ].map((faq, i) => (
+              {faqItems.map((faq, i) => (
                 <Card key={i}>
                   <CardBody className="p-6">
                     <h3 className="text-lg font-semibold mb-2">{faq.question}</h3>
@@ -190,17 +173,15 @@ export default function HomePage() {
         {/* Final CTA Section */}
         <section className="py-20 bg-gradient-to-r from-primary to-secondary text-white">
           <div className="container mx-auto px-4 text-center">
-            <h2 className="text-4xl font-bold mb-6">Start Publishing Smarter Today</h2>
-            <p className="mb-8 text-white/90 max-w-2xl mx-auto">
-              Join our growing community of content creators and developers
-            </p>
+            <h2 className="text-4xl font-bold mb-6">{t('finalCta.title')}</h2>
+            <p className="mb-8 text-white/90 max-w-2xl mx-auto">{t('finalCta.description')}</p>
             <div className="flex gap-4 justify-center">
               <Button
                 size="lg"
                 as={Link}
                 href="/extension"
                 className="bg-white text-primary hover:bg-white/90">
-                Install Extension
+                {t('finalCta.install')}
               </Button>
               <Button
                 size="lg"
@@ -209,7 +190,7 @@ export default function HomePage() {
                 target="_blank"
                 className="bg-transparent border-2 border-white text-white hover:bg-white/10"
                 startContent={<Github className="size-5" />}>
-                Star on GitHub
+                {t('finalCta.github')}
               </Button>
             </div>
           </div>

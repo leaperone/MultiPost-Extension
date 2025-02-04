@@ -5,6 +5,7 @@ import { MessageCircle } from 'lucide-react';
 import dynamic from 'next/dynamic';
 import Link from 'next/link';
 import React from 'react';
+import { useTranslation } from '@/i18n/client';
 
 import ForceInstallExtension from '@/components/ForceInstallExtension';
 import HomePageHeader from '@/components/HomePage/Header';
@@ -18,15 +19,17 @@ const VideoTab = dynamic(() => import('./VideoTab'), {
 });
 
 export default function PublishPage() {
+  const { t } = useTranslation('publish');
+
   const tabs = [
     {
       id: 'dynamic',
-      label: 'Dynamic',
+      label: t('tabs.dynamic'),
       content: <DynamicTab />,
     },
     {
       id: 'video',
-      label: 'Video',
+      label: t('tabs.video'),
       content: <VideoTab />,
     },
   ];
@@ -34,13 +37,12 @@ export default function PublishPage() {
   return (
     <div className="min-h-screen bg-gradient-to-b from-background to-muted/20">
       <HomePageHeader />
-      <Spacer y={8}/>
+      <Spacer y={8} />
       {process.env.NODE_ENV !== 'development' && <ForceInstallExtension />}
       <div className="container mx-auto px-4 py-16">
         <div className="max-w-2xl mx-auto mb-12 text-center">
-
-          <h1 className="text-3xl font-semibold mb-4">Publish Content</h1>
-          <p className="text-foreground/80">Choose your content type and start publishing across multiple platforms.</p>
+          <h1 className="text-3xl font-semibold mb-4">{t('title')}</h1>
+          <p className="text-foreground/80">{t('description')}</p>
         </div>
 
         <Card className="w-full max-w-2xl mx-auto bg-background/60 dark:bg-background/60 backdrop-blur-md border border-border/50">
@@ -65,19 +67,19 @@ export default function PublishPage() {
           <CardBody className="flex flex-row items-center gap-2 p-4">
             <MessageCircle className="size-4 text-warning-800 dark:text-warning-500" />
             <p className="text-sm text-warning-800 dark:text-warning-500">
-              If your platform is not listed, please contact us via email at{' '}
+              {t('contact.message')}{' '}
               <Link
                 href="mailto:support@leaper.one"
                 className="text-blue-500 hover:underline">
                 support@leaper.one
               </Link>{' '}
-              or use our{' '}
+              {t('contact.or')}{' '}
               <Link
-                href="https://github.com/leaper-one/Multipost-Extension-Releases/issues"
+                href="https://github.com/leaper-one/Multipost-Extension/issues"
                 className="text-blue-500 hover:underline">
-                GitHub Issues
+                {t('contact.github')}
               </Link>{' '}
-              page.
+              {t('contact.page')}.
             </p>
           </CardBody>
         </Card>

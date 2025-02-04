@@ -1,0 +1,34 @@
+{
+  "title": "Publish Content",
+  "description": "Choose your content type and start publishing across multiple platforms.",
+  "tabs": {
+    "dynamic": "Dynamic",
+    "video": "Video"
+  },
+  "contact": {
+    "message": "If your platform is not listed, please contact us via email at",
+    "or": "or use our",
+    "github": "GitHub Issues",
+    "page": "page"
+  },
+  "dynamic": {
+    "title": "Enter title",
+    "content": "Enter content",
+    "autoPublish": "Auto Publish",
+    "selectPlatforms": "Select Platforms to Publish",
+    "publish": "Publish",
+    "clearAll": "Clear all"
+  },
+  "video": {
+    "title": "Please enter a title",
+    "description": "Please enter a description",
+    "upload": "Upload Video",
+    "selectPlatforms": "Select Publishing Platforms",
+    "publish": "Sync Video"
+  },
+  "validation": {
+    "contentRequired": "Content is required",
+    "platformRequired": "Please select at least one platform",
+    "titleAndVideoRequired": "Please enter a title and upload a video"
+  }
+}

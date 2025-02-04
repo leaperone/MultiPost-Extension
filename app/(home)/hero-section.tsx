@@ -5,6 +5,7 @@ import Link from 'next/link';
 
 import ScrollScreenChevronDown from '@/components/HomePage/ScrollScreenChevronDown';
 import HeroSectionTextHover from './hero-section-text-hover';
+import { createTranslation } from '@/i18n/server';
 
 const ChromeIcon = () => (
   <svg
@@ -18,12 +19,18 @@ const ChromeIcon = () => (
 );
 
 // InfoContainer Component
-function InfoContainer() {
-  const underlinedWord = (text: string) => (
+async function InfoContainer() {
+  const { t } = await createTranslation('home');
+
+  const UnderlinedWord = ({ text }: { text: string }) => (
     <span className="cursor-pointer underline decoration-blue-500 decoration-wavy dark:decoration-yellow-300">
       {text}
     </span>
   );
+
+  const description = t('hero.description');
+  const platformText = t('hero.platform');
+  const [before, after] = description.split('all platforms');
 
   return (
     <div className="flex w-full flex-col items-center">
@@ -32,11 +39,13 @@ function InfoContainer() {
         variant="flat"
         color="success"
         startContent={<CheckIcon />}>
-        All on the house during beta.
+        {t('hero.beta')}
       </Chip>
       <HeroSectionTextHover />
-      <p className="mb-8 w-full max-w-2xl  text-center text-lg leading-8 text-foreground-600">
-        All in one 🎯 tool that empowers 🚀 your content posting 📝 in {underlinedWord('all platforms')}.
+      <p className="mb-8 w-full max-w-2xl text-center text-lg leading-8 text-foreground-600">
+        {before}
+        <UnderlinedWord text={platformText} />
+        {after}
       </p>
       <div className="flex justify-center gap-2">
         <Button
@@ -45,7 +54,7 @@ function InfoContainer() {
           size="lg"
           startContent={<LayoutDashboardIcon />}
           className="bg-gradient-to-r from-blue-400 to-sky-300 text-white transition-opacity hover:opacity-90">
-          Go to post
+          {t('hero.buttons.post')}
         </Button>
         <Button
           as={Link}
@@ -53,7 +62,7 @@ function InfoContainer() {
           size="lg"
           startContent={<ChromeIcon />}
           className="bg-gradient-to-r from-purple-400 to-pink-300 text-white transition-opacity hover:opacity-90">
-          Install Extension
+          {t('hero.buttons.install')}
         </Button>
       </div>
     </div>
@@ -61,7 +70,7 @@ function InfoContainer() {
 }
 
 // HeroSection Component
-function HeroSection({ className }: { className?: string }) {
+async function HeroSection({ className }: { className?: string }) {
   return (
     <div className={cn('hero-container relative w-full bg-background', className)}>
       <div className="z-40 m-auto flex h-full min-h-[70vh] w-[90%] flex-col items-center justify-center bg-transparent">

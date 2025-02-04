@@ -1,18 +1,6 @@
 {
-  "hero": {
-    "title": "Available On All Social Media Platforms",
-    "subtitle": "Trusted by content creators worldwide",
-    "beta": "All on the house during beta.",
-    "description": "All in one 🎯 tool that empowers 🚀 your creating 📝 in {{platform}}.",
-    "platform": "any platform",
-    "cta": "Set up your profile"
-  },
-  "platforms": {
-    "followers": "{{followers}}",
-    "connect": "Connect with {{followers}} on {{platform}} and growing fastly."
-  },
   "footer": {
-    "slogan": "People, Livestreaming, Life",
+    "slogan": "Streamline Your Social Media Workflow",
     "copyright": "© 2024 LEAPERone Inc. All rights reserved.",
     "sections": {
       "services": "Services",
@@ -22,7 +10,7 @@
     },
     "navigation": {
       "services": {
-        "bubblebox": "BubbleBox",
+        "voite": "Voite",
         "multipost": "MultiPost"
       },
       "support": {
@@ -37,6 +25,78 @@
         "privacy": "Privacy Policy",
         "terms": "Terms of Service"
       }
+    }
+  },
+  "navigation": {
+    "publish": "Publish",
+    "extension": "Extension"
+  },
+  "features": {
+    "title": "Streamline Your Social Media Workflow",
+    "subtitle": "Save time and maintain consistency across all your social media platforms with our powerful features",
+    "oneClick": {
+      "title": "One-Click Publishing",
+      "description": "Post to multiple platforms simultaneously with a single click"
+    },
+    "noLogin": {
+      "title": "No Extra Login",
+      "description": "Uses your existing browser sessions - no additional authentication needed"
+    },
+    "optimization": {
+      "title": "Platform Optimization",
+      "description": "Automatically formats content for each platform's requirements"
+    }
+  },
+  "demo": {
+    "title": "Powerful Yet Simple",
+    "features": [
+      "Write once, publish everywhere",
+      "Preview how your post will look on each platform",
+      "Schedule posts for optimal timing",
+      "Track post performance across platforms"
+    ],
+    "cta": "Install Extension"
+  },
+  "openSource": {
+    "badge": "Open Source",
+    "title": "Built by the Community, for the Community",
+    "description": "MultiPost is open source and free forever. Join us in building the future of social media management.",
+    "cta": "View on GitHub"
+  },
+  "faq": {
+    "title": "Frequently Asked Questions",
+    "items": [
+      {
+        "question": "How does MultiPost work?",
+        "answer": "MultiPost is a browser extension that uses your existing social media logins to publish content. No need for additional authentication or API keys."
+      },
+      {
+        "question": "Which platforms are supported?",
+        "answer": "We currently support Twitter, Facebook, LinkedIn, Instagram, and more. The list is growing with community contributions."
+      },
+      {
+        "question": "Is it really free?",
+        "answer": "Yes! MultiPost is completely free and open source. You can use all features without any restrictions."
+      },
+      {
+        "question": "How can I contribute?",
+        "answer": "You can contribute by starring the repository, reporting issues, submitting pull requests, or improving documentation."
+      }
+    ]
+  },
+  "finalCta": {
+    "title": "Start Publishing Smarter Today",
+    "description": "Join our growing community of content creators and developers",
+    "install": "Install Extension",
+    "github": "Star on GitHub"
+  },
+  "hero": {
+    "beta": "All on the house during beta.",
+    "description": "All in one 🎯 tool that empowers 🚀 your content posting 📝 in all platforms.",
+    "platform": "all platforms",
+    "buttons": {
+      "post": "Go to post",
+      "install": "Install Extension"
     }
   }
 }
