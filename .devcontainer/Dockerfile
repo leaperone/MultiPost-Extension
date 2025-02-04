@@ -7,7 +7,7 @@ FROM node:${VARIANT}
 ENV LANG C.UTF-8
 
 # 设置工作目录
-WORKDIR /root/template
+WORKDIR /root/multipost
 
 ENV SHELL /bin/bash
 # 设置 pnpm 环境变量

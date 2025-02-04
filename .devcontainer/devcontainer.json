@@ -1,14 +1,14 @@
 {
-  "name": "dev-template",
+  "name": "dev-multipost",
   "build": {
     "dockerfile": "Dockerfile"
   },
-  "workspaceFolder": "/root/template",
+  "workspaceFolder": "/root/multipost",
   "shutdownAction": "stopContainer",
   "remoteUser": "root",
   "runArgs": ["--network=host"],
   "forwardPorts": [3000],
-  "postCreateCommand": "git clone git@github.com:leaper-one/nextjs-i18n-prisma-authjs-tailwindcss-template.git .",
+  "postCreateCommand": "git clone git@github.com:leaper-one/MultiPost.git . && cp .env.example .env && cp .env.local.example .env.local",
   "postStartCommand": "pnpm install && sh prisma/generate.sh",
   "customizations": {
     "vscode": {
@@ -16,7 +16,6 @@
         "steoates.autoimport",
         "naumovs.color-highlight",
         "dbaeumer.vscode-eslint",
-        "maggie.eslint-rules-zh-plugin",
         "redjue.git-commit-plugin",
         "antfu.iconify",
         "xabikos.javascriptsnippets",
@@ -26,7 +25,14 @@
         "standard.vscode-standard",
         "bradlc.vscode-tailwindcss",
         "suhelmakkad.shadcn-ui",
-        "veroxyle.shadcn-ui-snippets"
+        "veroxyle.shadcn-ui-snippets",
+        "aaron-bond.better-comments",
+        "mikestead.dotenv",
+        "heybourn.headwind",
+        "lokalise.i18n-ally",
+        "kisstkondoros.vscode-gutter-preview",
+        "prisma.prisma",
+        "eamodio.gitlens"
       ]
     }
   },
