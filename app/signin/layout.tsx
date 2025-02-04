@@ -5,7 +5,7 @@ import { Button } from '@heroui/react';
 import Link from 'next/link';
 import { ThemeSwitcher } from '@/components/ThemeSwitcher';
 import { Suspense } from 'react';
-import { CircleAlert, FileTextIcon, HomeIcon } from 'lucide-react';
+import { HomeIcon } from 'lucide-react';
 
 export const metadata: Metadata = {
   title: '2SOMEone',
@@ -35,25 +35,7 @@ export default function RootLayout({
               className={buttonClasses}>
               <HomeIcon />
             </Button>
-
-            <Button
-              as="a"
-              href="https://doc.2some.one"
-              size="sm"
-              className={buttonClasses}
-              isIconOnly>
-              <FileTextIcon />
-            </Button>
-
             <ThemeSwitcher />
-          </div>
-          <div className="flex w-full max-w-sm flex-row justify-between gap-4 rounded-large bg-background/60 px-8 py-4 shadow-small backdrop-blur-md backdrop-saturate-150 dark:bg-default-100/50">
-            <a href="https://2some.ren">
-              <CircleAlert size={46} />
-            </a>
-            <a href="https://2some.ren">
-              <p>你当前正在访问国际站，与国内站数据不互通，点击此处返回国内站。</p>
-            </a>
           </div>
         </div>
       </div>

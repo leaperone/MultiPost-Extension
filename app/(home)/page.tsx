@@ -1,182 +1,221 @@
-import HomePageHeader from '@/components/HomePage/Header';
-import FooterWithColumns from '@/components/HomePage/FooterWithColumns';
-import HeroSection from '@/app/(home)/hero-section';
-import ScrollingBanner from '@/components/scrolling-banner';
-import FlipCard from '@/components/animata/card/flip-card';
-import Marquee from '@/components/ui/marquee';
-import { Avatar } from "@heroui/react";
-import { createTranslation } from '@/i18n/server';
+import { Card, CardBody, Button, Link } from '@heroui/react';
+import { ArrowRight, Share2, Github, Zap, Globe2, Sparkles } from 'lucide-react';
 
-export default async function HomePage() {
+import FooterWithColumns from '@/components/HomePage/FooterWithColumns';
+import HomePageHeader from '@/components/HomePage/Header';
+import HeroSection from './hero-section';
+
+export const metadata = {
+  title: 'MultiPost - Open Source Social Media Publishing Tool',
+  description:
+    'MultiPost is an open source browser extension that helps you publish content to multiple social media platforms with one click. Save time and boost your social media presence.',
+};
+
+export default function HomePage() {
   return (
     <div className="flex min-h-screen flex-col bg-background text-foreground">
       <HomePageHeader />
       <main className="grow">
-        <HeroSection className="h-[65dvh]" />
-        <AvailableOnPlatforms />
-        <UserRecommendations />
+        <HeroSection className="h-[70vh]" />
+
+        {/* Key Features */}
+        <section className="py-20">
+          <div className="container mx-auto px-4">
+            <div className="text-center max-w-3xl mx-auto mb-16">
+              <h2 className="text-4xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-primary to-secondary mb-4">
+                Streamline Your Social Media Workflow
+              </h2>
+              <p className="text-xl text-foreground/80">
+                Save time and maintain consistency across all your social media platforms with our powerful features
+              </p>
+            </div>
+            <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
+              {[
+                {
+                  icon: <Zap className="size-6 text-primary" />,
+                  title: 'One-Click Publishing',
+                  description: 'Post to multiple platforms simultaneously with a single click',
+                  gradient: 'bg-primary/10',
+                  textColor: 'text-primary',
+                },
+                {
+                  icon: <Share2 className="size-6 text-secondary" />,
+                  title: 'No Extra Login',
+                  description: 'Uses your existing browser sessions - no additional authentication needed',
+                  gradient: 'bg-secondary/10',
+                  textColor: 'text-secondary',
+                },
+                {
+                  icon: <Globe2 className="size-6 text-success" />,
+                  title: 'Platform Optimization',
+                  description: "Automatically formats content for each platform's requirements",
+                  gradient: 'bg-success/10',
+                  textColor: 'text-success',
+                },
+              ].map((feature, i) => (
+                <Card
+                  key={i}
+                  className="hover:scale-105 transition-all duration-300 hover:shadow-lg group border-none"
+                  isPressable>
+                  <CardBody className="p-6">
+                    <div className="flex items-start gap-4">
+                      <div className={`rounded-full ${feature.gradient} p-3`}>{feature.icon}</div>
+                      <div>
+                        <h3 className={`mb-2 text-xl font-semibold ${feature.textColor} flex items-center gap-2`}>
+                          {feature.title}
+                          <ArrowRight className="size-4 opacity-0 transition-opacity group-hover:opacity-100" />
+                        </h3>
+                        <p className="text-foreground/80">{feature.description}</p>
+                      </div>
+                    </div>
+                  </CardBody>
+                </Card>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* Product Demo Section */}
+        <section className="py-20 bg-default-50">
+          <div className="container mx-auto px-4">
+            <div className="grid md:grid-cols-2 gap-12 items-center">
+              <div>
+                <h2 className="text-4xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-primary to-secondary mb-6">
+                  Powerful Yet Simple
+                </h2>
+                <div className="space-y-6">
+                  {[
+                    'Write once, publish everywhere',
+                    'Preview how your post will look on each platform',
+                    'Schedule posts for optimal timing',
+                    'Track post performance across platforms',
+                  ].map((feature, i) => (
+                    <div
+                      key={i}
+                      className="flex items-center gap-3">
+                      <div className="rounded-full bg-primary/10 p-1">
+                        <Sparkles className="size-5 text-primary" />
+                      </div>
+                      <span className="text-lg text-foreground/90">{feature}</span>
+                    </div>
+                  ))}
+                </div>
+                <Button
+                  className="mt-8 bg-gradient-to-r from-primary to-secondary text-white px-8 py-6 rounded-xl"
+                  size="lg"
+                  as={Link}
+                  href="/extension">
+                  Install Extension
+                </Button>
+              </div>
+              <div className="relative">
+                <div className="aspect-video rounded-xl bg-content1 shadow-xl">
+                  {/* Add product screenshot or demo video here */}
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* Open Source Section */}
+        <section className="py-20">
+          <div className="container mx-auto px-4">
+            <div className="text-center max-w-3xl mx-auto mb-16">
+              <div className="inline-flex items-center gap-2 bg-primary/10 text-primary px-4 py-1 rounded-full mb-4">
+                <Github className="size-4" />
+                <span className="text-sm font-semibold">Open Source</span>
+              </div>
+              <h2 className="text-4xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-primary to-secondary mb-4">
+                Built by the Community, for the Community
+              </h2>
+              <p className="text-xl text-foreground/80">
+                MultiPost is open source and free forever. Join us in building the future of social media management.
+              </p>
+            </div>
+
+            <div className="mt-12 text-center">
+              <Button
+                as={Link}
+                href="https://github.com/leaper-one/MultiPost-Extension"
+                target="_blank"
+                className="bg-default-100 text-foreground hover:bg-default-200"
+                size="lg"
+                startContent={<Github className="size-5" />}>
+                View on GitHub
+              </Button>
+            </div>
+          </div>
+        </section>
+
+        {/* FAQ Section */}
+        <section className="py-20 bg-default-50">
+          <div className="container mx-auto px-4">
+            <h2 className="mb-12 text-center text-4xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-primary to-secondary">
+              Frequently Asked Questions
+            </h2>
+            <div className="max-w-3xl mx-auto space-y-4">
+              {[
+                {
+                  question: 'How does MultiPost work?',
+                  answer:
+                    'MultiPost is a browser extension that uses your existing social media logins to publish content. No need for additional authentication or API keys.',
+                },
+                {
+                  question: 'Which platforms are supported?',
+                  answer:
+                    'We currently support Twitter, Facebook, LinkedIn, Instagram, and more. The list is growing with community contributions.',
+                },
+                {
+                  question: 'Is it really free?',
+                  answer:
+                    'Yes! MultiPost is completely free and open source. You can use all features without any restrictions.',
+                },
+                {
+                  question: 'How can I contribute?',
+                  answer:
+                    'You can contribute by starring the repository, reporting issues, submitting pull requests, or improving documentation.',
+                },
+              ].map((faq, i) => (
+                <Card key={i}>
+                  <CardBody className="p-6">
+                    <h3 className="text-lg font-semibold mb-2">{faq.question}</h3>
+                    <p className="text-foreground/80">{faq.answer}</p>
+                  </CardBody>
+                </Card>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* Final CTA Section */}
+        <section className="py-20 bg-gradient-to-r from-primary to-secondary text-white">
+          <div className="container mx-auto px-4 text-center">
+            <h2 className="text-4xl font-bold mb-6">Start Publishing Smarter Today</h2>
+            <p className="mb-8 text-white/90 max-w-2xl mx-auto">
+              Join our growing community of content creators and developers
+            </p>
+            <div className="flex gap-4 justify-center">
+              <Button
+                size="lg"
+                as={Link}
+                href="/extension"
+                className="bg-white text-primary hover:bg-white/90">
+                Install Extension
+              </Button>
+              <Button
+                size="lg"
+                as={Link}
+                href="https://github.com/leaper-one/MultiPost-Extension"
+                target="_blank"
+                className="bg-transparent border-2 border-white text-white hover:bg-white/10"
+                startContent={<Github className="size-5" />}>
+                Star on GitHub
+              </Button>
+            </div>
+          </div>
+        </section>
       </main>
       <FooterWithColumns />
     </div>
   );
 }
-
-const AvailableOnPlatforms = async () => {
-  const { t } = await createTranslation('home');
-
-  const PLATFORMS = [
-    { key: 'youtube', name: 'YouTube', followers: '12M', icon: 'logos:youtube-icon' },
-    { key: 'bilibili', name: 'Bilibili', followers: '50M', icon: 'simple-icons:bilibili' },
-    { key: 'tiktok', name: 'TikTok', followers: '80M', icon: 'logos:tiktok-icon' },
-    { key: 'instagram', name: 'Instagram', followers: '10M', icon: 'logos:instagram-icon' },
-    { key: 'twitch', name: 'Twitch', followers: '100K', icon: 'logos:twitch' },
-    { key: 'telegram', name: 'Telegram', followers: '100K', icon: 'logos:telegram' },
-    { key: 'twitter', name: 'Twitter', followers: '100K', icon: 'lucide:twitter' },
-  ] as const;
-
-  return (
-    <section className="relative w-full bg-background py-8">
-      <div className="mx-auto max-w-7xl px-6 py-2 sm:py-4 lg:px-4">
-        <div className="mb-4 text-center">
-          <h2 className="mb-4 text-4xl font-bold tracking-tight">{t('hero.title')}</h2>
-        </div>
-        <ScrollingBanner
-          shouldPauseOnHover
-          duration={30}
-          gap="80px"
-          className="py-8">
-          {[...PLATFORMS, ...PLATFORMS].map(({ key, name, followers, icon }, index) => (
-            <FlipCard
-              key={`${key}-${index}`}
-              className="size-56"
-              icon={icon}
-              title={name}
-              subtitle={t('platforms.followers', { followers })}
-              description={t('platforms.connect', { followers, platform: name })}
-            />
-          ))}
-        </ScrollingBanner>
-      </div>
-    </section>
-  );
-};
-
-const UserRecommendations = async () => {
-  const { t } = await createTranslation('home');
-
-  const RECOMMENDATIONS = [
-    {
-      id: 1,
-      avatar: 'https://api.dicebear.com/7.x/lorelei/svg?seed=Sarah',
-      name: 'Sarah',
-      role: 'Bilibili Streamer',
-      content:
-        "BubbleBox's convenient setup simplified managing audience submissions during my livestreams. As a Bilibili streamer, I often receive tons of comments and stories, which used to be time-consuming to sort manually. With BubbleBox, I can easily categorize and share submissions one by one during the stream, and viewers say it's boosted their engagement—they're excited to keep participating.",
-    },
-    {
-      id: 2,
-      avatar: 'https://api.dicebear.com/7.x/lorelei/svg?seed=Mike',
-      name: 'Mike Zhang',
-      role: 'Content Creator',
-      content:
-        "As a host of storytelling content, I often felt overwhelmed by sorting audience submissions individually. BubbleBox's collection and organization tools allow me to quickly categorize posts, making it easy to present each story during streams. Viewers are excited to submit content freely, which has greatly improved the interactivity and involvement in my show.",
-    },
-    {
-      id: 3,
-      avatar: 'https://api.dicebear.com/7.x/lorelei/svg?seed=Emily',
-      name: 'Emily Wang',
-      role: 'Interactive Streamer',
-      content:
-        "BubbleBox's anonymous submission feature has made my livestreams more inclusive and engaging. My audience is diverse, and many viewers want to share personal stories while keeping their privacy. Since using BubbleBox, audience engagement has increased significantly, with more posts than ever, and the show has developed a warmer, more connected atmosphere.",
-    },
-    {
-      id: 4,
-      avatar: 'https://api.dicebear.com/7.x/lorelei/svg?seed=David',
-      name: 'David Liu',
-      role: 'Live Host',
-      content:
-        "As an interactive host, I encourage my audience to express themselves during streams. Previously, organizing submissions manually was tedious, but BubbleBox's auto-categorization feature saves me tons of time. What surprised me is how well the display is optimized for OBS—large, clear fonts make viewers feel valued, and the quality of my content has noticeably improved.",
-    },
-    {
-      id: 5,
-      avatar: 'https://api.dicebear.com/7.x/lorelei/svg?seed=Sophie',
-      name: 'Sophie Lin',
-      role: 'Community Manager',
-      content:
-        "Receiving audience submissions is part of my show, and BubbleBox's efficient design is exactly what I needed. Both the categorization and display are super convenient, letting me focus on presenting content without being bogged down by managing posts. Viewers love the seamless interaction, saying it makes them feel involved, and the entire atmosphere has become more vibrant.",
-    },
-    {
-      id: 6,
-      avatar: 'https://api.dicebear.com/7.x/lorelei/svg?seed=Alex',
-      name: 'Alex Wu',
-      role: 'Content Creator',
-      content:
-        "Every submission I receive is a form of connection with my viewers, and manual sorting wasn't working. BubbleBox has automated the sorting and display process, keeping my streams smooth and well-paced. Viewers are thrilled by the real-time interaction and have started participating even more, creating a lively, welcoming stream environment.",
-    },
-    {
-      id: 7,
-      avatar: 'https://api.dicebear.com/7.x/lorelei/svg?seed=Rachel',
-      name: 'Rachel Chen',
-      role: 'Live Streamer',
-      content:
-        'BubbleBox has brought a more positive and interactive vibe to my channel. Viewers enjoy the anonymous submission feature and are more comfortable sharing. Every submission gets categorized and displayed quickly, so everyone feels heard. This easy involvement format has brought in tons of great feedback, with audience engagement rising significantly.',
-    },
-    {
-      id: 8,
-      avatar: 'https://api.dicebear.com/7.x/lorelei/svg?seed=Kevin',
-      name: 'Kevin Zhao',
-      role: 'Interactive Host',
-      content:
-        "Managing viewer submissions has always been challenging, but BubbleBox has solved this for me. Its straightforward interface allows quick categorization, saving me lots of time. Viewers find the submission link easy to use, and I'm able to interact instantly with everyone during the stream, leading to much higher viewer activity than before.",
-    },
-    {
-      id: 9,
-      avatar: 'https://api.dicebear.com/7.x/lorelei/svg?seed=Lisa',
-      name: 'Lisa Tang',
-      role: 'Community Host',
-      content:
-        'Each stream requires handling various types of viewer submissions, and BubbleBox has provided me with a structured way to manage them. Using its collection and categorization features, I can efficiently organize viewer content, keeping the stream interactive and smooth. The audience loves the interaction, not only improving satisfaction but also bringing in more participants.',
-    },
-    {
-      id: 10,
-      avatar: 'https://api.dicebear.com/7.x/lorelei/svg?seed=Tom',
-      name: 'Tom Yang',
-      role: 'Live Broadcaster',
-      content:
-        "I have a high level of audience interaction, and before, I had to manually collect and organize submissions, sometimes missing some. BubbleBox's submission collection and auto-categorization have made things much smoother, and viewers are enjoying the more structured experience. Submissions are clearly displayed on the stream screen, and people say it makes them feel part of the action, bringing even more energy to the channel.",
-    },
-  ];
-
-  return (
-    <section className="relative w-full bg-background/50 py-12">
-      <div className="mx-auto max-w-7xl px-6 lg:px-8">
-        <div className="mb-8 text-center">
-          <h2 className="text-4xl font-bold tracking-tight">{t('hero.subtitle')}</h2>
-        </div>
-
-        <Marquee
-          className="py-8"
-          pauseOnHover>
-          {RECOMMENDATIONS.map((item) => (
-            <div
-              key={item.id}
-              className="mx-4 w-[350px] rounded-xl border bg-card p-6 shadow-sm">
-              <div className="flex items-center gap-4">
-                <Avatar
-                  src={item.avatar}
-                  name={item.name}
-                  className="size-12"
-                />
-                <div>
-                  <h3 className="font-semibold">{item.name}</h3>
-                  <p className="text-sm text-muted-foreground">{item.role}</p>
-                </div>
-              </div>
-              <p className="mt-4 line-clamp-4 text-sm text-muted-foreground">{item.content}</p>
-            </div>
-          ))}
-        </Marquee>
-      </div>
-    </section>
-  );
-};

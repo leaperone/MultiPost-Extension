@@ -1,7 +1,6 @@
 import React from 'react';
-import { Navbar, NavbarBrand, NavbarContent, NavbarItem, Link } from '@heroui/react';
+import { Navbar, NavbarBrand, NavbarContent, NavbarItem, Link, Image } from '@heroui/react';
 import { HomePageNavigationMenu } from '@/components/HomePage/NavigationMenu';
-import SignInButton from '@/components/SignInButton';
 import { ThemeSwitcher } from '../ThemeSwitcher';
 import LanguageSwitcher from '../LanguageSwitcher';
 
@@ -12,10 +11,8 @@ export default function HomePageHeader() {
         <Link
           href="/"
           className="flex items-center gap-2">
-          <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-primary">
-            <span className="text-lg font-bold text-white">D</span>
-          </div>
-          <span className="text-xl font-semibold">Demo</span>
+          <Image src="/favicon.ico" alt="MultiPost" />
+          <span className="text-xl font-semibold">MultiPost</span>
         </Link>
       </NavbarBrand>
       <NavbarContent
@@ -31,7 +28,7 @@ export default function HomePageHeader() {
           <LanguageSwitcher />
         </NavbarItem>
         <NavbarItem>
-          <SignInButton />
+          {/* <SignInButton /> */}
         </NavbarItem>
       </NavbarContent>
     </Navbar>

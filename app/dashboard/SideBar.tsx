@@ -1,4 +1,4 @@
-import { Home, LayoutDashboardIcon, LogOutIcon, Settings } from 'lucide-react';
+import { AccessibilityIcon, Home, LayoutDashboardIcon, PuzzleIcon, Settings } from 'lucide-react';
 
 import {
   Sidebar,
@@ -12,6 +12,9 @@ import {
   SidebarHeader,
   SidebarFooter,
 } from '@/components/ui/sidebar';
+import { SidebarThemeSwitcher } from '../../components/ThemeSwitcher';
+// import TwoSomeOneLogo from '../../components/Dashboard/SiderBar/TwoSomeOneLogo';
+// import DashboardSiderBarTrigger from '../../components/Dashboard/SiderBar/Trigger';
 
 // Menu items.
 const items = [
@@ -27,11 +30,24 @@ const items = [
   },
 ];
 
-const sidebarFooterItems = [
+const applicationItems = [
   {
-    title: 'Sign Out',
-    url: '/signout',
-    icon: LogOutIcon,
+    title: 'Publish',
+    url: '/publish',
+    icon: AccessibilityIcon,
+  },
+];
+
+const sidebarFooterItems = [
+  // {
+  //   title: 'Recharge',
+  //   url: '/dashboard/recharge',
+  //   icon: CreditCardIcon,
+  // },
+  {
+    title: 'Browser Extension',
+    url: '/extension',
+    icon: PuzzleIcon,
   },
   {
     title: 'Settings',
@@ -47,9 +63,7 @@ export async function DashboardSidebar() {
       collapsible="icon">
       <SidebarHeader>
         <SidebarMenu>
-          <SidebarMenuItem>
-            <p>Template</p>
-          </SidebarMenuItem>
+          <SidebarMenuItem>MultiPost</SidebarMenuItem>
         </SidebarMenu>
       </SidebarHeader>
 
@@ -71,10 +85,31 @@ export async function DashboardSidebar() {
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
+
+        <SidebarGroup>
+          <SidebarGroupLabel>Application</SidebarGroupLabel>
+          <SidebarGroupContent>
+            <SidebarMenu>
+              {applicationItems.map((item) => (
+                <SidebarMenuItem key={item.title}>
+                  <SidebarMenuButton asChild>
+                    <a href={item.url}>
+                      <item.icon />
+                      <span>{item.title}</span>
+                    </a>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              ))}
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
       </SidebarContent>
 
       <SidebarFooter>
         <SidebarMenu>
+          <SidebarMenuItem>
+            <SidebarThemeSwitcher />
+          </SidebarMenuItem>
           {sidebarFooterItems.map((item) => (
             <SidebarMenuItem key={item.title}>
               <SidebarMenuButton asChild>
@@ -85,6 +120,7 @@ export async function DashboardSidebar() {
               </SidebarMenuButton>
             </SidebarMenuItem>
           ))}
+          <SidebarMenuItem>{/* <DashboardSiderBarTrigger /> */}</SidebarMenuItem>
         </SidebarMenu>
       </SidebarFooter>
     </Sidebar>

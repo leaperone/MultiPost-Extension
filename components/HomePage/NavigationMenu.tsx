@@ -12,25 +12,7 @@ import {
   navigationMenuTriggerStyle,
 } from '@/components/ui/navigation-menu';
 import Link from 'next/link';
-import { LayoutDashboard, MoreHorizontal, Wrench, InboxIcon, MenuIcon } from 'lucide-react';
-
-const dashboardItems: { title: string; icon: React.ElementType; href: string; description: string }[] = [
-  {
-    title: 'Dashboard',
-    icon: InboxIcon,
-    href: '/dashboard',
-    description: 'All here',
-  },
-];
-
-const moreItems: { title: string; icon: React.ElementType; href: string; description: string }[] = [
-  {
-    title: 'Tools',
-    icon: Wrench,
-    href: '/tools',
-    description: 'Your best toolbox',
-  },
-];
+import { LayoutDashboard, PuzzleIcon } from 'lucide-react';
 
 export function HomePageNavigationMenu() {
   return (
@@ -38,16 +20,27 @@ export function HomePageNavigationMenu() {
       <NavigationMenuList>
         <NavigationMenuItem>
           <Link
-            href="/dashboard"
+            href="/publish"
             legacyBehavior
             passHref>
             <NavigationMenuLink className={cn(navigationMenuTriggerStyle(), 'group')}>
               <LayoutDashboard className="mr-2 size-4 transition-transform" />
-              Dashboard
+              Publish
             </NavigationMenuLink>
           </Link>
         </NavigationMenuItem>
-        <MenuItem
+        <NavigationMenuItem>
+          <Link
+            href="/extension"
+            legacyBehavior
+            passHref>
+            <NavigationMenuLink className={cn(navigationMenuTriggerStyle(), 'group')}>
+              <PuzzleIcon className="mr-2 size-4 transition-transform" />
+              Extension
+            </NavigationMenuLink>
+          </Link>
+        </NavigationMenuItem>
+        {/* <MenuItem
           title="Features"
           icon={MenuIcon}
           items={dashboardItems}
@@ -56,13 +49,13 @@ export function HomePageNavigationMenu() {
           title="More"
           icon={MoreHorizontal}
           items={moreItems}
-        />
+        /> */}
       </NavigationMenuList>
     </NavigationMenu>
   );
 }
 
-function MenuItem({
+export function MenuItem({
   title,
   icon: Icon,
   items,

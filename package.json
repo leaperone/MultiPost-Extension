@@ -5,7 +5,7 @@
   "scripts": {
     "preinstall": "npx only-allow pnpm",
     "dev": "next dev -H 0.0.0.0",
-    "build": "next build",
+    "build": "sh prisma/generate.sh && next build",
     "start": "next start",
     "lint": "next lint",
     "eslint": "eslint . --ext .ts,.tsx",
@@ -107,6 +107,7 @@
     "react-i18next": "^15.4.0",
     "react-masonry-component2": "^1.0.10",
     "react-office-viewer": "^1.0.4",
+    "react-player": "^2.16.0",
     "react-resizable": "^3.0.5",
     "react-resizable-panels": "^2.1.7",
     "react-responsive": "^10.0.0",

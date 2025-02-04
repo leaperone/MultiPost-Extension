@@ -1,4 +1,3 @@
-import type { Metadata } from 'next';
 import { Inter } from 'next/font/google';
 import './globals.css';
 import { Providers } from './providers';
@@ -9,9 +8,10 @@ import { getLocale } from '@/i18n/server';
 
 const inter = Inter({ subsets: ['latin'] });
 
-export const metadata: Metadata = {
-  title: 'Template',
-  description: 'All in one.',
+export const metadata = {
+  title: 'MultiPost - Open Source Social Media Publishing Tool',
+  description:
+    'MultiPost is an open source browser extension that helps you publish content to multiple social media platforms with one click. Save time and boost your social media presence.',
 };
 
 export default function RootLayout({
