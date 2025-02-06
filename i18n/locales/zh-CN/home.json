@@ -9,10 +9,7 @@
       "legal": "法律条款"
     },
     "navigation": {
-      "services": {
-        "voite": "Voite",
-        "multipost": "MultiPost"
-      },
+      "services": {},
       "support": {
         "pricing": "定价",
         "userManual": "用户手册（文档）",
@@ -91,7 +88,6 @@
     "github": "在 GitHub 上点星"
   },
   "hero": {
-    "beta": "Beta 期间完全免费使用",
     "description": "一站式🎯工具，在所有平台上助力🚀你的内容发布📝",
     "platform": "所有平台",
     "buttons": {

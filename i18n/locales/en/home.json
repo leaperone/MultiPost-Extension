@@ -9,10 +9,7 @@
       "legal": "Legal"
     },
     "navigation": {
-      "services": {
-        "voite": "Voite",
-        "multipost": "MultiPost"
-      },
+      "services": {},
       "support": {
         "pricing": "Pricing",
         "userManual": "User Manual (Documentation)",
@@ -91,7 +88,6 @@
     "github": "Star on GitHub"
   },
   "hero": {
-    "beta": "All on the house during beta.",
     "description": "All in one 🎯 tool that empowers 🚀 your content posting 📝 in all platforms.",
     "platform": "all platforms",
     "buttons": {

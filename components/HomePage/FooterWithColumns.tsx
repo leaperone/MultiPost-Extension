@@ -3,7 +3,7 @@
 import type { IconProps } from '@iconify/react';
 
 import React from 'react';
-import { Divider, Link } from "@heroui/react";
+import { Divider, Link } from '@heroui/react';
 import { Icon } from '@iconify/react';
 import { ThemeSwitcher } from '@/components/ThemeSwitcher';
 import { useTranslation } from '@/i18n/client';
@@ -16,8 +16,10 @@ export default function FooterWithColumns() {
 
   const footerNavigation = {
     services: [
-      { name: t('footer.navigation.services.voite'), href: 'https://voite.2some.one' },
-      { name: t('footer.navigation.services.multipost'), href: 'https://multipost.app' },
+      { name: 'Voite', href: 'https://voite.2some.one' },
+      { name: 'MultiPost', href: 'https://multipost.app' },
+      { name: '2SOMEone', href: 'https://2some.one' },
+      { name: '2SOMEren', href: 'https://2some.ren' },
     ],
     legal: [
       { name: t('footer.navigation.legal.privacy'), href: '/legal/privacy' },

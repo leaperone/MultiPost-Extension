@@ -1,6 +1,6 @@
-import { Button, Chip } from '@heroui/react';
+import { Button } from '@heroui/react';
 import { cn } from '@/lib/utils';
-import { CheckIcon, LayoutDashboardIcon } from 'lucide-react';
+import { LayoutDashboardIcon } from 'lucide-react';
 import Link from 'next/link';
 
 import ScrollScreenChevronDown from '@/components/HomePage/ScrollScreenChevronDown';
@@ -34,13 +34,6 @@ async function InfoContainer() {
 
   return (
     <div className="flex w-full flex-col items-center">
-      <Chip
-        size="lg"
-        variant="flat"
-        color="success"
-        startContent={<CheckIcon />}>
-        {t('hero.beta')}
-      </Chip>
       <HeroSectionTextHover />
       <p className="mb-8 w-full max-w-2xl text-center text-lg leading-8 text-foreground-600">
         {before}

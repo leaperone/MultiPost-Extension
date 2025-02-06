@@ -9,10 +9,7 @@
       "legal": "法的情報"
     },
     "navigation": {
-      "services": {
-        "voite": "Voite",
-        "multipost": "MultiPost"
-      },
+      "services": {},
       "support": {
         "pricing": "料金プラン",
         "userManual": "ユーザーマニュアル（ドキュメント）",
@@ -91,7 +88,6 @@
     "github": "GitHubでスターを付ける"
   },
   "hero": {
-    "beta": "ベータ期間中は全て無料でご利用いただけます。",
     "description": "すべてのプラットフォームで、あなたのコンテンツ投稿を支援する🎯オールインワン🚀ツール📝",
     "platform": "すべてのプラットフォーム",
     "buttons": {
