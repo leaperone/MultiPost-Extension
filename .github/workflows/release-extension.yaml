@@ -1,0 +1,118 @@
+name: Release Extension
+
+on:
+  push:
+    tags:
+      - '*'
+
+jobs:
+  build:
+    name: Build Extension
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.get_version.outputs.version }}
+    
+    steps:
+    - uses: actions/checkout@v3
+    - uses: actions/setup-node@v3
+      with:
+        node-version: 20
+    
+    # 设置 pnpm
+    - uses: pnpm/action-setup@v2
+      with:
+        version: 9
+        run_install: false
+
+    # 获取 pnpm store 目录
+    - name: Get pnpm store directory
+      shell: bash
+      run: |
+        echo "STORE_PATH=$(pnpm store path --silent)" >> $GITHUB_ENV
+
+    # 设置 pnpm 缓存
+    - uses: actions/cache@v3
+      name: Setup pnpm cache
+      with:
+        path: ${{ env.STORE_PATH }}
+        key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
+        restore-keys: |
+          ${{ runner.os }}-pnpm-store-
+
+    # 安装依赖并构建
+    - name: Install dependencies
+      run: pnpm install
+
+    - name: Build
+      run: pnpm build
+
+    # 获取版本号
+    - name: Get version
+      id: get_version
+      run: echo "version=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
+
+    # 上传构建产物
+    - name: Upload artifact
+      uses: actions/upload-artifact@v3
+      with:
+        name: extension-package
+        path: build/chrome-mv3-prod.zip
+        retention-days: 1
+
+  github-release:
+    needs: build
+    name: Create GitHub Release
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    
+    steps:
+    - name: Download artifact
+      uses: actions/download-artifact@v3
+      with:
+        name: extension-package
+
+    - name: Create Release
+      uses: softprops/action-gh-release@v1
+      with:
+        files: chrome-mv3-prod.zip
+        generate_release_notes: true
+
+  chrome-store:
+    needs: build
+    name: Publish to Chrome Web Store
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Download artifact
+      uses: actions/download-artifact@v3
+      with:
+        name: extension-package
+
+    - name: Upload & release
+      uses: mnao305/chrome-extension-upload@v5.0.0
+      with:
+        file-path: chrome-mv3-prod.zip
+        extension-id: ${{ secrets.CHROME_EXTENSION_ID }}
+        client-id: ${{ secrets.CHROME_EXTENSION_CLIENT_ID }}
+        client-secret: ${{ secrets.CHROME_EXTENSION_CLIENT_SECRET }}
+        refresh-token: ${{ secrets.CHROME_EXTENSION_REFRESH_TOKEN }}
+
+  edge-store:
+    needs: build
+    name: Publish to Edge Add-ons
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Download artifact
+      uses: actions/download-artifact@v3
+      with:
+        name: extension-package
+
+    - name: Publish to Edge Add-ons
+      uses: wdzeng/edge-addon@v2
+      with:
+        product-id: ${{ secrets.EDGE_PRODUCT_ID }}
+        zip-path: chrome-mv3-prod.zip
+        client-id: ${{ secrets.EDGE_CLIENT_ID }}
+        api-key: ${{ secrets.EDGE_ADDONS_API_KEY }}
