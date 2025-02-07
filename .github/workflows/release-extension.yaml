@@ -92,7 +92,7 @@ jobs:
     - name: Upload & release
       uses: mnao305/chrome-extension-upload@v5.0.0
       with:
-        file-path: chrome-mv3-prod.zip
+        file-path: build\chrome-mv3-prod.zip
         extension-id: ${{ secrets.CHROME_EXTENSION_ID }}
         client-id: ${{ secrets.CHROME_EXTENSION_CLIENT_ID }}
         client-secret: ${{ secrets.CHROME_EXTENSION_CLIENT_SECRET }}
@@ -113,6 +113,6 @@ jobs:
       uses: wdzeng/edge-addon@v2
       with:
         product-id: ${{ secrets.EDGE_PRODUCT_ID }}
-        zip-path: chrome-mv3-prod.zip
+        zip-path: build\chrome-mv3-prod.zip
         client-id: ${{ secrets.EDGE_CLIENT_ID }}
         api-key: ${{ secrets.EDGE_ADDONS_API_KEY }}
