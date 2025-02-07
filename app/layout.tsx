@@ -29,7 +29,7 @@ export default function RootLayout({
           <Sonner />
         </Providers>
       </body>
-      <GoogleAnalytics gaId={process.env.NEXT_PUBLIC_GOOGLE_ANALYTICS_ID || ''} />
+      <GoogleAnalytics gaId={'G-6JJ7JNT2GY'} />
     </html>
   );
 }
