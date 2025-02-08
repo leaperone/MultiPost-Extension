@@ -5,9 +5,10 @@ import { VideoIcon, XIcon } from 'lucide-react';
 import dynamic from 'next/dynamic';
 import type { FileData, SyncData } from '@/types/sync';
 import PlatformCheckbox from './PlatformCheckbox';
-import { funcPublish, getPlatformInfos } from './common';
+import { funcPublish, getPlatformInfos } from '@/app/publish/common';
 import type { PlatformInfo } from '@/types/platform';
 import { useTranslation } from '@/i18n/client';
+import { usePlatformStore } from '@/store/publish.store';
 
 const ReactPlayer = dynamic(() => import('react-player'), {
   ssr: false,
@@ -19,7 +20,8 @@ const VideoTab: React.FC = () => {
   const [content, setContent] = useState<string>('');
   const [videoFile, setVideoFile] = useState<FileData | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const [selectedPlatforms, setSelectedPlatforms] = useState<string[]>([]);
+  const { videoPlatforms, setVideoPlatforms, clearVideoPlatforms } = usePlatformStore();
+  const [selectedPlatforms, setSelectedPlatforms] = useState<string[]>(videoPlatforms);
   const [platforms, setPlatforms] = useState<PlatformInfo[]>([]);
 
   useEffect(() => {
@@ -43,10 +45,16 @@ const VideoTab: React.FC = () => {
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
     }
+    setSelectedPlatforms([]);
+    clearVideoPlatforms();
   };
 
   const handlePlatformChange = (platform: string, isSelected: boolean) => {
-    setSelectedPlatforms((prev) => (isSelected ? [...prev, platform] : prev.filter((p) => p !== platform)));
+    setSelectedPlatforms((prev) => {
+      const newSelected = isSelected ? [...prev, platform] : prev.filter((p) => p !== platform);
+      setVideoPlatforms(newSelected);
+      return newSelected;
+    });
   };
 
   const handlePublish = async () => {

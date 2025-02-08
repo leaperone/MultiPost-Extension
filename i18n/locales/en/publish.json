@@ -1,6 +1,4 @@
 {
-  "title": "Publish Content",
-  "description": "Choose your content type and start publishing across multiple platforms.",
   "tabs": {
     "dynamic": "Dynamic",
     "video": "Video"
