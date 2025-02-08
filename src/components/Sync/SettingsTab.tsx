@@ -79,7 +79,7 @@ const SettingsTab: React.FC = () => {
               errorMessage={error}
             />
             <Button
-              onClick={handleAddDomain}
+              onPress={handleAddDomain}
               className="min-w-[100px]">
               <Plus className="w-4 h-4 mr-1" />
               {chrome.i18n.getMessage('settingsAdd')}

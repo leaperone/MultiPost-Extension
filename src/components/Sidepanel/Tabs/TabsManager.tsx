@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Button } from "@heroui/react";
+import { Button } from '@heroui/react';
 import { X, RefreshCw } from 'lucide-react';
 import type { TabManagerMessage } from '~background/services/tabs';
 
@@ -72,13 +72,13 @@ function TabsManager() {
                     size="sm"
                     variant="light"
                     className="mr-2"
-                    onClick={() => handleReloadTab(group, tabItem.tab.id)}
+                    onPress={() => handleReloadTab(group, tabItem.tab.id)}
                     aria-label={chrome.i18n.getMessage('sidepanelReloadTab')}>
                     <RefreshCw className="w-4 h-4" />
                   </Button>
                   <Button
                     className="justify-start pr-10 pl-2 text-left grow"
-                    onClick={() => handleTabClick(tabItem.tab.id)}
+                    onPress={() => handleTabClick(tabItem.tab.id)}
                     onMouseDown={(e) => handleTabMiddleClick(e, tabItem.tab.id)}>
                     {tabItem.tab.favIconUrl && (
                       <img
@@ -96,7 +96,7 @@ function TabsManager() {
                     color="danger"
                     variant="light"
                     className="absolute right-2 top-1/2 -translate-y-1/2"
-                    onClick={() => handleCloseTab(tabItem.tab.id)}
+                    onPress={() => handleCloseTab(tabItem.tab.id)}
                     aria-label={chrome.i18n.getMessage('sidepanelCloseTab')}>
                     <X className="w-4 h-4" />
                   </Button>
@@ -110,7 +110,7 @@ function TabsManager() {
           <p className="mb-4 text-lg">{chrome.i18n.getMessage('sidepanelNoTabsMessage')}</p>
           <Button
             color="primary"
-            onClick={() => chrome.runtime.openOptionsPage()}>
+            onPress={() => chrome.runtime.openOptionsPage()}>
             {chrome.i18n.getMessage('sidepanelCreateNewTabButton')}
           </Button>
         </div>
