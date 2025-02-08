@@ -457,10 +457,15 @@
     "message": "Douyin",
     "description": "Platform name for Douyin"
   },
+  "platformOkjike": {
+    "message": "Okjike",
+    "description": "Platform name for Okjike"
+  },
   "platformInstagram": {
     "message": "Instagram",
     "description": "Platform name for Instagram"
   },
+
   "platformYoutube": {
     "message": "YouTube",
     "description": "Platform name for YouTube"
