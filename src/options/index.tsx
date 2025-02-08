@@ -162,7 +162,7 @@ const Options = () => {
           </a>
           <span>&nbsp;{chrome.i18n.getMessage('optionsOrText')}&nbsp;</span>
           <a
-            href="https://github.com/leaper-one/Multipost-Extension-Releases/issues"
+            href="https://github.com/leaper-one/Multipost-Extension/issues"
             target="_blank"
             rel="noopener noreferrer"
             className="text-primary hover:underline">
