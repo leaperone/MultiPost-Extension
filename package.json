@@ -14,15 +14,10 @@
     "prepare": "husky"
   },
   "dependencies": {
-    "@ai-sdk/openai": "^0.0.66",
-    "@mozilla/readability": "^0.5.0",
     "@heroui/react": "2.6.14",
-    "@heroui/theme": "2.4.6",
+    "@mozilla/readability": "^0.5.0",
     "@plasmohq/storage": "^1.11.0",
-    "ai": "^3.4.9",
-    "dexie": "^4.0.8",
-    "file-saver": "^2.0.5",
-    "framer-motion": "^10.16.16",
+    "framer-motion": "^10.18.0",
     "lucide-react": "^0.447.0",
     "plasmo": "0.89.4",
     "react": "18.2.0",
@@ -30,8 +25,7 @@
     "react-viewer": "^3.2.2",
     "tailwindcss": "3.3.5",
     "uuid": "^10.0.0",
-    "video-react": "^0.16.0",
-    "xlsx": "^0.18.5"
+    "video-react": "^0.16.0"
   },
   "devDependencies": {
     "@commitlint/cli": "^19.5.0",
@@ -44,7 +38,7 @@
     "@types/react-dom": "18.2.15",
     "@typescript-eslint/eslint-plugin": "^8.8.1",
     "@typescript-eslint/parser": "^8.8.1",
-    "eslint": "^8",
+    "eslint": "^8.57.1",
     "eslint-plugin-tailwindcss": "^3.17.4",
     "husky": "^9.1.6",
     "lint-staged": "^15.2.10",
