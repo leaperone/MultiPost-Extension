@@ -29,17 +29,38 @@ This extension solves the pain points of content creators when publishing across
 First, run the development server:
 
 ```bash
+pnpm i
+
 pnpm dev
-# or
-npm run dev
 ```
 
-## Making production build
+In the browser extension page, open the developer mode, click `Load unpacked extension` and find `build/chrome-mv3-dev` to load it.
 
-Run the following:
+## Building the Production Version
+
+Run the following command:
 
 ```bash
 pnpm build
-# or
-npm run build
 ```
+
+You can find the build content in the `build` folder
+
+## Development Instructions
+
+### Documents You Need to Know
+
+[Chrome Extension API Reference](https://developer.chrome.com/docs/extensions/reference/api)
+
+[Edge Extension](https://learn.microsoft.com/en-us/microsoft-edge/extensions-chromium/)
+
+[Plasmo Docs](https://docs.plasmo.com/)
+
+### File Structure
+
+> src/sync: This folder contains the code for operating on different platforms, where dynamic is related to dynamic publishing, and video is related to video publishing; any added platform needs to be registered in common.ts.
+> components: This folder contains all the components for frontend interface operations.
+
+### Development Environment
+
+It is recommended to use the package management tool `pnpm@latest-9`.

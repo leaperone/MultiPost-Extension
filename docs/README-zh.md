@@ -21,8 +21,8 @@
 
 ## 浏览器扩展商店
 
-- [Chrome 网上应用店](https://chromewebstore.google.com/detail/multipost/dhohkaclnjgcikfoaacfgijgjgceofih)
-- [Microsoft Edge 外接程序](https://microsoftedge.microsoft.com/addons/detail/multipost/ckoiphiceimehjkolnfffgbmihoppgjg)
+- [Chrome 应用商店](https://chromewebstore.google.com/detail/multipost/dhohkaclnjgcikfoaacfgijgjgceofih)
+- [Microsoft Edge 扩展商店](https://microsoftedge.microsoft.com/addons/detail/multipost/ckoiphiceimehjkolnfffgbmihoppgjg)
 
 ## 开始使用
 
@@ -32,9 +32,9 @@
 pnpm i
 
 pnpm dev
-# 或者
-npm run dev
 ```
+
+在浏览器扩展程序页面中打开开发者模式，点击 `加载已解压的扩展程序` 并找到 `build/chrome-mv3-dev` 进行加载。
 
 ## 构建生产版本
 
@@ -42,6 +42,25 @@ npm run dev
 
 ```bash
 pnpm build
-# 或者
-npm run build
 ```
+
+你可以在 `build` 文件夹下找到构建内容
+
+## 开发说明
+
+### 你需要了解的文档
+
+[Chrome Extension API Reference](https://developer.chrome.com/docs/extensions/reference/api)
+
+[Edge Extension](https://learn.microsoft.com/en-us/microsoft-edge/extensions-chromium/)
+
+[Plasmo Docs](https://docs.plasmo.com/)
+
+### 文件架构
+
+> src/sync：该文件夹下存放了有关操作不同平台的代码，其中 dynamic 是动态发布相关的，video 是视频发布相关的；任何加入的平台都需要在 common.ts 中注册。
+> components：该文件下存放了所有前端界面操作的组件。
+
+### 开发环境
+
+包管理工具建议使用 `pnpm@latest-9`
