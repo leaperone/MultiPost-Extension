@@ -503,7 +503,29 @@
   "gAbout": {
     "message": "About"
   },
+  "gSettings": {
+    "message": "Settings"
+  },
   "syncPublicPageTitle": {
     "message": ""
+  },
+
+  "settingsTrustedDomains": {
+    "message": "Trusted Domains"
+  },
+  "settingsTrustedDomainsDesc": {
+    "message": "Add trusted domains. Wildcard supported (e.g., *.multipost.app)"
+  },
+  "settingsAdd": {
+    "message": "Add"
+  },
+  "settingsDomainEmpty": {
+    "message": "Domain cannot be empty"
+  },
+  "settingsDomainInvalid": {
+    "message": "Invalid domain format"
+  },
+  "settingsTrustedDomainsWarning": {
+    "message": "After adding a trusted domain, web pages from that domain will be allowed to use the extension for content publishing operations. Please add trusted domains carefully and only add websites you trust."
   }
 }

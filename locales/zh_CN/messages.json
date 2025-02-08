@@ -505,5 +505,26 @@
   },
   "gAbout": {
     "message": "关于"
+  },
+  "gSettings": {
+    "message": "设置"
+  },
+  "settingsTrustedDomains": {
+    "message": "可信域名"
+  },
+  "settingsTrustedDomainsDesc": {
+    "message": "添加可信任的域名，支持通配符（例如：*.multipost.app）"
+  },
+  "settingsAdd": {
+    "message": "添加"
+  },
+  "settingsDomainEmpty": {
+    "message": "域名不能为空"
+  },
+  "settingsDomainInvalid": {
+    "message": "无效的域名格式"
+  },
+  "settingsTrustedDomainsWarning": {
+    "message": "添加可信域名后，来自该域名的网页将被允许调用扩展进行内容发布操作。请谨慎添加可信域名，仅添加您信任的网站。"
   }
 }
