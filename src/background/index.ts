@@ -8,7 +8,6 @@ import {
   tabsManagerMessageHandler,
 } from './services/tabs';
 import QuantumEntanglementKeepAlive from '../utils/keep-alive';
-import { collectionMessageHandler } from './services/collection/collection';
 import { createTabsForPlatforms, getPlatformInfos, injectScriptsToTabs, type SyncData } from '~sync/common';
 
 chrome.runtime.onInstalled.addListener((object) => {
@@ -22,7 +21,6 @@ chrome.runtime.onInstalled.addListener((object) => {
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   defaultMessageHandler(request, sender, sendResponse);
   tabsManagerMessageHandler(request, sender, sendResponse);
-  collectionMessageHandler(request, sender, sendResponse);
   return true;
 });
 chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
