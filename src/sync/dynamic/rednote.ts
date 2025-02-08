@@ -32,52 +32,6 @@ export async function DynamicRednote(data: SyncData) {
     });
   }
 
-  // 辅助函数：通过文本内容查找元素
-  async function findElementByText(
-    selector: string,
-    text: string,
-    maxRetries = 5,
-    retryInterval = 1000,
-  ): Promise<Element | null> {
-    for (let i = 0; i < maxRetries; i++) {
-      const elements = document.querySelectorAll(selector);
-      const element = Array.from(elements).find((element) => element.textContent?.includes(text));
-
-      if (element) {
-        return element;
-      }
-
-      console.log(`未找到包含文本 "${text}" 的元素，尝试次数：${i + 1}`);
-      await new Promise((resolve) => setTimeout(resolve, retryInterval));
-    }
-
-    console.error(`在 ${maxRetries} 次尝试后未找到包含文本 "${text}" 的元素`);
-    return null;
-  }
-
-  // 辅助函数：等待多个元素出现
-  function waitForElements(selector: string, count: number, timeout = 30000): Promise<Element[]> {
-    return new Promise((resolve, reject) => {
-      const checkElements = () => {
-        const elements = document.querySelectorAll(selector);
-        if (elements.length >= count) {
-          resolve(Array.from(elements));
-          return;
-        }
-
-        if (Date.now() - startTime > timeout) {
-          reject(new Error(`未能在 ${timeout}ms 内找到 ${count} 个 "${selector}" 元素`));
-          return;
-        }
-
-        setTimeout(checkElements, 100);
-      };
-
-      const startTime = Date.now();
-      checkElements();
-    });
-  }
-
   // 辅助函数：上传文件
   async function uploadImages() {
     const fileInput = (await waitForElement('input[type="file"]')) as HTMLInputElement;
@@ -150,111 +104,107 @@ export async function DynamicRednote(data: SyncData) {
   if (images && images.length > 0) {
     // 等待页面加载
     await waitForElement('span[class="title"]');
-    await new Promise((resolve) => setTimeout(resolve, 2000));
+    await new Promise((resolve) => setTimeout(resolve, 1000));
 
-    // 上传图片
-    const uploadButton = (await findElementByText('span[class="title"]', '上传图文')) as HTMLElement;
-    if (uploadButton) {
-      uploadButton.click();
-      await new Promise((resolve) => setTimeout(resolve, 2000));
+    // 点击上传图文按钮
+    const uploadButtons = document.querySelectorAll('span[class="title"]');
+    const uploadButton = Array.from(uploadButtons).find(
+      (element) => element.textContent?.includes('上传图文'),
+    ) as HTMLElement;
+
+    if (!uploadButton) {
+      console.error('未找到上传图文按钮');
+      return;
     }
+
+    uploadButton.click();
+    uploadButton.dispatchEvent(new Event('click', { bubbles: true }));
+    await new Promise((resolve) => setTimeout(resolve, 1000));
 
     // 上传文件
     await uploadImages();
+    await new Promise((resolve) => setTimeout(resolve, 5000)); // 等待图片上传完成
 
     // 填写标题
-    const titleInput = (await waitForElement('input[class="el-input__inner"]')) as HTMLInputElement;
+    const titleInput = (await waitForElement('input[type="text"]')) as HTMLInputElement;
     if (titleInput) {
-      titleInput.value = title || content.slice(0, 20);
+      const titleText = title || content?.slice(0, 20) || '';
+      titleInput.value = titleText;
       titleInput.dispatchEvent(new Event('input', { bubbles: true }));
     }
 
     // 填写内容
-    const contentEditor = (await waitForElement('p.post-content')) as HTMLParagraphElement;
+    const contentEditor = (await waitForElement('div[contenteditable="true"]')) as HTMLDivElement;
     if (contentEditor) {
       contentEditor.innerText = content;
-      contentEditor.dispatchEvent(new Event('input', { bubbles: true }));
+      console.log('设置内容:', content);
     }
 
-    // 等待内容更新
-    await new Promise((resolve) => setTimeout(resolve, 3000));
-
-    await waitForElements('button[class="el-button publishBtn"]', images.length);
-
-    // 发布按钮
-    // const publishButton = (await findElementByText('button', '发布')) as HTMLButtonElement;
-    // if (publishButton) {
-    // publishButton.click();
-    // await new Promise(resolve => setTimeout(resolve, 30000));
-    // window.location.href = "https://creator.xiaohongshu.com/new/note-manager";
-    // }
-
+    // 自动发布
     if (data.auto_publish) {
-      const maxAttempts = 3;
-      for (let attempt = 0; attempt < maxAttempts; attempt++) {
-        try {
-          const publishButton = (await waitForElement(
-            'button[class="el-button publishBtn"]',
-            5000,
-          )) as HTMLButtonElement;
-          publishButton.click();
-          console.log('发布按钮已点击');
-          await new Promise((resolve) => setTimeout(resolve, 3000));
-          window.location.href = 'https://creator.xiaohongshu.com/new/note-manager';
-          break; // 成功点击后退出循环
-        } catch (error) {
-          console.warn(`第 ${attempt + 1} 次尝试查找发布按钮失败:`, error);
-          if (attempt === maxAttempts - 1) {
-            console.error('达到最大尝试次数，无法找到发布按钮');
-          }
-          await new Promise((resolve) => setTimeout(resolve, 2000)); // 等待2秒后重试
+      await new Promise((resolve) => setTimeout(resolve, 2000));
+      const buttons = document.querySelectorAll('button');
+      const publishButton = Array.from(buttons).find(
+        (button) => button.textContent?.includes('发布'),
+      ) as HTMLButtonElement;
+
+      if (publishButton) {
+        // 等待按钮可用
+        while (publishButton.getAttribute('aria-disabled') === 'true') {
+          await new Promise((resolve) => setTimeout(resolve, 1000));
+          console.log('等待发布按钮可用...');
         }
+
+        console.log('点击发布按钮');
+        publishButton.click();
+        await new Promise((resolve) => setTimeout(resolve, 10000));
+        window.location.href = 'https://creator.xiaohongshu.com/new/note-manager';
       }
     }
   } else if (videos && videos.length > 0) {
     // 等待页面加载
     await waitForElement('span[class="title"]');
-    await new Promise((resolve) => setTimeout(resolve, 2000));
+    await new Promise((resolve) => setTimeout(resolve, 1000));
 
     // 上传视频
     await uploadVideo();
+    await new Promise((resolve) => setTimeout(resolve, 5000)); // 等待视频上传完成
 
     // 填写标题
-    const titleInput = (await waitForElement('input[class="el-input__inner"]')) as HTMLInputElement;
+    const titleInput = (await waitForElement('input[type="text"]')) as HTMLInputElement;
     if (titleInput) {
-      titleInput.value = title || content.slice(0, 20);
+      const titleText = title || content?.slice(0, 20) || '';
+      titleInput.value = titleText;
       titleInput.dispatchEvent(new Event('input', { bubbles: true }));
     }
 
     // 填写内容
-    const contentEditor = (await waitForElement('p.post-content')) as HTMLParagraphElement;
+    const contentEditor = (await waitForElement('div[contenteditable="true"]')) as HTMLDivElement;
     if (contentEditor) {
       contentEditor.innerText = content;
-      contentEditor.dispatchEvent(new Event('input', { bubbles: true }));
+      console.log('设置内容:', content);
     }
 
-    // 等待内容更新
-    await new Promise((resolve) => setTimeout(resolve, 3000));
+    // 自动发布
+    if (data.auto_publish) {
+      await new Promise((resolve) => setTimeout(resolve, 2000));
+      const buttons = document.querySelectorAll('button');
+      const publishButton = Array.from(buttons).find(
+        (button) => button.textContent?.includes('发布'),
+      ) as HTMLButtonElement;
 
-    // 发布按钮
-    // if (data.auto_publish) {
-    //   const maxAttempts = 3;
-    //   for (let attempt = 0; attempt < maxAttempts; attempt++) {
-    //     try {
-    //       const publishButton = (await waitForElement('button[class="el-button publishBtn"]', 5000)) as HTMLButtonElement;
-    //       publishButton.click();
-    //       console.log('发布按钮已点击');
-    //       await new Promise((resolve) => setTimeout(resolve, 3000));
-    //       window.location.href = 'https://creator.xiaohongshu.com/new/note-manager';
-    //       break; // 成功点击后退出循环
-    //     } catch (error) {
-    //       console.warn(`第 ${attempt + 1} 次尝试查找发布按钮失败:`, error);
-    //       if (attempt === maxAttempts - 1) {
-    //         console.error('达到最大尝试次数，无法找到发布按钮');
-    //       }
-    //       await new Promise((resolve) => setTimeout(resolve, 2000)); // 等待2秒后重试
-    //     }
-    //   }
-    // }
+      if (publishButton) {
+        // 等待按钮可用
+        while (publishButton.getAttribute('aria-disabled') === 'true') {
+          await new Promise((resolve) => setTimeout(resolve, 1000));
+          console.log('等待发布按钮可用...');
+        }
+
+        console.log('点击发布按钮');
+        publishButton.click();
+        await new Promise((resolve) => setTimeout(resolve, 10000));
+        window.location.href = 'https://creator.xiaohongshu.com/new/note-manager';
+      }
+    }
   }
 }
