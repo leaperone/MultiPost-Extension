@@ -460,10 +460,15 @@
     "message": "抖音",
     "description": "抖音平台名称"
   },
+  "platformOkjike": {
+    "message": "即刻",
+    "description": "即刻平台名称"
+  },
   "platformInstagram": {
     "message": "Instagram",
     "description": "Instagram 平台名称"
   },
+
   "platformYoutube": {
     "message": "YouTube",
     "description": "YouTube 平台名称"

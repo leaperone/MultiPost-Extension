@@ -13,6 +13,7 @@ import { VideoDouyin } from './video/douyin';
 import { DynamicFacebook } from './dynamic/facebook';
 import { VideoTiktok } from './video/tiktok';
 import { DynamicLinkedin } from './dynamic/linkedin';
+import { DynamicOkjike } from './dynamic/okjike';
 
 export interface SyncData {
   platforms: string[];
@@ -156,6 +157,15 @@ export const infoMap: Record<string, PlatformInfo> = {
     injectUrl: 'https://www.linkedin.com/feed',
     injectFunction: DynamicLinkedin,
   },
+  DYNAMIC_OKJIKE: {
+    type: 'DYNAMIC',
+    name: 'DYNAMIC_OKJIKE',
+    homeUrl: 'https://web.okjike.com',
+    faviconUrl: 'https://web.okjike.com/favicon.ico',
+    platformName: chrome.i18n.getMessage('platformOkjike'),
+    injectUrl: 'https://web.okjike.com',
+    injectFunction: DynamicOkjike,
+  },
   VIDEO_BILIBILI: {
     type: 'VIDEO',
     name: 'VIDEO_BILIBILI',
@@ -188,7 +198,8 @@ export const infoMap: Record<string, PlatformInfo> = {
     type: 'VIDEO',
     name: 'VIDEO_REDNOTE',
     homeUrl: 'https://creator.xiaohongshu.com',
-    // faviconUrl: 'https://creator.xiaohongshu.com/favicon.ico',
+    faviconUrl: 'https://creator.xiaohongshu.com/favicon.ico',
+    iconifyIcon: 'simple-icons:xiaohongshu',
     platformName: chrome.i18n.getMessage('platformRednote'),
     injectUrl: 'https://creator.xiaohongshu.com/publish/publish',
     injectFunction: VideoRednote,
