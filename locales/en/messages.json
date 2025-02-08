@@ -527,5 +527,9 @@
   },
   "settingsTrustedDomainsWarning": {
     "message": "After adding a trusted domain, web pages from that domain will be allowed to use the extension for content publishing operations. Please add trusted domains carefully and only add websites you trust."
+  },
+  "optionViewHomePagePublish": {
+    "message": "Publish on Web",
+    "description": "Text for the publish button in header that links to homepage publish section"
   }
 }
