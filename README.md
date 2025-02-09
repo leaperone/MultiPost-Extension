@@ -1,9 +1,14 @@
-# MultiPost - Browser Extension for One-Click Multi-Platform Content Publishing
+# MultiPost
 
-> Website: [multipost.app](https://multipost.app)
-> Repo: [leaper-one/MultiPost-Extension](https://github.com/leaper-one/MultiPost-Extension)
+> A browser extension that helps users publish content to multiple social media platforms with one click.
 
-A browser extension that helps users publish content to multiple social media platforms with one click.
+![GitHub License GitHub许可证](https://img.shields.io/github/license/leaper-one/MultiPost-Extension) ![GitHub Repo stars GitHub回购明星](https://img.shields.io/github/stars/leaper-one/MultiPost-Extension) ![GitHub commit activity GitHub提交活动](https://img.shields.io/github/commit-activity/m/leaper-one/MultiPost-Extension) [![Website 网站](https://img.shields.io/website?url=https%3A%2F%2Fmultipost.app)](https://multipost.app)
+
+## Browser Extension
+
+- [![Chrome Web Store Version Chrome网上商店版本](https://img.shields.io/chrome-web-store/v/dhohkaclnjgcikfoaacfgijgjgceofih)](https://chromewebstore.google.com/detail/multipost/dhohkaclnjgcikfoaacfgijgjgceofih) ![Chrome Web Store Last Updated](https://img.shields.io/chrome-web-store/last-updated/dhohkaclnjgcikfoaacfgijgjgceofih) ![Chrome Web Store Users Chrome网上商店用户](https://img.shields.io/chrome-web-store/users/dhohkaclnjgcikfoaacfgijgjgceofih)
+
+- [![Edge Extension](https://img.shields.io/badge/Edge%20Extension-v0.0.4-0884D8)](https://microsoftedge.microsoft.com/addons/detail/multipost/ckoiphiceimehjkolnfffgbmihoppgjg)
 
 [English](README.md) | [中文](docs/README-zh.md)
 
@@ -18,11 +23,6 @@ A browser extension that helps users publish content to multiple social media pl
   - AI content generation integration
 
 This extension solves the pain points of content creators when publishing across multiple platforms. Through a single edit, content can be synchronized to all platforms, greatly improving work efficiency.
-
-## Browser Extension
-
-- [Chrome Web Store](https://chromewebstore.google.com/detail/multipost/dhohkaclnjgcikfoaacfgijgjgceofih)
-- [Microsoft Edge Add-ons](https://microsoftedge.microsoft.com/addons/detail/multipost/ckoiphiceimehjkolnfffgbmihoppgjg)
 
 ## Getting Started
 
