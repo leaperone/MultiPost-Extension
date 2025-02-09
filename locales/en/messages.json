@@ -433,10 +433,15 @@
     "message": "CSDN",
     "description": "Platform name for CSDN"
   },
+  "platformJuejin": {
+    "message": "Juejin",
+    "description": "Platform name for Juejin"
+  },
   "platformX": {
     "message": "X",
     "description": "Platform name for X (Twitter)"
   },
+
   "platformBilibili": {
     "message": "Bilibili",
     "description": "Platform name for Bilibili"

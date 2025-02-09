@@ -440,6 +440,10 @@
     "message": "CSDN",
     "description": "CSDN 平台名称"
   },
+  "platformJuejin": {
+    "message": "掘金",
+    "description": "掘金平台名称"
+  },
   "platformX": {
     "message": "X",
     "description": "X (Twitter) 平台名称"
