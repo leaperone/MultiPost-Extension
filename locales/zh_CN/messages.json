@@ -453,7 +453,6 @@
     "description": "X (Twitter) 平台名称"
   },
 
-
   "platformBilibili": {
     "message": "哔哩哔哩",
     "description": "哔哩哔哩平台名称"
@@ -563,5 +562,14 @@
   },
   "processingFiles": {
     "message": "正在处理文件..."
+  },
+  "errorEnterTitle": {
+    "message": "请输入标题"
+  },
+  "errorSelectPlatform": {
+    "message": "至少选择一个平台"
+  },
+  "errorEnterUrl": {
+    "message": "请输入有效的URL"
   }
 }
