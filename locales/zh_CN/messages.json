@@ -545,5 +545,14 @@
   },
   "optionsUploadCover": {
     "message": "上传封面"
+  },
+  "processingImages": {
+    "message": "正在处理图片..."
+  },
+  "processingVideos": {
+    "message": "正在处理视频..."
+  },
+  "processingFiles": {
+    "message": "正在处理文件..."
   }
 }

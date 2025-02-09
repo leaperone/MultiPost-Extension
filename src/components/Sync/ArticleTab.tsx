@@ -1,5 +1,5 @@
 import React, { useState, useRef } from 'react';
-import { Card, Button, Image, Input, Textarea, CardHeader, CardBody } from '@heroui/react';
+import { Card, Button, Image, Input, Textarea, CardHeader, CardBody, Progress, CardFooter } from '@heroui/react';
 import { ImagePlusIcon, XIcon, DownloadIcon } from 'lucide-react';
 import type { FileData, SyncData } from '~sync/common';
 import PlatformCheckbox from './PlatformCheckbox';
@@ -25,7 +25,13 @@ const ArticleTab: React.FC<ArticleTabProps> = ({ funcPublish, funcScraper }) => 
     author: string;
   } | null>(null);
   const [coverImage, setCoverImage] = useState<FileData | null>(null);
+  const [images, setImages] = useState<FileData[]>([]);
+  const [videos, setVideos] = useState<FileData[]>([]);
+  const [fileDatas, setFileDatas] = useState<FileData[]>([]);
   const coverInputRef = useRef<HTMLInputElement>(null);
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [processStatus, setProcessStatus] = useState('');
+  const [processProgress, setProcessProgress] = useState(0);
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const handlePlatformChange = (platform: string, isSelected: boolean) => {
@@ -65,54 +71,177 @@ const ArticleTab: React.FC<ArticleTabProps> = ({ funcPublish, funcScraper }) => 
         content: content || digest,
         digest,
         cover: coverImage || null,
-        images: [],
-        videos: [],
-        fileDatas: [],
+        images: images || [],
+        videos: videos || [],
+        fileDatas: [...fileDatas, ...images, ...videos],
       },
       auto_publish: false,
     };
     console.log(data);
 
     try {
-      const res = await chrome.runtime.sendMessage({
-        type: 'MUTLIPOST_EXTENSION_CHECK_SERVICE_STATUS',
-      });
-      if (res === 'success') {
-        chrome.windows.getCurrent({ populate: true }, (window) => {
-          chrome.sidePanel.open({ windowId: window.id }).then(() => {
-            funcPublish(data);
-          });
+      chrome.windows.getCurrent({ populate: true }, (window) => {
+        chrome.sidePanel.open({ windowId: window.id }).then(() => {
+          funcPublish(data);
         });
-      } else {
-        funcPublish(data);
-      }
+      });
     } catch (error) {
       console.error('检查服务状态时出错:', error);
       funcPublish(data);
     }
   };
 
-  const handleImport = () => {
+  const processImportedContent = async (content: string) => {
+    setIsProcessing(true);
+    setProcessStatus(chrome.i18n.getMessage('processingImages'));
+    setProcessProgress(0);
+
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(content, 'text/html');
+    const images = Array.from(doc.querySelectorAll('img'));
+    const videos = Array.from(doc.querySelectorAll('video'));
+    const files = Array.from(doc.querySelectorAll('a[href$=".pdf"], a[href$=".doc"], a[href$=".docx"]'));
+
+    const fileDatas: FileData[] = [];
+    const imageFileDatas: FileData[] = [];
+    const videoFileDatas: FileData[] = [];
+
+    // 处理图片
+    for (let i = 0; i < images.length; i++) {
+      try {
+        const img = images[i];
+        const src = img.src;
+        const response = await fetch(src);
+        const blob = await response.blob();
+        const fileData: FileData = {
+          name: `image_${i}.${blob.type.split('/')[1]}`,
+          type: blob.type,
+          size: blob.size,
+          url: URL.createObjectURL(blob),
+        };
+        imageFileDatas.push(fileData);
+
+        // 替换原始图片的 src 为本地 URL
+        img.src = fileData.url;
+
+        // 如果是第一张图片且没有设置封面，则设置为封面
+        if (i === 0 && !coverImage) {
+          setCoverImage(fileData);
+        }
+
+        setProcessProgress((i / images.length) * 100);
+      } catch (error) {
+        console.error('处理图片时出错:', error);
+      }
+    }
+
+    // 处理视频
+    setProcessStatus(chrome.i18n.getMessage('processingVideos'));
+    for (let i = 0; i < videos.length; i++) {
+      try {
+        const video = videos[i];
+        const src = video.src;
+        const response = await fetch(src);
+        const blob = await response.blob();
+        const fileData: FileData = {
+          name: `video_${i}.${blob.type.split('/')[1]}`,
+          type: blob.type,
+          size: blob.size,
+          url: URL.createObjectURL(blob),
+        };
+        videoFileDatas.push(fileData);
+
+        // 替换原始视频的 src 为本地 URL
+        video.src = fileData.url;
+      } catch (error) {
+        console.error('处理视频时出错:', error);
+      }
+    }
+
+    // 处理文件
+    setProcessStatus(chrome.i18n.getMessage('processingFiles'));
+    for (let i = 0; i < files.length; i++) {
+      try {
+        const file = files[i];
+        const href = file.getAttribute('href');
+        if (href) {
+          const response = await fetch(href);
+          const blob = await response.blob();
+          const fileData: FileData = {
+            name: file.textContent || `file_${i}`,
+            type: blob.type,
+            size: blob.size,
+            url: URL.createObjectURL(blob),
+          };
+          fileDatas.push(fileData);
+
+          // 替换原始文件链接的 href 为本地 URL
+          file.setAttribute('href', fileData.url);
+        }
+      } catch (error) {
+        console.error('处理文件时出错:', error);
+      }
+    }
+
+    setIsProcessing(false);
+
+    // 返回处理后的 HTML 内容和文件数据
+    return {
+      imageFileDatas,
+      videoFileDatas,
+      fileDatas,
+      processedContent: doc.body.innerHTML,
+    };
+  };
+
+  const handleImport = async () => {
     if (!url) {
       console.log('请输入有效的URL');
       return;
     }
-    console.log('url', url);
-    funcScraper(url).then((res) => {
-      console.log('res', res);
+
+    try {
+      const res = await funcScraper(url);
       if (res && res.title && res.content) {
+        const { imageFileDatas, videoFileDatas, fileDatas, processedContent } = await processImportedContent(
+          res.content,
+        );
+
+        // 如果导入的内容有封面图，且当前没有设置封面，则设置为封面
+        if (res.cover && !coverImage) {
+          try {
+            const response = await fetch(res.cover);
+            const blob = await response.blob();
+            const coverFileData: FileData = {
+              name: `cover.${blob.type.split('/')[1]}`,
+              type: blob.type,
+              size: blob.size,
+              url: URL.createObjectURL(blob),
+            };
+            setCoverImage(coverFileData);
+          } catch (error) {
+            console.error('处理封面图片时出错:', error);
+          }
+        }
+
         setImportedContent({
           title: res.title,
-          content: res.content,
+          content: processedContent,
           digest: res.digest || '',
           cover: res.cover || '',
           author: res.author || '',
         });
+
         setTitle(res.title);
-        setContent(res.content);
+        setContent(processedContent);
         setDigest(res.digest || '');
+        setImages(imageFileDatas);
+        setVideos(videoFileDatas);
+        setFileDatas(fileDatas);
       }
-    });
+    } catch (error) {
+      console.error('导入内容时出错:', error);
+    }
   };
 
   return (
@@ -134,6 +263,19 @@ const ArticleTab: React.FC<ArticleTabProps> = ({ funcPublish, funcScraper }) => 
             </Button>
           </div>
         </CardBody>
+
+        {isProcessing && (
+          <CardFooter>
+            <div className="flex flex-col gap-2">
+              <p className="text-sm">{processStatus}</p>
+              <Progress
+                value={processProgress}
+                color="primary"
+                className="w-full"
+              />
+            </div>
+          </CardFooter>
+        )}
       </Card>
 
       <Card className="mb-4 shadow-none h-fit bg-default-50">

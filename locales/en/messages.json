@@ -547,5 +547,14 @@
   "optionsSyncArticle": {
     "message": "Sync Article",
     "description": "Sync article button text"
+  },
+  "processingImages": {
+    "message": "Processing images..."
+  },
+  "processingVideos": {
+    "message": "Processing videos..."
+  },
+  "processingFiles": {
+    "message": "Processing files..."
   }
 }
