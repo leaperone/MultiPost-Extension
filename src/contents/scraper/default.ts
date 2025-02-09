@@ -3,6 +3,7 @@ import { preprocessor } from './preprocessor';
 import scrapeCSDNContent from './csdn';
 import scrapeZhihuContent from './zhihu';
 import scrapeWeixinContent from './wechat';
+import scrapeJuejinContent from './juejin';
 
 export interface ArticleData {
   title: string;
@@ -20,6 +21,7 @@ export default async function scrapeContent(): Promise<ArticleData | undefined> 
     'https://blog.csdn.net/': scrapeCSDNContent,
     'https://zhuanlan.zhihu.com/p/': scrapeZhihuContent,
     'https://mp.weixin.qq.com/s/': scrapeWeixinContent,
+    'https://juejin.cn/post/': scrapeJuejinContent,
   };
 
   const scraper = Object.keys(scraperMap).find((key) => url.startsWith(key));
@@ -63,4 +65,3 @@ async function defaultScraper(): Promise<ArticleData | undefined> {
 
   return articleData;
 }
-
