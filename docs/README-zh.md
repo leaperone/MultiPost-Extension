@@ -1,9 +1,16 @@
-# MultiPost - 一键发布内容到多个社交平台的浏览器扩展
+# MultiPost
 
-> 官网：[multipost.app](https://multipost.app)
-> Repo：[leaper-one/MultiPost-Extension](https://github.com/leaper-one/MultiPost-Extension)
+> 一键发布内容到多个社交平台的浏览器扩展
 
-这是一个浏览器扩展，可以帮助用户一键将内容同步发布到多个社交媒体平台。
+![GitHub License GitHub许可证](https://img.shields.io/github/license/leaper-one/MultiPost-Extension) ![GitHub Repo stars GitHub星星](https://img.shields.io/github/stars/leaper-one/MultiPost-Extension) ![GitHub commit activity GitHub提交活动](https://img.shields.io/github/commit-activity/m/leaper-one/MultiPost-Extension) [![Website 网站](https://img.shields.io/website?url=https%3A%2F%2Fmultipost.app)](https://multipost.app)
+
+## 安装
+
+- [![Chrome Web Store Version Chrome网上商店版本](https://img.shields.io/chrome-web-store/v/dhohkaclnjgcikfoaacfgijgjgceofih)](https://chromewebstore.google.com/detail/multipost/dhohkaclnjgcikfoaacfgijgjgceofih) ![Chrome Web Store Last Updated](https://img.shields.io/chrome-web-store/last-updated/dhohkaclnjgcikfoaacfgijgjgceofih) ![Chrome Web Store Users Chrome网上商店用户](https://img.shields.io/chrome-web-store/users/dhohkaclnjgcikfoaacfgijgjgceofih)
+
+- [![Edge Extension](https://img.shields.io/badge/Edge%20Extension-v0.0.4-0884D8)](https://microsoftedge.microsoft.com/addons/detail/multipost/ckoiphiceimehjkolnfffgbmihoppgjg)
+
+---
 
 [English](../README.md) | [中文](docs/README-zh.md)
 
@@ -18,11 +25,6 @@
   - 联动 AI 生成内容
 
 这个扩展主要解决了内容创作者在多平台发布时的痛点。通过一次编辑，就能将内容同步发布到所有平台，大大提高了工作效率。
-
-## 浏览器扩展商店
-
-- [Chrome 应用商店](https://chromewebstore.google.com/detail/multipost/dhohkaclnjgcikfoaacfgijgjgceofih)
-- [Microsoft Edge 扩展商店](https://microsoftedge.microsoft.com/addons/detail/multipost/ckoiphiceimehjkolnfffgbmihoppgjg)
 
 ## 开始使用
 
