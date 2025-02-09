@@ -444,10 +444,15 @@
     "message": "掘金",
     "description": "掘金平台名称"
   },
+  "platformJianshu": {
+    "message": "简书",
+    "description": "简书平台名称"
+  },
   "platformX": {
     "message": "X",
     "description": "X (Twitter) 平台名称"
   },
+
 
   "platformBilibili": {
     "message": "哔哩哔哩",

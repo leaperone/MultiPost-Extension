@@ -17,6 +17,7 @@ import { DynamicOkjike } from './dynamic/okjike';
 import { ArticleCSDN } from './article/csdn';
 import { ArticleZhihu } from './article/zhihu';
 import { ArticleJuejin } from './article/juejin';
+import { ArticleJianshu } from './article/jianshu';
 
 export interface SyncData {
   platforms: string[];
@@ -118,6 +119,15 @@ export const infoMap: Record<string, PlatformInfo> = {
     platformName: chrome.i18n.getMessage('platformJuejin'),
     injectUrl: 'https://juejin.cn/editor/drafts/new?v=2',
     injectFunction: ArticleJuejin,
+  },
+  ARTICLE_JIANSHU: {
+    type: 'ARTICLE',
+    name: 'ARTICLE_JIANSHU',
+    homeUrl: 'https://www.jianshu.com/writer',
+    faviconUrl: 'https://cdn2.jianshu.io/writer/favicon.c183daf7eab8ea4c81a845f12734f77f.ico',
+    platformName: chrome.i18n.getMessage('platformJianshu'),
+    injectUrl: 'https://www.jianshu.com/writer',
+    injectFunction: ArticleJianshu,
   },
   DYNAMIC_X: {
     type: 'DYNAMIC',

@@ -437,10 +437,15 @@
     "message": "Juejin",
     "description": "Platform name for Juejin"
   },
+  "platformJianshu": {
+    "message": "Jianshu",
+    "description": "Platform name for Jianshu"
+  },
   "platformX": {
     "message": "X",
     "description": "Platform name for X (Twitter)"
   },
+
 
   "platformBilibili": {
     "message": "Bilibili",
