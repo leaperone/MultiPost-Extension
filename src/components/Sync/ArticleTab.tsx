@@ -20,6 +20,7 @@ const ArticleTab: React.FC<ArticleTabProps> = ({ funcPublish, funcScraper }) => 
   const [importedContent, setImportedContent] = useState<{
     title: string;
     content: string;
+    originContent: string;
     digest: string;
     cover: string;
     author: string;
@@ -74,6 +75,7 @@ const ArticleTab: React.FC<ArticleTabProps> = ({ funcPublish, funcScraper }) => 
         images: images || [],
         videos: videos || [],
         fileDatas: [...fileDatas, ...images, ...videos],
+        originContent: importedContent?.originContent || '',
       },
       auto_publish: false,
     };
@@ -118,6 +120,7 @@ const ArticleTab: React.FC<ArticleTabProps> = ({ funcPublish, funcScraper }) => 
           type: blob.type,
           size: blob.size,
           url: URL.createObjectURL(blob),
+          originUrl: src,
         };
         imageFileDatas.push(fileData);
 
@@ -148,6 +151,7 @@ const ArticleTab: React.FC<ArticleTabProps> = ({ funcPublish, funcScraper }) => 
           type: blob.type,
           size: blob.size,
           url: URL.createObjectURL(blob),
+          originUrl: src,
         };
         videoFileDatas.push(fileData);
 
@@ -172,6 +176,7 @@ const ArticleTab: React.FC<ArticleTabProps> = ({ funcPublish, funcScraper }) => 
             type: blob.type,
             size: blob.size,
             url: URL.createObjectURL(blob),
+            originUrl: href,
           };
           fileDatas.push(fileData);
 
@@ -217,6 +222,7 @@ const ArticleTab: React.FC<ArticleTabProps> = ({ funcPublish, funcScraper }) => 
               type: blob.type,
               size: blob.size,
               url: URL.createObjectURL(blob),
+              originUrl: res.cover,
             };
             setCoverImage(coverFileData);
           } catch (error) {
@@ -227,6 +233,7 @@ const ArticleTab: React.FC<ArticleTabProps> = ({ funcPublish, funcScraper }) => 
         setImportedContent({
           title: res.title,
           content: processedContent,
+          originContent: res.content,
           digest: res.digest || '',
           cover: res.cover || '',
           author: res.author || '',
