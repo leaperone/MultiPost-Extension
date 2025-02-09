@@ -4,13 +4,13 @@ import { ImagePlusIcon, XIcon, DownloadIcon } from 'lucide-react';
 import Viewer from 'react-viewer';
 import type { FileData, SyncData } from '~sync/common';
 
-interface PostTabProps {
+interface ArticleTabProps {
   funcPublish: (data: SyncData) => void;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   funcScraper: (url: string) => Promise<any>;
 }
 
-const PostTab: React.FC<PostTabProps> = ({ funcPublish, funcScraper }) => {
+const ArticleTab: React.FC<ArticleTabProps> = ({ funcPublish, funcScraper }) => {
   const [files, setFiles] = useState<FileData[]>([]);
   const [title, setTitle] = useState<string>('');
   const [content, setContent] = useState<string>('');
@@ -61,9 +61,14 @@ const PostTab: React.FC<PostTabProps> = ({ funcPublish, funcScraper }) => {
       data: {
         title,
         content,
-        // images: files,
+        digest: '',
+        cover: files[0],
+        images: files,
+        videos: [],
+        fileDatas: [],
       },
       auto_publish: false,
+
     };
     console.log(data);
 
@@ -145,7 +150,7 @@ const PostTab: React.FC<PostTabProps> = ({ funcPublish, funcScraper }) => {
       <Card className="shadow-none h-fit bg-default-50">
         <CardHeader>
           <Input
-            placeholder={chrome.i18n.getMessage('optionsEnterPostTitle')}
+            placeholder={chrome.i18n.getMessage('optionsEnterArticleTitle')}
             value={title}
             onChange={(e) => setTitle(e.target.value)}
             className="w-full"
@@ -154,7 +159,7 @@ const PostTab: React.FC<PostTabProps> = ({ funcPublish, funcScraper }) => {
 
         <CardBody>
           <Textarea
-            placeholder={chrome.i18n.getMessage('optionsEnterPostContent')}
+            placeholder={chrome.i18n.getMessage('optionsEnterArticleContent')}
             value={content}
             onChange={(e) => setContent(e.target.value)}
             fullWidth
@@ -226,7 +231,7 @@ const PostTab: React.FC<PostTabProps> = ({ funcPublish, funcScraper }) => {
         color="primary"
         disabled={!title || !content || selectedPlatforms.length === 0}
         className="px-4 py-2 w-full font-bold">
-        {chrome.i18n.getMessage('optionsSyncPost')}
+        {chrome.i18n.getMessage('optionsSyncArticle')}
       </Button>
 
       {importedContent && (
@@ -256,4 +261,4 @@ const PostTab: React.FC<PostTabProps> = ({ funcPublish, funcScraper }) => {
   );
 };
 
-export default PostTab;
+export default ArticleTab;

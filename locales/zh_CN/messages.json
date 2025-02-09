@@ -272,15 +272,15 @@
     "message": "导入",
     "description": "导入按钮文本"
   },
-  "optionsEnterPostTitle": {
+  "optionsEnterArticleTitle": {
     "message": "输入文章标题",
     "description": "文章标题输入框占位符"
   },
-  "optionsEnterPostContent": {
+  "optionsEnterArticleContent": {
     "message": "输入文章内容",
     "description": "文章内容输入框占位符"
   },
-  "optionsSyncPost": {
+  "optionsSyncArticle": {
     "message": "同步文章",
     "description": "同步文章按钮文本"
   },
