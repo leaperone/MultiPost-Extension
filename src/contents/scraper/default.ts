@@ -4,6 +4,7 @@ import scrapeCSDNContent from './csdn';
 import scrapeZhihuContent from './zhihu';
 import scrapeWeixinContent from './wechat';
 import scrapeJuejinContent from './juejin';
+import scrapeJianshuContent from './jianshu';
 
 export interface ArticleData {
   title: string;
@@ -22,6 +23,7 @@ export default async function scrapeContent(): Promise<ArticleData | undefined> 
     'https://zhuanlan.zhihu.com/p/': scrapeZhihuContent,
     'https://mp.weixin.qq.com/s/': scrapeWeixinContent,
     'https://juejin.cn/post/': scrapeJuejinContent,
+    'https://www.jianshu.com/p/': scrapeJianshuContent,
   };
 
   const scraper = Object.keys(scraperMap).find((key) => url.startsWith(key));
