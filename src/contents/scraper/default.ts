@@ -1,6 +1,7 @@
 import { Readability } from '@mozilla/readability';
 import { preprocessor } from './preprocessor';
 import scrapeCSDNContent from './csdn';
+import scrapeZhihuContent from './zhihu';
 
 export interface ArticleData {
   title: string;
@@ -11,17 +12,17 @@ export interface ArticleData {
 }
 
 export default async function scrapeContent(): Promise<ArticleData | undefined> {
-  const hostname = window.location.hostname;
+  const url = window.location.href;
 
-  // 针对不同域名使用不同的scraper
+  // 针对不同网址开头使用不同的scraper
   const scraperMap: { [key: string]: () => Promise<ArticleData | undefined> } = {
-    'blog.csdn.net': scrapeCSDNContent,
-    // 添加更多域名和scraper函数
+    'https://blog.csdn.net/': scrapeCSDNContent,
+    'https://zhuanlan.zhihu.com/p/': scrapeZhihuContent,
   };
 
-  const scraper = scraperMap[hostname];
+  const scraper = Object.keys(scraperMap).find((key) => url.startsWith(key));
   if (scraper) {
-    return scraper();
+    return scraperMap[scraper]();
   }
 
   return defaultScraper();
@@ -59,5 +60,4 @@ async function defaultScraper(): Promise<ArticleData | undefined> {
   };
 
   return articleData;
-  
 }
