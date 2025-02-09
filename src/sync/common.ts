@@ -15,6 +15,7 @@ import { VideoTiktok } from './video/tiktok';
 import { DynamicLinkedin } from './dynamic/linkedin';
 import { DynamicOkjike } from './dynamic/okjike';
 import { ArticleCSDN } from './article/csdn';
+import { ArticleZhihu } from './article/zhihu';
 
 export interface SyncData {
   platforms: string[];
@@ -35,6 +36,7 @@ export interface FileData {
   type: string;
   size: number;
   base64?: string;
+  originUrl?: string;
 }
 
 export interface ArticleData {
@@ -45,6 +47,7 @@ export interface ArticleData {
   images: FileData[];
   videos: FileData[];
   fileDatas: FileData[];
+  originContent?: string;
 }
 
 export interface VideoData {
@@ -75,6 +78,15 @@ export const infoMap: Record<string, PlatformInfo> = {
     platformName: chrome.i18n.getMessage('platformCSDN'),
     injectUrl: 'https://mp.csdn.net/mp_blog/creation/editor',
     injectFunction: ArticleCSDN,
+  },
+  ARTICLE_ZHIHU: {
+    type: 'ARTICLE',
+    name: 'ARTICLE_ZHIHU',
+    homeUrl: 'https://zhuanlan.zhihu.com/write',
+    faviconUrl: 'https://www.zhihu.com/favicon.ico',
+    platformName: chrome.i18n.getMessage('platformZhihu'),
+    injectUrl: 'https://zhuanlan.zhihu.com/write',
+    injectFunction: ArticleZhihu,
   },
   DYNAMIC_X: {
     type: 'DYNAMIC',
