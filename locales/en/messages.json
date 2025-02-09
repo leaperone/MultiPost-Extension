@@ -429,6 +429,10 @@
   "dashboardSendBiliPrivateMsg": {
     "message": "Send Bilibili Private Message"
   },
+  "platformCSDN": {
+    "message": "CSDN",
+    "description": "Platform name for CSDN"
+  },
   "platformX": {
     "message": "X",
     "description": "Platform name for X (Twitter)"

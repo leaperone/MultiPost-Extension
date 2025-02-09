@@ -45,16 +45,13 @@ export interface ArticleData {
   images: FileData[];
   videos: FileData[];
   fileDatas: FileData[];
-
 }
-
 
 export interface VideoData {
   title: string;
   content: string;
   video: FileData;
 }
-
 
 export interface PlatformInfo {
   type: 'DYNAMIC' | 'VIDEO' | 'ARTICLE';
@@ -75,13 +72,12 @@ export const infoMap: Record<string, PlatformInfo> = {
     name: 'ARTICLE_CSDN',
     homeUrl: 'https://mp.csdn.net/mp_blog/creation/editor',
     faviconUrl: 'https://g.csdnimg.cn/static/logo/favicon32.ico',
-    platformName: chrome.i18n.getMessage('platformCsdn'),
+    platformName: chrome.i18n.getMessage('platformCSDN'),
     injectUrl: 'https://mp.csdn.net/mp_blog/creation/editor',
     injectFunction: ArticleCSDN,
   },
   DYNAMIC_X: {
     type: 'DYNAMIC',
-
     name: 'DYNAMIC_X',
     homeUrl: 'https://x.com/home',
     faviconUrl: 'https://x.com/favicon.ico',
@@ -238,7 +234,7 @@ export function getDefaultPlatformInfo(platform: string): PlatformInfo | null {
   return infoMap[platform] || null;
 }
 
-export function getPlatformInfos(type?: 'DYNAMIC' | 'VIDEO'): PlatformInfo[] {
+export function getPlatformInfos(type?: 'DYNAMIC' | 'VIDEO' | 'ARTICLE'): PlatformInfo[] {
   if (!type) return Object.values(infoMap);
   return Object.values(infoMap).filter((info) => info.type === type);
 }
