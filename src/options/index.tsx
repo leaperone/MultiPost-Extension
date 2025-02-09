@@ -9,6 +9,7 @@ import VideoTab from '~/components/Sync/VideoTab';
 import AboutTab from '~/components/Sync/AboutTab';
 import { type SyncData, createTabsForPlatforms, injectScriptsToTabs } from '~sync/common';
 import SettingsTab from '~components/Sync/SettingsTab';
+import ArticleTab from '~components/Sync/ArticleTab';
 
 export function getShadowContainer() {
   return document.querySelector('#test-shadow').shadowRoot.querySelector('#plasmo-shadow-container');
@@ -135,8 +136,15 @@ const Options = () => {
             <DynamicTab funcPublish={funcPublish} />
           </Tab>
           <Tab
+            key="article"
+            title={chrome.i18n.getMessage('gArticle')}
+            className="w-full">
+            <ArticleTab funcPublish={funcPublish} funcScraper={funcScraper} />
+          </Tab>
+          <Tab
             key="video"
             title={chrome.i18n.getMessage('gVideo')}
+
             className="w-full">
             <VideoTab funcPublish={funcPublish} />
           </Tab>

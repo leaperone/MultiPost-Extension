@@ -14,11 +14,12 @@ import { DynamicFacebook } from './dynamic/facebook';
 import { VideoTiktok } from './video/tiktok';
 import { DynamicLinkedin } from './dynamic/linkedin';
 import { DynamicOkjike } from './dynamic/okjike';
+import { ArticleCSDN } from './article/csdn';
 
 export interface SyncData {
   platforms: string[];
   auto_publish: boolean;
-  data: DynamicData | PostData | VideoData;
+  data: DynamicData | ArticleData | VideoData;
 }
 
 export interface DynamicData {
@@ -36,9 +37,14 @@ export interface FileData {
   base64?: string;
 }
 
-export interface PostData {
+export interface ArticleData {
   title: string;
   content: string;
+  digest: string;
+  cover: FileData;
+  images: FileData[];
+  videos: FileData[];
+  fileDatas: FileData[];
 }
 
 export interface VideoData {
@@ -48,7 +54,7 @@ export interface VideoData {
 }
 
 export interface PlatformInfo {
-  type: 'DYNAMIC' | 'VIDEO';
+  type: 'DYNAMIC' | 'VIDEO' | 'ARTICLE';
   name: string;
   homeUrl: string;
   faviconUrl?: string;
@@ -61,6 +67,15 @@ export interface PlatformInfo {
 }
 
 export const infoMap: Record<string, PlatformInfo> = {
+  ARTICLE_CSDN: {
+    type: 'ARTICLE',
+    name: 'ARTICLE_CSDN',
+    homeUrl: 'https://mp.csdn.net/mp_blog/creation/editor',
+    faviconUrl: 'https://g.csdnimg.cn/static/logo/favicon32.ico',
+    platformName: chrome.i18n.getMessage('platformCSDN'),
+    injectUrl: 'https://mp.csdn.net/mp_blog/creation/editor',
+    injectFunction: ArticleCSDN,
+  },
   DYNAMIC_X: {
     type: 'DYNAMIC',
     name: 'DYNAMIC_X',
@@ -219,7 +234,7 @@ export function getDefaultPlatformInfo(platform: string): PlatformInfo | null {
   return infoMap[platform] || null;
 }
 
-export function getPlatformInfos(type?: 'DYNAMIC' | 'VIDEO'): PlatformInfo[] {
+export function getPlatformInfos(type?: 'DYNAMIC' | 'VIDEO' | 'ARTICLE'): PlatformInfo[] {
   if (!type) return Object.values(infoMap);
   return Object.values(infoMap).filter((info) => info.type === type);
 }

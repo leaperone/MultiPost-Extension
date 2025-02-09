@@ -429,6 +429,10 @@
   "dashboardSendBiliPrivateMsg": {
     "message": "Send Bilibili Private Message"
   },
+  "platformCSDN": {
+    "message": "CSDN",
+    "description": "Platform name for CSDN"
+  },
   "platformX": {
     "message": "X",
     "description": "Platform name for X (Twitter)"
@@ -531,5 +535,26 @@
   "optionViewHomePagePublish": {
     "message": "Publish on Web",
     "description": "Text for the publish button in header that links to homepage publish section"
+  },
+  "optionsEnterArticleTitle": {
+    "message": "Enter Article Title",
+    "description": "Article title input placeholder"
+  },
+  "optionsEnterArticleContent": {
+    "message": "Enter Article Content",
+    "description": "Article content input placeholder"
+  },
+  "optionsSyncArticle": {
+    "message": "Sync Article",
+    "description": "Sync article button text"
+  },
+  "processingImages": {
+    "message": "Processing images..."
+  },
+  "processingVideos": {
+    "message": "Processing videos..."
+  },
+  "processingFiles": {
+    "message": "Processing files..."
   }
 }

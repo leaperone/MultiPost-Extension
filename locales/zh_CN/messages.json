@@ -272,15 +272,19 @@
     "message": "导入",
     "description": "导入按钮文本"
   },
-  "optionsEnterPostTitle": {
+  "optionsEnterArticleTitle": {
     "message": "输入文章标题",
     "description": "文章标题输入框占位符"
   },
-  "optionsEnterPostContent": {
+  "optionsEnterArticleDigest": {
+    "message": "输入文章摘要",
+    "description": "文章摘要输入框占位符"
+  },
+  "optionsEnterArticleContent": {
     "message": "输入文章内容",
     "description": "文章内容输入框占位符"
   },
-  "optionsSyncPost": {
+  "optionsSyncArticle": {
     "message": "同步文章",
     "description": "同步文章按钮文本"
   },
@@ -432,10 +436,15 @@
   "dashboardSendBiliPrivateMsg": {
     "message": "发送 B 站私信"
   },
+  "platformCSDN": {
+    "message": "CSDN",
+    "description": "CSDN 平台名称"
+  },
   "platformX": {
     "message": "X",
     "description": "X (Twitter) 平台名称"
   },
+
   "platformBilibili": {
     "message": "哔哩哔哩",
     "description": "哔哩哔哩平台名称"
@@ -530,5 +539,20 @@
   "optionViewHomePagePublish": {
     "message": "去网页发布",
     "description": "Text for the publish button in header that links to homepage publish section"
+  },
+  "optionsCoverImage": {
+    "message": "封面图片"
+  },
+  "optionsUploadCover": {
+    "message": "上传封面"
+  },
+  "processingImages": {
+    "message": "正在处理图片..."
+  },
+  "processingVideos": {
+    "message": "正在处理视频..."
+  },
+  "processingFiles": {
+    "message": "正在处理文件..."
   }
 }
