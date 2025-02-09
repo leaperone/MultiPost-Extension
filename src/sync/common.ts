@@ -16,6 +16,7 @@ import { DynamicLinkedin } from './dynamic/linkedin';
 import { DynamicOkjike } from './dynamic/okjike';
 import { ArticleCSDN } from './article/csdn';
 import { ArticleZhihu } from './article/zhihu';
+import { ArticleJuejin } from './article/juejin';
 
 export interface SyncData {
   platforms: string[];
@@ -69,6 +70,27 @@ export interface PlatformInfo {
   injectFunction: (data: SyncData) => Promise<void>;
 }
 
+export interface UploadConfig {
+  filePath: string;
+  policy: string;
+  accessId: string;
+  signature: string;
+  callbackUrl: string;
+  callbackBody: string;
+  callbackBodyType: string;
+  customParam: {
+    rtype: string;
+    watermark: string;
+    templateName: string;
+    filePath: string;
+    isAudit: boolean;
+    'x-image-app': string;
+    type: string;
+    'x-image-suffix': string;
+    username: string;
+  };
+}
+
 export const infoMap: Record<string, PlatformInfo> = {
   ARTICLE_CSDN: {
     type: 'ARTICLE',
@@ -88,9 +110,19 @@ export const infoMap: Record<string, PlatformInfo> = {
     injectUrl: 'https://zhuanlan.zhihu.com/write',
     injectFunction: ArticleZhihu,
   },
+  ARTICLE_JUEJIN: {
+    type: 'ARTICLE',
+    name: 'ARTICLE_JUEJIN',
+    homeUrl: 'https://juejin.cn/editor/drafts/new?v=2',
+    faviconUrl: 'https://lf-web-assets.juejin.cn/obj/juejin-web/xitu_juejin_web/static/favicons/apple-touch-icon.png',
+    platformName: chrome.i18n.getMessage('platformJuejin'),
+    injectUrl: 'https://juejin.cn/editor/drafts/new?v=2',
+    injectFunction: ArticleJuejin,
+  },
   DYNAMIC_X: {
     type: 'DYNAMIC',
     name: 'DYNAMIC_X',
+
     homeUrl: 'https://x.com/home',
     faviconUrl: 'https://x.com/favicon.ico',
     iconifyIcon: 'simple-icons:x',
