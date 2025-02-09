@@ -446,7 +446,6 @@
     "description": "Platform name for X (Twitter)"
   },
 
-
   "platformBilibili": {
     "message": "Bilibili",
     "description": "Platform name for Bilibili"
@@ -566,5 +565,14 @@
   },
   "processingFiles": {
     "message": "Processing files..."
+  },
+  "errorEnterTitle": {
+    "message": "Please enter a title"
+  },
+  "errorSelectPlatform": {
+    "message": "Please select at least one platform"
+  },
+  "errorEnterUrl": {
+    "message": "Please enter a valid URL"
   }
 }

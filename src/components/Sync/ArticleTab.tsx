@@ -57,20 +57,20 @@ const ArticleTab: React.FC<ArticleTabProps> = ({ funcPublish, funcScraper }) => 
   };
 
   const handlePublish = async () => {
-    if (!title || !digest) {
-      console.log('请输入标题和摘要');
+    if (!title) {
+      alert(chrome.i18n.getMessage('errorEnterTitle') || '请输入标题');
       return;
     }
     if (selectedPlatforms.length === 0) {
-      console.log('至少选择一个平台');
+      alert(chrome.i18n.getMessage('errorSelectPlatform') || '至少选择一个平台');
       return;
     }
     const data: SyncData = {
       platforms: selectedPlatforms,
       data: {
         title,
-        content: content || digest,
-        digest,
+        content: content || digest || '',
+        digest: digest || '',
         cover: coverImage || null,
         images: images || [],
         videos: videos || [],
@@ -201,12 +201,13 @@ const ArticleTab: React.FC<ArticleTabProps> = ({ funcPublish, funcScraper }) => 
 
   const handleImport = async () => {
     if (!url) {
-      console.log('请输入有效的URL');
+      alert(chrome.i18n.getMessage('errorEnterUrl') || '请输入有效的URL');
       return;
     }
 
     try {
       const res = await funcScraper(url);
+      console.log('res', res);
       if (res && res.title && res.content) {
         const { imageFileDatas, videoFileDatas, fileDatas, processedContent } = await processImportedContent(
           res.content,
@@ -369,7 +370,7 @@ const ArticleTab: React.FC<ArticleTabProps> = ({ funcPublish, funcScraper }) => 
       <Button
         onPress={handlePublish}
         color="primary"
-        disabled={!title || !digest || selectedPlatforms.length === 0}
+        disabled={!title || selectedPlatforms.length === 0}
         className="px-4 py-2 w-full font-bold">
         {chrome.i18n.getMessage('optionsSyncArticle')}
       </Button>
