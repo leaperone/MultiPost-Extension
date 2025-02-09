@@ -11,15 +11,15 @@ importers:
       '@heroui/react':
         specifier: 2.6.14
         version: 2.6.14(@types/react@18.2.37)(framer-motion@10.18.0(react-dom@18.2.0(react@18.2.0))(react@18.2.0))(react-dom@18.2.0(react@18.2.0))(react@18.2.0)(tailwindcss@3.3.5)
+      '@heroui/theme':
+        specifier: 2.4.6
+        version: 2.4.6(tailwindcss@3.3.5)
       '@mozilla/readability':
         specifier: ^0.5.0
         version: 0.5.0
       '@plasmohq/storage':
         specifier: ^1.11.0
         version: 1.11.0(react@18.2.0)
-      framer-motion:
-        specifier: ^10.18.0
-        version: 10.18.0(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
       lucide-react:
         specifier: ^0.447.0
         version: 0.447.0(react@18.2.0)
@@ -76,7 +76,7 @@ importers:
         specifier: ^8.8.1
         version: 8.8.1(eslint@8.57.1)(typescript@5.2.2)
       eslint:
-        specifier: ^8.57.1
+        specifier: ^8
         version: 8.57.1
       eslint-plugin-tailwindcss:
         specifier: ^3.17.4
