@@ -64,4 +64,4 @@ Vous trouverez le contenu construit dans le dossier `build`.
 
 ### Environnement de développement
 
-Il est recommandé d'utiliser le gestionnaire de paquets `pnpm@latest-9`. 
+Il est recommandé d'utiliser le gestionnaire de paquets `pnpm@latest-9`.
