@@ -255,10 +255,72 @@ export async function ArticleCSDN(data: SyncData) {
   }
 
   // 主流程
-  const articleId = await publishArticle(articleData);
-  if (articleId) {
-    if (!data.auto_publish) {
-      window.location.href = `https://mp.csdn.net/mp_blog/creation/editor/${articleId}`;
+  const host = document.createElement('div') as HTMLDivElement;
+  const tip = document.createElement('div') as HTMLDivElement;
+
+  try {
+    // 添加漂浮提示
+    host.style.position = 'fixed';
+    host.style.bottom = '20px';
+    host.style.right = '20px';
+    host.style.zIndex = '9999';
+    document.body.appendChild(host);
+
+    const shadow = host.attachShadow({ mode: 'open' });
+
+    tip.innerHTML = `
+      <style>
+        .float-tip {
+          background: #1e293b;
+          color: white;
+          padding: 12px 16px;
+          border-radius: 8px;
+          font-size: 14px;
+          box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+          animation: slideIn 0.3s ease-out;
+        }
+        @keyframes slideIn {
+          from {
+            transform: translateY(100%);
+            opacity: 0;
+          }
+          to {
+            transform: translateY(0);
+            opacity: 1;
+          }
+        }
+      </style>
+      <div class="float-tip">
+        正在同步文章到CSDN...
+      </div>
+    `;
+    shadow.appendChild(tip);
+
+    const articleId = await publishArticle(articleData);
+    
+    if (articleId) {
+      (tip.querySelector('.float-tip') as HTMLDivElement).textContent = '文章同步成功！';
+      
+      setTimeout(() => {
+        document.body.removeChild(host);
+      }, 3000);
+
+      if (!data.auto_publish) {
+        window.location.href = `https://mp.csdn.net/mp_blog/creation/editor/${articleId}`;
+      }
     }
+  } catch (error) {
+    if (document.body.contains(host)) {
+      const floatTip = tip.querySelector('.float-tip') as HTMLDivElement;
+      floatTip.textContent = '同步失败，请重试';
+      floatTip.style.backgroundColor = '#dc2626';
+
+      setTimeout(() => {
+        document.body.removeChild(host);
+      }, 3000);
+    }
+    
+    console.error('发布文章失败:', error);
+    throw error;
   }
 }

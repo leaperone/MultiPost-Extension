@@ -151,9 +151,11 @@ export async function ArticleSegmentfault(data: SyncData) {
   }
 
   // 主流程
+  const host = document.createElement('div') as HTMLDivElement;
+  const tip = document.createElement('div') as HTMLDivElement;
+
   try {
     // 添加漂浮提示
-    const host = document.createElement('div');
     host.style.position = 'fixed';
     host.style.bottom = '20px';
     host.style.right = '20px';
@@ -162,7 +164,6 @@ export async function ArticleSegmentfault(data: SyncData) {
 
     const shadow = host.attachShadow({ mode: 'open' });
 
-    const tip = document.createElement('div');
     tip.innerHTML = `
       <style>
         .float-tip {
@@ -213,7 +214,7 @@ export async function ArticleSegmentfault(data: SyncData) {
     const draftId = await publishDraft(processedContent, coverUrl);
 
     // 发布成功后更新提示
-    tip.querySelector('.float-tip')!.textContent = '文章同步成功！';
+    (tip.querySelector('.float-tip') as HTMLDivElement).textContent = '文章同步成功！';
 
     // 3秒后移除提示
     setTimeout(() => {
@@ -227,8 +228,9 @@ export async function ArticleSegmentfault(data: SyncData) {
   } catch (error) {
     // 发生错误时更新提示
     if (document.body.contains(host)) {
-      tip.querySelector('.float-tip')!.textContent = '同步失败，请重试';
-      tip.querySelector('.float-tip')!.style.backgroundColor = '#dc2626';
+      const floatTip = tip.querySelector('.float-tip') as HTMLDivElement;
+      floatTip.textContent = '同步失败，请重试';
+      floatTip.style.backgroundColor = '#dc2626';
 
       setTimeout(() => {
         document.body.removeChild(host);
