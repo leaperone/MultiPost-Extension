@@ -38,7 +38,6 @@ async function isOriginTrusted(origin: string): Promise<boolean> {
 }
 
 window.addEventListener('message', async (event) => {
-  console.debug(event);
   const request: ExtensionExternalRequest<unknown> = event.data;
 
   if (request.type !== 'request') {
@@ -48,7 +47,6 @@ window.addEventListener('message', async (event) => {
   // 验证来源是否可信
   const isTrusted = await isOriginTrusted(new URL(event.origin).hostname);
   if (!isTrusted) {
-    console.warn(`Untrusted origin: ${event.origin}`);
     event.source.postMessage({
       type: 'response',
       traceId: request.traceId,
