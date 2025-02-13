@@ -452,7 +452,10 @@
     "message": "X",
     "description": "X (Twitter) 平台名称"
   },
-
+  "platformSegmentfault": {
+    "message": "思否",
+    "description": "思否平台名称"
+  },
   "platformBilibili": {
     "message": "哔哩哔哩",
     "description": "哔哩哔哩平台名称"
@@ -571,5 +574,11 @@
   },
   "errorEnterUrl": {
     "message": "请输入有效的URL"
+  },
+  "optionsMarkdownEditor": {
+    "message": "Markdown 编辑器"
+  },
+  "optionsEnterMarkdown": {
+    "message": "输入 Markdown 内容..."
   }
 }

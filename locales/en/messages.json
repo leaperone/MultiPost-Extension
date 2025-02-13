@@ -445,7 +445,10 @@
     "message": "X",
     "description": "Platform name for X (Twitter)"
   },
-
+  "platformSegmentfault": {
+    "message": "Segmentfault",
+    "description": "Platform name for Segmentfault"
+  },
   "platformBilibili": {
     "message": "Bilibili",
     "description": "Platform name for Bilibili"
@@ -574,5 +577,11 @@
   },
   "errorEnterUrl": {
     "message": "Please enter a valid URL"
+  },
+  "optionsMarkdownEditor": {
+    "message": "Markdown Editor"
+  },
+  "optionsEnterMarkdown": {
+    "message": "Enter Markdown content..."
   }
 }

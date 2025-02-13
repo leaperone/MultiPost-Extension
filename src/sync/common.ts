@@ -18,6 +18,7 @@ import { ArticleCSDN } from './article/csdn';
 import { ArticleZhihu } from './article/zhihu';
 import { ArticleJuejin } from './article/juejin';
 import { ArticleJianshu } from './article/jianshu';
+import { ArticleSegmentfault } from './article/segmentfault';
 
 export interface SyncData {
   platforms: string[];
@@ -50,6 +51,8 @@ export interface ArticleData {
   videos: FileData[];
   fileDatas: FileData[];
   originContent?: string;
+  markdownContent?: string;
+  markdownOriginContent?: string;
 }
 
 export interface VideoData {
@@ -128,6 +131,15 @@ export const infoMap: Record<string, PlatformInfo> = {
     platformName: chrome.i18n.getMessage('platformJianshu'),
     injectUrl: 'https://www.jianshu.com/writer',
     injectFunction: ArticleJianshu,
+  },
+  ARTICLE_SEGMENTFAULT: {
+    type: 'ARTICLE',
+    name: 'ARTICLE_SEGMENTFAULT',
+    homeUrl: 'https://segmentfault.com/write',
+    faviconUrl: 'https://static.segmentfault.com/main_site_next/d937cc1d/touch-icon.png',
+    platformName: chrome.i18n.getMessage('platformSegmentfault'),
+    injectUrl: 'https://segmentfault.com/write',
+    injectFunction: ArticleSegmentfault,
   },
   DYNAMIC_X: {
     type: 'DYNAMIC',

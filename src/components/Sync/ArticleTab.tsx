@@ -4,6 +4,7 @@ import { ImagePlusIcon, XIcon, DownloadIcon } from 'lucide-react';
 import type { FileData, SyncData } from '~sync/common';
 import PlatformCheckbox from './PlatformCheckbox';
 import { getPlatformInfos } from '~sync/common';
+import TurndownService from 'turndown';
 
 interface ArticleTabProps {
   funcPublish: (data: SyncData) => void;
@@ -33,6 +34,10 @@ const ArticleTab: React.FC<ArticleTabProps> = ({ funcPublish, funcScraper }) => 
   const [isProcessing, setIsProcessing] = useState(false);
   const [processStatus, setProcessStatus] = useState('');
   const [processProgress, setProcessProgress] = useState(0);
+  const turndownService = new TurndownService({
+    headingStyle: 'atx',
+    codeBlockStyle: 'fenced',
+  });
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const handlePlatformChange = (platform: string, isSelected: boolean) => {
@@ -65,6 +70,13 @@ const ArticleTab: React.FC<ArticleTabProps> = ({ funcPublish, funcScraper }) => 
       alert(chrome.i18n.getMessage('errorSelectPlatform') || '至少选择一个平台');
       return;
     }
+
+    // 将 HTML 转换为 Markdown
+    const markdownContent = turndownService.turndown(content || digest || '');
+    const markdownOriginContent = importedContent?.originContent
+      ? turndownService.turndown(importedContent.originContent)
+      : '';
+
     const data: SyncData = {
       platforms: selectedPlatforms,
       data: {
@@ -76,6 +88,8 @@ const ArticleTab: React.FC<ArticleTabProps> = ({ funcPublish, funcScraper }) => 
         videos: videos || [],
         fileDatas: [...fileDatas, ...images, ...videos],
         originContent: importedContent?.originContent || '',
+        markdownContent,
+        markdownOriginContent,
       },
       auto_publish: false,
     };
