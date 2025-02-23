@@ -1,0 +1,23 @@
+{
+  "title": "Thank you for installing MultiPost",
+  "subtitle": "Your one-click solution for multi-platform content publishing",
+  "instructions": {
+    "step1": "1. Click the extension icon in your browser's toolbar",
+    "step2": "2. Pin the extension to keep it easily accessible"
+  },
+  "features": {
+    "multiPlatform": {
+      "title": "Multi-Platform Support",
+      "description": "Publish your content to over 10 mainstream platforms including Zhihu, Weibo, Xiaohongshu, TikTok, and more with just one click."
+    },
+    "noLogin": {
+      "title": "No Login Required",
+      "description": "Start publishing immediately - no registration, no API keys, and completely free to use."
+    },
+    "integration": {
+      "title": "Easy Integration",
+      "description": "Supports web page integration and automation features like scheduled posting and AI content generation."
+    }
+  },
+  "cta": "Start Using MultiPost"
+} 

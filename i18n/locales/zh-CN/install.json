@@ -1,0 +1,23 @@
+{
+  "title": "感谢安装 MultiPost",
+  "subtitle": "一键发布内容到多个平台的解决方案",
+  "instructions": {
+    "step1": "1. 点击浏览器工具栏中的扩展图标",
+    "step2": "2. 将扩展固定以方便访问"
+  },
+  "features": {
+    "multiPlatform": {
+      "title": "多平台支持",
+      "description": "一键将内容发布到知乎、微博、小红书、抖音等超过10个主流平台。"
+    },
+    "noLogin": {
+      "title": "无需登录",
+      "description": "立即开始使用 - 无需注册，无需 API 密钥，完全免费。"
+    },
+    "integration": {
+      "title": "易于集成",
+      "description": "支持网页集成和自动化功能，如定时发布和 AI 内容生成。"
+    }
+  },
+  "cta": "开始使用 MultiPost"
+} 

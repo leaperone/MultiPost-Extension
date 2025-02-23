@@ -16,7 +16,7 @@ const PinTip = () => {
     <div className="mt-8 flex items-center gap-3 rounded-lg border border-warning-200 bg-warning-50/50 p-4 text-sm text-warning-800 dark:border-warning-800 dark:bg-warning-900/20 dark:text-warning-500">
       <Icon
         icon="solar:pin-bold"
-        className="size-5 flex-shrink-0"
+        className="size-5 shrink-0"
       />
       <p>{t('pin_tip')}</p>
     </div>
@@ -30,9 +30,9 @@ interface StatusCardProps {
 const StatusCard: React.FC<StatusCardProps> = ({ isInstalled }) => {
   const { t } = useTranslation('extension');
   return (
-    <Card className="w-full max-w-2xl mx-auto bg-background/60 dark:bg-background/60 backdrop-blur-md border border-border/50">
+    <Card className="mx-auto w-full max-w-2xl border border-border/50 bg-background/60 backdrop-blur-md dark:bg-background/60">
       <CardBody className="p-6">
-        <div className="flex items-center gap-2 mb-4">
+        <div className="mb-4 flex items-center gap-2">
           {isInstalled ? (
             <PuzzleIcon className="size-5 text-primary" />
           ) : (
@@ -43,8 +43,8 @@ const StatusCard: React.FC<StatusCardProps> = ({ isInstalled }) => {
 
         {isInstalled ? (
           <>
-            <p className="text-foreground/80 mb-6">{t('extension_ready_desc')}</p>
-            <div className="flex gap-3 justify-evenly">
+            <p className="mb-6 text-foreground/80">{t('extension_ready_desc')}</p>
+            <div className="flex justify-evenly gap-3">
               <Button
                 onPress={() => openOptions()}
                 startContent={<PuzzleIcon className="size-4" />}>
@@ -61,7 +61,7 @@ const StatusCard: React.FC<StatusCardProps> = ({ isInstalled }) => {
           </>
         ) : (
           <>
-            <p className="text-foreground/80 mb-6">{t('extension_not_detected_desc')}</p>
+            <p className="mb-6 text-foreground/80">{t('extension_not_detected_desc')}</p>
             <div className="flex flex-col gap-3">
               <Button
                 as={Link}
@@ -71,7 +71,7 @@ const StatusCard: React.FC<StatusCardProps> = ({ isInstalled }) => {
                 className="w-full">
                 <Icon
                   icon="logos:chrome"
-                  className="size-5 mr-2"
+                  className="mr-2 size-5"
                 />
                 {t('chrome_store')}
               </Button>
@@ -83,7 +83,7 @@ const StatusCard: React.FC<StatusCardProps> = ({ isInstalled }) => {
                 className="w-full">
                 <Icon
                   icon="logos:microsoft-edge"
-                  className="size-5 mr-2"
+                  className="mr-2 size-5"
                 />
                 {t('edge_store')}
               </Button>
@@ -122,8 +122,8 @@ const ExtensionPage: React.FC = () => {
       <div className="relative z-10">
         <HomePageHeader />
         <main className="container mx-auto px-4 py-16">
-          <div className="max-w-2xl mx-auto mb-12 text-center">
-            <h1 className="text-3xl font-semibold mb-4">{t('title')}</h1>
+          <div className="mx-auto mb-12 max-w-2xl text-center">
+            <h1 className="mb-4 text-3xl font-semibold">{t('title')}</h1>
             <p className="text-foreground/80">{t('description')}</p>
           </div>
           <StatusCard isInstalled={isInstalled} />
