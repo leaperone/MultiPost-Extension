@@ -33,5 +33,5 @@
   "i18n-ally.enabledParsers": [
     "json"
   ],
-  "Codegeex.RepoIndex": true
+  "makefile.configureOnOpen": false
 }

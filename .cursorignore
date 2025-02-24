@@ -1,19 +1,22 @@
 # Add directories or file patterns to ignore during indexing (e.g. foo/ or *.csv)
 
-
 .env.*
 
 .eslintrc.js
 .gitignore
 .lintstagedrc.mjs
 .prettierrc.mjs
-.stylelintrc.mjscommitlint.config.js
+.stylelintrc.mjs
+commitlint.config.js
 postcss.config.js
 tailwind.config.js
 tsconfig.json
 
 node_modules
+build
 
 .vscode
 .husky
 .plasmo
+
+LICENSE
