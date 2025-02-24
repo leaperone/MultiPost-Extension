@@ -12,7 +12,7 @@ import { createTabsForPlatforms, getPlatformInfos, injectScriptsToTabs, type Syn
 
 chrome.runtime.onInstalled.addListener((object) => {
   if (object.reason === chrome.runtime.OnInstalledReason.INSTALL) {
-    chrome.tabs.create({ url: 'https://multipost.2some.one/extension' });
+    chrome.tabs.create({ url: 'https://multipost.2some.one/on-install' });
   }
   chrome.sidePanel.setPanelBehavior({ openPanelOnActionClick: false });
 });
