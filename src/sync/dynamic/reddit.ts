@@ -1,6 +1,5 @@
 import type { DynamicData, SyncData } from '../common';
 
-// 只支持图文，不支持视频
 export async function DynamicReddit(data: SyncData) {
   const { title, content, images, videos } = data.data as DynamicData;
 
@@ -131,26 +130,28 @@ export async function DynamicReddit(data: SyncData) {
     await new Promise((resolve) => setTimeout(resolve, 5000));
 
     // 自动提交
-    const maxAttempts = 3;
-    for (let attempt = 0; attempt < maxAttempts; attempt++) {
-      try {
-        const submitButton = (await waitForElement('#submit-post-button', 5000)).shadowRoot.querySelector(
-          '#inner-post-submit-button',
-        ) as HTMLButtonElement;
-        submitButton.click();
-        console.log('提交按钮已点击');
-        await new Promise((resolve) => setTimeout(resolve, 3000)); // 等待提交完成
-        window.location.reload(); // 提交后刷新页面
-        break; // 成功点击后退出循环
-      } catch (error) {
-        console.warn(`第 ${attempt + 1} 次尝试查找提交按钮失败:`, error);
-        if (attempt === maxAttempts - 1) {
-          console.error('达到最大尝试次数，无法找到提交按钮');
+    if (data.auto_publish) {
+      const maxAttempts = 3;
+      for (let attempt = 0; attempt < maxAttempts; attempt++) {
+        try {
+          const submitButton = (await waitForElement('#submit-post-button', 5000)).shadowRoot.querySelector(
+            '#inner-post-submit-button',
+          ) as HTMLButtonElement;
+          submitButton.click();
+          console.log('提交按钮已点击');
+          await new Promise((resolve) => setTimeout(resolve, 3000)); // 等待提交完成
+          window.location.reload(); // 提交后刷新页面
+          break; // 成功点击后退出循环
+        } catch (error) {
+          console.warn(`第 ${attempt + 1} 次尝试查找提交按钮失败:`, error);
+          if (attempt === maxAttempts - 1) {
+            console.error('达到最大尝试次数，无法找到提交按钮');
+          }
+          await new Promise((resolve) => setTimeout(resolve, 2000)); // 等待2秒后重试
         }
-        await new Promise((resolve) => setTimeout(resolve, 2000)); // 等待2秒后重试
       }
     }
   } catch (error) {
-    console.error('填入内容或上传图片时出错:', error);
+    console.error('填入内容或上传图片或上传视频时出错:', error);
   }
 }
