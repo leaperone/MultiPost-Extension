@@ -498,6 +498,10 @@
     "message": "LinkedIn",
     "description": "Platform name for LinkedIn"
   },
+  "platformReddit": {
+    "message": "Reddit",
+    "description": "Platform name for Reddit"
+  },
   "optionsFeedbackPrefix": {
     "message": "Missing a platform you need?"
   },
