@@ -65,7 +65,7 @@ You can find the build content in the `build` folder
 
 ### Development Environment
 
-It is recommended to use the package management tool `pnpm@latest-9`.
+It is recommended to use the package management tool `pnpm@latest-9` with Node.js version 20.
 
 ## Star History
 

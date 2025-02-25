@@ -488,7 +488,6 @@
     "message": "Instagram",
     "description": "Instagram 平台名称"
   },
-
   "platformYoutube": {
     "message": "YouTube",
     "description": "YouTube 平台名称"
@@ -504,6 +503,10 @@
   "platformLinkedin": {
     "message": "领英",
     "description": "LinkedIn 平台名称"
+  },
+  "platformReddit": {
+    "message": "Reddit",
+    "description": "Reddit 平台名称"
   },
   "optionsFeedbackPrefix": {
     "message": "没有你需要的平台？"

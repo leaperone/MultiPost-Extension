@@ -19,6 +19,7 @@ import { ArticleZhihu } from './article/zhihu';
 import { ArticleJuejin } from './article/juejin';
 import { ArticleJianshu } from './article/jianshu';
 import { ArticleSegmentfault } from './article/segmentfault';
+import { DynamicReddit } from './dynamic/reddit';
 
 export interface SyncData {
   platforms: string[];
@@ -246,6 +247,15 @@ export const infoMap: Record<string, PlatformInfo> = {
     platformName: chrome.i18n.getMessage('platformOkjike'),
     injectUrl: 'https://web.okjike.com',
     injectFunction: DynamicOkjike,
+  },
+  DYNAMIC_REDDIT: {
+    type: 'DYNAMIC',
+    name: 'DYNAMIC_REDDIT',
+    homeUrl: 'https://www.reddit.com/',
+    faviconUrl: 'https://www.reddit.com/favicon.ico',
+    platformName: chrome.i18n.getMessage('platformReddit'),
+    injectUrl: 'https://www.reddit.com/submit?type=TEXT',
+    injectFunction: DynamicReddit,
   },
   VIDEO_BILIBILI: {
     type: 'VIDEO',
