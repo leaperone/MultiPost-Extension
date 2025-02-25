@@ -22,6 +22,7 @@ import { ArticleSegmentfault } from './article/segmentfault';
 import { DynamicReddit } from './dynamic/reddit';
 import { VideoWeiXin } from './video/weixin';
 import { VideoKuaishou } from './video/kuaishou';
+import { DynamicKuaishou } from './dynamic/kuaishou';
 
 export interface SyncData {
   platforms: string[];
@@ -258,6 +259,15 @@ export const infoMap: Record<string, PlatformInfo> = {
     platformName: chrome.i18n.getMessage('platformReddit'),
     injectUrl: 'https://www.reddit.com/submit?type=TEXT',
     injectFunction: DynamicReddit,
+  },
+  DYNAMIC_KUAISHOU: {
+    type: 'DYNAMIC',
+    name: 'DYNAMIC_KUAISHOU',
+    homeUrl: 'https://cp.kuaishou.com/',
+    faviconUrl: 'https://www.kuaishou.com/favicon.ico',
+    platformName: chrome.i18n.getMessage('platformKuaishou'),
+    injectUrl: 'https://cp.kuaishou.com/article/publish/video',
+    injectFunction: DynamicKuaishou,
   },
   VIDEO_BILIBILI: {
     type: 'VIDEO',
