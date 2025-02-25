@@ -19,6 +19,7 @@ const DynamicTab: React.FC<DynamicTabProps> = ({ funcPublish }) => {
   const [content, setContent] = useState<string>('');
   const imageInputRef = useRef<HTMLInputElement>(null);
   const videoInputRef = useRef<HTMLInputElement>(null);
+  const dropAreaRef = useRef<HTMLDivElement>(null);
   const [selectedPlatforms, setSelectedPlatforms] = useState<string[]>([]);
   const [autoPublish, setAutoPublish] = useState<boolean>(false);
   const [viewerVisible, setViewerVisible] = useState(false);
@@ -29,6 +30,24 @@ const DynamicTab: React.FC<DynamicTabProps> = ({ funcPublish }) => {
       setTitle('开发环境标题');
       setContent('开发环境内容');
     }
+    
+    // 添加粘贴事件监听器
+    document.addEventListener('paste', handlePaste);
+    
+    // 添加拖拽事件监听器
+    const dropArea = dropAreaRef.current;
+    if (dropArea) {
+      dropArea.addEventListener('dragover', handleDragOver);
+      dropArea.addEventListener('drop', handleDrop);
+    }
+    
+    return () => {
+      document.removeEventListener('paste', handlePaste);
+      if (dropArea) {
+        dropArea.removeEventListener('dragover', handleDragOver);
+        dropArea.removeEventListener('drop', handleDrop);
+      }
+    };
   }, []);
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>, fileType: 'image' | 'video') => {
@@ -45,8 +64,91 @@ const DynamicTab: React.FC<DynamicTabProps> = ({ funcPublish }) => {
       if (fileType === 'image') {
         setImages((prevImages) => [...prevImages, ...newFiles]);
       } else {
-        setVideos((prevVideos) => [...prevVideos, ...newFiles]);
+        // 只允许一个视频，如果已有视频则替换
+        setVideos([newFiles[0]]);
       }
+    }
+  };
+
+  const handlePaste = (event: ClipboardEvent) => {
+    const items = event.clipboardData?.items;
+    if (!items) return;
+
+    for (let i = 0; i < items.length; i++) {
+      const item = items[i];
+      if (item.kind === 'file') {
+        const file = item.getAsFile();
+        if (!file) continue;
+
+        if (file.type.startsWith('image/')) {
+          setImages((prevImages) => [
+            ...prevImages,
+            {
+              name: file.name || `pasted-image-${Date.now()}.png`,
+              type: file.type,
+              size: file.size,
+              url: URL.createObjectURL(file),
+            },
+          ]);
+        } else if (file.type.startsWith('video/')) {
+          // 只允许一个视频
+          if (videos.length === 0) {
+            setVideos([
+              {
+                name: file.name || `pasted-video-${Date.now()}.mp4`,
+                type: file.type,
+                size: file.size,
+                url: URL.createObjectURL(file),
+              },
+            ]);
+          }
+          break; // 处理完第一个视频后退出循环
+        }
+      }
+    }
+  };
+
+  const handleDragOver = (event: DragEvent) => {
+    event.preventDefault();
+    event.stopPropagation();
+  };
+
+  const handleDrop = (event: DragEvent) => {
+    event.preventDefault();
+    event.stopPropagation();
+
+    const files = event.dataTransfer?.files;
+    if (!files) return;
+
+    const imageFiles: FileData[] = [];
+    let videoFile: FileData | null = null;
+
+    for (let i = 0; i < files.length; i++) {
+      const file = files[i];
+      if (file.type.startsWith('image/')) {
+        imageFiles.push({
+          name: file.name,
+          type: file.type,
+          size: file.size,
+          url: URL.createObjectURL(file),
+        });
+      } else if (file.type.startsWith('video/') && !videoFile) {
+        // 只取第一个视频文件
+        videoFile = {
+          name: file.name,
+          type: file.type,
+          size: file.size,
+          url: URL.createObjectURL(file),
+        };
+      }
+    }
+
+    if (imageFiles.length > 0) {
+      setImages((prevImages) => [...prevImages, ...imageFiles]);
+    }
+
+    if (videoFile && videos.length === 0) {
+      setVideos([videoFile]);
     }
   };
 
@@ -65,12 +167,7 @@ const DynamicTab: React.FC<DynamicTabProps> = ({ funcPublish }) => {
       alert(chrome.i18n.getMessage('optionsSelectPublishPlatforms'));
       return;
     }
-    // const needImage = PLATFORM_NEED_IMAGE.some((platform) => selectedPlatforms.includes(platform));
-    // if (needImage && images.length === 0) {
-    //   console.log('至少一张图片');
-    //   alert(chrome.i18n.getMessage('optionsAtLeastOneImage'));
-    //   return;
-    // }
+    
     const data: SyncData = {
       platforms: selectedPlatforms,
       data: {
@@ -110,7 +207,7 @@ const DynamicTab: React.FC<DynamicTabProps> = ({ funcPublish }) => {
     if (fileType === 'image') {
       setImages((prevImages) => prevImages.filter((_, i) => i !== index));
     } else {
-      setVideos((prevVideos) => prevVideos.filter((_, i) => i !== index));
+      setVideos([]);
     }
   };
 
@@ -124,14 +221,13 @@ const DynamicTab: React.FC<DynamicTabProps> = ({ funcPublish }) => {
   };
 
   return (
-    <div className="flex flex-col gap-4">
+    <div className="flex flex-col gap-4" ref={dropAreaRef}>
       <Card className="shadow-none bg-default-50">
         <CardHeader className="flex flex-col gap-4">
           <Input
             isClearable
             variant="underlined"
             label={chrome.i18n.getMessage('optionsEnterDynamicTitle')}
-            // placeholder={chrome.i18n.getMessage('optionsEnterDynamicTitle')}
             value={title}
             onChange={(e) => setTitle(e.target.value)}
             onClear={() => setTitle('')}
@@ -143,7 +239,6 @@ const DynamicTab: React.FC<DynamicTabProps> = ({ funcPublish }) => {
           <Textarea
             isClearable
             label={chrome.i18n.getMessage('optionsEnterDynamicContent')}
-            // placeholder={chrome.i18n.getMessage('optionsEnterDynamicContent')}
             value={content}
             onChange={(e) => setContent(e.target.value)}
             variant="underlined"
@@ -177,7 +272,6 @@ const DynamicTab: React.FC<DynamicTabProps> = ({ funcPublish }) => {
                 accept="video/*"
                 onChange={(e) => handleFileChange(e, 'video')}
                 className="hidden"
-                multiple
               />
               <Button
                 isIconOnly
@@ -230,7 +324,7 @@ const DynamicTab: React.FC<DynamicTabProps> = ({ funcPublish }) => {
         </Card>
       )}
 
-      <div className="flex flex-col gap-4 bg-default-50 p-4 rounded-lg">
+      <div className="flex flex-col gap-4 p-4 rounded-lg bg-default-50">
         <Switch
           isSelected={autoPublish}
           onValueChange={setAutoPublish}
@@ -261,7 +355,7 @@ const DynamicTab: React.FC<DynamicTabProps> = ({ funcPublish }) => {
         variant="flat"
         disabled={!title || !content || selectedPlatforms.length === 0}
         className="w-full font-medium shadow-none">
-        <SendIcon className="size-4 mr-2" />
+        <SendIcon className="mr-2 size-4" />
         {chrome.i18n.getMessage('optionsSyncDynamic')}
       </Button>
 

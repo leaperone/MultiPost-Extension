@@ -181,7 +181,7 @@ const VideoTab: React.FC<VideoTabProps> = ({ funcPublish }) => {
         </Card>
       )}
 
-      <div className="flex flex-col gap-4 bg-default-50 p-4 rounded-lg">
+      <div className="flex flex-col gap-4 p-4 rounded-lg bg-default-50">
         <div className="flex flex-col gap-2">
           <p className="text-sm font-medium">{chrome.i18n.getMessage('optionsSelectPublishPlatforms')}</p>
           <div className="grid grid-cols-2 gap-3">
@@ -204,7 +204,7 @@ const VideoTab: React.FC<VideoTabProps> = ({ funcPublish }) => {
         variant="flat"
         disabled={!videoFile || !title || !content || selectedPlatforms.length === 0}
         className="w-full font-medium shadow-none">
-        <SendIcon className="size-4 mr-2" />
+        <SendIcon className="mr-2 size-4" />
         {chrome.i18n.getMessage('optionsSyncVideo')}
       </Button>
     </div>
