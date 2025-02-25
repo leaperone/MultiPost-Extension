@@ -20,6 +20,7 @@ import { ArticleJuejin } from './article/juejin';
 import { ArticleJianshu } from './article/jianshu';
 import { ArticleSegmentfault } from './article/segmentfault';
 import { DynamicReddit } from './dynamic/reddit';
+import { VideoWeiXin } from './video/weixin';
 
 export interface SyncData {
   platforms: string[];
@@ -303,6 +304,15 @@ export const infoMap: Record<string, PlatformInfo> = {
     platformName: chrome.i18n.getMessage('platformTiktok'),
     injectUrl: 'https://www.tiktok.com/tiktokstudio/upload',
     injectFunction: VideoTiktok,
+  },
+  VIDEO_WEIXIN: {
+    type: 'VIDEO',
+    name: 'VIDEO_WEIXIN',
+    homeUrl: 'https://channels.weixin.qq.com/platform',
+    faviconUrl: 'https://res.wx.qq.com/t/wx_fed/finder/helper/finder-helper-web/res/favicon-v2.ico',
+    platformName: chrome.i18n.getMessage('platformWeiXinVideo'),
+    injectUrl: 'https://channels.weixin.qq.com/platform/post/create',
+    injectFunction: VideoWeiXin,
   },
 };
 

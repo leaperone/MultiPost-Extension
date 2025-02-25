@@ -502,6 +502,10 @@
     "message": "Reddit",
     "description": "Platform name for Reddit"
   },
+  "platformWeiXinVideo": {
+    "message": "WeiXinVideo",
+    "description": "Platform name for WeiXinVideo"
+  },
   "optionsFeedbackPrefix": {
     "message": "Missing a platform you need?"
   },
