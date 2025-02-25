@@ -34,7 +34,7 @@ export async function VideoKuaishou(data: SyncData) {
 
   // 辅助函数：上传视频
   async function uploadVideo() {
-    const fileInput = (await waitForElement('input[type="file"]')) as HTMLInputElement;
+    const fileInput = (await waitForElement('input[type=file][accept="video/*,.mp4,.mov,.flv,.f4v,.webm,.mkv,.rm,.rmvb,.m4v,.3gp,.3g2,.wmv,.avi,.asf,.mpg,.mpeg,.ts"]')) as HTMLInputElement;
     if (!fileInput) {
       console.error('未找到文件输入元素');
       return;
@@ -97,23 +97,23 @@ export async function VideoKuaishou(data: SyncData) {
   }
 
   // 发布按钮逻辑
-  // if (data.auto_publish) {
-  //   const maxAttempts = 3;
-  //   for (let attempt = 0; attempt < maxAttempts; attempt++) {
-  //     try {
-  //       const publishButton = (await waitForElement('button[class="el-button publishBtn"]', 5000)) as HTMLButtonElement;
-  //       publishButton.click();
-  //       console.log('发布按钮已点击');
-  //       await new Promise((resolve) => setTimeout(resolve, 3000));
-  //       window.location.href = 'https://creator.xiaohongshu.com/new/note-manager';
-  //       break; // 成功点击后退出循环
-  //     } catch (error) {
-  //       console.warn(`第 ${attempt + 1} 次尝试查找发布按钮失败:`, error);
-  //       if (attempt === maxAttempts - 1) {
-  //         console.error('达到最大尝试次数，无法找到发布按钮');
-  //       }
-  //       await new Promise((resolve) => setTimeout(resolve, 2000)); // 等待2秒后重试
-  //     }
-  //   }
-  // }
+  if (data.auto_publish) {
+    const maxAttempts = 3;
+    for (let attempt = 0; attempt < maxAttempts; attempt++) {
+      try {
+        const publishButton = (await waitForElement('div[contains(., "发布")]', 5000)) as HTMLElement;
+        publishButton.click();
+        console.log('发布按钮已点击');
+        await new Promise((resolve) => setTimeout(resolve, 3000));
+        window.location.href = 'https://cp.kuaishou.com/article/manage/video';
+        break; // 成功点击后退出循环
+      } catch (error) {
+        console.warn(`第 ${attempt + 1} 次尝试查找发布按钮失败:`, error);
+        if (attempt === maxAttempts - 1) {
+          console.error('达到最大尝试次数，无法找到发布按钮');
+        }
+        await new Promise((resolve) => setTimeout(resolve, 2000)); // 等待2秒后重试
+      }
+    }
+  }
 }
