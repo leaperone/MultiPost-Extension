@@ -591,5 +591,9 @@
   },
   "optionsEnterMarkdown": {
     "message": "Enter Markdown content..."
+  },
+  "platformKuaishou": {
+    "message": "Kuaishou",
+    "description": "Platform name for Kuaishou"
   }
 }
