@@ -587,5 +587,9 @@
   },
   "optionsEnterMarkdown": {
     "message": "输入 Markdown 内容..."
+  },
+  "platformKuaishou": {
+    "message": "快手",
+    "description": "快手平台名称"
   }
 }
