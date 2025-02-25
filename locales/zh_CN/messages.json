@@ -508,6 +508,10 @@
     "message": "Reddit",
     "description": "Reddit 平台名称"
   },
+  "platformWeiXinVideo": {
+    "message": "微信视频号",
+    "description": "微信视频号平台名称"
+  },
   "optionsFeedbackPrefix": {
     "message": "没有你需要的平台？"
   },

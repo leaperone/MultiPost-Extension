@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { Card, Button, Input, Textarea, CardHeader, CardBody, CardFooter } from '@heroui/react';
 import { VideoIcon, XIcon, TrashIcon, SendIcon } from 'lucide-react';
 import { Player } from 'video-react';
@@ -17,6 +17,13 @@ const VideoTab: React.FC<VideoTabProps> = ({ funcPublish }) => {
   const [videoFile, setVideoFile] = useState<FileData | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [selectedPlatforms, setSelectedPlatforms] = useState<string[]>([]);
+
+  useEffect(() => {
+    if (process.env.NODE_ENV === 'development') {
+      setTitle('开发环境标题');
+      setContent('开发环境内容');
+    }
+  }, []);
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFile = event.target.files?.[0];
