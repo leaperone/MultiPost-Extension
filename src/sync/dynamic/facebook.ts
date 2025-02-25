@@ -39,19 +39,22 @@ export async function DynamicFacebook(data: SyncData) {
     await waitForElement('body');
     await new Promise((resolve) => setTimeout(resolve, 1000));
 
-    // 查找创建帖子按钮
+    // 查找创建帖子按钮并触发点击事件
     const createPostButton =
       document.querySelector('div[aria-label="创建帖子"]') ||
       document.querySelector('div[aria-label="Create a post"]') ||
       document.querySelector('div[aria-label="建立貼文"]');
 
     if (!createPostButton) {
-      console.debug('未找到创建帖子按钮');
-      return;
+      throw new Error('未找到创建帖子按钮');
     }
 
+    // 使用原生事件触发点击
+    createPostButton.dispatchEvent(new Event('click', { bubbles: true }));
+    await new Promise((resolve) => setTimeout(resolve, 1000));
+
     // 查找并点击照片/视频按钮
-    const spans = createPostButton.querySelectorAll('span');
+    const spans = document.querySelectorAll('span');
     const photoButton = Array.from(spans).find(
       (span) =>
         span.textContent?.includes('照片/视频') ||
@@ -60,101 +63,99 @@ export async function DynamicFacebook(data: SyncData) {
     );
 
     if (!photoButton) {
-      console.error('未找到照片/视频按钮');
-      return;
+      throw new Error('未找到照片/视频按钮');
     }
-    photoButton.click();
+    photoButton.dispatchEvent(new Event('click', { bubbles: true }));
 
-    await new Promise((resolve) => setTimeout(resolve, 1000));
+    await new Promise((resolve) => setTimeout(resolve, 1500));
 
     // 查找并填写帖子内容
-    const editors = document.querySelectorAll(
+    const editor = (await waitForElement(
       'div[contenteditable="true"][role="textbox"][spellcheck="true"][tabindex="0"][data-lexical-editor="true"]',
-    );
-    const editor = Array.from(editors).find((el) => {
-      const placeholder = el.getAttribute('aria-placeholder');
-      return (
-        placeholder?.includes('在想些什么') ||
-        placeholder?.includes("What's on your mind") ||
-        placeholder?.includes('分享你的新鲜事吧')
-      );
-    }) as HTMLElement;
+    )) as HTMLElement;
 
     if (!editor) {
-      console.debug('未找到编辑器元素');
-      return;
+      throw new Error('未找到编辑器元素');
     }
 
     // 填写内容
     editor.focus();
-    const pasteEvent = new ClipboardEvent('paste', {
-      bubbles: true,
-      cancelable: true,
-      clipboardData: new DataTransfer(),
-    });
-    pasteEvent.clipboardData.setData('text/plain', `${title}\n${content}` || '');
-    editor.dispatchEvent(pasteEvent);
+    const text = `${title}\n${content}`;
 
-    // 上传图片
-    if (images && images.length > 0) {
-      const fileInput = document.querySelector(
-        'input[type="file"][accept="image/*,image/heif,image/heic,video/*,video/mp4,video/x-m4v,video/x-matroska,.mkv"]',
-      ) as HTMLInputElement;
+    // 使用 execCommand 插入文本
+    document.execCommand('insertText', false, text);
+
+    // 上传文件
+    if (images?.length > 0 || videos?.length > 0) {
+      const fileInput = (await waitForElement('input[type="file"][accept*="image/*"]')) as HTMLInputElement;
+
       if (!fileInput) {
-        console.debug('未找到文件输入元素');
-        return;
+        throw new Error('未找到文件输入元素');
       }
 
       const dataTransfer = new DataTransfer();
-      for (const image of images) {
-        console.debug('尝试上传文件', image);
-        try {
-          const response = await fetch(image.url);
-          const blob = await response.blob();
-          const file = new File([blob], image.name, { type: image.type });
-          dataTransfer.items.add(file);
-        } catch (error) {
-          console.error('获取文件失败:', error);
+
+      // 处理图片
+      if (images) {
+        for (const image of images) {
+          try {
+            const response = await fetch(image.url);
+            const blob = await response.blob();
+            const file = new File([blob], image.name, { type: image.type });
+            dataTransfer.items.add(file);
+          } catch (error) {
+            console.error('获取图片失败:', error);
+          }
         }
       }
 
+      // 处理视频
       if (videos && videos.length > 0) {
-        const video = videos[0];
-        const response = await fetch(video.url);
-        const blob = await response.blob();
-        const file = new File([blob], video.name, { type: video.type });
-        dataTransfer.items.add(file);
+        try {
+          const video = videos[0];
+          const response = await fetch(video.url);
+          const blob = await response.blob();
+          const file = new File([blob], video.name, { type: video.type });
+          dataTransfer.items.add(file);
+        } catch (error) {
+          console.error('获取视频失败:', error);
+        }
       }
 
       fileInput.files = dataTransfer.files;
-      fileInput.dispatchEvent(new Event('change', { bubbles: true }));
-      fileInput.dispatchEvent(new Event('input', { bubbles: true }));
-      console.debug('文件上传操作完成');
+      const changeEvent = new Event('change', { bubbles: true });
+      fileInput.dispatchEvent(changeEvent);
     }
 
-    // 等待上传完成后查找发布按钮
-    await new Promise((resolve) => setTimeout(resolve, 3000));
+    // 等待上传完成
+    await new Promise((resolve) => setTimeout(resolve, 5000));
 
+    // 自动发布
     if (data.auto_publish) {
-      const maxAttempts = 3;
-      for (let attempt = 0; attempt < maxAttempts; attempt++) {
-        const postButton =
-          document.querySelector('div[aria-label="发帖"]') ||
-          document.querySelector('div[aria-label="Post"]') ||
-          document.querySelector('div[aria-label="發佈"]');
+      const maxAttempts = 5;
+      let attempt = 0;
+
+      while (attempt < maxAttempts) {
+        const postButton = document.querySelector(
+          'div[aria-label="发帖"], div[aria-label="Post"], div[aria-label="發佈"]',
+        ) as HTMLElement;
 
         if (postButton) {
-          (postButton as HTMLElement).click();
+          postButton.dispatchEvent(new Event('click', { bubbles: true }));
           console.log('已点击发布按钮');
-          await new Promise((resolve) => setTimeout(resolve, 3000));
+          await new Promise((resolve) => setTimeout(resolve, 5000));
           window.location.reload();
           return;
         }
+
         await new Promise((resolve) => setTimeout(resolve, 1000));
+        attempt++;
       }
-      console.error('发布按钮点击失败：超过最大重试次数');
+
+      throw new Error('发布按钮点击失败：超过最大重试次数');
     }
   } catch (error) {
     console.error('FacebookDynamic 发布过程中出错:', error);
+    throw error; // 向上传递错误
   }
 }
