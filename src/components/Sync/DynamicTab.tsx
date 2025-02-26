@@ -30,17 +30,18 @@ const DynamicTab: React.FC<DynamicTabProps> = ({ funcPublish }) => {
       setTitle('开发环境标题');
       setContent('开发环境内容');
     }
-    
+    setSelectedPlatforms(JSON.parse(localStorage.getItem('dynamicPlatforms') || '[]'));
+
     // 添加粘贴事件监听器
     document.addEventListener('paste', handlePaste);
-    
+
     // 添加拖拽事件监听器
     const dropArea = dropAreaRef.current;
     if (dropArea) {
       dropArea.addEventListener('dragover', handleDragOver);
       dropArea.addEventListener('drop', handleDrop);
     }
-    
+
     return () => {
       document.removeEventListener('paste', handlePaste);
       if (dropArea) {
@@ -167,7 +168,7 @@ const DynamicTab: React.FC<DynamicTabProps> = ({ funcPublish }) => {
       alert(chrome.i18n.getMessage('optionsSelectPublishPlatforms'));
       return;
     }
-    
+    localStorage.setItem('dynamicPlatforms', JSON.stringify(selectedPlatforms));
     const data: SyncData = {
       platforms: selectedPlatforms,
       data: {
@@ -221,7 +222,9 @@ const DynamicTab: React.FC<DynamicTabProps> = ({ funcPublish }) => {
   };
 
   return (
-    <div className="flex flex-col gap-4" ref={dropAreaRef}>
+    <div
+      className="flex flex-col gap-4"
+      ref={dropAreaRef}>
       <Card className="shadow-none bg-default-50">
         <CardHeader className="flex flex-col gap-4">
           <Input
