@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { Card, Button, Image, Input, Textarea, CardHeader, CardBody, Progress, CardFooter } from '@heroui/react';
 import { ImagePlusIcon, XIcon, DownloadIcon } from 'lucide-react';
 import type { FileData, SyncData } from '~sync/common';
@@ -39,6 +39,14 @@ const ArticleTab: React.FC<ArticleTabProps> = ({ funcPublish, funcScraper }) => 
     codeBlockStyle: 'fenced',
   });
 
+  useEffect(() => {
+    if (process.env.NODE_ENV === 'development') {
+      setTitle('开发环境标题');
+      setDigest('开发环境内容');
+    }
+    setSelectedPlatforms(JSON.parse(localStorage.getItem('articlePlatforms') || '[]'));
+  }, []);
+
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const handlePlatformChange = (platform: string, isSelected: boolean) => {
     setSelectedPlatforms((prev) => (isSelected ? [...prev, platform] : prev.filter((p) => p !== platform)));
@@ -70,7 +78,7 @@ const ArticleTab: React.FC<ArticleTabProps> = ({ funcPublish, funcScraper }) => 
       alert(chrome.i18n.getMessage('errorSelectPlatform') || '至少选择一个平台');
       return;
     }
-
+    localStorage.setItem('articlePlatforms', JSON.stringify(selectedPlatforms));
     // 将 HTML 转换为 Markdown
     const markdownContent = turndownService.turndown(content || digest || '');
     const markdownOriginContent = importedContent?.originContent

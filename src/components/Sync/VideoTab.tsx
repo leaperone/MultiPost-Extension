@@ -23,6 +23,7 @@ const VideoTab: React.FC<VideoTabProps> = ({ funcPublish }) => {
       setTitle('开发环境标题');
       setContent('开发环境内容');
     }
+    setSelectedPlatforms(JSON.parse(localStorage.getItem('videoPlatforms') || '[]'));
   }, []);
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -59,7 +60,7 @@ const VideoTab: React.FC<VideoTabProps> = ({ funcPublish }) => {
       alert(chrome.i18n.getMessage('optionsSelectPublishPlatforms'));
       return;
     }
-
+    localStorage.setItem('videoPlatforms', JSON.stringify(selectedPlatforms));
     const data: SyncData = {
       platforms: selectedPlatforms,
       data: {
