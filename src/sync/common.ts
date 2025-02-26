@@ -26,6 +26,8 @@ import { DynamicKuaishou } from './dynamic/kuaishou';
 import { DynamicBaijiahao } from './dynamic/baijiahao';
 import { VideoBaijiahao } from './video/baijiahao';
 import { ArticleBaijiahao } from './article/baijiahao';
+import { DynamicToutiao } from './dynamic/toutiao';
+import { ArticleToutiao } from './article/toutiao';
 
 export interface SyncData {
   platforms: string[];
@@ -157,10 +159,18 @@ export const infoMap: Record<string, PlatformInfo> = {
     injectUrl: 'https://baijiahao.baidu.com/builder/rc/edit?type=news',
     injectFunction: ArticleBaijiahao,
   },
+  ARTICLE_TOUTIAO: {
+    type: 'ARTICLE',
+    name: 'ARTICLE_TOUTIAO', 
+    homeUrl: 'https://mp.toutiao.com/',
+    faviconUrl: 'https://sf1-cdn-tos.toutiaostatic.com/obj/ttfe/pgcfe/sz/mp_logo.png',
+    platformName: chrome.i18n.getMessage('platformToutiao'),
+    injectUrl: 'https://mp.toutiao.com/profile_v4/graphic/publish',
+    injectFunction: ArticleToutiao,
+  },
   DYNAMIC_X: {
     type: 'DYNAMIC',
     name: 'DYNAMIC_X',
-
     homeUrl: 'https://x.com/home',
     faviconUrl: 'https://x.com/favicon.ico',
     iconifyIcon: 'simple-icons:x',
@@ -289,6 +299,15 @@ export const infoMap: Record<string, PlatformInfo> = {
     platformName: chrome.i18n.getMessage('platformBaijiahao'),
     injectUrl: 'https://baijiahao.baidu.com/builder/rc/edit?type=events',
     injectFunction: DynamicBaijiahao,
+  },
+  DYNAMIC_TOUTIAO: {
+    type: 'DYNAMIC',
+    name: 'DYNAMIC_TOUTIAO', 
+    homeUrl: 'https://mp.toutiao.com/',
+    faviconUrl: 'https://sf1-cdn-tos.toutiaostatic.com/obj/ttfe/pgcfe/sz/mp_logo.png',
+    platformName: chrome.i18n.getMessage('platformToutiao'),
+    injectUrl: 'https://mp.toutiao.com/profile_v4/weitoutiao/publish',
+    injectFunction: DynamicToutiao,
   },
   VIDEO_BILIBILI: {
     type: 'VIDEO',
