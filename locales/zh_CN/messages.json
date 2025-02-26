@@ -591,5 +591,9 @@
   "platformKuaishou": {
     "message": "快手",
     "description": "快手平台名称"
+  },
+  "platformBaijiahao": {
+    "message": "百家号",
+    "description": "百家号平台名称"
   }
 }
