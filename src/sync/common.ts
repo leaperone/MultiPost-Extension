@@ -24,6 +24,7 @@ import { VideoWeiXin } from './video/weixin';
 import { VideoKuaishou } from './video/kuaishou';
 import { DynamicKuaishou } from './dynamic/kuaishou';
 import { DynamicBaijiahao } from './dynamic/baijiahao';
+import { VideoBaijiahao } from './video/baijiahao';
 
 export interface SyncData {
   platforms: string[];
@@ -343,6 +344,15 @@ export const infoMap: Record<string, PlatformInfo> = {
     platformName: chrome.i18n.getMessage('platformKuaishou'),
     injectUrl: 'https://cp.kuaishou.com/article/publish/video',
     injectFunction: VideoKuaishou, 
+  },
+  VIDEO_BAIJIAHAO: {
+    type: 'VIDEO',
+    name: 'VIDEO_BAIJIAHAO',
+    homeUrl: 'https://baijiahao.baidu.com/',
+    faviconUrl: 'https://pic.rmb.bdstatic.com/10e1e2b43c35577e1315f0f6aad6ba24.vnd.microsoft.icon',
+    platformName: chrome.i18n.getMessage('platformBaijiahao'),
+    injectUrl: 'https://baijiahao.baidu.com/builder/rc/edit?type=videoV2',
+    injectFunction: VideoBaijiahao,
   },
 };
 
