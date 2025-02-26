@@ -595,5 +595,9 @@
   "platformKuaishou": {
     "message": "Kuaishou",
     "description": "Platform name for Kuaishou"
+  },
+  "platformBaijiahao": {
+    "message": "Baijiahao",
+    "description": "Platform name for Baijiahao"
   }
 }
