@@ -7,7 +7,7 @@ import 'video-react/dist/video-react.css';
 import type { FileData, SyncData } from '~sync/common';
 import PlatformCheckbox from './PlatformCheckbox';
 import { getPlatformInfos } from '~sync/common';
-
+import { Storage } from '@plasmohq/storage';
 interface DynamicTabProps {
   funcPublish: (data: SyncData) => void;
 }
@@ -24,7 +24,9 @@ const DynamicTab: React.FC<DynamicTabProps> = ({ funcPublish }) => {
   const [autoPublish, setAutoPublish] = useState<boolean>(false);
   const [viewerVisible, setViewerVisible] = useState(false);
   const [currentImage, setCurrentImage] = useState(0);
-
+  const storage = new Storage({
+    area: 'local', // 明确指定使用 localStorage
+  });
   useEffect(() => {
     if (process.env.NODE_ENV === 'development') {
       setTitle('开发环境标题');
@@ -153,9 +155,18 @@ const DynamicTab: React.FC<DynamicTabProps> = ({ funcPublish }) => {
     }
   };
 
-  const handlePlatformChange = (platform: string, isSelected: boolean) => {
-    setSelectedPlatforms((prev) => (isSelected ? [...prev, platform] : prev.filter((p) => p !== platform)));
+  const handlePlatformChange = async (platform: string, isSelected: boolean) => {
+    const newSelectedPlatforms = isSelected
+      ? [...selectedPlatforms, platform]
+      : selectedPlatforms.filter((p) => p !== platform);
+    setSelectedPlatforms(newSelectedPlatforms);
+    await storage.set('dynamicPlatforms', newSelectedPlatforms);
   };
+  const loadPlatforms = async () => {
+    const platforms = await storage.get<string[]>('dynamicPlatforms');
+    setSelectedPlatforms((platforms as string[]) || []);
+  };
+  loadPlatforms();
 
   const handlePublish = async () => {
     if (!content) {

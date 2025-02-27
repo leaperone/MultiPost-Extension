@@ -5,7 +5,7 @@ import type { FileData, SyncData } from '~sync/common';
 import PlatformCheckbox from './PlatformCheckbox';
 import { getPlatformInfos } from '~sync/common';
 import TurndownService from 'turndown';
-
+import { Storage } from '@plasmohq/storage';
 interface ArticleTabProps {
   funcPublish: (data: SyncData) => void;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -38,19 +38,30 @@ const ArticleTab: React.FC<ArticleTabProps> = ({ funcPublish, funcScraper }) => 
     headingStyle: 'atx',
     codeBlockStyle: 'fenced',
   });
-
+  const storage = new Storage({
+    area: "local" // 明确指定使用 localStorage
+  });
+  
   useEffect(() => {
     if (process.env.NODE_ENV === 'development') {
       setTitle('开发环境标题');
       setDigest('开发环境内容');
     }
-    setSelectedPlatforms(JSON.parse(localStorage.getItem('articlePlatforms') || '[]'));
   }, []);
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const handlePlatformChange = (platform: string, isSelected: boolean) => {
-    setSelectedPlatforms((prev) => (isSelected ? [...prev, platform] : prev.filter((p) => p !== platform)));
+  const handlePlatformChange = async (platform: string, isSelected: boolean) => {
+    const newSelectedPlatforms = isSelected 
+    ? [...selectedPlatforms, platform] 
+    : selectedPlatforms.filter((p) => p !== platform);   
+  setSelectedPlatforms(newSelectedPlatforms);
+  await storage.set('articlePlatforms', newSelectedPlatforms);
   };
+
+  const loadPlatforms = async () => {
+    const platforms = await storage.get<string[]>("articlePlatforms");
+    setSelectedPlatforms(platforms as string[] || []);
+  };
+  loadPlatforms();
 
   const handleCoverChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFile = event.target.files?.[0];
@@ -78,7 +89,6 @@ const ArticleTab: React.FC<ArticleTabProps> = ({ funcPublish, funcScraper }) => 
       alert(chrome.i18n.getMessage('errorSelectPlatform') || '至少选择一个平台');
       return;
     }
-    localStorage.setItem('articlePlatforms', JSON.stringify(selectedPlatforms));
     // 将 HTML 转换为 Markdown
     const markdownContent = turndownService.turndown(content || digest || '');
     const markdownOriginContent = importedContent?.originContent
