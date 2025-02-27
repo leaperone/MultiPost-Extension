@@ -390,7 +390,7 @@ export const infoMap: Record<string, PlatformInfo> = {
     homeUrl: 'https://weibo.com/',
     faviconUrl: 'https://weibo.com/favicon.ico',
     platformName: chrome.i18n.getMessage('platformWeibo'),
-    injectUrl: 'https://weibo.com',
+    injectUrl: 'https://weibo.com/upload/channel',
     injectFunction: VideoWeibo,
   },
 };
