@@ -28,6 +28,7 @@ import { VideoBaijiahao } from './video/baijiahao';
 import { ArticleBaijiahao } from './article/baijiahao';
 import { DynamicToutiao } from './dynamic/toutiao';
 import { ArticleToutiao } from './article/toutiao';
+import { VideoWeibo } from './video/weibo';
 
 export interface SyncData {
   platforms: string[];
@@ -382,6 +383,15 @@ export const infoMap: Record<string, PlatformInfo> = {
     platformName: chrome.i18n.getMessage('platformBaijiahao'),
     injectUrl: 'https://baijiahao.baidu.com/builder/rc/edit?type=videoV2',
     injectFunction: VideoBaijiahao,
+  },
+  VIDEO_WEIBO: {
+    type: 'VIDEO',
+    name: 'VIDEO_WEIBO',
+    homeUrl: 'https://weibo.com/',
+    faviconUrl: 'https://weibo.com/favicon.ico',
+    platformName: chrome.i18n.getMessage('platformWeibo'),
+    injectUrl: 'https://weibo.com',
+    injectFunction: VideoWeibo,
   },
 };
 
