@@ -603,5 +603,9 @@
   "platformToutiao": {
     "message": "Toutiao",
     "description": "Platform name for Toutiao"
+  },
+  "optionsQQGroup": {
+    "message": "QQ Group:",
+    "description": "QQ group number"
   }
 }

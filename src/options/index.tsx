@@ -120,7 +120,7 @@ const Options = () => {
   return (
     <HeroUIProvider>
       <Header />
-      <main className="mx-auto max-w-3xl w-full p-4">
+      <main className="p-4 mx-auto w-full max-w-3xl">
         <Tabs
           aria-label="sync publish"
           defaultSelectedKey={hashParams.tab || 'dynamic'}
@@ -139,12 +139,14 @@ const Options = () => {
             key="article"
             title={chrome.i18n.getMessage('gArticle')}
             className="w-full">
-            <ArticleTab funcPublish={funcPublish} funcScraper={funcScraper} />
+            <ArticleTab
+              funcPublish={funcPublish}
+              funcScraper={funcScraper}
+            />
           </Tab>
           <Tab
             key="video"
             title={chrome.i18n.getMessage('gVideo')}
-
             className="w-full">
             <VideoTab funcPublish={funcPublish} />
           </Tab>
@@ -157,14 +159,23 @@ const Options = () => {
           <Tab
             key="aboutTab"
             title={chrome.i18n.getMessage('gAbout')}
-
             className="w-full">
             <AboutTab />
           </Tab>
         </Tabs>
       </main>
       <Spacer y={8} />
-      <footer className="text-center text-sm text-foreground/60">
+      <footer className="text-sm text-center text-foreground/60">
+        <p>
+          <span>{chrome.i18n.getMessage('optionsQQGroup')}</span>
+          <a
+            href="http://qm.qq.com/cgi-bin/qm/qr?_wv=1027&k=c5BjhD8JxNAuwjKh6qvCoROU301PppYU&authKey=NfKianfDwngrwJyVQbefIQET9vUQs46xb0PfOYUm6KzdeCjPd5YbvlRoO8trJUUZ&noverify=0&group_code=921137242"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-primary hover:underline">
+            921137242
+          </a>
+        </p>
         <p>
           <span>{chrome.i18n.getMessage('optionsHelpPrefix')}&nbsp;</span>
           <span>{chrome.i18n.getMessage('optionsFeedbackPrefix')}</span>

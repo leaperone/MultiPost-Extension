@@ -599,5 +599,9 @@
   "platformToutiao": {
     "message": "今日头条",
     "description": "今日头条平台名称"
+  },
+  "optionsQQGroup": {
+    "message": "QQ交流群：",
+    "description": "QQ group number"
   }
 }
