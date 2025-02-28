@@ -6,7 +6,7 @@ import 'video-react/dist/video-react.css';
 // import ReactPlayer from 'react-player';
 import { type SyncData, type FileData, getPlatformInfos } from '~sync/common';
 import PlatformCheckbox from './PlatformCheckbox';
-
+import { Storage } from '@plasmohq/storage';
 interface VideoTabProps {
   funcPublish: (data: SyncData) => void;
 }
@@ -17,12 +17,15 @@ const VideoTab: React.FC<VideoTabProps> = ({ funcPublish }) => {
   const [videoFile, setVideoFile] = useState<FileData | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [selectedPlatforms, setSelectedPlatforms] = useState<string[]>([]);
-
+  const storage = new Storage({
+    area: 'local', // 明确指定使用 localStorage
+  });
   useEffect(() => {
     if (process.env.NODE_ENV === 'development') {
       setTitle('开发环境标题');
       setContent('开发环境内容');
     }
+    setSelectedPlatforms(JSON.parse(localStorage.getItem('videoPlatforms') || '[]'));
   }, []);
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -44,9 +47,18 @@ const VideoTab: React.FC<VideoTabProps> = ({ funcPublish }) => {
     }
   };
 
-  const handlePlatformChange = (platform: string, isSelected: boolean) => {
-    setSelectedPlatforms((prev) => (isSelected ? [...prev, platform] : prev.filter((p) => p !== platform)));
+  const handlePlatformChange = async (platform: string, isSelected: boolean) => {
+    const newSelectedPlatforms = isSelected
+      ? [...selectedPlatforms, platform]
+      : selectedPlatforms.filter((p) => p !== platform);
+    setSelectedPlatforms(newSelectedPlatforms);
+    await storage.set('videoPlatforms', newSelectedPlatforms);
   };
+  const loadPlatforms = async () => {
+    const platforms = await storage.get<string[]>('videoPlatforms');
+    setSelectedPlatforms((platforms as string[]) || []);
+  };
+  loadPlatforms();
 
   const handlePublish = async () => {
     if (!title || !videoFile) {
@@ -59,7 +71,7 @@ const VideoTab: React.FC<VideoTabProps> = ({ funcPublish }) => {
       alert(chrome.i18n.getMessage('optionsSelectPublishPlatforms'));
       return;
     }
-
+    localStorage.setItem('videoPlatforms', JSON.stringify(selectedPlatforms));
     const data: SyncData = {
       platforms: selectedPlatforms,
       data: {

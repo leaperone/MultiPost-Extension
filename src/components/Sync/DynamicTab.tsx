@@ -7,7 +7,7 @@ import 'video-react/dist/video-react.css';
 import type { FileData, SyncData } from '~sync/common';
 import PlatformCheckbox from './PlatformCheckbox';
 import { getPlatformInfos } from '~sync/common';
-
+import { Storage } from '@plasmohq/storage';
 interface DynamicTabProps {
   funcPublish: (data: SyncData) => void;
 }
@@ -24,23 +24,26 @@ const DynamicTab: React.FC<DynamicTabProps> = ({ funcPublish }) => {
   const [autoPublish, setAutoPublish] = useState<boolean>(false);
   const [viewerVisible, setViewerVisible] = useState(false);
   const [currentImage, setCurrentImage] = useState(0);
-
+  const storage = new Storage({
+    area: 'local', // 明确指定使用 localStorage
+  });
   useEffect(() => {
     if (process.env.NODE_ENV === 'development') {
       setTitle('开发环境标题');
       setContent('开发环境内容');
     }
-    
+    setSelectedPlatforms(JSON.parse(localStorage.getItem('dynamicPlatforms') || '[]'));
+
     // 添加粘贴事件监听器
     document.addEventListener('paste', handlePaste);
-    
+
     // 添加拖拽事件监听器
     const dropArea = dropAreaRef.current;
     if (dropArea) {
       dropArea.addEventListener('dragover', handleDragOver);
       dropArea.addEventListener('drop', handleDrop);
     }
-    
+
     return () => {
       document.removeEventListener('paste', handlePaste);
       if (dropArea) {
@@ -152,9 +155,18 @@ const DynamicTab: React.FC<DynamicTabProps> = ({ funcPublish }) => {
     }
   };
 
-  const handlePlatformChange = (platform: string, isSelected: boolean) => {
-    setSelectedPlatforms((prev) => (isSelected ? [...prev, platform] : prev.filter((p) => p !== platform)));
+  const handlePlatformChange = async (platform: string, isSelected: boolean) => {
+    const newSelectedPlatforms = isSelected
+      ? [...selectedPlatforms, platform]
+      : selectedPlatforms.filter((p) => p !== platform);
+    setSelectedPlatforms(newSelectedPlatforms);
+    await storage.set('dynamicPlatforms', newSelectedPlatforms);
   };
+  const loadPlatforms = async () => {
+    const platforms = await storage.get<string[]>('dynamicPlatforms');
+    setSelectedPlatforms((platforms as string[]) || []);
+  };
+  loadPlatforms();
 
   const handlePublish = async () => {
     if (!content) {
@@ -167,7 +179,7 @@ const DynamicTab: React.FC<DynamicTabProps> = ({ funcPublish }) => {
       alert(chrome.i18n.getMessage('optionsSelectPublishPlatforms'));
       return;
     }
-    
+    localStorage.setItem('dynamicPlatforms', JSON.stringify(selectedPlatforms));
     const data: SyncData = {
       platforms: selectedPlatforms,
       data: {
@@ -221,7 +233,9 @@ const DynamicTab: React.FC<DynamicTabProps> = ({ funcPublish }) => {
   };
 
   return (
-    <div className="flex flex-col gap-4" ref={dropAreaRef}>
+    <div
+      className="flex flex-col gap-4"
+      ref={dropAreaRef}>
       <Card className="shadow-none bg-default-50">
         <CardHeader className="flex flex-col gap-4">
           <Input
