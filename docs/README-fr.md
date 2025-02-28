@@ -68,7 +68,7 @@ Il est recommandé d'utiliser le gestionnaire de paquets `pnpm@latest-9`.
 
 ## Contactez-nous
 
-- Groupe QQ: 921137242
+- Groupe QQ: [921137242](http://qm.qq.com/cgi-bin/qm/qr?_wv=1027&k=c5BjhD8JxNAuwjKh6qvCoROU301PppYU&authKey=NfKianfDwngrwJyVQbefIQET9vUQs46xb0PfOYUm6KzdeCjPd5YbvlRoO8trJUUZ&noverify=0&group_code=921137242)
 - Email: support@leaper.one
 - Problèmes GitHub: https://github.com/MultiPost-Extension/MultiPost-Extension/issues
 
