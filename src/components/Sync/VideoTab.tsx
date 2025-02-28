@@ -71,7 +71,7 @@ const VideoTab: React.FC<VideoTabProps> = ({ funcPublish }) => {
       alert(chrome.i18n.getMessage('optionsSelectPublishPlatforms'));
       return;
     }
-    localStorage.setItem('videoPlatforms', JSON.stringify(selectedPlatforms));
+
     const data: SyncData = {
       platforms: selectedPlatforms,
       data: {
