@@ -65,3 +65,11 @@ pnpm build
 ### 개발 환경
 
 패키지 관리자로 `pnpm@latest-9` 사용을 권장합니다.
+
+## 문의하기
+
+- QQ 그룹: 921137242
+- 이메일: support@leaper.one
+- GitHub Issues: https://github.com/MultiPost-Extension/MultiPost-Extension/issues
+
+![QQ 그룹](MultiPost-Extension_2025-02-28T14_17_15.717Z.png)

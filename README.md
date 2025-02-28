@@ -76,3 +76,11 @@ It is recommended to use the package management tool `pnpm@latest-9` with Node.j
    <img alt="Star History Chart" src="https://api.star-history.com/svg?repos=MultiPost-Extension/MultiPost-Extension&type=Date" />
  </picture>
 </a>
+
+## Contact Us
+
+- QQ Group: 921137242
+- Email: support@leaper.one
+- GitHub Issues: https://github.com/MultiPost-Extension/MultiPost-Extension/issues
+
+![QQ Group](docs/MultiPost-Extension_2025-02-28T14_17_15.717Z.png)

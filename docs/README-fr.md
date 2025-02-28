@@ -65,3 +65,11 @@ Vous trouverez le contenu construit dans le dossier `build`.
 ### Environnement de développement
 
 Il est recommandé d'utiliser le gestionnaire de paquets `pnpm@latest-9`.
+
+## Contactez-nous
+
+- Groupe QQ: 921137242
+- Email: support@leaper.one
+- Problèmes GitHub: https://github.com/MultiPost-Extension/MultiPost-Extension/issues
+
+![Groupe QQ](MultiPost-Extension_2025-02-28T14_17_15.717Z.png)

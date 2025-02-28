@@ -65,3 +65,12 @@ pnpm build
 ### 开发环境
 
 包管理工具建议使用 `pnpm@latest-9`
+
+## 联系我们
+
+- QQ 群: 921137242
+- 邮箱: support@leaper.one
+- GitHub Issues: https://github.com/MultiPost-Extension/MultiPost-Extension/issues
+
+![QQ 群](MultiPost-Extension_2025-02-28T14_17_15.717Z.png)
+
