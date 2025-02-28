@@ -179,7 +179,7 @@ const DynamicTab: React.FC<DynamicTabProps> = ({ funcPublish }) => {
       alert(chrome.i18n.getMessage('optionsSelectPublishPlatforms'));
       return;
     }
-    localStorage.setItem('dynamicPlatforms', JSON.stringify(selectedPlatforms));
+
     const data: SyncData = {
       platforms: selectedPlatforms,
       data: {
