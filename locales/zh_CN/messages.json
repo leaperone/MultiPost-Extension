@@ -527,6 +527,10 @@
   "optionsClearAll": {
     "message": "清空"
   },
+  "optionsClearPlatforms": {
+    "message": "清空平台",
+    "description": "清空所有已选择平台的按钮文本"
+  },
   "aboutDescription": {
     "message": "MultiPost Extension 帮助您同时将内容发布到多个平台，提高内容分发效率。"
   },

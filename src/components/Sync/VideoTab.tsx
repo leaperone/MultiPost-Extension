@@ -54,6 +54,12 @@ const VideoTab: React.FC<VideoTabProps> = ({ funcPublish }) => {
     setSelectedPlatforms(newSelectedPlatforms);
     await storage.set('videoPlatforms', newSelectedPlatforms);
   };
+
+  const clearSelectedPlatforms = async () => {
+    setSelectedPlatforms([]);
+    await storage.set('videoPlatforms', []);
+  };
+  
   const loadPlatforms = async () => {
     const platforms = await storage.get<string[]>('videoPlatforms');
     setSelectedPlatforms((platforms as string[]) || []);
@@ -195,7 +201,22 @@ const VideoTab: React.FC<VideoTabProps> = ({ funcPublish }) => {
 
       <div className="flex flex-col gap-4 p-4 rounded-lg bg-default-50">
         <div className="flex flex-col gap-2">
-          <p className="text-sm font-medium">{chrome.i18n.getMessage('optionsSelectPublishPlatforms')}</p>
+          <div className="flex justify-between items-center">
+            <div className="flex items-center gap-2">
+              <p className="text-sm font-medium">{chrome.i18n.getMessage('optionsSelectPublishPlatforms')}</p>
+            </div>
+            {selectedPlatforms.length > 0 && (
+              <Button 
+                size="sm" 
+                variant="light" 
+                color="danger" 
+                onPress={clearSelectedPlatforms}
+                className="text-xs"
+              >
+                {chrome.i18n.getMessage('optionsClearPlatforms') || chrome.i18n.getMessage('optionsClearAll') || '清空平台'}
+              </Button>
+            )}
+          </div>
           <div className="grid grid-cols-2 gap-3">
             {getPlatformInfos('VIDEO').map((platform) => (
               <PlatformCheckbox

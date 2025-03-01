@@ -57,6 +57,11 @@ const ArticleTab: React.FC<ArticleTabProps> = ({ funcPublish, funcScraper }) => 
   await storage.set('articlePlatforms', newSelectedPlatforms);
   };
 
+  const clearSelectedPlatforms = async () => {
+    setSelectedPlatforms([]);
+    await storage.set('articlePlatforms', []);
+  };
+
   const loadPlatforms = async () => {
     const platforms = await storage.get<string[]>("articlePlatforms");
     setSelectedPlatforms(platforms as string[] || []);
@@ -344,7 +349,7 @@ const ArticleTab: React.FC<ArticleTabProps> = ({ funcPublish, funcScraper }) => 
                   isIconOnly
                   size="sm"
                   color="danger"
-                  className="absolute top-0 right-0 z-50 m-1 opacity-0 transition-opacity group-hover:opacity-100"
+                  className="absolute top-0 right-0 z-50 m-1 transition-opacity opacity-0 group-hover:opacity-100"
                   onPress={handleDeleteCover}>
                   <XIcon className="size-4" />
                 </Button>
@@ -383,9 +388,24 @@ const ArticleTab: React.FC<ArticleTabProps> = ({ funcPublish, funcScraper }) => 
         </CardBody>
       </Card>
 
-      <div className="flex flex-col gap-4 bg-default-50 p-4 rounded-lg">
+      <div className="flex flex-col gap-4 p-4 rounded-lg bg-default-50">
         <div className="flex flex-col gap-2">
-          <p className="text-sm font-medium">{chrome.i18n.getMessage('optionsSelectPublishPlatforms')}</p>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <p className="text-sm font-medium">{chrome.i18n.getMessage('optionsSelectPublishPlatforms')}</p>
+            </div>
+            {selectedPlatforms.length > 0 && (
+              <Button 
+                size="sm" 
+                variant="light" 
+                color="danger" 
+                onPress={clearSelectedPlatforms}
+                className="text-xs"
+              >
+                {chrome.i18n.getMessage('optionsClearPlatforms') || chrome.i18n.getMessage('optionsClearAll') || '清空平台'}
+              </Button>
+            )}
+          </div>
           <div className="grid grid-cols-2 gap-3">
             {getPlatformInfos('ARTICLE').map((platform) => (
               <PlatformCheckbox
@@ -403,7 +423,7 @@ const ArticleTab: React.FC<ArticleTabProps> = ({ funcPublish, funcScraper }) => 
         onPress={handlePublish}
         color="primary"
         disabled={!title || selectedPlatforms.length === 0}
-        className="px-4 py-2 w-full font-bold">
+        className="w-full px-4 py-2 font-bold">
         {chrome.i18n.getMessage('optionsSyncArticle')}
       </Button>
 
@@ -423,7 +443,7 @@ const ArticleTab: React.FC<ArticleTabProps> = ({ funcPublish, funcScraper }) => 
             <h4 className="mb-2 font-semibold">{importedContent.title}</h4>
             <p className="mb-4 text-sm">{importedContent.digest}</p>
             <div
-              className="max-w-none prose"
+              className="prose max-w-none"
               dangerouslySetInnerHTML={{ __html: importedContent.content }}
             />
           </CardBody>
