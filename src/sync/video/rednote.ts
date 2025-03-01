@@ -73,18 +73,27 @@ export async function VideoRednote(data: SyncData) {
   await uploadVideo();
 
   // 填写标题
-  const titleInput = (await waitForElement('input[class="el-input__inner"]')) as HTMLInputElement;
+  const titleInput = (await waitForElement('input[placeholder="填写标题会有更多赞哦～"]')) as HTMLInputElement;
   if (titleInput) {
     titleInput.value = title || content.slice(0, 20);
     titleInput.dispatchEvent(new Event('input', { bubbles: true }));
   }
 
   // 填写内容
-  const contentEditor = (await waitForElement('p.post-content')) as HTMLParagraphElement;
-  if (contentEditor) {
-    contentEditor.innerText = content;
-    contentEditor.dispatchEvent(new Event('input', { bubbles: true }));
+  const editor = document.querySelector(
+    'div[data-placeholder="输入正文描述，真诚有价值的分享予人温暖"]',
+  ) as HTMLElement;
+  if (!editor) {
+    throw new Error('未找到编辑器元素');
   }
+  editor.focus();
+  const pasteEvent = new ClipboardEvent('paste', {
+    bubbles: true,
+    cancelable: true,
+    clipboardData: new DataTransfer(),
+  });
+  pasteEvent.clipboardData.setData('text/plain', `${content}` || '');
+  editor.dispatchEvent(pasteEvent);
 
   // 等待内容更新
   await new Promise((resolve) => setTimeout(resolve, 3000));
