@@ -611,5 +611,9 @@
   "optionsQQGroup": {
     "message": "QQ Group:",
     "description": "QQ group number"
+  },
+  "platformThreads": {
+    "message": "Threads",
+    "description": "Platform name for Threads"
   }
 }

@@ -607,5 +607,9 @@
   "optionsQQGroup": {
     "message": "QQ交流群：",
     "description": "QQ group number"
+  },
+  "platformThreads": {
+    "message": "Threads",
+    "description": "Threads平台名称"
   }
 }
