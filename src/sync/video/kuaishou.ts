@@ -83,18 +83,18 @@ export async function VideoKuaishou(data: SyncData) {
   // 等待内容更新
   await new Promise((resolve) => setTimeout(resolve, 3000));
 
-  // 自动选择前三个标签
-  const recommendationTitle = await waitForElement('div._recommend-title_oei9t_269'); // 等待"话题推荐"标题出现
-  const tagsContainer = recommendationTitle.nextElementSibling; // 获取下一个兄弟元素作为标签容器
-  if (tagsContainer) {
-    const tags = Array.from(tagsContainer.querySelectorAll('span._tag_oei9t_283')).filter((tag) => tag.textContent); // 获取所有标签
-    if (tags.length > 0) {
-      for (let i = 0; i < Math.min(3, tags.length); i++) {
-        const tag = tags[i] as HTMLElement; // 类型断言为 HTMLElement
-        tag.click(); // 点击选择标签
-      }
-    }
-  }
+  // // 自动选择前三个标签
+  // const recommendationTitle = await waitForElement('div._recommend-title_oei9t_269'); // 等待"话题推荐"标题出现
+  // const tagsContainer = recommendationTitle.nextElementSibling; // 获取下一个兄弟元素作为标签容器
+  // if (tagsContainer) {
+  //   const tags = Array.from(tagsContainer.querySelectorAll('span._tag_oei9t_283')).filter((tag) => tag.textContent); // 获取所有标签
+  //   if (tags.length > 0) {
+  //     for (let i = 0; i < Math.min(3, tags.length); i++) {
+  //       const tag = tags[i] as HTMLElement; // 类型断言为 HTMLElement
+  //       tag.click(); // 点击选择标签
+  //     }
+  //   }
+  // }
 
   // 发布按钮逻辑
   if (data.auto_publish) {
