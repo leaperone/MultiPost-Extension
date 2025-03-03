@@ -1,6 +1,7 @@
 import type { PlatformInfo } from './common';
 import { VideoBaijiahao } from './video/baijiahao';
 import { VideoBilibili } from './video/bilibili';
+import { VideoBluesky } from './video/bluesky';
 import { VideoDouyin } from './video/douyin';
 import { VideoKuaishou } from './video/kuaishou';
 import { VideoOkjike } from './video/okjike';
@@ -102,5 +103,14 @@ export const VideoInfoMap: Record<string, PlatformInfo> = {
     platformName: chrome.i18n.getMessage('platformOkjike'),
     injectUrl: 'https://web.okjike.com',
     injectFunction: VideoOkjike,
+  },
+  VIDEO_BLUESKY: {
+    type: 'VIDEO',
+    name: 'VIDEO_BLUESKY',
+    homeUrl: 'https://bsky.app/',
+    faviconUrl: 'https://web-cdn.bsky.app/static/favicon-32x32.png',
+    platformName: chrome.i18n.getMessage('platformBluesky'),
+    injectUrl: 'https://bsky.app/',
+    injectFunction: VideoBluesky,
   },
 };
