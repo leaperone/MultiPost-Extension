@@ -2,7 +2,7 @@ import type { DynamicData, SyncData } from '../common';
 
 // 优先发布图文
 export async function DynamicDouyin(data: SyncData) {
-  const { title, content, images, videos } = data.data as DynamicData;
+  const { title, content, images } = data.data as DynamicData;
   // 辅助函数：等待元素出现
   function waitForElement(selector: string, timeout = 10000): Promise<Element> {
     return new Promise((resolve, reject) => {
@@ -111,21 +111,6 @@ export async function DynamicDouyin(data: SyncData) {
     }
   }
 
-  async function uploadVideo(file: File): Promise<void> {
-    const fileInput = (await waitForElement('input[type=file][accept="video/*"]')) as HTMLInputElement;
-
-    // 创建一个新的 File 对象，因为某些浏览器可能不允许直接设置 fileInput.files
-    const dataTransfer = new DataTransfer();
-    dataTransfer.items.add(file);
-    fileInput.files = dataTransfer.files;
-
-    // 触发 change 事件
-    const changeEvent = new Event('change', { bubbles: true });
-    fileInput.dispatchEvent(changeEvent);
-
-    console.log('视频上传事件已触发');
-  }
-
   await new Promise((resolve) => setTimeout(resolve, 2000));
 
   if (images && images.length > 0) {
@@ -183,41 +168,6 @@ export async function DynamicDouyin(data: SyncData) {
           await new Promise((resolve) => setTimeout(resolve, 2000)); // 等待2秒后重试
         }
       }
-    }
-  } else if (videos && videos.length > 0) {
-    const video = videos[0];
-    const response = await fetch(video.url);
-    const blob = await response.blob();
-    const videoFile = new File([blob], video.name, { type: video.type });
-    console.log(`视频文件: ${videoFile.name} ${videoFile.type} ${videoFile.size}`);
-
-    await uploadVideo(videoFile);
-    console.log('视频上传已初始化');
-
-    await new Promise((resolve) => setTimeout(resolve, 5000));
-
-    // 处理标题输入
-    const titleInput = (await waitForElement('input[placeholder*="作品标题"]')) as HTMLInputElement;
-    if (titleInput) {
-      titleInput.value = title || content.slice(0, 20);
-      titleInput.dispatchEvent(new Event('input', { bubbles: true }));
-    }
-
-    // 填写内容
-    const contentEditor = (await waitForElement('div[data-line-wrapper="true"]')) as HTMLDivElement;
-    if (contentEditor) {
-      // 创建一个新的 ClipboardEvent
-      const pasteEvent = new ClipboardEvent('paste', {
-        bubbles: true,
-        cancelable: true,
-        clipboardData: new DataTransfer(),
-      });
-
-      // 设置剪贴板数据
-      pasteEvent.clipboardData.setData('text/plain', content);
-
-      // 触发粘贴事件
-      contentEditor.dispatchEvent(pasteEvent);
     }
   }
 }

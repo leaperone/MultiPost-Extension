@@ -30,7 +30,7 @@ export async function VideoDouyin(data: SyncData) {
   }
 
   async function uploadVideo(file: File): Promise<void> {
-    const fileInput = (await waitForElement('input[type=file][accept="video/*"]')) as HTMLInputElement;
+    const fileInput = (await waitForElement('input[type=file]')) as HTMLInputElement;
 
     // 创建一个新的 File 对象，因为某些浏览器可能不允许直接设置 fileInput.files
     const dataTransfer = new DataTransfer();
