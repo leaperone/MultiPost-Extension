@@ -7,7 +7,7 @@ import { VideoOkjike } from './video/okjike';
 import { VideoRednote } from './video/rednote';
 import { VideoTiktok } from './video/tiktok';
 import { VideoWeibo } from './video/weibo';
-import { VideoWeiXin } from './video/weixin';
+import { VideoWeiXinChannel } from './video/weixinchannel';
 import { VideoYoutube } from './video/youtube';
 
 export const VideoInfoMap: Record<string, PlatformInfo> = {
@@ -58,14 +58,14 @@ export const VideoInfoMap: Record<string, PlatformInfo> = {
     injectUrl: 'https://www.tiktok.com/tiktokstudio/upload',
     injectFunction: VideoTiktok,
   },
-  VIDEO_WEIXIN: {
+  VIDEO_WEIXINCHANNEL: {
     type: 'VIDEO',
-    name: 'VIDEO_WEIXIN',
+    name: 'VIDEO_WEIXINCHANNEL',
     homeUrl: 'https://channels.weixin.qq.com/platform',
     faviconUrl: 'https://res.wx.qq.com/t/wx_fed/finder/helper/finder-helper-web/res/favicon-v2.ico',
     platformName: chrome.i18n.getMessage('platformWeiXinVideo'),
     injectUrl: 'https://channels.weixin.qq.com/platform/post/create',
-    injectFunction: VideoWeiXin,
+    injectFunction: VideoWeiXinChannel,
   },
   VIDEO_KUAISHOU: {
     type: 'VIDEO',

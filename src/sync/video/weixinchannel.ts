@@ -1,6 +1,6 @@
 import type { SyncData, VideoData } from '../common';
 
-export async function VideoWeiXin(data: SyncData) {
+export async function VideoWeiXinChannel(data: SyncData) {
   function waitForElement(selector: string, timeout = 10000): Promise<Element> {
     return new Promise((resolve, reject) => {
       const element = document.querySelector(selector);
@@ -64,7 +64,7 @@ export async function VideoWeiXin(data: SyncData) {
     await new Promise((resolve) => setTimeout(resolve, 5000));
 
     // 处理内容输入
-    const editorElement = (await waitForElement('div[data-placeholder="添加描述"]')) as HTMLDivElement;
+    const editorElement = (await waitForElement('div.input-editor')) as HTMLDivElement;
     if (editorElement) {
       editorElement.focus();
       const pasteEvent = new ClipboardEvent('paste', {
