@@ -12,6 +12,7 @@ import { DynamicRednote } from './dynamic/rednote';
 import { DynamicThreads } from './dynamic/threads';
 import { DynamicToutiao } from './dynamic/toutiao';
 import { DynamicWeibo } from './dynamic/weibo';
+import { DynamicWeiXinChannel } from './dynamic/weixinchannel';
 import { DynamicX } from './dynamic/x';
 import { DynamicXueqiu } from './dynamic/xueqiu';
 import { DynamicZhihu } from './dynamic/zhihu';
@@ -166,5 +167,14 @@ export const DynamicInfoMap: Record<string, PlatformInfo> = {
     platformName: chrome.i18n.getMessage('platformThreads'),
     injectUrl: 'https://www.threads.net/web',
     injectFunction: DynamicThreads,
+  },
+  DYNAMIC_WEIXINCHANNEL: {
+    type: 'DYNAMIC',
+    name: 'DYNAMIC_WEIXINCHANNEL',
+    homeUrl: 'https://channels.weixin.qq.com/platform',
+    faviconUrl: 'https://res.wx.qq.com/t/wx_fed/finder/helper/finder-helper-web/res/favicon-v2.ico',
+    platformName: chrome.i18n.getMessage('platformWeiXinVideo'),
+    injectUrl: 'https://channels.weixin.qq.com/platform/post/finderNewLifeCreate',
+    injectFunction: DynamicWeiXinChannel,
   },
 };
