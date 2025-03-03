@@ -614,5 +614,8 @@
   },
   "optionsNoticeDynamicVideo": {
     "message": "只有部分同时支持图片和视频的平台才能上传视频，其它平台仅发布图文"
+  },
+  "platformBluesky": {
+    "message": "BlueSky"
   }
 }

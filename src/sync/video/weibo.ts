@@ -42,8 +42,6 @@ export async function VideoWeibo(data: SyncData) {
       window.postMessage({ type: 'WEIBO_VIDEO_UPLOAD', video: videoFile }, '*');
     }
 
-    console.log('成功填入微博内容和视频');
-
     await new Promise((resolve) => setTimeout(resolve, 1000));
 
     // 使用 findElementByText 函数查找输入元素
