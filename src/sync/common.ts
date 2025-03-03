@@ -29,6 +29,7 @@ import { ArticleBaijiahao } from './article/baijiahao';
 import { DynamicToutiao } from './dynamic/toutiao';
 import { ArticleToutiao } from './article/toutiao';
 import { VideoWeibo } from './video/weibo';
+import { DynamicThreads } from './dynamic/threads';
 
 export interface SyncData {
   platforms: string[];
@@ -162,7 +163,7 @@ export const infoMap: Record<string, PlatformInfo> = {
   },
   ARTICLE_TOUTIAO: {
     type: 'ARTICLE',
-    name: 'ARTICLE_TOUTIAO', 
+    name: 'ARTICLE_TOUTIAO',
     homeUrl: 'https://mp.toutiao.com/',
     faviconUrl: 'https://sf1-cdn-tos.toutiaostatic.com/obj/ttfe/pgcfe/sz/mp_logo.png',
     platformName: chrome.i18n.getMessage('platformToutiao'),
@@ -303,12 +304,21 @@ export const infoMap: Record<string, PlatformInfo> = {
   },
   DYNAMIC_TOUTIAO: {
     type: 'DYNAMIC',
-    name: 'DYNAMIC_TOUTIAO', 
+    name: 'DYNAMIC_TOUTIAO',
     homeUrl: 'https://mp.toutiao.com/',
     faviconUrl: 'https://sf1-cdn-tos.toutiaostatic.com/obj/ttfe/pgcfe/sz/mp_logo.png',
     platformName: chrome.i18n.getMessage('platformToutiao'),
     injectUrl: 'https://mp.toutiao.com/profile_v4/weitoutiao/publish',
     injectFunction: DynamicToutiao,
+  },
+  DYNAMIC_THREADS: {
+    type: 'DYNAMIC',
+    name: 'DYNAMIC_THREADS',
+    homeUrl: 'https://www.threads.net/web',
+    faviconUrl: 'https://static.cdninstagram.com/rsrc.php/ye/r/lEu8iVizmNW.ico',
+    platformName: chrome.i18n.getMessage('platformThreads'),
+    injectUrl: 'https://www.threads.net/web',
+    injectFunction: DynamicThreads,
   },
   VIDEO_BILIBILI: {
     type: 'VIDEO',
