@@ -616,5 +616,8 @@
   },
   "optionsNoticeDynamicVideo": {
     "message": "Only some platforms that support both images and videos can upload videos, while other platforms only publish images and texts."
+  },
+  "platformBluesky": {
+    "message": "BlueSky"
   }
 }

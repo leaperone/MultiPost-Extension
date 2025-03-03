@@ -1,6 +1,7 @@
 import type { PlatformInfo } from './common';
 import { DynamicBaijiahao } from './dynamic/baijiahao';
 import { DynamicBilibili } from './dynamic/bilibili';
+import { DynamicBluesky } from './dynamic/bluesky';
 import { DynamicDouyin } from './dynamic/douyin';
 import { DynamicFacebook } from './dynamic/facebook';
 import { DynamicInstagram } from './dynamic/instagram';
@@ -176,5 +177,14 @@ export const DynamicInfoMap: Record<string, PlatformInfo> = {
     platformName: chrome.i18n.getMessage('platformWeiXinVideo'),
     injectUrl: 'https://channels.weixin.qq.com/platform/post/finderNewLifeCreate',
     injectFunction: DynamicWeiXinChannel,
+  },
+  DYNAMIC_BLUESKY: {
+    type: 'DYNAMIC',
+    name: 'DYNAMIC_BLUESKY',
+    homeUrl: 'https://bsky.app/',
+    faviconUrl: 'https://web-cdn.bsky.app/static/favicon-32x32.png',
+    platformName: chrome.i18n.getMessage('platformBluesky'),
+    injectUrl: 'https://bsky.app/',
+    injectFunction: DynamicBluesky,
   },
 };
