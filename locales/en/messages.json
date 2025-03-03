@@ -481,7 +481,6 @@
     "message": "Instagram",
     "description": "Platform name for Instagram"
   },
-
   "platformYoutube": {
     "message": "YouTube",
     "description": "Platform name for YouTube"
@@ -537,7 +536,6 @@
   "syncPublicPageTitle": {
     "message": ""
   },
-
   "settingsTrustedDomains": {
     "message": "Trusted Domains"
   },
@@ -615,5 +613,8 @@
   "platformThreads": {
     "message": "Threads",
     "description": "Platform name for Threads"
+  },
+  "optionsNoticeDynamicVideo": {
+    "message": "Only some platforms that support both images and videos can upload videos, while other platforms only publish images and texts."
   }
 }

@@ -14,6 +14,7 @@ import { DynamicFacebook } from './dynamic/facebook';
 import { VideoTiktok } from './video/tiktok';
 import { DynamicLinkedin } from './dynamic/linkedin';
 import { DynamicOkjike } from './dynamic/okjike';
+import { VideoOkjike } from './video/okjike';
 import { ArticleCSDN } from './article/csdn';
 import { ArticleZhihu } from './article/zhihu';
 import { ArticleJuejin } from './article/juejin';
@@ -402,6 +403,15 @@ export const infoMap: Record<string, PlatformInfo> = {
     platformName: chrome.i18n.getMessage('platformWeibo'),
     injectUrl: 'https://weibo.com/upload/channel',
     injectFunction: VideoWeibo,
+  },
+  VIDEO_OKJIKE: {
+    type: 'VIDEO',
+    name: 'VIDEO_OKJIKE',
+    homeUrl: 'https://web.okjike.com',
+    faviconUrl: 'https://web.okjike.com/favicon.ico',
+    platformName: chrome.i18n.getMessage('platformOkjike'),
+    injectUrl: 'https://web.okjike.com',
+    injectFunction: VideoOkjike,
   },
 };
 
