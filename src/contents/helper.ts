@@ -12,6 +12,12 @@ export const config: PlasmoCSConfig = {
   run_at: 'document_start',
 };
 
+interface CodeMirrorElement extends HTMLDivElement {
+  CodeMirror: {
+    setValue: (content: string) => void;
+  };
+}
+
 let originalCreateElement = document.createElement.bind(document);
 export let createdInputs: HTMLInputElement[] = [];
 
@@ -34,6 +40,11 @@ function handleMessage(event: MessageEvent) {
     handleBlueskyVideoUpload(event);
   } else if (data.type === 'BLUESKY_IMAGE_UPLOAD') {
     handleBlueskyImageUpload(event);
+  } else if (data.type === 'V2EX_DYNAMIC_UPLOAD') {
+    const editor = document.querySelector('.CodeMirror') as CodeMirrorElement;
+    if (editor) {
+      editor.CodeMirror.setValue(data.content);
+    }
   }
 }
 

@@ -12,6 +12,7 @@ import { DynamicReddit } from './dynamic/reddit';
 import { DynamicRednote } from './dynamic/rednote';
 import { DynamicThreads } from './dynamic/threads';
 import { DynamicToutiao } from './dynamic/toutiao';
+import { DynamicV2EX } from './dynamic/v2ex';
 import { DynamicWeibo } from './dynamic/weibo';
 import { DynamicWeiXinChannel } from './dynamic/weixinchannel';
 import { DynamicX } from './dynamic/x';
@@ -186,5 +187,14 @@ export const DynamicInfoMap: Record<string, PlatformInfo> = {
     platformName: chrome.i18n.getMessage('platformBluesky'),
     injectUrl: 'https://bsky.app/',
     injectFunction: DynamicBluesky,
+  },
+  DYNAMIC_V2EX: {
+    type: 'DYNAMIC',
+    name: 'DYNAMIC_V2EX',
+    homeUrl: 'https://www.v2ex.com/',
+    faviconUrl: 'https://www.v2ex.com/favicon.ico',
+    platformName: chrome.i18n.getMessage('platformV2ex'),
+    injectUrl: 'https://www.v2ex.com/write',
+    injectFunction: DynamicV2EX,
   },
 };

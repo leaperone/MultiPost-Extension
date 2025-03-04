@@ -265,7 +265,7 @@
     "message": "同步发布"
   },
   "optionsEnterUrl": {
-    "message": "输入URL",
+    "message": "输入URL（🔗 在任意一个平台发布后再导入内容）",
     "description": "URL输入框占位符"
   },
   "optionsImport": {
@@ -617,5 +617,8 @@
   },
   "platformBluesky": {
     "message": "BlueSky"
+  },
+  "platformV2ex": {
+    "message": "V2EX"
   }
 }

@@ -619,5 +619,8 @@
   },
   "platformBluesky": {
     "message": "BlueSky"
+  },
+  "platformV2ex": {
+    "message": "V2EX"
   }
 }
