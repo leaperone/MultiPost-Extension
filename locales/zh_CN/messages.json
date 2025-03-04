@@ -538,7 +538,7 @@
     "message": "关于"
   },
   "gSettings": {
-    "message": "设置"
+    "message": "设置页"
   },
   "settingsTrustedDomains": {
     "message": "可信域名"
@@ -620,5 +620,44 @@
   },
   "platformV2ex": {
     "message": "V2EX"
+  },
+  "settingsTrustedDomainsOrigin": {
+    "message": "来源域名"
+  },
+  "settingsTrustedDomainsSafetyTip": {
+    "message": "安全提示"
+  },
+  "settingsTrustedDomainsConfirm": {
+    "message": "请确认你信任此域名。允许此域名将会："
+  },
+  "settingsTrustedDomainsAllowPublish": {
+    "message": "允许该网站通过扩展发布内容"
+  },
+  "settingsTrustedDomainsAllowAPI": {
+    "message": "允许该网站调用扩展开放的 API"
+  },
+  "settingsTrustedDomainsCancel": {
+    "message": "可以随时在扩展的设置页里取消授权："
+  },
+  "settingsTrustedDomainsOnlyAllow": {
+    "message": "仅允许来自"
+  },
+  "settingsTrustedDomainsConfirmText": {
+    "message": "我已阅读并理解上述内容，确认要允许此域名访问扩展功能"
+  },
+  "settingsTrustedDomainsReject": {
+    "message": "拒绝"
+  },
+  "settingsTrustedDomainsAllow": {
+    "message": "允许并信任"
+  },
+  "settingsTrustedDomainsAdded": {
+    "message": "已添加到信任域名列表"
+  },
+  "settingsTrustedDomainsRejected": {
+    "message": "已拒绝此域名请求"
+  },
+  "settingsTrustedDomainsError": {
+    "message": "处理请求时发生错误"
   }
 }

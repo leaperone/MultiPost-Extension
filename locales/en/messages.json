@@ -622,5 +622,44 @@
   },
   "platformV2ex": {
     "message": "V2EX"
+  },
+  "settingsTrustedDomainsOrigin": {
+    "message": "Origin Domain"
+  },
+  "settingsTrustedDomainsSafetyTip": {
+    "message": "Safety Notice"
+  },
+  "settingsTrustedDomainsConfirm": {
+    "message": "Please confirm that you trust this domain. Allowing this domain will:"
+  },
+  "settingsTrustedDomainsAllowPublish": {
+    "message": "Allow this website to publish content through the extension"
+  },
+  "settingsTrustedDomainsAllowAPI": {
+    "message": "Allow this website to call the extension's open APIs"
+  },
+  "settingsTrustedDomainsCancel": {
+    "message": "You can revoke trusted domains at any time in the extension's"
+  },
+  "settingsTrustedDomainsOnlyAllow": {
+    "message": "Only allow requests from"
+  },
+  "settingsTrustedDomainsConfirmText": {
+    "message": "I have read and understood the above content and confirm to allow this domain to access extension features"
+  },
+  "settingsTrustedDomainsReject": {
+    "message": "Reject"
+  },
+  "settingsTrustedDomainsAllow": {
+    "message": "Allow and Trust"
+  },
+  "settingsTrustedDomainsAdded": {
+    "message": "Added to trusted domains list"
+  },
+  "settingsTrustedDomainsRejected": {
+    "message": "Domain request rejected"
+  },
+  "settingsTrustedDomainsError": {
+    "message": "Error processing request"
   }
 }
