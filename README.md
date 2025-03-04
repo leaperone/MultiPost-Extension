@@ -58,6 +58,10 @@ You can find the build content in the `build` folder
 
 [Plasmo Docs](https://docs.plasmo.com/)
 
+## Recommended Articles
+
+- [AI Full Stack Guide Vol.033: Learn One-Click Multi-Platform Content Publishing in 5 Minutes](https://mp.weixin.qq.com/s/K7yh6EsBLOGJzl8Gh8SwLw)
+
 ### File Structure
 
 > src/sync: This folder contains the code for operating on different platforms, where dynamic is related to dynamic publishing, and video is related to video publishing; any added platform needs to be registered in common.ts.

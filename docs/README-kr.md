@@ -57,6 +57,10 @@ pnpm build
 
 [Plasmo Docs](https://docs.plasmo.com/)
 
+## 추천 기사
+
+- [AI全栈指南 Vol.033：5分钟学会内容一键发布多平台](https://mp.weixin.qq.com/s/K7yh6EsBLOGJzl8Gh8SwLw)
+
 ### 파일 구조
 
 > src/sync: 이 폴더에는 다양한 플랫폼 작업을 위한 코드가 포함되어 있으며, dynamic은 동적 게시 관련, video는 동영상 게시 관련 코드입니다. 추가된 모든 플랫폼은 common.ts에 등록해야 합니다.

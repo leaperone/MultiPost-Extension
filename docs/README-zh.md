@@ -57,6 +57,10 @@ pnpm build
 
 [Plasmo Docs](https://docs.plasmo.com/)
 
+## 推荐文章
+
+- [AI全栈指南 Vol.033：5分钟学会内容一键发布多平台](https://mp.weixin.qq.com/s/K7yh6EsBLOGJzl8Gh8SwLw)
+
 ### 文件架构
 
 > src/sync：该文件夹下存放了有关操作不同平台的代码，其中 dynamic 是动态发布相关的，video 是视频发布相关的；任何加入的平台都需要在 common.ts 中注册。

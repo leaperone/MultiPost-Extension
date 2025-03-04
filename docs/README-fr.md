@@ -57,6 +57,10 @@ Vous trouverez le contenu construit dans le dossier `build`.
 
 [Plasmo Docs](https://docs.plasmo.com/)
 
+## Articles recommandés
+
+- [AI全栈指南 Vol.033：5分钟学会内容一键发布多平台](https://mp.weixin.qq.com/s/K7yh6EsBLOGJzl8Gh8SwLw)
+
 ### Structure des fichiers
 
 > src/sync : Ce dossier contient le code pour opérer sur différentes plateformes, où dynamic concerne la publication dynamique et video concerne la publication de vidéos ; toute plateforme ajoutée doit être enregistrée dans common.ts.
