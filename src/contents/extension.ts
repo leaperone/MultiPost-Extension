@@ -12,20 +12,13 @@ const storage = new Storage({
   area: 'local',
 });
 
-// 初始化默认可信域名
-async function initDefaultTrustedDomains() {
-  const trustedDomains = await storage.get<Array<{ id: string; domain: string }>>('trustedDomains');
-  if (!trustedDomains) {
-    await storage.set('trustedDomains', [
-      {
-        id: crypto.randomUUID(),
-        domain: '*.multipost.app',
-      },
-    ]);
-  }
-}
+const ACTIONS_NOT_NEED_TRUST_DOMAIN = ['MUTLIPOST_EXTENSION_REQUEST_TRUST_DOMAIN'];
 
-async function isOriginTrusted(origin: string): Promise<boolean> {
+async function isOriginTrusted(origin: string, action: string): Promise<boolean> {
+  if (ACTIONS_NOT_NEED_TRUST_DOMAIN.includes(action)) {
+    return true;
+  }
+
   const trustedDomains = (await storage.get<Array<{ domain: string }>>('trustedDomains')) || [];
 
   return trustedDomains.some(({ domain }) => {
@@ -45,7 +38,7 @@ window.addEventListener('message', async (event) => {
   }
 
   // 验证来源是否可信
-  const isTrusted = await isOriginTrusted(new URL(event.origin).hostname);
+  const isTrusted = await isOriginTrusted(new URL(event.origin).hostname, request.action);
   if (!isTrusted) {
     event.source.postMessage({
       type: 'response',
@@ -60,9 +53,6 @@ window.addEventListener('message', async (event) => {
 
   defaultHandler(request, event);
 });
-
-// 在扩展加载时初始化默认可信域名
-initDefaultTrustedDomains();
 
 function defaultHandler<T>(request: ExtensionExternalRequest<T>, event: MessageEvent) {
   chrome.runtime.sendMessage(request).then((response) => {

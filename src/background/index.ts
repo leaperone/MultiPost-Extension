@@ -9,11 +9,30 @@ import {
 } from './services/tabs';
 import QuantumEntanglementKeepAlive from '../utils/keep-alive';
 import { createTabsForPlatforms, getPlatformInfos, injectScriptsToTabs, type SyncData } from '~sync/common';
+import { trustDomainMessageHandler } from './services/trust-domain';
+import { Storage } from '@plasmohq/storage';
+
+const storage = new Storage({
+  area: 'local',
+});
+
+async function initDefaultTrustedDomains() {
+  const trustedDomains = await storage.get<Array<{ id: string; domain: string }>>('trustedDomains');
+  if (!trustedDomains) {
+    await storage.set('trustedDomains', [
+      {
+        id: crypto.randomUUID(),
+        domain: 'multipost.app',
+      },
+    ]);
+  }
+}
 
 chrome.runtime.onInstalled.addListener((object) => {
   if (object.reason === chrome.runtime.OnInstalledReason.INSTALL) {
     chrome.tabs.create({ url: 'https://multipost.2some.one/on-install' });
   }
+  initDefaultTrustedDomains();
   chrome.sidePanel.setPanelBehavior({ openPanelOnActionClick: false });
 });
 
@@ -21,6 +40,7 @@ chrome.runtime.onInstalled.addListener((object) => {
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   defaultMessageHandler(request, sender, sendResponse);
   tabsManagerMessageHandler(request, sender, sendResponse);
+  trustDomainMessageHandler(request, sender, sendResponse);
   return true;
 });
 chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
