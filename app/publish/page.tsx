@@ -11,6 +11,8 @@ import { Alert } from '@heroui/react';
 
 import ForceInstallExtension from '@/components/ForceInstallExtension';
 import HomePageHeader from '@/components/HomePage/Header';
+import { funcGetPermission } from './common';
+import { useEffect } from 'react';
 
 const DynamicTab = dynamic(() => import('./components/DynamicTab'), {
   ssr: false,
@@ -22,6 +24,17 @@ const VideoTab = dynamic(() => import('./components/VideoTab'), {
 
 export default function PublishPage() {
   const { t } = useTranslation('publish');
+
+  useEffect(() => {
+    funcGetPermission().then((res) => {
+      if (res.status && res.status === 'confirm') {
+        window.location.reload();
+      } else if (res.trusted) {
+        return true;
+      }
+      return false;
+    });
+  }, []);
 
   const tabs = [
     {
