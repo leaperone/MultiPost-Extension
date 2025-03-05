@@ -25,6 +25,7 @@ interface PlatformResponse {
 
 export const getPlatformInfos = async (type: string) => {
   const response = await funcGetPlatformInfos();
-  const platforms = Array.isArray(response) ? response : (response as PlatformResponse).platforms;
-  return platforms?.filter((platform: PlatformInfo) => platform.type === type) ?? [];
+  if (!response) return [];
+  const platforms = Array.isArray(response) ? response : ((response as PlatformResponse)?.platforms ?? []);
+  return platforms.filter((platform: PlatformInfo) => platform.type === type);
 };
