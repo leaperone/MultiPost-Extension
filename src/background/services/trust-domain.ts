@@ -34,5 +34,15 @@ export const trustDomainMessageHandler = async (request, sender, sendResponse) =
       width: 800,
       height: 600,
     });
+
+    const trustDomainListener = (message, authSender, authSendResponse) => {
+      if (message.type === 'MUTLIPOST_EXTENSION_TRUST_DOMAIN_CONFIRM') {
+        const { trusted, status } = message;
+        sendResponse({ trusted, status });
+        authSendResponse('success');
+        chrome.runtime.onMessage.removeListener(trustDomainListener);
+      }
+    };
+    chrome.runtime.onMessage.addListener(trustDomainListener);
   }
 };

@@ -83,6 +83,12 @@ const TrustDomain = () => {
           message: chrome.i18n.getMessage('settingsTrustedDomainsRejected') || '已拒绝此域名请求',
         });
       }
+      chrome.runtime.sendMessage({
+        type: 'MUTLIPOST_EXTENSION_TRUST_DOMAIN_CONFIRM',
+        origin: params.origin,
+        trusted: trust,
+        status: trust ? 'confirm' : 'cancel',
+      });
 
       // 延迟关闭窗口
       setTimeout(() => {
