@@ -1,8 +1,4 @@
-name: deploy website
-on:
-  push:
-    branches:
-      - main
+name: deploy website on vercel
 
 jobs:
   deploy:
