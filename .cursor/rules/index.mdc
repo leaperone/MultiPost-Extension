@@ -1,0 +1,143 @@
+---
+description: General development guidelines for Chrome Extension
+globs: *
+alwaysApply: true
+---
+Chrome Extension Development Guidelines:
+
+Code Style and Structure:
+- Write concise TypeScript code with accurate type definitions
+- Use functional and declarative programming patterns; avoid classes
+- Use descriptive variable names with auxiliary verbs (e.g., isLoading, hasError)
+```typescript
+// ✅ Correct
+const isLoading = true;
+const hasError = false;
+const fetchUserData = async () => {};
+
+// ❌ Incorrect
+const loading = true;
+const error = false;
+const userData = async () => {};
+```
+
+File Structure:
+```
+src/
+├── popup/           # Popup window related code
+├── background/      # Background service code
+├── contents/        # Content scripts
+├── components/      # Shared components
+│   ├── ui/         # UI components
+│   └── features/   # Feature components
+├── utils/          # Utility functions
+├── types/          # Type definitions
+└── static/         # Static assets
+```
+
+Naming Conventions:
+- Use PascalCase for directories (e.g., components/AuthWizard)
+- Use PascalCase for components
+- Use camelCase for utility functions
+- Use SNAKE_CASE for constants
+```typescript
+// Component naming
+function UserProfile() {}
+function AuthButton() {}
+
+// Utility function naming
+function formatDateTime() {}
+function parseUserData() {}
+
+// Constant naming
+const API_BASE_URL = "https://api.example.com";
+const MAX_RETRY_COUNT = 3;
+```
+
+Chrome API Usage:
+- Properly use chrome.* APIs (storage, tabs, runtime, etc.)
+- Handle asynchronous operations with Promises
+- Use Service Worker for background scripts (MV3 requirement)
+```typescript
+// Storage API example
+const storage = {
+  get: async <T>(key: string): Promise<T | undefined> => {
+    const result = await chrome.storage.local.get(key);
+    return result[key];
+  },
+  set: async <T>(key: string, value: T): Promise<void> => {
+    await chrome.storage.local.set({ [key]: value });
+  }
+};
+
+// Tabs API example
+const tabs = {
+  getCurrentTab: async () => {
+    const [tab] = await chrome.tabs.query({
+      active: true,
+      currentWindow: true
+    });
+    return tab;
+  }
+};
+```
+
+Error Handling and Validation:
+- Prioritize error and edge case handling
+- Use early returns and guard clauses
+- Use Zod for form validation
+```typescript
+// ✅ Correct
+function processUserData(data?: UserData) {
+  if (!data) return null;
+  if (!data.email) return { error: "Email required" };
+  
+  return processData(data);
+}
+
+// ❌ Incorrect
+function processUserData(data?: UserData) {
+  if (data) {
+    if (data.email) {
+      return processData(data);
+    }
+  }
+}
+```
+
+Security and Privacy:
+- Implement Content Security Policy (CSP)
+- Handle user data securely
+- Prevent XSS and injection attacks
+- Secure component communication
+- Handle cross-origin requests safely
+```typescript
+// Secure message passing
+chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+  if (!sender.id || sender.id !== chrome.runtime.id) {
+    return;
+  }
+  // Process message
+});
+```
+
+Performance Optimization:
+- Minimize useEffect and setState usage
+- Use dynamic loading for non-critical components
+- Implement appropriate caching strategies
+```typescript
+// Caching strategy example
+const CACHE_DURATION = 1000 * 60 * 5; // 5 minutes
+
+async function fetchWithCache<T>(key: string, fetcher: () => Promise<T>): Promise<T> {
+  const cached = await storage.get<{ data: T; timestamp: number }>(key);
+  
+  if (cached && Date.now() - cached.timestamp < CACHE_DURATION) {
+    return cached.data;
+  }
+  
+  const data = await fetcher();
+  await storage.set(key, { data, timestamp: Date.now() });
+  return data;
+}
+```

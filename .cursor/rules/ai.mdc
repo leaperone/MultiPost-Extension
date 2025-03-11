@@ -1,0 +1,7 @@
+---
+description: AI 
+globs: *.tsx, *.js, *.ts
+alwaysApply: false
+---
+Third party lib:
+- Use Vercel AI SDK for AI function

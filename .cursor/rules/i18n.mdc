@@ -1,0 +1,48 @@
+---
+description: i18n, tanslation
+globs: locales/**/*.json
+alwaysApply: false
+---
+Internationalization (i18n) Guidelines:
+
+Message Structure:
+- Store all text content in `/locales/[locale]/messages.json`
+- Use descriptive message keys in SNAKE_CASE
+- Include placeholders with $PLACEHOLDER$ syntax
+- Add descriptions for translators in message files
+
+Message Format:
+```json
+"extensionDisplayName": {
+  "message": "MultiPost",
+  "description": "Multipost Extension"
+},
+```
+
+Implementation:
+- Use `chrome.i18n.getMessage('extensionDisplayName')` for all user-facing text
+- Never hardcode text strings in components
+- Handle RTL languages with appropriate CSS
+- Set default_locale in manifest.json
+- Support fallback locales
+
+Best Practices:
+- Keep messages concise and clear
+- Use semantic keys (e.g., WELCOME_MESSAGE vs MSG_001)
+- Maintain consistent terminology across translations
+- Handle pluralization properly
+- Consider cultural differences in formatting dates, numbers, and currencies
+- Test UI with different language lengths
+
+Code Examples:
+```typescript
+// Component usage
+const message = chrome.i18n.getMessage("WELCOME_MESSAGE", [username]);
+
+// Manifest configuration
+{
+  "default_locale": "en",
+  "name": "__MSG_extension_name__",
+  "description": "__MSG_extension_description__"
+}
+```

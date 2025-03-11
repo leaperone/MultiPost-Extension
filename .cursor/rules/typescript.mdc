@@ -1,6 +1,7 @@
 ---
-description: 
+description: typescript
 globs: *.ts, *.tsx
+alwaysApply: false
 ---
 TypeScript Usage:
 - Use TypeScript for all code; prefer interfaces over types
