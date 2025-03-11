@@ -1,6 +1,6 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useCallback, useMemo } from 'react';
 import { Card, Button, Image, Input, Textarea, CardHeader, CardBody, CardFooter, Switch } from '@heroui/react';
-import { XIcon, TrashIcon, SendIcon, HandIcon, BotIcon, FileVideo2Icon, FileImageIcon } from 'lucide-react';
+import { XIcon, TrashIcon, SendIcon, HandIcon, BotIcon, FileVideo2Icon, FileImageIcon, Eraser } from 'lucide-react';
 import Viewer from 'react-viewer';
 import { Player } from 'video-react';
 import 'video-react/dist/video-react.css';
@@ -8,37 +8,142 @@ import type { FileData, SyncData } from '~sync/common';
 import PlatformCheckbox from './PlatformCheckbox';
 import { getPlatformInfos } from '~sync/common';
 import { Storage } from '@plasmohq/storage';
+
+// Constants
+const STORAGE_KEY = 'dynamicPlatforms';
+const MAX_VIDEO_COUNT = 1;
+
 interface DynamicTabProps {
   funcPublish: (data: SyncData) => void;
 }
 
+interface FormState {
+  title: string;
+  content: string;
+  images: FileData[];
+  videos: FileData[];
+  selectedPlatforms: string[];
+  autoPublish: boolean;
+}
+
 const DynamicTab: React.FC<DynamicTabProps> = ({ funcPublish }) => {
-  const [images, setImages] = useState<FileData[]>([]);
-  const [videos, setVideos] = useState<FileData[]>([]);
-  const [title, setTitle] = useState<string>('');
-  const [content, setContent] = useState<string>('');
+  const [formState, setFormState] = useState<FormState>({
+    title: process.env.NODE_ENV === 'development' ? '开发环境标题' : '',
+    content: process.env.NODE_ENV === 'development' ? '开发环境内容' : '',
+    images: [],
+    videos: [],
+    selectedPlatforms: [],
+    autoPublish: false,
+  });
+
+  const [viewerState, setViewerState] = useState({
+    visible: false,
+    currentImage: 0,
+  });
+
   const imageInputRef = useRef<HTMLInputElement>(null);
   const videoInputRef = useRef<HTMLInputElement>(null);
   const dropAreaRef = useRef<HTMLDivElement>(null);
-  const [selectedPlatforms, setSelectedPlatforms] = useState<string[]>([]);
-  const [autoPublish, setAutoPublish] = useState<boolean>(false);
-  const [viewerVisible, setViewerVisible] = useState(false);
-  const [currentImage, setCurrentImage] = useState(0);
-  const storage = new Storage({
-    area: 'local', // 明确指定使用 localStorage
-  });
+  const storage = useMemo(() => new Storage({ area: 'local' }), []);
+
+  // 文件处理函数
+  const handleFileProcess = useCallback(
+    (file: File): FileData => ({
+      name: file.name,
+      type: file.type,
+      size: file.size,
+      url: URL.createObjectURL(file),
+    }),
+    [],
+  );
+
+  // 粘贴处理
+  const handlePaste = useCallback(
+    (event: ClipboardEvent) => {
+      const items = event.clipboardData?.items;
+      if (!items) return;
+
+      Array.from(items).forEach((item) => {
+        if (item.kind === 'file') {
+          const file = item.getAsFile();
+          if (!file) return;
+
+          const fileData = handleFileProcess(file);
+
+          if (file.type.startsWith('image/')) {
+            setFormState((prev) => ({
+              ...prev,
+              images: [...prev.images, fileData],
+            }));
+          } else if (file.type.startsWith('video/') && formState.videos.length < MAX_VIDEO_COUNT) {
+            setFormState((prev) => ({
+              ...prev,
+              videos: [fileData],
+            }));
+          }
+        }
+      });
+    },
+    [handleFileProcess, formState.videos.length],
+  );
+
+  // 拖放处理
+  const handleDrop = useCallback(
+    (event: DragEvent) => {
+      event.preventDefault();
+      event.stopPropagation();
+
+      const files = event.dataTransfer?.files;
+      if (!files) return;
+
+      const imageFiles: FileData[] = [];
+      let videoFile: FileData | null = null;
+
+      Array.from(files).forEach((file) => {
+        const fileData = handleFileProcess(file);
+
+        if (file.type.startsWith('image/')) {
+          imageFiles.push(fileData);
+        } else if (file.type.startsWith('video/') && !videoFile && formState.videos.length < MAX_VIDEO_COUNT) {
+          videoFile = fileData;
+        }
+      });
+
+      setFormState((prev) => ({
+        ...prev,
+        images: [...prev.images, ...imageFiles],
+        videos: videoFile ? [videoFile] : prev.videos,
+      }));
+    },
+    [handleFileProcess, formState.videos.length],
+  );
+
+  // 初始化加载平台数据
   useEffect(() => {
-    if (process.env.NODE_ENV === 'development') {
-      setTitle('开发环境标题');
-      setContent('开发环境内容');
-    }
-    setSelectedPlatforms(JSON.parse(localStorage.getItem('dynamicPlatforms') || '[]'));
+    const loadPlatforms = async () => {
+      try {
+        const platforms = await storage.get<string[]>(STORAGE_KEY);
+        if (platforms) {
+          setFormState((prev) => ({ ...prev, selectedPlatforms: platforms }));
+        }
+      } catch (error) {
+        console.error('加载平台数据失败:', error);
+      }
+    };
 
-    // 添加粘贴事件监听器
+    loadPlatforms();
+  }, [storage]);
+
+  // 添加事件监听器
+  useEffect(() => {
     document.addEventListener('paste', handlePaste);
-
-    // 添加拖拽事件监听器
     const dropArea = dropAreaRef.current;
+
+    const handleDragOver = (event: DragEvent) => {
+      event.preventDefault();
+      event.stopPropagation();
+    };
+
     if (dropArea) {
       dropArea.addEventListener('dragover', handleDragOver);
       dropArea.addEventListener('drop', handleDrop);
@@ -51,192 +156,110 @@ const DynamicTab: React.FC<DynamicTabProps> = ({ funcPublish }) => {
         dropArea.removeEventListener('drop', handleDrop);
       }
     };
-  }, []);
+  }, [handlePaste, handleDrop]);
 
-  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>, fileType: 'image' | 'video') => {
-    const selectedFiles = event.target.files;
-    if (selectedFiles) {
-      const newFiles: FileData[] = Array.from(selectedFiles)
+  // 文件变更处理
+  const handleFileChange = useCallback(
+    (event: React.ChangeEvent<HTMLInputElement>, fileType: 'image' | 'video') => {
+      const selectedFiles = event.target.files;
+      if (!selectedFiles) return;
+
+      const newFiles = Array.from(selectedFiles)
         .filter((file) => file.type.startsWith(`${fileType}/`))
-        .map((file) => ({
-          name: file.name,
-          type: file.type,
-          size: file.size,
-          url: URL.createObjectURL(file),
-        }));
-      if (fileType === 'image') {
-        setImages((prevImages) => [...prevImages, ...newFiles]);
-      } else {
-        // 只允许一个视频，如果已有视频则替换
-        setVideos([newFiles[0]]);
-      }
-    }
-  };
+        .map(handleFileProcess);
 
-  const handlePaste = (event: ClipboardEvent) => {
-    const items = event.clipboardData?.items;
-    if (!items) return;
+      setFormState((prev) => ({
+        ...prev,
+        [fileType === 'image' ? 'images' : 'videos']:
+          fileType === 'image'
+            ? [...prev.images, ...newFiles]
+            : newFiles.length > 0 && prev.videos.length < MAX_VIDEO_COUNT
+            ? [newFiles[0]]
+            : prev.videos,
+      }));
+    },
+    [handleFileProcess],
+  );
 
-    for (let i = 0; i < items.length; i++) {
-      const item = items[i];
-      if (item.kind === 'file') {
-        const file = item.getAsFile();
-        if (!file) continue;
+  // 平台选择处理
+  const handlePlatformChange = useCallback(
+    async (platform: string, isSelected: boolean) => {
+      const newPlatforms = isSelected
+        ? [...formState.selectedPlatforms, platform]
+        : formState.selectedPlatforms.filter((p) => p !== platform);
 
-        if (file.type.startsWith('image/')) {
-          setImages((prevImages) => [
-            ...prevImages,
-            {
-              name: file.name || `pasted-image-${Date.now()}.png`,
-              type: file.type,
-              size: file.size,
-              url: URL.createObjectURL(file),
-            },
-          ]);
-        } else if (file.type.startsWith('video/')) {
-          // 只允许一个视频
-          if (videos.length === 0) {
-            setVideos([
-              {
-                name: file.name || `pasted-video-${Date.now()}.mp4`,
-                type: file.type,
-                size: file.size,
-                url: URL.createObjectURL(file),
-              },
-            ]);
-          }
-          break; // 处理完第一个视频后退出循环
-        }
-      }
-    }
-  };
+      setFormState((prev) => ({ ...prev, selectedPlatforms: newPlatforms }));
+      await storage.set(STORAGE_KEY, newPlatforms);
+    },
+    [formState.selectedPlatforms, storage],
+  );
 
-  const handleDragOver = (event: DragEvent) => {
-    event.preventDefault();
-    event.stopPropagation();
-  };
-
-  const handleDrop = (event: DragEvent) => {
-    event.preventDefault();
-    event.stopPropagation();
-
-    const files = event.dataTransfer?.files;
-    if (!files) return;
-
-    const imageFiles: FileData[] = [];
-    let videoFile: FileData | null = null;
-
-    for (let i = 0; i < files.length; i++) {
-      const file = files[i];
-      if (file.type.startsWith('image/')) {
-        imageFiles.push({
-          name: file.name,
-          type: file.type,
-          size: file.size,
-          url: URL.createObjectURL(file),
-        });
-      } else if (file.type.startsWith('video/') && !videoFile) {
-        // 只取第一个视频文件
-        videoFile = {
-          name: file.name,
-          type: file.type,
-          size: file.size,
-          url: URL.createObjectURL(file),
-        };
-      }
-    }
-
-    if (imageFiles.length > 0) {
-      setImages((prevImages) => [...prevImages, ...imageFiles]);
-    }
-
-    if (videoFile && videos.length === 0) {
-      setVideos([videoFile]);
-    }
-  };
-
-  const handlePlatformChange = async (platform: string, isSelected: boolean) => {
-    const newSelectedPlatforms = isSelected
-      ? [...selectedPlatforms, platform]
-      : selectedPlatforms.filter((p) => p !== platform);
-    setSelectedPlatforms(newSelectedPlatforms);
-    await storage.set('dynamicPlatforms', newSelectedPlatforms);
-  };
-
-  const clearSelectedPlatforms = async () => {
-    setSelectedPlatforms([]);
-    await storage.set('dynamicPlatforms', []);
-  };
-
-  const loadPlatforms = async () => {
-    const platforms = await storage.get<string[]>('dynamicPlatforms');
-    setSelectedPlatforms((platforms as string[]) || []);
-  };
-  loadPlatforms();
-
-  const handlePublish = async () => {
-    if (!content) {
-      console.log('至少输入内容');
+  // 发布处理
+  const handlePublish = useCallback(async () => {
+    if (!formState.content) {
       alert(chrome.i18n.getMessage('optionsEnterDynamicContent'));
       return;
     }
-    if (selectedPlatforms.length === 0) {
-      console.log('至少选择一个平台');
+    if (formState.selectedPlatforms.length === 0) {
       alert(chrome.i18n.getMessage('optionsSelectPublishPlatforms'));
       return;
     }
 
     const data: SyncData = {
-      platforms: selectedPlatforms,
+      platforms: formState.selectedPlatforms,
       data: {
-        title,
-        content,
-        images,
-        videos,
+        title: formState.title,
+        content: formState.content,
+        images: formState.images,
+        videos: formState.videos,
       },
-      auto_publish: autoPublish,
+      auto_publish: formState.autoPublish,
     };
+
     try {
-      chrome.windows.getCurrent({ populate: true }, (window) => {
-        chrome.sidePanel.open({ windowId: window.id }).then(() => {
-          funcPublish(data);
-        });
-      });
+      const window = await chrome.windows.getCurrent({ populate: true });
+      await chrome.sidePanel.open({ windowId: window.id });
+      funcPublish(data);
     } catch (error) {
-      console.error('检查服务状态时出错:', error);
+      console.error('发布时出错:', error);
       funcPublish(data);
     }
-  };
+  }, [formState, funcPublish]);
 
-  const handleIconClick = (type: 'image' | 'video') => {
-    if (type === 'image') {
-      imageInputRef.current?.click();
-    } else {
-      videoInputRef.current?.click();
-    }
-  };
+  // 清空所有内容
+  const handleClearAll = useCallback(() => {
+    setFormState({
+      title: '',
+      content: '',
+      images: [],
+      videos: [],
+      selectedPlatforms: [],
+      autoPublish: false,
+    });
+  }, []);
 
-  const handleImageClick = (index: number) => {
-    setCurrentImage(index);
-    setViewerVisible(true);
-  };
+  // 清空平台选择
+  const clearSelectedPlatforms = useCallback(async () => {
+    setFormState((prev) => ({ ...prev, selectedPlatforms: [] }));
+    await storage.set(STORAGE_KEY, []);
+  }, [storage]);
 
-  const handleDeleteFile = (index: number, fileType: 'image' | 'video') => {
-    if (fileType === 'image') {
-      setImages((prevImages) => prevImages.filter((_, i) => i !== index));
-    } else {
-      setVideos([]);
-    }
-  };
+  // 删除文件
+  const handleDeleteFile = useCallback((index: number, fileType: 'image' | 'video') => {
+    setFormState((prev) => ({
+      ...prev,
+      [fileType === 'image' ? 'images' : 'videos']:
+        fileType === 'image' ? prev.images.filter((_, i) => i !== index) : [],
+    }));
+  }, []);
 
-  const handleClearAll = () => {
-    setImages([]);
-    setVideos([]);
-    setTitle('');
-    setContent('');
-    setSelectedPlatforms([]);
-    setAutoPublish(false);
-  };
+  // 图片查看器控制
+  const handleImageClick = useCallback((index: number) => {
+    setViewerState({
+      currentImage: index,
+      visible: true,
+    });
+  }, []);
 
   return (
     <div
@@ -248,9 +271,9 @@ const DynamicTab: React.FC<DynamicTabProps> = ({ funcPublish }) => {
             isClearable
             variant="underlined"
             label={chrome.i18n.getMessage('optionsEnterDynamicTitle')}
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-            onClear={() => setTitle('')}
+            value={formState.title}
+            onChange={(e) => setFormState((prev) => ({ ...prev, title: e.target.value }))}
+            onClear={() => setFormState((prev) => ({ ...prev, title: '' }))}
             className="w-full"
           />
         </CardHeader>
@@ -259,18 +282,18 @@ const DynamicTab: React.FC<DynamicTabProps> = ({ funcPublish }) => {
           <Textarea
             isClearable
             label={chrome.i18n.getMessage('optionsEnterDynamicContent')}
-            value={content}
-            onChange={(e) => setContent(e.target.value)}
+            value={formState.content}
+            onChange={(e) => setFormState((prev) => ({ ...prev, content: e.target.value }))}
             variant="underlined"
             minRows={5}
             className="w-full"
             autoFocus
-            onClear={() => setContent('')}
+            onClear={() => setFormState((prev) => ({ ...prev, content: '' }))}
           />
         </CardBody>
 
         <CardFooter>
-          <div className="flex items-center justify-between w-full">
+          <div className="flex justify-between items-center w-full">
             <div className="flex gap-2">
               <input
                 type="file"
@@ -283,7 +306,7 @@ const DynamicTab: React.FC<DynamicTabProps> = ({ funcPublish }) => {
               <Button
                 isIconOnly
                 variant="light"
-                onPress={() => handleIconClick('image')}>
+                onPress={() => imageInputRef.current?.click()}>
                 <FileImageIcon className="size-5" />
               </Button>
               <input
@@ -296,14 +319,14 @@ const DynamicTab: React.FC<DynamicTabProps> = ({ funcPublish }) => {
               <Button
                 isIconOnly
                 variant="light"
-                onPress={() => handleIconClick('video')}>
+                onPress={() => videoInputRef.current?.click()}>
                 <FileVideo2Icon className="size-5" />
               </Button>
-              {videos.length > 0 && (
+              {formState.videos.length > 0 && (
                 <span className="text-xs text-gray-500">{chrome.i18n.getMessage('optionsNoticeDynamicVideo')}</span>
               )}
             </div>
-            {(title || content || images.length > 0 || videos.length > 0) && (
+            {(formState.title || formState.content || formState.images.length > 0 || formState.videos.length > 0) && (
               <Button
                 isIconOnly
                 variant="light"
@@ -317,10 +340,10 @@ const DynamicTab: React.FC<DynamicTabProps> = ({ funcPublish }) => {
         </CardFooter>
       </Card>
 
-      {images.length > 0 && (
+      {formState.images.length > 0 && (
         <Card className="shadow-none bg-default-50">
-          <CardBody className="flex flex-row flex-wrap items-start justify-start gap-3 p-4">
-            {images.map((file, index) => (
+          <CardBody className="flex flex-row flex-wrap gap-3 justify-start items-start p-4">
+            {formState.images.map((file, index) => (
               <div
                 key={index}
                 className="relative group">
@@ -337,7 +360,7 @@ const DynamicTab: React.FC<DynamicTabProps> = ({ funcPublish }) => {
                   size="sm"
                   color="danger"
                   variant="light"
-                  className="absolute z-50 transition-opacity duration-200 opacity-0 top-1 right-1 group-hover:opacity-100"
+                  className="absolute top-1 right-1 z-50 opacity-0 transition-opacity duration-200 group-hover:opacity-100"
                   onPress={() => handleDeleteFile(index, 'image')}>
                   <XIcon className="size-4" />
                 </Button>
@@ -349,37 +372,37 @@ const DynamicTab: React.FC<DynamicTabProps> = ({ funcPublish }) => {
 
       <div className="flex flex-col gap-4 p-4 rounded-lg bg-default-50">
         <Switch
-          isSelected={autoPublish}
-          onValueChange={setAutoPublish}
+          isSelected={formState.autoPublish}
+          onValueChange={(value) => setFormState((prev) => ({ ...prev, autoPublish: value }))}
           startContent={<BotIcon className="size-4" />}
           endContent={<HandIcon className="size-4" />}>
           {chrome.i18n.getMessage('optionsAutoPublish')}
         </Switch>
 
         <div className="flex flex-col gap-2">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
+          <div className="flex justify-between items-center">
+            <div className="flex gap-2 items-center">
               <p className="text-sm font-medium">{chrome.i18n.getMessage('optionsSelectPublishPlatforms')}</p>
             </div>
-            {selectedPlatforms.length > 0 && (
+            {formState.selectedPlatforms.length > 0 && (
               <Button
+                isIconOnly
                 size="sm"
                 variant="light"
                 color="danger"
                 onPress={clearSelectedPlatforms}
-                className="text-xs">
-                {chrome.i18n.getMessage('optionsClearPlatforms') ||
-                  chrome.i18n.getMessage('optionsClearAll') ||
-                  '清空平台'}
+                title="清空平台"
+                className="hover:bg-danger-100">
+                <Eraser className="size-4" />
               </Button>
             )}
           </div>
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-2 gap-1 xs:grid-cols-3 sm:grid-cols-4">
             {getPlatformInfos('DYNAMIC').map((platform) => (
               <PlatformCheckbox
                 key={platform.name}
                 platformInfo={platform}
-                isSelected={selectedPlatforms.includes(platform.name)}
+                isSelected={formState.selectedPlatforms.includes(platform.name)}
                 onChange={(_, isSelected) => handlePlatformChange(platform.name, isSelected)}
                 isDisabled={false}
               />
@@ -392,16 +415,16 @@ const DynamicTab: React.FC<DynamicTabProps> = ({ funcPublish }) => {
         onPress={handlePublish}
         color="primary"
         variant="flat"
-        disabled={!title || !content || selectedPlatforms.length === 0}
+        disabled={!formState.title || !formState.content || formState.selectedPlatforms.length === 0}
         className="w-full font-medium shadow-none">
         <SendIcon className="mr-2 size-4" />
         {chrome.i18n.getMessage('optionsSyncDynamic')}
       </Button>
 
-      {videos.length > 0 && (
+      {formState.videos.length > 0 && (
         <Card className="my-2 shadow-none bg-default-50">
           <CardBody className="flex flex-col gap-4">
-            {videos.map((file, index) => (
+            {formState.videos.map((file, index) => (
               <div
                 key={index}
                 className="relative w-full group aspect-video">
@@ -415,7 +438,7 @@ const DynamicTab: React.FC<DynamicTabProps> = ({ funcPublish }) => {
                   size="sm"
                   color="danger"
                   variant="light"
-                  className="absolute z-50 transition-opacity opacity-0 top-2 right-2 group-hover:opacity-100"
+                  className="absolute top-2 right-2 z-50 opacity-0 transition-opacity group-hover:opacity-100"
                   onPress={() => handleDeleteFile(index, 'video')}>
                   <XIcon className="size-4" />
                 </Button>
@@ -426,10 +449,10 @@ const DynamicTab: React.FC<DynamicTabProps> = ({ funcPublish }) => {
       )}
 
       <Viewer
-        visible={viewerVisible}
-        onClose={() => setViewerVisible(false)}
-        images={images.map((file) => ({ src: file.url, alt: file.name }))}
-        activeIndex={currentImage}
+        visible={viewerState.visible}
+        onClose={() => setViewerState({ ...viewerState, visible: false })}
+        images={formState.images.map((file) => ({ src: file.url, alt: file.name }))}
+        activeIndex={viewerState.currentImage}
       />
     </div>
   );

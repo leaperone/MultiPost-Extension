@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Card, Button, Input, Textarea, CardHeader, CardBody, CardFooter } from '@heroui/react';
-import { VideoIcon, XIcon, TrashIcon, SendIcon } from 'lucide-react';
+import { VideoIcon, XIcon, TrashIcon, SendIcon, Eraser } from 'lucide-react';
 import { Player } from 'video-react';
 import 'video-react/dist/video-react.css';
 // import ReactPlayer from 'react-player';
@@ -59,7 +59,7 @@ const VideoTab: React.FC<VideoTabProps> = ({ funcPublish }) => {
     setSelectedPlatforms([]);
     await storage.set('videoPlatforms', []);
   };
-  
+
   const loadPlatforms = async () => {
     const platforms = await storage.get<string[]>('videoPlatforms');
     setSelectedPlatforms((platforms as string[]) || []);
@@ -202,22 +202,23 @@ const VideoTab: React.FC<VideoTabProps> = ({ funcPublish }) => {
       <div className="flex flex-col gap-4 p-4 rounded-lg bg-default-50">
         <div className="flex flex-col gap-2">
           <div className="flex justify-between items-center">
-            <div className="flex items-center gap-2">
+            <div className="flex gap-2 items-center">
               <p className="text-sm font-medium">{chrome.i18n.getMessage('optionsSelectPublishPlatforms')}</p>
             </div>
             {selectedPlatforms.length > 0 && (
-              <Button 
-                size="sm" 
-                variant="light" 
-                color="danger" 
+              <Button
+                isIconOnly
+                size="sm"
+                variant="light"
+                color="danger"
                 onPress={clearSelectedPlatforms}
-                className="text-xs"
-              >
-                {chrome.i18n.getMessage('optionsClearPlatforms') || chrome.i18n.getMessage('optionsClearAll') || '清空平台'}
+                title="清空平台"
+                className="hover:bg-danger-100">
+                <Eraser className="size-4" />
               </Button>
             )}
           </div>
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-2 gap-1 md:grid-cols-4">
             {getPlatformInfos('VIDEO').map((platform) => (
               <PlatformCheckbox
                 key={platform.name}

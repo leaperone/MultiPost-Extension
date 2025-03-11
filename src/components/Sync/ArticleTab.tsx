@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Card, Button, Image, Input, Textarea, CardHeader, CardBody, Progress, CardFooter } from '@heroui/react';
-import { ImagePlusIcon, XIcon, DownloadIcon } from 'lucide-react';
+import { ImagePlusIcon, XIcon, DownloadIcon, Eraser } from 'lucide-react';
 import type { FileData, SyncData } from '~sync/common';
 import PlatformCheckbox from './PlatformCheckbox';
 import { getPlatformInfos } from '~sync/common';
@@ -39,9 +39,9 @@ const ArticleTab: React.FC<ArticleTabProps> = ({ funcPublish, funcScraper }) => 
     codeBlockStyle: 'fenced',
   });
   const storage = new Storage({
-    area: "local" // 明确指定使用 localStorage
+    area: 'local', // 明确指定使用 localStorage
   });
-  
+
   useEffect(() => {
     if (process.env.NODE_ENV === 'development') {
       setTitle('开发环境标题');
@@ -50,11 +50,11 @@ const ArticleTab: React.FC<ArticleTabProps> = ({ funcPublish, funcScraper }) => 
   }, []);
 
   const handlePlatformChange = async (platform: string, isSelected: boolean) => {
-    const newSelectedPlatforms = isSelected 
-    ? [...selectedPlatforms, platform] 
-    : selectedPlatforms.filter((p) => p !== platform);   
-  setSelectedPlatforms(newSelectedPlatforms);
-  await storage.set('articlePlatforms', newSelectedPlatforms);
+    const newSelectedPlatforms = isSelected
+      ? [...selectedPlatforms, platform]
+      : selectedPlatforms.filter((p) => p !== platform);
+    setSelectedPlatforms(newSelectedPlatforms);
+    await storage.set('articlePlatforms', newSelectedPlatforms);
   };
 
   const clearSelectedPlatforms = async () => {
@@ -63,8 +63,8 @@ const ArticleTab: React.FC<ArticleTabProps> = ({ funcPublish, funcScraper }) => 
   };
 
   const loadPlatforms = async () => {
-    const platforms = await storage.get<string[]>("articlePlatforms");
-    setSelectedPlatforms(platforms as string[] || []);
+    const platforms = await storage.get<string[]>('articlePlatforms');
+    setSelectedPlatforms((platforms as string[]) || []);
   };
   loadPlatforms();
 
@@ -395,18 +395,19 @@ const ArticleTab: React.FC<ArticleTabProps> = ({ funcPublish, funcScraper }) => 
               <p className="text-sm font-medium">{chrome.i18n.getMessage('optionsSelectPublishPlatforms')}</p>
             </div>
             {selectedPlatforms.length > 0 && (
-              <Button 
-                size="sm" 
-                variant="light" 
-                color="danger" 
+              <Button
+                isIconOnly
+                size="sm"
+                variant="light"
+                color="danger"
                 onPress={clearSelectedPlatforms}
-                className="text-xs"
-              >
-                {chrome.i18n.getMessage('optionsClearPlatforms') || chrome.i18n.getMessage('optionsClearAll') || '清空平台'}
+                title="清空平台"
+                className="hover:bg-danger-100">
+                <Eraser className="size-4" />
               </Button>
             )}
           </div>
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-2 xs:grid-cols-3 sm:grid-cols-4 gap-1">
             {getPlatformInfos('ARTICLE').map((platform) => (
               <PlatformCheckbox
                 key={platform.name}

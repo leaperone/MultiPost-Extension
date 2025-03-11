@@ -14,26 +14,27 @@ export default function PlatformCheckbox({ platformInfo, isSelected, isDisabled,
   const hasUserInfo = platformInfo.username && platformInfo.userAvatarUrl;
 
   return (
-    <div className="flex items-center justify-between p-2 hover:bg-default-100 rounded-lg transition-colors">
-      <div className="flex items-center gap-3">
+    <div className="flex items-center justify-between p-1 hover:bg-default-100 rounded-lg transition-colors">
+      <div className="flex items-center gap-1">
         <Checkbox
           isSelected={isSelected}
           isDisabled={isDisabled}
           onChange={(e) => onChange(platformInfo.name, e.target.checked)}
-          className="mr-1">
-          <div className="flex items-center gap-2">
+          size="sm"
+          className="mr-0.5">
+          <div className="flex items-center gap-1">
             {platformInfo.iconifyIcon ? (
               <Icon
                 icon={platformInfo.iconifyIcon}
-                className="w-5 h-5"
+                className="w-4 h-4"
               />
             ) : (
               platformInfo.faviconUrl && (
                 <Image
                   src={platformInfo.faviconUrl}
                   alt={platformInfo.platformName}
-                  width={20}
-                  height={20}
+                  width={16}
+                  height={16}
                   className="rounded-sm"
                 />
               )
@@ -42,22 +43,22 @@ export default function PlatformCheckbox({ platformInfo, isSelected, isDisabled,
               href={platformInfo.homeUrl}
               isExternal
               className="text-foreground hover:text-primary transition-colors">
-              <span className="text-sm font-semibold">{platformInfo.platformName}</span>
+              <span className="text-xs font-medium truncate">{platformInfo.platformName}</span>
             </Link>
           </div>
         </Checkbox>
       </div>
 
       {hasUserInfo && (
-        <div className="flex items-center gap-2 px-2">
+        <div className="flex items-center gap-1 px-1">
           <Image
             src={platformInfo.userAvatarUrl}
             alt={`${platformInfo.platformName}用户头像`}
-            width={24}
-            height={24}
+            width={16}
+            height={16}
             className="rounded-full"
           />
-          <span className="text-sm text-default-600">{platformInfo.username}</span>
+          <span className="text-xs text-default-600 truncate max-w-[60px]">{platformInfo.username}</span>
         </div>
       )}
     </div>
