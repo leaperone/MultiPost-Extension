@@ -608,7 +608,7 @@
     "description": "今日头条平台名称"
   },
   "optionsQQGroup": {
-    "message": "QQ交流群：",
+    "message": "QQ交流群",
     "description": "QQ group number"
   },
   "platformThreads": {
@@ -690,5 +690,13 @@
   "errorImportingContent": {
     "message": "导入内容时出错",
     "description": "Error message when importing content"
+  },
+  "optionsQQGroupTitle": {
+    "message": "QQ 交流群",
+    "description": "Title for QQ group popover"
+  },
+  "optionsContactPrefix": {
+    "message": "如遇问题，或期望支持新平台，请联系我们",
+    "description": "Contact prefix text in footer"
   }
 }

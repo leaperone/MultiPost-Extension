@@ -630,7 +630,7 @@
     "description": "Platform name for Toutiao"
   },
   "optionsQQGroup": {
-    "message": "QQ Group:",
+    "message": "QQ Group",
     "description": "QQ group number"
   },
   "platformThreads": {
@@ -692,5 +692,38 @@
   "popupLoadingMessage": {
     "message": "Opening application...",
     "description": "Loading message"
+  },
+  "optionsQQGroupTitle": {
+    "message": "QQ Group",
+    "description": "Title for QQ group popover"
+  },
+
+  "optionsEmailTitle": {
+    "message": "Email Support",
+    "description": "Title for email support popover"
+  },
+  "optionsEmailAddress": {
+    "message": "support@leaper.one",
+    "description": "Support email address"
+  },
+  "optionsEmailTip": {
+    "message": "Click to send email",
+    "description": "Tip text for sending email"
+  },
+  "optionsGithubTitle": {
+    "message": "GitHub Issues",
+    "description": "Title for GitHub Issues popover"
+  },
+  "optionsGithubTip": {
+    "message": "Click to create an issue",
+    "description": "Tip text for creating GitHub issue"
+  },
+  "optionsContactUs": {
+    "message": "Contact Us",
+    "description": "Contact us text in footer"
+  },
+  "optionsContactPrefix": {
+    "message": "If you have any issues or want us to support new platforms, please contact us.",
+    "description": "Contact prefix text in footer"
   }
 }

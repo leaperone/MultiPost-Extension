@@ -1,7 +1,8 @@
 import '~style.css';
 import React, { useState } from 'react';
 import { HeroUIProvider } from '@heroui/react';
-import { Tabs, Tab, Spacer } from '@heroui/react';
+import { Tabs, Tab, Spacer, Popover, PopoverTrigger, PopoverContent, Button } from '@heroui/react';
+import { Icon } from '@iconify/react';
 import cssText from 'data-text:~style.css';
 import Header from '~/components/Header';
 import DynamicTab from '~/components/Sync/DynamicTab';
@@ -11,29 +12,49 @@ import { type SyncData, createTabsForPlatforms, injectScriptsToTabs } from '~syn
 import SettingsTab from '~components/Sync/SettingsTab';
 import ArticleTab from '~components/Sync/ArticleTab';
 
+/**
+ * Get the shadow container element for styling
+ * @returns {Element} The shadow container element
+ */
 export function getShadowContainer() {
   return document.querySelector('#test-shadow').shadowRoot.querySelector('#plasmo-shadow-container');
 }
 
+/**
+ * Get the shadow host ID
+ * @returns {string} The shadow host ID
+ */
 export const getShadowHostId = () => 'test-shadow';
 
+/**
+ * Get the style element with injected CSS
+ * @returns {HTMLStyleElement} The style element
+ */
 export const getStyle = () => {
   const style = document.createElement('style');
-
   style.textContent = cssText;
   return style;
 };
 
+/**
+ * Options component for the extension settings page
+ * @description Main component that handles the extension's options/settings interface
+ * Manages tabs for different functionalities like dynamic posts, videos, articles, etc.
+ */
 const Options = () => {
   const [isReady, setIsReady] = useState(false);
   const [hashParams, setHashParams] = useState<Record<string, string>>({});
 
+  /**
+   * Initialize the options page
+   * Sets the page title and processes URL hash parameters
+   */
   React.useEffect(() => {
     document.title = chrome.i18n.getMessage('extensionDisplayName');
 
     const hash = window.location.hash.slice(1);
 
-    // 解析哈希参数
+    // Parse hash parameters from URL
     const params = {};
     hash.split('&').forEach((param) => {
       const [key, value] = param.split('=');
@@ -45,6 +66,10 @@ const Options = () => {
     setIsReady(true);
   }, []);
 
+  /**
+   * Handle content publishing across multiple platforms
+   * @param {SyncData} data - The data to be published including content and target platforms
+   */
   const funcPublish = async (data: SyncData) => {
     console.log('funcPublish', data);
     if (Array.isArray(data.platforms) && data.platforms.length > 0) {
@@ -52,12 +77,14 @@ const Options = () => {
         .then(async (tabs) => {
           injectScriptsToTabs(tabs, data);
 
+          // Notify tabs manager about new tabs
           chrome.runtime.sendMessage({
             type: 'MUTLIPOST_EXTENSION_TABS_MANAGER_REQUEST_ADD_TABS',
             data: data,
             tabs: tabs,
           });
 
+          // Activate tabs sequentially with delay
           for (const [tab] of tabs) {
             if (tab.id) {
               await chrome.tabs.update(tab.id, { active: true });
@@ -66,17 +93,23 @@ const Options = () => {
           }
         })
         .catch((error) => {
-          console.error('创建标签页或分组时出错:', error);
+          console.error('Error creating tabs or groups:', error);
         });
     } else {
-      console.error('没有指定有效的平台');
+      console.error('No valid platforms specified');
     }
   };
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unused-vars
+  /**
+   * Scrape content from a given URL
+   * @param {string} url - The URL to scrape content from
+   * @returns {Promise<any>} The scraped content
+   * @throws {Error} When URL is invalid or scraping fails
+   */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const funcScraper = async (url: string): Promise<any> => {
     if (!url) {
-      throw new Error('未提供有效的URL');
+      throw new Error('No valid URL provided');
     }
 
     return new Promise(async (resolve, reject) => {
@@ -85,11 +118,12 @@ const Options = () => {
         const newTab = await chrome.tabs.create({ url, active: false });
 
         if (!newTab.id) {
-          throw new Error('新标签页创建失败');
+          throw new Error('Failed to create new tab');
         }
 
         await chrome.tabs.update(newTab.id, { active: true });
 
+        // Listen for tab load completion to start scraping
         const listener = (tabId: number, info: chrome.tabs.TabChangeInfo) => {
           if (tabId === newTab.id && info.status === 'complete') {
             chrome.tabs.onUpdated.removeListener(listener);
@@ -108,8 +142,8 @@ const Options = () => {
 
         chrome.tabs.onUpdated.addListener(listener);
       } catch (error) {
-        console.error('爬虫操作出错:', error);
-        reject(new Error('爬虫操作失败'));
+        console.error('Scraper operation error:', error);
+        reject(new Error('Scraper operation failed'));
       }
     });
   };
@@ -165,36 +199,74 @@ const Options = () => {
         </Tabs>
       </main>
       <Spacer y={8} />
-      <footer className="text-sm text-center text-foreground/60">
-        <p>
-          <span>{chrome.i18n.getMessage('optionsQQGroup')}</span>
-          <a
-            href="http://qm.qq.com/cgi-bin/qm/qr?_wv=1027&k=c5BjhD8JxNAuwjKh6qvCoROU301PppYU&authKey=NfKianfDwngrwJyVQbefIQET9vUQs46xb0PfOYUm6KzdeCjPd5YbvlRoO8trJUUZ&noverify=0&group_code=921137242"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-primary hover:underline">
-            921137242
-          </a>
-        </p>
-        <p>
-          <span>{chrome.i18n.getMessage('optionsHelpPrefix')}&nbsp;</span>
-          <span>{chrome.i18n.getMessage('optionsFeedbackPrefix')}</span>
-        </p>
-        <p>
-          <span>{chrome.i18n.getMessage('optionsFeedbackEmail')}&nbsp;</span>
-          <a
-            href="mailto:support@leaper.one"
-            className="text-primary hover:underline">
-            support@leaper.one
-          </a>
-          <span>&nbsp;{chrome.i18n.getMessage('optionsOrText')}&nbsp;</span>
-          <a
+      <footer className="text-sm text-center">
+        <p className="mb-4 text-gray-600">{chrome.i18n.getMessage('optionsContactPrefix')}</p>
+        <p className="flex gap-4 justify-center items-center">
+          <Button
+            as="a"
             href="https://github.com/leaper-one/Multipost-Extension/issues"
             target="_blank"
             rel="noopener noreferrer"
-            className="text-primary hover:underline">
-            GitHub Issues
-          </a>
+            size="sm"
+            isIconOnly
+            className="text-white bg-[#24292F] hover:bg-[#24292F]/90">
+            <Icon
+              icon="mdi:github"
+              className="size-5"
+            />
+          </Button>
+
+          <Button
+            as="a"
+            href="mailto:support@leaper.one"
+            size="sm"
+            startContent={
+              <Icon
+                icon="material-symbols:mail"
+                className="size-5"
+              />
+            }>
+            support@leaper.one
+          </Button>
+
+          <Popover placement="top">
+            <PopoverTrigger>
+              <Button
+                size="sm"
+                isIconOnly>
+                <Icon
+                  icon="icon-park:tencent-qq"
+                  className="size-5"
+                />
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent>
+              <div className="gap-2 px-4 py-3">
+                <div className="text-sm font-medium">{chrome.i18n.getMessage('optionsQQGroupTitle')}</div>
+                <div className="flex gap-4 items-center">
+                  <Button
+                    size="sm"
+                    variant="light"
+                    as="a"
+                    href="http://qm.qq.com/cgi-bin/qm/qr?_wv=1027&k=c5BjhD8JxNAuwjKh6qvCoROU301PppYU&authKey=NfKianfDwngrwJyVQbefIQET9vUQs46xb0PfOYUm6KzdeCjPd5YbvlRoO8trJUUZ&noverify=0&group_code=921137242"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex gap-2 items-center">
+                    921137242
+                  </Button>
+                  <Button
+                    isIconOnly
+                    size="sm"
+                    onPress={() => navigator.clipboard.writeText('921137242')}>
+                    <Icon
+                      icon="material-symbols:content-copy"
+                      className="size-4"
+                    />
+                  </Button>
+                </div>
+              </div>
+            </PopoverContent>
+          </Popover>
         </p>
       </footer>
     </HeroUIProvider>
