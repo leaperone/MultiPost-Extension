@@ -93,6 +93,15 @@
     "buttons": {
       "post": "投稿する",
       "install": "拡張機能をインストール"
+    },
+    "features": {
+      "draft": "下書き",
+      "save": "保存",
+      "post": "投稿",
+      "conjunction": {
+        "and": "と",
+        "comma": "、"
+      }
     }
   }
 }

@@ -93,6 +93,15 @@
     "buttons": {
       "post": "Go to post",
       "install": "Install Extension"
+    },
+    "features": {
+      "draft": "Draft",
+      "save": "Save",
+      "post": "Post",
+      "conjunction": {
+        "and": "and",
+        "comma": ","
+      }
     }
   }
 }

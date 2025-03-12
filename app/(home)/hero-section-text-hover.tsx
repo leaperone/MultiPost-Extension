@@ -1,5 +1,6 @@
 import React from 'react';
 import { cn } from '@/lib/utils';
+import { createTranslation } from '@/i18n/server';
 
 interface ItemProps {
   emoji: string;
@@ -12,9 +13,11 @@ interface FeatureProps {
   hoverColor: string;
 }
 
-const HeroSectionTextHover: React.FC<{ className?: string }> = ({ className }) => {
+const HeroSectionTextHover = async ({ className }: { className?: string }) => {
+  const { t } = await createTranslation('home');
+
   const draftFeature: FeatureProps = {
-    text: 'Draft',
+    text: t('hero.features.draft'),
     hoverColor: 'text-sky-400',
     emojis: [
       {
@@ -34,7 +37,7 @@ const HeroSectionTextHover: React.FC<{ className?: string }> = ({ className }) =
   };
 
   const saveFeature: FeatureProps = {
-    text: 'Save',
+    text: t('hero.features.save'),
     hoverColor: 'text-purple-400',
     emojis: [
       {
@@ -54,7 +57,7 @@ const HeroSectionTextHover: React.FC<{ className?: string }> = ({ className }) =
   };
 
   const postFeature: FeatureProps = {
-    text: 'Post',
+    text: t('hero.features.post'),
     hoverColor: 'text-orange-400',
     emojis: [
       {
@@ -100,7 +103,11 @@ const HeroSectionTextHover: React.FC<{ className?: string }> = ({ className }) =
                 ))}
               </div>
               {featureIndex < features.length - 1 && (
-                <span className="ml-3 text-gray-400">{featureIndex === features.length - 2 ? 'and' : ','}</span>
+                <span className="ml-3 text-gray-400">
+                  {featureIndex === features.length - 2
+                    ? t('hero.features.conjunction.and')
+                    : t('hero.features.conjunction.comma')}
+                </span>
               )}
             </div>
           ))}
