@@ -108,13 +108,13 @@ const TrustDomain = () => {
   return (
     <HeroUIProvider>
       <div className="min-h-screen bg-gray-50/30">
-        <div className="max-w-md p-6 mx-auto">
-          <div className="p-6 bg-white border border-gray-200 rounded-lg shadow-sm">
-            <div className="flex flex-col items-center justify-center mb-8">
+        <div className="p-6 mx-auto max-w-md">
+          <div className="p-6 bg-white rounded-lg border border-gray-200 shadow-sm">
+            <div className="flex flex-col justify-center items-center mb-8">
               <Image
                 src={chrome.runtime.getURL('assets/icon.png')}
                 alt="logo"
-                className="w-16 h-16 mb-3 rounded-lg"
+                className="mb-3 w-16 h-16 rounded-lg"
               />
               <a
                 href="https://multipost.app"
@@ -124,7 +124,7 @@ const TrustDomain = () => {
               </a>
             </div>
 
-            <div className="flex items-center justify-center gap-3 mb-6 ju">
+            <div className="flex gap-3 justify-center items-center mb-6 ju">
               <ShieldAlert className="w-6 h-6 text-amber-500" />
               <h1 className="text-xl font-semibold text-gray-900">
                 {chrome.i18n.getMessage('settingsTrustedDomains')}
@@ -133,8 +133,8 @@ const TrustDomain = () => {
 
             {params && (
               <div className="space-y-6">
-                <div className="p-4 border border-gray-100 rounded-lg bg-gray-50">
-                  <div className="flex items-start gap-3">
+                <div className="p-4 bg-gray-50 rounded-lg border border-gray-100">
+                  <div className="flex gap-3 items-start">
                     <Globe className="w-5 h-5 text-gray-500 mt-0.5" />
                     <div>
                       <div className="mb-1 text-sm font-medium text-gray-500">
@@ -145,7 +145,7 @@ const TrustDomain = () => {
                   </div>
                 </div>
 
-                <div className="p-4 border rounded-lg bg-amber-50 border-amber-100">
+                <div className="p-4 bg-amber-50 rounded-lg border border-amber-100">
                   <div className="flex gap-3">
                     <Shield className="w-5 h-5 text-amber-500 mt-0.5" />
                     <div className="space-y-3">
@@ -162,6 +162,7 @@ const TrustDomain = () => {
                         <li>{chrome.i18n.getMessage('settingsTrustedDomainsAllowAPI')}</li>
                         <li>
                           {chrome.i18n.getMessage('settingsTrustedDomainsCancel')}
+                          &nbsp;
                           <a
                             href={chrome.runtime.getURL('options.html#tab=settings')}
                             target="_blank"
@@ -170,7 +171,7 @@ const TrustDomain = () => {
                           </a>
                         </li>
                       </ul>
-                      <div className="flex items-center gap-2 pt-2 text-xs text-amber-600">
+                      <div className="flex gap-2 items-center pt-2 text-xs text-amber-600">
                         <Globe className="w-4 h-4" />
                         <span>
                           {chrome.i18n.getMessage('settingsTrustedDomainsOnlyAllow')} {params?.origin}
@@ -182,7 +183,7 @@ const TrustDomain = () => {
 
                 {!feedback && (
                   <>
-                    <div className="flex items-start gap-2 p-3 border border-gray-100 rounded-lg bg-gray-50">
+                    <div className="flex gap-2 items-start p-3 bg-gray-50 rounded-lg border border-gray-100">
                       <Checkbox
                         checked={isConfirmed}
                         onChange={(e) => setIsConfirmed(e.target.checked)}
@@ -199,7 +200,7 @@ const TrustDomain = () => {
                         className="flex-1 h-10"
                         onPress={() => handleTrustDomain(false)}
                         disabled={isProcessing}>
-                        <XCircle className="w-4 h-4 mr-2" />
+                        <XCircle className="mr-2 w-4 h-4" />
                         {chrome.i18n.getMessage('settingsTrustedDomainsReject')}
                       </Button>
                       <Button
@@ -207,7 +208,7 @@ const TrustDomain = () => {
                         variant="solid"
                         className="flex-1 h-10"
                         onPress={() => handleTrustDomain(true)}>
-                        <Shield className="w-4 h-4 mr-2" />
+                        <Shield className="mr-2 w-4 h-4" />
                         {chrome.i18n.getMessage('settingsTrustedDomainsAllow')}
                       </Button>
                     </div>
@@ -219,7 +220,7 @@ const TrustDomain = () => {
                     className={`flex items-center justify-center p-4 rounded-lg transition-all duration-300 ${
                       feedback.type === 'success' ? 'bg-green-50 border-green-100' : 'bg-red-50 border-red-100'
                     }`}>
-                    <div className="flex items-center gap-2">
+                    <div className="flex gap-2 items-center">
                       {feedback.type === 'success' ? (
                         <CheckCircle2 className="w-5 h-5 text-green-500" />
                       ) : (

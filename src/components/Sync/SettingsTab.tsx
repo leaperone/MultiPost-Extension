@@ -39,15 +39,15 @@ const SettingsTab: React.FC = () => {
             <p className="text-sm text-foreground/60">{chrome.i18n.getMessage('settingsTrustedDomainsWarning')}</p>
           </div>
 
-          <div className="flex flex-col w-full gap-2">
+          <div className="flex flex-col gap-2 w-full">
             {trustedDomains.map((domain) => (
               <div
                 key={domain.id}
-                className="flex items-center justify-between w-full p-2 rounded-lg bg-default-100">
+                className="flex justify-between items-center p-2 w-full rounded-lg bg-default-100">
                 <span className="text-sm">{domain.domain}</span>
                 <button
                   onClick={() => handleRemoveDomain(domain.id)}
-                  className="p-1 transition-colors rounded-full hover:bg-default-200">
+                  className="p-1 rounded-full transition-colors hover:bg-default-200">
                   <X className="w-4 h-4 text-default-500" />
                 </button>
               </div>
