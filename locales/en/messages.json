@@ -570,14 +570,37 @@
     "message": "Sync Article",
     "description": "Sync article button text"
   },
+  "errorProcessingImages": {
+    "message": "Error processing images",
+    "description": "Error message when processing images"
+  },
+  "errorProcessingVideos": {
+    "message": "Error processing videos",
+    "description": "Error message when processing videos"
+  },
+  "errorProcessingFiles": {
+    "message": "Error processing files",
+    "description": "Error message when processing files"
+  },
+  "errorProcessingCover": {
+    "message": "Error processing cover image",
+    "description": "Error message when processing cover image"
+  },
+  "errorImportingContent": {
+    "message": "Error importing content",
+    "description": "Error message when importing content"
+  },
   "processingImages": {
-    "message": "Processing images..."
+    "message": "Processing images...",
+    "description": "Status message when processing images"
   },
   "processingVideos": {
-    "message": "Processing videos..."
+    "message": "Processing videos...",
+    "description": "Status message when processing videos"
   },
   "processingFiles": {
-    "message": "Processing files..."
+    "message": "Processing files...",
+    "description": "Status message when processing files"
   },
   "errorEnterTitle": {
     "message": "Please enter a title"

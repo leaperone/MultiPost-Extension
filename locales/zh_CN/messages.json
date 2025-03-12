@@ -569,13 +569,16 @@
     "message": "上传封面"
   },
   "processingImages": {
-    "message": "正在处理图片..."
+    "message": "正在处理图片...",
+    "description": "Status message when processing images"
   },
   "processingVideos": {
-    "message": "正在处理视频..."
+    "message": "正在处理视频...",
+    "description": "Status message when processing videos"
   },
   "processingFiles": {
-    "message": "正在处理文件..."
+    "message": "正在处理文件...",
+    "description": "Status message when processing files"
   },
   "errorEnterTitle": {
     "message": "请输入标题"
@@ -667,5 +670,25 @@
   "popupLoadingMessage": {
     "message": "正在打开程序...",
     "description": "加载提示信息"
+  },
+  "errorProcessingImages": {
+    "message": "处理图片时出错",
+    "description": "Error message when processing images"
+  },
+  "errorProcessingVideos": {
+    "message": "处理视频时出错",
+    "description": "Error message when processing videos"
+  },
+  "errorProcessingFiles": {
+    "message": "处理文件时出错",
+    "description": "Error message when processing files"
+  },
+  "errorProcessingCover": {
+    "message": "处理封面图片时出错",
+    "description": "Error message when processing cover image"
+  },
+  "errorImportingContent": {
+    "message": "导入内容时出错",
+    "description": "Error message when importing content"
   }
 }

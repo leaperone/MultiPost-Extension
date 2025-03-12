@@ -44,8 +44,8 @@ const ArticleTab: React.FC<ArticleTabProps> = ({ funcPublish, funcScraper }) => 
 
   useEffect(() => {
     if (process.env.NODE_ENV === 'development') {
-      setTitle('开发环境标题');
-      setDigest('开发环境内容');
+      setTitle(chrome.i18n.getMessage('devEnvironmentTitle') || '开发环境标题');
+      setDigest(chrome.i18n.getMessage('devEnvironmentContent') || '开发环境内容');
     }
   }, []);
 
@@ -171,7 +171,7 @@ const ArticleTab: React.FC<ArticleTabProps> = ({ funcPublish, funcScraper }) => 
 
         setProcessProgress((i / images.length) * 100);
       } catch (error) {
-        console.error('处理图片时出错:', error);
+        console.error(chrome.i18n.getMessage('errorProcessingImages') || '处理图片时出错:', error);
       }
     }
 
@@ -195,7 +195,7 @@ const ArticleTab: React.FC<ArticleTabProps> = ({ funcPublish, funcScraper }) => 
         // 替换原始视频的 src 为本地 URL
         video.src = fileData.url;
       } catch (error) {
-        console.error('处理视频时出错:', error);
+        console.error(chrome.i18n.getMessage('errorProcessingVideos') || '处理视频时出错:', error);
       }
     }
 
@@ -221,7 +221,7 @@ const ArticleTab: React.FC<ArticleTabProps> = ({ funcPublish, funcScraper }) => 
           file.setAttribute('href', fileData.url);
         }
       } catch (error) {
-        console.error('处理文件时出错:', error);
+        console.error(chrome.i18n.getMessage('errorProcessingFiles') || '处理文件时出错:', error);
       }
     }
 
@@ -264,7 +264,7 @@ const ArticleTab: React.FC<ArticleTabProps> = ({ funcPublish, funcScraper }) => 
             };
             setCoverImage(coverFileData);
           } catch (error) {
-            console.error('处理封面图片时出错:', error);
+            console.error(chrome.i18n.getMessage('errorProcessingCover') || '处理封面图片时出错:', error);
           }
         }
 
@@ -285,7 +285,7 @@ const ArticleTab: React.FC<ArticleTabProps> = ({ funcPublish, funcScraper }) => 
         setFileDatas(fileDatas);
       }
     } catch (error) {
-      console.error('导入内容时出错:', error);
+      console.error(chrome.i18n.getMessage('errorImportingContent') || '导入内容时出错:', error);
     }
   };
 
@@ -328,7 +328,7 @@ const ArticleTab: React.FC<ArticleTabProps> = ({ funcPublish, funcScraper }) => 
           <h3 className="text-sm font-medium">{chrome.i18n.getMessage('optionsCoverImage')}</h3>
         </CardHeader>
         <CardBody>
-          <div className="flex items-center justify-center">
+          <div className="flex justify-center items-center">
             <input
               type="file"
               ref={coverInputRef}
@@ -349,7 +349,7 @@ const ArticleTab: React.FC<ArticleTabProps> = ({ funcPublish, funcScraper }) => 
                   isIconOnly
                   size="sm"
                   color="danger"
-                  className="absolute top-0 right-0 z-50 m-1 transition-opacity opacity-0 group-hover:opacity-100"
+                  className="absolute top-0 right-0 z-50 m-1 opacity-0 transition-opacity group-hover:opacity-100"
                   onPress={handleDeleteCover}>
                   <XIcon className="size-4" />
                 </Button>
@@ -358,7 +358,7 @@ const ArticleTab: React.FC<ArticleTabProps> = ({ funcPublish, funcScraper }) => 
               <Button
                 variant="light"
                 onPress={() => coverInputRef.current?.click()}>
-                <ImagePlusIcon className="w-6 h-6 mr-2" />
+                <ImagePlusIcon className="mr-2 w-6 h-6" />
                 {chrome.i18n.getMessage('optionsUploadCover')}
               </Button>
             )}
@@ -390,8 +390,8 @@ const ArticleTab: React.FC<ArticleTabProps> = ({ funcPublish, funcScraper }) => 
 
       <div className="flex flex-col gap-4 p-4 rounded-lg bg-default-50">
         <div className="flex flex-col gap-2">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
+          <div className="flex justify-between items-center">
+            <div className="flex gap-2 items-center">
               <p className="text-sm font-medium">{chrome.i18n.getMessage('optionsSelectPublishPlatforms')}</p>
             </div>
             {selectedPlatforms.length > 0 && (
@@ -401,13 +401,13 @@ const ArticleTab: React.FC<ArticleTabProps> = ({ funcPublish, funcScraper }) => 
                 variant="light"
                 color="danger"
                 onPress={clearSelectedPlatforms}
-                title="清空平台"
+                title={chrome.i18n.getMessage('clearPlatforms')}
                 className="hover:bg-danger-100">
                 <Eraser className="size-4" />
               </Button>
             )}
           </div>
-          <div className="grid grid-cols-2 xs:grid-cols-3 sm:grid-cols-4 gap-1">
+          <div className="grid grid-cols-2 gap-1 xs:grid-cols-3 sm:grid-cols-4">
             {getPlatformInfos('ARTICLE').map((platform) => (
               <PlatformCheckbox
                 key={platform.name}
@@ -424,7 +424,7 @@ const ArticleTab: React.FC<ArticleTabProps> = ({ funcPublish, funcScraper }) => 
         onPress={handlePublish}
         color="primary"
         disabled={!title || selectedPlatforms.length === 0}
-        className="w-full px-4 py-2 font-bold">
+        className="px-4 py-2 w-full font-bold">
         {chrome.i18n.getMessage('optionsSyncArticle')}
       </Button>
 
@@ -444,7 +444,7 @@ const ArticleTab: React.FC<ArticleTabProps> = ({ funcPublish, funcScraper }) => 
             <h4 className="mb-2 font-semibold">{importedContent.title}</h4>
             <p className="mb-4 text-sm">{importedContent.digest}</p>
             <div
-              className="prose max-w-none"
+              className="max-w-none prose"
               dangerouslySetInnerHTML={{ __html: importedContent.content }}
             />
           </CardBody>
