@@ -4,8 +4,6 @@
         "naumovs.color-highlight",
         "mikestead.dotenv",
         "dbaeumer.vscode-eslint",
-        "maggie.eslint-rules-zh-plugin",
-        "redjue.git-commit-plugin",
         "heybourn.headwind",
         "antfu.iconify",
         "standard.vscode-standard",
