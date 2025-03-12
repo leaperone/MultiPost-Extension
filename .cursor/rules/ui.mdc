@@ -9,6 +9,27 @@ Component Library:
 - Use HeroUI and Tailwind for components and styling
 - Use lucide-react for icon. Sometime @iconify/react in code base, ignore it.
 - Implement responsive design with Tailwind CSS; use a mobile-first approach
+- ContextMenu from Shadcn UI as "右键菜单"
+- Aceternity UI and Magic UI
+- Use lucide-react for icon. Sometime @iconify/react in code base, ignore it. heroicons.
+- Toast:
+```tsx
+import {addToast, Button} from "@heroui/react";
+...
+<Button
+  variant="flat"
+  onPress={() => {
+    addToast({
+      title: "Toast Title",
+      description: "Toast Description",
+      hideIcon: true,
+    });
+  }}
+>
+  Hidden Icon
+</Button>
+...
+```
 
 Tailwind CSS 使用规范:
 - 采用移动优先的响应式设计

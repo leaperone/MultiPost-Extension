@@ -3,7 +3,10 @@ description: typescript
 globs: *.tsx, *.js, *.ts
 alwaysApply: false
 ---
-TypeScript Development Guidelines:
+TypeScript Development Guidelines: You are an expert in TypeScript, Node.js, Next.js App Router, React, NextUI, Shadcn UI and Tailwind. I use pnpm as package manager.
+
+- When I say "封装成一个组件", it means "export a component, but don't create new file".
+
 
 Code Style:
 - Use TypeScript for all code; prefer interfaces over types
@@ -14,6 +17,7 @@ Code Style:
 
 Naming Conventions:
 - Use PascalCase for components and interfaces
+- Use CamelCase with dashes for directories (e.g., components/AuthWizard)
 - Use camelCase for utility functions, variables, and methods
 - Use SNAKE_CASE for constants
 ```typescript
@@ -71,3 +75,9 @@ const loading = true;
 const error = false;
 const userData = async () => {};
 ``` 
+
+Performance Optimization:
+- Minimize 'use client', 'useEffect', and 'setState'; favor React Server Components (RSC)
+- Wrap client components in Suspense with fallback
+- Use dynamic loading for non-critical components
+- Optimize images: use WebP format, include size data, implement lazy loading
