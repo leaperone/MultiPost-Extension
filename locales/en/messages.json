@@ -661,5 +661,13 @@
   },
   "settingsTrustedDomainsError": {
     "message": "Error processing request"
+  },
+  "popupLogoAlt": {
+    "message": "MultiPost Icon",
+    "description": "Alt text for the logo image"
+  },
+  "popupLoadingMessage": {
+    "message": "Opening application...",
+    "description": "Loading message"
   }
 }

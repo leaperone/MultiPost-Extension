@@ -659,5 +659,13 @@
   },
   "settingsTrustedDomainsError": {
     "message": "处理请求时发生错误"
+  },
+  "popupLogoAlt": {
+    "message": "MultiPost 图标",
+    "description": "Logo 图片的替代文本"
+  },
+  "popupLoadingMessage": {
+    "message": "正在打开程序...",
+    "description": "加载提示信息"
   }
 }
