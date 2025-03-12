@@ -1,0 +1,81 @@
+---
+description: i18n, 翻译, 国际化
+globs: 
+alwaysApply: false
+---
+Internationalization (i18n) Guidelines:
+
+Message Structure:
+- Store all text content in `/i18n/locales/[locale]/*.json`
+- Use descriptive message keys in SNAKE_CASE
+- Include placeholders with $PLACEHOLDER$ syntax
+- Add descriptions for translators in message files
+- `console.log` don't need add i18n, only for UI text display on screen
+
+```
+# For server component
+import { createTranslation } from '@/i18n/server';
+const { t } = await createTranslation('home');
+
+# For client component
+'use client'
+import { useTranslation } from '@/i18n/client';
+const { t } = useTranslation('install');
+```
+
+Message Format:
+```json
+"footer": {
+    "slogan": "简化你的社交媒体工作流程",
+    "copyright": "© 2024 LEAPERone Inc. 保留所有权利",
+    "sections": {
+      "services": "服务",
+      "support": "支持",
+      "aboutus": "关于我们",
+      "legal": "法律条款"
+    },
+    "navigation": {
+      "services": {},
+      "support": {
+        "pricing": "定价",
+        "userManual": "用户手册（文档）",
+        "devDocs": "LEAPERone 开发文档"
+      },
+      "aboutUs": {
+        "team": "我们的团队"
+      },
+      "legal": {
+        "privacy": "隐私政策",
+        "terms": "服务条款"
+      }
+    }
+  },
+```
+
+Implementation:
+- Use `chrome.i18n.getMessage('extensionDisplayName')` for all user-facing text
+- Never hardcode text strings in components
+- Handle RTL languages with appropriate CSS
+- Set default_locale in manifest.json
+- Support fallback locales
+
+Best Practices:
+- Keep messages concise and clear
+- Use semantic keys (e.g., WELCOME_MESSAGE vs MSG_001)
+- Maintain consistent terminology across translations
+- Handle pluralization properly
+- Consider cultural differences in formatting dates, numbers, and currencies
+- Test UI with different language lengths
+
+Code Examples:
+```typescript
+// Component usage
+const message = chrome.i18n.getMessage("WELCOME_MESSAGE", [username]);
+
+// Manifest configuration
+{
+  "default_locale": "en",
+  "name": "__MSG_extension_name__",
+  "description": "__MSG_extension_description__"
+}
+```
