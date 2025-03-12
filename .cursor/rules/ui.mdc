@@ -1,5 +1,5 @@
 ---
-description: all UI and html, jsxfiled- Use HeroUI and Tailwind for components and styling - Use lucide-react for icon. Sometime @iconify/react in code base, ignore it. - Implement responsive design with Tailwind CSS; use a mobile-first approach- Use HeroUI and Tailwind for components and styling - Use lucide-react for icon. Sometime @iconify/react in code base, ignore it. - Implement responsive design with Tailwind CSS; use a mobile-first approachkk
+description: 
 globs: *.tsx
 alwaysApply: false
 ---

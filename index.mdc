@@ -1,25 +1,11 @@
 ---
-description: General development guidelines for Chrome Extension
-globs: *
-alwaysApply: true
+description: 
+globs: 
+alwaysApply: false
 ---
+General development guidelines for Chrome Extension
+
 Chrome Extension Development Guidelines:
-
-Code Style and Structure:
-- Write concise TypeScript code with accurate type definitions
-- Use functional and declarative programming patterns; avoid classes
-- Use descriptive variable names with auxiliary verbs (e.g., isLoading, hasError)
-```typescript
-// ✅ Correct
-const isLoading = true;
-const hasError = false;
-const fetchUserData = async () => {};
-
-// ❌ Incorrect
-const loading = true;
-const error = false;
-const userData = async () => {};
-```
 
 File Structure:
 ```
@@ -33,25 +19,6 @@ src/
 ├── utils/          # Utility functions
 ├── types/          # Type definitions
 └── static/         # Static assets
-```
-
-Naming Conventions:
-- Use PascalCase for directories (e.g., components/AuthWizard)
-- Use PascalCase for components
-- Use camelCase for utility functions
-- Use SNAKE_CASE for constants
-```typescript
-// Component naming
-function UserProfile() {}
-function AuthButton() {}
-
-// Utility function naming
-function formatDateTime() {}
-function parseUserData() {}
-
-// Constant naming
-const API_BASE_URL = "https://api.example.com";
-const MAX_RETRY_COUNT = 3;
 ```
 
 Chrome API Usage:
@@ -80,29 +47,6 @@ const tabs = {
     return tab;
   }
 };
-```
-
-Error Handling and Validation:
-- Prioritize error and edge case handling
-- Use early returns and guard clauses
-- Use Zod for form validation
-```typescript
-// ✅ Correct
-function processUserData(data?: UserData) {
-  if (!data) return null;
-  if (!data.email) return { error: "Email required" };
-  
-  return processData(data);
-}
-
-// ❌ Incorrect
-function processUserData(data?: UserData) {
-  if (data) {
-    if (data.email) {
-      return processData(data);
-    }
-  }
-}
 ```
 
 Security and Privacy:
@@ -140,4 +84,4 @@ async function fetchWithCache<T>(key: string, fetcher: () => Promise<T>): Promis
   await storage.set(key, { data, timestamp: Date.now() });
   return data;
 }
-```
+``` 

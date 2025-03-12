@@ -1,5 +1,5 @@
 ---
-description: i18n, tanslation
+description: i18n, tanslation, chinese, english
 globs: locales/**/*.json
 alwaysApply: false
 ---
