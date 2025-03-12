@@ -1,5 +1,5 @@
 ---
-description: i18n, tanslation, chinese, english
+description: i18n, 国际化, 翻译, tanslation, chinese, english
 globs: locales/**/*.json
 alwaysApply: false
 ---
@@ -10,6 +10,7 @@ Message Structure:
 - Use descriptive message keys in SNAKE_CASE
 - Include placeholders with $PLACEHOLDER$ syntax
 - Add descriptions for translators in message files
+- `console.log` don't need add i18n, only for UI text display on screen
 
 Message Format:
 ```json
