@@ -14,37 +14,17 @@ export const metadata = {
     'MultiPost is an open source browser extension that helps you publish content to multiple social media platforms with one click. Save time and boost your social media presence.',
 };
 
-// Chrome 图标组件
-const ChromeIcon = () => (
-  <svg
-    xmlns="http://www.w3.org/2000/svg"
-    width="24"
-    height="24"
-    viewBox="0 0 24 24"
-    fill="currentColor">
-    <path d="M12 0C8.21 0 4.831 1.757 2.632 4.501l3.953 6.848A5.454 5.454 0 0 1 12 6.545h10.691A12 12 0 0 0 12 0zM1.931 5.47A11.943 11.943 0 0 0 0 12c0 6.012 4.42 10.991 10.189 11.864l3.953-6.847a5.45 5.45 0 0 1-6.865-2.29zm13.342 2.166a5.446 5.446 0 0 1 1.45 7.09l.002.001h-.002l-5.344 9.257c.206.01.413.016.621.016 6.627 0 12-5.373 12-12 0-1.54-.29-3.011-.818-4.364zM12 16.364a4.364 4.364 0 1 1 0-8.728 4.364 4.364 0 0 1 0 8.728Z" />
-  </svg>
-);
-
-// Hero Section 文字悬停效果组件
-interface ItemProps {
-  emoji: string;
-  position: string;
-}
-
-interface Feature {
-  text: string;
-  emojis: ItemProps[];
-  hoverColor: string;
-}
-
 interface TranslationFunction {
   (key: string): string;
   (key: string, options: { returnObjects: boolean }): string | Record<string, unknown>;
 }
 
-function HeroSectionTextHover({ t, className }: { t: TranslationFunction; className?: string }) {
-  const features: Feature[] = [
+function HeroSection({ t, className }: { t: TranslationFunction; className?: string }) {
+  const description = t('hero.description');
+  const platformText = t('hero.platform');
+  const [before, after] = description.split('all platforms');
+
+  const features = [
     {
       text: t('hero.features.draft'),
       hoverColor: 'text-sky-400',
@@ -108,67 +88,52 @@ function HeroSectionTextHover({ t, className }: { t: TranslationFunction; classN
   ];
 
   return (
-    <div className={cn('storybook-fix pt-4 relative min-h-[60px] w-full rounded-2xl', className)}>
-      <div className="flex flex-col items-center justify-center gap-3">
-        <div className="flex flex-wrap items-center justify-center gap-x-3 gap-y-2 p-4 text-2xl font-bold sm:text-3xl md:text-4xl lg:text-5xl">
-          {features.map((feature, featureIndex) => (
-            <div
-              key={featureIndex}
-              className="group relative flex items-center">
-              <span
-                className={cn('text-foreground transition-colors duration-300', `group-hover:${feature.hoverColor}`)}>
-                {feature.text}
-              </span>
-              <div className="absolute inset-0 cursor-pointer opacity-0 transition-opacity duration-400 group-hover:opacity-100">
-                {feature.emojis.map((item, index) => (
-                  <span
-                    key={index}
-                    className={cn(
-                      'pointer-events-none absolute transform text-2xl transition-all duration-500 group-hover:scale-110 sm:text-3xl md:text-4xl lg:text-5xl',
-                      item.position,
-                    )}>
-                    {item.emoji}
-                  </span>
+    <div className={cn('hero-container relative w-full bg-background', className)}>
+      <div className="z-40 m-auto flex h-[80vh] w-[90%] flex-col items-center justify-center bg-transparent">
+        <div className="flex w-full flex-col items-center">
+          <div className="relative min-h-[60px] w-full rounded-2xl pt-4">
+            <div className="flex flex-col items-center justify-center gap-3">
+              <div className="flex flex-wrap items-center justify-center gap-x-3 gap-y-2 p-4 text-2xl font-bold sm:text-3xl md:text-4xl lg:text-5xl">
+                {features.map((feature, featureIndex) => (
+                  <div
+                    key={featureIndex}
+                    className="group relative flex items-center">
+                    <span
+                      className={cn(
+                        'text-foreground transition-colors duration-300',
+                        `group-hover:${feature.hoverColor}`,
+                      )}>
+                      {feature.text}
+                    </span>
+                    <div className="absolute inset-0 cursor-pointer opacity-0 transition-opacity duration-400 group-hover:opacity-100">
+                      {feature.emojis.map((item, index) => (
+                        <span
+                          key={index}
+                          className={cn(
+                            'pointer-events-none absolute transform text-2xl transition-all duration-500 group-hover:scale-110 sm:text-3xl md:text-4xl lg:text-5xl',
+                            item.position,
+                          )}>
+                          {item.emoji}
+                        </span>
+                      ))}
+                    </div>
+                    {featureIndex < features.length - 1 && (
+                      <span className="ml-3 text-gray-400">
+                        {featureIndex === features.length - 2
+                          ? t('hero.features.conjunction.and')
+                          : t('hero.features.conjunction.comma')}
+                      </span>
+                    )}
+                  </div>
                 ))}
               </div>
-              {featureIndex < features.length - 1 && (
-                <span className="ml-3 text-gray-400">
-                  {featureIndex === features.length - 2
-                    ? t('hero.features.conjunction.and')
-                    : t('hero.features.conjunction.comma')}
-                </span>
-              )}
             </div>
-          ))}
-        </div>
-      </div>
-    </div>
-  );
-}
-
-// Hero Section 组件
-function HeroSection({ t, className }: { t: TranslationFunction; className?: string }) {
-  const UnderlinedWord = ({ text }: { text: string }) => (
-    <span className="cursor-pointer underline decoration-blue-500 decoration-wavy dark:decoration-yellow-300">
-      {text}
-    </span>
-  );
-
-  const description = t('hero.description');
-  const platformText = t('hero.platform');
-  const [before, after] = description.split('all platforms');
-
-  return (
-    <div className={cn('hero-container relative w-full bg-background', className)}>
-      <div className="z-40 m-auto flex h-full min-h-[70vh] w-[90%] flex-col items-center justify-center bg-transparent">
-        <div className="flex w-full flex-col items-center">
-          <HeroSectionTextHover
-            t={t}
-            className={className}
-          />
+          </div>
           <p className="mb-8 w-full max-w-2xl text-center text-lg leading-8 text-foreground-600">
             {before}
-            <UnderlinedWord text={platformText} />
+            <span className="cursor-pointer underline decoration-blue-500 decoration-wavy dark:decoration-yellow-300">
+              {platformText}
+            </span>
             {after}
           </p>
           <div className="flex justify-center gap-2">
@@ -184,15 +149,26 @@ function HeroSection({ t, className }: { t: TranslationFunction; className?: str
               as={Link}
               href="/extension"
               size="lg"
-              startContent={<ChromeIcon />}
+              startContent={
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="24"
+                  height="24"
+                  viewBox="0 0 24 24"
+                  fill="currentColor">
+                  <path d="M12 0C8.21 0 4.831 1.757 2.632 4.501l3.953 6.848A5.454 5.454 0 0 1 12 6.545h10.691A12 12 0 0 0 12 0zM1.931 5.47A11.943 11.943 0 0 0 0 12c0 6.012 4.42 10.991 10.189 11.864l3.953-6.847a5.45 5.45 0 0 1-6.865-2.29zm13.342 2.166a5.446 5.446 0 0 1 1.45 7.09l.002.001h-.002l-5.344 9.257c.206.01.413.016.621.016 6.627 0 12-5.373 12-12 0-1.54-.29-3.011-.818-4.364zM12 16.364a4.364 4.364 0 1 1 0-8.728 4.364 4.364 0 0 1 0 8.728Z" />
+                </svg>
+              }
               className="bg-gradient-to-r from-purple-400 to-pink-300 text-white transition-opacity hover:opacity-90">
               {t('hero.buttons.install')}
             </Button>
           </div>
         </div>
       </div>
-      <div className="absolute bottom-4 left-1/2 z-40 -translate-x-1/2 sm:bottom-8">
-        <ScrollScreenChevronDown />
+      <div className="absolute bottom-12 left-1/2 z-40 -translate-x-1/2">
+        <div className="flex flex-col items-center gap-2">
+          <ScrollScreenChevronDown />
+        </div>
       </div>
     </div>
   );
@@ -239,7 +215,7 @@ export default async function HomePage() {
     <div className="flex min-h-screen flex-col bg-background text-foreground">
       <HomePageHeader />
       <main className="flex-1">
-        <div className="relative min-h-screen w-full">
+        <div className="relative min-h-[80vh] w-full">
           <HeroSection t={t} />
         </div>
 
