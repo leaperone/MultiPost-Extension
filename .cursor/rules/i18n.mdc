@@ -7,7 +7,7 @@ Internationalization (i18n) Guidelines:
 
 Message Structure:
 - Store all text content in `/locales/[locale]/messages.json`
-- Use descriptive message keys in SNAKE_CASE
+- Use descriptive message keys in camelCase: `errorImportingContent`
 - Include placeholders with $PLACEHOLDER$ syntax
 - Add descriptions for translators in message files
 - `console.log` don't need add i18n, only for UI text display on screen
@@ -22,7 +22,7 @@ Message Format:
 
 Implementation:
 - Use `chrome.i18n.getMessage('extensionDisplayName')` for all user-facing text
-- Never hardcode text strings in components
+- Never hardcode text strings in UI components
 - Handle RTL languages with appropriate CSS
 - Set default_locale in manifest.json
 - Support fallback locales
