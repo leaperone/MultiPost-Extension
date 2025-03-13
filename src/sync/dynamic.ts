@@ -2,6 +2,7 @@ import type { PlatformInfo } from './common';
 import { DynamicBaijiahao } from './dynamic/baijiahao';
 import { DynamicBilibili } from './dynamic/bilibili';
 import { DynamicBluesky } from './dynamic/bluesky';
+import { DynamicDouban } from './dynamic/douban';
 import { DynamicDouyin } from './dynamic/douyin';
 import { DynamicFacebook } from './dynamic/facebook';
 import { DynamicInstagram } from './dynamic/instagram';
@@ -196,5 +197,14 @@ export const DynamicInfoMap: Record<string, PlatformInfo> = {
     platformName: chrome.i18n.getMessage('platformV2ex'),
     injectUrl: 'https://www.v2ex.com/write',
     injectFunction: DynamicV2EX,
+  },
+  DYNAMIC_DOUBAN: {
+    type: 'DYNAMIC',
+    name: 'DYNAMIC_DOUBAN',
+    homeUrl: 'https://www.douban.com/',
+    faviconUrl: 'https://www.douban.com/favicon.ico',
+    platformName: chrome.i18n.getMessage('platformDouban'),
+    injectUrl: 'https://www.douban.com/',
+    injectFunction: DynamicDouban,
   },
 };

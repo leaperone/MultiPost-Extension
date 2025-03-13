@@ -457,6 +457,10 @@
     "message": "rednote",
     "description": "Platform name for Rednote"
   },
+  "platformDouban": {
+    "message": "Douban",
+    "description": "Platform name for Douban"
+  },
   "platformWeibo": {
     "message": "Weibo",
     "description": "Platform name for Weibo"
