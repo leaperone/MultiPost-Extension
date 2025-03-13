@@ -10,6 +10,7 @@ import { VideoTiktok } from './video/tiktok';
 import { VideoWeibo } from './video/weibo';
 import { VideoWeiXinChannel } from './video/weixinchannel';
 import { VideoYoutube } from './video/youtube';
+import { VideoZhihu } from './video/zhihu';
 
 export const VideoInfoMap: Record<string, PlatformInfo> = {
   VIDEO_BILIBILI: {
@@ -112,5 +113,14 @@ export const VideoInfoMap: Record<string, PlatformInfo> = {
     platformName: chrome.i18n.getMessage('platformBluesky'),
     injectUrl: 'https://bsky.app/',
     injectFunction: VideoBluesky,
+  },
+  VIDEO_ZHIHU: {
+    type: 'VIDEO',
+    name: 'VIDEO_ZHIHU',
+    homeUrl: 'https://www.zhihu.com/',
+    faviconUrl: 'https://www.zhihu.com/favicon.ico',
+    platformName: chrome.i18n.getMessage('platformZhihu'),
+    injectUrl: 'https://www.zhihu.com/zvideo/upload-video',
+    injectFunction: VideoZhihu,
   },
 };
