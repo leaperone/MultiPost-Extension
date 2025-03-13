@@ -464,6 +464,10 @@
     "message": "小红书",
     "description": "小红书平台名称"
   },
+  "platformDedao": {
+    "message": "得到",
+    "description": "得到平台名称"
+  },
   "platformDouban": {
     "message": "豆瓣",
     "description": "豆瓣平台名称"

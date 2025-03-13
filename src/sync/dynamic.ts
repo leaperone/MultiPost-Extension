@@ -2,6 +2,7 @@ import type { PlatformInfo } from './common';
 import { DynamicBaijiahao } from './dynamic/baijiahao';
 import { DynamicBilibili } from './dynamic/bilibili';
 import { DynamicBluesky } from './dynamic/bluesky';
+import { DynamicDedao } from './dynamic/dedao';
 import { DynamicDouban } from './dynamic/douban';
 import { DynamicDouyin } from './dynamic/douyin';
 import { DynamicFacebook } from './dynamic/facebook';
@@ -206,5 +207,14 @@ export const DynamicInfoMap: Record<string, PlatformInfo> = {
     platformName: chrome.i18n.getMessage('platformDouban'),
     injectUrl: 'https://www.douban.com/',
     injectFunction: DynamicDouban,
+  },
+  DYNAMIC_DEDAO: {
+    type: 'DYNAMIC',
+    name: 'DYNAMIC_DEDAO',
+    homeUrl: 'https://www.dedao.cn/',
+    faviconUrl: 'https://www.dedao.cn/favicon.ico',
+    platformName: chrome.i18n.getMessage('platformDedao'),
+    injectUrl: 'https://www.dedao.cn/knowledge/home',
+    injectFunction: DynamicDedao,
   },
 };

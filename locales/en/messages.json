@@ -461,6 +461,10 @@
     "message": "Douban",
     "description": "Platform name for Douban"
   },
+  "platformDedao": {
+    "message": "Dedao",
+    "description": "Platform name for Dedao"
+  },
   "platformWeibo": {
     "message": "Weibo",
     "description": "Platform name for Weibo"
