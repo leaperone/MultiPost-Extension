@@ -1,5 +1,6 @@
 import { ArticleBaijiahao } from './article/baijiahao';
 import { ArticleCSDN } from './article/csdn';
+import { ArticleDouban } from './article/douban';
 import { ArticleJianshu } from './article/jianshu';
 import { ArticleJuejin } from './article/juejin';
 import { ArticleSegmentfault } from './article/segmentfault';
@@ -70,5 +71,14 @@ export const ArticleInfoMap: Record<string, PlatformInfo> = {
     platformName: chrome.i18n.getMessage('platformToutiao'),
     injectUrl: 'https://mp.toutiao.com/profile_v4/graphic/publish',
     injectFunction: ArticleToutiao,
+  },
+  ARTICLE_DOUBAN: {
+    type: 'ARTICLE',
+    name: 'ARTICLE_DOUBAN',
+    homeUrl: 'https://www.douban.com/',
+    faviconUrl: 'https://www.douban.com/favicon.ico',
+    platformName: chrome.i18n.getMessage('platformDouban'),
+    injectUrl: 'https://www.douban.com/note/create',
+    injectFunction: ArticleDouban,
   },
 };
