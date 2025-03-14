@@ -1,7 +1,7 @@
 'use client';
 
 import { Tabs, Tab, Spacer } from '@heroui/react';
-import { MessageCircleHeartIcon, VideoIcon } from 'lucide-react';
+import { MessageCircleHeartIcon, VideoIcon, GridIcon } from 'lucide-react';
 import dynamic from 'next/dynamic';
 import Link from 'next/link';
 import React from 'react';
@@ -19,6 +19,10 @@ const DynamicTab = dynamic(() => import('./components/DynamicTab'), {
 });
 
 const VideoTab = dynamic(() => import('./components/VideoTab'), {
+  ssr: false,
+});
+
+const GridTab = dynamic(() => import('./components/GridTab'), {
   ssr: false,
 });
 
@@ -49,6 +53,12 @@ export default function PublishPage() {
       icon: <VideoIcon className="size-4" />,
       content: <VideoTab />,
     },
+    {
+      id: 'grid',
+      label: t('tabs.grid'),
+      icon: <GridIcon className="size-4" />,
+      content: <GridTab />,
+    },
   ];
 
   return (
@@ -57,7 +67,7 @@ export default function PublishPage() {
       <Spacer y={8} />
       {process.env.NODE_ENV !== 'development' && <ForceInstallExtension />}
       <div className="container mx-auto px-4 py-16">
-        <div className="w-full max-w-3xl mx-auto">
+        <div className="mx-auto w-full max-w-3xl">
           <Tabs
             aria-label="Content type tabs"
             isVertical
@@ -85,7 +95,7 @@ export default function PublishPage() {
         <Alert
           variant="flat"
           color="secondary"
-          className="max-w-xl mx-auto mt-4">
+          className="mx-auto mt-4 max-w-xl">
           <div>
             {t('contact.message')}
             <Link

@@ -1,7 +1,8 @@
 {
   "tabs": {
-    "dynamic": "投稿",
-    "video": "動画"
+    "dynamic": "ダイナミック",
+    "video": "ビデオ",
+    "grid": "グリッド"
   },
   "contact": {
     "message": "プラットフォームが表示されていない場合は、メールでお問い合わせください",
@@ -28,5 +29,12 @@
     "contentRequired": "コンテンツを入力してください",
     "platformRequired": "少なくとも1つのプラットフォームを選択してください",
     "titleAndVideoRequired": "タイトルを入力し、動画をアップロードしてください"
+  },
+  "grid": {
+    "uploadImage": "クリックまたはドラッグして画像をアップロード",
+    "preview": "オリジナルプレビュー",
+    "result": "グリッドプレビュー",
+    "generate": "グリッド生成",
+    "trimEdges": "エッジトリミング（ずれを防ぐ）"
   }
 }

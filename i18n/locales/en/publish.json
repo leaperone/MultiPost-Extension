@@ -1,7 +1,8 @@
 {
   "tabs": {
     "dynamic": "Dynamic",
-    "video": "Video"
+    "video": "Video",
+    "grid": "Grid"
   },
   "contact": {
     "message": "If your platform is not listed, please contact us via email at",
@@ -23,6 +24,13 @@
     "upload": "Upload Video",
     "selectPlatforms": "Select Publishing Platforms",
     "publish": "Sync Video"
+  },
+  "grid": {
+    "uploadImage": "Click or drag to upload image",
+    "preview": "Original Preview",
+    "result": "Grid Preview",
+    "generate": "Generate Grid",
+    "trimEdges": "Trim edges (avoid misalignment)"
   },
   "validation": {
     "contentRequired": "Content is required",

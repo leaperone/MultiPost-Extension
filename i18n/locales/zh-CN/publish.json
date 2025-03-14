@@ -1,7 +1,8 @@
 {
   "tabs": {
     "dynamic": "动态",
-    "video": "视频"
+    "video": "视频",
+    "grid": "九宫格"
   },
   "contact": {
     "message": "如果您的平台未列出，请通过电子邮件联系我们",
@@ -23,6 +24,13 @@
     "upload": "上传视频",
     "selectPlatforms": "选择发布平台",
     "publish": "同步视频"
+  },
+  "grid": {
+    "uploadImage": "点击或拖拽上传图片",
+    "preview": "原图预览",
+    "result": "九宫格预览",
+    "generate": "生成九宫格",
+    "trimEdges": "裁剪边缘（避免错位）"
   },
   "validation": {
     "contentRequired": "内容不能为空",
