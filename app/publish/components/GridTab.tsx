@@ -2,14 +2,17 @@
 
 import React, { useState, useCallback } from 'react';
 import { Card, Button, Image, Switch } from '@heroui/react';
-import { ImagePlusIcon } from 'lucide-react';
+import { ImagePlusIcon, DownloadIcon } from 'lucide-react';
 import { useTranslation } from '@/i18n/client';
+import JSZip from 'jszip';
+import { saveAs } from 'file-saver';
 
 export default function GridTab() {
   const { t } = useTranslation('publish');
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const [gridImages, setGridImages] = useState<string[]>([]);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [isDownloading, setIsDownloading] = useState(false);
   const [trimEdges, setTrimEdges] = useState(false);
 
   const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -96,6 +99,30 @@ export default function GridTab() {
     }
   }, [selectedImage, trimEdges]);
 
+  const handleDownload = useCallback(async () => {
+    if (gridImages.length === 0) return;
+
+    setIsDownloading(true);
+    try {
+      const zip = new JSZip();
+      const promises = gridImages.map(async (dataUrl, index) => {
+        // 将 base64 转换为 Blob
+        const response = await fetch(dataUrl);
+        const blob = await response.blob();
+        // 添加到 zip，使用从1开始的序号
+        zip.file(`grid_${String(index + 1).padStart(2, '0')}.jpg`, blob);
+      });
+
+      await Promise.all(promises);
+      const content = await zip.generateAsync({ type: 'blob' });
+      saveAs(content, 'grid_images.zip');
+    } catch (error) {
+      console.error('下载失败:', error);
+    } finally {
+      setIsDownloading(false);
+    }
+  }, [gridImages]);
+
   return (
     <Card className="p-6">
       <div className="space-y-6">
@@ -117,15 +144,36 @@ export default function GridTab() {
 
         {selectedImage && (
           <div className="mt-4">
-            <h3 className="mb-2 text-lg font-medium">{t('grid.preview')}</h3>
-            <div className="relative mx-auto aspect-square w-full max-w-md">
-              <Image
-                src={selectedImage}
-                alt="Selected image"
-                className="rounded-lg object-cover"
-                width={400}
-                height={400}
-              />
+            <div className="flex flex-col items-start justify-between gap-4">
+              <div className="flex-1">
+                <h3 className="mb-2 text-lg font-medium">{t('grid.preview')}</h3>
+                <div className="relative mx-auto aspect-square w-full max-w-md">
+                  <Image
+                    src={selectedImage}
+                    alt="Selected image"
+                    className="rounded-lg object-cover"
+                    width={400}
+                    height={400}
+                  />
+                </div>
+              </div>
+              <div className="flex w-full flex-row items-center justify-between pt-10">
+                <div className="flex items-center gap-2">
+                  <Switch
+                    size="sm"
+                    isSelected={trimEdges}
+                    onValueChange={setTrimEdges}
+                  />
+                  <span className="text-sm text-gray-600">{t('grid.trimEdges')}</span>
+                </div>
+                <Button
+                  color="primary"
+                  isDisabled={!selectedImage || isProcessing}
+                  isLoading={isProcessing}
+                  onPress={generateGridImages}>
+                  {t('grid.generate')}
+                </Button>
+              </div>
             </div>
           </div>
         )}
@@ -133,7 +181,7 @@ export default function GridTab() {
         {gridImages.length > 0 && (
           <div className="mt-4">
             <h3 className="mb-2 text-lg font-medium">{t('grid.result')}</h3>
-            <div className="mx-auto grid max-w-md grid-cols-3 gap-px">
+            <div className="mx-auto grid max-w-md grid-cols-3 gap-0.5">
               {gridImages.map((src, index) => (
                 <div
                   key={index}
@@ -145,29 +193,26 @@ export default function GridTab() {
                     width={133}
                     height={133}
                   />
+                  <div className="absolute left-1 top-1 flex size-5 items-center justify-center rounded-full bg-black/50 text-xs text-white">
+                    {index + 1}
+                  </div>
                 </div>
               ))}
             </div>
+            <div className="mt-4 flex justify-center">
+              <Button
+                color="secondary"
+                size="lg"
+                className="min-w-40"
+                isDisabled={isDownloading}
+                isLoading={isDownloading}
+                onPress={handleDownload}
+                startContent={<DownloadIcon className="size-4" />}>
+                {t('grid.download')}
+              </Button>
+            </div>
           </div>
         )}
-
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <Switch
-              size="sm"
-              isSelected={trimEdges}
-              onValueChange={setTrimEdges}
-            />
-            <span className="text-sm text-gray-600">{t('grid.trimEdges')}</span>
-          </div>
-          <Button
-            color="primary"
-            isDisabled={!selectedImage || isProcessing}
-            isLoading={isProcessing}
-            onPress={generateGridImages}>
-            {t('grid.generate')}
-          </Button>
-        </div>
       </div>
     </Card>
   );

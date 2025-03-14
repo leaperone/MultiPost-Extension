@@ -30,7 +30,8 @@
     "preview": "Original Preview",
     "result": "Grid Preview",
     "generate": "Generate Grid",
-    "trimEdges": "Trim edges (avoid misalignment)"
+    "trimEdges": "Trim edges (avoid misalignment)",
+    "download": "Download Grid"
   },
   "validation": {
     "contentRequired": "Content is required",

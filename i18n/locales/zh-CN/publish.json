@@ -30,7 +30,8 @@
     "preview": "原图预览",
     "result": "九宫格预览",
     "generate": "生成九宫格",
-    "trimEdges": "裁剪边缘（避免错位）"
+    "trimEdges": "裁剪边缘（避免错位）",
+    "download": "下载九宫格"
   },
   "validation": {
     "contentRequired": "内容不能为空",
