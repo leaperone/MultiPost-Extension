@@ -41,7 +41,7 @@ export default function PublishPage() {
   }, []);
 
   const handleArticleClick = () => {
-    window.open('https://md.multipost.app', '_blank');
+    window.location.href = 'https://md.multipost.app';
   };
 
   const tabs = [
