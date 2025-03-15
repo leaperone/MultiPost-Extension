@@ -468,6 +468,10 @@
     "message": "得到",
     "description": "得到平台名称"
   },
+  "platformWeixin": {
+    "message": "微信公众号",
+    "description": "微信公众号平台名称"
+  },
   "platformDouban": {
     "message": "豆瓣",
     "description": "豆瓣平台名称"
