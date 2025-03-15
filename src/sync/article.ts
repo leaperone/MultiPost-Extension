@@ -5,6 +5,7 @@ import { ArticleJianshu } from './article/jianshu';
 import { ArticleJuejin } from './article/juejin';
 import { ArticleSegmentfault } from './article/segmentfault';
 import { ArticleToutiao } from './article/toutiao';
+import { ArticleWeixin } from './article/weixin';
 import { ArticleZhihu } from './article/zhihu';
 import type { PlatformInfo } from './common';
 
@@ -80,5 +81,14 @@ export const ArticleInfoMap: Record<string, PlatformInfo> = {
     platformName: chrome.i18n.getMessage('platformDouban'),
     injectUrl: 'https://www.douban.com/note/create',
     injectFunction: ArticleDouban,
+  },
+  ARTICLE_WEIXIN: {
+    type: 'ARTICLE',
+    name: 'ARTICLE_WEIXIN',
+    homeUrl: 'https://mp.weixin.qq.com/',
+    faviconUrl: 'https://mp.weixin.qq.com/favicon.ico',
+    platformName: chrome.i18n.getMessage('platformWeixin'),
+    injectUrl: 'https://mp.weixin.qq.com/',
+    injectFunction: ArticleWeixin,
   },
 };

@@ -16,6 +16,7 @@ import { DynamicThreads } from './dynamic/threads';
 import { DynamicToutiao } from './dynamic/toutiao';
 import { DynamicV2EX } from './dynamic/v2ex';
 import { DynamicWeibo } from './dynamic/weibo';
+import { DynamicWeixin } from './dynamic/weixin';
 import { DynamicWeiXinChannel } from './dynamic/weixinchannel';
 import { DynamicX } from './dynamic/x';
 import { DynamicXueqiu } from './dynamic/xueqiu';
@@ -216,5 +217,14 @@ export const DynamicInfoMap: Record<string, PlatformInfo> = {
     platformName: chrome.i18n.getMessage('platformDedao'),
     injectUrl: 'https://www.dedao.cn/knowledge/home',
     injectFunction: DynamicDedao,
+  },
+  DYNAMIC_WEIXIN: {
+    type: 'DYNAMIC',
+    name: 'DYNAMIC_WEIXIN',
+    homeUrl: 'https://mp.weixin.qq.com/',
+    faviconUrl: 'https://mp.weixin.qq.com/favicon.ico',
+    platformName: chrome.i18n.getMessage('platformWeixin'),
+    injectUrl: 'https://mp.weixin.qq.com/',
+    injectFunction: DynamicWeixin,
   },
 };
