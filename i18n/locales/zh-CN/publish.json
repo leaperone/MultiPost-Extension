@@ -2,7 +2,8 @@
   "tabs": {
     "dynamic": "动态",
     "video": "视频",
-    "grid": "九宫格"
+    "grid": "九宫格",
+    "article": "文章"
   },
   "contact": {
     "message": "如果您的平台未列出，请通过电子邮件联系我们",

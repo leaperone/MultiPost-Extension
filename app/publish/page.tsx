@@ -1,7 +1,7 @@
 'use client';
 
 import { Tabs, Tab, Spacer } from '@heroui/react';
-import { MessageCircleHeartIcon, VideoIcon, GridIcon } from 'lucide-react';
+import { MessageCircleHeartIcon, VideoIcon, GridIcon, FileTextIcon } from 'lucide-react';
 import dynamic from 'next/dynamic';
 import Link from 'next/link';
 import React from 'react';
@@ -40,6 +40,10 @@ export default function PublishPage() {
     });
   }, []);
 
+  const handleArticleClick = () => {
+    window.open('https://md.multipost.app', '_blank');
+  };
+
   const tabs = [
     {
       id: 'dynamic',
@@ -58,6 +62,13 @@ export default function PublishPage() {
       label: t('tabs.grid'),
       icon: <GridIcon className="size-4" />,
       content: <GridTab />,
+    },
+    {
+      id: 'article',
+      label: t('tabs.article'),
+      icon: <FileTextIcon className="size-4" />,
+      content: null,
+      onClick: handleArticleClick,
     },
   ];
 
@@ -80,7 +91,9 @@ export default function PublishPage() {
               <Tab
                 key={tab.id}
                 title={
-                  <div className="flex items-center gap-2">
+                  <div
+                    className="flex items-center gap-2"
+                    onClick={tab.onClick}>
                     <p>{tab.icon}</p>
                     <p>{tab.label}</p>
                   </div>

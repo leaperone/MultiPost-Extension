@@ -2,7 +2,8 @@
   "tabs": {
     "dynamic": "Dynamic",
     "video": "Video",
-    "grid": "Grid"
+    "grid": "Grid",
+    "article": "Article"
   },
   "contact": {
     "message": "If your platform is not listed, please contact us via email at",
