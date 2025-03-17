@@ -8,8 +8,8 @@ import { Suspense } from 'react';
 import { HomeIcon } from 'lucide-react';
 
 export const metadata: Metadata = {
-  title: '2SOMEone',
-  description: 'All in one.',
+  title: 'Sign In | MultiPost',
+  description: 'MultiPost Sign In',
 };
 
 export default function RootLayout({

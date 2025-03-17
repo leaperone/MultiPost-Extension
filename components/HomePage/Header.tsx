@@ -3,6 +3,7 @@ import { Navbar, NavbarBrand, NavbarContent, NavbarItem, Link, Image } from '@he
 import { HomePageNavigationMenu } from '@/components/HomePage/NavigationMenu';
 import { ThemeSwitcher } from '../ThemeSwitcher';
 import LanguageSwitcher from '../LanguageSwitcher';
+import SignInButton from '../SignInButton';
 
 export default function HomePageHeader() {
   return (
@@ -28,7 +29,7 @@ export default function HomePageHeader() {
           <LanguageSwitcher />
         </NavbarItem>
         <NavbarItem>
-          {/* <SignInButton /> */}
+          <SignInButton />
         </NavbarItem>
       </NavbarContent>
     </Navbar>
