@@ -1,12 +1,12 @@
 generator client {
   provider      = "prisma-client-js"
-  output        = "./client_template"
+  output        = "./client_multipost"
   binaryTargets = ["native", "darwin-arm64"]
 }
 
 datasource db {
   provider = "postgresql"
-  url      = env("TEMPLATE_DATABASE_URL")
+  url      = env("MULTIPOST_DATABASE_URL")
 }
 
 model User {

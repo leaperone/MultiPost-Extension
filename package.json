@@ -1,6 +1,6 @@
 {
-  "name": "nextjs-i18n-prisma-authjs-tailwindcss-template",
-  "version": "3.3.54",
+  "name": "multipost",
+  "version": "1.0.0",
   "private": true,
   "scripts": {
     "preinstall": "npx only-allow pnpm",

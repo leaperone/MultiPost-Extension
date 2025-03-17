@@ -7,4 +7,4 @@ if [ $# -eq 0 ]; then
 fi
 
 # 使用提供的参数作为迁移名称
-pnpm prisma migrate dev --schema prisma/schema_template.prisma --name "$1"
+pnpm prisma migrate dev --schema prisma/schema_multipost.prisma --name "$1"

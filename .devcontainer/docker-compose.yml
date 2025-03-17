@@ -1,0 +1,20 @@
+services:
+
+  multipost-db:
+    image: bitnami/postgresql:15
+    restart: always
+    environment:
+      - POSTGRESQL_USERNAME=leaperone
+      - POSTGRESQL_PASSWORD=password
+      - POSTGRESQL_DATABASE=multipost_db
+      - POSTGRESQL_POSTGRES_PASSWORD=password
+      - POSTGRESQL_TIMEZONE=Asia/Shanghai
+      - POSTGRESQL_LOG_TIMEZONE=Asia/Shanghai
+    volumes:
+      - multipost-postgres-data:/bitnami/postgresql
+    ports:
+      - "35432:5432"
+
+volumes:
+  multipost-postgres-data:
+    driver: local
