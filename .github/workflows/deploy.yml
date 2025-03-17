@@ -1,13 +1,46 @@
-name: deploy website on vercel
+name: Trigger Deploy
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+    inputs:
+      ref:
+        description: '部署的分支或标签'
+        required: true
+        default: 'main'
+      message:
+        description: '部署说明'
+        required: false
+        default: '手动触发部署'
+      author:
+        description: '触发者'
+        required: false
+        default: 'manual trigger'
 
 jobs:
-  deploy:
+  trigger:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
-      - uses: amondnet/vercel-action@v25
+      - name: Get first line of commit message
+        id: commit
+        run: |
+          # 限制输入消息的长度为72个字符
+          input_message=$(echo "${{ inputs.message }}" | cut -c 1-72)
+          commit_message=$(echo "${{ github.event.head_commit.message }}" | cut -c 1-72)
+          message="${commit_message:-$input_message}"
+          first_line=$(echo "$message" | sed -n '1p' | sed 's/["\]/\\&/g')
+          echo "first_line=${first_line}" >> $GITHUB_OUTPUT
+
+      - name: Repository Dispatch
+        uses: peter-evans/repository-dispatch@v3
         with:
-          vercel-token: ${{ secrets.VERCEL_TOKEN }}
-          vercel-org-id: ${{ secrets.ORG_ID}}
-          vercel-project-id: ${{ secrets.PROJECT_ID}}
-          vercel-args: "--prod"
+          token: ${{ secrets.ACCESS_TOKEN }}
+          repository: leaper-one/leaperone-release
+          event-type: deploy-multipost
+          client-payload: '{
+            "ref": "${{ github.ref_name }}",
+            "message": "${{ steps.commit.outputs.first_line }}",
+            "author": "${{ github.actor || inputs.author }}"
+          }'
