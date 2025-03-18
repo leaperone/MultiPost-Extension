@@ -73,26 +73,23 @@ export async function DynamicOkjike(data: SyncData) {
 
   // 填写内容
   async function fillContent() {
-    const textarea = (await waitForElement('textarea[placeholder="分享你的想法..."]')) as HTMLTextAreaElement;
-    if (textarea) {
-      // 如果有标题，将标题和内容拼接
-      const fullContent = title ? `${title}\n\n${content}` : content;
-      textarea.value = fullContent;
-      textarea.dispatchEvent(new Event('input', { bubbles: true }));
-      await new Promise((resolve) => setTimeout(resolve, 500));
-    }
-
-    // 处理话题
-    // if (extra?.jike?.topic) {
-    //   await handleTopicSelection(extra.jike.topic);
-    // }
+    const inputElement = (await waitForElement('div[contenteditable="true"][role="textbox"]')) as HTMLDivElement;
+    const fullContent = `${title}\n${content}`;
+    const pasteEvent = new ClipboardEvent('paste', {
+      bubbles: true,
+      cancelable: true,
+      clipboardData: new DataTransfer(),
+    });
+    pasteEvent.clipboardData.setData('text/plain', fullContent);
+    inputElement.focus();
+    inputElement.dispatchEvent(pasteEvent);
   }
 
   // 修改文件上传函数
   async function uploadFiles() {
     let fileInput: HTMLInputElement | null = null;
 
-    fileInput = document.querySelector('input[type="file"][accept="image/*"]');
+    fileInput = document.querySelector('input[type="file"]');
 
     if (!fileInput) {
       console.error('未找到文件输入元素');
@@ -135,7 +132,7 @@ export async function DynamicOkjike(data: SyncData) {
       await new Promise((resolve) => setTimeout(resolve, 3000));
       const buttons = document.querySelectorAll('button');
       const publishButton = Array.from(buttons).find(
-        (button) => button.textContent?.includes('发布'),
+        (button) => button.textContent?.includes('发送'),
       ) as HTMLButtonElement;
 
       if (publishButton) {
