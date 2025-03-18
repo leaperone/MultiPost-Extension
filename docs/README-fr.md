@@ -6,7 +6,7 @@
 
 [English](../README.md) | [中文](README-zh.md) | [日本語](README-jp.md) | [Français](README-fr.md) | [한국어](README-kr.md)
 
-> Une extension de navigateur qui permet aux utilisateurs de publier du contenu sur plusieurs plateformes de médias sociaux en un seul clic
+> Une extension de navigateur qui aide les utilisateurs à publier du contenu sur plusieurs plateformes de médias sociaux en un seul clic
 
 </div>
 
@@ -14,7 +14,7 @@
 
 ## Pour commencer
 - [multipost.app](https://multipost.app) - Site officiel
-- [Éditeur d'articles MultiPost](https://md.multipost.app/) - Éditeur en ligne pour créer et publier du contenu sur plusieurs plateformes
+- [Éditeur d'articles MultiPost](https://md.multipost.app/) - [(Dépôt)](https://github.com/leaper-one/multipost-wechat-markdown-editor) - Éditeur en ligne pour créer et publier du contenu sur plusieurs plateformes
 - [Extension Chrome - ![Chrome Web Store Version Version du Chrome Web Store](https://img.shields.io/chrome-web-store/v/dhohkaclnjgcikfoaacfgijgjgceofih)](https://chromewebstore.google.com/detail/multipost/dhohkaclnjgcikfoaacfgijgjgceofih) ![Chrome Web Store Users Utilisateurs du Chrome Web Store](https://img.shields.io/chrome-web-store/users/dhohkaclnjgcikfoaacfgijgjgceofih) ![Chrome Web Store Last Updated](https://img.shields.io/chrome-web-store/last-updated/dhohkaclnjgcikfoaacfgijgjgceofih)
 - [Extension Edge - ![](https://img.shields.io/badge/dynamic/json?label=edge%20add-on&prefix=v&query=%24.version&url=https%3A%2F%2Fmicrosoftedge.microsoft.com%2Faddons%2Fgetproductdetailsbycrxid%2Fckoiphiceimehjkolnfffgbmihoppgjg)](https://microsoftedge.microsoft.com/addons/detail/multipost/ckoiphiceimehjkolnfffgbmihoppgjg) [![](https://img.shields.io/badge/dynamic/json?label=users&query=%24.activeInstallCount&url=https%3A%2F%2Fmicrosoftedge.microsoft.com%2Faddons%2Fgetproductdetailsbycrxid%2Fckoiphiceimehjkolnfffgbmihoppgjg)](https://microsoftedge.microsoft.com/addons/detail/multipost/ckoiphiceimehjkolnfffgbmihoppgjg)
 
