@@ -19,11 +19,13 @@ model User {
   sessions      Session[]
   // Optional for WebAuthn support
   Authenticator Authenticator[]
- 
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  reports       Report[]
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  Website   Website[]
 }
- 
+
 model Account {
   userId            String
   type              String
@@ -36,33 +38,33 @@ model Account {
   scope             String?
   id_token          String?
   session_state     String?
- 
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
- 
+
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
- 
+
   @@id([provider, providerAccountId])
 }
- 
+
 model Session {
   sessionToken String   @unique
   userId       String
   expires      DateTime
   user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
- 
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
- 
+
 model VerificationToken {
   identifier String
   token      String
   expires    DateTime
- 
+
   @@id([identifier, token])
 }
- 
+
 // Optional for WebAuthn support
 model Authenticator {
   credentialID         String  @unique
@@ -73,8 +75,157 @@ model Authenticator {
   credentialDeviceType String
   credentialBackedUp   Boolean
   transports           String?
- 
+
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
- 
+
   @@id([userId, credentialID])
+}
+
+model Website {
+  id        String    @id @unique @default(cuid())
+  name      String    @db.VarChar(100)
+  domain    String?   @db.VarChar(500)
+  shareId   String?   @unique @db.VarChar(50)
+  resetAt   DateTime?
+  userId    String    @db.VarChar(50)
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  eventData   EventData[]
+  report      Report[]
+  sessionData SessionData[]
+  User        User          @relation(fields: [userId], references: [id])
+
+  @@index([userId])
+  @@index([createdAt])
+  @@index([shareId])
+}
+
+model WebsiteEvent {
+  id             String   @id() @default(cuid())
+  websiteId      String
+  sessionId      String
+  visitId        String
+  createdAt      DateTime @default(now())
+  urlPath        String   @db.VarChar(500)
+  urlQuery       String?  @db.VarChar(500)
+  referrerPath   String?  @db.VarChar(500)
+  referrerQuery  String?  @db.VarChar(500)
+  referrerDomain String?  @db.VarChar(500)
+  pageTitle      String?  @db.VarChar(500)
+  eventType      Int      @default(1) @db.Integer
+  eventName      String?  @db.VarChar(50)
+  tag            String?  @db.VarChar(50)
+
+  eventData EventData[]
+  session   VisitorSession @relation(fields: [sessionId], references: [id])
+
+  @@index([createdAt])
+  @@index([sessionId])
+  @@index([visitId])
+  @@index([websiteId])
+  @@index([websiteId, createdAt])
+  @@index([websiteId, createdAt, urlPath])
+  @@index([websiteId, createdAt, urlQuery])
+  @@index([websiteId, createdAt, referrerDomain])
+  @@index([websiteId, createdAt, pageTitle])
+  @@index([websiteId, createdAt, eventName])
+  @@index([websiteId, createdAt, tag])
+  @@index([websiteId, sessionId, createdAt])
+  @@index([websiteId, visitId, createdAt])
+}
+
+model EventData {
+  id             String    @id() @default(cuid())
+  websiteId      String
+  websiteEventId String
+  dataKey        String
+  stringValue    String?   @db.VarChar(500)
+  numberValue    Decimal?  @db.Decimal(19, 4)
+  dateValue      DateTime?
+  dataType       Int       @db.Integer
+  createdAt      DateTime  @default(now())
+
+  website      Website      @relation(fields: [websiteId], references: [id])
+  websiteEvent WebsiteEvent @relation(fields: [websiteEventId], references: [id])
+
+  @@index([createdAt])
+  @@index([websiteId])
+  @@index([websiteEventId])
+  @@index([websiteId, createdAt])
+  @@index([websiteId, createdAt, dataKey])
+}
+
+model VisitorSession {
+  id           String    @id @unique @default(cuid())
+  websiteId    String
+  hostname     String?   @db.VarChar(100)
+  browser      String?   @db.VarChar(20)
+  os           String?   @db.VarChar(20)
+  device       String?   @db.VarChar(20)
+  screen       String?   @db.VarChar(11)
+  language     String?   @db.VarChar(35)
+  country      String?   @db.Char(2)
+  subdivision1 String?   @db.VarChar(20)
+  subdivision2 String?   @db.VarChar(50)
+  city         String?   @db.VarChar(50)
+  createdAt    DateTime  @default(now())
+
+  websiteEvent WebsiteEvent[]
+  sessionData  SessionData[]
+
+  @@index([createdAt])
+  @@index([websiteId])
+  @@index([websiteId, createdAt])
+  @@index([websiteId, createdAt, hostname])
+  @@index([websiteId, createdAt, browser])
+  @@index([websiteId, createdAt, os])
+  @@index([websiteId, createdAt, device])
+  @@index([websiteId, createdAt, screen])
+  @@index([websiteId, createdAt, language])
+  @@index([websiteId, createdAt, country])
+  @@index([websiteId, createdAt, subdivision1])
+  @@index([websiteId, createdAt, city])
+}
+
+model SessionData {
+  id          String    @id() @default(cuid())
+  websiteId   String
+  sessionId   String
+  dataKey     String
+  stringValue String?   @db.VarChar(500)
+  numberValue Decimal?  @db.Decimal(19, 4)
+  dateValue   DateTime?
+  dataType    Int       @db.Integer
+  createdAt   DateTime  @default(now())
+
+  website Website        @relation(fields: [websiteId], references: [id])
+  session VisitorSession @relation(fields: [sessionId], references: [id])
+
+  @@index([createdAt])
+  @@index([websiteId])
+  @@index([sessionId])
+  @@index([sessionId, createdAt])
+  @@index([websiteId, createdAt, dataKey])
+}
+
+model Report {
+  id          String    @id() @unique() @default(cuid())
+  userId      String
+  websiteId   String
+  type        String    @db.VarChar(200)
+  name        String    @db.VarChar(200)
+  description String    @db.VarChar(500)
+  parameters  String    @db.VarChar(6000)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime? @updatedAt
+
+  user    User    @relation(fields: [userId], references: [id])
+  website Website @relation(fields: [websiteId], references: [id])
+
+  @@index([userId])
+  @@index([websiteId])
+  @@index([type])
+  @@index([name])
 }
