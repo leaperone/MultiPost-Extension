@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Multidata 跟踪测试</title>
+    <!-- 引入跟踪脚本 -->
+    <script
+        async
+        src="./index.js"
+        mdata-website-id="test-id"
+        mdata-host-url="http://localhost:3000"
+        mdata-auto-track="true"
+    ></script>
+</head>
+<body>
+    <!-- 测试点击事件跟踪 -->
+    <button mdata-multidata-event="test-button-click">
+        测试按钮点击
+    </button>
+
+    <!-- 测试链接点击跟踪 -->
+    <a href="/page2.html" mdata-multidata-event="test-link-click">
+        测试链接点击
+    </a>
+
+    <!-- 测试自定义事件属性 -->
+    <button 
+        mdata-multidata-event="custom-event"
+        mdata-multidata-event-category="test"
+        mdata-multidata-event-value="123"
+    >
+        测试自定义事件
+    </button>
+</body>
+</html>
