@@ -13,6 +13,7 @@ RUN apk update --no-cache && apk add --no-cache \
     pkgconfig
 COPY . /app
 WORKDIR /app
+RUN wget 'https://git.io/GeoLite2-City.mmdb' -O geo/GeoLite2-City.mmdb
 
 FROM base AS builder
 ENV NODE_OPTIONS="--max-old-space-size=8192"
@@ -41,5 +42,6 @@ COPY --from=builder /usr/share/zoneinfo/Asia/Shanghai /usr/share/zoneinfo/Asia/S
 COPY --from=builder /app/public ./public
 COPY --from=builder /app/.next/standalone ./
 COPY --from=builder /app/.next/static ./.next/static
+COPY --from=builder /app/geo ./geo
 EXPOSE 3000
 CMD [ "node", "server.js" ]
