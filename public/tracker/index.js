@@ -14,11 +14,11 @@
 
   if (!currentScript) return;
 
-  const dev = true;
   const _data = 'mdata-';
   const _false = 'false';
   const _true = 'true';
   const attr = currentScript.getAttribute.bind(currentScript);
+  const dev = attr(_data + 'dev') === _true;
   const website = attr(_data + 'website-id');
   const tag = attr(_data + 'tag');
   const autoTrack = attr(_data + 'auto-track') !== _false;
@@ -110,6 +110,7 @@
     document.addEventListener(
       'click',
       async (e) => {
+        console.log('click', e);
         const isSpecialTag = (tagName) => ['BUTTON', 'A'].includes(tagName);
 
         const trackElement = async (el) => {

@@ -1,5 +1,5 @@
 import { multipostDb } from '@/lib/db';
-import { Website } from '@prisma/client/client_multipost';
+import { Website } from '@/prisma/client_multipost';
 
 export async function getWebsite(websiteId: string): Promise<Website | null> {
   return await multipostDb.website.findUnique({
@@ -22,7 +22,7 @@ export async function getWebsiteByShareId(shareId: string): Promise<Website | nu
 export async function getUserWebsites(userId: string): Promise<Website[]> {
   return await multipostDb.website.findMany({
     where: {
-      OR: [{ userId }, { createdBy: userId }],
+      OR: [{ userId }],
       deletedAt: null,
     },
     orderBy: {
@@ -40,7 +40,6 @@ export async function createWebsite(data: {
   return await multipostDb.website.create({
     data: {
       ...data,
-      createdBy: data.userId,
     },
   });
 }
