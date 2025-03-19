@@ -34,6 +34,7 @@ export async function createSession(data: {
   subdivision1?: string;
   subdivision2?: string;
   city?: string;
+  ip?: string;
 }): Promise<VisitorSession> {
   return await multipostDb.visitorSession.create({
     data,

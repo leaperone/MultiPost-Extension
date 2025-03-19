@@ -40,6 +40,7 @@ interface CreateSessionData {
   subdivision1?: string;
   subdivision2?: string;
   city?: string;
+  ip?: string;
 }
 
 // 将 null 转换为 undefined 的辅助函数
@@ -149,6 +150,7 @@ export async function POST(request: Request) {
           subdivision1: nullToUndefined(subdivision1),
           subdivision2: nullToUndefined(subdivision2),
           city: nullToUndefined(city),
+          ip,
         };
         await createSession(sessionData);
       } catch (error) {

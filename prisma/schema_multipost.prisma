@@ -170,6 +170,7 @@ model VisitorSession {
   subdivision1 String?   @db.VarChar(20)
   subdivision2 String?   @db.VarChar(50)
   city         String?   @db.VarChar(50)
+  ip           String?   @db.VarChar(50)
   createdAt    DateTime  @default(now())
 
   websiteEvent WebsiteEvent[]
