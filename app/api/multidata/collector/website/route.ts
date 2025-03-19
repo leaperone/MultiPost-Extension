@@ -97,7 +97,7 @@ export async function POST(request: Request) {
     const cacheHeader = request.headers.get('x-multidata-cache');
 
     if (cacheHeader) {
-      const result = await parseToken(cacheHeader, secret());
+      const result = parseToken(cacheHeader, secret());
       if (result) {
         cache = result as Cache;
       }
