@@ -5,6 +5,7 @@ import { Toaster } from '@/components/ui/toaster';
 import { Toaster as Sonner } from '@/components/ui/sonner';
 import { GoogleAnalytics } from '@next/third-parties/google';
 import { getLocale } from '@/i18n/server';
+import Script from 'next/script';
 
 const inter = Inter({ subsets: ['latin'] });
 
@@ -30,6 +31,12 @@ export default function RootLayout({
         </Providers>
       </body>
       <GoogleAnalytics gaId={'G-6JJ7JNT2GY'} />
+      <Script
+        async
+        src="/tracker/index.js"
+        mdata-website-id="cm8g07ajo00014dtyl58l9p5r"
+        mdata-auto-track="true"
+      />
     </html>
   );
 }
