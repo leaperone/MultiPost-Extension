@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { AccessibilityIcon, GlobeLockIcon, Home, LayoutDashboardIcon, LogOut, PuzzleIcon, Settings } from 'lucide-react';
+import { AccessibilityIcon, Home, LayoutDashboardIcon, LogOut, PuzzleIcon, Settings } from 'lucide-react';
 
 import {
   Sidebar,
@@ -47,11 +47,11 @@ const getApplicationItems = (t: TranslationFunction): MenuItem[] => [
     url: '/publish',
     icon: AccessibilityIcon,
   },
-  {
-    title: "WebTrace",
-    url: "/dashboard/webtrace",
-    icon: GlobeLockIcon,
-  }
+  // {
+  //   title: "WebTrace",
+  //   url: "/dashboard/webtrace",
+  //   icon: GlobeLockIcon,
+  // }
 ];
 
 const getSidebarFooterItems = (t: TranslationFunction): MenuItem[] => [

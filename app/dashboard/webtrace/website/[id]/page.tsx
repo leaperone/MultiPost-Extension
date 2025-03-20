@@ -1,6 +1,5 @@
-import { auth } from '@/auth';
 import { multipostDb } from '@/lib/db';
-import { notFound, redirect } from 'next/navigation';
+import { notFound } from 'next/navigation';
 import { Card, CardBody, CardHeader } from '@heroui/react';
 import { Globe, Clock, Users, Eye } from 'lucide-react';
 import { StatsCard } from './components/StatsCard';
@@ -15,15 +14,15 @@ interface WebsitePageProps {
 }
 
 export default async function WebsitePage({ params }: WebsitePageProps) {
-  const session = await auth();
-  if (!session?.user?.id) {
-    redirect('/signin');
-  }
+  // const session = await auth();
+  // if (!session?.user?.id) {
+  //   redirect('/signin');
+  // }
 
   const website = await multipostDb.website.findFirst({
     where: {
       id: params.id,
-      userId: session.user.id,
+      // userId: session.user.id,
       deletedAt: null,
     },
   });
