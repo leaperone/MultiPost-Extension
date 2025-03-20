@@ -48,3 +48,5 @@ docker/docker-compose.yml
 prisma/client*
 
 geo/*.mmdb
+
+public/tracker/

@@ -295,10 +295,10 @@ importers:
         version: 15.4.0(i18next@24.2.2(typescript@5.7.3))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       react-masonry-component2:
         specifier: ^1.0.10
-        version: 1.0.10(@babel/plugin-syntax-flow@7.26.0(@babel/core@7.26.7))(@babel/plugin-transform-react-jsx@7.25.9(@babel/core@7.26.7))(@types/babel__core@7.20.5)(eslint@8.57.1)(type-fest@4.37.0)
+        version: 1.0.10(@babel/plugin-syntax-flow@7.26.0(@babel/core@7.26.7))(@babel/plugin-transform-react-jsx@7.25.9(@babel/core@7.26.7))(@types/babel__core@7.20.5)(eslint@8.57.1)(type-fest@4.37.0)(uglify-js@3.19.3)
       react-office-viewer:
         specifier: ^1.0.4
-        version: 1.0.4(worker-loader@3.0.8(webpack@5.97.1))
+        version: 1.0.4(worker-loader@3.0.8(webpack@5.97.1(uglify-js@3.19.3)))
       react-player:
         specifier: ^2.16.0
         version: 2.16.0(react@18.3.1)
@@ -456,6 +456,9 @@ importers:
       typescript:
         specifier: ^5.7.3
         version: 5.7.3
+      uglify-js:
+        specifier: ^3.19.3
+        version: 3.19.3
 
 packages:
 
@@ -14261,7 +14264,7 @@ snapshots:
   '@pkgjs/parseargs@0.11.0':
     optional: true
 
-  '@pmmmwh/react-refresh-webpack-plugin@0.5.15(react-refresh@0.11.0)(type-fest@4.37.0)(webpack-dev-server@4.15.2(webpack@5.97.1))(webpack@5.97.1)':
+  '@pmmmwh/react-refresh-webpack-plugin@0.5.15(react-refresh@0.11.0)(type-fest@4.37.0)(webpack-dev-server@4.15.2(webpack@5.97.1(uglify-js@3.19.3)))(webpack@5.97.1(uglify-js@3.19.3))':
     dependencies:
       ansi-html: 0.0.9
       core-js-pure: 3.40.0
@@ -14271,10 +14274,10 @@ snapshots:
       react-refresh: 0.11.0
       schema-utils: 4.3.0
       source-map: 0.7.4
-      webpack: 5.97.1
+      webpack: 5.97.1(uglify-js@3.19.3)
     optionalDependencies:
       type-fest: 4.37.0
-      webpack-dev-server: 4.15.2(webpack@5.97.1)
+      webpack-dev-server: 4.15.2(webpack@5.97.1(uglify-js@3.19.3))
 
   '@popperjs/core@2.11.8': {}
 
@@ -17927,14 +17930,14 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  babel-loader@8.4.1(@babel/core@7.26.7)(webpack@5.97.1):
+  babel-loader@8.4.1(@babel/core@7.26.7)(webpack@5.97.1(uglify-js@3.19.3)):
     dependencies:
       '@babel/core': 7.26.7
       find-cache-dir: 3.3.2
       loader-utils: 2.0.4
       make-dir: 3.1.0
       schema-utils: 2.7.1
-      webpack: 5.97.1
+      webpack: 5.97.1(uglify-js@3.19.3)
 
   babel-plugin-istanbul@6.1.1:
     dependencies:
@@ -18597,7 +18600,7 @@ snapshots:
     dependencies:
       utrie: 1.0.2
 
-  css-loader@6.11.0(webpack@5.97.1):
+  css-loader@6.11.0(webpack@5.97.1(uglify-js@3.19.3)):
     dependencies:
       icss-utils: 5.1.0(postcss@8.5.1)
       postcss: 8.5.1
@@ -18608,11 +18611,11 @@ snapshots:
       postcss-value-parser: 4.2.0
       semver: 7.7.1
     optionalDependencies:
-      webpack: 5.97.1
+      webpack: 5.97.1(uglify-js@3.19.3)
 
   css-mediaquery@0.1.2: {}
 
-  css-minimizer-webpack-plugin@3.4.1(webpack@5.97.1):
+  css-minimizer-webpack-plugin@3.4.1(webpack@5.97.1(uglify-js@3.19.3)):
     dependencies:
       cssnano: 5.1.15(postcss@8.5.1)
       jest-worker: 27.5.1
@@ -18620,7 +18623,7 @@ snapshots:
       schema-utils: 4.3.0
       serialize-javascript: 6.0.2
       source-map: 0.6.1
-      webpack: 5.97.1
+      webpack: 5.97.1(uglify-js@3.19.3)
 
   css-prefers-color-scheme@6.0.3(postcss@8.5.1):
     dependencies:
@@ -19388,7 +19391,7 @@ snapshots:
 
   eslint-visitor-keys@3.4.3: {}
 
-  eslint-webpack-plugin@3.2.0(eslint@8.57.1)(webpack@5.97.1):
+  eslint-webpack-plugin@3.2.0(eslint@8.57.1)(webpack@5.97.1(uglify-js@3.19.3)):
     dependencies:
       '@types/eslint': 8.56.12
       eslint: 8.57.1
@@ -19396,7 +19399,7 @@ snapshots:
       micromatch: 4.0.8
       normalize-path: 3.0.0
       schema-utils: 4.3.0
-      webpack: 5.97.1
+      webpack: 5.97.1(uglify-js@3.19.3)
 
   eslint@8.57.1:
     dependencies:
@@ -19604,11 +19607,11 @@ snapshots:
     dependencies:
       flat-cache: 3.2.0
 
-  file-loader@6.2.0(webpack@5.97.1):
+  file-loader@6.2.0(webpack@5.97.1(uglify-js@3.19.3)):
     dependencies:
       loader-utils: 2.0.4
       schema-utils: 3.3.0
-      webpack: 5.97.1
+      webpack: 5.97.1(uglify-js@3.19.3)
 
   file-saver@2.0.5: {}
 
@@ -19693,7 +19696,7 @@ snapshots:
       cross-spawn: 7.0.6
       signal-exit: 4.1.0
 
-  fork-ts-checker-webpack-plugin@6.5.3(eslint@8.57.1)(typescript@4.9.5)(webpack@5.97.1):
+  fork-ts-checker-webpack-plugin@6.5.3(eslint@8.57.1)(typescript@4.9.5)(webpack@5.97.1(uglify-js@3.19.3)):
     dependencies:
       '@babel/code-frame': 7.26.2
       '@types/json-schema': 7.0.15
@@ -19709,7 +19712,7 @@ snapshots:
       semver: 7.7.1
       tapable: 1.1.3
       typescript: 4.9.5
-      webpack: 5.97.1
+      webpack: 5.97.1(uglify-js@3.19.3)
     optionalDependencies:
       eslint: 8.57.1
 
@@ -20031,7 +20034,7 @@ snapshots:
 
   html-tags@3.3.1: {}
 
-  html-webpack-plugin@5.6.3(webpack@5.97.1):
+  html-webpack-plugin@5.6.3(webpack@5.97.1(uglify-js@3.19.3)):
     dependencies:
       '@types/html-minifier-terser': 6.1.0
       html-minifier-terser: 6.1.0
@@ -20039,7 +20042,7 @@ snapshots:
       pretty-error: 4.0.0
       tapable: 2.2.1
     optionalDependencies:
-      webpack: 5.97.1
+      webpack: 5.97.1(uglify-js@3.19.3)
 
   html2canvas@1.4.1:
     dependencies:
@@ -21381,11 +21384,11 @@ snapshots:
 
   min-indent@1.0.1: {}
 
-  mini-css-extract-plugin@2.9.2(webpack@5.97.1):
+  mini-css-extract-plugin@2.9.2(webpack@5.97.1(uglify-js@3.19.3)):
     dependencies:
       schema-utils: 4.3.0
       tapable: 2.2.1
-      webpack: 5.97.1
+      webpack: 5.97.1(uglify-js@3.19.3)
 
   mini-svg-data-uri@1.4.4: {}
 
@@ -21788,9 +21791,9 @@ snapshots:
 
   path-type@4.0.0: {}
 
-  pdfjs-dist@2.10.377(worker-loader@3.0.8(webpack@5.97.1)):
+  pdfjs-dist@2.10.377(worker-loader@3.0.8(webpack@5.97.1(uglify-js@3.19.3))):
     dependencies:
-      worker-loader: 3.0.8(webpack@5.97.1)
+      worker-loader: 3.0.8(webpack@5.97.1(uglify-js@3.19.3))
 
   performance-now@2.1.0: {}
 
@@ -21973,13 +21976,13 @@ snapshots:
     optionalDependencies:
       postcss: 8.5.1
 
-  postcss-loader@6.2.1(postcss@8.5.1)(webpack@5.97.1):
+  postcss-loader@6.2.1(postcss@8.5.1)(webpack@5.97.1(uglify-js@3.19.3)):
     dependencies:
       cosmiconfig: 7.1.0
       klona: 2.0.6
       postcss: 8.5.1
       semver: 7.7.1
-      webpack: 5.97.1
+      webpack: 5.97.1(uglify-js@3.19.3)
 
   postcss-logical@5.0.4(postcss@8.5.1):
     dependencies:
@@ -22520,7 +22523,7 @@ snapshots:
       date-fns-jalali: 4.1.0-0
       react: 18.3.1
 
-  react-dev-utils@12.0.1(eslint@8.57.1)(typescript@4.9.5)(webpack@5.97.1):
+  react-dev-utils@12.0.1(eslint@8.57.1)(typescript@4.9.5)(webpack@5.97.1(uglify-js@3.19.3)):
     dependencies:
       '@babel/code-frame': 7.26.2
       address: 1.2.2
@@ -22531,7 +22534,7 @@ snapshots:
       escape-string-regexp: 4.0.0
       filesize: 8.0.7
       find-up: 5.0.0
-      fork-ts-checker-webpack-plugin: 6.5.3(eslint@8.57.1)(typescript@4.9.5)(webpack@5.97.1)
+      fork-ts-checker-webpack-plugin: 6.5.3(eslint@8.57.1)(typescript@4.9.5)(webpack@5.97.1(uglify-js@3.19.3))
       global-modules: 2.0.0
       globby: 11.1.0
       gzip-size: 6.0.0
@@ -22546,7 +22549,7 @@ snapshots:
       shell-quote: 1.8.2
       strip-ansi: 6.0.1
       text-table: 0.2.0
-      webpack: 5.97.1
+      webpack: 5.97.1(uglify-js@3.19.3)
     optionalDependencies:
       typescript: 4.9.5
     transitivePeerDependencies:
@@ -22637,14 +22640,14 @@ snapshots:
 
   react-is@18.3.1: {}
 
-  react-masonry-component2@1.0.10(@babel/plugin-syntax-flow@7.26.0(@babel/core@7.26.7))(@babel/plugin-transform-react-jsx@7.25.9(@babel/core@7.26.7))(@types/babel__core@7.20.5)(eslint@8.57.1)(type-fest@4.37.0):
+  react-masonry-component2@1.0.10(@babel/plugin-syntax-flow@7.26.0(@babel/core@7.26.7))(@babel/plugin-transform-react-jsx@7.25.9(@babel/core@7.26.7))(@types/babel__core@7.20.5)(eslint@8.57.1)(type-fest@4.37.0)(uglify-js@3.19.3):
     dependencies:
       classnames: 2.5.1
       lodash-es: 4.17.21
       react: 18.3.1
       react-dom: 18.3.1(react@18.3.1)
       react-intersection-observer: 9.15.1(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
-      react-scripts: 5.0.1(@babel/plugin-syntax-flow@7.26.0(@babel/core@7.26.7))(@babel/plugin-transform-react-jsx@7.25.9(@babel/core@7.26.7))(@types/babel__core@7.20.5)(eslint@8.57.1)(react@18.3.1)(type-fest@4.37.0)(typescript@4.9.5)
+      react-scripts: 5.0.1(@babel/plugin-syntax-flow@7.26.0(@babel/core@7.26.7))(@babel/plugin-transform-react-jsx@7.25.9(@babel/core@7.26.7))(@types/babel__core@7.20.5)(eslint@8.57.1)(react@18.3.1)(type-fest@4.37.0)(typescript@4.9.5)(uglify-js@3.19.3)
       typescript: 4.9.5
       web-vitals: 2.1.4
     transitivePeerDependencies:
@@ -22682,7 +22685,7 @@ snapshots:
       - webpack-hot-middleware
       - webpack-plugin-serve
 
-  react-office-viewer@1.0.4(worker-loader@3.0.8(webpack@5.97.1)):
+  react-office-viewer@1.0.4(worker-loader@3.0.8(webpack@5.97.1(uglify-js@3.19.3))):
     dependencies:
       '@handsontable/react': 12.4.0(handsontable@12.4.0)
       '@yiiran/get-file-type': 1.0.3
@@ -22690,7 +22693,7 @@ snapshots:
       i18next: 21.10.0
       i18next-browser-languagedetector: 6.1.8
       mammoth: 1.9.0
-      pdfjs-dist: 2.10.377(worker-loader@3.0.8(webpack@5.97.1))
+      pdfjs-dist: 2.10.377(worker-loader@3.0.8(webpack@5.97.1(uglify-js@3.19.3)))
       react: 16.14.0
       react-dom: 16.14.0(react@16.14.0)
       react-i18next: 11.18.6(i18next@21.10.0)(react-dom@16.14.0(react@16.14.0))(react@16.14.0)
@@ -22755,56 +22758,56 @@ snapshots:
       react: 18.3.1
       react-dom: 18.3.1(react@18.3.1)
 
-  react-scripts@5.0.1(@babel/plugin-syntax-flow@7.26.0(@babel/core@7.26.7))(@babel/plugin-transform-react-jsx@7.25.9(@babel/core@7.26.7))(@types/babel__core@7.20.5)(eslint@8.57.1)(react@18.3.1)(type-fest@4.37.0)(typescript@4.9.5):
+  react-scripts@5.0.1(@babel/plugin-syntax-flow@7.26.0(@babel/core@7.26.7))(@babel/plugin-transform-react-jsx@7.25.9(@babel/core@7.26.7))(@types/babel__core@7.20.5)(eslint@8.57.1)(react@18.3.1)(type-fest@4.37.0)(typescript@4.9.5)(uglify-js@3.19.3):
     dependencies:
       '@babel/core': 7.26.7
-      '@pmmmwh/react-refresh-webpack-plugin': 0.5.15(react-refresh@0.11.0)(type-fest@4.37.0)(webpack-dev-server@4.15.2(webpack@5.97.1))(webpack@5.97.1)
+      '@pmmmwh/react-refresh-webpack-plugin': 0.5.15(react-refresh@0.11.0)(type-fest@4.37.0)(webpack-dev-server@4.15.2(webpack@5.97.1(uglify-js@3.19.3)))(webpack@5.97.1(uglify-js@3.19.3))
       '@svgr/webpack': 5.5.0
       babel-jest: 27.5.1(@babel/core@7.26.7)
-      babel-loader: 8.4.1(@babel/core@7.26.7)(webpack@5.97.1)
+      babel-loader: 8.4.1(@babel/core@7.26.7)(webpack@5.97.1(uglify-js@3.19.3))
       babel-plugin-named-asset-import: 0.3.8(@babel/core@7.26.7)
       babel-preset-react-app: 10.0.1
       bfj: 7.1.0
       browserslist: 4.24.4
       camelcase: 6.3.0
       case-sensitive-paths-webpack-plugin: 2.4.0
-      css-loader: 6.11.0(webpack@5.97.1)
-      css-minimizer-webpack-plugin: 3.4.1(webpack@5.97.1)
+      css-loader: 6.11.0(webpack@5.97.1(uglify-js@3.19.3))
+      css-minimizer-webpack-plugin: 3.4.1(webpack@5.97.1(uglify-js@3.19.3))
       dotenv: 10.0.0
       dotenv-expand: 5.1.0
       eslint: 8.57.1
       eslint-config-react-app: 7.0.1(@babel/plugin-syntax-flow@7.26.0(@babel/core@7.26.7))(@babel/plugin-transform-react-jsx@7.25.9(@babel/core@7.26.7))(eslint@8.57.1)(jest@27.5.1)(typescript@4.9.5)
-      eslint-webpack-plugin: 3.2.0(eslint@8.57.1)(webpack@5.97.1)
-      file-loader: 6.2.0(webpack@5.97.1)
+      eslint-webpack-plugin: 3.2.0(eslint@8.57.1)(webpack@5.97.1(uglify-js@3.19.3))
+      file-loader: 6.2.0(webpack@5.97.1(uglify-js@3.19.3))
       fs-extra: 10.1.0
-      html-webpack-plugin: 5.6.3(webpack@5.97.1)
+      html-webpack-plugin: 5.6.3(webpack@5.97.1(uglify-js@3.19.3))
       identity-obj-proxy: 3.0.0
       jest: 27.5.1
       jest-resolve: 27.5.1
       jest-watch-typeahead: 1.1.0(jest@27.5.1)
-      mini-css-extract-plugin: 2.9.2(webpack@5.97.1)
+      mini-css-extract-plugin: 2.9.2(webpack@5.97.1(uglify-js@3.19.3))
       postcss: 8.5.1
       postcss-flexbugs-fixes: 5.0.2(postcss@8.5.1)
-      postcss-loader: 6.2.1(postcss@8.5.1)(webpack@5.97.1)
+      postcss-loader: 6.2.1(postcss@8.5.1)(webpack@5.97.1(uglify-js@3.19.3))
       postcss-normalize: 10.0.1(browserslist@4.24.4)(postcss@8.5.1)
       postcss-preset-env: 7.8.3(postcss@8.5.1)
       prompts: 2.4.2
       react: 18.3.1
       react-app-polyfill: 3.0.0
-      react-dev-utils: 12.0.1(eslint@8.57.1)(typescript@4.9.5)(webpack@5.97.1)
+      react-dev-utils: 12.0.1(eslint@8.57.1)(typescript@4.9.5)(webpack@5.97.1(uglify-js@3.19.3))
       react-refresh: 0.11.0
       resolve: 1.22.10
       resolve-url-loader: 4.0.0
-      sass-loader: 12.6.0(webpack@5.97.1)
+      sass-loader: 12.6.0(webpack@5.97.1(uglify-js@3.19.3))
       semver: 7.7.1
-      source-map-loader: 3.0.2(webpack@5.97.1)
-      style-loader: 3.3.4(webpack@5.97.1)
+      source-map-loader: 3.0.2(webpack@5.97.1(uglify-js@3.19.3))
+      style-loader: 3.3.4(webpack@5.97.1(uglify-js@3.19.3))
       tailwindcss: 3.4.17
-      terser-webpack-plugin: 5.3.11(webpack@5.97.1)
-      webpack: 5.97.1
-      webpack-dev-server: 4.15.2(webpack@5.97.1)
-      webpack-manifest-plugin: 4.1.1(webpack@5.97.1)
-      workbox-webpack-plugin: 6.6.0(@types/babel__core@7.20.5)(webpack@5.97.1)
+      terser-webpack-plugin: 5.3.11(uglify-js@3.19.3)(webpack@5.97.1(uglify-js@3.19.3))
+      webpack: 5.97.1(uglify-js@3.19.3)
+      webpack-dev-server: 4.15.2(webpack@5.97.1(uglify-js@3.19.3))
+      webpack-manifest-plugin: 4.1.1(webpack@5.97.1(uglify-js@3.19.3))
+      workbox-webpack-plugin: 6.6.0(@types/babel__core@7.20.5)(webpack@5.97.1(uglify-js@3.19.3))
     optionalDependencies:
       fsevents: 2.3.3
       typescript: 4.9.5
@@ -23098,11 +23101,11 @@ snapshots:
 
   sanitize.css@13.0.0: {}
 
-  sass-loader@12.6.0(webpack@5.97.1):
+  sass-loader@12.6.0(webpack@5.97.1(uglify-js@3.19.3)):
     dependencies:
       klona: 2.0.6
       neo-async: 2.6.2
-      webpack: 5.97.1
+      webpack: 5.97.1(uglify-js@3.19.3)
 
   sax@1.2.4: {}
 
@@ -23331,12 +23334,12 @@ snapshots:
 
   source-map-js@1.2.1: {}
 
-  source-map-loader@3.0.2(webpack@5.97.1):
+  source-map-loader@3.0.2(webpack@5.97.1(uglify-js@3.19.3)):
     dependencies:
       abab: 2.0.6
       iconv-lite: 0.6.3
       source-map-js: 1.2.1
-      webpack: 5.97.1
+      webpack: 5.97.1(uglify-js@3.19.3)
 
   source-map-support@0.5.21:
     dependencies:
@@ -23577,9 +23580,9 @@ snapshots:
 
   strnum@1.0.5: {}
 
-  style-loader@3.3.4(webpack@5.97.1):
+  style-loader@3.3.4(webpack@5.97.1(uglify-js@3.19.3)):
     dependencies:
-      webpack: 5.97.1
+      webpack: 5.97.1(uglify-js@3.19.3)
 
   styled-jsx@5.1.1(@babel/core@7.26.7)(react@18.3.1):
     dependencies:
@@ -23821,14 +23824,16 @@ snapshots:
       ansi-escapes: 4.3.2
       supports-hyperlinks: 2.3.0
 
-  terser-webpack-plugin@5.3.11(webpack@5.97.1):
+  terser-webpack-plugin@5.3.11(uglify-js@3.19.3)(webpack@5.97.1(uglify-js@3.19.3)):
     dependencies:
       '@jridgewell/trace-mapping': 0.3.25
       jest-worker: 27.5.1
       schema-utils: 4.3.0
       serialize-javascript: 6.0.2
       terser: 5.38.1
-      webpack: 5.97.1
+      webpack: 5.97.1(uglify-js@3.19.3)
+    optionalDependencies:
+      uglify-js: 3.19.3
 
   terser@5.38.1:
     dependencies:
@@ -24047,8 +24052,7 @@ snapshots:
 
   uc.micro@2.1.0: {}
 
-  uglify-js@3.19.3:
-    optional: true
+  uglify-js@3.19.3: {}
 
   unbox-primitive@1.1.0:
     dependencies:
@@ -24247,16 +24251,16 @@ snapshots:
 
   webidl-conversions@6.1.0: {}
 
-  webpack-dev-middleware@5.3.4(webpack@5.97.1):
+  webpack-dev-middleware@5.3.4(webpack@5.97.1(uglify-js@3.19.3)):
     dependencies:
       colorette: 2.0.20
       memfs: 3.5.3
       mime-types: 2.1.35
       range-parser: 1.2.1
       schema-utils: 4.3.0
-      webpack: 5.97.1
+      webpack: 5.97.1(uglify-js@3.19.3)
 
-  webpack-dev-server@4.15.2(webpack@5.97.1):
+  webpack-dev-server@4.15.2(webpack@5.97.1(uglify-js@3.19.3)):
     dependencies:
       '@types/bonjour': 3.5.13
       '@types/connect-history-api-fallback': 1.5.4
@@ -24286,20 +24290,20 @@ snapshots:
       serve-index: 1.9.1
       sockjs: 0.3.24
       spdy: 4.0.2
-      webpack-dev-middleware: 5.3.4(webpack@5.97.1)
+      webpack-dev-middleware: 5.3.4(webpack@5.97.1(uglify-js@3.19.3))
       ws: 8.18.0
     optionalDependencies:
-      webpack: 5.97.1
+      webpack: 5.97.1(uglify-js@3.19.3)
     transitivePeerDependencies:
       - bufferutil
       - debug
       - supports-color
       - utf-8-validate
 
-  webpack-manifest-plugin@4.1.1(webpack@5.97.1):
+  webpack-manifest-plugin@4.1.1(webpack@5.97.1(uglify-js@3.19.3)):
     dependencies:
       tapable: 2.2.1
-      webpack: 5.97.1
+      webpack: 5.97.1(uglify-js@3.19.3)
       webpack-sources: 2.3.1
 
   webpack-sources@1.4.3:
@@ -24314,7 +24318,7 @@ snapshots:
 
   webpack-sources@3.2.3: {}
 
-  webpack@5.97.1:
+  webpack@5.97.1(uglify-js@3.19.3):
     dependencies:
       '@types/eslint-scope': 3.7.7
       '@types/estree': 1.0.6
@@ -24336,7 +24340,7 @@ snapshots:
       neo-async: 2.6.2
       schema-utils: 3.3.0
       tapable: 2.2.1
-      terser-webpack-plugin: 5.3.11(webpack@5.97.1)
+      terser-webpack-plugin: 5.3.11(uglify-js@3.19.3)(webpack@5.97.1(uglify-js@3.19.3))
       watchpack: 2.4.2
       webpack-sources: 3.2.3
     transitivePeerDependencies:
@@ -24536,12 +24540,12 @@ snapshots:
 
   workbox-sw@6.6.0: {}
 
-  workbox-webpack-plugin@6.6.0(@types/babel__core@7.20.5)(webpack@5.97.1):
+  workbox-webpack-plugin@6.6.0(@types/babel__core@7.20.5)(webpack@5.97.1(uglify-js@3.19.3)):
     dependencies:
       fast-json-stable-stringify: 2.1.0
       pretty-bytes: 5.6.0
       upath: 1.2.0
-      webpack: 5.97.1
+      webpack: 5.97.1(uglify-js@3.19.3)
       webpack-sources: 1.4.3
       workbox-build: 6.6.0(@types/babel__core@7.20.5)
     transitivePeerDependencies:
@@ -24553,11 +24557,11 @@ snapshots:
       '@types/trusted-types': 2.0.7
       workbox-core: 6.6.0
 
-  worker-loader@3.0.8(webpack@5.97.1):
+  worker-loader@3.0.8(webpack@5.97.1(uglify-js@3.19.3)):
     dependencies:
       loader-utils: 2.0.4
       schema-utils: 3.3.0
-      webpack: 5.97.1
+      webpack: 5.97.1(uglify-js@3.19.3)
 
   wrap-ansi@7.0.0:
     dependencies:
