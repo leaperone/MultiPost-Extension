@@ -1,0 +1,19 @@
+{
+  "title": "设置",
+  "profile": {
+    "title": "个人资料",
+    "name": "姓名",
+    "email": "邮箱",
+    "created": "注册时间"
+  },
+  "preferences": {
+    "title": "偏好设置",
+    "language": "语言",
+    "theme": {
+      "title": "主题",
+      "light": "浅色",
+      "dark": "深色",
+      "system": "跟随系统"
+    }
+  }
+} 

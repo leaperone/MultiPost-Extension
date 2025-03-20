@@ -2,14 +2,16 @@ import React from 'react';
 import { signIn } from '@/auth';
 import { Button, Spacer } from '@heroui/react';
 import { Icon } from '@iconify/react/dist/iconify.js';
+import { createTranslation } from '@/i18n/server';
 // import { MailIcon } from 'lucide-react';
 
 const SigninPage = async ({ searchParams }: { searchParams: { redirect: string } }) => {
   const redirect = searchParams.redirect || '/dashboard';
+  const { t } = await createTranslation('auth');
 
   return (
     <div className="flex min-h-[40px] flex-col items-center gap-2 pb-2">
-      <h1 className="text-xl font-medium">Sign In</h1>
+      <h1 className="text-xl font-medium">{t('signin.title')}</h1>
       <Spacer y={4} />
 
       <form
@@ -26,7 +28,7 @@ const SigninPage = async ({ searchParams }: { searchParams: { redirect: string }
               className="size-6"
             />
           }>
-          Sign in with Github
+          {t('signin.github')}
         </Button>
       </form>
     </div>

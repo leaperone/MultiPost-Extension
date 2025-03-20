@@ -1,0 +1,23 @@
+{
+  "welcome": {
+    "title": "Welcome back, {{name}}",
+    "description": "Start using MultiPost to manage and publish your content!",
+    "publish": {
+      "title": "Publish Your First Content",
+      "description": "Start creating content and publish to multiple platforms with one click"
+    }
+  },
+  "sidebar": {
+    "basic": "Basic",
+    "application": "Application",
+    "menu": {
+      "home": "Home",
+      "dashboard": "Dashboard",
+      "publish": "Publish",
+      "extension": "Browser Extension",
+      "settings": "Settings",
+      "signout": "Sign Out"
+    },
+    "collapse": "Collapse Sidebar"
+  }
+}

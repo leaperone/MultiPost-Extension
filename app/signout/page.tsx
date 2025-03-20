@@ -1,13 +1,16 @@
 import React from 'react';
 import { signOut } from '@/auth';
-import { Card, CardHeader, CardBody, Button } from "@heroui/react";
+import { Card, CardHeader, CardBody, Button } from '@heroui/react';
+import { createTranslation } from '@/i18n/server';
 
 const SignoutPage = async () => {
+  const { t } = await createTranslation('auth');
+
   return (
     <div className="flex min-h-screen items-center justify-center bg-background">
       <Card className="w-full max-w-md">
         <CardHeader className="flex flex-col items-center pb-0">
-          <h2 className="text-2xl font-bold">Are you sure to sign out?</h2>
+          <h2 className="text-2xl font-bold">{t('signout.title')}</h2>
         </CardHeader>
         <CardBody>
           <form
@@ -19,7 +22,7 @@ const SignoutPage = async () => {
               type="submit"
               color="primary"
               fullWidth>
-              Sign out
+              {t('signout.confirm')}
             </Button>
           </form>
         </CardBody>

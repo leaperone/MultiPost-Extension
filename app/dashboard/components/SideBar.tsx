@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { AccessibilityIcon, Home, LayoutDashboardIcon, LogOut, PuzzleIcon, Settings } from 'lucide-react';
 
 import {
@@ -16,54 +17,67 @@ import { SidebarThemeSwitcher } from '../../../components/ThemeSwitcher';
 import MultiPostLogo from './Logo';
 import DashboardSiderBarTrigger from './Trigger';
 import { Tooltip } from '@heroui/react';
-// import TwoSomeOneLogo from '../../components/Dashboard/SiderBar/TwoSomeOneLogo';
-// import DashboardSiderBarTrigger from '../../components/Dashboard/SiderBar/Trigger';
+import { createTranslation } from '@/i18n/server';
+
+interface MenuItem {
+  title: string;
+  url: string;
+  icon: React.ComponentType;
+}
+
+type TranslationFunction = (key: string) => string;
 
 // Menu items.
-const items = [
+const getItems = (t: TranslationFunction): MenuItem[] => [
   {
-    title: 'Home',
+    title: t('sidebar.menu.home'),
     url: '/',
     icon: Home,
   },
   {
-    title: 'Dashboard',
+    title: t('sidebar.menu.dashboard'),
     url: '/dashboard',
     icon: LayoutDashboardIcon,
   },
 ];
 
-const applicationItems = [
+const getApplicationItems = (t: TranslationFunction): MenuItem[] => [
   {
-    title: 'Publish',
+    title: t('sidebar.menu.publish'),
     url: '/publish',
     icon: AccessibilityIcon,
   },
 ];
 
-const sidebarFooterItems = [
+const getSidebarFooterItems = (t: TranslationFunction): MenuItem[] => [
   // {
   //   title: 'Recharge',
   //   url: '/dashboard/recharge',
   //   icon: CreditCardIcon,
   // },
   {
-    title: 'Browser Extension',
+    title: t('sidebar.menu.extension'),
     url: '/extension',
     icon: PuzzleIcon,
   },
   {
-    title: 'Settings',
+    title: t('sidebar.menu.settings'),
     url: '/dashboard/settings',
     icon: Settings,
   },
   {
-    title: 'Sign Out',
+    title: t('sidebar.menu.signout'),
     url: '/signout',
     icon: LogOut,
-  }
+  },
 ];
+
 export async function DashboardSidebar() {
+  const { t } = await createTranslation('dashboard');
+  const items = getItems(t);
+  const applicationItems = getApplicationItems(t);
+  const sidebarFooterItems = getSidebarFooterItems(t);
+
   return (
     <Sidebar
       side="left"
@@ -79,7 +93,7 @@ export async function DashboardSidebar() {
 
       <SidebarContent>
         <SidebarGroup>
-          <SidebarGroupLabel>Basic</SidebarGroupLabel>
+          <SidebarGroupLabel>{t('sidebar.basic')}</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
               {items.map((item) => (
@@ -97,7 +111,7 @@ export async function DashboardSidebar() {
         </SidebarGroup>
 
         <SidebarGroup>
-          <SidebarGroupLabel>Application</SidebarGroupLabel>
+          <SidebarGroupLabel>{t('sidebar.application')}</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
               {applicationItems.map((item) => (

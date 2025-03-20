@@ -1,0 +1,19 @@
+{
+  "title": "Settings",
+  "profile": {
+    "title": "Profile",
+    "name": "Name",
+    "email": "Email",
+    "created": "Member since"
+  },
+  "preferences": {
+    "title": "Preferences",
+    "language": "Language",
+    "theme": {
+      "title": "Theme",
+      "light": "Light",
+      "dark": "Dark",
+      "system": "System"
+    }
+  }
+} 

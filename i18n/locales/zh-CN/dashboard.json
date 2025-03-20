@@ -1,0 +1,23 @@
+{
+  "welcome": {
+    "title": "欢迎回来，{{name}}",
+    "description": "开始使用 MultiPost 来管理和发布你的内容吧！",
+    "publish": {
+      "title": "发布你的第一篇内容",
+      "description": "开始创建内容，一键发布到多个平台"
+    }
+  },
+  "sidebar": {
+    "basic": "基础",
+    "application": "应用",
+    "menu": {
+      "home": "首页",
+      "dashboard": "仪表板",
+      "publish": "发布",
+      "extension": "浏览器扩展",
+      "settings": "设置",
+      "signout": "退出登录"
+    },
+    "collapse": "收起侧边栏"
+  }
+}
