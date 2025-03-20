@@ -1,8 +1,8 @@
 import { Metadata } from 'next';
 
 export const metadata: Metadata = {
-  title: 'Publish | MultiPost',
-  description: 'Publish content to multiple social media platforms with one click.',
+  title: 'On Install | MultiPost',
+  description: 'On install for MultiPost',
 };
 
 export default function OnInstallLayout({
