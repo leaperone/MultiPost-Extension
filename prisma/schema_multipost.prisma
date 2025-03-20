@@ -19,7 +19,6 @@ model User {
   sessions      Session[]
   // Optional for WebAuthn support
   Authenticator Authenticator[]
-  reports       Report[]
 
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
@@ -93,7 +92,6 @@ model Website {
   deletedAt DateTime?
 
   eventData   EventData[]
-  report      Report[]
   sessionData SessionData[]
   User        User          @relation(fields: [userId], references: [id])
 
@@ -209,24 +207,4 @@ model SessionData {
   @@index([sessionId])
   @@index([sessionId, createdAt])
   @@index([websiteId, createdAt, dataKey])
-}
-
-model Report {
-  id          String    @id() @unique() @default(cuid())
-  userId      String
-  websiteId   String
-  type        String    @db.VarChar(200)
-  name        String    @db.VarChar(200)
-  description String    @db.VarChar(500)
-  parameters  String    @db.VarChar(6000)
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime? @updatedAt
-
-  user    User    @relation(fields: [userId], references: [id])
-  website Website @relation(fields: [websiteId], references: [id])
-
-  @@index([userId])
-  @@index([websiteId])
-  @@index([type])
-  @@index([name])
 }
