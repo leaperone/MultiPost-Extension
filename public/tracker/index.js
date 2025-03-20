@@ -36,6 +36,29 @@
 
   /* Helper functions */
 
+  const isExternalLink = (href) => {
+    if (!href) return false;
+    try {
+      const url = new URL(href, window.location.href);
+      return url.hostname !== window.location.hostname;
+    } catch (e) {
+      return false;
+    }
+  };
+
+  const handleLinkInteraction = async (element) => {
+    if (element.tagName === 'A') {
+      const { href, textContent, target } = element;
+      if (href && isExternalLink(href)) {
+        return track('external_link', {
+          url: href,
+          text: textContent.trim(),
+          target,
+        });
+      }
+    }
+  };
+
   const getPayload = () => ({
     website,
     screen,
@@ -110,9 +133,16 @@
     document.addEventListener(
       'click',
       async (e) => {
-        console.log('click', e);
         const isSpecialTag = (tagName) => ['BUTTON', 'A'].includes(tagName);
 
+        const el = e.target;
+        const linkElement = isSpecialTag(el.tagName) ? el : el.closest('a');
+
+        if (linkElement && linkElement.tagName === 'A') {
+          await handleLinkInteraction(linkElement);
+        }
+
+        // 保留原有的事件处理逻辑
         const trackElement = async (el) => {
           const attr = el.getAttribute.bind(el);
           const eventName = attr(eventNameAttribute);
@@ -145,7 +175,6 @@
           }
         };
 
-        const el = e.target;
         const parentElement = isSpecialTag(el.tagName) ? el : findParentTag(el, 10);
 
         if (parentElement) {
@@ -189,10 +218,7 @@
     (dnt && hasDoNotTrack());
 
   const send = async (payload, type = 'event') => {
-      console.log('payload', payload)
-      console.log('type', type)
-      console.log('endpoint', endpoint)
-    // if (trackingDisabled()) return;
+    if (trackingDisabled()) return;
 
     const headers = {
       'Content-Type': 'application/json',
@@ -227,6 +253,17 @@
       handlePathChanges();
       handleTitleChanges();
       handleClicks();
+
+      // 添加键盘事件监听
+      document.addEventListener('keydown', async (e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          const activeElement = document.activeElement;
+          if (activeElement && activeElement.tagName === 'A') {
+            await handleLinkInteraction(activeElement);
+          }
+        }
+      });
+
       initialized = true;
     }
   };
