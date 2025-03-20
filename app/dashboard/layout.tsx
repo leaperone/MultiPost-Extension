@@ -1,15 +1,16 @@
-import { SidebarProvider } from '@/components/ui/sidebar';
+import { SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar';
 import React from 'react';
-import { DashboardSidebar } from './SideBar';
+import { DashboardSidebar } from './components/SideBar';
 import { redirect } from 'next/navigation';
 import { auth } from '@/auth';
 import { headers } from 'next/headers';
 import { Metadata } from 'next';
+import { ThemeSwitcher } from '@/components/ThemeSwitcher';
 
 export const metadata: Metadata = {
   title: 'Dashboard | MultiPost',
   description: 'MultiPost Dashboard',
-}
+};
 
 export default async function DashboardLayout({
   children,
@@ -27,7 +28,13 @@ export default async function DashboardLayout({
     <div className="flex h-screen w-full overflow-y-hidden">
       <SidebarProvider defaultOpen={false}>
         <DashboardSidebar />
-        <div className="flex-1">{children}</div>
+        <div className="flex-1">
+          <div className="flex w-full justify-between sm:hidden md:hidden">
+            <SidebarTrigger />
+            <ThemeSwitcher isBlur={false} />
+          </div>
+          {children}
+        </div>
       </SidebarProvider>
     </div>
   );

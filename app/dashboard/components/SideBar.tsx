@@ -1,4 +1,4 @@
-import { AccessibilityIcon, Home, LayoutDashboardIcon, PuzzleIcon, Settings } from 'lucide-react';
+import { AccessibilityIcon, Home, LayoutDashboardIcon, LogOut, PuzzleIcon, Settings } from 'lucide-react';
 
 import {
   Sidebar,
@@ -12,7 +12,10 @@ import {
   SidebarHeader,
   SidebarFooter,
 } from '@/components/ui/sidebar';
-import { SidebarThemeSwitcher } from '../../components/ThemeSwitcher';
+import { SidebarThemeSwitcher } from '../../../components/ThemeSwitcher';
+import MultiPostLogo from './Logo';
+import DashboardSiderBarTrigger from './Trigger';
+import { Tooltip } from '@heroui/react';
 // import TwoSomeOneLogo from '../../components/Dashboard/SiderBar/TwoSomeOneLogo';
 // import DashboardSiderBarTrigger from '../../components/Dashboard/SiderBar/Trigger';
 
@@ -54,6 +57,11 @@ const sidebarFooterItems = [
     url: '/dashboard/settings',
     icon: Settings,
   },
+  {
+    title: 'Sign Out',
+    url: '/signout',
+    icon: LogOut,
+  }
 ];
 export async function DashboardSidebar() {
   return (
@@ -63,7 +71,9 @@ export async function DashboardSidebar() {
       collapsible="icon">
       <SidebarHeader>
         <SidebarMenu>
-          <SidebarMenuItem>MultiPost</SidebarMenuItem>
+          <SidebarMenuItem>
+            <MultiPostLogo />
+          </SidebarMenuItem>
         </SidebarMenu>
       </SidebarHeader>
 
@@ -120,7 +130,13 @@ export async function DashboardSidebar() {
               </SidebarMenuButton>
             </SidebarMenuItem>
           ))}
-          <SidebarMenuItem>{/* <DashboardSiderBarTrigger /> */}</SidebarMenuItem>
+          <Tooltip
+            content="Ctrl + B"
+            placement="right">
+            <SidebarMenuItem>
+              <DashboardSiderBarTrigger />
+            </SidebarMenuItem>
+          </Tooltip>
         </SidebarMenu>
       </SidebarFooter>
     </Sidebar>
