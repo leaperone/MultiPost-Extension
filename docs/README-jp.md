@@ -4,9 +4,11 @@
 
 ![GitHub License GitHub許可証](https://img.shields.io/github/license/leaper-one/MultiPost-Extension) ![GitHub Repo stars GitHubスター](https://img.shields.io/github/stars/leaper-one/MultiPost-Extension) ![GitHub commit activity GitHubコミット活動](https://img.shields.io/github/commit-activity/m/leaper-one/MultiPost-Extension) [![Website ウェブサイト](https://img.shields.io/website?url=https%3A%2F%2Fmultipost.app)](https://multipost.app)
 
+⭐ このプロジェクトが役立つと思われましたら、ぜひスターを付けてください！皆様のサポートが私たちの成長と改善の励みになります！⭐
+
 [English](../README.md) | [中文](README-zh.md) | [日本語](README-jp.md) | [Français](README-fr.md) | [한국어](README-kr.md)
 
-> 複数のソーシャルメディアプラットフォームにワンクリックでコンテンツを投稿できるブラウザ拡張機能
+> ワンクリックで複数のソーシャルメディアプラットフォームにコンテンツを公開できるブラウザ拡張機能です。
 
 </div>
 
@@ -81,8 +83,9 @@ pnpm build
 
 ## お問い合わせ
 
-- QQグループ: [921137242](http://qm.qq.com/cgi-bin/qm/qr?_wv=1027&k=c5BjhD8JxNAuwjKh6qvCoROU301PppYU&authKey=NfKianfDwngrwJyVQbefIQET9vUQs46xb0PfOYUm6KzdeCjPd5YbvlRoO8trJUUZ&noverify=0&group_code=921137242)
-- メール: support@leaper.one
-- GitHub Issues: https://github.com/leaper-one/MultiPost-Extension/issues
+- QQグループ：[921137242](http://qm.qq.com/cgi-bin/qm/qr?_wv=1027&k=c5BjhD8JxNAuwjKh6qvCoROU301PppYU&authKey=NfKianfDwngrwJyVQbefIQET9vUQs46xb0PfOYUm6KzdeCjPd5YbvlRoO8trJUUZ&noverify=0&group_code=921137242)
+- メール：support@leaper.one
+- Twitter：[@harry_wong_](https://x.com/harry_wong_)
+- GitHub Issues：https://github.com/MultiPost-Extension/MultiPost-Extension/issues
 
 ![QQグループ](MultiPost-Extension_2025-02-28T14_17_15.717Z.png)

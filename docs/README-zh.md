@@ -4,6 +4,8 @@
 
 ![GitHub License GitHub许可证](https://img.shields.io/github/license/leaper-one/MultiPost-Extension) ![GitHub Repo stars GitHub星星](https://img.shields.io/github/stars/leaper-one/MultiPost-Extension) ![GitHub commit activity GitHub提交活动](https://img.shields.io/github/commit-activity/m/leaper-one/MultiPost-Extension) [![Website 网站](https://img.shields.io/website?url=https%3A%2F%2Fmultipost.app)](https://multipost.app)
 
+⭐ 如果这个项目对你有帮助，欢迎给我们一个 star！你的支持是我们前进的动力！⭐
+
 [English](../README.md) | [中文](README-zh.md) | [日本語](README-jp.md) | [Français](README-fr.md) | [한국어](README-kr.md)
 
 > 一键发布内容到多个社交平台的浏览器扩展
@@ -81,8 +83,9 @@ pnpm build
 
 ## 联系我们
 
-- QQ 群: [921137242](http://qm.qq.com/cgi-bin/qm/qr?_wv=1027&k=c5BjhD8JxNAuwjKh6qvCoROU301PppYU&authKey=NfKianfDwngrwJyVQbefIQET9vUQs46xb0PfOYUm6KzdeCjPd5YbvlRoO8trJUUZ&noverify=0&group_code=921137242)
-- 邮箱: support@leaper.one
-- GitHub Issues: https://github.com/leaper-one/MultiPost-Extension/issues
+- QQ群：[921137242](http://qm.qq.com/cgi-bin/qm/qr?_wv=1027&k=c5BjhD8JxNAuwjKh6qvCoROU301PppYU&authKey=NfKianfDwngrwJyVQbefIQET9vUQs46xb0PfOYUm6KzdeCjPd5YbvlRoO8trJUUZ&noverify=0&group_code=921137242)
+- 邮箱：support@leaper.one
+- Twitter：[@harry_wong_](https://x.com/harry_wong_)
+- GitHub Issues：https://github.com/MultiPost-Extension/MultiPost-Extension/issues
 
 ![QQ 群](MultiPost-Extension_2025-02-28T14_17_15.717Z.png)
