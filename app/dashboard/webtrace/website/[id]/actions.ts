@@ -68,9 +68,9 @@ export async function getVisitTrends(websiteId: string, days: number = 7) {
   const startDate = startOfDay(subDays(now, days - 1));
   const endDate = endOfDay(now);
 
-  // 获取访问趋势数据
+  // 获取访问趋势数据，按天分组
   const events = await multipostDb.websiteEvent.groupBy({
-    by: ['websiteId', 'createdAt'],
+    by: ['createdAt'],
     where: {
       websiteId,
       createdAt: {
@@ -79,13 +79,15 @@ export async function getVisitTrends(websiteId: string, days: number = 7) {
       },
       eventType: 1,
     },
-    _count: true,
+    _count: {
+      _all: true,
+    },
     orderBy: {
       createdAt: 'asc',
     },
   });
 
-  // 生成日期数组
+  // 生成日期数组，初始化所有日期的访问量为 0
   const dateArray = Array.from({ length: days }, (_, i) => {
     const date = startOfDay(subDays(now, days - 1 - i));
     return {
@@ -94,12 +96,20 @@ export async function getVisitTrends(websiteId: string, days: number = 7) {
     };
   });
 
-  // 合并数据
-  events.forEach((event) => {
-    const dateStr = event.createdAt.toISOString().split('T')[0];
-    const dateItem = dateArray.find((item) => item.date === dateStr);
-    if (dateItem) {
-      dateItem.views = event._count;
+  // 按天合并数据
+  const dailyViews = events.reduce(
+    (acc, event) => {
+      const dateStr = event.createdAt.toISOString().split('T')[0];
+      acc[dateStr] = (acc[dateStr] || 0) + event._count._all;
+      return acc;
+    },
+    {} as Record<string, number>,
+  );
+
+  // 更新日期数组中的访问量
+  dateArray.forEach((item) => {
+    if (dailyViews[item.date]) {
+      item.views = dailyViews[item.date];
     }
   });
 

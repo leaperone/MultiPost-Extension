@@ -12,10 +12,17 @@ interface VisitTrendsChartProps {
 }
 
 export function VisitTrendsChart({ data }: VisitTrendsChartProps) {
+  // 计算合适的 Y 轴刻度
+  const maxViews = Math.max(...data.map((item) => item.views));
+  const yAxisTicks = Array.from({ length: 5 }, (_, i) => Math.round((maxViews * (i + 1)) / 5)).filter(
+    (tick) => tick > 0,
+  );
+
   return (
     <Card>
-      <CardHeader>
+      <CardHeader className="flex items-center justify-between">
         <h2 className="text-lg font-semibold">访问趋势</h2>
+        <div className="text-sm text-gray-500">过去 {data.length} 天</div>
       </CardHeader>
       <CardBody>
         <div className="h-[300px] w-full">
@@ -50,10 +57,19 @@ export function VisitTrendsChart({ data }: VisitTrendsChartProps) {
                 axisLine={false}
               />
               <YAxis
-                tickFormatter={(value) => value.toLocaleString()}
+                tickFormatter={(value) => {
+                  if (value >= 1000000) {
+                    return `${(value / 1000000).toFixed(1)}M`;
+                  }
+                  if (value >= 1000) {
+                    return `${(value / 1000).toFixed(1)}K`;
+                  }
+                  return value.toString();
+                }}
                 tick={{ fontSize: 12 }}
                 tickLine={false}
                 axisLine={false}
+                ticks={yAxisTicks}
               />
               <Tooltip
                 content={({ active, payload }) => {
