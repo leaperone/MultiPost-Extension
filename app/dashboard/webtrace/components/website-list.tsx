@@ -20,7 +20,7 @@ export function WebsiteList() {
       {websites.map((website) => (
         <Link
           key={website.id}
-          href={`/dashboard/website/${website.id}`}>
+          href={`/dashboard/webtrace/website/${website.id}`}>
           <Card className="cursor-pointer transition-all hover:scale-[1.02]">
             <CardHeader className="flex items-center justify-between">
               <div className="flex items-center gap-2">

@@ -120,6 +120,7 @@
     "react-responsive": "^10.0.0",
     "react-rewards": "^2.1.0",
     "react-viewer": "^3.2.2",
+    "recharts": "^2.15.1",
     "serialize-error": "^12.0.0",
     "simplex-noise": "^4.0.3",
     "sonner": "^1.7.4",
