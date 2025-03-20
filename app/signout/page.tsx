@@ -2,6 +2,12 @@ import React from 'react';
 import { signOut } from '@/auth';
 import { Card, CardHeader, CardBody, Button } from '@heroui/react';
 import { createTranslation } from '@/i18n/server';
+import { Metadata } from 'next';
+
+export const metadata: Metadata = {
+  title: 'Signout | MultiPost',
+  description: 'Signout from MultiPost',
+};
 
 const SignoutPage = async () => {
   const { t } = await createTranslation('auth');

@@ -1,3 +1,10 @@
+import { Metadata } from 'next';
+
+export const metadata: Metadata = {
+  title: 'Privacy Policy | MultiPost',
+  description: 'Privacy policy for MultiPost',
+};
+
 export default function PrivacyPolicy() {
   return (
     <div className="prose dark:prose-invert prose-slate mx-auto max-w-4xl space-y-6 px-4 py-8">

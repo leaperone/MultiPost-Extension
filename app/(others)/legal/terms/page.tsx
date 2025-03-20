@@ -1,3 +1,10 @@
+import { Metadata } from 'next';
+
+export const metadata: Metadata = {
+  title: 'Terms of Service | MultiPost',
+  description: 'Terms of service for MultiPost',
+};
+
 export default function Service() {
   return (
     <div className="prose dark:prose-invert prose-slate mx-auto max-w-4xl space-y-6 px-4 py-8">
