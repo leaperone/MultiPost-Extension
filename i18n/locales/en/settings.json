@@ -15,5 +15,13 @@
       "dark": "Dark",
       "system": "System"
     }
+  },
+  "security": {
+    "title": "Security",
+    "passkey": {
+      "title": "Passkey Management",
+      "description": "Passkeys provide a secure, passwordless way to sign in to your account.",
+      "register": "Register New Passkey"
+    }
   }
 } 

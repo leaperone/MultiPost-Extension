@@ -3,7 +3,7 @@ import { signIn } from '@/auth';
 import { Button, Spacer } from '@heroui/react';
 import { Icon } from '@iconify/react/dist/iconify.js';
 import { createTranslation } from '@/i18n/server';
-// import { MailIcon } from 'lucide-react';
+import { PasskeyAuthButton } from './PasskeyAuthButton';
 
 const SigninPage = async (props: { searchParams: Promise<{ redirect: string }> }) => {
   const searchParams = await props.searchParams;
@@ -14,6 +14,9 @@ const SigninPage = async (props: { searchParams: Promise<{ redirect: string }> }
     <div className="flex min-h-[40px] flex-col items-center gap-2 pb-2">
       <h1 className="text-xl font-medium">{t('signin.title')}</h1>
       <Spacer y={4} />
+
+      <PasskeyAuthButton redirect={redirect} />
+      <Spacer y={2} />
 
       <form
         action={async () => {

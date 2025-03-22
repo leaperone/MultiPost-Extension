@@ -2,6 +2,7 @@
 
 import { Card, CardBody, CardHeader, Divider } from '@heroui/react';
 import { useSession } from 'next-auth/react';
+import { signIn } from 'next-auth/webauthn';
 import { useTranslation } from '@/i18n/client';
 import { ThemeSwitcher } from '@/components/ThemeSwitcher';
 import LanguageSwitcher from '@/components/LanguageSwitcher';
@@ -51,6 +52,24 @@ export default function SettingsPage() {
             <div className="w-48">
               <LanguageSwitcher />
             </div>
+          </div>
+        </CardBody>
+      </Card>
+
+      {/* Security Section */}
+      <Card>
+        <CardHeader>
+          <h2 className="text-xl font-semibold">{t('security.title')}</h2>
+        </CardHeader>
+        <CardBody className="space-y-6">
+          <div>
+            <label className="mb-2 block text-sm text-foreground/60">{t('security.passkey.title')}</label>
+            <p className="mb-4 text-sm text-foreground/60">{t('security.passkey.description')}</p>
+            <button
+              onClick={() => signIn('passkey', { action: 'register' })}
+              className="rounded-md bg-primary px-4 py-2 text-sm font-medium text-white hover:bg-primary/90">
+              {t('security.passkey.register')}
+            </button>
           </div>
         </CardBody>
       </Card>

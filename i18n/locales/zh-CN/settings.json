@@ -15,5 +15,13 @@
       "dark": "深色",
       "system": "跟随系统"
     }
+  },
+  "security": {
+    "title": "安全设置",
+    "passkey": {
+      "title": "密钥管理",
+      "description": "密钥提供了一种安全的无密码登录方式。",
+      "register": "注册新密钥"
+    }
   }
 } 
