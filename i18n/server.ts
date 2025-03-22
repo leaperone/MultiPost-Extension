@@ -1,8 +1,8 @@
-import {createInstance} from 'i18next';
+import { createInstance } from 'i18next';
 import resourcesToBackend from 'i18next-resources-to-backend';
-import {initReactI18next} from 'react-i18next/initReactI18next';
-import {FALLBACK_LOCALE,getOptions,Locales,LANGUAGE_COOKIE} from './settings';
-import {cookies} from 'next/headers';
+import { initReactI18next } from 'react-i18next/initReactI18next';
+import { FALLBACK_LOCALE, getOptions, Locales, LANGUAGE_COOKIE } from './settings';
+import { cookies } from 'next/headers';
 
 async function initI18next(lang: Locales, namespace: string) {
   const i18nInstance = createInstance();
@@ -22,7 +22,7 @@ async function initI18next(lang: Locales, namespace: string) {
 
 // This function will be used in our server components for the translation
 export async function createTranslation(ns: string) {
-  const lang = getLocale();
+  const lang = (await getLocale()) as Locales;
   const i18nextInstance = await initI18next(lang, ns);
 
   return {
@@ -31,7 +31,8 @@ export async function createTranslation(ns: string) {
 }
 
 // Utility function to get the locale from server components
-export function getLocale() {
-  return (cookies().get(LANGUAGE_COOKIE)?.value ?? FALLBACK_LOCALE) as Locales;
+export async function getLocale(): Promise<Locales> {
+  // const cookieStore = await cookies()
+  // return (cookieStore.get(LANGUAGE_COOKIE)?.value ?? FALLBACK_LOCALE) as Locales;
+  return ((await cookies()).get(LANGUAGE_COOKIE)?.value ?? FALLBACK_LOCALE) as Locales;
 }
-

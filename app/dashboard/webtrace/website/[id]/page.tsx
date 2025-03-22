@@ -8,12 +8,13 @@ import { VisitTrendsChart } from './components/VisitTrendsChart';
 import { getWebsiteStats, getVisitTrends, getPopularPages } from './actions';
 
 interface WebsitePageProps {
-  params: {
+  params: Promise<{
     id: string;
-  };
+  }>;
 }
 
-export default async function WebsitePage({ params }: WebsitePageProps) {
+export default async function WebsitePage(props: WebsitePageProps) {
+  const params = await props.params;
   // const session = await auth();
   // if (!session?.user?.id) {
   //   redirect('/signin');

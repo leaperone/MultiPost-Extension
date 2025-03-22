@@ -26,7 +26,8 @@
   },
   "navigation": {
     "publish": "Publish",
-    "extension": "Extension"
+    "extension": "Extension",
+    "about": "About"
   },
   "features": {
     "title": "Streamline Your Social Media Workflow",

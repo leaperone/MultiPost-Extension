@@ -3,7 +3,7 @@
 import { useRouter } from 'next/navigation';
 import React, { useEffect } from 'react';
 
-import { checkServiceStatus } from '@/extension/common';
+import { checkServiceStatus } from '@/lib/extension/common';
 
 const ForceInstallExtension = () => {
   const router = useRouter();

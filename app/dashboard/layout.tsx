@@ -18,7 +18,7 @@ export default async function DashboardLayout({
   children: React.ReactNode;
 }>) {
   const session = await auth();
-  const headersList = headers();
+  const headersList = await headers();
   const pathname = headersList.get('x-pathname') || '/dashboard';
 
   if (!session) {

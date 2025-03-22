@@ -1,4 +1,4 @@
-import { sendRequest } from '@/extension/common';
+import { sendRequest } from '@/lib/extension/common';
 import { type PlatformInfo } from '@/types/platform';
 import { type SyncData } from '@/types/sync';
 

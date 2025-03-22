@@ -5,7 +5,8 @@ import { Icon } from '@iconify/react/dist/iconify.js';
 import { createTranslation } from '@/i18n/server';
 // import { MailIcon } from 'lucide-react';
 
-const SigninPage = async ({ searchParams }: { searchParams: { redirect: string } }) => {
+const SigninPage = async (props: { searchParams: Promise<{ redirect: string }> }) => {
+  const searchParams = await props.searchParams;
   const redirect = searchParams.redirect || '/dashboard';
   const { t } = await createTranslation('auth');
 

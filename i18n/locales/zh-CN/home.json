@@ -26,7 +26,8 @@
   },
   "navigation": {
     "publish": "发布",
-    "extension": "扩展"
+    "extension": "扩展",
+    "about": "关于"
   },
   "features": {
     "title": "简化你的社交媒体工作流程",

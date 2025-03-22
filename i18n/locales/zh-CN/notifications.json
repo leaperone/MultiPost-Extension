@@ -1,0 +1,18 @@
+{
+  "platforms": {
+    "twitter": "Twitter",
+    "instagram": "Instagram",
+    "bilibili": "哔哩哔哩",
+    "wechat": "微信",
+    "redbook": "小红书",
+    "facebook": "Facebook",
+    "tiktok": "TikTok",
+    "douyin": "抖音",
+    "kuaishou": "快手",
+    "wechat_mp": "微信公众号"
+  },
+  "status": {
+    "sent_to": "已发送到 {{platform}}",
+    "sync_success": "内容已成功同步"
+  }
+}

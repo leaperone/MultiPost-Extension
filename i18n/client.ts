@@ -1,17 +1,12 @@
 'use client';
 
-import {useEffect} from 'react';
-import i18next, {i18n} from 'i18next';
-import {initReactI18next, useTranslation as useTransAlias} from 'react-i18next';
+import { useEffect } from 'react';
+import i18next, { i18n } from 'i18next';
+import { initReactI18next, useTranslation as useTransAlias } from 'react-i18next';
 import resourcesToBackend from 'i18next-resources-to-backend';
 import LanguageDetector from 'i18next-browser-languagedetector';
-import {
-  Locales,
-  LANGUAGE_COOKIE,
-  getOptions,
-  supportedLocales,
-} from './settings';
-import {useLocale} from './locale-provider';
+import { Locales, LANGUAGE_COOKIE, getOptions, supportedLocales } from './settings';
+import { useLocale } from './locale-provider';
 
 const runsOnServerSide = typeof window === 'undefined';
 
@@ -19,11 +14,7 @@ const runsOnServerSide = typeof window === 'undefined';
 i18next
   .use(initReactI18next)
   .use(LanguageDetector)
-  .use(
-    resourcesToBackend(
-      (lang: string, ns: string) => import(`./locales/${lang}/${ns}.json`),
-    ),
-  )
+  .use(resourcesToBackend((lang: string, ns: string) => import(`./locales/${lang}/${ns}.json`)))
   .init({
     ...getOptions(),
     lng: undefined, // detect the language on the client
@@ -42,7 +33,7 @@ export function useTranslation(ns: string) {
   const lng = useLocale();
 
   const translator = useTransAlias(ns);
-  const {i18n} = translator;
+  const { i18n } = translator;
 
   // Run content is being rendered on server side
   if (runsOnServerSide && lng && i18n.resolvedLanguage !== lng) {

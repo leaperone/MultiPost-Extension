@@ -1,11 +1,13 @@
-import { Card, CardBody, Button, Link } from '@heroui/react';
-import { ArrowRight, Share2, Zap, Globe2, Sparkles, LayoutDashboardIcon } from 'lucide-react';
+import { Card, CardBody, Button, Link, Badge } from '@heroui/react';
+import { ArrowRight, Share2, Zap, Globe2, Sparkles, LayoutDashboardIcon, PenToolIcon } from 'lucide-react';
 import { Icon } from '@iconify/react';
 import { cn } from '@/lib/utils';
+import { BackgroundLines } from '@/components/background-lines';
 
 import FooterWithColumns from '@/components/HomePage/FooterWithColumns';
 import HomePageHeader from '@/components/HomePage/Header';
 import ScrollScreenChevronDown from '@/components/HomePage/ScrollScreenChevronDown';
+import SocialShareNotifications from '@/components/HomePage/SocialShareNotifications';
 import { createTranslation } from '@/i18n/server';
 
 export const metadata = {
@@ -88,7 +90,7 @@ function HeroSection({ t, className }: { t: TranslationFunction; className?: str
   ];
 
   return (
-    <div className={cn('hero-container relative w-full bg-background', className)}>
+    <BackgroundLines className={cn('relative w-full', className)}>
       <div className="z-40 m-auto flex h-[80vh] w-[90%] flex-col items-center justify-center bg-transparent">
         <div className="flex w-full flex-col items-center">
           <div className="relative min-h-[60px] w-full rounded-2xl pt-4">
@@ -145,6 +147,19 @@ function HeroSection({ t, className }: { t: TranslationFunction; className?: str
               className="bg-gradient-to-r from-blue-400 to-sky-300 text-white transition-opacity hover:opacity-90">
               {t('hero.buttons.post')}
             </Button>
+            <Badge
+              color="danger"
+              content="New">
+              <Button
+                as={Link}
+                href="https://md.multipost.app"
+                target="_blank"
+                size="lg"
+                startContent={<PenToolIcon />}
+                className="bg-gradient-to-r from-green-600 to-lime-400 text-white transition-opacity hover:opacity-90">
+                Markdown 文章编辑器
+              </Button>
+            </Badge>
             <Button
               as={Link}
               href="/extension"
@@ -170,7 +185,7 @@ function HeroSection({ t, className }: { t: TranslationFunction; className?: str
           <ScrollScreenChevronDown />
         </div>
       </div>
-    </div>
+    </BackgroundLines>
   );
 }
 
@@ -214,8 +229,9 @@ export default async function HomePage() {
   return (
     <div className="flex min-h-screen flex-col bg-background text-foreground">
       <HomePageHeader />
+      <SocialShareNotifications />
       <main className="flex-1">
-        <div className="relative min-h-[80vh] w-full">
+        <div className="relative w-full">
           <HeroSection t={t} />
         </div>
 

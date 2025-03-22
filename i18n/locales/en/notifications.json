@@ -1,0 +1,18 @@
+{
+  "platforms": {
+    "twitter": "Twitter",
+    "instagram": "Instagram",
+    "bilibili": "Bilibili",
+    "wechat": "WeChat",
+    "redbook": "Xiaohongshu",
+    "facebook": "Facebook",
+    "tiktok": "TikTok",
+    "douyin": "Douyin",
+    "kuaishou": "Kuaishou",
+    "wechat_mp": "WeChat Official"
+  },
+  "status": {
+    "sent_to": "Sent to {{platform}}",
+    "sync_success": "Content synced successfully"
+  }
+}

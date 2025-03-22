@@ -1,0 +1,42 @@
+{
+  "title": "About Us",
+  "description": "We are a passionate team dedicated to creating excellent products",
+  "organization": {
+    "title": "About LEAPERone",
+    "description": "LEAPERone is a technology team focused on Social Network, AI, and Web3 SaaS. We are dedicated to building innovative tools and platforms that make content creation and sharing simpler and more efficient.",
+    "focus": {
+      "title": "Our Focus Areas",
+      "items": [
+        {
+          "title": "Social Network Tools",
+          "description": "Developing powerful social media management and content publishing tools"
+        },
+        {
+          "title": "AI Applications",
+          "description": "Applying artificial intelligence to content creation and management"
+        },
+        {
+          "title": "Web3 Solutions",
+          "description": "Exploring decentralized technologies in social networking"
+        }
+      ]
+    }
+  },
+  "team": {
+    "title": "Our Team",
+    "harry": {
+      "name": "Harry Wong",
+      "role": "Founder & Developer",
+      "description": "Full-stack developer passionate about building great developer tools and user experiences"
+    },
+    "cunoe": {
+      "name": "Cunoe",
+      "role": "Co-founder & Developer",
+      "description": "Full-stack developer focused on system architecture and performance optimization"
+    }
+  },
+  "community": {
+    "title": "Join Our Community",
+    "qq": "QQ Group"
+  }
+}

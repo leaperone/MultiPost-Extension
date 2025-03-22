@@ -70,10 +70,13 @@ const DynamicTab: React.FC = () => {
   const handlePlatformChange = (platform: string, isSelected: boolean) => {
     setSelectedPlatforms((prev) => {
       const newSelected = isSelected ? [...prev, platform] : prev.filter((p) => p !== platform);
-      setDynamicPlatforms(newSelected);
       return newSelected;
     });
   };
+
+  useEffect(() => {
+    setDynamicPlatforms(selectedPlatforms);
+  }, [selectedPlatforms, setDynamicPlatforms]);
 
   const handlePublish = async () => {
     if (!content) {

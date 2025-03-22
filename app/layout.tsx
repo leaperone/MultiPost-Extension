@@ -15,14 +15,17 @@ export const metadata = {
     'MultiPost is an open source browser extension that helps you publish content to multiple social media platforms with one click. Save time and boost your social media presence.',
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const locale = getLocale();
+  const locale = await getLocale();
   return (
-    <html lang={locale}>
+    <html
+      lang={locale}
+      className="dark"
+      style={{ colorScheme: 'dark' }}>
       <body className={inter.className}>
         <Providers>
           {children}

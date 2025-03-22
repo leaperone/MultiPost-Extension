@@ -1,7 +1,7 @@
 'use server';
 
-import { auth } from "@/auth";
-import { multipostDb } from "@/lib/db";
+import { auth } from '@/auth';
+import { multipostDb } from '@/lib/db';
 
 interface CreateWebsiteData {
   name: string;

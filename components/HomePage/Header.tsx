@@ -12,7 +12,10 @@ export default function HomePageHeader() {
         <Link
           href="/"
           className="flex items-center gap-2">
-          <Image src="/favicon.ico" alt="MultiPost" />
+          <Image
+            src="/favicon.ico"
+            alt="MultiPost"
+          />
           <span className="text-xl font-semibold">MultiPost</span>
         </Link>
       </NavbarBrand>
@@ -25,7 +28,7 @@ export default function HomePageHeader() {
         <NavbarItem>
           <ThemeSwitcher isBlur={false} />
         </NavbarItem>
-        <NavbarItem className="hidden sm:block w-28">
+        <NavbarItem className="hidden w-28 sm:block">
           <LanguageSwitcher />
         </NavbarItem>
         <NavbarItem>
