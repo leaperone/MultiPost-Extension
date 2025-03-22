@@ -33,13 +33,17 @@ export default async function RootLayout({
           <Sonner />
         </Providers>
       </body>
-      <GoogleAnalytics gaId={'G-6JJ7JNT2GY'} />
-      <Script
-        async
-        src="/tracker/index.js"
-        mdata-website-id="cm8g07ajo00014dtyl58l9p5r"
-        mdata-auto-track="true"
-      />
+      {process.env.NODE_ENV === 'production' && (
+        <>
+          <GoogleAnalytics gaId={'G-6JJ7JNT2GY'} />
+          <Script
+            async
+            src="/tracker/index.js"
+            mdata-website-id="cm8g07ajo00014dtyl58l9p5r"
+            mdata-auto-track="true"
+          />
+        </>
+      )}
     </html>
   );
 }
