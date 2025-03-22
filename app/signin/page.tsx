@@ -1,6 +1,6 @@
 import React from 'react';
 import { signIn } from '@/auth';
-import { Button, Spacer } from '@heroui/react';
+import { Button, Input, Spacer } from '@heroui/react';
 import { Icon } from '@iconify/react/dist/iconify.js';
 import { createTranslation } from '@/i18n/server';
 import { PasskeyAuthButton } from './PasskeyAuthButton';
@@ -35,6 +35,26 @@ const SigninPage = async (props: { searchParams: Promise<{ redirect: string }> }
           {t('signin.github')}
         </Button>
       </form>
+      {process.env.NODE_ENV === 'development' && (
+        <>
+          <Spacer y={2} />
+          <form
+            action={async (formData: FormData) => {
+              'use server';
+              await signIn('http-email', {
+                email: formData.get('email'),
+                redirectTo: redirect,
+              });
+            }}>
+            <Input
+              type="email"
+              name="email"
+              placeholder="Email"
+            />
+            <Button type="submit">Sign in with Email</Button>
+          </form>
+        </>
+      )}
     </div>
   );
 };
