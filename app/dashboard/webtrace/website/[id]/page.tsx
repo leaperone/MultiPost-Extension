@@ -1,11 +1,13 @@
 import { multipostDb } from '@/lib/db';
-import { notFound } from 'next/navigation';
+import { notFound, redirect } from 'next/navigation';
 import { Card, CardBody, CardHeader } from '@heroui/react';
 import { Globe, Clock, Users, Eye } from 'lucide-react';
 import { StatsCard } from './components/StatsCard';
 import { ScriptModalButton } from './components/ScriptModalButton';
 import { VisitTrendsChart } from './components/VisitTrendsChart';
 import { getWebsiteStats, getVisitTrends, getPopularPages } from './actions';
+import { auth } from '@/auth';
+import { Prisma } from '@/prisma/client_multipost';
 
 interface WebsitePageProps {
   params: Promise<{
@@ -15,17 +17,22 @@ interface WebsitePageProps {
 
 export default async function WebsitePage(props: WebsitePageProps) {
   const params = await props.params;
-  // const session = await auth();
-  // if (!session?.user?.id) {
-  //   redirect('/signin');
-  // }
+  const session = await auth();
+  if (!session?.user?.id) {
+    redirect('/signin');
+  }
+
+  const where: Prisma.WebsiteWhereInput = {
+    id: params.id,
+    deletedAt: null,
+  };
+
+  if (process.env.NODE_ENV === 'production') {
+    where.userId = session.user.id;
+  }
 
   const website = await multipostDb.website.findFirst({
-    where: {
-      id: params.id,
-      // userId: session.user.id,
-      deletedAt: null,
-    },
+    where,
   });
 
   if (!website) {
