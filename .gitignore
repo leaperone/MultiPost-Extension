@@ -50,3 +50,5 @@ prisma/client*
 geo/*.mmdb
 
 public/tracker/
+
+.devcontainer/.env.dev

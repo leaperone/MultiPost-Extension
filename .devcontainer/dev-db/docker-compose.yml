@@ -1,0 +1,29 @@
+services:
+  postgres-multipost:
+    build:
+      dockerfile: ./Dockerfile
+      target: postgres
+    environment:
+      - POSTGRESQL_USERNAME=leaperone
+      - POSTGRESQL_PASSWORD=password
+      - POSTGRESQL_POSTGRES_PASSWORD=password
+      - POSTGRESQL_TIMEZONE=Asia/Shanghai
+      - POSTGRESQL_LOG_TIMEZONE=Asia/Shanghai
+      - BACKUP_REMOTE_HOST=${BACKUP_REMOTE_HOST}
+      - BACKUP_REMOTE_PORT=${BACKUP_REMOTE_PORT}
+      - BACKUP_REMOTE_USERNAME=${BACKUP_REMOTE_USERNAME}
+      - BACKUP_REMOTE_POSTGRES_PASSWORD=${BACKUP_REMOTE_POSTGRES_PASSWORD}
+    volumes:
+      - postgres-data-multipost:/bitnami/postgresql
+    ports:
+      - "35432:5432"
+    networks:
+      - multipost-dev
+
+volumes:
+  postgres-data-multipost:
+    driver: local
+
+networks:
+  multipost-dev:
+    driver: bridge
