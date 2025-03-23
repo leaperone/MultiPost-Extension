@@ -2,6 +2,7 @@
 
 import { Modal, ModalContent, ModalHeader, ModalBody, ModalFooter, Button } from '@heroui/react';
 import { Code } from 'lucide-react';
+import { useState, useEffect } from 'react';
 
 interface ScriptExampleModalProps {
   websiteId: string;
@@ -16,6 +17,19 @@ export function ScriptExampleModal({ websiteId, isOpen, onClose }: ScriptExample
   mdata-website-id="${websiteId}"
   mdata-auto-track="true"
 />`;
+  const [showCopySuccess, setShowCopySuccess] = useState(false);
+
+  useEffect(() => {
+    let timer: NodeJS.Timeout;
+    if (showCopySuccess) {
+      timer = setTimeout(() => {
+        setShowCopySuccess(false);
+      }, 2000);
+    }
+    return () => {
+      clearTimeout(timer);
+    };
+  }, [showCopySuccess]);
 
   return (
     <Modal
@@ -33,14 +47,22 @@ export function ScriptExampleModal({ websiteId, isOpen, onClose }: ScriptExample
               <pre className="rounded-lg bg-gray-900 p-4 text-sm text-gray-100">
                 <code>{scriptCode}</code>
               </pre>
-              <Button
-                variant="flat"
-                size="sm"
-                onClick={() => {
-                  navigator.clipboard.writeText(scriptCode);
-                }}>
-                复制代码
-              </Button>
+              <div className="flex items-center gap-3">
+                <Button
+                  variant="flat"
+                  size="sm"
+                  onPress={() => {
+                    navigator.clipboard.writeText(scriptCode);
+                    setShowCopySuccess(true);
+                  }}>
+                  复制代码
+                </Button>
+                {showCopySuccess && (
+                  <span className="text-sm font-medium text-emerald-600 animate-in fade-in dark:text-emerald-500">
+                    复制成功
+                  </span>
+                )}
+              </div>
             </div>
 
             <div className="space-y-2">
