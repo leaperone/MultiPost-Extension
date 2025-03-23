@@ -25,7 +25,7 @@ const SigninPage = async (props: { searchParams: Promise<{ redirect: string }> }
           className="w-full bg-foreground/10 dark:bg-foreground/20"
           startContent={
             <Icon
-              icon="logos:github-icon"
+              icon="logos:google-icon"
               className="size-6"
             />
           }>
