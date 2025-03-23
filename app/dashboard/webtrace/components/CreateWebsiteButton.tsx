@@ -16,6 +16,8 @@ import { PlusIcon } from 'lucide-react';
 import { useState } from 'react';
 import { z } from 'zod';
 import { createWebsite } from '../actions';
+import { useRouter } from 'next/navigation';
+
 
 /**
  * 网站表单验证 Schema
@@ -43,6 +45,7 @@ export function CreateWebsiteButton() {
   const { isOpen, onOpen, onClose } = useDisclosure();
   const [isLoading, setIsLoading] = useState(false);
   const [validationErrors, setValidationErrors] = useState<Record<string, string>>({});
+  const router = useRouter();
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -68,8 +71,8 @@ export function CreateWebsiteButton() {
         return;
       }
 
-      await createWebsite(result.data);
-      onClose();
+      const createdResult = await createWebsite(result.data);
+      router.push(`/dashboard/webtrace/${createdResult.id}`);
     } catch (error) {
       console.error('创建网站失败:', error);
       setValidationErrors({
