@@ -25,6 +25,7 @@
     }
   },
   "navigation": {
+    "dashboard": "Dashboard",
     "publish": "Publish",
     "extension": "Extension",
     "about": "About"

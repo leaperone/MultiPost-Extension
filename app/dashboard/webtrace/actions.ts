@@ -24,22 +24,3 @@ export async function createWebsite(data: CreateWebsiteData) {
 
   return website;
 }
-
-export async function getWebsites() {
-  const session = await auth();
-  if (!session?.user?.id) {
-    throw new Error('未授权');
-  }
-
-  const websites = await multipostDb.website.findMany({
-    where: {
-      userId: session.user.id,
-      deletedAt: null,
-    },
-    orderBy: {
-      createdAt: 'desc',
-    },
-  });
-
-  return websites;
-}

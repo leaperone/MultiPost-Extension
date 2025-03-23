@@ -1,15 +1,26 @@
+'use server';
+
 import { Card, CardBody, CardHeader } from '@heroui/react';
-import { getWebsites } from '../actions';
 import Link from 'next/link';
 import { BarChart3Icon } from 'lucide-react';
-import { useEffect, useState } from 'react';
-import { Website } from '@/prisma/client_multipost';
-export function WebsiteList() {
-  const [websites, setWebsites] = useState<Website[]>([]);
+import { auth } from '@/auth';
+import { multipostDb } from '@/lib/db';
 
-  useEffect(() => {
-    getWebsites().then(setWebsites);
-  }, []);
+export async function WebsiteList() {
+  const session = await auth();
+  if (!session?.user?.id) {
+    throw new Error('未授权');
+  }
+
+  const websites = await multipostDb.website.findMany({
+    where: {
+      userId: session.user.id,
+      deletedAt: null,
+    },
+    orderBy: {
+      createdAt: 'desc',
+    },
+  });
 
   if (!websites?.length) {
     return <div className="text-center text-gray-500">还没有添加任何网站，点击右上角的按钮添加一个吧！</div>;
@@ -24,7 +35,7 @@ export function WebsiteList() {
           <Card className="cursor-pointer transition-all hover:scale-[1.02]">
             <CardHeader className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <BarChart3Icon className="h-5 w-5" />
+                <BarChart3Icon className="size-5" />
                 <h3 className="text-lg font-semibold">{website.name}</h3>
               </div>
             </CardHeader>

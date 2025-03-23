@@ -1,0 +1,61 @@
+import React from 'react';
+import styled from 'styled-components';
+
+const ValorantLoader = () => {
+  return (
+    <StyledWrapper>
+      <div className="loader">
+        <div className="pattern-1">
+          <div className="pattern-1-shade" />
+        </div>
+        <div className="pattern-2" />
+      </div>
+    </StyledWrapper>
+  );
+};
+
+const StyledWrapper = styled.div`
+  .loader {
+    position: relative;
+    width: 200px;
+    height: 200px;
+  }
+
+  .loader .pattern-1 {
+    position: absolute;
+    background-color: #ff4c5a;
+    width: 200px;
+    height: 200px;
+    clip-path: polygon(0 10%, 70% 90%, 40% 90%, 0 45%);
+  }
+
+  .loader .pattern-2 {
+    position: absolute;
+    background-color: #ff4c5a;
+    width: 220px;
+    height: 190px;
+    clip-path: polygon(100% 10%, 100% 45%, 83% 65%, 55% 65%);
+  }
+
+  .loader .pattern-1 .pattern-1-shade {
+    position: absolute;
+    transform: translateX(-20px);
+    opacity: 0.7;
+    z-index: 10;
+    background-color: white;
+    width: 20px;
+    height: 200px;
+    animation: shiny 1s infinite;
+  }
+
+  @keyframes shiny {
+    0% {
+      transform: translateX(-20px);
+    }
+    100% {
+      transform: translateX(140px);
+    }
+  }
+`;
+
+export default ValorantLoader;

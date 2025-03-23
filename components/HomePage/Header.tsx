@@ -14,7 +14,7 @@ export default function HomePageHeader() {
           className="flex items-center gap-2">
           <Image
             src="/favicon.ico"
-            alt="MultiPost"
+            alt="MultiPost Logo"
           />
           <span className="text-xl font-semibold">MultiPost</span>
         </Link>

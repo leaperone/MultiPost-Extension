@@ -12,7 +12,7 @@ import {
   navigationMenuTriggerStyle,
 } from '@/components/ui/navigation-menu';
 import Link from 'next/link';
-import { LayoutDashboard, PuzzleIcon, Users } from 'lucide-react';
+import { LayoutDashboard, PuzzleIcon, Users, SendIcon } from 'lucide-react';
 import { useTranslation } from '@/i18n/client';
 
 export function HomePageNavigationMenu() {
@@ -23,11 +23,22 @@ export function HomePageNavigationMenu() {
       <NavigationMenuList>
         <NavigationMenuItem>
           <Link
-            href="/publish"
+            href="/dashboard"
             legacyBehavior
             passHref>
             <NavigationMenuLink className={cn(navigationMenuTriggerStyle(), 'group')}>
               <LayoutDashboard className="mr-2 size-4 transition-transform" />
+              {t('navigation.dashboard')}
+            </NavigationMenuLink>
+          </Link>
+        </NavigationMenuItem>
+        <NavigationMenuItem>
+          <Link
+            href="/publish"
+            legacyBehavior
+            passHref>
+            <NavigationMenuLink className={cn(navigationMenuTriggerStyle(), 'group')}>
+              <SendIcon className="mr-2 size-4 transition-transform" />
               {t('navigation.publish')}
             </NavigationMenuLink>
           </Link>

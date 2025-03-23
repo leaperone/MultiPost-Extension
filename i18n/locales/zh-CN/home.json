@@ -25,6 +25,7 @@
     }
   },
   "navigation": {
+    "dashboard": "控制台",
     "publish": "发布",
     "extension": "扩展",
     "about": "关于"
