@@ -17,7 +17,7 @@ export function ScriptModalButton({ websiteId }: ScriptModalButtonProps) {
       <Button
         variant="flat"
         size="sm"
-        onClick={() => setIsOpen(true)}>
+        onPress={() => setIsOpen(true)}>
         <Code className="mr-2 size-4" />
         查看跟踪代码
       </Button>

@@ -1,5 +1,5 @@
 import { Suspense } from 'react';
-import { CreateWebsiteButton } from './components/create-website-button';
+import { CreateWebsiteButton } from './components/CreateWebsiteButton';
 import { WebsiteList } from './components/WebsitesList';
 
 export default async function WebTracePage() {

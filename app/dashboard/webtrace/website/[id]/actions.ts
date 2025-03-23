@@ -144,3 +144,22 @@ export async function getPopularPages(websiteId: string) {
     count: page._count.urlPath,
   }));
 }
+
+export async function getUserWebsites(userId: string) {
+  const websites = await multipostDb.website.findMany({
+    where: {
+      userId,
+      deletedAt: null,
+    },
+    select: {
+      id: true,
+      name: true,
+      domain: true,
+    },
+    orderBy: {
+      createdAt: 'desc',
+    },
+  });
+
+  return websites;
+}
