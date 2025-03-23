@@ -1,14 +1,15 @@
 import { multipostDb } from '@/lib/db';
 import { notFound, redirect } from 'next/navigation';
 import { Card, CardBody, CardHeader } from '@heroui/react';
-import { Globe, Clock, Users, Eye } from 'lucide-react';
+import { Clock, Users, Eye } from 'lucide-react';
 import { StatsCard } from './components/StatsCard';
 import { ScriptModalButton } from './components/ScriptModalButton';
 import { VisitTrendsChart } from './components/VisitTrendsChart';
-import { getWebsiteStats, getVisitTrends, getPopularPages } from './actions';
+import { getWebsiteStats, getVisitTrends, getPopularPages, getUserWebsites } from './actions';
 import { auth } from '@/auth';
 import { Prisma } from '@/prisma/client_multipost';
 import { NoDataOverlay } from './components/NoDataOverlay';
+import { WebsiteSelector } from './components/WebsiteSelector';
 
 interface WebsitePageProps {
   params: Promise<{
@@ -50,18 +51,16 @@ export default async function WebsitePage(props: WebsitePageProps) {
 
   const hasNoData = stats.pageviews.current === 0 && stats.visitors.current === 0;
 
+  // 获取用户的所有网站
+  const websites = await getUserWebsites(session.user.id);
+
   return (
     <div className="mx-auto h-full max-w-7xl space-y-6 overflow-y-auto p-4">
       <div className="flex items-center justify-between">
-        <div className="space-y-1">
-          <h1 className="text-2xl font-bold tracking-tight">{website.name}</h1>
-          {website.domain && (
-            <p className="flex items-center text-sm text-gray-500 dark:text-gray-400">
-              <Globe className="mr-2 size-4" />
-              {website.domain}
-            </p>
-          )}
-        </div>
+        <WebsiteSelector
+          websites={websites}
+          currentWebsiteId={website.id}
+        />
         <ScriptModalButton websiteId={website.id} />
       </div>
 
