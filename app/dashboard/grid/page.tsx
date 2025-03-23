@@ -7,7 +7,7 @@ import { useTranslation } from '@/i18n/client';
 import JSZip from 'jszip';
 import { saveAs } from 'file-saver';
 
-export default function GridTab() {
+export default function GridPage() {
   const { t } = useTranslation('publish');
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const [gridImages, setGridImages] = useState<string[]>([]);

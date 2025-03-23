@@ -1,11 +1,12 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import {
-  AccessibilityIcon,
   ChartSplineIcon,
+  GridIcon,
   Home,
   LayoutDashboardIcon,
   LogOut,
   PuzzleIcon,
+  SendIcon,
   Settings,
 } from 'lucide-react';
 
@@ -52,8 +53,13 @@ const getItems = (t: TranslationFunction): MenuItem[] => [
 const getApplicationItems = (t: TranslationFunction): MenuItem[] => [
   {
     title: t('sidebar.menu.publish'),
-    url: '/publish',
-    icon: AccessibilityIcon,
+    url: '/dashboard/publish',
+    icon: SendIcon,
+  },
+  {
+    title: 'Grid',
+    url: '/dashboard/grid',
+    icon: GridIcon,
   },
   {
     title: 'WebTrace',

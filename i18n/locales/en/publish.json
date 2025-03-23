@@ -1,19 +1,18 @@
 {
+  "title": "Content Publishing",
+  "action": {
+    "enter": "Enter"
+  },
   "tabs": {
     "dynamic": "Dynamic",
     "video": "Video",
     "grid": "Grid",
     "article": "Article"
   },
-  "contact": {
-    "message": "If your platform is not listed, please contact us via email at",
-    "or": "or use our",
-    "github": "GitHub Issues",
-    "page": "page"
-  },
   "dynamic": {
     "title": "Enter title",
     "content": "Enter content",
+    "description": "Create and publish dynamic content to multiple social media platforms simultaneously",
     "autoPublish": "Auto Publish",
     "selectPlatforms": "Select Platforms to Publish",
     "publish": "Publish",
@@ -21,18 +20,28 @@
   },
   "video": {
     "title": "Please enter a title",
-    "description": "Please enter a description",
+    "description": "Upload and sync videos across different video platforms",
     "upload": "Upload Video",
     "selectPlatforms": "Select Publishing Platforms",
     "publish": "Sync Video"
   },
   "grid": {
+    "description": "Create beautiful photo grids for social media posts",
     "uploadImage": "Click or drag to upload image",
     "preview": "Original Preview",
     "result": "Grid Preview",
     "generate": "Generate Grid",
     "trimEdges": "Trim edges (avoid misalignment)",
     "download": "Download Grid"
+  },
+  "article": {
+    "description": "Write and edit professional articles with Markdown support"
+  },
+  "contact": {
+    "message": "If your platform is not listed, please contact us via email at",
+    "or": "or use our",
+    "github": "GitHub Issues",
+    "page": "page"
   },
   "validation": {
     "contentRequired": "Content is required",

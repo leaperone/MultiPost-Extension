@@ -34,7 +34,7 @@ export function HomePageNavigationMenu() {
         </NavigationMenuItem>
         <NavigationMenuItem>
           <Link
-            href="/publish"
+            href="/dashboard/publish"
             legacyBehavior
             passHref>
             <NavigationMenuLink className={cn(navigationMenuTriggerStyle(), 'group')}>

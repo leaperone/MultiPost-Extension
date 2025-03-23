@@ -53,7 +53,7 @@ export default async function DashboardPage() {
           <p className="text-foreground/80">{t('welcome.description')}</p>
           <div className="grid gap-6 sm:grid-cols-2">
             <HoverCard
-              href="/publish"
+              href="/dashboard/publish"
               title={t('welcome.publish.title')}
               titleIcon={<SendIcon className="size-5 text-foreground/50" />}
               titleDescription={t('welcome.publish.titleDescription')}
