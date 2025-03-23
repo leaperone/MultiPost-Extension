@@ -15,9 +15,24 @@ const SigninPage = async (props: { searchParams: Promise<{ redirect: string }> }
       <h1 className="text-xl font-medium">{t('signin.title')}</h1>
       <Spacer y={4} />
 
-      <PasskeyAuthButton redirect={redirect} />
+      <form
+        action={async () => {
+          'use server';
+          await signIn('google', { redirectTo: redirect });
+        }}>
+        <Button
+          type="submit"
+          className="w-full bg-foreground/10 dark:bg-foreground/20"
+          startContent={
+            <Icon
+              icon="logos:github-icon"
+              className="size-6"
+            />
+          }>
+          {t('signin.google')}
+        </Button>
+      </form>
       <Spacer y={2} />
-
       <form
         action={async () => {
           'use server';
@@ -35,6 +50,8 @@ const SigninPage = async (props: { searchParams: Promise<{ redirect: string }> }
           {t('signin.github')}
         </Button>
       </form>
+      <Spacer y={2} />
+      <PasskeyAuthButton redirect={redirect} />
       {process.env.NODE_ENV === 'development' && (
         <>
           <Spacer y={2} />

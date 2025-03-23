@@ -4,6 +4,7 @@ import { prisma } from '@/lib/db';
 import Github from 'next-auth/providers/github';
 import Passkey from 'next-auth/providers/passkey';
 import { sendVerificationRequest } from './lib/devauth';
+import Google from 'next-auth/providers/google';
 declare module 'next-auth' {
   interface Session {
     user: {
@@ -27,7 +28,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
             sendVerificationRequest,
           },
         ]
-      : [Github, Passkey],
+      : [Github, Passkey, Google],
   experimental: {
     enableWebAuthn: true,
   },
