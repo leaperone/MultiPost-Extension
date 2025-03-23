@@ -72,7 +72,7 @@ export function CreateWebsiteButton() {
       }
 
       const createdResult = await createWebsite(result.data);
-      router.push(`/dashboard/webtrace/${createdResult.id}`);
+      router.push(`/dashboard/webtrace/website/${createdResult.id}`);
     } catch (error) {
       console.error('创建网站失败:', error);
       setValidationErrors({
