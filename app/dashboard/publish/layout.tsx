@@ -6,11 +6,16 @@ import { useTranslation } from '@/i18n/client';
 import { MessageCircleHeartIcon, VideoIcon, FileTextIcon } from 'lucide-react';
 import { usePathname } from 'next/navigation';
 import ForceInstallExtension from '@/components/ForceInstallExtension';
+import { useEffect } from 'react';
+import { funcGetPermission } from './common';
 
 export default function PublishLayout({ children }: { children: React.ReactNode }) {
   const { t } = useTranslation('publish');
   const pathname = usePathname();
 
+  useEffect(() => {
+    funcGetPermission().then(() => {});
+  }, []);
   return (
     <div className="mx-auto h-full max-w-2xl space-y-6 overflow-y-auto p-4 scrollbar-hide">
       {process.env.NODE_ENV !== 'development' && <ForceInstallExtension />}
