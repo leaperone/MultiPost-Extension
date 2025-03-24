@@ -6,7 +6,7 @@ export const anyObjectParam = z.record(z.any());
 export const urlOrPathParam = z.string().max(500);
 
 export const schema = z.object({
-  type: z.enum(['event', 'identify']),
+  type: z.enum(['event', 'identify', 'preDefinedEvent']),
   payload: z.object({
     website: z.string(),
     data: anyObjectParam.optional(),
