@@ -23,10 +23,10 @@ import { z } from 'zod';
 import { SessionsCard } from './components/SessionsCard';
 
 interface WebsitePageProps {
-  params: {
+  params: Promise<{
     id: string;
-  };
-  searchParams: { [key: string]: string | string[] | undefined };
+  }>;
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 }
 
 /**
@@ -75,7 +75,7 @@ function parseSearchParams(searchParams: { [key: string]: string | string[] | un
 }
 
 export default async function WebsitePage(props: WebsitePageProps) {
-  const [params, searchParams] = await Promise.all([props.params, Promise.resolve(props.searchParams)]);
+  const [params, searchParams] = await Promise.all([props.params, props.searchParams]);
   const { isFirstTime, startDate, endDate } = parseSearchParams(searchParams);
   const session = await auth();
   if (!session?.user?.id) {
