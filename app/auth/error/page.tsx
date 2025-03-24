@@ -6,9 +6,9 @@ import { createTranslation } from '@/i18n/server';
 enum Error {
   Configuration = 'Configuration',
   AccessDenied = 'AccessDenied',
-  Verification = 'Verification', 
+  Verification = 'Verification',
   Default = 'Default',
-  OAuthAccountNotLinked = 'OAuthAccountNotLinked'
+  OAuthAccountNotLinked = 'OAuthAccountNotLinked',
 }
 
 // 错误类型到i18n键值的映射
@@ -17,7 +17,7 @@ const errorToI18nKey = {
   [Error.AccessDenied]: 'error.access_denied',
   [Error.Verification]: 'error.verification',
   [Error.Default]: 'error.default',
-  [Error.OAuthAccountNotLinked]: 'error.account_not_linked'
+  [Error.OAuthAccountNotLinked]: 'error.account_not_linked',
 };
 
 const errorCodeMap = {
@@ -25,18 +25,19 @@ const errorCodeMap = {
   [Error.AccessDenied]: <code className="rounded-sm bg-slate-100 p-1 text-xs">AccessDenied</code>,
   [Error.Verification]: <code className="rounded-sm bg-slate-100 p-1 text-xs">Verification</code>,
   [Error.Default]: <code className="rounded-sm bg-slate-100 p-1 text-xs">Default</code>,
-  [Error.OAuthAccountNotLinked]: <code className="rounded-sm bg-slate-100 p-1 text-xs">OAuthAccountNotLinked</code>
+  [Error.OAuthAccountNotLinked]: <code className="rounded-sm bg-slate-100 p-1 text-xs">OAuthAccountNotLinked</code>,
 };
 
-export default async function AuthErrorPage({ searchParams }: { searchParams: { error?: string } }) {
+export default async function AuthErrorPage(props: { searchParams: Promise<{ error?: string }> }) {
+  const searchParams = await props.searchParams;
   const error = searchParams.error as Error;
   const { t } = await createTranslation('auth');
 
   // 如果错误类型未知，直接展示错误内容
-  const errorMessage = errorToI18nKey[error] 
-    ? t(errorToI18nKey[error]) 
-    : error 
-      ? `Unknown error: ${error}` 
+  const errorMessage = errorToI18nKey[error]
+    ? t(errorToI18nKey[error])
+    : error
+      ? `Unknown error: ${error}`
       : t('error.contact_us');
 
   return (
@@ -44,7 +45,10 @@ export default async function AuthErrorPage({ searchParams }: { searchParams: { 
       <Card className="w-full max-w-md">
         <CardBody className="p-6 text-center">
           <div className="mb-6 flex flex-col items-center justify-center">
-            <AlertCircle className="mb-2 text-red-500" size={36} />
+            <AlertCircle
+              className="mb-2 text-red-500"
+              size={36}
+            />
             <h5 className="text-xl font-bold tracking-tight">{t('error.title')}</h5>
           </div>
 
@@ -57,9 +61,7 @@ export default async function AuthErrorPage({ searchParams }: { searchParams: { 
                 {errorCodeMap[error]}
               </p>
             )}
-            <p className="mt-2">
-              {t('error.contact_us')}
-            </p>
+            <p className="mt-2">{t('error.contact_us')}</p>
           </div>
 
           <div className="flex flex-col justify-center gap-4 sm:flex-row">
