@@ -1,5 +1,6 @@
 'use server';
 
+import { auth } from '@/auth';
 import { multipostDb } from '@/lib/db';
 import { endOfDay, startOfDay, subDays } from 'date-fns';
 
@@ -145,16 +146,16 @@ export async function getPopularPages(websiteId: string) {
   }));
 }
 
-export async function getUserWebsites(userId: string) {
+export async function getWebsites() {
+  const session = await auth();
+  if (!session?.user?.id) {
+    return [];
+  }
+
   const websites = await multipostDb.website.findMany({
     where: {
-      userId,
+      userId: session.user.id,
       deletedAt: null,
-    },
-    select: {
-      id: true,
-      name: true,
-      domain: true,
     },
     orderBy: {
       createdAt: 'desc',
@@ -162,4 +163,20 @@ export async function getUserWebsites(userId: string) {
   });
 
   return websites;
+}
+
+export async function getWebsite(websiteId: string) {
+  const session = await auth();
+  if (!session?.user?.id) {
+    return null;
+  }
+
+  const website = await multipostDb.website.findUnique({
+    where: {
+      id: websiteId,
+      userId: session.user.id,
+    },
+  });
+
+  return website;
 }
