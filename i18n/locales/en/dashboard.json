@@ -1,28 +1,19 @@
 {
   "welcome": {
     "title": "Welcome back, {{name}}",
-    "description": "Start using MultiPost to make content creation easier",
     "chrome_store": "Chrome Store",
     "edge_store": "Edge Store",
     "publish": {
-      "title": "Go to Publish",
-      "action": "Start Publishing",
-      "description": "One-click publishing to multiple platforms, supporting WeChat Official Account, Zhihu, JueJin, and more",
-      "titleDescription": "Publish to Multiple Platforms",
-      "hoverDescription": "One-click publishing to multiple platforms, supporting WeChat Official Account, Zhihu, JueJin, and more, improving content distribution efficiency"
+      "title": "Publish",
+      "description": "One-click publish to WeChat, Zhihu, JueJin and more"
     },
     "markdown": {
       "title": "Markdown Editor",
-      "action": "Start Editing",
-      "description": "Professional Markdown editor with real-time preview, image upload, math formulas, and more features",
-      "titleDescription": "Markdown Editor",
-      "hoverDescription": "Professional Markdown editor with real-time preview, image upload, math formulas, and more features, making writing easier"
+      "description": "Real-time preview, image upload, math formulas and more"
     },
     "webtrace": {
-      "title": "Web Trace",
-      "action": "View Analytics",
-      "titleDescription": "Website Analytics",
-      "hoverDescription": "Track your website's performance with real-time analytics, visitor insights, and detailed page views statistics"
+      "title": "Web Analytics",
+      "description": "Track website performance and visitor data"
     },
     "card": {
       "hover_tip": "Click for details"

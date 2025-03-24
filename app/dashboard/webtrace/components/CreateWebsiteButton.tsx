@@ -18,7 +18,6 @@ import { z } from 'zod';
 import { createWebsite } from '../actions';
 import { useRouter } from 'next/navigation';
 
-
 /**
  * 网站表单验证 Schema
  * @description 定义网站添加表单的验证规则
@@ -72,7 +71,7 @@ export function CreateWebsiteButton() {
       }
 
       const createdResult = await createWebsite(result.data);
-      router.push(`/dashboard/webtrace/website/${createdResult.id}`);
+      router.push(`/dashboard/webtrace/website/${createdResult.id}?first-time=true`);
     } catch (error) {
       console.error('创建网站失败:', error);
       setValidationErrors({
@@ -88,7 +87,7 @@ export function CreateWebsiteButton() {
       {/* 触发按钮 */}
       <Button
         color="primary"
-        startContent={<PlusIcon className="size-4" />}
+        startContent={<PlusIcon />}
         onPress={onOpen}>
         添加
       </Button>

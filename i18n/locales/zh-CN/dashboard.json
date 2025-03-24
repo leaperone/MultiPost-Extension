@@ -1,27 +1,19 @@
 {
   "welcome": {
     "title": "欢迎回来，{{name}}",
-    "description": "开始使用 MultiPost，让内容创作更轻松",
     "chrome_store": "Chrome 商店",
     "edge_store": "Edge 商店",
     "publish": {
-      "title": "前往发布页面",
-      "action": "开始发布",
-      "titleDescription": "发布内容到多个平台",
-      "hoverDescription": "一键发布内容到多个平台，支持微信公众号、知乎、掘金等，提高内容分发效率"
+      "title": "发布内容",
+      "description": "一键发布到微信公众号、知乎、掘金等平台"
     },
     "markdown": {
       "title": "Markdown 编辑器",
-      "action": "前往编辑",
-      "description": "专业的 Markdown 编辑器，支持实时预览、图片上传、数学公式等，让写作更轻松",
-      "titleDescription": "Markdown 编辑器",
-      "hoverDescription": "专业的 Markdown 编辑器，支持实时预览、图片上传、数学公式等，让写作更轻松"
+      "description": "支持实时预览、图片上传、数学公式等"
     },
     "webtrace": {
       "title": "网站分析",
-      "action": "查看分析",
-      "titleDescription": "网站数据分析",
-      "hoverDescription": "实时跟踪您的网站性能，包括访客洞察、页面浏览统计等详细分析数据"
+      "description": "实时跟踪网站性能和访客数据"
     },
     "card": {
       "hover_tip": "点击查看详情"

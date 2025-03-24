@@ -1,12 +1,16 @@
 import { Suspense } from 'react';
 import { CreateWebsiteButton } from './components/CreateWebsiteButton';
 import { WebsiteList } from './components/WebsitesList';
+import { InfoButton } from './components/InfoButton';
 
 export default async function WebTracePage() {
   return (
     <div className="mx-auto h-full max-w-7xl space-y-6 overflow-y-auto p-4">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold">Web Trace</h1>
+        <div className="flex items-center gap-2">
+          <h1 className="text-2xl font-bold">Web Trace</h1>
+          <InfoButton />
+        </div>
         <CreateWebsiteButton />
       </div>
 

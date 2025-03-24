@@ -1,0 +1,71 @@
+'use server';
+
+import { multipostDb } from '@/lib/db';
+import { startOfDay, subDays } from 'date-fns';
+import { Card, CardBody, CardHeader } from '@heroui/react';
+
+async function getPopularPages(websiteId: string) {
+  const startDate = startOfDay(subDays(new Date(), 7));
+
+  const pages = await multipostDb.websiteEvent.groupBy({
+    by: ['urlPath'],
+    where: {
+      websiteId,
+      createdAt: {
+        gte: startDate,
+      },
+      eventType: 1,
+    },
+    _count: {
+      urlPath: true,
+    },
+    orderBy: {
+      _count: {
+        urlPath: 'desc',
+      },
+    },
+    take: 5,
+  });
+
+  return pages.map((page) => ({
+    urlPath: page.urlPath,
+    count: page._count.urlPath,
+  }));
+}
+
+interface PopularPagesCardProps {
+  websiteId: string;
+}
+
+export async function PopularPagesCard({ websiteId }: PopularPagesCardProps) {
+  const popularPages = await getPopularPages(websiteId);
+  const totalPageviews = popularPages.reduce((acc, curr) => acc + curr.count, 0);
+
+  return (
+    <Card>
+      <CardHeader>
+        <h2 className="text-lg font-semibold">热门页面</h2>
+      </CardHeader>
+      <CardBody>
+        <div className="space-y-4">
+          {popularPages.map((page, i) => (
+            <div
+              key={page.urlPath}
+              className="flex items-center justify-between">
+              <div className="flex items-center space-x-2">
+                <div className="flex size-8 items-center justify-center rounded-full bg-primary-100 text-sm font-medium text-primary-900">
+                  {i + 1}
+                </div>
+                <div className="space-y-1">
+                  <p className="text-sm font-medium">{page.urlPath}</p>
+                  <p className="text-xs text-gray-500">{page.count.toLocaleString()} 访问</p>
+                </div>
+              </div>
+              <div className="text-sm text-gray-500">{((page.count / totalPageviews) * 100).toFixed(1)}%</div>
+            </div>
+          ))}
+        </div>
+      </CardBody>
+    </Card>
+  );
+}

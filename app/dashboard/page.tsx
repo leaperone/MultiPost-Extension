@@ -1,17 +1,65 @@
-import { Button, Link, Skeleton } from '@heroui/react';
+import { Button, Link, Skeleton, Card, CardBody } from '@heroui/react';
 import { Suspense } from 'react';
 import { Icon } from '@iconify/react';
 
 import { auth } from '@/auth';
 import { createTranslation } from '@/i18n/server';
 import { SendIcon, FileTextIcon, ChartSplineIcon } from 'lucide-react';
-import { HoverCard } from './components/HoverCard';
+
+interface DashboardCardProps {
+  href: string;
+  title: string;
+  description: string;
+  icon: React.ReactNode;
+  external?: boolean;
+}
+
+function DashboardCard({ href, title, description, icon, external }: DashboardCardProps) {
+  return (
+    <Card
+      as={Link}
+      href={href}
+      target={external ? '_blank' : undefined}
+      isPressable
+      className="group transition-all hover:scale-[1.02]">
+      <CardBody className="flex items-start gap-4 p-6">
+        <div className="rounded-lg bg-primary-50 p-2 dark:bg-primary-900/20">{icon}</div>
+        <div className="space-y-1.5">
+          <h3 className="text-lg font-semibold text-foreground/90">{title}</h3>
+          <p className="text-sm text-foreground/60">{description}</p>
+        </div>
+      </CardBody>
+    </Card>
+  );
+}
 
 export default async function DashboardPage() {
   const session = await auth();
   const user = session?.user;
 
   const { t } = await createTranslation('dashboard');
+
+  const cards = [
+    {
+      href: '/dashboard/publish',
+      title: t('welcome.publish.title'),
+      description: t('welcome.publish.description'),
+      icon: <SendIcon className="size-5 text-primary-600 dark:text-primary-400" />,
+    },
+    {
+      href: 'https://md.multipost.app',
+      title: t('welcome.markdown.title'),
+      description: t('welcome.markdown.description'),
+      icon: <FileTextIcon className="size-5 text-primary-600 dark:text-primary-400" />,
+      external: true,
+    },
+    {
+      href: '/dashboard/webtrace',
+      title: t('welcome.webtrace.title'),
+      description: t('welcome.webtrace.description'),
+      icon: <ChartSplineIcon className="size-5 text-primary-600 dark:text-primary-400" />,
+    },
+  ];
 
   return (
     <div className="mx-auto h-full max-w-7xl space-y-6 overflow-y-auto p-4">
@@ -50,35 +98,13 @@ export default async function DashboardPage() {
               </Button>
             </div>
           </div>
-          <p className="text-foreground/80">{t('welcome.description')}</p>
-          <div className="grid gap-6 sm:grid-cols-2">
-            <HoverCard
-              href="/dashboard/publish"
-              title={t('welcome.publish.title')}
-              titleIcon={<SendIcon className="size-5 text-foreground/50" />}
-              titleDescription={t('welcome.publish.titleDescription')}
-              hoverTitle={t('welcome.publish.action')}
-              hoverDescription={t('welcome.publish.hoverDescription')}
-            />
-
-            <HoverCard
-              href="https://md.multipost.app"
-              isExternal
-              title={t('welcome.markdown.title')}
-              titleIcon={<FileTextIcon className="size-5 text-foreground/50" />}
-              titleDescription={t('welcome.markdown.titleDescription')}
-              hoverTitle={t('welcome.markdown.action')}
-              hoverDescription={t('welcome.markdown.hoverDescription')}
-            />
-
-            <HoverCard
-              href="/dashboard/webtrace"
-              title={t('welcome.webtrace.title')}
-              titleIcon={<ChartSplineIcon className="size-5 text-foreground/50" />}
-              titleDescription={t('welcome.webtrace.titleDescription')}
-              hoverTitle={t('welcome.webtrace.action')}
-              hoverDescription={t('welcome.webtrace.hoverDescription')}
-            />
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {cards.map((card, index) => (
+              <DashboardCard
+                key={index}
+                {...card}
+              />
+            ))}
           </div>
           <Suspense fallback={<CardSkeleton />}></Suspense>
         </div>
