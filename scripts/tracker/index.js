@@ -57,7 +57,7 @@
             text: textContent.trim(),
             target,
           },
-          'preDefinedEvent',
+          'predefinedEvent',
         );
       }
     }
@@ -89,9 +89,8 @@
         timestamp: currentTime,
         state: document.visibilityState,
         duration: duration,
-        url: currentUrl,
       },
-      'preDefinedEvent',
+      'predefinedEvent',
     );
 
     lastVisibilityChangeTimestamp = currentTime;
@@ -107,10 +106,8 @@
       'page_enter',
       {
         timestamp: currentTime,
-        referrer: currentRef,
-        url: currentUrl,
       },
-      'preDefinedEvent',
+      'predefinedEvent',
     );
     pageEnterTimestamp = currentTime;
   };
@@ -129,9 +126,8 @@
       {
         timestamp: currentTime,
         duration: duration,
-        url: currentUrl,
       },
-      'preDefinedEvent',
+      'predefinedEvent',
     );
   };
 

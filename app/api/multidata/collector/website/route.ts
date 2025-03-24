@@ -198,8 +198,8 @@ export async function POST(request: Request) {
 
       let eventType: number = EVENT_TYPE.pageView;
 
-      if (type === COLLECTION_TYPE.preDefinedEvent) {
-        eventType = EVENT_TYPE.preDefinedEvent;
+      if (type === COLLECTION_TYPE.predefinedEvent) {
+        eventType = EVENT_TYPE.predefinedEvent;
       } else if (name) {
         eventType = EVENT_TYPE.customEvent;
       }
