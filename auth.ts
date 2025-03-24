@@ -27,9 +27,14 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
             maxAge: 60 * 60 * 24,
             sendVerificationRequest,
           },
+          Google,
         ]
       : [Github, Passkey, Google],
   experimental: {
     enableWebAuthn: true,
+  },
+  pages: {
+    error: '/auth/error',
+    signIn: '/signin',
   },
 });
