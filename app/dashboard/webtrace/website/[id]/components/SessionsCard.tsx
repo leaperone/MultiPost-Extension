@@ -35,9 +35,7 @@ async function getSessionsStats(websiteId: string, startDate: Date, endDate: Dat
 
   return {
     current: currentCycleSessions,
-    change: previousCycleSessions
-      ? ((currentCycleSessions - previousCycleSessions) / previousCycleSessions) * 100
-      : 0,
+    change: previousCycleSessions ? ((currentCycleSessions - previousCycleSessions) / previousCycleSessions) * 100 : 0,
   };
 }
 

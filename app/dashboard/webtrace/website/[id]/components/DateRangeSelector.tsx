@@ -5,7 +5,7 @@ import { DateRangePicker } from '@heroui/react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useCallback, useEffect } from 'react';
 import { getLocalTimeZone, parseDate, today } from '@internationalized/date';
-import { startOfDay, subDays } from 'date-fns';
+import { startOfDay, subDays, endOfDay } from 'date-fns';
 
 export function DateRangeSelector() {
   const router = useRouter();
@@ -23,7 +23,7 @@ export function DateRangeSelector() {
       }
 
       if (range?.end) {
-        const endTimestamp = range.end.toDate(getLocalTimeZone()).getTime();
+        const endTimestamp = endOfDay(range.end.toDate(getLocalTimeZone())).getTime();
         params.set('endDate', endTimestamp.toString());
       } else {
         params.delete('endDate');
@@ -38,7 +38,7 @@ export function DateRangeSelector() {
   useEffect(() => {
     if (!searchParams.has('startDate') || !searchParams.has('endDate')) {
       const now = new Date();
-      const defaultEndDate = now.getTime();
+      const defaultEndDate = endOfDay(now).getTime();
       const defaultStartDate = startOfDay(subDays(now, 7)).getTime();
 
       const params = new URLSearchParams(searchParams.toString());
