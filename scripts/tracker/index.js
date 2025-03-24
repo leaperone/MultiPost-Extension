@@ -50,13 +50,89 @@
     if (element.tagName === 'A') {
       const { href, textContent, target } = element;
       if (href && isExternalLink(href)) {
-        return track('external_link', {
-          url: href,
-          text: textContent.trim(),
-          target,
-        });
+        return track(
+          'external_link',
+          {
+            url: href,
+            text: textContent.trim(),
+            target,
+          },
+          'preDefinedEvent',
+        );
       }
     }
+  };
+
+  const handleVisibilityChange = () => {
+    const isVisible = document.visibilityState === 'visible';
+    const currentTime = Date.now();
+    let duration = 0;
+    let eventName;
+
+    if (isVisible) {
+      // 用户返回页面 - 页面变为可见
+      eventName = 'page_visible';
+      if (lastHiddenTimestamp) {
+        duration = currentTime - lastHiddenTimestamp;
+      }
+    } else {
+      // 用户离开页面 - 页面变为不可见
+      eventName = 'page_hidden';
+      if (lastVisibilityChangeTimestamp) {
+        duration = currentTime - lastVisibilityChangeTimestamp;
+      }
+    }
+
+    track(
+      eventName,
+      {
+        timestamp: currentTime,
+        state: document.visibilityState,
+        duration: duration,
+        url: currentUrl,
+      },
+      'preDefinedEvent',
+    );
+
+    lastVisibilityChangeTimestamp = currentTime;
+    if (!isVisible) {
+      lastHiddenTimestamp = currentTime;
+    }
+  };
+
+  // 处理用户进入页面的事件
+  const handlePageEnter = () => {
+    const currentTime = Date.now();
+    track(
+      'page_enter',
+      {
+        timestamp: currentTime,
+        referrer: currentRef,
+        url: currentUrl,
+      },
+      'preDefinedEvent',
+    );
+    pageEnterTimestamp = currentTime;
+  };
+
+  // 处理用户退出页面的事件
+  const handlePageExit = () => {
+    const currentTime = Date.now();
+    let duration = 0;
+
+    if (pageEnterTimestamp) {
+      duration = currentTime - pageEnterTimestamp;
+    }
+
+    track(
+      'page_exit',
+      {
+        timestamp: currentTime,
+        duration: duration,
+        url: currentUrl,
+      },
+      'preDefinedEvent',
+    );
   };
 
   const getPayload = () => ({
@@ -249,6 +325,9 @@
 
   const init = () => {
     if (!initialized) {
+      // 记录用户进入页面事件
+      handlePageEnter();
+
       track();
       handlePathChanges();
       handleTitleChanges();
@@ -264,23 +343,33 @@
         }
       });
 
+      // 添加页面可见性变化监听
+      document.addEventListener('visibilitychange', handleVisibilityChange, false);
+
+      // 添加页面卸载事件监听
+      window.addEventListener('beforeunload', handlePageExit);
+      window.addEventListener('unload', handlePageExit);
+
       initialized = true;
     }
   };
 
-  const track = (obj, data) => {
+  const track = (obj, data, type = 'event') => {
     if (typeof obj === 'string') {
-      return send({
-        ...getPayload(),
-        name: obj,
-        data: typeof data === 'object' ? data : undefined,
-      });
+      return send(
+        {
+          ...getPayload(),
+          name: obj,
+          data: typeof data === 'object' ? data : undefined,
+        },
+        type,
+      );
     } else if (typeof obj === 'object') {
-      return send(obj);
+      return send(obj, type);
     } else if (typeof obj === 'function') {
-      return send(obj(getPayload()));
+      return send(obj(getPayload()), type);
     }
-    return send(getPayload());
+    return send(getPayload(), type);
   };
 
   const identify = (data) => send({ ...getPayload(), data }, 'identify');
@@ -300,6 +389,9 @@
   let cache;
   let initialized;
   let disabled = false;
+  let lastVisibilityChangeTimestamp = Date.now();
+  let lastHiddenTimestamp = 0;
+  let pageEnterTimestamp = 0;
 
   if (autoTrack && !trackingDisabled()) {
     if (document.readyState === 'complete') {

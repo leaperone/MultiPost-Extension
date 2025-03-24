@@ -55,11 +55,13 @@ export const FILTER_COLUMNS = {
 export const COLLECTION_TYPE = {
   event: 'event',
   identify: 'identify',
+  preDefinedEvent: 'preDefinedEvent',
 };
 
 export const EVENT_TYPE = {
   pageView: 1,
   customEvent: 2,
+  preDefinedEvent: 3,
 } as const;
 
 export const DATA_TYPE = {

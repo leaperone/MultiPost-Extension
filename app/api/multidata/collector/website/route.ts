@@ -2,12 +2,13 @@
 import { isbot } from 'isbot';
 import { startOfHour, startOfMonth } from 'date-fns';
 import { NextResponse } from 'next/server';
-import { schema, COLLECTION_TYPE, safeDecodeURI, safeDecodeURIComponent } from './utils';
+import { schema, safeDecodeURI, safeDecodeURIComponent } from './utils';
 import { secret, uuid, hash } from '@/lib/crypto';
 import { createToken, parseToken } from '@/lib/jwt';
 import { getClientInfo, hasBlockedIp } from '@/lib/detect';
 import { fetchWebsite, fetchSession, createSession, saveEvent, saveSessionData } from './db';
 import { json, badRequest, forbidden, serverError } from '@/lib/response';
+import { EVENT_TYPE, COLLECTION_TYPE } from '@/lib/constants';
 
 // 添加 CORS 头部的工具函数
 function corsHeaders() {
@@ -195,6 +196,14 @@ export async function POST(request: Request) {
         }
       }
 
+      let eventType: number = EVENT_TYPE.pageView;
+
+      if (type === COLLECTION_TYPE.preDefinedEvent) {
+        eventType = EVENT_TYPE.preDefinedEvent;
+      } else if (name) {
+        eventType = EVENT_TYPE.customEvent;
+      }
+
       await saveEvent({
         websiteId,
         sessionId,
@@ -207,6 +216,7 @@ export async function POST(request: Request) {
         pageTitle: title ? ensureString(safeDecodeURIComponent(title)) : undefined,
         eventName: name,
         eventData: data,
+        eventType,
         hostname: hostname || urlDomain,
         browser: nullToUndefined(browser),
         os: os || 'unknown',

@@ -1,5 +1,4 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { EVENT_TYPE } from '@/lib/constants';
 import { multipostDb } from '@/lib/db';
 import { Website, WebsiteEvent, VisitorSession, SessionData } from '@/prisma/client_multipost';
 
@@ -52,6 +51,7 @@ export async function saveEvent(data: {
   referrerDomain?: string;
   pageTitle?: string;
   eventName?: string;
+  eventType?: number;
   eventData?: Record<string, any>;
   hostname?: string;
   browser?: string;
@@ -78,7 +78,7 @@ export async function saveEvent(data: {
       referrerDomain: data.referrerDomain,
       pageTitle: data.pageTitle,
       eventName: data.eventName,
-      eventType: data.eventName ? EVENT_TYPE.customEvent : EVENT_TYPE.pageView,
+      eventType: data.eventType,
       tag: data.tag,
       createdAt: data.createdAt,
     },
