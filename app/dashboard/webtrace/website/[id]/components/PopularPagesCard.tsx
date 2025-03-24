@@ -1,18 +1,16 @@
 'use server';
 
 import { multipostDb } from '@/lib/db';
-import { startOfDay, subDays } from 'date-fns';
 import { Card, CardBody, CardHeader } from '@heroui/react';
 
-async function getPopularPages(websiteId: string) {
-  const startDate = startOfDay(subDays(new Date(), 7));
-
+async function getPopularPages(websiteId: string, startDate: Date, endDate: Date) {
   const pages = await multipostDb.websiteEvent.groupBy({
     by: ['urlPath'],
     where: {
       websiteId,
       createdAt: {
         gte: startDate,
+        lt: endDate,
       },
       eventType: 1,
     },
@@ -35,10 +33,12 @@ async function getPopularPages(websiteId: string) {
 
 interface PopularPagesCardProps {
   websiteId: string;
+  startDate: Date;
+  endDate: Date;
 }
 
-export async function PopularPagesCard({ websiteId }: PopularPagesCardProps) {
-  const popularPages = await getPopularPages(websiteId);
+export async function PopularPagesCard({ websiteId, startDate, endDate }: PopularPagesCardProps) {
+  const popularPages = await getPopularPages(websiteId, startDate, endDate);
   const totalPageviews = popularPages.reduce((acc, curr) => acc + curr.count, 0);
 
   return (

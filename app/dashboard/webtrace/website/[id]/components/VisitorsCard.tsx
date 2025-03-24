@@ -1,55 +1,62 @@
 'use server';
 
 import { multipostDb } from '@/lib/db';
-import { startOfDay, subDays } from 'date-fns';
 import { Users } from 'lucide-react';
 import { Card, CardBody } from '@heroui/react';
 import { Icon } from '@iconify/react';
 
-async function getVisitorsStats(websiteId: string) {
-  const now = new Date();
-  const today = startOfDay(now);
-  const yesterday = startOfDay(subDays(now, 1));
-
-  // 获取今日实时访客数
-  const todayVisitors = await multipostDb.visitorSession.count({
+async function getVisitorsStats(websiteId: string, startDate: Date, endDate: Date) {
+  // 获取当前周期访客数（通过独立的 visitId 计算）
+  const currentCycleVisitors = await multipostDb.websiteEvent.findMany({
     where: {
       websiteId,
       createdAt: {
-        gte: today,
+        gte: startDate,
+        lt: endDate,
       },
     },
+    distinct: ['visitId'],
   });
 
-  // 获取昨日数据用于计算增长率
-  const yesterdayVisitors = await multipostDb.visitorSession.count({
+  // 计算上一周期的时间范围
+  const timeSpan = endDate.getTime() - startDate.getTime();
+  const previousCycleStart = new Date(startDate.getTime() - timeSpan);
+  const previousCycleEnd = startDate;
+
+  // 获取上一周期数据用于计算增长率（通过独立的 visitId 计算）
+  const previousCycleVisitors = await multipostDb.websiteEvent.findMany({
     where: {
       websiteId,
       createdAt: {
-        gte: yesterday,
-        lt: today,
+        gte: previousCycleStart,
+        lt: previousCycleEnd,
       },
     },
+    distinct: ['visitId'],
   });
 
   return {
-    current: todayVisitors,
-    change: yesterdayVisitors ? ((todayVisitors - yesterdayVisitors) / yesterdayVisitors) * 100 : 0,
+    current: currentCycleVisitors.length,
+    change: previousCycleVisitors.length
+      ? ((currentCycleVisitors.length - previousCycleVisitors.length) / previousCycleVisitors.length) * 100
+      : 0,
   };
 }
 
 interface VisitorsCardProps {
   websiteId: string;
+  startDate: Date;
+  endDate: Date;
 }
 
-export async function VisitorsCard({ websiteId }: VisitorsCardProps) {
-  const stats = await getVisitorsStats(websiteId);
+export async function VisitorsCard({ websiteId, startDate, endDate }: VisitorsCardProps) {
+  const stats = await getVisitorsStats(websiteId, startDate, endDate);
 
   return (
     <Card>
       <CardBody className="space-y-2">
         <div className="flex items-center justify-between">
-          <span className="text-sm text-gray-500">实时访客</span>
+          <span className="text-sm text-gray-500">访客</span>
           <div className="rounded-full bg-gray-100 p-2 dark:bg-gray-800">
             <Users className="size-4" />
           </div>
@@ -60,7 +67,7 @@ export async function VisitorsCard({ websiteId }: VisitorsCardProps) {
               icon="openmoji:smiling-face-with-open-hands"
               className="size-20"
             />
-            <p className="text-sm text-gray-500">今日暂无访客</p>
+            <p className="text-sm text-gray-500">该周期暂无访客</p>
           </div>
         ) : (
           <div className="flex items-baseline justify-between">

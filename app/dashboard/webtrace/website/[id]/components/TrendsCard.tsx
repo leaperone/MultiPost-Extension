@@ -1,22 +1,18 @@
 'use server';
 
 import { multipostDb } from '@/lib/db';
-import { endOfDay, startOfDay, subDays } from 'date-fns';
+import { endOfDay, startOfDay } from 'date-fns';
 import { VisitTrendsChart } from './VisitTrendsChart';
 
-async function getVisitTrends(websiteId: string, days: number = 7) {
-  const now = new Date();
-  const startDate = startOfDay(subDays(now, days - 1));
-  const endDate = endOfDay(now);
-
+async function getVisitTrends(websiteId: string, startDate: Date, endDate: Date) {
   // 获取访问趋势数据，按天分组
   const events = await multipostDb.websiteEvent.groupBy({
     by: ['createdAt'],
     where: {
       websiteId,
       createdAt: {
-        gte: startDate,
-        lte: endDate,
+        gte: startOfDay(startDate),
+        lte: endOfDay(endDate),
       },
       eventType: 1,
     },
@@ -28,9 +24,13 @@ async function getVisitTrends(websiteId: string, days: number = 7) {
     },
   });
 
+  // 计算天数
+  const days = Math.ceil((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24));
+
   // 生成日期数组，初始化所有日期的访问量为 0
   const dateArray = Array.from({ length: days }, (_, i) => {
-    const date = startOfDay(subDays(now, days - 1 - i));
+    const date = new Date(startDate);
+    date.setDate(date.getDate() + i);
     return {
       date: date.toISOString().split('T')[0],
       views: 0,
@@ -59,10 +59,12 @@ async function getVisitTrends(websiteId: string, days: number = 7) {
 
 interface TrendsCardProps {
   websiteId: string;
+  startDate: Date;
+  endDate: Date;
 }
 
-export async function TrendsCard({ websiteId }: TrendsCardProps) {
-  const trends = await getVisitTrends(websiteId);
+export async function TrendsCard({ websiteId, startDate, endDate }: TrendsCardProps) {
+  const trends = await getVisitTrends(websiteId, startDate, endDate);
 
   return <VisitTrendsChart data={trends} />;
 }
