@@ -23,9 +23,9 @@ import { z } from 'zod';
 import { SessionsCard } from './components/SessionsCard';
 
 interface WebsitePageProps {
-  params: Promise<{
+  params: {
     id: string;
-  }>;
+  };
   searchParams: { [key: string]: string | string[] | undefined };
 }
 
