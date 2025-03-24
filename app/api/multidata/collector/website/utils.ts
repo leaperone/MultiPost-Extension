@@ -24,12 +24,6 @@ export const schema = z.object({
   }),
 });
 
-// 常量
-export const COLLECTION_TYPE = {
-  event: 'event',
-  identify: 'identify',
-} as const;
-
 export function safeDecodeURI(s: string | undefined | null): string | undefined | null {
   if (s === undefined || s === null) {
     return s;
