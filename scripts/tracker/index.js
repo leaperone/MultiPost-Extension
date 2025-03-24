@@ -63,27 +63,71 @@
     }
   };
 
-  // 记录可见和不可见的时间，但不发送可见性变化事件
+  // 记录可见和不可见的时间，并发送可见性变化事件
   const handleVisibilityChange = () => {
-    // 如果停留时间不足5秒或未被标记为有效会话，则不处理
+    // 如果未被标记为有效会话，则不处理
     if (!validSession) return;
 
     const isVisible = document.visibilityState === 'visible';
     const currentTime = Date.now();
 
     if (isVisible) {
-      // 用户返回页面 - 页面变为可见，记录开始计时点
+      // 用户返回页面 - 页面变为可见
+      // 初始化可见时间计数器
       visibleStartTime = currentTime;
+      totalVisibleTime = 0; // 重新开始计算可见时间
+
+      // 清除之前的计时器（如果有）
+      if (returnPageTimeout) {
+        clearTimeout(returnPageTimeout);
+      }
+
+      // 设置计时器，返回页面也要等待5秒才发送进入事件
+      returnPageTimeout = setTimeout(() => {
+        // 发送页面进入事件
+        track(
+          'page_enter',
+          {
+            timestamp: currentTime,
+            state: 'visible',
+            url: currentUrl,
+            referrer: currentRef,
+          },
+          'predefinedEvent',
+        );
+      }, 5000); // 5秒
     } else {
-      // 用户离开页面 - 页面变为不可见，累计已可见的时间
+      // 用户离开页面 - 页面变为不可见
+      // 如果有等待中的返回页面计时器，取消它
+      if (returnPageTimeout) {
+        clearTimeout(returnPageTimeout);
+        returnPageTimeout = null;
+      }
+
+      // 计算用户在此次可见期间的停留时间
       if (visibleStartTime > 0) {
         totalVisibleTime += currentTime - visibleStartTime;
         visibleStartTime = 0; // 重置开始时间
       }
+
+      // 发送页面退出事件
+      sendBeacon(
+        {
+          ...getPayload(),
+          name: 'page_exit',
+          data: {
+            timestamp: currentTime,
+            state: 'hidden',
+            visibleDuration: totalVisibleTime,
+            url: currentUrl,
+          },
+        },
+        'predefinedEvent',
+      );
     }
   };
 
-  // 处理用户进入页面的事件
+  // 处理用户首次进入页面的事件
   const handlePageEnter = () => {
     const currentTime = Date.now();
 
@@ -97,6 +141,9 @@
         'page_enter',
         {
           timestamp: currentTime,
+          state: 'initial', // 首次进入标记为initial
+          url: currentUrl,
+          referrer: currentRef,
         },
         'predefinedEvent',
       );
@@ -104,7 +151,7 @@
     }, 5000); // 5秒
   };
 
-  // 处理用户退出页面的事件
+  // 处理用户完全关闭页面的事件
   const handlePageExit = () => {
     // 如果停留时间不足5秒或未被标记为有效会话，则不记录退出事件
     if (!validSession) return;
@@ -129,6 +176,7 @@
         name: 'page_exit',
         data: {
           timestamp: currentTime,
+          state: 'closed', // 区分是完全关闭页面的退出
           visibleDuration: totalVisibleTime, // 只记录可见状态下的停留时间
           url: currentUrl,
         },
@@ -446,6 +494,7 @@
   let initialized;
   let disabled = false;
   let pageEnterTimeout = null;
+  let returnPageTimeout = null; // 用户返回页面后的计时器
   let validSession = false;
   let visibleStartTime = 0; // 记录页面变为可见的开始时间
   let totalVisibleTime = 0; // 累计页面可见的总时间
