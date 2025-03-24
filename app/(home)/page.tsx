@@ -141,7 +141,7 @@ function HeroSection({ t, className }: { t: TranslationFunction; className?: str
           <div className="flex justify-center gap-2">
             <Button
               as={Link}
-              href="/publish"
+              href="/dashboard/publish"
               size="lg"
               startContent={<LayoutDashboardIcon />}
               className="bg-gradient-to-r from-blue-400 to-sky-300 text-white transition-opacity hover:opacity-90">

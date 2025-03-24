@@ -52,7 +52,7 @@ const StatusCard: React.FC<StatusCardProps> = ({ isInstalled }) => {
               </Button>
               <Button
                 as={Link}
-                href="/publish"
+                href="/dashboard/publish"
                 startContent={<ArrowRight className="size-4" />}>
                 {t('start_publishing')}
               </Button>
