@@ -173,7 +173,7 @@ export async function POST(request: Request) {
     }
 
     // 处理事件类型
-    if (type === COLLECTION_TYPE.event) {
+    if (type === COLLECTION_TYPE.event || type === COLLECTION_TYPE.predefinedEvent) {
       const base = hostname ? `https://${hostname}` : 'https://localhost';
       const currentUrl = new URL(url || '', base);
 
