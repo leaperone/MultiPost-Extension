@@ -90,8 +90,6 @@
           {
             timestamp: currentTime,
             state: 'visible',
-            url: currentUrl,
-            referrer: currentRef,
           },
           'predefinedEvent',
         );
@@ -119,7 +117,6 @@
             timestamp: currentTime,
             state: 'hidden',
             visibleDuration: totalVisibleTime,
-            url: currentUrl,
           },
         },
         'predefinedEvent',
@@ -142,8 +139,6 @@
         {
           timestamp: currentTime,
           state: 'initial', // 首次进入标记为initial
-          url: currentUrl,
-          referrer: currentRef,
         },
         'predefinedEvent',
       );
@@ -178,7 +173,6 @@
           timestamp: currentTime,
           state: 'closed', // 区分是完全关闭页面的退出
           visibleDuration: totalVisibleTime, // 只记录可见状态下的停留时间
-          url: currentUrl,
         },
       },
       'predefinedEvent',
