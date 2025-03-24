@@ -63,72 +63,117 @@
     }
   };
 
+  // 记录可见和不可见的时间，但不发送可见性变化事件
   const handleVisibilityChange = () => {
+    // 如果停留时间不足5秒或未被标记为有效会话，则不处理
+    if (!validSession) return;
+
     const isVisible = document.visibilityState === 'visible';
     const currentTime = Date.now();
-    let duration = 0;
-    let eventName;
 
     if (isVisible) {
-      // 用户返回页面 - 页面变为可见
-      eventName = 'page_visible';
-      if (lastHiddenTimestamp) {
-        duration = currentTime - lastHiddenTimestamp;
-      }
+      // 用户返回页面 - 页面变为可见，记录开始计时点
+      visibleStartTime = currentTime;
     } else {
-      // 用户离开页面 - 页面变为不可见
-      eventName = 'page_hidden';
-      if (lastVisibilityChangeTimestamp) {
-        duration = currentTime - lastVisibilityChangeTimestamp;
+      // 用户离开页面 - 页面变为不可见，累计已可见的时间
+      if (visibleStartTime > 0) {
+        totalVisibleTime += currentTime - visibleStartTime;
+        visibleStartTime = 0; // 重置开始时间
       }
-    }
-
-    track(
-      eventName,
-      {
-        timestamp: currentTime,
-        state: document.visibilityState,
-        duration: duration,
-      },
-      'predefinedEvent',
-    );
-
-    lastVisibilityChangeTimestamp = currentTime;
-    if (!isVisible) {
-      lastHiddenTimestamp = currentTime;
     }
   };
 
   // 处理用户进入页面的事件
   const handlePageEnter = () => {
     const currentTime = Date.now();
-    track(
-      'page_enter',
-      {
-        timestamp: currentTime,
-      },
-      'predefinedEvent',
-    );
-    pageEnterTimestamp = currentTime;
+
+    // 初始化可见时间计数器
+    visibleStartTime = currentTime;
+    totalVisibleTime = 0;
+
+    // 设置计时器，只有停留超过5秒才发送进入事件
+    pageEnterTimeout = setTimeout(() => {
+      track(
+        'page_enter',
+        {
+          timestamp: currentTime,
+        },
+        'predefinedEvent',
+      );
+      validSession = true; // 标记为有效会话
+    }, 5000); // 5秒
   };
 
   // 处理用户退出页面的事件
   const handlePageExit = () => {
-    const currentTime = Date.now();
-    let duration = 0;
+    // 如果停留时间不足5秒或未被标记为有效会话，则不记录退出事件
+    if (!validSession) return;
 
-    if (pageEnterTimestamp) {
-      duration = currentTime - pageEnterTimestamp;
+    // 清除进入页面的超时计时器，避免重复计数
+    if (pageEnterTimeout) {
+      clearTimeout(pageEnterTimeout);
+      pageEnterTimeout = null;
     }
 
-    track(
-      'page_exit',
+    const currentTime = Date.now();
+
+    // 如果当前页面是可见的，要加上当前这段可见时间
+    if (document.visibilityState === 'visible' && visibleStartTime > 0) {
+      totalVisibleTime += currentTime - visibleStartTime;
+    }
+
+    // 使用sendBeacon确保数据在页面关闭前发送成功
+    sendBeacon(
       {
-        timestamp: currentTime,
-        duration: duration,
+        ...getPayload(),
+        name: 'page_exit',
+        data: {
+          timestamp: currentTime,
+          visibleDuration: totalVisibleTime, // 只记录可见状态下的停留时间
+          url: currentUrl,
+        },
       },
       'predefinedEvent',
     );
+
+    // 重置会话状态
+    validSession = false;
+    visibleStartTime = 0;
+    totalVisibleTime = 0;
+  };
+
+  // 添加会话超时处理，如果用户长时间不活动，重置会话
+  const setupSessionTimeout = () => {
+    // 30分钟无活动，会话过期
+    const SESSION_TIMEOUT = 30 * 60 * 1000;
+
+    // 用户活动事件列表
+    const userActivityEvents = ['mousedown', 'keydown', 'touchstart', 'scroll'];
+
+    let sessionTimeoutId = null;
+
+    // 重置会话超时
+    const resetSessionTimeout = () => {
+      if (sessionTimeoutId) {
+        clearTimeout(sessionTimeoutId);
+      }
+
+      // 如果是有效会话，设置超时
+      if (validSession) {
+        sessionTimeoutId = setTimeout(() => {
+          // 会话超时，记录一个退出事件
+          handlePageExit();
+        }, SESSION_TIMEOUT);
+      }
+    };
+
+    // 为用户活动事件添加监听器
+    userActivityEvents.forEach((eventName) => {
+      window.addEventListener(eventName, resetSessionTimeout, { passive: true });
+    });
+
+    // 初始化会话超时
+    resetSessionTimeout();
   };
 
   const getPayload = () => ({
@@ -319,6 +364,18 @@
     }
   };
 
+  // 使用navigator.sendBeacon发送数据（适用于页面卸载场景）
+  const sendBeacon = (payload, type = 'event') => {
+    if (trackingDisabled() || !navigator.sendBeacon) return false;
+
+    const data = JSON.stringify({
+      type,
+      payload,
+    });
+
+    return navigator.sendBeacon(endpoint, data);
+  };
+
   const init = () => {
     if (!initialized) {
       // 记录用户进入页面事件
@@ -345,6 +402,9 @@
       // 添加页面卸载事件监听
       window.addEventListener('beforeunload', handlePageExit);
       window.addEventListener('unload', handlePageExit);
+
+      // 添加会话超时处理
+      setupSessionTimeout();
 
       initialized = true;
     }
@@ -385,9 +445,10 @@
   let cache;
   let initialized;
   let disabled = false;
-  let lastVisibilityChangeTimestamp = Date.now();
-  let lastHiddenTimestamp = 0;
-  let pageEnterTimestamp = 0;
+  let pageEnterTimeout = null;
+  let validSession = false;
+  let visibleStartTime = 0; // 记录页面变为可见的开始时间
+  let totalVisibleTime = 0; // 累计页面可见的总时间
 
   if (autoTrack && !trackingDisabled()) {
     if (document.readyState === 'complete') {
