@@ -14,6 +14,7 @@ import {
 } from 'recharts';
 import { format } from 'date-fns';
 import { zhCN } from 'date-fns/locale';
+import { useState } from 'react';
 
 interface ChartContentProps {
   data: Record<string, string | number>[];
@@ -73,19 +74,29 @@ const CustomTooltip = ({ active, payload, label }: CustomTooltipProps) => {
 
 // 自定义图例样式
 const CustomLegend = (props: any) => {
-  const { payload } = props;
+  const { eventTypes, onClick, inactiveTypes } = props;
 
   return (
     <div className="flex flex-wrap justify-center gap-4 px-4 pt-4">
-      {payload.map((entry: any, index: number) => (
+      {eventTypes.map((type: string, index: number) => (
         <div
-          key={entry.value}
-          className="flex items-center gap-2">
+          key={type}
+          className="flex cursor-pointer items-center gap-2 transition-opacity hover:opacity-80"
+          onClick={() => onClick?.(type)}
+          role="button"
+          tabIndex={0}>
           <div
             className="size-2.5 rounded-full"
-            style={{ backgroundColor: COLORS[index % COLORS.length] }}
+            style={{
+              backgroundColor: COLORS[index % COLORS.length],
+              opacity: inactiveTypes.includes(type) ? 0.3 : 1,
+            }}
           />
-          <span className="text-sm text-gray-600 dark:text-gray-400">{entry.value}</span>
+          <span
+            className="text-sm text-gray-600 dark:text-gray-400"
+            style={{ opacity: inactiveTypes.includes(type) ? 0.5 : 1 }}>
+            {type}
+          </span>
         </div>
       ))}
     </div>
@@ -93,6 +104,15 @@ const CustomLegend = (props: any) => {
 };
 
 export function ChartContent({ data, eventTypes }: ChartContentProps) {
+  const [inactiveTypes, setInactiveTypes] = useState<string[]>([]);
+
+  const handleLegendClick = (type: string) => {
+    setInactiveTypes((prev) => (prev.includes(type) ? prev.filter((t) => t !== type) : [...prev, type]));
+  };
+
+  // 获取活跃的事件类型（未被禁用的）
+  const activeTypes = eventTypes.filter((type) => !inactiveTypes.includes(type));
+
   return (
     <ResponsiveContainer
       width="100%"
@@ -123,15 +143,27 @@ export function ChartContent({ data, eventTypes }: ChartContentProps) {
           content={<CustomTooltip />}
           cursor={{ fill: 'rgba(0, 0, 0, 0.1)' }}
         />
-        <Legend content={<CustomLegend />} />
-        {eventTypes.map((type, index) => (
+        <Legend
+          content={
+            <CustomLegend
+              eventTypes={eventTypes}
+              onClick={handleLegendClick}
+              inactiveTypes={inactiveTypes}
+            />
+          }
+        />
+        {activeTypes.map((type, index) => (
           <Bar
             key={type}
             dataKey={type}
             stackId="a"
             fill={COLORS[index % COLORS.length]}
             name={type}
-            radius={[4, 4, 0, 0]}
+            radius={index === activeTypes.length - 1 ? [4, 4, 0, 0] : [0, 0, 0, 0]}
+            isAnimationActive={true}
+            animationBegin={0}
+            animationDuration={400}
+            animationEasing="ease"
           />
         ))}
       </BarChart>
