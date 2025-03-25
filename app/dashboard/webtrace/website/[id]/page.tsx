@@ -21,6 +21,8 @@ import { getWebsites } from './actions';
 import { DateRangeSelector } from './components/DateRangeSelector';
 import { z } from 'zod';
 import { SessionsCard } from './components/SessionsCard';
+import { WorldMap } from './components/WorldMap';
+import { CountriesCard } from './components/CountriesCard';
 
 interface WebsitePageProps {
   params: Promise<{
@@ -193,6 +195,24 @@ export default async function WebsitePage(props: WebsitePageProps) {
                 startDate={startDate}
                 endDate={endDate}
               />
+            </Suspense>
+          </div>
+
+          <div className="mt-4 grid gap-4 lg:grid-cols-1">
+            <Suspense fallback={<div className="col-span-3 h-[400px] animate-pulse rounded-lg bg-gray-100" />}>
+              <div className="grid grid-cols-3 gap-4">
+                <WorldMap
+                  className="col-span-2"
+                  websiteId={params.id}
+                  startDate={startDate}
+                  endDate={endDate}
+                />
+                <CountriesCard
+                  websiteId={params.id}
+                  startDate={startDate}
+                  endDate={endDate}
+                />
+              </div>
             </Suspense>
           </div>
         </div>

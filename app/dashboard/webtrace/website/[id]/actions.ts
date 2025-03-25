@@ -180,3 +180,31 @@ export async function getWebsite(websiteId: string) {
 
   return website;
 }
+
+/**
+ * 获取地理位置数据
+ */
+export async function getGeographicalData(websiteId: string, startDate: Date, endDate: Date) {
+  const data = await multipostDb.visitorSession.groupBy({
+    by: ['country'],
+    where: {
+      websiteId,
+      createdAt: {
+        gte: startDate,
+        lte: endDate,
+      },
+      country: {
+        not: null,
+      },
+    },
+    _count: {
+      _all: true,
+    },
+  });
+
+  return data.map((item) => ({
+    x: item.country,
+    y: item._count._all,
+    z: 0, // 将在前端计算百分比
+  }));
+}
