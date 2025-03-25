@@ -6,8 +6,28 @@
 
 import { multipostDb } from '@/lib/db';
 import { Card, CardBody, CardHeader, Image } from '@heroui/react';
+import { GROUPED_DOMAINS } from '@/lib/constants';
+
+function getGroupedDomain(domain: string) {
+  for (const group of GROUPED_DOMAINS) {
+    const matches = Array.isArray(group.match) ? group.match : [group.match];
+    if (matches.some((match) => domain.includes(match))) {
+      return {
+        name: group.name,
+        domain: group.domain,
+      };
+    }
+  }
+  return null;
+}
 
 async function getReferrerStats(websiteId: string, startDate: Date, endDate: Date) {
+  // 首先获取网站的 domain
+  const website = await multipostDb.website.findUnique({
+    where: { id: websiteId },
+    select: { domain: true },
+  });
+
   const referrers = await multipostDb.websiteEvent.groupBy({
     by: ['referrerDomain'],
     where: {
@@ -19,31 +39,61 @@ async function getReferrerStats(websiteId: string, startDate: Date, endDate: Dat
       referrerDomain: {
         not: null,
       },
+      NOT: {
+        referrerDomain: website?.domain,
+      },
     },
-    _count: {
-      referrerDomain: true,
-    },
+    _count: true,
     orderBy: {
       _count: {
         referrerDomain: 'desc',
       },
     },
-    take: 5,
   });
 
-  // 计算总访问量（不包括直接访问）
-  const total = referrers.reduce((acc, curr) => acc + curr._count.referrerDomain, 0);
+  // 合并相关域名的访问量
+  const groupedReferrers = new Map<string, { name: string; count: number; domain: string }>();
 
-  // 转换数据格式，不包含直接访问
-  const stats = referrers.map((item) => ({
-    name: item.referrerDomain || 'Unknown',
-    count: item._count.referrerDomain,
-    percentage: (item._count.referrerDomain / total) * 100,
-    favicon: `https://icons.duckduckgo.com/ip3/${item.referrerDomain}.ico`,
+  for (const item of referrers) {
+    const domain = item.referrerDomain || 'Unknown';
+    const groupInfo = getGroupedDomain(domain);
+
+    if (groupInfo) {
+      const existing = groupedReferrers.get(groupInfo.domain);
+      if (existing) {
+        existing.count += item._count;
+      } else {
+        groupedReferrers.set(groupInfo.domain, {
+          name: groupInfo.name,
+          count: item._count,
+          domain: groupInfo.domain,
+        });
+      }
+    } else {
+      groupedReferrers.set(domain, {
+        name: domain,
+        count: item._count,
+        domain: domain,
+      });
+    }
+  }
+
+  const stats = Array.from(groupedReferrers.values());
+
+  // 计算总访问量
+  const total = stats.reduce((acc, curr) => acc + curr.count, 0);
+
+  // 转换数据格式并计算百分比
+  const formattedStats = stats.map((item) => ({
+    name: item.name,
+    domain: item.domain,
+    count: item.count,
+    percentage: (item.count / total) * 100,
+    favicon: `https://icons.duckduckgo.com/ip3/${item.domain}.ico`,
   }));
 
-  // 按访问量排序
-  return stats.sort((a, b) => b.count - a.count);
+  // 按访问量排序并只返回前5个
+  return formattedStats.sort((a, b) => b.count - a.count).slice(0, 5);
 }
 
 interface ReferrersCardProps {
@@ -77,7 +127,7 @@ export async function ReferrersCard({ websiteId, startDate, endDate }: Referrers
                   className="rounded-sm"
                 />
                 <div className="space-y-1">
-                  <p className="text-sm font-medium">{item.name}</p>
+                  <p className="text-sm font-medium">{item.domain}</p>
                   <p className="text-xs text-gray-500">{item.count.toLocaleString()} 访问</p>
                 </div>
               </div>
