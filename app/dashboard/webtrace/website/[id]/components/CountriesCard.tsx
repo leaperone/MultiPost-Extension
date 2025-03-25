@@ -47,7 +47,7 @@ export function CountriesCard({ websiteId, startDate, endDate }: CountriesCardPr
   return (
     <Card>
       <CardHeader>
-        <h2 className="text-lg font-semibold">访问国家</h2>
+        <h2 className="text-lg font-semibold">访问国家/地区</h2>
       </CardHeader>
       <CardBody>
         <div className="space-y-4">

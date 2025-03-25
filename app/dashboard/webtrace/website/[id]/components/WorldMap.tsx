@@ -49,23 +49,23 @@ interface Geography {
 const colors = {
   map: {
     fillColor: '#e5e7eb',
-    strokeColor: '#9ca3af',
+    strokeColor: '#64748b',
     hoverColor: '#d1d5db',
     baseColor: '#3b82f6',
     heatmap: {
       light: {
-        lowest: '#EFF6FF', // 非常浅的蓝色
-        low: '#93C5FD', // 天蓝色
-        medium: '#3B82F6', // 亮蓝色
-        high: '#1D4ED8', // 深蓝色
-        highest: '#1E3A8A', // 非常深的蓝色
+        lowest: '#F0F9FF',
+        low: '#7DD3FC',
+        medium: '#0EA5E9',
+        high: '#0369A1',
+        highest: '#0C4A6E',
       },
       dark: {
-        lowest: '#1E3A8A', // 深蓝色
-        low: '#1D4ED8', // 较深蓝色
-        medium: '#3B82F6', // 中等蓝色
-        high: '#60A5FA', // 浅蓝色
-        highest: '#93C5FD', // 非常浅的蓝色
+        lowest: '#0C4A6E',
+        low: '#0369A1',
+        medium: '#0EA5E9',
+        high: '#7DD3FC',
+        highest: '#F0F9FF',
       },
     },
   },
@@ -168,10 +168,15 @@ export function WorldMap({
                         geography={geo}
                         fill={getFillColor(code)}
                         stroke={colors.map.strokeColor}
+                        strokeWidth={1.5}
                         opacity={getOpacity(code)}
                         style={{
                           default: { outline: 'none' },
-                          hover: { outline: 'none', fill: colors.map.hoverColor },
+                          hover: {
+                            outline: 'none',
+                            fill: colors.map.hoverColor,
+                            strokeWidth: 2,
+                          },
                           pressed: { outline: 'none' },
                         }}
                         onMouseOver={() => handleHover(code, name)}
