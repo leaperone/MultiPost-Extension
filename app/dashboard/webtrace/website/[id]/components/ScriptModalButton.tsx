@@ -15,8 +15,8 @@ export function ScriptModalButton({ websiteId }: ScriptModalButtonProps) {
   return (
     <>
       <Button
-        variant="flat"
-        size="sm"
+        size="lg"
+        variant="bordered"
         onPress={() => setIsOpen(true)}>
         <Code className="mr-2 size-4" />
         查看跟踪代码

@@ -20,44 +20,36 @@ export function WebsiteSelector({ websites, currentWebsiteId }: WebsiteSelectorP
   const currentWebsite = websites.find((w) => w.id === currentWebsiteId);
 
   return (
-    <div className="space-y-1">
-      <Select
-        defaultSelectedKeys={[currentWebsiteId]}
-        onSelectionChange={(keys) => {
-          // 处理 Set 类型的选择值
-          const selectedKey = Array.from(keys)[0];
-          if (selectedKey) {
-            router.push(`/dashboard/webtrace/website/${selectedKey}`);
-          }
-        }}
-        selectedKeys={[currentWebsiteId]}
-        className="w-[280px]"
-        size="sm"
-        variant="bordered"
-        placeholder={currentWebsite?.name || '选择网站'}>
-        {websites.map((website) => (
-          <SelectItem
-            key={website.id}
-            value={website.id}
-            textValue={website.name}>
-            <div className="flex flex-col gap-0.5">
-              <span>{website.name}</span>
-              {website.domain && (
-                <span className="flex items-center text-xs text-default-400">
-                  <Globe className="mr-1 size-3" />
-                  {website.domain}
-                </span>
-              )}
-            </div>
-          </SelectItem>
-        ))}
-      </Select>
-      {currentWebsite?.domain && (
-        <p className="flex items-center text-sm text-muted-foreground">
-          <Globe className="mr-2 size-4" />
-          {currentWebsite.domain}
-        </p>
-      )}
-    </div>
+    <Select
+      label="选择网站"
+      defaultSelectedKeys={[currentWebsiteId]}
+      onSelectionChange={(keys) => {
+        // 处理 Set 类型的选择值
+        const selectedKey = Array.from(keys)[0];
+        if (selectedKey) {
+          router.push(`/dashboard/webtrace/website/${selectedKey}`);
+        }
+      }}
+      selectedKeys={[currentWebsiteId]}
+      className="w-[280px]"
+      variant="bordered"
+      placeholder={currentWebsite?.name || '选择网站'}>
+      {websites.map((website) => (
+        <SelectItem
+          key={website.id}
+          value={website.id}
+          textValue={website.name}>
+          <div className="flex flex-col gap-0.5">
+            <span>{website.name}</span>
+            {website.domain && (
+              <span className="flex items-center text-xs text-default-400">
+                <Globe className="mr-1 size-3" />
+                {website.domain}
+              </span>
+            )}
+          </div>
+        </SelectItem>
+      ))}
+    </Select>
   );
 }
