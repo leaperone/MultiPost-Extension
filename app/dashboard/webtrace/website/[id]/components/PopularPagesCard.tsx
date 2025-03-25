@@ -1,7 +1,7 @@
 'use server';
 
 import { multipostDb } from '@/lib/db';
-import { Card, CardBody, CardHeader } from '@heroui/react';
+import { StatTable } from './StatTable';
 
 async function getPopularPages(websiteId: string, startDate: Date, endDate: Date) {
   const pages = await multipostDb.websiteEvent.groupBy({
@@ -22,12 +22,16 @@ async function getPopularPages(websiteId: string, startDate: Date, endDate: Date
         urlPath: 'desc',
       },
     },
-    take: 5,
+    take: 10,
   });
 
+  const totalPageviews = pages.reduce((acc, curr) => acc + curr._count.urlPath, 0);
+
   return pages.map((page) => ({
-    urlPath: page.urlPath,
+    key: page.urlPath || '/',
+    label: page.urlPath || '/',
     count: page._count.urlPath,
+    percentage: (page._count.urlPath / totalPageviews) * 100,
   }));
 }
 
@@ -38,31 +42,12 @@ interface PopularPagesCardProps {
 }
 
 export async function PopularPagesCard({ websiteId, startDate, endDate }: PopularPagesCardProps) {
-  const popularPages = await getPopularPages(websiteId, startDate, endDate);
-  const totalPageviews = popularPages.reduce((acc, curr) => acc + curr.count, 0);
+  const stats = await getPopularPages(websiteId, startDate, endDate);
 
   return (
-    <Card>
-      <CardHeader>
-        <h2 className="text-lg font-semibold">热门页面</h2>
-      </CardHeader>
-      <CardBody>
-        <div className="space-y-4">
-          {popularPages.map((page) => (
-            <div
-              key={page.urlPath}
-              className="flex items-center justify-between">
-              <div className="flex items-center space-x-2">
-                <div className="space-y-1">
-                  <p className="text-sm font-medium">{page.urlPath}</p>
-                  <p className="text-xs text-gray-500">{page.count.toLocaleString()} 访问</p>
-                </div>
-              </div>
-              <div className="text-sm text-gray-500">{((page.count / totalPageviews) * 100).toFixed(1)}%</div>
-            </div>
-          ))}
-        </div>
-      </CardBody>
-    </Card>
+    <StatTable
+      title="热门页面"
+      items={stats}
+    />
   );
 }

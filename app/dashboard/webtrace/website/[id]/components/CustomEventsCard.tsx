@@ -2,9 +2,8 @@
  * @file 自定义事件数量排名卡片组件
  */
 
-import { Card, CardHeader, CardBody } from '@heroui/react';
 import { multipostDb } from '@/lib/db';
-import { cn } from '@/lib/utils';
+import { StatTable } from './StatTable';
 
 /**
  * 获取自定义事件排名
@@ -23,16 +22,24 @@ async function getCustomEvents(websiteId: string, startDate: Date, endDate: Date
         not: null,
       },
     },
-    _count: true,
+    _count: {
+      eventName: true,
+    },
     orderBy: {
-      eventName: 'desc',
+      _count: {
+        eventName: 'desc',
+      },
     },
     take: 10,
   });
 
+  const total = events.reduce((acc, curr) => acc + curr._count.eventName, 0);
+
   return events.map((event) => ({
-    name: event.eventName as string,
-    count: event._count,
+    key: event.eventName || 'unknown',
+    label: event.eventName,
+    count: event._count.eventName,
+    percentage: (event._count.eventName / total) * 100,
   }));
 }
 
@@ -47,29 +54,11 @@ export async function CustomEventsCard({ websiteId, startDate, endDate, classNam
   const events = await getCustomEvents(websiteId, startDate, endDate);
 
   return (
-    <Card className={cn('', className)}>
-      <CardHeader>
-        <h3 className="text-lg font-semibold">自定义事件排名</h3>
-      </CardHeader>
-      <CardBody>
-        {events.length === 0 ? (
-          <div className="flex h-[300px] items-center justify-center text-sm text-gray-500">暂无数据</div>
-        ) : (
-          <div className="space-y-4">
-            {events.map((event, index) => (
-              <div
-                key={event.name}
-                className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <span className="text-sm font-medium text-gray-500">#{index + 1}</span>
-                  <span className="text-sm font-medium">{event.name}</span>
-                </div>
-                <span className="text-sm text-gray-500">{event.count.toLocaleString()}</span>
-              </div>
-            ))}
-          </div>
-        )}
-      </CardBody>
-    </Card>
+    <StatTable
+      title="自定义事件"
+      items={events}
+      className={className}
+      emptyText="暂无数据"
+    />
   );
 }

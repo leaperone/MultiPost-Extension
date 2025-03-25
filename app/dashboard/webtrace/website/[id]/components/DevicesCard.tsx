@@ -5,7 +5,7 @@
 'use server';
 
 import { multipostDb } from '@/lib/db';
-import { Card, CardBody, CardHeader } from '@heroui/react';
+import { StatTable } from './StatTable';
 
 async function getDeviceStats(websiteId: string, startDate: Date, endDate: Date) {
   const devices = await multipostDb.visitorSession.groupBy({
@@ -28,13 +28,14 @@ async function getDeviceStats(websiteId: string, startDate: Date, endDate: Date)
         device: 'desc',
       },
     },
-    take: 5,
+    take: 10,
   });
 
   const total = devices.reduce((acc, curr) => acc + curr._count.device, 0);
 
   return devices.map((item) => ({
-    name: item.device || 'Unknown',
+    key: item.device || 'unknown',
+    label: item.device ? item.device.charAt(0).toUpperCase() + item.device.slice(1) : 'Unknown',
     count: item._count.device,
     percentage: (item._count.device / total) * 100,
   }));
@@ -50,27 +51,9 @@ export async function DevicesCard({ websiteId, startDate, endDate }: DevicesCard
   const stats = await getDeviceStats(websiteId, startDate, endDate);
 
   return (
-    <Card>
-      <CardHeader>
-        <div className="flex items-center justify-between">
-          <h2 className="text-lg font-semibold">设备类型</h2>
-        </div>
-      </CardHeader>
-      <CardBody>
-        <div className="space-y-4">
-          {stats.map((item) => (
-            <div
-              key={item.name}
-              className="flex items-center justify-between">
-              <div className="space-y-1">
-                <p className="text-sm font-medium">{item.name.charAt(0).toUpperCase() + item.name.slice(1)}</p>
-                <p className="text-xs text-gray-500">{item.count.toLocaleString()} 访问</p>
-              </div>
-              <div className="text-sm text-gray-500">{item.percentage.toFixed(1)}%</div>
-            </div>
-          ))}
-        </div>
-      </CardBody>
-    </Card>
+    <StatTable
+      title="设备类型"
+      items={stats}
+    />
   );
 }

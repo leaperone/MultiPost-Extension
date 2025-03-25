@@ -5,8 +5,9 @@
 'use server';
 
 import { multipostDb } from '@/lib/db';
-import { Card, CardBody, CardHeader, Image } from '@heroui/react';
+import { Image } from '@heroui/react';
 import { GROUPED_DOMAINS } from '@/lib/constants';
+import { StatTable } from './StatTable';
 
 function getGroupedDomain(domain: string) {
   for (const group of GROUPED_DOMAINS) {
@@ -85,15 +86,23 @@ async function getReferrerStats(websiteId: string, startDate: Date, endDate: Dat
 
   // 转换数据格式并计算百分比
   const formattedStats = stats.map((item) => ({
-    name: item.name,
-    domain: item.domain,
+    key: item.domain,
+    label: item.domain,
     count: item.count,
     percentage: (item.count / total) * 100,
-    favicon: `https://icons.duckduckgo.com/ip3/${item.domain}.ico`,
+    prefix: (
+      <Image
+        src={`https://icons.duckduckgo.com/ip3/${item.domain}.ico`}
+        alt={`${item.name} favicon`}
+        width={16}
+        height={16}
+        className="rounded-sm"
+      />
+    ),
   }));
 
   // 按访问量排序并只返回前5个
-  return formattedStats.sort((a, b) => b.count - a.count).slice(0, 5);
+  return formattedStats.sort((a, b) => b.count - a.count).slice(0, 10);
 }
 
 interface ReferrersCardProps {
@@ -106,36 +115,9 @@ export async function ReferrersCard({ websiteId, startDate, endDate }: Referrers
   const stats = await getReferrerStats(websiteId, startDate, endDate);
 
   return (
-    <Card>
-      <CardHeader>
-        <div className="flex items-center justify-between">
-          <h2 className="text-lg font-semibold">访问来源</h2>
-        </div>
-      </CardHeader>
-      <CardBody>
-        <div className="space-y-4">
-          {stats.map((item) => (
-            <div
-              key={item.name}
-              className="flex items-center justify-between">
-              <div className="flex items-center space-x-2">
-                <Image
-                  src={item.favicon}
-                  alt={`${item.name} favicon`}
-                  width={16}
-                  height={16}
-                  className="rounded-sm"
-                />
-                <div className="space-y-1">
-                  <p className="text-sm font-medium">{item.domain}</p>
-                  <p className="text-xs text-gray-500">{item.count.toLocaleString()} 访问</p>
-                </div>
-              </div>
-              <div className="text-sm text-gray-500">{item.percentage.toFixed(1)}%</div>
-            </div>
-          ))}
-        </div>
-      </CardBody>
-    </Card>
+    <StatTable
+      title="访问来源"
+      items={stats}
+    />
   );
 }
