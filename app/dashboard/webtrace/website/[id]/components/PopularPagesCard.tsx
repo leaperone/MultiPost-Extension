@@ -48,14 +48,11 @@ export async function PopularPagesCard({ websiteId, startDate, endDate }: Popula
       </CardHeader>
       <CardBody>
         <div className="space-y-4">
-          {popularPages.map((page, i) => (
+          {popularPages.map((page) => (
             <div
               key={page.urlPath}
               className="flex items-center justify-between">
               <div className="flex items-center space-x-2">
-                <div className="flex size-8 items-center justify-center rounded-full bg-primary-100 text-sm font-medium text-primary-900">
-                  {i + 1}
-                </div>
                 <div className="space-y-1">
                   <p className="text-sm font-medium">{page.urlPath}</p>
                   <p className="text-xs text-gray-500">{page.count.toLocaleString()} 访问</p>
