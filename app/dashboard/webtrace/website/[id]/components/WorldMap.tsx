@@ -162,8 +162,7 @@ export function WorldMap({
     return code === 'AQ' ? 0 : 1;
   };
 
-  const handleHover = (code: string, name: string, e: React.MouseEvent<SVGPathElement>) => {
-    console.log(code, name, e);
+  const handleHover = (code: string, name: string) => {
     if (code === 'AQ') return;
 
     const country = metrics?.find(({ x }) => x === code);
@@ -180,7 +179,7 @@ export function WorldMap({
       return;
     }
 
-    setTooltipPopup(`${displayName} (${code}): ${formatLongNumber(country?.y || 0)} ${visitorsLabel}`);
+    setTooltipPopup(`${displayName}: ${formatLongNumber(country?.y || 0)} ${visitorsLabel}`);
   };
 
   return (
@@ -220,7 +219,7 @@ export function WorldMap({
                           },
                           pressed: { outline: 'none' },
                         }}
-                        onMouseOver={(e) => handleHover(code, name, e)}
+                        onMouseOver={() => handleHover(code, name)}
                         onMouseOut={() => setTooltipPopup(null)}
                       />
                     );
