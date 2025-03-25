@@ -96,7 +96,7 @@ export default async function WebsitePage(props: WebsitePageProps) {
 
   if (isFirstTime) {
     return (
-      <div className="mx-auto h-full max-w-7xl space-y-6 overflow-y-auto p-4">
+      <div className="mx-auto h-full max-w-7xl space-y-6 overflow-y-auto p-4 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
         <FirstTimeGuide websiteId={website.id} />
       </div>
     );
@@ -106,7 +106,7 @@ export default async function WebsitePage(props: WebsitePageProps) {
   const websites = await getWebsites();
 
   return (
-    <div className="mx-auto h-full max-w-7xl space-y-6 overflow-y-auto p-4">
+    <div className="mx-auto h-full max-w-7xl space-y-6 overflow-y-auto p-4 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
       <div className="flex items-center justify-between">
         <WebsiteSelector
           websites={websites}

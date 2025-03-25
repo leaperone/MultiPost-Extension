@@ -6,7 +6,6 @@
 
 import { multipostDb } from '@/lib/db';
 import { Card, CardBody, CardHeader } from '@heroui/react';
-import { Smartphone } from 'lucide-react';
 
 async function getDeviceStats(websiteId: string, startDate: Date, endDate: Date) {
   const devices = await multipostDb.visitorSession.groupBy({
@@ -55,9 +54,6 @@ export async function DevicesCard({ websiteId, startDate, endDate }: DevicesCard
       <CardHeader>
         <div className="flex items-center justify-between">
           <h2 className="text-lg font-semibold">设备类型</h2>
-          <div className="rounded-full bg-gray-100 p-2 dark:bg-gray-800">
-            <Smartphone className="size-4" />
-          </div>
         </div>
       </CardHeader>
       <CardBody>
@@ -67,7 +63,7 @@ export async function DevicesCard({ websiteId, startDate, endDate }: DevicesCard
               key={item.name}
               className="flex items-center justify-between">
               <div className="space-y-1">
-                <p className="text-sm font-medium">{item.name}</p>
+                <p className="text-sm font-medium">{item.name.charAt(0).toUpperCase() + item.name.slice(1)}</p>
                 <p className="text-xs text-gray-500">{item.count.toLocaleString()} 访问</p>
               </div>
               <div className="text-sm text-gray-500">{item.percentage.toFixed(1)}%</div>

@@ -4,7 +4,10 @@ import { PrismaPlugin } from '@prisma/nextjs-monorepo-workaround-plugin';
 const nextConfig = {
   output: 'standalone',
   images: {
-    remotePatterns: [{ protocol: 'https', hostname: 'nextui.org' }],
+    remotePatterns: [
+      { protocol: 'https', hostname: 'nextui.org' },
+      { protocol: 'https', hostname: 'icons.duckduckgo.com' },
+    ],
   },
   webpack: (config, { isServer }) => {
     if (isServer) {

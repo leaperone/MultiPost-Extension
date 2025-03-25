@@ -5,8 +5,8 @@
 'use server';
 
 import { multipostDb } from '@/lib/db';
+import { BROWSERS } from '@/lib/constants';
 import { Card, CardBody, CardHeader } from '@heroui/react';
-import { Globe } from 'lucide-react';
 
 async function getBrowserStats(websiteId: string, startDate: Date, endDate: Date) {
   const browsers = await multipostDb.visitorSession.groupBy({
@@ -35,7 +35,7 @@ async function getBrowserStats(websiteId: string, startDate: Date, endDate: Date
   const total = browsers.reduce((acc, curr) => acc + curr._count.browser, 0);
 
   return browsers.map((item) => ({
-    name: item.browser || 'Unknown',
+    name: BROWSERS[item.browser as keyof typeof BROWSERS] || item.browser || 'Unknown',
     count: item._count.browser,
     percentage: (item._count.browser / total) * 100,
   }));
@@ -55,9 +55,6 @@ export async function BrowsersCard({ websiteId, startDate, endDate }: BrowsersCa
       <CardHeader>
         <div className="flex items-center justify-between">
           <h2 className="text-lg font-semibold">浏览器</h2>
-          <div className="rounded-full bg-gray-100 p-2 dark:bg-gray-800">
-            <Globe className="size-4" />
-          </div>
         </div>
       </CardHeader>
       <CardBody>
