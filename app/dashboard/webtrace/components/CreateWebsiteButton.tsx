@@ -142,7 +142,7 @@ export function CreateWebsiteButton() {
               color="secondary">
               <p className="font-medium">说明</p>
               <ul className="list-inside list-disc gap-1">
-                <li>添加网站后，系统将自动开始收集相关数据</li>
+                <li>添加网站后，系统将自动开始收集相关数据，无需额外操作</li>
                 <li>网站名称用于区分不同的监控目标</li>
                 <li>域名可选，用于过滤特定来源的数据</li>
               </ul>
