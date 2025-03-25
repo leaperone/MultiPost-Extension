@@ -90,6 +90,7 @@ async function getReferrerStats(websiteId: string, startDate: Date, endDate: Dat
     label: item.domain,
     count: item.count,
     percentage: (item.count / total) * 100,
+    href: `https://${item.domain}`,
     prefix: (
       <Image
         src={`https://icons.duckduckgo.com/ip3/${item.domain}.ico`}

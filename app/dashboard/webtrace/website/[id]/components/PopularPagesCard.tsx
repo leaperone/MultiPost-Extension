@@ -4,6 +4,11 @@ import { multipostDb } from '@/lib/db';
 import { StatTable } from './StatTable';
 
 async function getPopularPages(websiteId: string, startDate: Date, endDate: Date) {
+  const website = await multipostDb.website.findUnique({
+    where: { id: websiteId },
+    select: { domain: true },
+  });
+
   const pages = await multipostDb.websiteEvent.groupBy({
     by: ['urlPath'],
     where: {
@@ -32,6 +37,7 @@ async function getPopularPages(websiteId: string, startDate: Date, endDate: Date
     label: page.urlPath || '/',
     count: page._count.urlPath,
     percentage: (page._count.urlPath / totalPageviews) * 100,
+    href: `https://${website?.domain}${page.urlPath || '/'}`,
   }));
 }
 

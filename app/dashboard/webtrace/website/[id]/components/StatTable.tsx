@@ -1,8 +1,9 @@
 /**
  * @file 统计数据表格组件
  */
-import { Card, CardBody, CardHeader } from '@heroui/react';
+import { Card, CardBody, CardHeader, Spacer } from '@heroui/react';
 import { cn } from '@/lib/utils';
+import { ExternalLink } from 'lucide-react';
 
 export interface StatTableItem {
   key: string;
@@ -11,6 +12,7 @@ export interface StatTableItem {
   percentage: number;
   prefix?: React.ReactNode;
   suffix?: string;
+  href?: string;
 }
 
 interface StatTableProps {
@@ -37,10 +39,21 @@ export function StatTable({ title, items, className, emptyText = '暂无数据',
             {items.map((item) => (
               <div
                 key={item.key}
-                className="flex items-center justify-between">
+                className="group flex items-center justify-between">
                 <div className="flex flex-1 items-center space-x-2">
                   {item.prefix}
                   <p className="text-sm font-medium">{item.label}</p>
+                  <Spacer x={2} />
+                  {item.href && (
+                    <a
+                      href={item.href}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="ml-2 opacity-0 transition-opacity group-hover:opacity-100"
+                      title="在新标签页中打开">
+                      <ExternalLink className="size-4 text-gray-400 hover:text-gray-600" />
+                    </a>
+                  )}
                 </div>
                 <div className="flex items-center text-sm text-gray-500">
                   <span className="w-20 text-right">
