@@ -23,6 +23,8 @@ import { z } from 'zod';
 import { SessionsCard } from './components/SessionsCard';
 import { WorldMap } from './components/WorldMap';
 import { CountriesCard } from './components/CountriesCard';
+import { CustomEventsCard } from './components/CustomEventsCard';
+import { CustomEventChart } from './components/CustomEventChart';
 
 interface WebsitePageProps {
   params: Promise<{
@@ -208,6 +210,24 @@ export default async function WebsitePage(props: WebsitePageProps) {
                   endDate={endDate}
                 />
                 <CountriesCard
+                  websiteId={params.id}
+                  startDate={startDate}
+                  endDate={endDate}
+                />
+              </div>
+            </Suspense>
+          </div>
+
+          <div className="mt-4 grid gap-4 lg:grid-cols-1">
+            <Suspense fallback={<div className="col-span-3 h-[400px] animate-pulse rounded-lg bg-gray-100" />}>
+              <div className="grid grid-cols-3 gap-4">
+                <CustomEventsCard
+                  websiteId={params.id}
+                  startDate={startDate}
+                  endDate={endDate}
+                />
+                <CustomEventChart
+                  className="col-span-2"
                   websiteId={params.id}
                   startDate={startDate}
                   endDate={endDate}
