@@ -5,3 +5,5 @@ services:
     build:
       context: ..
       dockerfile: ./docker/Dockerfile
+    environment:
+      - NEXT_PUBLIC_BASE_PATH=https://multipost.app

@@ -6,7 +6,7 @@ import { ComposableMap, Geographies, Geography, ZoomableGroup } from 'react-simp
 import classNames from 'classnames';
 import useSWR from 'swr';
 import { HoverTooltip } from './WorldMapHoverToolTip';
-import { ISO_COUNTRIES, MAP_FILE } from '@/lib/constants';
+import { MAP_FILE } from '@/lib/constants';
 import { getGeographicalData } from '../actions';
 import { useTheme } from 'next-themes';
 import { Card, CardBody } from '@heroui/react';
@@ -74,6 +74,16 @@ const colors = {
 const visitorsLabel = '访问者';
 const unknownLabel = '未知';
 
+// 特殊地区名称映射
+const SPECIAL_REGION_NAMES: Record<string, string> = {
+  TW: '中国台湾',
+  HK: '中国香港',
+  MO: '中国澳门',
+};
+
+// 中国及特殊行政区的代码
+const CHINA_REGIONS = ['CN', 'TW', 'HK', 'MO'];
+
 export function WorldMap({
   websiteId,
   startDate,
@@ -107,15 +117,31 @@ export function WorldMap({
     [mapData],
   );
 
+  const getRegionMetrics = (code: string) => {
+    if (CHINA_REGIONS.includes(code)) {
+      // 如果是中国或特殊行政区，合并所有相关地区的数据
+      const total = CHINA_REGIONS.reduce((sum, regionCode) => {
+        const region = metrics?.find(({ x }) => x === regionCode);
+        return sum + (region?.y || 0);
+      }, 0);
+      return total;
+    }
+    // 其他国家/地区返回原始数据
+    const country = metrics?.find(({ x }) => x === code);
+    return country?.y || 0;
+  };
+
   const getFillColor = (code: string) => {
     if (code === 'AQ') return;
-    const country = metrics?.find(({ x }) => x === code);
 
-    if (!country) {
+    const value = getRegionMetrics(code);
+    if (!value) {
       return colors.map.fillColor;
     }
 
-    const percentage = country.z;
+    // 重新计算百分比，使用合并后的数据
+    const total = metrics.reduce((sum, item) => sum + Number(item.y), 0);
+    const percentage = (value / total) * 100;
     const colorSet = theme === 'light' ? colors.map.heatmap.light : colors.map.heatmap.dark;
 
     // 调整颜色分级的阈值，使分布更均匀
@@ -136,11 +162,25 @@ export function WorldMap({
     return code === 'AQ' ? 0 : 1;
   };
 
-  const handleHover = (code: string, name: string) => {
+  const handleHover = (code: string, name: string, e: React.MouseEvent<SVGPathElement>) => {
+    console.log(code, name, e);
     if (code === 'AQ') return;
+
     const country = metrics?.find(({ x }) => x === code);
-    const countryName = countries.getName(code, 'zh') || name || unknownLabel;
-    setTooltipPopup(`${countryName} (${code}): ${formatLongNumber(country?.y || 0)} ${visitorsLabel}`);
+    const displayName = SPECIAL_REGION_NAMES[code] || countries.getName(code, 'zh') || name || unknownLabel;
+
+    // 如果是中国或特殊行政区，显示所有相关地区的数据
+    if (CHINA_REGIONS.includes(code)) {
+      const details = CHINA_REGIONS.map((regionCode) => {
+        const region = metrics?.find(({ x }) => x === regionCode);
+        const regionName = regionCode === 'CN' ? '中国' : SPECIAL_REGION_NAMES[regionCode];
+        return `${regionName}: ${formatLongNumber(region?.y || 0)} ${visitorsLabel}`;
+      });
+      setTooltipPopup(details.join('\r\n'));
+      return;
+    }
+
+    setTooltipPopup(`${displayName} (${code}): ${formatLongNumber(country?.y || 0)} ${visitorsLabel}`);
   };
 
   return (
@@ -159,8 +199,9 @@ export function WorldMap({
               <Geographies geography={`${process.env.NEXT_PUBLIC_BASE_PATH || ''}${MAP_FILE}`}>
                 {({ geographies }: { geographies: Geography[] }) => {
                   return geographies.map((geo) => {
-                    const code = ISO_COUNTRIES[geo.id as keyof typeof ISO_COUNTRIES];
-                    const name = geo.properties?.name;
+                    // world-110m.json 使用 ISO_A2 作为国家代码
+                    const code = geo.properties?.ISO_A2;
+                    const name = geo.properties?.NAME;
 
                     return (
                       <Geography
@@ -179,7 +220,7 @@ export function WorldMap({
                           },
                           pressed: { outline: 'none' },
                         }}
-                        onMouseOver={() => handleHover(code, name)}
+                        onMouseOver={(e) => handleHover(code, name, e)}
                         onMouseOut={() => setTooltipPopup(null)}
                       />
                     );

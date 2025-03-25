@@ -21,17 +21,7 @@ export const FILTER_PAGES = 'filter-pages';
 export const UNIT_TYPES = ['year', 'month', 'hour', 'day', 'minute'];
 export const EVENT_COLUMNS = ['url', 'entry', 'exit', 'referrer', 'title', 'query', 'event', 'tag'];
 
-export const SESSION_COLUMNS = [
-  'browser',
-  'os',
-  'device',
-  'screen',
-  'language',
-  'country',
-  'region',
-  'city',
-  'host',
-];
+export const SESSION_COLUMNS = ['browser', 'os', 'device', 'screen', 'language', 'country', 'region', 'city', 'host'];
 
 export const FILTER_COLUMNS = {
   url: 'url_path',
@@ -172,11 +162,7 @@ export const ROLE_PERMISSIONS = {
     PERMISSIONS.websiteDelete,
     PERMISSIONS.websiteTransferToTeam,
   ],
-  [ROLES.teamMember]: [
-    PERMISSIONS.websiteCreate,
-    PERMISSIONS.websiteUpdate,
-    PERMISSIONS.websiteDelete,
-  ],
+  [ROLES.teamMember]: [PERMISSIONS.websiteCreate, PERMISSIONS.websiteUpdate, PERMISSIONS.websiteDelete],
   [ROLES.teamViewOnly]: [],
 } as const;
 
@@ -363,14 +349,7 @@ export const SHOPPING_DOMAINS = [
   'newegg.com',
 ];
 
-export const EMAIL_DOMAINS = [
-  'gmail.',
-  'mail.yahoo.',
-  'outlook.',
-  'hotmail.',
-  'protonmail.',
-  'proton.me',
-];
+export const EMAIL_DOMAINS = ['gmail.', 'mail.yahoo.', 'outlook.', 'hotmail.', 'protonmail.', 'proton.me'];
 
 export const VIDEO_DOMAINS = ['youtube.', 'twitch.'];
 
@@ -412,7 +391,7 @@ export const GROUPED_DOMAINS = [
   { name: 'ChatGPT', domain: 'chatgpt.com', match: 'chatgpt.' },
 ];
 
-export const MAP_FILE = '/datamaps.world.json';
+export const MAP_FILE = '/world-110m.json';
 
 export const ISO_COUNTRIES = {
   AFG: 'AF',

@@ -16,5 +16,5 @@
   border-radius: 6px;
   font-size: 14px;
   box-shadow: 0 2px 8px rgb(0 0 0 / 15%);
-  white-space: nowrap;
+  white-space: pre-line;
 }

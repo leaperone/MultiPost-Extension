@@ -13,6 +13,13 @@ import { StatTable } from './StatTable';
 // 初始化 i18n-iso-countries 的中文支持
 countries.registerLocale(zhLocale);
 
+// 特殊地区名称映射
+const SPECIAL_REGION_NAMES: Record<string, string> = {
+  TW: '中国台湾',
+  HK: '中国香港',
+  MO: '中国澳门',
+};
+
 interface CountriesCardProps {
   websiteId: string;
   startDate: Date;
@@ -33,12 +40,7 @@ export function CountriesCard({ websiteId, startDate, endDate }: CountriesCardPr
           const z = (y / total) * 100;
           return {
             key: item.x || 'unknown',
-            label: (
-              <>
-                {countries.getName(item.x as string, 'zh') || '未知'}
-                <span className="ml-1 text-xs text-gray-500">({item.x})</span>
-              </>
-            ),
+            label: SPECIAL_REGION_NAMES[item.x as string] || countries.getName(item.x as string, 'zh') || '未知',
             count: y,
             percentage: z,
           };
