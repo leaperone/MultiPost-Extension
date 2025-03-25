@@ -1,7 +1,7 @@
 'use server';
 
 import { multipostDb } from '@/lib/db';
-import { Users } from 'lucide-react';
+import { HandshakeIcon } from 'lucide-react';
 import { Card, CardBody } from '@heroui/react';
 import { Icon } from '@iconify/react';
 
@@ -54,7 +54,7 @@ export async function SessionsCard({ websiteId, startDate, endDate }: SessionsCa
         <div className="flex items-center justify-between">
           <span className="text-sm text-gray-500">会话数</span>
           <div className="rounded-full bg-gray-100 p-2 dark:bg-gray-800">
-            <Users className="size-4" />
+            <HandshakeIcon className="size-4" />
           </div>
         </div>
         {stats.current === 0 ? (

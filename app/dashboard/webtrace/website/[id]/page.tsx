@@ -123,21 +123,21 @@ export default async function WebsitePage(props: WebsitePageProps) {
       <div className="relative">
         <div>
           <div className="grid gap-4 sm:grid-cols-3">
-            <Suspense fallback={<div className="h-24 animate-pulse rounded-lg bg-gray-100" />}>
+            <Suspense fallback={<div className="h-24 animate-pulse rounded-lg bg-default-100" />}>
               <VisitorsCard
                 websiteId={website.id}
                 startDate={startDate}
                 endDate={endDate}
               />
             </Suspense>
-            <Suspense fallback={<div className="h-24 animate-pulse rounded-lg bg-gray-100" />}>
+            <Suspense fallback={<div className="h-24 animate-pulse rounded-lg bg-default-100" />}>
               <SessionsCard
                 websiteId={website.id}
                 startDate={startDate}
                 endDate={endDate}
               />
             </Suspense>
-            <Suspense fallback={<div className="h-24 animate-pulse rounded-lg bg-gray-100" />}>
+            <Suspense fallback={<div className="h-24 animate-pulse rounded-lg bg-default-100" />}>
               <PageviewsCard
                 websiteId={website.id}
                 startDate={startDate}
@@ -147,7 +147,7 @@ export default async function WebsitePage(props: WebsitePageProps) {
           </div>
 
           <div className="mt-4 grid gap-4 lg:grid-cols-1">
-            <Suspense fallback={<div className="h-[400px] animate-pulse rounded-lg bg-gray-100" />}>
+            <Suspense fallback={<div className="h-[400px] animate-pulse rounded-lg bg-default-100" />}>
               <TrendsCard
                 websiteId={website.id}
                 startDate={startDate}
@@ -157,7 +157,7 @@ export default async function WebsitePage(props: WebsitePageProps) {
           </div>
 
           <div className="mt-4 grid gap-4 lg:grid-cols-2">
-            <Suspense fallback={<div className="h-[400px] animate-pulse rounded-lg bg-gray-100" />}>
+            <Suspense fallback={<div className="h-[400px] animate-pulse rounded-lg bg-default-100" />}>
               <ReferrersCard
                 websiteId={website.id}
                 startDate={startDate}
@@ -165,7 +165,7 @@ export default async function WebsitePage(props: WebsitePageProps) {
               />
             </Suspense>
 
-            <Suspense fallback={<div className="h-[400px] animate-pulse rounded-lg bg-gray-100" />}>
+            <Suspense fallback={<div className="h-[400px] animate-pulse rounded-lg bg-default-100" />}>
               <PopularPagesCard
                 websiteId={website.id}
                 startDate={startDate}
@@ -175,7 +175,7 @@ export default async function WebsitePage(props: WebsitePageProps) {
           </div>
 
           <div className="mt-4 grid gap-4 lg:grid-cols-3">
-            <Suspense fallback={<div className="h-[400px] animate-pulse rounded-lg bg-gray-100" />}>
+            <Suspense fallback={<div className="h-[400px] animate-pulse rounded-lg bg-default-100" />}>
               <BrowsersCard
                 websiteId={website.id}
                 startDate={startDate}
@@ -183,7 +183,7 @@ export default async function WebsitePage(props: WebsitePageProps) {
               />
             </Suspense>
 
-            <Suspense fallback={<div className="h-[400px] animate-pulse rounded-lg bg-gray-100" />}>
+            <Suspense fallback={<div className="h-[400px] animate-pulse rounded-lg bg-default-100" />}>
               <OsCard
                 websiteId={website.id}
                 startDate={startDate}
@@ -191,7 +191,7 @@ export default async function WebsitePage(props: WebsitePageProps) {
               />
             </Suspense>
 
-            <Suspense fallback={<div className="h-[400px] animate-pulse rounded-lg bg-gray-100" />}>
+            <Suspense fallback={<div className="h-[400px] animate-pulse rounded-lg bg-default-100" />}>
               <DevicesCard
                 websiteId={website.id}
                 startDate={startDate}
@@ -201,7 +201,7 @@ export default async function WebsitePage(props: WebsitePageProps) {
           </div>
 
           <div className="mt-4 grid gap-4 lg:grid-cols-1">
-            <Suspense fallback={<div className="col-span-3 h-[400px] animate-pulse rounded-lg bg-gray-100" />}>
+            <Suspense fallback={<div className="col-span-3 h-[400px] animate-pulse rounded-lg bg-default-100" />}>
               <div className="grid grid-cols-3 gap-4">
                 <WorldMap
                   className="col-span-2"
@@ -219,7 +219,7 @@ export default async function WebsitePage(props: WebsitePageProps) {
           </div>
 
           <div className="mt-4 grid gap-4 lg:grid-cols-1">
-            <Suspense fallback={<div className="col-span-3 h-[400px] animate-pulse rounded-lg bg-gray-100" />}>
+            <Suspense fallback={<div className="col-span-3 h-[400px] animate-pulse rounded-lg bg-default-100" />}>
               <div className="grid grid-cols-3 gap-4">
                 <CustomEventsCard
                   websiteId={params.id}
