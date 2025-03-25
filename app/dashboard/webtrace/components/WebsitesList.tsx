@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { BarChart3Icon } from 'lucide-react';
 import { auth } from '@/auth';
 import { multipostDb } from '@/lib/db';
+import { Icon } from '@iconify/react/dist/iconify.js';
 
 export async function WebsiteList() {
   const session = await auth();
@@ -22,8 +23,20 @@ export async function WebsiteList() {
     },
   });
 
-  if (!websites?.length) {
-    return <div className="text-center text-gray-500">还没有添加任何网站，点击右上角的按钮添加一个吧！</div>;
+  if (websites?.length) {
+    return (
+      <div className="flex w-full flex-col items-center justify-center text-center">
+        <Icon
+          icon="openmoji:index-pointing-up"
+          className="size-20 place-self-end"
+        />
+        <Icon
+          icon="openmoji:japanese-free-of-charge-button"
+          className="size-20 place-self-center"
+        />
+        <p className="text-3xl text-foreground">一片旷野，点击右上角的按钮添加站点吧！</p>
+      </div>
+    );
   }
 
   return (

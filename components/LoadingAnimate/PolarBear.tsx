@@ -1,3 +1,5 @@
+'use client';
+
 import React from 'react';
 import styled from 'styled-components';
 
@@ -26,11 +28,11 @@ const StyledWrapper = styled.div`
     left: 50%;
     top: 25px;
     transform: translateX(-50%);
-    background-image: radial-gradient(circle, #000 48%, transparent 55%),
-      radial-gradient(circle, #000 48%, transparent 55%), radial-gradient(circle, #fff 30%, transparent 45%),
-      radial-gradient(circle, #000 48%, transparent 51%), linear-gradient(#000 20px, transparent 0),
-      linear-gradient(#cfecf9 60px, transparent 0), radial-gradient(circle, #cfecf9 50%, transparent 51%),
-      radial-gradient(circle, #cfecf9 50%, transparent 51%);
+    background-image:
+      radial-gradient(circle, #000 48%, transparent 55%), radial-gradient(circle, #000 48%, transparent 55%),
+      radial-gradient(circle, #fff 30%, transparent 45%), radial-gradient(circle, #000 48%, transparent 51%),
+      linear-gradient(#000 20px, transparent 0), linear-gradient(#cfecf9 60px, transparent 0),
+      radial-gradient(circle, #cfecf9 50%, transparent 51%), radial-gradient(circle, #cfecf9 50%, transparent 51%);
     background-repeat: no-repeat;
     background-size:
       16px 16px,
@@ -60,8 +62,8 @@ const StyledWrapper = styled.div`
     height: 125px;
     left: -20%;
     top: 0;
-    background-image: radial-gradient(circle, #fff 48%, transparent 50%),
-      radial-gradient(circle, #fff 48%, transparent 50%);
+    background-image:
+      radial-gradient(circle, #fff 48%, transparent 50%), radial-gradient(circle, #fff 48%, transparent 50%);
     background-repeat: no-repeat;
     background-size: 65px 65px;
     background-position:
