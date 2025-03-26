@@ -16,7 +16,7 @@
 ---
 
 <!-- 最新更新 -->
-<div align="center" style="background-color: #e4d6f5; padding: 20px; border-radius: 10px; box-shadow: 0 0 10px #e4d6f5;">
+<div align="center">
   <h3>MultiPost Analytics: Web Trace</h3>
   <p>Web Trace: 实时访问统计、访客分析、浏览分析和时长分析。</p>
   <p>Real-time access statistics, visitor analysis, browsing analysis, and duration analysis.</p>

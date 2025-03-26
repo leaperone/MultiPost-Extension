@@ -15,7 +15,7 @@
 ---
 
 <!-- 最新更新 -->
-<div align="center" style="background-color: #e4d6f5; padding: 20px; border-radius: 10px; box-shadow: 0 0 10px #e4d6f5;">
+<div align="center">
   <h3>MultiPost Analytics: Web Trace</h3>
   <p>Web Trace: 实时访问统计、访客分析、浏览分析和时长分析。</p>
   <p>实时访问统计、访客分析、浏览分析和时长分析。</p>
@@ -100,7 +100,6 @@ pnpm build
 
 - QQ群：[921137242](http://qm.qq.com/cgi-bin/qm/qr?_wv=1027&k=c5BjhD8JxNAuwjKh6qvCoROU301PppYU&authKey=NfKianfDwngrwJyVQbefIQET9vUQs46xb0PfOYUm6KzdeCjPd5YbvlRoO8trJUUZ&noverify=0&group_code=921137242)
 - 邮箱：support@leaper.one
-- Twitter：[@harry_wong_](https://x.com/harry_wong_)
 - GitHub Issues：https://github.com/MultiPost-Extension/MultiPost-Extension/issues
 
 ![QQ 群](MultiPost-Extension_2025-02-28T14_17_15.717Z.png)
