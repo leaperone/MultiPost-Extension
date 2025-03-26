@@ -23,7 +23,7 @@ export async function WebsiteList() {
     },
   });
 
-  if (websites?.length) {
+  if (!websites?.length) {
     return (
       <div className="flex w-full flex-col items-center justify-center text-center">
         <Icon
