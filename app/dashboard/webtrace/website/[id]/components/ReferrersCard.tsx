@@ -22,7 +22,7 @@ function getGroupedDomain(domain: string) {
   return null;
 }
 
-async function getReferrerStats(websiteId: string, startDate: Date, endDate: Date) {
+async function getReferrerStats(websiteId: string, startDate: Date, endDate: Date, isDetail?: boolean) {
   // 首先获取网站的 domain
   const website = await multipostDb.website.findUnique({
     where: { id: websiteId },
@@ -102,23 +102,28 @@ async function getReferrerStats(websiteId: string, startDate: Date, endDate: Dat
     ),
   }));
 
-  // 按访问量排序并只返回前5个
-  return formattedStats.sort((a, b) => b.count - a.count).slice(0, 10);
+  // 按访问量排序并根据isDetail决定返回数量
+  return formattedStats.sort((a, b) => b.count - a.count).slice(0, isDetail ? undefined : 10);
 }
 
 interface ReferrersCardProps {
   websiteId: string;
   startDate: Date;
   endDate: Date;
+  className?: string;
+  isDetail?: boolean;
 }
 
-export async function ReferrersCard({ websiteId, startDate, endDate }: ReferrersCardProps) {
-  const stats = await getReferrerStats(websiteId, startDate, endDate);
+export async function ReferrersCard({ websiteId, startDate, endDate, className, isDetail }: ReferrersCardProps) {
+  const stats = await getReferrerStats(websiteId, startDate, endDate, isDetail);
 
   return (
     <StatTable
       title="访问来源"
       items={stats}
+      className={className}
+      showMoreButton={!isDetail}
+      detailType="referrers"
     />
   );
 }

@@ -26,6 +26,7 @@ import { CountriesCard } from './components/CountriesCard';
 import { CustomEventsCard } from './components/CustomEventsCard';
 import { CustomEventChartCard } from './components/CustomEventChartCard';
 import { cookies } from 'next/headers';
+import DetailView from './components/DetailView';
 
 interface WebsitePageProps {
   params: Promise<{
@@ -58,6 +59,7 @@ const schema = z.object({
   startDate: z.date(),
   endDate: z.date(),
   timezone: z.string().default('Asia/Shanghai'),
+  detail: z.string().optional(),
 });
 
 async function parseSearchParams(
@@ -73,6 +75,7 @@ async function parseSearchParams(
     startDate: queryStartDate ? new Date(parseInt(queryStartDate as string)) : defaultRange.startDate,
     endDate: queryEndDate ? new Date(parseInt(queryEndDate as string)) : defaultRange.endDate,
     timezone: defaultRange.timezone,
+    detail: searchParams['detail'] as string | undefined,
   });
 }
 
@@ -143,57 +146,67 @@ export default async function WebsitePage(props: WebsitePageProps) {
             </Suspense>
           </div>
 
-          {/* 推荐来源和热门页面 */}
-          <div className="mt-4 grid grid-cols-1 gap-4 lg:grid-cols-2">
-            <Suspense fallback={<div className="h-[300px] animate-pulse rounded-lg bg-default-100 sm:h-[400px]" />}>
-              <ReferrersCard {...parsedParams} />
-            </Suspense>
+          {parsedParams.detail ? (
+            <div className="mt-4 grid grid-cols-1 gap-4">
+              <Suspense fallback={<div className="h-[300px] animate-pulse rounded-lg bg-default-100 sm:h-[400px]" />}>
+                <DetailView {...parsedParams} />
+              </Suspense>
+            </div>
+          ) : (
+            <>
+              {/* 推荐来源和热门页面 */}
+              <div className="mt-4 grid grid-cols-1 gap-4 lg:grid-cols-2">
+                <Suspense fallback={<div className="h-[300px] animate-pulse rounded-lg bg-default-100 sm:h-[400px]" />}>
+                  <ReferrersCard {...parsedParams} />
+                </Suspense>
 
-            <Suspense fallback={<div className="h-[300px] animate-pulse rounded-lg bg-default-100 sm:h-[400px]" />}>
-              <PopularPagesCard {...parsedParams} />
-            </Suspense>
-          </div>
-
-          {/* 浏览器、操作系统和设备统计 */}
-          <div className="mt-4 grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
-            <Suspense fallback={<div className="h-[300px] animate-pulse rounded-lg bg-default-100 sm:h-[400px]" />}>
-              <BrowsersCard {...parsedParams} />
-            </Suspense>
-
-            <Suspense fallback={<div className="h-[300px] animate-pulse rounded-lg bg-default-100 sm:h-[400px]" />}>
-              <OsCard {...parsedParams} />
-            </Suspense>
-
-            <Suspense fallback={<div className="h-[300px] animate-pulse rounded-lg bg-default-100 sm:h-[400px]" />}>
-              <DevicesCard {...parsedParams} />
-            </Suspense>
-          </div>
-
-          {/* 世界地图和国家统计 */}
-          <div className="mt-4 grid gap-4">
-            <Suspense fallback={<div className="h-[300px] animate-pulse rounded-lg bg-default-100 sm:h-[400px]" />}>
-              <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
-                <WorldMap
-                  className="col-span-1 md:col-span-2"
-                  {...parsedParams}
-                />
-                <CountriesCard {...parsedParams} />
+                <Suspense fallback={<div className="h-[300px] animate-pulse rounded-lg bg-default-100 sm:h-[400px]" />}>
+                  <PopularPagesCard {...parsedParams} />
+                </Suspense>
               </div>
-            </Suspense>
-          </div>
 
-          {/* 自定义事件 */}
-          <div className="mt-4 grid gap-4">
-            <Suspense fallback={<div className="h-[300px] animate-pulse rounded-lg bg-default-100 sm:h-[400px]" />}>
-              <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
-                <CustomEventsCard {...parsedParams} />
-                <CustomEventChartCard
-                  className="col-span-1 md:col-span-2"
-                  {...parsedParams}
-                />
+              {/* 浏览器、操作系统和设备统计 */}
+              <div className="mt-4 grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+                <Suspense fallback={<div className="h-[300px] animate-pulse rounded-lg bg-default-100 sm:h-[400px]" />}>
+                  <BrowsersCard {...parsedParams} />
+                </Suspense>
+
+                <Suspense fallback={<div className="h-[300px] animate-pulse rounded-lg bg-default-100 sm:h-[400px]" />}>
+                  <OsCard {...parsedParams} />
+                </Suspense>
+
+                <Suspense fallback={<div className="h-[300px] animate-pulse rounded-lg bg-default-100 sm:h-[400px]" />}>
+                  <DevicesCard {...parsedParams} />
+                </Suspense>
               </div>
-            </Suspense>
-          </div>
+
+              {/* 世界地图和国家统计 */}
+              <div className="mt-4 grid gap-4">
+                <Suspense fallback={<div className="h-[300px] animate-pulse rounded-lg bg-default-100 sm:h-[400px]" />}>
+                  <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+                    <WorldMap
+                      className="col-span-1 md:col-span-2"
+                      {...parsedParams}
+                    />
+                    <CountriesCard {...parsedParams} />
+                  </div>
+                </Suspense>
+              </div>
+
+              {/* 自定义事件 */}
+              <div className="mt-4 grid gap-4">
+                <Suspense fallback={<div className="h-[300px] animate-pulse rounded-lg bg-default-100 sm:h-[400px]" />}>
+                  <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+                    <CustomEventsCard {...parsedParams} />
+                    <CustomEventChartCard
+                      className="col-span-1 md:col-span-2"
+                      {...parsedParams}
+                    />
+                  </div>
+                </Suspense>
+              </div>
+            </>
+          )}
         </div>
       </div>
     </div>

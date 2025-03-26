@@ -3,7 +3,7 @@
 import { multipostDb } from '@/lib/db';
 import { StatTable } from './StatTable';
 
-async function getPopularPages(websiteId: string, startDate: Date, endDate: Date) {
+async function getPopularPages(websiteId: string, startDate: Date, endDate: Date, isDetail?: boolean) {
   const website = await multipostDb.website.findUnique({
     where: { id: websiteId },
     select: { domain: true },
@@ -27,7 +27,7 @@ async function getPopularPages(websiteId: string, startDate: Date, endDate: Date
         urlPath: 'desc',
       },
     },
-    take: 10,
+    take: isDetail ? undefined : 10,
   });
 
   const totalPageviews = pages.reduce((acc, curr) => acc + curr._count.urlPath, 0);
@@ -45,15 +45,20 @@ interface PopularPagesCardProps {
   websiteId: string;
   startDate: Date;
   endDate: Date;
+  className?: string;
+  isDetail?: boolean;
 }
 
-export async function PopularPagesCard({ websiteId, startDate, endDate }: PopularPagesCardProps) {
-  const stats = await getPopularPages(websiteId, startDate, endDate);
+export async function PopularPagesCard({ websiteId, startDate, endDate, className, isDetail }: PopularPagesCardProps) {
+  const stats = await getPopularPages(websiteId, startDate, endDate, isDetail);
 
   return (
     <StatTable
       title="热门页面"
       items={stats}
+      className={className}
+      showMoreButton={!isDetail}
+      detailType="pages"
     />
   );
 }

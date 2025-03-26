@@ -8,7 +8,7 @@ import { multipostDb } from '@/lib/db';
 import { BROWSERS } from '@/lib/constants';
 import { StatTable } from './StatTable';
 
-async function getBrowserStats(websiteId: string, startDate: Date, endDate: Date) {
+async function getBrowserStats(websiteId: string, startDate: Date, endDate: Date, isDetail?: boolean) {
   const browsers = await multipostDb.visitorSession.groupBy({
     by: ['browser'],
     where: {
@@ -29,7 +29,7 @@ async function getBrowserStats(websiteId: string, startDate: Date, endDate: Date
         browser: 'desc',
       },
     },
-    take: 10,
+    take: isDetail ? undefined : 10,
   });
 
   const total = browsers.reduce((acc, curr) => acc + curr._count.browser, 0);
@@ -46,15 +46,20 @@ interface BrowsersCardProps {
   websiteId: string;
   startDate: Date;
   endDate: Date;
+  className?: string;
+  isDetail?: boolean;
 }
 
-export async function BrowsersCard({ websiteId, startDate, endDate }: BrowsersCardProps) {
-  const stats = await getBrowserStats(websiteId, startDate, endDate);
+export async function BrowsersCard({ websiteId, startDate, endDate, className, isDetail }: BrowsersCardProps) {
+  const stats = await getBrowserStats(websiteId, startDate, endDate, isDetail);
 
   return (
     <StatTable
       title="浏览器"
       items={stats}
+      className={className}
+      showMoreButton={!isDetail}
+      detailType="browsers"
     />
   );
 }

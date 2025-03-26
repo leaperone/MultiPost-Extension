@@ -8,7 +8,7 @@ import { StatTable } from './StatTable';
 /**
  * 获取自定义事件排名
  */
-async function getCustomEvents(websiteId: string, startDate: Date, endDate: Date) {
+async function getCustomEvents(websiteId: string, startDate: Date, endDate: Date, isDetail?: boolean) {
   const events = await multipostDb.websiteEvent.groupBy({
     by: ['eventName'],
     where: {
@@ -30,7 +30,8 @@ async function getCustomEvents(websiteId: string, startDate: Date, endDate: Date
         eventName: 'desc',
       },
     },
-    take: 10,
+    // 如果是详情视图，则获取所有数据，否则只获取前10条
+    take: isDetail ? undefined : 10,
   });
 
   const total = events.reduce((acc, curr) => acc + curr._count.eventName, 0);
@@ -48,10 +49,11 @@ interface CustomEventsCardProps {
   startDate: Date;
   endDate: Date;
   className?: string;
+  isDetail?: boolean;
 }
 
-export async function CustomEventsCard({ websiteId, startDate, endDate, className }: CustomEventsCardProps) {
-  const events = await getCustomEvents(websiteId, startDate, endDate);
+export async function CustomEventsCard({ websiteId, startDate, endDate, className, isDetail }: CustomEventsCardProps) {
+  const events = await getCustomEvents(websiteId, startDate, endDate, isDetail);
 
   return (
     <StatTable
@@ -59,6 +61,8 @@ export async function CustomEventsCard({ websiteId, startDate, endDate, classNam
       items={events}
       className={className}
       emptyText="暂无数据"
+      showMoreButton={!isDetail}
+      detailType="events"
     />
   );
 }

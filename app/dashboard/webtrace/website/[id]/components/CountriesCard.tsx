@@ -24,9 +24,11 @@ interface CountriesCardProps {
   websiteId: string;
   startDate: Date;
   endDate: Date;
+  isDetail?: boolean;
+  className?: string;
 }
 
-export function CountriesCard({ websiteId, startDate, endDate }: CountriesCardProps) {
+export function CountriesCard({ websiteId, startDate, endDate, isDetail, className }: CountriesCardProps) {
   const { data: mapData } = useSWR(['geographical-data', websiteId, startDate, endDate], () =>
     getGeographicalData(websiteId, startDate, endDate),
   );
@@ -49,14 +51,17 @@ export function CountriesCard({ websiteId, startDate, endDate }: CountriesCardPr
     : [];
 
   // 按访问量排序
-  const sortedMetrics = [...metrics].sort((a, b) => b.count - a.count).slice(0, 10);
+  const sortedMetrics = [...metrics].sort((a, b) => b.count - a.count);
+  const top10Metrics = sortedMetrics.slice(0, 10);
 
   return (
     <StatTable
       title="访问国家/地区"
-      items={sortedMetrics}
+      items={isDetail ? sortedMetrics : top10Metrics}
+      className={className}
+      showMoreButton={!isDetail}
+      detailType="countries"
     />
   );
 }
-
 export default CountriesCard;

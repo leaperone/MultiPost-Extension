@@ -643,3 +643,17 @@ export const ISO_COUNTRIES = {
   ZWE: 'ZW',
   XKX: 'XK',
 };
+
+export const DETAIL_OPTIONS = [
+  { key: 'browsers', label: '浏览器' },
+  { key: 'countries', label: '访问国家/地区' },
+  { key: 'events', label: '自定义事件' },
+  { key: 'devices', label: '设备类型' },
+  { key: 'os', label: '操作系统' },
+  { key: 'pages', label: '热门页面' },
+  { key: 'referrers', label: '访问来源' },
+  { key: 'languages', label: '语言' },
+  { key: 'hosts', label: '访问域名' },
+  { key: 'screens', label: '屏幕分辨率' },
+  { key: 'pagetitles', label: '页面标题' },
+];

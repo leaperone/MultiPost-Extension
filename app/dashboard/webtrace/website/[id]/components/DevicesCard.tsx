@@ -7,7 +7,7 @@
 import { multipostDb } from '@/lib/db';
 import { StatTable } from './StatTable';
 
-async function getDeviceStats(websiteId: string, startDate: Date, endDate: Date) {
+async function getDeviceStats(websiteId: string, startDate: Date, endDate: Date, isDetail?: boolean) {
   const devices = await multipostDb.visitorSession.groupBy({
     by: ['device'],
     where: {
@@ -28,7 +28,7 @@ async function getDeviceStats(websiteId: string, startDate: Date, endDate: Date)
         device: 'desc',
       },
     },
-    take: 10,
+    take: isDetail ? undefined : 10,
   });
 
   const total = devices.reduce((acc, curr) => acc + curr._count.device, 0);
@@ -45,15 +45,20 @@ interface DevicesCardProps {
   websiteId: string;
   startDate: Date;
   endDate: Date;
+  className?: string;
+  isDetail?: boolean;
 }
 
-export async function DevicesCard({ websiteId, startDate, endDate }: DevicesCardProps) {
-  const stats = await getDeviceStats(websiteId, startDate, endDate);
+export async function DevicesCard({ websiteId, startDate, endDate, className, isDetail }: DevicesCardProps) {
+  const stats = await getDeviceStats(websiteId, startDate, endDate, isDetail);
 
   return (
     <StatTable
       title="设备类型"
       items={stats}
+      className={className}
+      showMoreButton={!isDetail}
+      detailType="devices"
     />
   );
 }

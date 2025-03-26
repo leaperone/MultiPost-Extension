@@ -7,8 +7,8 @@
 import { multipostDb } from '@/lib/db';
 import { StatTable } from './StatTable';
 
-async function getOsStats(websiteId: string, startDate: Date, endDate: Date) {
-  const systems = await multipostDb.visitorSession.groupBy({
+async function getOsStats(websiteId: string, startDate: Date, endDate: Date, isDetail?: boolean) {
+  const oses = await multipostDb.visitorSession.groupBy({
     by: ['os'],
     where: {
       websiteId,
@@ -28,12 +28,12 @@ async function getOsStats(websiteId: string, startDate: Date, endDate: Date) {
         os: 'desc',
       },
     },
-    take: 10,
+    take: isDetail ? undefined : 10,
   });
 
-  const total = systems.reduce((acc, curr) => acc + curr._count.os, 0);
+  const total = oses.reduce((acc, curr) => acc + curr._count.os, 0);
 
-  return systems.map((item) => ({
+  return oses.map((item) => ({
     key: item.os || 'unknown',
     label: item.os || 'Unknown',
     count: item._count.os,
@@ -45,15 +45,20 @@ interface OsCardProps {
   websiteId: string;
   startDate: Date;
   endDate: Date;
+  className?: string;
+  isDetail?: boolean;
 }
 
-export async function OsCard({ websiteId, startDate, endDate }: OsCardProps) {
-  const stats = await getOsStats(websiteId, startDate, endDate);
+export async function OsCard({ websiteId, startDate, endDate, className, isDetail }: OsCardProps) {
+  const stats = await getOsStats(websiteId, startDate, endDate, isDetail);
 
   return (
     <StatTable
       title="操作系统"
       items={stats}
+      className={className}
+      showMoreButton={!isDetail}
+      detailType="os"
     />
   );
 }
