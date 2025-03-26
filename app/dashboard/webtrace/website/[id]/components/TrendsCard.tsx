@@ -6,7 +6,6 @@ import { differenceInDays, addDays } from 'date-fns';
 import { formatInTimeZone } from 'date-fns-tz';
 
 async function getVisitTrends(websiteId: string, startDate: Date, endDate: Date, timezone: string) {
-  console.log(startDate, endDate, timezone);
   // 获取访问趋势数据，按天分组（使用指定的时区）
   const events = await multipostDb.websiteEvent.groupBy({
     by: ['createdAt'],
