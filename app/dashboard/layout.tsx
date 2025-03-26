@@ -6,6 +6,7 @@ import { auth } from '@/auth';
 import { headers } from 'next/headers';
 import { Metadata } from 'next';
 import { ThemeSwitcher } from '@/components/ThemeSwitcher';
+import { TimezoneProvider } from './components/TimezoneProvider';
 
 export const metadata: Metadata = {
   title: 'Dashboard | MultiPost',
@@ -27,6 +28,7 @@ export default async function DashboardLayout({
   return (
     <div className="flex h-screen w-full overflow-y-hidden">
       <SidebarProvider defaultOpen={false}>
+        <TimezoneProvider />
         <DashboardSidebar />
         <div className="flex-1">
           <div className="flex w-full justify-between sm:hidden md:hidden">
