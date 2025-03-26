@@ -63,9 +63,9 @@ export function DateRangeSelector() {
         startDate = subHours(now, 24).getTime();
         endDate = now.getTime();
       } else {
-        // 3天、7天、30天：从现在往前推N天
-        startDate = startOfDay(subDays(now, type)).getTime();
-        endDate = now.getTime();
+        // 3天、7天、30天：从N天前的开始时间到今天的结束时间
+        startDate = startOfDay(subDays(now, type - 1)).getTime();
+        endDate = endOfDay(now).getTime();
       }
 
       const params = new URLSearchParams(searchParams.toString());
