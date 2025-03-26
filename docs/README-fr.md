@@ -87,9 +87,14 @@ Vous trouverez le contenu de la construction dans le dossier `build`
 
 Il est recommandé d'utiliser l'outil de gestion de paquets `pnpm@latest-9` avec Node.js version 20.
 
-## Historique des étoiles
-
-[![Star History Chart](https://api.star-history.com/svg?repos=leaper-one/MultiPost-Extension&type=Date)](https://star-history.com/#leaper-one/MultiPost-Extension&Date)
+## Star History
+<a href="https://www.star-history.com/#leaper-one/MultiPost-Extension&leaper-one/multipost-wechat-markdown-editor&Date">
+ <picture>
+   <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/svg?repos=leaper-one/MultiPost-Extension,leaper-one/multipost-wechat-markdown-editor&type=Date&theme=dark" />
+   <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/svg?repos=leaper-one/MultiPost-Extension,leaper-one/multipost-wechat-markdown-editor&type=Date" />
+   <img alt="Star History Chart" src="https://api.star-history.com/svg?repos=leaper-one/MultiPost-Extension,leaper-one/multipost-wechat-markdown-editor&type=Date" />
+ </picture>
+</a>
 
 ## Contactez-nous
 
