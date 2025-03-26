@@ -24,7 +24,8 @@ import { SessionsCard } from './components/SessionsCard';
 import { WorldMap } from './components/WorldMap';
 import { CountriesCard } from './components/CountriesCard';
 import { CustomEventsCard } from './components/CustomEventsCard';
-import { CustomEventChart } from './components/CustomEventChart';
+import { CustomEventChartCard } from './components/CustomEventChartCard';
+import { cookies } from 'next/headers';
 
 interface WebsitePageProps {
   params: Promise<{
@@ -33,54 +34,48 @@ interface WebsitePageProps {
   searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 }
 
-/**
- * 将本地时间转换为 UTC 时间
- * @param localDate 本地时间
- * @returns UTC 时间
- */
-function convertLocalToUTC(localDate: Date): Date {
-  return new Date(localDate.getTime() - localDate.getTimezoneOffset() * 60 * 1000);
-}
+const getDefaultTimeRange = async () => {
+  const cookieStore = await cookies();
+  const timezone = cookieStore.get('timezone')?.value || 'Asia/Shanghai';
 
-/**
- * 获取默认的开始时间（本地时间7天前的UTC时间）
- */
-function getDefaultStartDate(): Date {
-  const localDate = new Date();
-  localDate.setDate(localDate.getDate() - 7);
-  localDate.setHours(0, 0, 0, 0);
-  return convertLocalToUTC(localDate);
-}
+  const now = new Date();
 
-/**
- * 获取默认的结束时间（本地时间今天23:59:59的UTC时间）
- */
-function getDefaultEndDate(): Date {
-  const localDate = new Date();
-  localDate.setHours(23, 59, 59, 999);
-  return convertLocalToUTC(localDate);
-}
+  // 设置今天的结束时间 (23:59:59.999)，使用用户时区
+  const endDate = new Date(now.toLocaleString('en-US', { timeZone: timezone }));
+  endDate.setHours(23, 59, 59, 999);
+
+  // 设置7天前的开始时间 (00:00:00.000)，使用用户时区
+  const startDate = new Date(now.toLocaleString('en-US', { timeZone: timezone }));
+  startDate.setDate(startDate.getDate() - 7);
+  startDate.setHours(0, 0, 0, 0);
+
+  return { startDate, endDate, timezone };
+};
 
 const schema = z.object({
+  websiteId: z.string(),
   isFirstTime: z.boolean().default(false),
-  startDate: z.date().optional().default(getDefaultStartDate),
-  endDate: z.date().optional().default(getDefaultEndDate),
+  startDate: z.date(),
+  endDate: z.date(),
+  timezone: z.string().default('Asia/Shanghai'),
 });
 
-function parseSearchParams(searchParams: { [key: string]: string | string[] | undefined }) {
-  const localStartDate = searchParams.startDate ? new Date(parseInt(searchParams.startDate as string)) : undefined;
-  const localEndDate = searchParams.endDate ? new Date(parseInt(searchParams.endDate as string)) : undefined;
+async function parseSearchParams(params: { id: string }, searchParams: { [key: string]: string | string[] | undefined }) {
+  const { startDate: queryStartDate, endDate: queryEndDate } = searchParams;
+  const defaultRange = await getDefaultTimeRange();
 
   return schema.parse({
+    websiteId: params.id,
     isFirstTime: searchParams['first-time'] === 'true',
-    startDate: localStartDate ? convertLocalToUTC(localStartDate) : undefined,
-    endDate: localEndDate ? convertLocalToUTC(localEndDate) : undefined,
+    startDate: queryStartDate ? new Date(parseInt(queryStartDate as string)) : defaultRange.startDate,
+    endDate: queryEndDate ? new Date(parseInt(queryEndDate as string)) : defaultRange.endDate,
+    timezone: defaultRange.timezone,
   });
 }
 
 export default async function WebsitePage(props: WebsitePageProps) {
   const [params, searchParams] = await Promise.all([props.params, props.searchParams]);
-  const { isFirstTime, startDate, endDate } = parseSearchParams(searchParams);
+  const parsedParams = await parseSearchParams(params, searchParams);
   const session = await auth();
   if (!session?.user?.id) {
     redirect('/signin');
@@ -98,7 +93,7 @@ export default async function WebsitePage(props: WebsitePageProps) {
     notFound();
   }
 
-  if (isFirstTime) {
+  if (parsedParams.isFirstTime) {
     return (
       <div className="mx-auto h-full max-w-7xl space-y-6 overflow-y-auto p-4 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
         <FirstTimeGuide websiteId={website.id} />
@@ -125,23 +120,17 @@ export default async function WebsitePage(props: WebsitePageProps) {
           <div className="grid gap-4 sm:grid-cols-3">
             <Suspense fallback={<div className="h-24 animate-pulse rounded-lg bg-default-100" />}>
               <VisitorsCard
-                websiteId={website.id}
-                startDate={startDate}
-                endDate={endDate}
+                {...parsedParams}
               />
             </Suspense>
             <Suspense fallback={<div className="h-24 animate-pulse rounded-lg bg-default-100" />}>
               <SessionsCard
-                websiteId={website.id}
-                startDate={startDate}
-                endDate={endDate}
+                {...parsedParams}
               />
             </Suspense>
             <Suspense fallback={<div className="h-24 animate-pulse rounded-lg bg-default-100" />}>
               <PageviewsCard
-                websiteId={website.id}
-                startDate={startDate}
-                endDate={endDate}
+                {...parsedParams}
               />
             </Suspense>
           </div>
@@ -149,9 +138,7 @@ export default async function WebsitePage(props: WebsitePageProps) {
           <div className="mt-4 grid gap-4 lg:grid-cols-1">
             <Suspense fallback={<div className="h-[400px] animate-pulse rounded-lg bg-default-100" />}>
               <TrendsCard
-                websiteId={website.id}
-                startDate={startDate}
-                endDate={endDate}
+                {...parsedParams}
               />
             </Suspense>
           </div>
@@ -159,17 +146,13 @@ export default async function WebsitePage(props: WebsitePageProps) {
           <div className="mt-4 grid gap-4 lg:grid-cols-2">
             <Suspense fallback={<div className="h-[400px] animate-pulse rounded-lg bg-default-100" />}>
               <ReferrersCard
-                websiteId={website.id}
-                startDate={startDate}
-                endDate={endDate}
+                {...parsedParams}
               />
             </Suspense>
 
             <Suspense fallback={<div className="h-[400px] animate-pulse rounded-lg bg-default-100" />}>
               <PopularPagesCard
-                websiteId={website.id}
-                startDate={startDate}
-                endDate={endDate}
+                {...parsedParams}
               />
             </Suspense>
           </div>
@@ -177,25 +160,19 @@ export default async function WebsitePage(props: WebsitePageProps) {
           <div className="mt-4 grid gap-4 lg:grid-cols-3">
             <Suspense fallback={<div className="h-[400px] animate-pulse rounded-lg bg-default-100" />}>
               <BrowsersCard
-                websiteId={website.id}
-                startDate={startDate}
-                endDate={endDate}
+                {...parsedParams}
               />
             </Suspense>
 
             <Suspense fallback={<div className="h-[400px] animate-pulse rounded-lg bg-default-100" />}>
               <OsCard
-                websiteId={website.id}
-                startDate={startDate}
-                endDate={endDate}
+                {...parsedParams}
               />
             </Suspense>
 
             <Suspense fallback={<div className="h-[400px] animate-pulse rounded-lg bg-default-100" />}>
               <DevicesCard
-                websiteId={website.id}
-                startDate={startDate}
-                endDate={endDate}
+                {...parsedParams}
               />
             </Suspense>
           </div>
@@ -205,14 +182,10 @@ export default async function WebsitePage(props: WebsitePageProps) {
               <div className="grid grid-cols-3 gap-4">
                 <WorldMap
                   className="col-span-2"
-                  websiteId={params.id}
-                  startDate={startDate}
-                  endDate={endDate}
+                  {...parsedParams}
                 />
                 <CountriesCard
-                  websiteId={params.id}
-                  startDate={startDate}
-                  endDate={endDate}
+                  {...parsedParams}
                 />
               </div>
             </Suspense>
@@ -222,15 +195,11 @@ export default async function WebsitePage(props: WebsitePageProps) {
             <Suspense fallback={<div className="col-span-3 h-[400px] animate-pulse rounded-lg bg-default-100" />}>
               <div className="grid grid-cols-3 gap-4">
                 <CustomEventsCard
-                  websiteId={params.id}
-                  startDate={startDate}
-                  endDate={endDate}
+                  {...parsedParams}
                 />
-                <CustomEventChart
+                <CustomEventChartCard
                   className="col-span-2"
-                  websiteId={params.id}
-                  startDate={startDate}
-                  endDate={endDate}
+                  {...parsedParams}
                 />
               </div>
             </Suspense>
