@@ -7,7 +7,9 @@ import { Area, AreaChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'rec
 interface VisitTrendsChartProps {
   data: {
     date: string;
+    displayDate: string;
     views: number;
+    granularity: 'hour' | 'day' | 'month';
   }[];
 }
 
@@ -18,11 +20,62 @@ export function VisitTrendsChart({ data }: VisitTrendsChartProps) {
     (tick) => tick > 0,
   );
 
+  // 根据时间粒度获取适当的显示文本
+  const getTimeRangeText = () => {
+    if (data.length === 0) return '';
+
+    const granularity = data[0].granularity;
+    switch (granularity) {
+      case 'hour':
+        return `过去 ${data.length} 小时`;
+      case 'day':
+        return `过去 ${data.length} 天`;
+      case 'month':
+        return `过去 ${data.length} 个月`;
+      default:
+        return `过去 ${data.length} 天`;
+    }
+  };
+
+  // 根据时间粒度获取X轴的格式化函数
+  const getTickFormatter = (value: string) => {
+    const date = new Date(value);
+    const granularity = data[0]?.granularity;
+
+    switch (granularity) {
+      case 'hour':
+        return format(date, 'HH:00');
+      case 'day':
+        return format(date, 'MM-dd');
+      case 'month':
+        return format(date, 'yyyy-MM');
+      default:
+        return format(date, 'MM-dd');
+    }
+  };
+
+  // 根据时间粒度获取工具提示的格式化函数
+  const getTooltipDateFormatter = (value: string) => {
+    const date = new Date(value);
+    const granularity = data[0]?.granularity;
+
+    switch (granularity) {
+      case 'hour':
+        return format(date, 'yyyy-MM-dd HH:00');
+      case 'day':
+        return format(date, 'yyyy-MM-dd');
+      case 'month':
+        return format(date, 'yyyy-MM');
+      default:
+        return format(date, 'yyyy-MM-dd');
+    }
+  };
+
   return (
     <Card>
       <CardHeader className="flex items-center justify-between">
         <h2 className="text-lg font-semibold">访问趋势</h2>
-        <div className="text-sm text-gray-500">过去 {data.length} 天</div>
+        <div className="text-sm text-gray-500">{getTimeRangeText()}</div>
       </CardHeader>
       <CardBody>
         <div className="h-[300px] w-full">
@@ -51,7 +104,7 @@ export function VisitTrendsChart({ data }: VisitTrendsChartProps) {
               </defs>
               <XAxis
                 dataKey="date"
-                tickFormatter={(value) => format(new Date(value), 'MM-dd')}
+                tickFormatter={getTickFormatter}
                 tick={{ fontSize: 12 }}
                 tickLine={false}
                 axisLine={false}
@@ -78,9 +131,7 @@ export function VisitTrendsChart({ data }: VisitTrendsChartProps) {
                       <div className="rounded-lg border bg-white p-2 shadow-sm dark:border-gray-800 dark:bg-gray-950">
                         <div className="grid grid-cols-2 gap-2">
                           <div className="text-sm text-gray-500">日期</div>
-                          <div className="text-sm font-medium">
-                            {format(new Date(payload[0].payload.date), 'yyyy-MM-dd')}
-                          </div>
+                          <div className="text-sm font-medium">{getTooltipDateFormatter(payload[0].payload.date)}</div>
                           <div className="text-sm text-gray-500">浏览量</div>
                           <div className="text-sm font-medium">{payload[0].value?.toLocaleString()}</div>
                         </div>
