@@ -4,12 +4,22 @@
 
 ![GitHub License GitHub許可証](https://img.shields.io/github/license/leaper-one/MultiPost-Extension) ![GitHub Repo stars GitHubスター](https://img.shields.io/github/stars/leaper-one/MultiPost-Extension) ![GitHub commit activity GitHubコミット活動](https://img.shields.io/github/commit-activity/m/leaper-one/MultiPost-Extension) [![Website ウェブサイト](https://img.shields.io/website?url=https%3A%2F%2Fmultipost.app)](https://multipost.app)
 
-⭐ このプロジェクトが役立つと思われましたら、ぜひスターを付けてください！皆様のサポートが私たちの成長と改善の励みになります！⭐
+⭐ このプロジェクトが役立つと思われる場合は、スターを付けていただけると幸いです！皆様のサポートが私たちの成長と改善の原動力となります！⭐
 
 [English](../README.md) | [中文](README-zh.md) | [日本語](README-jp.md) | [Français](README-fr.md) | [한국어](README-kr.md)
 
-> ワンクリックで複数のソーシャルメディアプラットフォームにコンテンツを公開できるブラウザ拡張機能です。
+> 複数のソーシャルメディアプラットフォームにワンクリックでコンテンツを公開できるブラウザ拡張機能
 
+</div>
+
+---
+
+<!-- 最新アップデート -->
+<div align="center" style="background-color: #e4d6f5; padding: 20px; border-radius: 10px; box-shadow: 0 0 10px #e4d6f5;">
+  <h3>MultiPost Analytics: Web Trace</h3>
+  <p>Web Trace: リアルタイムアクセス統計、訪問者分析、閲覧分析、滞在時間分析。</p>
+  <p>リアルタイムアクセス統計、訪問者分析、閲覧分析、滞在時間分析を提供します。</p>
+  <p>詳細はこちら：<a href="https://multipost.app/dashboard/webtrace">https://multipost.app/dashboard/webtrace</a></p>
 </div>
 
 ---

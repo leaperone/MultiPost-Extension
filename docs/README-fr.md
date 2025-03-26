@@ -14,6 +14,16 @@
 
 ---
 
+<!-- Dernière mise à jour -->
+<div align="center" style="background-color: #e4d6f5; padding: 20px; border-radius: 10px; box-shadow: 0 0 10px #e4d6f5;">
+  <h3>MultiPost Analytics: Web Trace</h3>
+  <p>Web Trace : Statistiques d'accès en temps réel, analyse des visiteurs, analyse de navigation et analyse de durée.</p>
+  <p>Statistiques d'accès en temps réel, analyse des visiteurs, analyse de navigation et analyse de durée.</p>
+  <p>En savoir plus : <a href="https://multipost.app/dashboard/webtrace">https://multipost.app/dashboard/webtrace</a></p>
+</div>
+
+---
+
 ## Pour commencer
 - [multipost.app](https://multipost.app) - Site officiel
 - [Éditeur d'articles MultiPost](https://md.multipost.app/) - [(Dépôt)](https://github.com/leaper-one/multipost-wechat-markdown-editor) - Éditeur en ligne pour créer et publier du contenu sur plusieurs plateformes

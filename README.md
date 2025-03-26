@@ -4,14 +4,24 @@
 
 ![GitHub License GitHub许可证](https://img.shields.io/github/license/leaper-one/MultiPost-Extension) ![GitHub Repo stars GitHub星星](https://img.shields.io/github/stars/leaper-one/MultiPost-Extension) ![GitHub commit activity GitHub提交活动](https://img.shields.io/github/commit-activity/m/leaper-one/MultiPost-Extension) [![Website 网站](https://img.shields.io/website?url=https%3A%2F%2Fmultipost.app)](https://multipost.app)
 
-⭐ If you find this project helpful, please consider giving it a star! Your support helps us grow and improve! ⭐
 
 [English](README.md) | [中文](docs/README-zh.md) | [日本語](docs/README-jp.md) | [Français](docs/README-fr.md) | [한국어](docs/README-kr.md)
 
 > A browser extension that helps users publish content to multiple social media platforms with one click.
+> 一个用于在多个社交平台上发布内容的浏览器扩展。
 
+⭐ If you find this project helpful, please consider giving it a star! Your support helps us grow and improve! ⭐
 </div>
 
+---
+
+<!-- 最新更新 -->
+<div align="center" style="background-color: #e4d6f5; padding: 20px; border-radius: 10px; box-shadow: 0 0 10px #e4d6f5;">
+  <h3>MultiPost Analytics: Web Trace</h3>
+  <p>Web Trace: 实时访问统计、访客分析、浏览分析和时长分析。</p>
+  <p>Real-time access statistics, visitor analysis, browsing analysis, and duration analysis.</p>
+  <p>Learn more: <a href="https://multipost.app/dashboard/webtrace">https://multipost.app/dashboard/webtrace</a></p>
+</div>
 
 ---
 

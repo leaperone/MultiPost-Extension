@@ -14,6 +14,16 @@
 
 ---
 
+<!-- 最新更新 -->
+<div align="center" style="background-color: #e4d6f5; padding: 20px; border-radius: 10px; box-shadow: 0 0 10px #e4d6f5;">
+  <h3>MultiPost Analytics: Web Trace</h3>
+  <p>Web Trace: 实时访问统计、访客分析、浏览分析和时长分析。</p>
+  <p>实时访问统计、访客分析、浏览分析和时长分析。</p>
+  <p>了解更多：<a href="https://multipost.app/dashboard/webtrace">https://multipost.app/dashboard/webtrace</a></p>
+</div>
+
+---
+
 ## 快速开始
 - [multipost.app](https://multipost.app) - 官方网站
 - [MultiPost 文章编辑器](https://md.multipost.app/) - [(代码仓库)](https://github.com/leaper-one/multipost-wechat-markdown-editor) - 用于创建和发布内容到多个平台的在线编辑器
