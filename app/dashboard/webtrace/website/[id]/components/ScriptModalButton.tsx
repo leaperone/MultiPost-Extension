@@ -15,12 +15,11 @@ export function ScriptModalButton({ websiteId }: ScriptModalButtonProps) {
   return (
     <>
       <Button
-        size="md"
-        className="w-full sm:w-auto"
+        size="lg"
         variant="bordered"
         onPress={() => setIsOpen(true)}>
         <Code className="mr-2 size-4" />
-        <span className="sm:inline">查看跟踪代码</span>
+        查看跟踪代码
       </Button>
       <ScriptExampleModal
         websiteId={websiteId}

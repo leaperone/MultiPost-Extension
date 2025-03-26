@@ -115,7 +115,7 @@ export default async function WebsitePage(props: WebsitePageProps) {
           websites={websites}
           currentWebsiteId={website.id}
         />
-        <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
           <DateRangeSelector />
           <ScriptModalButton websiteId={website.id} />
         </div>
