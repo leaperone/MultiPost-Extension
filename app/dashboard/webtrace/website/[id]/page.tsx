@@ -60,7 +60,10 @@ const schema = z.object({
   timezone: z.string().default('Asia/Shanghai'),
 });
 
-async function parseSearchParams(params: { id: string }, searchParams: { [key: string]: string | string[] | undefined }) {
+async function parseSearchParams(
+  params: { id: string },
+  searchParams: { [key: string]: string | string[] | undefined },
+) {
   const { startDate: queryStartDate, endDate: queryEndDate } = searchParams;
   const defaultRange = await getDefaultTimeRange();
 
@@ -106,99 +109,86 @@ export default async function WebsitePage(props: WebsitePageProps) {
 
   return (
     <div className="mx-auto h-full max-w-7xl space-y-6 overflow-y-auto p-4 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-      <div className="flex items-center justify-between">
+      {/* 移动端响应式导航栏 */}
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <WebsiteSelector
           websites={websites}
           currentWebsiteId={website.id}
         />
-        <DateRangeSelector />
-        <ScriptModalButton websiteId={website.id} />
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+          <DateRangeSelector />
+          <ScriptModalButton websiteId={website.id} />
+        </div>
       </div>
 
       <div className="relative">
         <div>
-          <div className="grid gap-4 sm:grid-cols-3">
+          {/* 访客、会话和页面浏览统计卡片 - 在移动端堆叠显示 */}
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3">
             <Suspense fallback={<div className="h-24 animate-pulse rounded-lg bg-default-100" />}>
-              <VisitorsCard
-                {...parsedParams}
-              />
-            </Suspense>
-            <Suspense fallback={<div className="h-24 animate-pulse rounded-lg bg-default-100" />}>
-              <SessionsCard
-                {...parsedParams}
-              />
+              <VisitorsCard {...parsedParams} />
             </Suspense>
             <Suspense fallback={<div className="h-24 animate-pulse rounded-lg bg-default-100" />}>
-              <PageviewsCard
-                {...parsedParams}
-              />
+              <SessionsCard {...parsedParams} />
+            </Suspense>
+            <Suspense fallback={<div className="h-24 animate-pulse rounded-lg bg-default-100" />}>
+              <PageviewsCard {...parsedParams} />
             </Suspense>
           </div>
 
-          <div className="mt-4 grid gap-4 lg:grid-cols-1">
-            <Suspense fallback={<div className="h-[400px] animate-pulse rounded-lg bg-default-100" />}>
-              <TrendsCard
-                {...parsedParams}
-              />
+          {/* 趋势图表 */}
+          <div className="mt-4 grid gap-4">
+            <Suspense fallback={<div className="h-[300px] animate-pulse rounded-lg bg-default-100 sm:h-[400px]" />}>
+              <TrendsCard {...parsedParams} />
             </Suspense>
           </div>
 
-          <div className="mt-4 grid gap-4 lg:grid-cols-2">
-            <Suspense fallback={<div className="h-[400px] animate-pulse rounded-lg bg-default-100" />}>
-              <ReferrersCard
-                {...parsedParams}
-              />
+          {/* 推荐来源和热门页面 */}
+          <div className="mt-4 grid grid-cols-1 gap-4 lg:grid-cols-2">
+            <Suspense fallback={<div className="h-[300px] animate-pulse rounded-lg bg-default-100 sm:h-[400px]" />}>
+              <ReferrersCard {...parsedParams} />
             </Suspense>
 
-            <Suspense fallback={<div className="h-[400px] animate-pulse rounded-lg bg-default-100" />}>
-              <PopularPagesCard
-                {...parsedParams}
-              />
+            <Suspense fallback={<div className="h-[300px] animate-pulse rounded-lg bg-default-100 sm:h-[400px]" />}>
+              <PopularPagesCard {...parsedParams} />
             </Suspense>
           </div>
 
-          <div className="mt-4 grid gap-4 lg:grid-cols-3">
-            <Suspense fallback={<div className="h-[400px] animate-pulse rounded-lg bg-default-100" />}>
-              <BrowsersCard
-                {...parsedParams}
-              />
+          {/* 浏览器、操作系统和设备统计 */}
+          <div className="mt-4 grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+            <Suspense fallback={<div className="h-[300px] animate-pulse rounded-lg bg-default-100 sm:h-[400px]" />}>
+              <BrowsersCard {...parsedParams} />
             </Suspense>
 
-            <Suspense fallback={<div className="h-[400px] animate-pulse rounded-lg bg-default-100" />}>
-              <OsCard
-                {...parsedParams}
-              />
+            <Suspense fallback={<div className="h-[300px] animate-pulse rounded-lg bg-default-100 sm:h-[400px]" />}>
+              <OsCard {...parsedParams} />
             </Suspense>
 
-            <Suspense fallback={<div className="h-[400px] animate-pulse rounded-lg bg-default-100" />}>
-              <DevicesCard
-                {...parsedParams}
-              />
+            <Suspense fallback={<div className="h-[300px] animate-pulse rounded-lg bg-default-100 sm:h-[400px]" />}>
+              <DevicesCard {...parsedParams} />
             </Suspense>
           </div>
 
-          <div className="mt-4 grid gap-4 lg:grid-cols-1">
-            <Suspense fallback={<div className="col-span-3 h-[400px] animate-pulse rounded-lg bg-default-100" />}>
-              <div className="grid grid-cols-3 gap-4">
+          {/* 世界地图和国家统计 */}
+          <div className="mt-4 grid gap-4">
+            <Suspense fallback={<div className="h-[300px] animate-pulse rounded-lg bg-default-100 sm:h-[400px]" />}>
+              <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
                 <WorldMap
-                  className="col-span-2"
+                  className="col-span-1 md:col-span-2"
                   {...parsedParams}
                 />
-                <CountriesCard
-                  {...parsedParams}
-                />
+                <CountriesCard {...parsedParams} />
               </div>
             </Suspense>
           </div>
 
-          <div className="mt-4 grid gap-4 lg:grid-cols-1">
-            <Suspense fallback={<div className="col-span-3 h-[400px] animate-pulse rounded-lg bg-default-100" />}>
-              <div className="grid grid-cols-3 gap-4">
-                <CustomEventsCard
-                  {...parsedParams}
-                />
+          {/* 自定义事件 */}
+          <div className="mt-4 grid gap-4">
+            <Suspense fallback={<div className="h-[300px] animate-pulse rounded-lg bg-default-100 sm:h-[400px]" />}>
+              <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+                <CustomEventsCard {...parsedParams} />
                 <CustomEventChartCard
-                  className="col-span-2"
+                  className="col-span-1 md:col-span-2"
                   {...parsedParams}
                 />
               </div>

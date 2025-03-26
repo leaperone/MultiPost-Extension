@@ -156,19 +156,23 @@ export async function CustomEventChartCard({
   const chartData = await getCustomEventTrends(websiteId, startDate, endDate, timezone);
 
   return (
-    <Card className={cn('', className)}>
+    <Card className={cn('h-full', className)}>
       <CardHeader>
         <h3 className="text-lg font-semibold">事件趋势</h3>
       </CardHeader>
       <CardBody>
         {!chartData || chartData.data.length === 0 ? (
-          <div className="flex h-[300px] items-center justify-center text-sm text-gray-500">暂无数据</div>
+          <div className="flex h-[200px] items-center justify-center text-sm text-gray-500 sm:h-[250px] md:h-[300px]">
+            暂无数据
+          </div>
         ) : (
-          <ChartContent
-            data={chartData.data}
-            eventTypes={chartData.eventTypes}
-            granularity={chartData.granularity}
-          />
+          <div className="h-[200px] sm:h-[250px] md:h-[300px]">
+            <ChartContent
+              data={chartData.data}
+              eventTypes={chartData.eventTypes}
+              granularity={chartData.granularity}
+            />
+          </div>
         )}
       </CardBody>
     </Card>

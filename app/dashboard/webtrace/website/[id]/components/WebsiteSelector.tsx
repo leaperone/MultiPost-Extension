@@ -31,7 +31,7 @@ export function WebsiteSelector({ websites, currentWebsiteId }: WebsiteSelectorP
         }
       }}
       selectedKeys={[currentWebsiteId]}
-      className="w-[280px]"
+      className="w-full sm:w-[280px]"
       variant="bordered"
       placeholder={currentWebsite?.name || '选择网站'}>
       {websites.map((website) => (

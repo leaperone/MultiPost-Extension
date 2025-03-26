@@ -3,13 +3,46 @@
 
 import { DateRangePicker, Button, ButtonGroup } from '@heroui/react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { useCallback, useEffect } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { getLocalTimeZone, parseDate, today } from '@internationalized/date';
 import { startOfDay, subDays, endOfDay, subHours } from 'date-fns';
 
 export function DateRangeSelector() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  // 使用窗口宽度来决定显示的月份数量
+  const [visibleMonths, setVisibleMonths] = useState(1);
+  // 判断是否是小屏幕设备
+  const [isMobile, setIsMobile] = useState(false);
+
+  // 在组件挂载时和窗口大小变化时更新可见月份数和设备类型
+  useEffect(() => {
+    const updateViewport = () => {
+      if (typeof window !== 'undefined') {
+        const width = window.innerWidth;
+        setIsMobile(width < 640);
+
+        if (width >= 1024) {
+          setVisibleMonths(3);
+        } else if (width >= 768) {
+          setVisibleMonths(2);
+        } else {
+          setVisibleMonths(1);
+        }
+      }
+    };
+
+    // 初始化运行一次
+    updateViewport();
+
+    // 添加调整大小监听器
+    window.addEventListener('resize', updateViewport);
+
+    // 清理
+    return () => {
+      window.removeEventListener('resize', updateViewport);
+    };
+  }, []);
 
   const handleDateRangeChange = useCallback(
     (range: any) => {
@@ -76,31 +109,103 @@ export function DateRangeSelector() {
     [router, searchParams],
   );
 
+  // 移动端快速选择按钮
+  const QuickSelectButtons = () => (
+    <div className={`grid ${isMobile ? 'grid-cols-2' : 'grid-cols-5'} w-full gap-1`}>
+      <Button
+        size="sm"
+        variant="bordered"
+        className="border-default-200/60 text-default-500"
+        onPress={() => handleQuickSelect('today')}>
+        今天
+      </Button>
+      <Button
+        size="sm"
+        variant="bordered"
+        className="border-default-200/60 text-default-500"
+        onPress={() => handleQuickSelect('24h')}>
+        24小时
+      </Button>
+      <Button
+        size="sm"
+        variant="bordered"
+        className="border-default-200/60 text-default-500"
+        onPress={() => handleQuickSelect(3)}>
+        3天
+      </Button>
+      <Button
+        size="sm"
+        variant="bordered"
+        className="border-default-200/60 text-default-500"
+        onPress={() => handleQuickSelect(7)}>
+        7天
+      </Button>
+      <Button
+        size="sm"
+        variant="bordered"
+        className={`border-default-200/60 text-default-500 ${isMobile ? 'col-span-2' : ''}`}
+        onPress={() => handleQuickSelect(30)}>
+        30天
+      </Button>
+    </div>
+  );
+
   return (
-    <div className="space-y-4">
+    <div className="w-full space-y-4">
+      {/* 移动端在日期选择器前显示快速选择按钮 */}
+      {isMobile && (
+        <div className="mb-2">
+          <QuickSelectButtons />
+        </div>
+      )}
+
       <DateRangePicker
-        className="w-[600px]"
+        className="w-full sm:w-[300px] md:w-[400px] lg:w-[600px]"
         onChange={handleDateRangeChange}
         variant="bordered"
         radius="sm"
         label="选择日期范围"
         maxValue={today(getLocalTimeZone())}
         minValue={parseDate('2025-01-01')}
-        visibleMonths={3}
+        visibleMonths={visibleMonths}
         // labelPlacement="outside-left"
         CalendarTopContent={
-          <ButtonGroup
-            fullWidth
-            className="bg-content1 px-3 pb-2 pt-3 [&>button]:border-default-200/60 [&>button]:text-default-500"
-            radius="full"
-            size="sm"
-            variant="bordered">
-            <Button onPress={() => handleQuickSelect('today')}>今天</Button>
-            <Button onPress={() => handleQuickSelect('24h')}>24小时内</Button>
-            <Button onPress={() => handleQuickSelect(3)}>3天内</Button>
-            <Button onPress={() => handleQuickSelect(7)}>7天内</Button>
-            <Button onPress={() => handleQuickSelect(30)}>30天内</Button>
-          </ButtonGroup>
+          !isMobile ? (
+            <div className="bg-content1 px-3 pb-2 pt-3">
+              <ButtonGroup
+                fullWidth
+                className="inline-flex flex-nowrap overflow-x-auto"
+                size="sm"
+                radius="full"
+                variant="bordered">
+                <Button
+                  className="border-default-200/60 text-default-500"
+                  onPress={() => handleQuickSelect('today')}>
+                  今天
+                </Button>
+                <Button
+                  className="border-default-200/60 text-default-500"
+                  onPress={() => handleQuickSelect('24h')}>
+                  24小时
+                </Button>
+                <Button
+                  className="border-default-200/60 text-default-500"
+                  onPress={() => handleQuickSelect(3)}>
+                  3天
+                </Button>
+                <Button
+                  className="border-default-200/60 text-default-500"
+                  onPress={() => handleQuickSelect(7)}>
+                  7天
+                </Button>
+                <Button
+                  className="border-default-200/60 text-default-500"
+                  onPress={() => handleQuickSelect(30)}>
+                  30天
+                </Button>
+              </ButtonGroup>
+            </div>
+          ) : null
         }
       />
     </div>
