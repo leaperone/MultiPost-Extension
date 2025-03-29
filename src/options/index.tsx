@@ -11,6 +11,7 @@ import AboutTab from '~/components/Sync/AboutTab';
 import { type SyncData, createTabsForPlatforms, injectScriptsToTabs } from '~sync/common';
 import SettingsTab from '~components/Sync/SettingsTab';
 import ArticleTab from '~components/Sync/ArticleTab';
+import { refreshAllAccountInfo } from '~sync/account';
 
 /**
  * Get the shadow container element for styling
@@ -64,6 +65,8 @@ const Options = () => {
     });
     setHashParams(params);
     setIsReady(true);
+
+    refreshAllAccountInfo();
   }, []);
 
   /**

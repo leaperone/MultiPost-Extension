@@ -32,6 +32,7 @@ export const DynamicInfoMap: Record<string, PlatformInfo> = {
     injectUrl: 'https://creator.douyin.com/creator-micro/content/upload?default-tab=3',
     injectFunction: DynamicDouyin,
     tags: ['CN'],
+    accountKey: 'douyin',
   },
   DYNAMIC_X: {
     type: 'DYNAMIC',
@@ -43,6 +44,7 @@ export const DynamicInfoMap: Record<string, PlatformInfo> = {
     injectUrl: 'https://x.com/home',
     injectFunction: DynamicX,
     tags: ['EN'],
+    accountKey: 'x',
   },
   DYNAMIC_BILIBILI: {
     type: 'DYNAMIC',
@@ -54,6 +56,7 @@ export const DynamicInfoMap: Record<string, PlatformInfo> = {
     injectUrl: 'https://t.bilibili.com',
     injectFunction: DynamicBilibili,
     tags: ['CN'],
+    accountKey: 'bilibili',
   },
   DYNAMIC_REDNOTE: {
     type: 'DYNAMIC',
@@ -65,6 +68,7 @@ export const DynamicInfoMap: Record<string, PlatformInfo> = {
     injectUrl: 'https://creator.xiaohongshu.com/publish/publish',
     injectFunction: DynamicRednote,
     tags: ['CN'],
+    accountKey: 'rednote',
   },
   DYNAMIC_WEIBO: {
     type: 'DYNAMIC',
@@ -75,6 +79,7 @@ export const DynamicInfoMap: Record<string, PlatformInfo> = {
     injectUrl: 'https://weibo.com',
     injectFunction: DynamicWeibo,
     tags: ['CN'],
+    accountKey: 'weibo',
   },
   DYNAMIC_XUEQIU: {
     type: 'DYNAMIC',
@@ -85,6 +90,7 @@ export const DynamicInfoMap: Record<string, PlatformInfo> = {
     injectUrl: 'https://xueqiu.com',
     injectFunction: DynamicXueqiu,
     tags: ['CN'],
+    accountKey: 'xueqiu',
   },
   DYNAMIC_ZHIHU: {
     type: 'DYNAMIC',
@@ -95,6 +101,7 @@ export const DynamicInfoMap: Record<string, PlatformInfo> = {
     injectUrl: 'https://www.zhihu.com',
     injectFunction: DynamicZhihu,
     tags: ['CN'],
+    accountKey: 'zhihu',
   },
   DYNAMIC_INSTAGRAM: {
     type: 'DYNAMIC',
@@ -106,6 +113,7 @@ export const DynamicInfoMap: Record<string, PlatformInfo> = {
     injectUrl: 'https://www.instagram.com/',
     injectFunction: DynamicInstagram,
     tags: ['EN'],
+    accountKey: 'instagram',
   },
   DYNAMIC_FACEBOOK: {
     type: 'DYNAMIC',
@@ -117,6 +125,7 @@ export const DynamicInfoMap: Record<string, PlatformInfo> = {
     injectUrl: 'https://www.facebook.com/',
     injectFunction: DynamicFacebook,
     tags: ['EN'],
+    accountKey: 'facebook',
   },
   DYNAMIC_LINKEDIN: {
     type: 'DYNAMIC',
@@ -128,6 +137,7 @@ export const DynamicInfoMap: Record<string, PlatformInfo> = {
     injectUrl: 'https://www.linkedin.com/feed',
     injectFunction: DynamicLinkedin,
     tags: ['EN'],
+    accountKey: 'linkedin',
   },
   DYNAMIC_OKJIKE: {
     type: 'DYNAMIC',
@@ -138,6 +148,7 @@ export const DynamicInfoMap: Record<string, PlatformInfo> = {
     injectUrl: 'https://web.okjike.com',
     injectFunction: DynamicOkjike,
     tags: ['CN'],
+    accountKey: 'okjike',
   },
   DYNAMIC_REDDIT: {
     type: 'DYNAMIC',
@@ -148,6 +159,7 @@ export const DynamicInfoMap: Record<string, PlatformInfo> = {
     injectUrl: 'https://www.reddit.com/submit?type=TEXT',
     injectFunction: DynamicReddit,
     tags: ['EN'],
+    accountKey: 'reddit',
   },
   DYNAMIC_KUAISHOU: {
     type: 'DYNAMIC',
@@ -158,6 +170,7 @@ export const DynamicInfoMap: Record<string, PlatformInfo> = {
     injectUrl: 'https://cp.kuaishou.com/article/publish/video',
     injectFunction: DynamicKuaishou,
     tags: ['CN'],
+    accountKey: 'kuaishou',
   },
   DYNAMIC_BAIJIAHAO: {
     type: 'DYNAMIC',
@@ -168,6 +181,7 @@ export const DynamicInfoMap: Record<string, PlatformInfo> = {
     injectUrl: 'https://baijiahao.baidu.com/builder/rc/edit?type=events',
     injectFunction: DynamicBaijiahao,
     tags: ['CN'],
+    accountKey: 'baijiahao',
   },
   DYNAMIC_TOUTIAO: {
     type: 'DYNAMIC',
@@ -178,6 +192,7 @@ export const DynamicInfoMap: Record<string, PlatformInfo> = {
     injectUrl: 'https://mp.toutiao.com/profile_v4/weitoutiao/publish',
     injectFunction: DynamicToutiao,
     tags: ['CN'],
+    accountKey: 'toutiao',
   },
   DYNAMIC_THREADS: {
     type: 'DYNAMIC',
@@ -188,6 +203,7 @@ export const DynamicInfoMap: Record<string, PlatformInfo> = {
     injectUrl: 'https://www.threads.net/web',
     injectFunction: DynamicThreads,
     tags: ['EN'],
+    accountKey: 'threads',
   },
   DYNAMIC_WEIXINCHANNEL: {
     type: 'DYNAMIC',
@@ -198,6 +214,7 @@ export const DynamicInfoMap: Record<string, PlatformInfo> = {
     injectUrl: 'https://channels.weixin.qq.com/platform/post/finderNewLifeCreate',
     injectFunction: DynamicWeiXinChannel,
     tags: ['CN'],
+    accountKey: 'weixinchannel',
   },
   DYNAMIC_BLUESKY: {
     type: 'DYNAMIC',
@@ -208,6 +225,7 @@ export const DynamicInfoMap: Record<string, PlatformInfo> = {
     injectUrl: 'https://bsky.app/',
     injectFunction: DynamicBluesky,
     tags: ['EN'],
+    accountKey: 'bluesky',
   },
   DYNAMIC_V2EX: {
     type: 'DYNAMIC',
@@ -218,6 +236,7 @@ export const DynamicInfoMap: Record<string, PlatformInfo> = {
     injectUrl: 'https://www.v2ex.com/write',
     injectFunction: DynamicV2EX,
     tags: ['CN'],
+    accountKey: 'v2ex',
   },
   DYNAMIC_DOUBAN: {
     type: 'DYNAMIC',
@@ -228,6 +247,7 @@ export const DynamicInfoMap: Record<string, PlatformInfo> = {
     injectUrl: 'https://www.douban.com/',
     injectFunction: DynamicDouban,
     tags: ['CN'],
+    accountKey: 'douban',
   },
   DYNAMIC_DEDAO: {
     type: 'DYNAMIC',
@@ -238,6 +258,7 @@ export const DynamicInfoMap: Record<string, PlatformInfo> = {
     injectUrl: 'https://www.dedao.cn/knowledge/home',
     injectFunction: DynamicDedao,
     tags: ['CN'],
+    accountKey: 'dedao',
   },
   DYNAMIC_WEIXIN: {
     type: 'DYNAMIC',
@@ -248,5 +269,6 @@ export const DynamicInfoMap: Record<string, PlatformInfo> = {
     injectUrl: 'https://mp.weixin.qq.com/',
     injectFunction: DynamicWeixin,
     tags: ['CN'],
+    accountKey: 'weixin',
   },
 };

@@ -15,7 +15,8 @@ import {
 import { ImagePlusIcon, XIcon, DownloadIcon, Eraser } from 'lucide-react';
 import type { FileData, SyncData } from '~sync/common';
 import PlatformCheckbox from './PlatformCheckbox';
-import { getPlatformInfos } from '~sync/common';
+import { getPlatformInfosWithAccount } from '~sync/account';
+import type { PlatformInfo } from '~sync/common';
 import TurndownService from 'turndown';
 import { Storage } from '@plasmohq/storage';
 interface ArticleTabProps {
@@ -46,6 +47,7 @@ const ArticleTab: React.FC<ArticleTabProps> = ({ funcPublish, funcScraper }) => 
   const [isProcessing, setIsProcessing] = useState(false);
   const [processStatus, setProcessStatus] = useState('');
   const [processProgress, setProcessProgress] = useState(0);
+  const [platforms, setPlatforms] = useState<PlatformInfo[]>([]);
   const turndownService = new TurndownService({
     headingStyle: 'atx',
     codeBlockStyle: 'fenced',
@@ -59,6 +61,20 @@ const ArticleTab: React.FC<ArticleTabProps> = ({ funcPublish, funcScraper }) => 
       setTitle(chrome.i18n.getMessage('devEnvironmentTitle') || '开发环境标题');
       setDigest(chrome.i18n.getMessage('devEnvironmentContent') || '开发环境内容');
     }
+  }, []);
+
+  // 加载平台信息
+  useEffect(() => {
+    const loadPlatformInfos = async () => {
+      try {
+        const infos = await getPlatformInfosWithAccount('ARTICLE');
+        setPlatforms(infos);
+      } catch (error) {
+        console.error('加载平台信息失败:', error);
+      }
+    };
+
+    loadPlatformInfos();
   }, []);
 
   const handlePlatformChange = async (platform: string, isSelected: boolean) => {
@@ -429,12 +445,13 @@ const ArticleTab: React.FC<ArticleTabProps> = ({ funcPublish, funcScraper }) => 
               title="国内平台"
               subtitle={`已选择 ${
                 selectedPlatforms.filter((platform) => {
-                  const info = getPlatformInfos().find((p) => p.name === platform);
+                  const info = platforms.find((p) => p.name === platform);
                   return info?.tags?.includes('CN');
                 }).length
-              } 个`}>
-              <div className="grid grid-cols-2 gap-1 xs:grid-cols-3 sm:grid-cols-4">
-                {getPlatformInfos('ARTICLE')
+              } 个`}
+              className="py-1">
+              <div className="grid grid-cols-2 gap-2">
+                {platforms
                   .filter((platform) => platform.tags?.includes('CN'))
                   .map((platform) => (
                     <PlatformCheckbox
@@ -452,12 +469,13 @@ const ArticleTab: React.FC<ArticleTabProps> = ({ funcPublish, funcScraper }) => 
               title="海外平台"
               subtitle={`已选择 ${
                 selectedPlatforms.filter((platform) => {
-                  const info = getPlatformInfos().find((p) => p.name === platform);
+                  const info = platforms.find((p) => p.name === platform);
                   return info?.tags?.includes('EN');
                 }).length
-              } 个`}>
-              <div className="grid grid-cols-2 gap-1 xs:grid-cols-3 sm:grid-cols-4">
-                {getPlatformInfos('ARTICLE')
+              } 个`}
+              className="py-1">
+              <div className="grid grid-cols-2 gap-2">
+                {platforms
                   .filter((platform) => platform.tags?.includes('EN'))
                   .map((platform) => (
                     <PlatformCheckbox

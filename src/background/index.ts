@@ -8,9 +8,10 @@ import {
   tabsManagerMessageHandler,
 } from './services/tabs';
 import QuantumEntanglementKeepAlive from '../utils/keep-alive';
-import { createTabsForPlatforms, getPlatformInfos, injectScriptsToTabs, type SyncData } from '~sync/common';
+import { createTabsForPlatforms, injectScriptsToTabs, type SyncData } from '~sync/common';
 import { trustDomainMessageHandler } from './services/trust-domain';
 import { Storage } from '@plasmohq/storage';
+import { getPlatformInfosWithAccount } from '~sync/account';
 
 const storage = new Storage({
   area: 'local',
@@ -30,7 +31,7 @@ async function initDefaultTrustedDomains() {
 
 chrome.runtime.onInstalled.addListener((object) => {
   if (object.reason === chrome.runtime.OnInstalledReason.INSTALL) {
-    chrome.tabs.create({ url: 'https://multipost.2some.one/on-install' });
+    chrome.tabs.create({ url: 'https://multipost.app/on-install' });
   }
   initDefaultTrustedDomains();
   chrome.sidePanel.setPanelBehavior({ openPanelOnActionClick: false });
@@ -86,7 +87,9 @@ const defaultMessageHandler = (request, sender, sendResponse) => {
     }
   }
   if (request.action === 'MUTLIPOST_EXTENSION_PLATFORMS') {
-    sendResponse({ platforms: getPlatformInfos() });
+    getPlatformInfosWithAccount().then((platforms) => {
+      sendResponse({ platforms });
+    });
   }
   if (request.action === 'MUTLIPOST_EXTENSION_OPEN_OPTIONS') {
     chrome.runtime.openOptionsPage();

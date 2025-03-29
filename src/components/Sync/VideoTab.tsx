@@ -14,8 +14,10 @@ import { VideoIcon, XIcon, TrashIcon, SendIcon, Eraser } from 'lucide-react';
 import { Player } from 'video-react';
 import 'video-react/dist/video-react.css';
 // import ReactPlayer from 'react-player';
-import { type SyncData, type FileData, getPlatformInfos } from '~sync/common';
+import { type SyncData, type FileData } from '~sync/common';
+import type { PlatformInfo } from '~sync/common';
 import PlatformCheckbox from './PlatformCheckbox';
+import { getPlatformInfosWithAccount } from '~sync/account';
 import { Storage } from '@plasmohq/storage';
 interface VideoTabProps {
   funcPublish: (data: SyncData) => void;
@@ -27,6 +29,7 @@ const VideoTab: React.FC<VideoTabProps> = ({ funcPublish }) => {
   const [videoFile, setVideoFile] = useState<FileData | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [selectedPlatforms, setSelectedPlatforms] = useState<string[]>([]);
+  const [platforms, setPlatforms] = useState<PlatformInfo[]>([]);
   const storage = new Storage({
     area: 'local', // 明确指定使用 localStorage
   });
@@ -36,6 +39,20 @@ const VideoTab: React.FC<VideoTabProps> = ({ funcPublish }) => {
       setContent('开发环境内容');
     }
     setSelectedPlatforms(JSON.parse(localStorage.getItem('videoPlatforms') || '[]'));
+  }, []);
+
+  // 加载平台信息
+  useEffect(() => {
+    const loadPlatformInfos = async () => {
+      try {
+        const infos = await getPlatformInfosWithAccount('VIDEO');
+        setPlatforms(infos);
+      } catch (error) {
+        console.error('加载平台信息失败:', error);
+      }
+    };
+
+    loadPlatformInfos();
   }, []);
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -238,12 +255,13 @@ const VideoTab: React.FC<VideoTabProps> = ({ funcPublish }) => {
               title="国内平台"
               subtitle={`已选择 ${
                 selectedPlatforms.filter((platform) => {
-                  const info = getPlatformInfos().find((p) => p.name === platform);
+                  const info = platforms.find((p) => p.name === platform);
                   return info?.tags?.includes('CN');
                 }).length
-              } 个`}>
-              <div className="grid grid-cols-2 gap-1 xs:grid-cols-3 sm:grid-cols-4">
-                {getPlatformInfos('VIDEO')
+              } 个`}
+              className="py-1">
+              <div className="grid grid-cols-2 gap-2">
+                {platforms
                   .filter((platform) => platform.tags?.includes('CN'))
                   .map((platform) => (
                     <PlatformCheckbox
@@ -261,12 +279,13 @@ const VideoTab: React.FC<VideoTabProps> = ({ funcPublish }) => {
               title="海外平台"
               subtitle={`已选择 ${
                 selectedPlatforms.filter((platform) => {
-                  const info = getPlatformInfos().find((p) => p.name === platform);
+                  const info = platforms.find((p) => p.name === platform);
                   return info?.tags?.includes('EN');
                 }).length
-              } 个`}>
-              <div className="grid grid-cols-2 gap-1 xs:grid-cols-3 sm:grid-cols-4">
-                {getPlatformInfos('VIDEO')
+              } 个`}
+              className="py-1">
+              <div className="grid grid-cols-2 gap-2">
+                {platforms
                   .filter((platform) => platform.tags?.includes('EN'))
                   .map((platform) => (
                     <PlatformCheckbox

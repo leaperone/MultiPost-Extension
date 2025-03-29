@@ -19,6 +19,7 @@ export const ArticleInfoMap: Record<string, PlatformInfo> = {
     injectUrl: 'https://mp.csdn.net/mp_blog/creation/editor',
     injectFunction: ArticleCSDN,
     tags: ['CN'],
+    accountKey: 'csdn',
   },
   ARTICLE_ZHIHU: {
     type: 'ARTICLE',
@@ -29,6 +30,7 @@ export const ArticleInfoMap: Record<string, PlatformInfo> = {
     injectUrl: 'https://zhuanlan.zhihu.com/write',
     injectFunction: ArticleZhihu,
     tags: ['CN'],
+    accountKey: 'zhihu',
   },
   ARTICLE_JUEJIN: {
     type: 'ARTICLE',
@@ -39,6 +41,7 @@ export const ArticleInfoMap: Record<string, PlatformInfo> = {
     injectUrl: 'https://juejin.cn/editor/drafts/new?v=2',
     injectFunction: ArticleJuejin,
     tags: ['CN'],
+    accountKey: 'juejin',
   },
   ARTICLE_JIANSHU: {
     type: 'ARTICLE',
@@ -48,6 +51,8 @@ export const ArticleInfoMap: Record<string, PlatformInfo> = {
     platformName: chrome.i18n.getMessage('platformJianshu'),
     injectUrl: 'https://www.jianshu.com/writer',
     injectFunction: ArticleJianshu,
+    tags: ['CN'],
+    accountKey: 'jianshu',
   },
   ARTICLE_SEGMENTFAULT: {
     type: 'ARTICLE',
@@ -58,6 +63,7 @@ export const ArticleInfoMap: Record<string, PlatformInfo> = {
     injectUrl: 'https://segmentfault.com/write',
     injectFunction: ArticleSegmentfault,
     tags: ['CN'],
+    accountKey: 'segmentfault',
   },
   ARTICLE_BAIJIAHAO: {
     type: 'ARTICLE',
@@ -68,6 +74,7 @@ export const ArticleInfoMap: Record<string, PlatformInfo> = {
     injectUrl: 'https://baijiahao.baidu.com/builder/rc/edit?type=news',
     injectFunction: ArticleBaijiahao,
     tags: ['CN'],
+    accountKey: 'baijiahao',
   },
   ARTICLE_TOUTIAO: {
     type: 'ARTICLE',
@@ -78,6 +85,7 @@ export const ArticleInfoMap: Record<string, PlatformInfo> = {
     injectUrl: 'https://mp.toutiao.com/profile_v4/graphic/publish',
     injectFunction: ArticleToutiao,
     tags: ['CN'],
+    accountKey: 'toutiao',
   },
   ARTICLE_DOUBAN: {
     type: 'ARTICLE',
@@ -88,6 +96,7 @@ export const ArticleInfoMap: Record<string, PlatformInfo> = {
     injectUrl: 'https://www.douban.com/note/create',
     injectFunction: ArticleDouban,
     tags: ['CN'],
+    accountKey: 'douban',
   },
   ARTICLE_WEIXIN: {
     type: 'ARTICLE',
@@ -98,5 +107,6 @@ export const ArticleInfoMap: Record<string, PlatformInfo> = {
     injectUrl: 'https://mp.weixin.qq.com/',
     injectFunction: ArticleWeixin,
     tags: ['CN'],
+    accountKey: 'weixin',
   },
 };

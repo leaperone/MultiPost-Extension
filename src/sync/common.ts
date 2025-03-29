@@ -55,6 +55,7 @@ export interface PlatformInfo {
   injectUrl: string;
   injectFunction: (data: SyncData) => Promise<void>;
   tags?: string[];
+  accountKey: string
   accountInfo?: AccountInfo;
 }
 
