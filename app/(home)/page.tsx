@@ -310,7 +310,7 @@ export default async function HomePage() {
             <div className="mt-12 text-center">
               <Button
                 as={Link}
-                href="https://github.com/leaper-one/MultiPost-Extension"
+                href="https://github.com/leaperone/MultiPost-Extension"
                 target="_blank"
                 className="bg-default-100 text-foreground hover:bg-default-200"
                 size="lg"
@@ -362,7 +362,7 @@ export default async function HomePage() {
                 <Button
                   size="lg"
                   as={Link}
-                  href="https://github.com/leaper-one/MultiPost-Extension"
+                  href="https://github.com/leaperone/MultiPost-Extension"
                   target="_blank"
                   className="border-2 border-white bg-transparent text-white hover:bg-white/10"
                   startContent={

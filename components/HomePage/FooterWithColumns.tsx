@@ -28,7 +28,7 @@ export default function FooterWithColumns() {
     social: [
       {
         name: 'GitHub',
-        href: 'https://github.com/leaper-one',
+        href: 'https://github.com/leaperone',
         icon: (props: SocialIconProps) => (
           <Icon
             {...props}

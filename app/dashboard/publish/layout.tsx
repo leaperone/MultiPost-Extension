@@ -72,7 +72,7 @@ export default function PublishLayout({ children }: { children: React.ReactNode 
           </Link>{' '}
           {t('contact.or')}{' '}
           <Link
-            href="https://github.com/leaper-one/Multipost-Extension/issues"
+            href="https://github.com/leaperone/Multipost-Extension/issues"
             className="text-blue-500 hover:underline">
             {t('contact.github')}
           </Link>{' '}

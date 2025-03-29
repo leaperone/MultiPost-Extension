@@ -37,7 +37,7 @@ jobs:
         uses: peter-evans/repository-dispatch@v3
         with:
           token: ${{ secrets.ACCESS_TOKEN }}
-          repository: leaper-one/leaperone-release
+          repository: leaperone/leaperone-releases
           event-type: deploy-multipost
           client-payload: '{
             "ref": "${{ github.ref_name }}",

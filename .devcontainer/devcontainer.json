@@ -8,7 +8,7 @@
   "remoteUser": "root",
   "runArgs": ["--env-file=.devcontainer/.env.dev", "--network=host"],
   "forwardPorts": [3000, 35432],
-  "postCreateCommand": "git clone git@github.com:leaper-one/MultiPost.git . && cp .env.example .env && cp .env.local.example .env.local",
+  "postCreateCommand": "git clone git@github.com:leaperone/MultiPost.git . && cp .env.example .env && cp .env.local.example .env.local",
   "postStartCommand": "sh .devcontainer/init.sh",
   "customizations": {
     "vscode": {
