@@ -1,24 +1,37 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { isbot } from 'isbot';
 import { startOfHour, startOfMonth } from 'date-fns';
-import { NextResponse } from 'next/server';
-import { schema, safeDecodeURI, safeDecodeURIComponent } from './utils';
 import { secret, uuid, hash } from '@/lib/crypto';
 import { createToken, parseToken } from '@/lib/jwt';
 import { getClientInfo, hasBlockedIp } from '@/lib/detect';
 import { fetchWebsite, fetchSession, createSession, saveEvent, saveSessionData } from './db';
 import { json, badRequest, forbidden, serverError } from '@/lib/response';
 import { EVENT_TYPE, COLLECTION_TYPE } from '@/lib/constants';
+import { z } from 'zod';
+import { safeDecodeURI, safeDecodeURIComponent } from '@/lib/url';
 
-// 添加 CORS 头部的工具函数
-function corsHeaders() {
-  return {
-    'Access-Control-Allow-Origin': '*',
-    'Access-Control-Allow-Methods': 'POST, OPTIONS',
-    'Access-Control-Allow-Headers': 'Content-Type, x-multidata-cache',
-    'Access-Control-Max-Age': '86400',
-  };
-}
+// Schema 定义
+export const anyObjectParam = z.record(z.any());
+export const urlOrPathParam = z.string().max(500);
+
+export const schema = z.object({
+  type: z.enum(['event', 'identify', 'predefinedEvent']),
+  payload: z.object({
+    website: z.string(),
+    data: anyObjectParam.optional(),
+    hostname: z.string().max(100).optional(),
+    language: z.string().max(35).optional(),
+    referrer: urlOrPathParam.optional(),
+    screen: z.string().max(11).optional(),
+    title: z.string().optional(),
+    url: urlOrPathParam.optional(),
+    name: z.string().max(50).optional(),
+    tag: z.string().max(50).optional(),
+    ip: z.string().ip().optional(),
+    userAgent: z.string().optional(),
+    timestamp: z.coerce.number().int().optional(),
+  }),
+});
 
 // 定义缓存类型
 interface Cache {
@@ -52,10 +65,6 @@ function nullToUndefined<T>(value: T | null): T | undefined {
 // 安全解码 URI，确保返回字符串
 function ensureString(value: string | null | undefined): string {
   return value || '';
-}
-
-export async function OPTIONS() {
-  return NextResponse.json({ ok: true }, { headers: corsHeaders() });
 }
 
 export async function POST(request: Request) {
