@@ -22,6 +22,7 @@ export const VideoInfoMap: Record<string, PlatformInfo> = {
     platformName: chrome.i18n.getMessage('platformBilibili'),
     injectUrl: 'https://member.bilibili.com/platform/upload/video/frame',
     injectFunction: VideoBilibili,
+    tags: ['CN'],
   },
   VIDEO_DOUYIN: {
     type: 'VIDEO',
@@ -31,6 +32,7 @@ export const VideoInfoMap: Record<string, PlatformInfo> = {
     platformName: chrome.i18n.getMessage('platformDouyin'),
     injectUrl: 'https://creator.douyin.com/creator-micro/content/upload',
     injectFunction: VideoDouyin,
+    tags: ['CN'],
   },
   VIDEO_YOUTUBE: {
     type: 'VIDEO',
@@ -40,6 +42,7 @@ export const VideoInfoMap: Record<string, PlatformInfo> = {
     platformName: chrome.i18n.getMessage('platformYoutube'),
     injectUrl: 'https://studio.youtube.com/',
     injectFunction: VideoYoutube,
+    tags: ['EN'],
   },
   VIDEO_REDNOTE: {
     type: 'VIDEO',
@@ -50,6 +53,7 @@ export const VideoInfoMap: Record<string, PlatformInfo> = {
     platformName: chrome.i18n.getMessage('platformRednote'),
     injectUrl: 'https://creator.xiaohongshu.com/publish/publish',
     injectFunction: VideoRednote,
+    tags: ['CN'],
   },
   VIDEO_TIKTOK: {
     type: 'VIDEO',
@@ -59,6 +63,7 @@ export const VideoInfoMap: Record<string, PlatformInfo> = {
     platformName: chrome.i18n.getMessage('platformTiktok'),
     injectUrl: 'https://www.tiktok.com/tiktokstudio/upload',
     injectFunction: VideoTiktok,
+    tags: ['EN'],
   },
   VIDEO_WEIXINCHANNEL: {
     type: 'VIDEO',
@@ -68,6 +73,7 @@ export const VideoInfoMap: Record<string, PlatformInfo> = {
     platformName: chrome.i18n.getMessage('platformWeiXinVideo'),
     injectUrl: 'https://channels.weixin.qq.com/platform/post/create',
     injectFunction: VideoWeiXinChannel,
+    tags: ['CN'],
   },
   VIDEO_KUAISHOU: {
     type: 'VIDEO',
@@ -77,6 +83,7 @@ export const VideoInfoMap: Record<string, PlatformInfo> = {
     platformName: chrome.i18n.getMessage('platformKuaishou'),
     injectUrl: 'https://cp.kuaishou.com/article/publish/video',
     injectFunction: VideoKuaishou,
+    tags: ['CN'],
   },
   VIDEO_BAIJIAHAO: {
     type: 'VIDEO',
@@ -86,6 +93,7 @@ export const VideoInfoMap: Record<string, PlatformInfo> = {
     platformName: chrome.i18n.getMessage('platformBaijiahao'),
     injectUrl: 'https://baijiahao.baidu.com/builder/rc/edit?type=videoV2',
     injectFunction: VideoBaijiahao,
+    tags: ['CN'],
   },
   VIDEO_WEIBO: {
     type: 'VIDEO',
@@ -95,6 +103,7 @@ export const VideoInfoMap: Record<string, PlatformInfo> = {
     platformName: chrome.i18n.getMessage('platformWeibo'),
     injectUrl: 'https://weibo.com/upload/channel',
     injectFunction: VideoWeibo,
+    tags: ['CN'],
   },
   VIDEO_OKJIKE: {
     type: 'VIDEO',
@@ -104,6 +113,7 @@ export const VideoInfoMap: Record<string, PlatformInfo> = {
     platformName: chrome.i18n.getMessage('platformOkjike'),
     injectUrl: 'https://web.okjike.com',
     injectFunction: VideoOkjike,
+    tags: ['CN'],
   },
   VIDEO_BLUESKY: {
     type: 'VIDEO',
@@ -113,6 +123,7 @@ export const VideoInfoMap: Record<string, PlatformInfo> = {
     platformName: chrome.i18n.getMessage('platformBluesky'),
     injectUrl: 'https://bsky.app/',
     injectFunction: VideoBluesky,
+    tags: ['EN'],
   },
   VIDEO_ZHIHU: {
     type: 'VIDEO',
@@ -122,5 +133,6 @@ export const VideoInfoMap: Record<string, PlatformInfo> = {
     platformName: chrome.i18n.getMessage('platformZhihu'),
     injectUrl: 'https://www.zhihu.com/zvideo/upload-video',
     injectFunction: VideoZhihu,
+    tags: ['CN'],
   },
 };

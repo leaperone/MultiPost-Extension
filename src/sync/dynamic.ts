@@ -23,6 +23,16 @@ import { DynamicXueqiu } from './dynamic/xueqiu';
 import { DynamicZhihu } from './dynamic/zhihu';
 
 export const DynamicInfoMap: Record<string, PlatformInfo> = {
+  DYNAMIC_DOUYIN: {
+    type: 'DYNAMIC',
+    name: 'DYNAMIC_DOUYIN',
+    homeUrl: 'https://creator.douyin.com/',
+    faviconUrl: 'https://lf1-cdn-tos.bytegoofy.com/goofy/ies/douyin_web/public/favicon.ico',
+    platformName: chrome.i18n.getMessage('platformDouyin'),
+    injectUrl: 'https://creator.douyin.com/creator-micro/content/upload?default-tab=3',
+    injectFunction: DynamicDouyin,
+    tags: ['CN'],
+  },
   DYNAMIC_X: {
     type: 'DYNAMIC',
     name: 'DYNAMIC_X',
@@ -32,6 +42,7 @@ export const DynamicInfoMap: Record<string, PlatformInfo> = {
     platformName: chrome.i18n.getMessage('platformX'),
     injectUrl: 'https://x.com/home',
     injectFunction: DynamicX,
+    tags: ['EN'],
   },
   DYNAMIC_BILIBILI: {
     type: 'DYNAMIC',
@@ -42,6 +53,7 @@ export const DynamicInfoMap: Record<string, PlatformInfo> = {
     platformName: chrome.i18n.getMessage('platformBilibili'),
     injectUrl: 'https://t.bilibili.com',
     injectFunction: DynamicBilibili,
+    tags: ['CN'],
   },
   DYNAMIC_REDNOTE: {
     type: 'DYNAMIC',
@@ -52,6 +64,7 @@ export const DynamicInfoMap: Record<string, PlatformInfo> = {
     platformName: chrome.i18n.getMessage('platformRednote'),
     injectUrl: 'https://creator.xiaohongshu.com/publish/publish',
     injectFunction: DynamicRednote,
+    tags: ['CN'],
   },
   DYNAMIC_WEIBO: {
     type: 'DYNAMIC',
@@ -61,6 +74,7 @@ export const DynamicInfoMap: Record<string, PlatformInfo> = {
     platformName: chrome.i18n.getMessage('platformWeibo'),
     injectUrl: 'https://weibo.com',
     injectFunction: DynamicWeibo,
+    tags: ['CN'],
   },
   DYNAMIC_XUEQIU: {
     type: 'DYNAMIC',
@@ -70,6 +84,7 @@ export const DynamicInfoMap: Record<string, PlatformInfo> = {
     platformName: chrome.i18n.getMessage('platformXueqiu'),
     injectUrl: 'https://xueqiu.com',
     injectFunction: DynamicXueqiu,
+    tags: ['CN'],
   },
   DYNAMIC_ZHIHU: {
     type: 'DYNAMIC',
@@ -79,15 +94,7 @@ export const DynamicInfoMap: Record<string, PlatformInfo> = {
     platformName: chrome.i18n.getMessage('platformZhihu'),
     injectUrl: 'https://www.zhihu.com',
     injectFunction: DynamicZhihu,
-  },
-  DYNAMIC_DOUYIN: {
-    type: 'DYNAMIC',
-    name: 'DYNAMIC_DOUYIN',
-    homeUrl: 'https://creator.douyin.com/',
-    faviconUrl: 'https://lf1-cdn-tos.bytegoofy.com/goofy/ies/douyin_web/public/favicon.ico',
-    platformName: chrome.i18n.getMessage('platformDouyin'),
-    injectUrl: 'https://creator.douyin.com/creator-micro/content/upload?default-tab=3',
-    injectFunction: DynamicDouyin,
+    tags: ['CN'],
   },
   DYNAMIC_INSTAGRAM: {
     type: 'DYNAMIC',
@@ -98,6 +105,7 @@ export const DynamicInfoMap: Record<string, PlatformInfo> = {
     platformName: chrome.i18n.getMessage('platformInstagram'),
     injectUrl: 'https://www.instagram.com/',
     injectFunction: DynamicInstagram,
+    tags: ['EN'],
   },
   DYNAMIC_FACEBOOK: {
     type: 'DYNAMIC',
@@ -108,6 +116,7 @@ export const DynamicInfoMap: Record<string, PlatformInfo> = {
     platformName: chrome.i18n.getMessage('platformFacebook'),
     injectUrl: 'https://www.facebook.com/',
     injectFunction: DynamicFacebook,
+    tags: ['EN'],
   },
   DYNAMIC_LINKEDIN: {
     type: 'DYNAMIC',
@@ -118,6 +127,7 @@ export const DynamicInfoMap: Record<string, PlatformInfo> = {
     platformName: chrome.i18n.getMessage('platformLinkedin'),
     injectUrl: 'https://www.linkedin.com/feed',
     injectFunction: DynamicLinkedin,
+    tags: ['EN'],
   },
   DYNAMIC_OKJIKE: {
     type: 'DYNAMIC',
@@ -127,6 +137,7 @@ export const DynamicInfoMap: Record<string, PlatformInfo> = {
     platformName: chrome.i18n.getMessage('platformOkjike'),
     injectUrl: 'https://web.okjike.com',
     injectFunction: DynamicOkjike,
+    tags: ['CN'],
   },
   DYNAMIC_REDDIT: {
     type: 'DYNAMIC',
@@ -136,6 +147,7 @@ export const DynamicInfoMap: Record<string, PlatformInfo> = {
     platformName: chrome.i18n.getMessage('platformReddit'),
     injectUrl: 'https://www.reddit.com/submit?type=TEXT',
     injectFunction: DynamicReddit,
+    tags: ['EN'],
   },
   DYNAMIC_KUAISHOU: {
     type: 'DYNAMIC',
@@ -145,6 +157,7 @@ export const DynamicInfoMap: Record<string, PlatformInfo> = {
     platformName: chrome.i18n.getMessage('platformKuaishou'),
     injectUrl: 'https://cp.kuaishou.com/article/publish/video',
     injectFunction: DynamicKuaishou,
+    tags: ['CN'],
   },
   DYNAMIC_BAIJIAHAO: {
     type: 'DYNAMIC',
@@ -154,6 +167,7 @@ export const DynamicInfoMap: Record<string, PlatformInfo> = {
     platformName: chrome.i18n.getMessage('platformBaijiahao'),
     injectUrl: 'https://baijiahao.baidu.com/builder/rc/edit?type=events',
     injectFunction: DynamicBaijiahao,
+    tags: ['CN'],
   },
   DYNAMIC_TOUTIAO: {
     type: 'DYNAMIC',
@@ -163,6 +177,7 @@ export const DynamicInfoMap: Record<string, PlatformInfo> = {
     platformName: chrome.i18n.getMessage('platformToutiao'),
     injectUrl: 'https://mp.toutiao.com/profile_v4/weitoutiao/publish',
     injectFunction: DynamicToutiao,
+    tags: ['CN'],
   },
   DYNAMIC_THREADS: {
     type: 'DYNAMIC',
@@ -172,6 +187,7 @@ export const DynamicInfoMap: Record<string, PlatformInfo> = {
     platformName: chrome.i18n.getMessage('platformThreads'),
     injectUrl: 'https://www.threads.net/web',
     injectFunction: DynamicThreads,
+    tags: ['EN'],
   },
   DYNAMIC_WEIXINCHANNEL: {
     type: 'DYNAMIC',
@@ -181,6 +197,7 @@ export const DynamicInfoMap: Record<string, PlatformInfo> = {
     platformName: chrome.i18n.getMessage('platformWeiXinVideo'),
     injectUrl: 'https://channels.weixin.qq.com/platform/post/finderNewLifeCreate',
     injectFunction: DynamicWeiXinChannel,
+    tags: ['CN'],
   },
   DYNAMIC_BLUESKY: {
     type: 'DYNAMIC',
@@ -190,6 +207,7 @@ export const DynamicInfoMap: Record<string, PlatformInfo> = {
     platformName: chrome.i18n.getMessage('platformBluesky'),
     injectUrl: 'https://bsky.app/',
     injectFunction: DynamicBluesky,
+    tags: ['EN'],
   },
   DYNAMIC_V2EX: {
     type: 'DYNAMIC',
@@ -199,6 +217,7 @@ export const DynamicInfoMap: Record<string, PlatformInfo> = {
     platformName: chrome.i18n.getMessage('platformV2ex'),
     injectUrl: 'https://www.v2ex.com/write',
     injectFunction: DynamicV2EX,
+    tags: ['CN'],
   },
   DYNAMIC_DOUBAN: {
     type: 'DYNAMIC',
@@ -208,6 +227,7 @@ export const DynamicInfoMap: Record<string, PlatformInfo> = {
     platformName: chrome.i18n.getMessage('platformDouban'),
     injectUrl: 'https://www.douban.com/',
     injectFunction: DynamicDouban,
+    tags: ['CN'],
   },
   DYNAMIC_DEDAO: {
     type: 'DYNAMIC',
@@ -217,6 +237,7 @@ export const DynamicInfoMap: Record<string, PlatformInfo> = {
     platformName: chrome.i18n.getMessage('platformDedao'),
     injectUrl: 'https://www.dedao.cn/knowledge/home',
     injectFunction: DynamicDedao,
+    tags: ['CN'],
   },
   DYNAMIC_WEIXIN: {
     type: 'DYNAMIC',
@@ -226,5 +247,6 @@ export const DynamicInfoMap: Record<string, PlatformInfo> = {
     platformName: chrome.i18n.getMessage('platformWeixin'),
     injectUrl: 'https://mp.weixin.qq.com/',
     injectFunction: DynamicWeixin,
+    tags: ['CN'],
   },
 };

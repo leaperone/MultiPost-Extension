@@ -18,6 +18,7 @@ export const ArticleInfoMap: Record<string, PlatformInfo> = {
     platformName: chrome.i18n.getMessage('platformCSDN'),
     injectUrl: 'https://mp.csdn.net/mp_blog/creation/editor',
     injectFunction: ArticleCSDN,
+    tags: ['CN'],
   },
   ARTICLE_ZHIHU: {
     type: 'ARTICLE',
@@ -27,6 +28,7 @@ export const ArticleInfoMap: Record<string, PlatformInfo> = {
     platformName: chrome.i18n.getMessage('platformZhihu'),
     injectUrl: 'https://zhuanlan.zhihu.com/write',
     injectFunction: ArticleZhihu,
+    tags: ['CN'],
   },
   ARTICLE_JUEJIN: {
     type: 'ARTICLE',
@@ -36,6 +38,7 @@ export const ArticleInfoMap: Record<string, PlatformInfo> = {
     platformName: chrome.i18n.getMessage('platformJuejin'),
     injectUrl: 'https://juejin.cn/editor/drafts/new?v=2',
     injectFunction: ArticleJuejin,
+    tags: ['CN'],
   },
   ARTICLE_JIANSHU: {
     type: 'ARTICLE',
@@ -54,6 +57,7 @@ export const ArticleInfoMap: Record<string, PlatformInfo> = {
     platformName: chrome.i18n.getMessage('platformSegmentfault'),
     injectUrl: 'https://segmentfault.com/write',
     injectFunction: ArticleSegmentfault,
+    tags: ['CN'],
   },
   ARTICLE_BAIJIAHAO: {
     type: 'ARTICLE',
@@ -63,6 +67,7 @@ export const ArticleInfoMap: Record<string, PlatformInfo> = {
     platformName: chrome.i18n.getMessage('platformBaijiahao'),
     injectUrl: 'https://baijiahao.baidu.com/builder/rc/edit?type=news',
     injectFunction: ArticleBaijiahao,
+    tags: ['CN'],
   },
   ARTICLE_TOUTIAO: {
     type: 'ARTICLE',
@@ -72,6 +77,7 @@ export const ArticleInfoMap: Record<string, PlatformInfo> = {
     platformName: chrome.i18n.getMessage('platformToutiao'),
     injectUrl: 'https://mp.toutiao.com/profile_v4/graphic/publish',
     injectFunction: ArticleToutiao,
+    tags: ['CN'],
   },
   ARTICLE_DOUBAN: {
     type: 'ARTICLE',
@@ -81,6 +87,7 @@ export const ArticleInfoMap: Record<string, PlatformInfo> = {
     platformName: chrome.i18n.getMessage('platformDouban'),
     injectUrl: 'https://www.douban.com/note/create',
     injectFunction: ArticleDouban,
+    tags: ['CN'],
   },
   ARTICLE_WEIXIN: {
     type: 'ARTICLE',
@@ -90,5 +97,6 @@ export const ArticleInfoMap: Record<string, PlatformInfo> = {
     platformName: chrome.i18n.getMessage('platformWeixin'),
     injectUrl: 'https://mp.weixin.qq.com/',
     injectFunction: ArticleWeixin,
+    tags: ['CN'],
   },
 };

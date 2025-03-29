@@ -1,5 +1,17 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Card, Button, Image, Input, Textarea, CardHeader, CardBody, Progress, CardFooter } from '@heroui/react';
+import {
+  Card,
+  Button,
+  Image,
+  Input,
+  Textarea,
+  CardHeader,
+  CardBody,
+  Progress,
+  CardFooter,
+  Accordion,
+  AccordionItem,
+} from '@heroui/react';
 import { ImagePlusIcon, XIcon, DownloadIcon, Eraser } from 'lucide-react';
 import type { FileData, SyncData } from '~sync/common';
 import PlatformCheckbox from './PlatformCheckbox';
@@ -401,23 +413,64 @@ const ArticleTab: React.FC<ArticleTabProps> = ({ funcPublish, funcScraper }) => 
                 variant="light"
                 color="danger"
                 onPress={clearSelectedPlatforms}
-                title={chrome.i18n.getMessage('clearPlatforms')}
+                title="清空平台"
                 className="hover:bg-danger-100">
                 <Eraser className="size-4" />
               </Button>
             )}
           </div>
-          <div className="grid grid-cols-2 gap-1 xs:grid-cols-3 sm:grid-cols-4">
-            {getPlatformInfos('ARTICLE').map((platform) => (
-              <PlatformCheckbox
-                key={platform.name}
-                platformInfo={platform}
-                isSelected={selectedPlatforms.includes(platform.name)}
-                onChange={(_, isSelected) => handlePlatformChange(platform.name, isSelected)}
-                isDisabled={false}
-              />
-            ))}
-          </div>
+
+          <Accordion
+            variant="bordered"
+            selectionMode="multiple"
+            defaultExpandedKeys={['CN']}>
+            <AccordionItem
+              key="CN"
+              title="国内平台"
+              subtitle={`已选择 ${
+                selectedPlatforms.filter((platform) => {
+                  const info = getPlatformInfos().find((p) => p.name === platform);
+                  return info?.tags?.includes('CN');
+                }).length
+              } 个`}>
+              <div className="grid grid-cols-2 gap-1 xs:grid-cols-3 sm:grid-cols-4">
+                {getPlatformInfos('ARTICLE')
+                  .filter((platform) => platform.tags?.includes('CN'))
+                  .map((platform) => (
+                    <PlatformCheckbox
+                      key={platform.name}
+                      platformInfo={platform}
+                      isSelected={selectedPlatforms.includes(platform.name)}
+                      onChange={(_, isSelected) => handlePlatformChange(platform.name, isSelected)}
+                      isDisabled={false}
+                    />
+                  ))}
+              </div>
+            </AccordionItem>
+            <AccordionItem
+              key="EN"
+              title="海外平台"
+              subtitle={`已选择 ${
+                selectedPlatforms.filter((platform) => {
+                  const info = getPlatformInfos().find((p) => p.name === platform);
+                  return info?.tags?.includes('EN');
+                }).length
+              } 个`}>
+              <div className="grid grid-cols-2 gap-1 xs:grid-cols-3 sm:grid-cols-4">
+                {getPlatformInfos('ARTICLE')
+                  .filter((platform) => platform.tags?.includes('EN'))
+                  .map((platform) => (
+                    <PlatformCheckbox
+                      key={platform.name}
+                      platformInfo={platform}
+                      isSelected={selectedPlatforms.includes(platform.name)}
+                      onChange={(_, isSelected) => handlePlatformChange(platform.name, isSelected)}
+                      isDisabled={false}
+                    />
+                  ))}
+              </div>
+            </AccordionItem>
+          </Accordion>
         </div>
       </div>
       <Button

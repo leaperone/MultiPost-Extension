@@ -1,5 +1,15 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Card, Button, Input, Textarea, CardHeader, CardBody, CardFooter } from '@heroui/react';
+import {
+  Card,
+  Button,
+  Input,
+  Textarea,
+  CardHeader,
+  CardBody,
+  CardFooter,
+  Accordion,
+  AccordionItem,
+} from '@heroui/react';
 import { VideoIcon, XIcon, TrashIcon, SendIcon, Eraser } from 'lucide-react';
 import { Player } from 'video-react';
 import 'video-react/dist/video-react.css';
@@ -218,17 +228,58 @@ const VideoTab: React.FC<VideoTabProps> = ({ funcPublish }) => {
               </Button>
             )}
           </div>
-          <div className="grid grid-cols-2 gap-1 md:grid-cols-4">
-            {getPlatformInfos('VIDEO').map((platform) => (
-              <PlatformCheckbox
-                key={platform.name}
-                platformInfo={platform}
-                isSelected={selectedPlatforms.includes(platform.name)}
-                onChange={(_, isSelected) => handlePlatformChange(platform.name, isSelected)}
-                isDisabled={false}
-              />
-            ))}
-          </div>
+
+          <Accordion
+            variant="bordered"
+            selectionMode="multiple"
+            defaultExpandedKeys={['CN']}>
+            <AccordionItem
+              key="CN"
+              title="国内平台"
+              subtitle={`已选择 ${
+                selectedPlatforms.filter((platform) => {
+                  const info = getPlatformInfos().find((p) => p.name === platform);
+                  return info?.tags?.includes('CN');
+                }).length
+              } 个`}>
+              <div className="grid grid-cols-2 gap-1 xs:grid-cols-3 sm:grid-cols-4">
+                {getPlatformInfos('VIDEO')
+                  .filter((platform) => platform.tags?.includes('CN'))
+                  .map((platform) => (
+                    <PlatformCheckbox
+                      key={platform.name}
+                      platformInfo={platform}
+                      isSelected={selectedPlatforms.includes(platform.name)}
+                      onChange={(_, isSelected) => handlePlatformChange(platform.name, isSelected)}
+                      isDisabled={false}
+                    />
+                  ))}
+              </div>
+            </AccordionItem>
+            <AccordionItem
+              key="EN"
+              title="海外平台"
+              subtitle={`已选择 ${
+                selectedPlatforms.filter((platform) => {
+                  const info = getPlatformInfos().find((p) => p.name === platform);
+                  return info?.tags?.includes('EN');
+                }).length
+              } 个`}>
+              <div className="grid grid-cols-2 gap-1 xs:grid-cols-3 sm:grid-cols-4">
+                {getPlatformInfos('VIDEO')
+                  .filter((platform) => platform.tags?.includes('EN'))
+                  .map((platform) => (
+                    <PlatformCheckbox
+                      key={platform.name}
+                      platformInfo={platform}
+                      isSelected={selectedPlatforms.includes(platform.name)}
+                      onChange={(_, isSelected) => handlePlatformChange(platform.name, isSelected)}
+                      isDisabled={false}
+                    />
+                  ))}
+              </div>
+            </AccordionItem>
+          </Accordion>
         </div>
       </div>
 

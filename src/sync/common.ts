@@ -54,6 +54,18 @@ export interface PlatformInfo {
   userAvatarUrl?: string;
   injectUrl: string;
   injectFunction: (data: SyncData) => Promise<void>;
+  tags?: string[];
+  accountInfo?: AccountInfo;
+}
+
+export interface AccountInfo {
+  provider: string;
+  accountId: string;
+  username: string;
+  description?: string;
+  profileUrl?: string;
+  avatarUrl?: string;
+  extraData: unknown;
 }
 
 export const infoMap: Record<string, PlatformInfo> = {
