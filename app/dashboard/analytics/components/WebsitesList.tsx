@@ -10,7 +10,7 @@ import { Icon } from '@iconify/react/dist/iconify.js';
 export async function WebsiteList() {
   const session = await auth();
   if (!session?.user?.id) {
-    throw new Error('未授权');
+    return null;
   }
 
   const websites = await multipostDb.website.findMany({

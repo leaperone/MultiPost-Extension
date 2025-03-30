@@ -3,12 +3,12 @@ import { CreateWebsiteButton } from './components/CreateWebsiteButton';
 import { WebsiteList } from './components/WebsitesList';
 import { InfoButton } from './components/InfoButton';
 
-export default async function WebTracePage() {
+export default async function AnalyticsPage() {
   return (
     <div className="mx-auto h-full max-w-7xl space-y-6 overflow-y-auto p-4">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <h1 className="text-2xl font-bold">Web Trace</h1>
+          <h1 className="text-2xl font-bold">Analytics</h1>
           <InfoButton />
         </div>
         <CreateWebsiteButton />
