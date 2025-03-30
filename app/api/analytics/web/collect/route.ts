@@ -11,10 +11,10 @@ import { z } from 'zod';
 import { safeDecodeURI, safeDecodeURIComponent } from '@/lib/url';
 
 // Schema 定义
-export const anyObjectParam = z.record(z.any());
-export const urlOrPathParam = z.string().max(500);
+const anyObjectParam = z.record(z.any());
+const urlOrPathParam = z.string().max(500);
 
-export const schema = z.object({
+const schema = z.object({
   type: z.enum(['event', 'identify', 'predefinedEvent']),
   payload: z.object({
     website: z.string(),
