@@ -63,7 +63,7 @@ const getApplicationItems = (t: TranslationFunction): MenuItem[] => [
   },
   {
     title: 'WebTrace',
-    url: '/dashboard/webtrace',
+    url: '/dashboard/analytics',
     icon: ChartSplineIcon,
   },
 ];

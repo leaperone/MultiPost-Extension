@@ -52,7 +52,7 @@ export function FirstTimeGuide({ websiteId }: FirstTimeGuideProps) {
           <div className="flex justify-end pt-2">
             <Button
               as={Link}
-              href={`/dashboard/webtrace/website/${websiteId}`}
+              href={`/dashboard/analytics/web/${websiteId}`}
               color="primary"
               startContent={<RefreshCw className="size-4" />}
               endContent={<ArrowRight className="size-4" />}>

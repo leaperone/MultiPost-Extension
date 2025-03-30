@@ -27,7 +27,7 @@ export function WebsiteSelector({ websites, currentWebsiteId }: WebsiteSelectorP
         // 处理 Set 类型的选择值
         const selectedKey = Array.from(keys)[0];
         if (selectedKey) {
-          router.push(`/dashboard/webtrace/website/${selectedKey}`);
+          router.push(`/dashboard/analytics/web/${selectedKey}`);
         }
       }}
       selectedKeys={[currentWebsiteId]}

@@ -28,7 +28,7 @@
   const domain = attr(_data + 'domains') || '';
   const domains = domain.split(',').map((n) => n.trim());
   const host = dev ? 'http://localhost:3000' : 'https://multipost.app';
-  const endpoint = `${host.replace(/\/$/, '')}/api/multidata/collector/website`;
+  const endpoint = `${host.replace(/\/$/, '')}/api/analytics/web/collect`;
   const screen = `${width}x${height}`;
   const eventRegex = /mdata-multidata-event-([\w-_]+)/;
   const eventNameAttribute = _data + 'multidata-event';
