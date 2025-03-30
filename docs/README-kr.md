@@ -19,7 +19,7 @@
   <h3>MultiPost Analytics: Web Trace</h3>
   <p>Web Trace: 실시간 접속 통계, 방문자 분석, 탐색 분석 및 체류 시간 분석.</p>
   <p>실시간 접속 통계, 방문자 분석, 탐색 분석 및 체류 시간 분석을 제공합니다.</p>
-  <p>자세히 알아보기: <a href="https://multipost.app/dashboard/webtrace">https://multipost.app/dashboard/webtrace</a></p>
+  <p>자세히 알아보기: <a href="https://multipost.app/dashboard/analytics">https://multipost.app/dashboard/analytics</a></p>
 </div>
 
 ---

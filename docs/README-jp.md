@@ -19,7 +19,7 @@
   <h3>MultiPost Analytics: Web Trace</h3>
   <p>Web Trace: リアルタイムアクセス統計、訪問者分析、閲覧分析、滞在時間分析。</p>
   <p>リアルタイムアクセス統計、訪問者分析、閲覧分析、滞在時間分析を提供します。</p>
-  <p>詳細はこちら：<a href="https://multipost.app/dashboard/webtrace">https://multipost.app/dashboard/webtrace</a></p>
+  <p>詳細はこちら：<a href="https://multipost.app/dashboard/analytics">https://multipost.app/dashboard/analytics</a></p>
 </div>
 
 ---

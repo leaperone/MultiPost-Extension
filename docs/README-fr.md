@@ -19,7 +19,7 @@
   <h3>MultiPost Analytics: Web Trace</h3>
   <p>Web Trace : Statistiques d'accès en temps réel, analyse des visiteurs, analyse de navigation et analyse de durée.</p>
   <p>Statistiques d'accès en temps réel, analyse des visiteurs, analyse de navigation et analyse de durée.</p>
-  <p>En savoir plus : <a href="https://multipost.app/dashboard/webtrace">https://multipost.app/dashboard/webtrace</a></p>
+  <p>En savoir plus : <a href="https://multipost.app/dashboard/analytics">https://multipost.app/dashboard/analytics</a></p>
 </div>
 
 ---

@@ -19,7 +19,7 @@
   <h3>MultiPost Analytics: Web Trace</h3>
   <p>Web Trace: 实时访问统计、访客分析、浏览分析和时长分析。</p>
   <p>实时访问统计、访客分析、浏览分析和时长分析。</p>
-  <p>了解更多：<a href="https://multipost.app/dashboard/webtrace">https://multipost.app/dashboard/webtrace</a></p>
+  <p>了解更多：<a href="https://multipost.app/dashboard/analytics">https://multipost.app/dashboard/analytics</a></p>
 </div>
 
 ---
