@@ -11,9 +11,9 @@
       "title": "Markdown 编辑器",
       "description": "支持实时预览、图片上传、数学公式等"
     },
-    "webtrace": {
-      "title": "网站分析",
-      "description": "实时跟踪网站性能和访客数据"
+    "analytics": {
+      "title": "分析",
+      "description": "使用你的数据分析任何事情"
     },
     "card": {
       "hover_tip": "点击查看详情"

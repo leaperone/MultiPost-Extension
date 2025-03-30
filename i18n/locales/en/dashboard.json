@@ -11,9 +11,9 @@
       "title": "Markdown Editor",
       "description": "Real-time preview, image upload, math formulas and more"
     },
-    "webtrace": {
-      "title": "Web Analytics",
-      "description": "Track website performance and visitor data"
+    "analytics": {
+      "title": "Analytics",
+      "description": "Analyze anything with your data"
     },
     "card": {
       "hover_tip": "Click for details"

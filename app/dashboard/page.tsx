@@ -55,8 +55,8 @@ export default async function DashboardPage() {
     },
     {
       href: '/dashboard/analytics',
-      title: t('welcome.webtrace.title'),
-      description: t('welcome.webtrace.description'),
+      title: t('welcome.analytics.title'),
+      description: t('welcome.analytics.description'),
       icon: <ChartSplineIcon className="size-5 text-primary-600 dark:text-primary-400" />,
     },
   ];
