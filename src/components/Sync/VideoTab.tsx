@@ -172,7 +172,7 @@ const VideoTab: React.FC<VideoTabProps> = ({ funcPublish }) => {
         </CardBody>
 
         <CardFooter>
-          <div className="flex justify-between items-center w-full">
+          <div className="flex items-center justify-between w-full">
             <div className="flex gap-2">
               <input
                 type="file"
@@ -216,7 +216,7 @@ const VideoTab: React.FC<VideoTabProps> = ({ funcPublish }) => {
                 size="sm"
                 color="danger"
                 variant="light"
-                className="absolute top-2 right-2 z-50 opacity-0 transition-opacity group-hover:opacity-100"
+                className="absolute z-50 transition-opacity opacity-0 top-2 right-2 group-hover:opacity-100"
                 onPress={handleRemoveVideo}>
                 <XIcon className="size-4" />
               </Button>
@@ -228,8 +228,8 @@ const VideoTab: React.FC<VideoTabProps> = ({ funcPublish }) => {
 
       <div className="flex flex-col gap-4 p-4 rounded-lg bg-default-50">
         <div className="flex flex-col gap-2">
-          <div className="flex justify-between items-center">
-            <div className="flex gap-2 items-center">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
               <p className="text-sm font-medium">{chrome.i18n.getMessage('optionsSelectPublishPlatforms')}</p>
             </div>
             {selectedPlatforms.length > 0 && (
@@ -252,7 +252,7 @@ const VideoTab: React.FC<VideoTabProps> = ({ funcPublish }) => {
             defaultExpandedKeys={['CN']}>
             <AccordionItem
               key="CN"
-              title="国内平台"
+              title={chrome.i18n.getMessage('optionsCNPlatforms')}
               subtitle={`已选择 ${
                 selectedPlatforms.filter((platform) => {
                   const info = platforms.find((p) => p.name === platform);
@@ -276,7 +276,7 @@ const VideoTab: React.FC<VideoTabProps> = ({ funcPublish }) => {
             </AccordionItem>
             <AccordionItem
               key="EN"
-              title="海外平台"
+              title={chrome.i18n.getMessage('optionsOverseasPlatforms')}
               subtitle={`已选择 ${
                 selectedPlatforms.filter((platform) => {
                   const info = platforms.find((p) => p.name === platform);

@@ -356,7 +356,7 @@ const ArticleTab: React.FC<ArticleTabProps> = ({ funcPublish, funcScraper }) => 
           <h3 className="text-sm font-medium">{chrome.i18n.getMessage('optionsCoverImage')}</h3>
         </CardHeader>
         <CardBody>
-          <div className="flex justify-center items-center">
+          <div className="flex items-center justify-center">
             <input
               type="file"
               ref={coverInputRef}
@@ -377,7 +377,7 @@ const ArticleTab: React.FC<ArticleTabProps> = ({ funcPublish, funcScraper }) => 
                   isIconOnly
                   size="sm"
                   color="danger"
-                  className="absolute top-0 right-0 z-50 m-1 opacity-0 transition-opacity group-hover:opacity-100"
+                  className="absolute top-0 right-0 z-50 m-1 transition-opacity opacity-0 group-hover:opacity-100"
                   onPress={handleDeleteCover}>
                   <XIcon className="size-4" />
                 </Button>
@@ -386,7 +386,7 @@ const ArticleTab: React.FC<ArticleTabProps> = ({ funcPublish, funcScraper }) => 
               <Button
                 variant="light"
                 onPress={() => coverInputRef.current?.click()}>
-                <ImagePlusIcon className="mr-2 w-6 h-6" />
+                <ImagePlusIcon className="w-6 h-6 mr-2" />
                 {chrome.i18n.getMessage('optionsUploadCover')}
               </Button>
             )}
@@ -418,8 +418,8 @@ const ArticleTab: React.FC<ArticleTabProps> = ({ funcPublish, funcScraper }) => 
 
       <div className="flex flex-col gap-4 p-4 rounded-lg bg-default-50">
         <div className="flex flex-col gap-2">
-          <div className="flex justify-between items-center">
-            <div className="flex gap-2 items-center">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
               <p className="text-sm font-medium">{chrome.i18n.getMessage('optionsSelectPublishPlatforms')}</p>
             </div>
             {selectedPlatforms.length > 0 && (
@@ -442,7 +442,7 @@ const ArticleTab: React.FC<ArticleTabProps> = ({ funcPublish, funcScraper }) => 
             defaultExpandedKeys={['CN']}>
             <AccordionItem
               key="CN"
-              title="国内平台"
+              title={chrome.i18n.getMessage('optionsCNPlatforms')}
               subtitle={`已选择 ${
                 selectedPlatforms.filter((platform) => {
                   const info = platforms.find((p) => p.name === platform);
@@ -466,7 +466,7 @@ const ArticleTab: React.FC<ArticleTabProps> = ({ funcPublish, funcScraper }) => 
             </AccordionItem>
             <AccordionItem
               key="EN"
-              title="海外平台"
+              title={chrome.i18n.getMessage('optionsOverseasPlatforms')}
               subtitle={`已选择 ${
                 selectedPlatforms.filter((platform) => {
                   const info = platforms.find((p) => p.name === platform);
@@ -495,7 +495,7 @@ const ArticleTab: React.FC<ArticleTabProps> = ({ funcPublish, funcScraper }) => 
         onPress={handlePublish}
         color="primary"
         disabled={!title || selectedPlatforms.length === 0}
-        className="px-4 py-2 w-full font-bold">
+        className="w-full px-4 py-2 font-bold">
         {chrome.i18n.getMessage('optionsSyncArticle')}
       </Button>
 
@@ -515,7 +515,7 @@ const ArticleTab: React.FC<ArticleTabProps> = ({ funcPublish, funcScraper }) => 
             <h4 className="mb-2 font-semibold">{importedContent.title}</h4>
             <p className="mb-4 text-sm">{importedContent.digest}</p>
             <div
-              className="max-w-none prose"
+              className="prose max-w-none"
               dangerouslySetInnerHTML={{ __html: importedContent.content }}
             />
           </CardBody>
