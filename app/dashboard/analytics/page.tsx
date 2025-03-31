@@ -2,7 +2,7 @@ import { Suspense } from 'react';
 import { CreateWebsiteButton } from './components/CreateWebsiteButton';
 import { WebsiteList } from './components/WebsitesList';
 import { InfoButton } from './components/InfoButton';
-
+import LinkSocialMediaButton from './components/LinkSocialMediaButton';
 export default async function AnalyticsPage() {
   return (
     <div className="mx-auto h-full max-w-7xl space-y-6 overflow-y-auto p-4">
@@ -12,6 +12,7 @@ export default async function AnalyticsPage() {
           <InfoButton />
         </div>
         <CreateWebsiteButton />
+        <LinkSocialMediaButton />
       </div>
 
       <div className="grid gap-6">

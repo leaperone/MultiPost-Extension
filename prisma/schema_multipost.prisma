@@ -10,15 +10,16 @@ datasource db {
 }
 
 model User {
-  id            String          @id @default(cuid())
-  name          String?
-  email         String          @unique
-  emailVerified DateTime?
-  image         String?
-  accounts      Account[]
-  sessions      Session[]
+  id                 String               @id @default(cuid())
+  name               String?
+  email              String               @unique
+  emailVerified      DateTime?
+  image              String?
+  accounts           Account[]
+  sessions           Session[]
   // Optional for WebAuthn support
-  Authenticator Authenticator[]
+  Authenticator      Authenticator[]
+  SocialMediaAccount SocialMediaAccount[]
 
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
@@ -156,20 +157,20 @@ model EventData {
 }
 
 model VisitorSession {
-  id           String    @id @unique @default(uuid())
+  id           String   @id @unique @default(uuid())
   websiteId    String
-  hostname     String?   @db.VarChar(100)
-  browser      String?   @db.VarChar(20)
-  os           String?   @db.VarChar(20)
-  device       String?   @db.VarChar(20)
-  screen       String?   @db.VarChar(11)
-  language     String?   @db.VarChar(35)
-  country      String?   @db.Char(2)
-  subdivision1 String?   @db.VarChar(20)
-  subdivision2 String?   @db.VarChar(50)
-  city         String?   @db.VarChar(50)
-  ip           String?   @db.VarChar(50)
-  createdAt    DateTime  @default(now())
+  hostname     String?  @db.VarChar(100)
+  browser      String?  @db.VarChar(20)
+  os           String?  @db.VarChar(20)
+  device       String?  @db.VarChar(20)
+  screen       String?  @db.VarChar(11)
+  language     String?  @db.VarChar(35)
+  country      String?  @db.Char(2)
+  subdivision1 String?  @db.VarChar(20)
+  subdivision2 String?  @db.VarChar(50)
+  city         String?  @db.VarChar(50)
+  ip           String?  @db.VarChar(50)
+  createdAt    DateTime @default(now())
 
   websiteEvent WebsiteEvent[]
   sessionData  SessionData[]
@@ -207,4 +208,23 @@ model SessionData {
   @@index([sessionId])
   @@index([sessionId, createdAt])
   @@index([websiteId, createdAt, dataKey])
+}
+
+model SocialMediaAccount {
+  id          String  @id @unique @default(cuid())
+  userId      String
+  provider    String
+  accountId   String
+  username    String?
+  profileUrl  String?
+  avatarUrl   String?
+  description String?
+  extraData   Json?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, provider, accountId])
 }

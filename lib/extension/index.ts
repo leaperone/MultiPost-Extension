@@ -59,7 +59,7 @@ export interface PlatformInfo {
   injectUrl: string;
   injectFunction: (data: SyncData) => Promise<void>;
   tags?: string[];
-  accountKey: string
+  accountKey: string;
   accountInfo?: AccountInfo;
 }
 
@@ -193,4 +193,11 @@ export const getPlatformInfos = async (type: string) => {
   if (!response) return [];
   const platforms = Array.isArray(response) ? response : ((response as PlatformResponse)?.platforms ?? []);
   return platforms.filter((platform: PlatformInfo) => platform.type === type);
+};
+
+export const getAccountInfos = async (): Promise<Record<string, AccountInfo>> => {
+  const response = await sendRequest<{ accountInfo: Record<string, AccountInfo> }>(
+    'MUTLIPOST_EXTENSION_GET_ACCOUNT_INFOS',
+  );
+  return response.accountInfo;
 };

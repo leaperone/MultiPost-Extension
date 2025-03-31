@@ -24,3 +24,43 @@ export async function createWebsite(data: CreateWebsiteData) {
 
   return website;
 }
+
+interface LinkSocialMediaData {
+  provider: string;
+  accountId: string;
+  username?: string;
+  profileUrl?: string;
+  avatarUrl?: string;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  extraData?: any;
+}
+
+export async function linkSocialMedia(data: LinkSocialMediaData) {
+  const session = await auth();
+  if (!session?.user?.id) {
+    throw new Error('未授权');
+  }
+
+  const socialMediaAccount = await multipostDb.socialMediaAccount.upsert({
+    where: {
+      userId_provider_accountId: {
+        userId: session.user.id,
+        provider: data.provider,
+        accountId: data.accountId,
+      },
+    },
+    create: {
+      ...data,
+      userId: session.user.id,
+    },
+    update: {
+      username: data.username,
+      profileUrl: data.profileUrl,
+      avatarUrl: data.avatarUrl,
+      extraData: data.extraData,
+      updatedAt: new Date(),
+    },
+  });
+
+  return socialMediaAccount;
+}
