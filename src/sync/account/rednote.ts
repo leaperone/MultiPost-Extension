@@ -115,6 +115,10 @@ export async function getRednoteAccountInfo(): Promise<AccountInfo> {
     }
   }
 
+  if (!initialState.user.loggedIn) {
+    return null;
+  }
+
   const result: AccountInfo = {
     provider: 'rednote',
     accountId: initialState.user.userInfo.user_id,

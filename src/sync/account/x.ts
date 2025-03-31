@@ -45,10 +45,11 @@ export async function getXAccountInfo(): Promise<AccountInfo> {
     }
   }
 
+
   // 从entities.users.entities中获取用户信息，这里的键是动态的用户ID
   const usersEntities = initialState.entities?.users?.entities;
   if (!usersEntities || Object.keys(usersEntities).length === 0) {
-    throw new Error('无法找到用户信息');
+    return null;
   }
 
   // 获取第一个用户ID（假设只有当前登录用户）
@@ -56,7 +57,7 @@ export async function getXAccountInfo(): Promise<AccountInfo> {
   const userInfo = usersEntities[userId];
 
   if (!userInfo) {
-    throw new Error('无法解析用户数据');
+    return null;
   }
 
   const result: AccountInfo = {

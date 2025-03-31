@@ -37,6 +37,12 @@ export async function refreshAccountInfo(accountKey: string): Promise<AccountInf
     return null;
   }
 
+  if (!accountInfo) {
+    console.error(`获取账号信息失败: ${accountKey}`);
+    removeAccountInfo(accountKey);
+    return null;
+  }
+
   // 更新平台信息并保存到storage
   await saveAccountInfo(accountKey, accountInfo);
 

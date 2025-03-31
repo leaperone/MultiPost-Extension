@@ -17,10 +17,14 @@ export async function getTiktokAccountInfo(): Promise<AccountInfo> {
 
   const responseData = await response.json();
 
+  if (!responseData.user) {
+    return null;
+  }
+
   const result: AccountInfo = {
-    provider: 'douyin',
-    accountId: responseData.user.uniqueId,
-    username: responseData.user.nickName,
+    provider: 'tiktok',
+    accountId: responseData.user.secUid,
+    username: responseData.user.uniqueId,
     description: responseData.user.signature,
     profileUrl: `https://www.tiktok.com/${responseData.user.uniqueId}`,
     avatarUrl: responseData.user.avatarUri[0],

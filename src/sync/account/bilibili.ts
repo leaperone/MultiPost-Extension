@@ -17,6 +17,10 @@ export async function getBilibiliAccountInfo(): Promise<AccountInfo> {
 
   const responseData = await response.json();
 
+  if (!responseData.data.code) {
+    return null
+  }
+
   const result: AccountInfo = {
     provider: 'bilibili',
     accountId: responseData.data.mid,
