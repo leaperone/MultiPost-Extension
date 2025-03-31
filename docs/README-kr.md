@@ -18,7 +18,6 @@
 <div align="center">
   <h3>MultiPost Analytics: Web Trace</h3>
   <p>Web Trace: 실시간 접속 통계, 방문자 분석, 탐색 분석 및 체류 시간 분석.</p>
-  <p>실시간 접속 통계, 방문자 분석, 탐색 분석 및 체류 시간 분석을 제공합니다.</p>
   <p>자세히 알아보기: <a href="https://multipost.app/dashboard/webtrace">https://multipost.app/dashboard/webtrace</a></p>
 </div>
 
@@ -29,11 +28,6 @@
 - [MultiPost 아티클 에디터](https://md.multipost.app/) - [(저장소)](https://github.com/leaper-one/multipost-wechat-markdown-editor) - 여러 플랫폼에 콘텐츠를 작성하고 게시하기 위한 온라인 에디터
 - [Chrome 확장 프로그램 - ![Chrome Web Store Version Chrome 웹 스토어 버전](https://img.shields.io/chrome-web-store/v/dhohkaclnjgcikfoaacfgijgjgceofih)](https://chromewebstore.google.com/detail/multipost/dhohkaclnjgcikfoaacfgijgjgceofih) ![Chrome Web Store Users Chrome 웹 스토어 사용자](https://img.shields.io/chrome-web-store/users/dhohkaclnjgcikfoaacfgijgjgceofih) ![Chrome Web Store Last Updated](https://img.shields.io/chrome-web-store/last-updated/dhohkaclnjgcikfoaacfgijgjgceofih)
 - [Edge 확장 프로그램 - ![](https://img.shields.io/badge/dynamic/json?label=edge%20add-on&prefix=v&query=%24.version&url=https%3A%2F%2Fmicrosoftedge.microsoft.com%2Faddons%2Fgetproductdetailsbycrxid%2Fckoiphiceimehjkolnfffgbmihoppgjg)](https://microsoftedge.microsoft.com/addons/detail/multipost/ckoiphiceimehjkolnfffgbmihoppgjg) [![](https://img.shields.io/badge/dynamic/json?label=users&query=%24.activeInstallCount&url=https%3A%2F%2Fmicrosoftedge.microsoft.com%2Faddons%2Fgetproductdetailsbycrxid%2Fckoiphiceimehjkolnfffgbmihoppgjg)](https://microsoftedge.microsoft.com/addons/detail/multipost/ckoiphiceimehjkolnfffgbmihoppgjg)
-<!-- ![Edge add-on last updated](https://img.shields.io/badge/dynamic/json?label=last%20updated&query=%24.lastUpdateDate&url=https%3A%2F%2Fmicrosoftedge.microsoft.com%2Faddons%2Fgetproductdetailsbycrxid%2Fckoiphiceimehjkolnfffgbmihoppgjg) -->
-
-## MultiPost 에디터
-
-- [MultiPost 에디터](https://md.multipost.app/) - 여러 플랫폼에 콘텐츠를 작성하고 게시할 수 있는 온라인 에디터
 
 ## 주요 기능
 
