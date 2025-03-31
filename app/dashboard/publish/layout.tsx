@@ -7,7 +7,7 @@ import { MessageCircleHeartIcon, VideoIcon, FileTextIcon } from 'lucide-react';
 import { usePathname } from 'next/navigation';
 import ForceInstallExtension from '@/components/ForceInstallExtension';
 import { useEffect } from 'react';
-import { funcGetPermission } from './common';
+import { funcGetPermission } from '@/lib/extension';
 
 export default function PublishLayout({ children }: { children: React.ReactNode }) {
   const { t } = useTranslation('publish');

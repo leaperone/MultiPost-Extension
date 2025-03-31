@@ -7,7 +7,7 @@ import { PuzzleIcon, AlertCircleIcon, ArrowRight } from 'lucide-react';
 import { Icon } from '@iconify/react';
 import confetti from 'canvas-confetti';
 import HomePageHeader from '@/components/HomePage/Header';
-import { checkServiceStatus, openOptions } from '@/lib/extension/common';
+import { checkServiceStatus, openOptions } from '@/lib/extension';
 import { useTranslation } from '@/i18n/client';
 
 const PinTip = () => {

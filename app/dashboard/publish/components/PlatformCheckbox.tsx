@@ -1,5 +1,5 @@
 import { Checkbox, Image } from '@heroui/react';
-import type { PlatformInfo } from '@/types/platform';
+import type { PlatformInfo } from '@/lib/extension';
 
 interface PlatformCheckboxProps {
   platformInfo: PlatformInfo;

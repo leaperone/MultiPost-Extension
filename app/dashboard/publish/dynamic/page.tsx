@@ -17,10 +17,10 @@ import React, { useState, useRef, useEffect } from 'react';
 import Viewer from 'react-viewer';
 import { useTranslation } from '@/i18n/client';
 
-import type { PlatformInfo } from '@/types/platform';
-import type { FileData, SyncData } from '@/types/sync';
+import type { PlatformInfo } from '@/lib/extension';
+import type { FileData, SyncData } from '@/lib/extension';
 
-import { funcPublish, getPlatformInfos } from '@/app/dashboard/publish/common';
+import { funcPublish, getPlatformInfos } from '@/lib/extension';
 import PlatformCheckbox from '../components/PlatformCheckbox';
 import { usePlatformStore } from '@/store/publish.store';
 

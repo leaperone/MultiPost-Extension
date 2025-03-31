@@ -4,10 +4,10 @@ import React, { useState, useRef, useEffect } from 'react';
 import { Card, Button, Input, Textarea, CardHeader, CardBody, CardFooter } from '@heroui/react';
 import { VideoIcon, XIcon } from 'lucide-react';
 import dynamic from 'next/dynamic';
-import type { FileData, SyncData } from '@/types/sync';
+import type { FileData, SyncData } from '@/lib/extension';
 import PlatformCheckbox from '../components/PlatformCheckbox';
-import { funcPublish, getPlatformInfos } from '@/app/dashboard/publish/common';
-import type { PlatformInfo } from '@/types/platform';
+import { funcPublish, getPlatformInfos } from '@/lib/extension';
+import type { PlatformInfo } from '@/lib/extension';
 import { useTranslation } from '@/i18n/client';
 import { usePlatformStore } from '@/store/publish.store';
 

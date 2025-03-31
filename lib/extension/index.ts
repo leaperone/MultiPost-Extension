@@ -6,6 +6,73 @@
 
 import { v4 as uuidv4 } from 'uuid';
 
+export interface SyncData {
+  platforms: string[];
+  auto_publish: boolean;
+  data: DynamicData | ArticleData | VideoData;
+}
+
+export interface DynamicData {
+  title: string;
+  content: string;
+  images: FileData[];
+  videos: FileData[];
+}
+
+export interface FileData {
+  name: string;
+  url: string;
+  type: string;
+  size: number;
+  base64?: string;
+  originUrl?: string;
+}
+
+export interface ArticleData {
+  title: string;
+  content: string;
+  digest: string;
+  cover: FileData;
+  images: FileData[];
+  videos: FileData[];
+  fileDatas: FileData[];
+  originContent?: string;
+  markdownContent?: string;
+  markdownOriginContent?: string;
+}
+
+export interface VideoData {
+  title: string;
+  content: string;
+  video: FileData;
+}
+
+export interface PlatformInfo {
+  type: 'DYNAMIC' | 'VIDEO' | 'ARTICLE';
+  name: string;
+  homeUrl: string;
+  faviconUrl?: string;
+  iconifyIcon?: string;
+  platformName: string;
+  username?: string;
+  userAvatarUrl?: string;
+  injectUrl: string;
+  injectFunction: (data: SyncData) => Promise<void>;
+  tags?: string[];
+  accountKey: string
+  accountInfo?: AccountInfo;
+}
+
+export interface AccountInfo {
+  provider: string;
+  accountId: string;
+  username: string;
+  description?: string;
+  profileUrl?: string;
+  avatarUrl?: string;
+  extraData: unknown;
+}
+
 /**
  * Sends a request to the browser extension and waits for a response
  * @description Uses window.postMessage for communication with the extension,
@@ -99,3 +166,31 @@ export async function openOptions(timeout: number = 5000): Promise<boolean> {
     return false;
   }
 }
+
+export const funcPublish = async (data: SyncData) => {
+  sendRequest('MUTLIPOST_EXTENSION_PUBLISH', data);
+};
+
+export const funcGetPlatformInfos = async (): Promise<PlatformInfo[]> => {
+  return sendRequest('MUTLIPOST_EXTENSION_PLATFORMS');
+};
+
+interface PermissionResponse {
+  status: string;
+  trusted: boolean;
+}
+
+export const funcGetPermission = async (timeout: number = 30000) => {
+  return sendRequest<PermissionResponse>('MUTLIPOST_EXTENSION_REQUEST_TRUST_DOMAIN', undefined, timeout);
+};
+
+interface PlatformResponse {
+  platforms: PlatformInfo[];
+}
+
+export const getPlatformInfos = async (type: string) => {
+  const response = await funcGetPlatformInfos();
+  if (!response) return [];
+  const platforms = Array.isArray(response) ? response : ((response as PlatformResponse)?.platforms ?? []);
+  return platforms.filter((platform: PlatformInfo) => platform.type === type);
+};
