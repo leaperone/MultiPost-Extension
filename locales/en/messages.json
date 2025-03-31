@@ -737,5 +737,13 @@
   "optionsContactPrefix": {
     "message": "If you have any issues or want us to support new platforms, please contact us.",
     "description": "Contact prefix text in footer"
+  },
+  "optionsCNPlatforms": {
+    "message": "CN Platforms",
+    "description": "CN platforms tab title"
+  },
+  "optionsOverseasPlatforms": {
+    "message": "EN Platforms",
+    "description": "EN platforms tab title"
   }
 }

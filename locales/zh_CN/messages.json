@@ -710,5 +710,13 @@
   "optionsContactPrefix": {
     "message": "如遇问题，或期望支持新平台，请联系我们",
     "description": "Contact prefix text in footer"
+  },
+  "optionsCNPlatforms": {
+    "message": "中文社区",
+    "description": "中文社区选项卡标题"
+  },
+  "optionsOverseasPlatforms": {
+    "message": "英文社区",
+    "description": "英文社区选项卡标题"
   }
 }

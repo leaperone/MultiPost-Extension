@@ -11,7 +11,7 @@ import QuantumEntanglementKeepAlive from '../utils/keep-alive';
 import { createTabsForPlatforms, injectScriptsToTabs, type SyncData } from '~sync/common';
 import { trustDomainMessageHandler } from './services/trust-domain';
 import { Storage } from '@plasmohq/storage';
-import { getPlatformInfosWithAccount } from '~sync/account';
+import { getAllAccountInfo, getPlatformInfosWithAccount } from '~sync/account';
 
 const storage = new Storage({
   area: 'local',
@@ -89,6 +89,11 @@ const defaultMessageHandler = (request, sender, sendResponse) => {
   if (request.action === 'MUTLIPOST_EXTENSION_PLATFORMS') {
     getPlatformInfosWithAccount().then((platforms) => {
       sendResponse({ platforms });
+    });
+  }
+  if (request.action === 'MUTLIPOST_EXTENSION_GET_ACCOUNT_INFOS') {
+    getAllAccountInfo().then((accountInfo) => {
+      sendResponse({ accountInfo });
     });
   }
   if (request.action === 'MUTLIPOST_EXTENSION_OPEN_OPTIONS') {

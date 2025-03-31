@@ -17,6 +17,10 @@ export async function getDouyinAccountInfo(): Promise<AccountInfo> {
 
   const responseData = await response.json();
 
+  if (!responseData.user) {
+    return null;
+  }
+
   const result: AccountInfo = {
     provider: 'douyin',
     accountId: responseData.user.sec_uid,
