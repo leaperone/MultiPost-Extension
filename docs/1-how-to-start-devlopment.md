@@ -43,6 +43,8 @@ pnpm build
 
 ### 开发文档
 
+- [抖音动态发布功能开发记录](development/douyin-dynamic.md)
+- [抖音账号信息获取](development/douyin-account.md)
 - [B站动态发布功能开发记录](development/bilibili-dynamic.md)
 
 ### 开发环境
