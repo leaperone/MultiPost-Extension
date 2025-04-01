@@ -718,5 +718,8 @@
   "optionsOverseasPlatforms": {
     "message": "英文社区",
     "description": "英文社区选项卡标题"
+  },
+  "optionViewHomePageDashboard": {
+    "message": "控制台"
   }
 }

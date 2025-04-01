@@ -26,7 +26,17 @@ const Header: React.FC = () => {
             color="primary"
             as="a"
             target="_blank"
-            href="https://multipost.app/publish"
+            href="https://multipost.app/dashboard"
+            startContent={<SendIcon size={16} />}>
+            <span className="text-sm">{chrome.i18n.getMessage('optionViewHomePageDashboard')}</span>
+          </Button>
+          <Button
+            size="sm"
+            variant="flat"
+            color="primary"
+            as="a"
+            target="_blank"
+            href="https://multipost.app/dashboard/publish"
             startContent={<SendIcon size={16} />}>
             <span className="text-sm">{chrome.i18n.getMessage('optionViewHomePagePublish')}</span>
           </Button>

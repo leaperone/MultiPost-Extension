@@ -745,5 +745,8 @@
   "optionsOverseasPlatforms": {
     "message": "EN Platforms",
     "description": "EN platforms tab title"
+  },
+  "optionViewHomePageDashboard": {
+    "message": "Dashboard"
   }
 }
