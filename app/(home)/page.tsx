@@ -9,6 +9,8 @@ import HomePageHeader from '@/components/HomePage/Header';
 import ScrollScreenChevronDown from '@/components/HomePage/ScrollScreenChevronDown';
 import SocialShareNotifications from '@/components/HomePage/SocialShareNotifications';
 import { createTranslation } from '@/i18n/server';
+import { auth } from '@/auth';
+import { redirect } from 'next/navigation';
 
 export const metadata = {
   title: 'MultiPost - Open Source Social Media Publishing Tool',
@@ -190,6 +192,10 @@ function HeroSection({ t, className }: { t: TranslationFunction; className?: str
 }
 
 export default async function HomePage() {
+  const session = await auth();
+  if (session) {
+    redirect('/dashboard');
+  }
   const { t } = await createTranslation('home');
 
   // 定义类型
