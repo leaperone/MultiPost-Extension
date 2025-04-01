@@ -87,10 +87,6 @@
     "message": "正文",
     "description": "动态内容输入框占位符"
   },
-  "optionsSelectPublishPlatforms": {
-    "message": "选择发布平台：",
-    "description": "选择发布平台提示"
-  },
   "optionsSyncDynamic": {
     "message": "同步动态",
     "description": "同步动态按钮文本"
@@ -712,12 +708,12 @@
     "description": "Contact prefix text in footer"
   },
   "optionsCNPlatforms": {
-    "message": "中文社区",
-    "description": "中文社区选项卡标题"
+    "message": "中国平台",
+    "description": "中国平台选项卡标题"
   },
-  "optionsOverseasPlatforms": {
-    "message": "英文社区",
-    "description": "英文社区选项卡标题"
+  "optionsInternationalPlatforms": {
+    "message": "国际平台",
+    "description": "国际平台选项卡标题"
   },
   "optionViewHomePageDashboard": {
     "message": "控制台"

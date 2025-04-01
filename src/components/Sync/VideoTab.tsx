@@ -19,6 +19,8 @@ import type { PlatformInfo } from '~sync/common';
 import PlatformCheckbox from './PlatformCheckbox';
 import { getPlatformInfosWithAccount } from '~sync/account';
 import { Storage } from '@plasmohq/storage';
+import { Icon } from '@iconify/react';
+
 interface VideoTabProps {
   funcPublish: (data: SyncData) => void;
 }
@@ -144,173 +146,194 @@ const VideoTab: React.FC<VideoTabProps> = ({ funcPublish }) => {
 
   return (
     <div className="flex flex-col gap-4">
-      <Card className="shadow-none bg-default-50">
-        <CardHeader className="flex flex-col gap-4">
-          <Input
-            isClearable
-            variant="underlined"
-            label={chrome.i18n.getMessage('optionsEnterVideoTitle')}
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-            onClear={() => setTitle('')}
-            className="w-full"
-          />
-        </CardHeader>
-
-        <CardBody>
-          <Textarea
-            isClearable
-            label={chrome.i18n.getMessage('optionsEnterVideoDescription')}
-            value={content}
-            onChange={(e) => setContent(e.target.value)}
-            variant="underlined"
-            minRows={5}
-            className="w-full"
-            autoFocus
-            onClear={() => setContent('')}
-          />
-        </CardBody>
-
-        <CardFooter>
-          <div className="flex items-center justify-between w-full">
-            <div className="flex gap-2">
-              <input
-                type="file"
-                ref={fileInputRef}
-                accept="video/*"
-                onChange={handleFileChange}
-                className="hidden"
+      <div className="flex flex-col md:flex-row gap-4">
+        <div className="flex flex-col gap-4 w-full md:w-1/2">
+          <Card className="shadow-none bg-default-50">
+            <CardHeader className="flex flex-col gap-4">
+              <Input
+                isClearable
+                variant="underlined"
+                label={chrome.i18n.getMessage('optionsEnterVideoTitle')}
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
+                onClear={() => setTitle('')}
+                className="w-full"
               />
-              <Button
-                isIconOnly
-                variant="light"
-                onPress={handleIconClick}>
-                <VideoIcon className="w-5 h-5" />
-              </Button>
-            </div>
-            {(title || content || videoFile) && (
-              <Button
-                isIconOnly
-                variant="light"
-                color="danger"
-                onPress={handleClearAll}
-                title={chrome.i18n.getMessage('optionsClearAll')}>
-                <TrashIcon className="size-5" />
-              </Button>
-            )}
-          </div>
-        </CardFooter>
-      </Card>
+            </CardHeader>
 
-      {videoFile && (
-        <Card className="shadow-none bg-default-50">
-          <CardBody className="p-4">
-            <div className="relative w-full group aspect-video">
-              <Player
-                playsInline
-                src={videoFile.url}>
-                <source src={videoFile.url} />
-              </Player>
-              <Button
-                isIconOnly
-                size="sm"
-                color="danger"
-                variant="light"
-                className="absolute z-50 transition-opacity opacity-0 top-2 right-2 group-hover:opacity-100"
-                onPress={handleRemoveVideo}>
-                <XIcon className="size-4" />
-              </Button>
-            </div>
-            <p className="mt-2 text-sm text-gray-600">{videoFile.name}</p>
-          </CardBody>
-        </Card>
-      )}
+            <CardBody>
+              <Textarea
+                isClearable
+                label={chrome.i18n.getMessage('optionsEnterVideoDescription')}
+                value={content}
+                onChange={(e) => setContent(e.target.value)}
+                variant="underlined"
+                minRows={5}
+                className="w-full"
+                autoFocus
+                onClear={() => setContent('')}
+              />
+            </CardBody>
 
-      <div className="flex flex-col gap-4 p-4 rounded-lg bg-default-50">
-        <div className="flex flex-col gap-2">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <p className="text-sm font-medium">{chrome.i18n.getMessage('optionsSelectPublishPlatforms')}</p>
-            </div>
-            {selectedPlatforms.length > 0 && (
-              <Button
-                isIconOnly
-                size="sm"
-                variant="light"
-                color="danger"
-                onPress={clearSelectedPlatforms}
-                title="清空平台"
-                className="hover:bg-danger-100">
-                <Eraser className="size-4" />
-              </Button>
-            )}
-          </div>
-
-          <Accordion
-            variant="bordered"
-            selectionMode="multiple"
-            defaultExpandedKeys={['CN']}>
-            <AccordionItem
-              key="CN"
-              title={chrome.i18n.getMessage('optionsCNPlatforms')}
-              subtitle={`已选择 ${
-                selectedPlatforms.filter((platform) => {
-                  const info = platforms.find((p) => p.name === platform);
-                  return info?.tags?.includes('CN');
-                }).length
-              } 个`}
-              className="py-1">
-              <div className="grid grid-cols-2 gap-2">
-                {platforms
-                  .filter((platform) => platform.tags?.includes('CN'))
-                  .map((platform) => (
-                    <PlatformCheckbox
-                      key={platform.name}
-                      platformInfo={platform}
-                      isSelected={selectedPlatforms.includes(platform.name)}
-                      onChange={(_, isSelected) => handlePlatformChange(platform.name, isSelected)}
-                      isDisabled={false}
-                    />
-                  ))}
+            <CardFooter>
+              <div className="flex items-center justify-between w-full">
+                <div className="flex gap-2">
+                  <input
+                    type="file"
+                    ref={fileInputRef}
+                    accept="video/*"
+                    onChange={handleFileChange}
+                    className="hidden"
+                  />
+                  <Button
+                    isIconOnly
+                    variant="light"
+                    onPress={handleIconClick}>
+                    <VideoIcon className="w-5 h-5" />
+                  </Button>
+                </div>
+                {(title || content || videoFile) && (
+                  <Button
+                    isIconOnly
+                    variant="light"
+                    color="danger"
+                    onPress={handleClearAll}
+                    title={chrome.i18n.getMessage('optionsClearAll')}>
+                    <TrashIcon className="size-5" />
+                  </Button>
+                )}
               </div>
-            </AccordionItem>
-            <AccordionItem
-              key="EN"
-              title={chrome.i18n.getMessage('optionsOverseasPlatforms')}
-              subtitle={`已选择 ${
-                selectedPlatforms.filter((platform) => {
-                  const info = platforms.find((p) => p.name === platform);
-                  return info?.tags?.includes('EN');
-                }).length
-              } 个`}
-              className="py-1">
-              <div className="grid grid-cols-2 gap-2">
-                {platforms
-                  .filter((platform) => platform.tags?.includes('EN'))
-                  .map((platform) => (
-                    <PlatformCheckbox
-                      key={platform.name}
-                      platformInfo={platform}
-                      isSelected={selectedPlatforms.includes(platform.name)}
-                      onChange={(_, isSelected) => handlePlatformChange(platform.name, isSelected)}
-                      isDisabled={false}
-                    />
-                  ))}
+            </CardFooter>
+          </Card>
+
+          {videoFile && (
+            <Card className="shadow-none bg-default-50">
+              <CardBody className="p-4">
+                <div className="relative w-full group aspect-video">
+                  <Player
+                    playsInline
+                    src={videoFile.url}>
+                    <source src={videoFile.url} />
+                  </Player>
+                  <Button
+                    isIconOnly
+                    size="sm"
+                    color="danger"
+                    variant="light"
+                    className="absolute z-50 transition-opacity opacity-0 top-2 right-2 group-hover:opacity-100"
+                    onPress={handleRemoveVideo}>
+                    <XIcon className="size-4" />
+                  </Button>
+                </div>
+                <p className="mt-2 text-sm text-gray-600">{videoFile.name}</p>
+              </CardBody>
+            </Card>
+          )}
+        </div>
+
+        <div className="flex flex-col gap-4 w-full md:w-1/2">
+          <div className="flex flex-col gap-4 p-4 rounded-lg bg-default-50">
+            <div className="flex flex-col gap-2">
+              <div className="flex items-center justify-between mb-2">
+                <div className="flex items-center gap-2"></div>
+                {selectedPlatforms.length > 0 && (
+                  <Button
+                    isIconOnly
+                    size="sm"
+                    variant="light"
+                    color="danger"
+                    onPress={clearSelectedPlatforms}
+                    title="清空平台"
+                    className="hover:bg-danger-100">
+                    <Eraser className="size-4" />
+                  </Button>
+                )}
               </div>
-            </AccordionItem>
-          </Accordion>
+
+              <Accordion
+                isCompact
+                variant="light"
+                selectionMode="multiple"
+                defaultExpandedKeys={['CN']}>
+                <AccordionItem
+                  key="CN"
+                  title={chrome.i18n.getMessage('optionsCNPlatforms')}
+                  subtitle={`${
+                    selectedPlatforms.filter((platform) => {
+                      const info = platforms.find((p) => p.name === platform);
+                      return info?.tags?.includes('CN');
+                    }).length
+                  }/${platforms.filter((platform) => platform.tags?.includes('CN')).length}`}
+                  startContent={
+                    <div className="w-8">
+                      <Icon
+                        icon="openmoji:flag-china"
+                        className="w-full h-max"
+                      />
+                    </div>
+                  }
+                  className="py-1">
+                  <div className="grid grid-cols-2 gap-2">
+                    {platforms
+                      .filter((platform) => platform.tags?.includes('CN'))
+                      .map((platform) => (
+                        <PlatformCheckbox
+                          key={platform.name}
+                          platformInfo={platform}
+                          isSelected={selectedPlatforms.includes(platform.name)}
+                          onChange={(_, isSelected) => handlePlatformChange(platform.name, isSelected)}
+                          isDisabled={false}
+                        />
+                      ))}
+                  </div>
+                </AccordionItem>
+                <AccordionItem
+                  key="EN"
+                  title={chrome.i18n.getMessage('optionsInternationalPlatforms')}
+                  subtitle={`${
+                    selectedPlatforms.filter((platform) => {
+                      const info = platforms.find((p) => p.name === platform);
+                      return info?.tags?.includes('EN');
+                    }).length
+                  }/${platforms.filter((platform) => platform.tags?.includes('EN')).length}`}
+                  startContent={
+                    <div className="w-8">
+                      <Icon
+                        icon="openmoji:globe-with-meridians"
+                        className="w-full h-max"
+                      />
+                    </div>
+                  }
+                  className="py-1">
+                  <div className="grid grid-cols-2 gap-2">
+                    {platforms
+                      .filter((platform) => platform.tags?.includes('EN'))
+                      .map((platform) => (
+                        <PlatformCheckbox
+                          key={platform.name}
+                          platformInfo={platform}
+                          isSelected={selectedPlatforms.includes(platform.name)}
+                          onChange={(_, isSelected) => handlePlatformChange(platform.name, isSelected)}
+                          isDisabled={false}
+                        />
+                      ))}
+                  </div>
+                </AccordionItem>
+              </Accordion>
+            </div>
+
+            <Button
+              onPress={handlePublish}
+              color="primary"
+              variant="flat"
+              disabled={!videoFile || !title || !content || selectedPlatforms.length === 0}
+              className="w-full font-medium shadow-none mt-2">
+              <SendIcon className="mr-2 size-4" />
+              {chrome.i18n.getMessage('optionsSyncVideo')}
+            </Button>
+          </div>
         </div>
       </div>
-
-      <Button
-        onPress={handlePublish}
-        color="primary"
-        variant="flat"
-        disabled={!videoFile || !title || !content || selectedPlatforms.length === 0}
-        className="w-full font-medium shadow-none">
-        <SendIcon className="mr-2 size-4" />
-        {chrome.i18n.getMessage('optionsSyncVideo')}
-      </Button>
     </div>
   );
 };
