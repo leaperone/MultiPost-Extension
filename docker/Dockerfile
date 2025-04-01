@@ -1,7 +1,7 @@
 FROM node:20.18.1-alpine3.20 AS base
 ENV PNPM_HOME="/pnpm"
 ENV PATH="$PNPM_HOME:$PATH"
-RUN npm install -g pnpm@latest-9
+RUN npm install -g pnpm
 RUN apk update --no-cache && apk add --no-cache \
     tzdata \
     python3 \
@@ -17,7 +17,7 @@ RUN wget 'https://git.io/GeoLite2-City.mmdb' -O geo/GeoLite2-City.mmdb
 
 FROM base AS builder
 ENV NODE_OPTIONS="--max-old-space-size=8192"
-RUN --mount=type=cache,id=pnpm-2someone-web,target=/pnpm/store pnpm install --frozen-lockfile
+RUN --mount=type=cache,id=pnpm-multipost,target=/pnpm/store pnpm install --frozen-lockfile
 RUN sh prisma/generate.sh && sh scripts/tracker/build.sh
 RUN pnpm run build
 
