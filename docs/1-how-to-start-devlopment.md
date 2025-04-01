@@ -47,10 +47,6 @@ pnpm build
 - [抖音账号信息获取](development/douyin-account.md)
 - [B站动态发布功能开发记录](development/bilibili-dynamic.md)
 
-### 开发环境
-
-包管理工具建议使用 `pnpm@latest-9`，Node.js版本20
-
 ## 功能开发指南
 
 ### 动态发布功能

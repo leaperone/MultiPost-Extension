@@ -21,7 +21,7 @@ jobs:
     # 设置 pnpm
     - uses: pnpm/action-setup@v2
       with:
-        version: 9
+        version: 10
         run_install: false
 
     # 获取 pnpm store 目录
