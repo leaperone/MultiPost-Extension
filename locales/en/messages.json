@@ -87,10 +87,6 @@
     "message": "Content",
     "description": "Dynamic content input placeholder"
   },
-  "optionsSelectPublishPlatforms": {
-    "message": "Select Publish Platforms:",
-    "description": "Select publish platforms prompt"
-  },
   "optionsSyncDynamic": {
     "message": "Sync Dynamic",
     "description": "Sync dynamic button text"
@@ -739,12 +735,12 @@
     "description": "Contact prefix text in footer"
   },
   "optionsCNPlatforms": {
-    "message": "CN Platforms",
+    "message": "China Platforms",
     "description": "CN platforms tab title"
   },
-  "optionsOverseasPlatforms": {
-    "message": "EN Platforms",
-    "description": "EN platforms tab title"
+  "optionsInternationalPlatforms": {
+    "message": "International Platforms",
+    "description": "International platforms tab title"
   },
   "optionViewHomePageDashboard": {
     "message": "Dashboard"

@@ -157,7 +157,7 @@ const Options = () => {
   return (
     <HeroUIProvider>
       <Header />
-      <main className="p-4 mx-auto w-full max-w-3xl">
+      <main className="p-4 mx-auto w-full max-w-3xl md:max-w-screen-xl sm:max-w-7xl">
         <Tabs
           aria-label="sync publish"
           defaultSelectedKey={hashParams.tab || 'dynamic'}

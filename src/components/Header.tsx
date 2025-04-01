@@ -1,5 +1,5 @@
 import { Button, Image } from '@heroui/react';
-import { BookOpenText, SendIcon } from 'lucide-react';
+import { BookOpenText, LayoutDashboardIcon, SendIcon } from 'lucide-react';
 import React from 'react';
 
 const Header: React.FC = () => {
@@ -27,7 +27,7 @@ const Header: React.FC = () => {
             as="a"
             target="_blank"
             href="https://multipost.app/dashboard"
-            startContent={<SendIcon size={16} />}>
+            startContent={<LayoutDashboardIcon size={16} />}>
             <span className="text-sm">{chrome.i18n.getMessage('optionViewHomePageDashboard')}</span>
           </Button>
           <Button

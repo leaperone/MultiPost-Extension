@@ -21,6 +21,7 @@ import PlatformCheckbox from './PlatformCheckbox';
 import { getPlatformInfosWithAccount } from '~sync/account';
 import { Storage } from '@plasmohq/storage';
 import type { PlatformInfo } from '~sync/common';
+import { Icon } from '@iconify/react';
 
 // Constants
 const STORAGE_KEY = 'dynamicPlatforms';
@@ -293,231 +294,252 @@ const DynamicTab: React.FC<DynamicTabProps> = ({ funcPublish }) => {
     <div
       className="flex flex-col gap-4"
       ref={dropAreaRef}>
-      <Card className="shadow-none bg-default-50">
-        <CardHeader className="flex flex-col gap-4">
-          <Input
-            isClearable
-            variant="underlined"
-            label={chrome.i18n.getMessage('optionsEnterDynamicTitle')}
-            value={formState.title}
-            onChange={(e) => setFormState((prev) => ({ ...prev, title: e.target.value }))}
-            onClear={() => setFormState((prev) => ({ ...prev, title: '' }))}
-            className="w-full"
-          />
-        </CardHeader>
-
-        <CardBody>
-          <Textarea
-            isClearable
-            label={chrome.i18n.getMessage('optionsEnterDynamicContent')}
-            value={formState.content}
-            onChange={(e) => setFormState((prev) => ({ ...prev, content: e.target.value }))}
-            variant="underlined"
-            minRows={5}
-            className="w-full"
-            autoFocus
-            onClear={() => setFormState((prev) => ({ ...prev, content: '' }))}
-          />
-        </CardBody>
-
-        <CardFooter>
-          <div className="flex items-center justify-between w-full">
-            <div className="flex gap-2">
-              <input
-                type="file"
-                ref={imageInputRef}
-                accept="image/*"
-                onChange={(e) => handleFileChange(e, 'image')}
-                className="hidden"
-                multiple
+      <div className="flex flex-col gap-4 md:flex-row">
+        <div className="flex flex-col gap-4 w-full md:w-1/2">
+          <Card className="shadow-none bg-default-50">
+            <CardHeader className="flex flex-col gap-4">
+              <Input
+                isClearable
+                variant="underlined"
+                label={chrome.i18n.getMessage('optionsEnterDynamicTitle')}
+                value={formState.title}
+                onChange={(e) => setFormState((prev) => ({ ...prev, title: e.target.value }))}
+                onClear={() => setFormState((prev) => ({ ...prev, title: '' }))}
+                className="w-full"
               />
-              <Button
-                isIconOnly
-                variant="light"
-                onPress={() => imageInputRef.current?.click()}>
-                <FileImageIcon className="size-5" />
-              </Button>
-              <input
-                type="file"
-                ref={videoInputRef}
-                accept="video/*"
-                onChange={(e) => handleFileChange(e, 'video')}
-                className="hidden"
+            </CardHeader>
+
+            <CardBody>
+              <Textarea
+                isClearable
+                label={chrome.i18n.getMessage('optionsEnterDynamicContent')}
+                value={formState.content}
+                onChange={(e) => setFormState((prev) => ({ ...prev, content: e.target.value }))}
+                variant="underlined"
+                minRows={5}
+                className="w-full"
+                autoFocus
+                onClear={() => setFormState((prev) => ({ ...prev, content: '' }))}
               />
-              <Button
-                isIconOnly
-                variant="light"
-                onPress={() => videoInputRef.current?.click()}>
-                <FileVideo2Icon className="size-5" />
-              </Button>
-              {formState.videos.length > 0 && (
-                <span className="text-xs text-gray-500">{chrome.i18n.getMessage('optionsNoticeDynamicVideo')}</span>
+            </CardBody>
+
+            <CardFooter>
+              <div className="flex justify-between items-center w-full">
+                <div className="flex gap-2">
+                  <input
+                    type="file"
+                    ref={imageInputRef}
+                    accept="image/*"
+                    onChange={(e) => handleFileChange(e, 'image')}
+                    className="hidden"
+                    multiple
+                  />
+                  <Button
+                    isIconOnly
+                    variant="light"
+                    onPress={() => imageInputRef.current?.click()}>
+                    <FileImageIcon className="size-5" />
+                  </Button>
+                  <input
+                    type="file"
+                    ref={videoInputRef}
+                    accept="video/*"
+                    onChange={(e) => handleFileChange(e, 'video')}
+                    className="hidden"
+                  />
+                  <Button
+                    isIconOnly
+                    variant="light"
+                    onPress={() => videoInputRef.current?.click()}>
+                    <FileVideo2Icon className="size-5" />
+                  </Button>
+                  {formState.videos.length > 0 && (
+                    <span className="text-xs text-gray-500">{chrome.i18n.getMessage('optionsNoticeDynamicVideo')}</span>
+                  )}
+                </div>
+                {(formState.title ||
+                  formState.content ||
+                  formState.images.length > 0 ||
+                  formState.videos.length > 0) && (
+                  <Button
+                    isIconOnly
+                    variant="light"
+                    color="danger"
+                    onPress={handleClearAll}
+                    title={chrome.i18n.getMessage('optionsClearAll')}>
+                    <TrashIcon className="w-5 h-5" />
+                  </Button>
+                )}
+              </div>
+            </CardFooter>
+          </Card>
+
+          {formState.images.length > 0 && (
+            <Card className="shadow-none bg-default-50">
+              <CardBody className="flex flex-row flex-wrap gap-3 justify-start items-start p-4">
+                {formState.images.map((file, index) => (
+                  <div
+                    key={index}
+                    className="relative group">
+                    <Image
+                      src={file.url}
+                      alt={file.name}
+                      width={120}
+                      height={120}
+                      className="object-cover rounded-lg cursor-pointer"
+                      onClick={() => handleImageClick(index)}
+                    />
+                    <Button
+                      isIconOnly
+                      size="sm"
+                      color="danger"
+                      variant="light"
+                      className="absolute top-1 right-1 z-50 opacity-0 transition-opacity duration-200 group-hover:opacity-100"
+                      onPress={() => handleDeleteFile(index, 'image')}>
+                      <XIcon className="size-4" />
+                    </Button>
+                  </div>
+                ))}
+              </CardBody>
+            </Card>
+          )}
+
+          {formState.videos.length > 0 && (
+            <Card className="shadow-none bg-default-50">
+              <CardBody className="flex flex-col gap-4">
+                {formState.videos.map((file, index) => (
+                  <div
+                    key={index}
+                    className="relative w-full group aspect-video">
+                    <Player
+                      playsInline
+                      src={file.url}>
+                      <source src={file.url} />
+                    </Player>
+                    <Button
+                      isIconOnly
+                      size="sm"
+                      color="danger"
+                      variant="light"
+                      className="absolute top-2 right-2 z-50 opacity-0 transition-opacity group-hover:opacity-100"
+                      onPress={() => handleDeleteFile(index, 'video')}>
+                      <XIcon className="size-4" />
+                    </Button>
+                  </div>
+                ))}
+              </CardBody>
+            </Card>
+          )}
+        </div>
+
+        <div className="flex flex-col gap-4 w-full md:w-1/2">
+          <div className="flex flex-col gap-4 p-4 rounded-lg bg-default-50">
+            <div className="flex justify-between items-center mb-2">
+              <Switch
+                isSelected={formState.autoPublish}
+                onValueChange={(value) => setFormState((prev) => ({ ...prev, autoPublish: value }))}
+                startContent={<BotIcon className="size-4" />}
+                endContent={<HandIcon className="size-4" />}>
+                {chrome.i18n.getMessage('optionsAutoPublish')}
+              </Switch>
+
+              {formState.selectedPlatforms.length > 0 && (
+                <Button
+                  isIconOnly
+                  size="sm"
+                  variant="light"
+                  color="danger"
+                  onPress={clearSelectedPlatforms}
+                  title="清空平台"
+                  className="hover:bg-danger-100">
+                  <Eraser className="size-4" />
+                </Button>
               )}
             </div>
-            {(formState.title || formState.content || formState.images.length > 0 || formState.videos.length > 0) && (
-              <Button
-                isIconOnly
-                variant="light"
-                color="danger"
-                onPress={handleClearAll}
-                title={chrome.i18n.getMessage('optionsClearAll')}>
-                <TrashIcon className="w-5 h-5" />
-              </Button>
-            )}
-          </div>
-        </CardFooter>
-      </Card>
 
-      {formState.images.length > 0 && (
-        <Card className="shadow-none bg-default-50">
-          <CardBody className="flex flex-row flex-wrap items-start justify-start gap-3 p-4">
-            {formState.images.map((file, index) => (
-              <div
-                key={index}
-                className="relative group">
-                <Image
-                  src={file.url}
-                  alt={file.name}
-                  width={120}
-                  height={120}
-                  className="object-cover rounded-lg cursor-pointer"
-                  onClick={() => handleImageClick(index)}
-                />
-                <Button
-                  isIconOnly
-                  size="sm"
-                  color="danger"
-                  variant="light"
-                  className="absolute z-50 transition-opacity duration-200 opacity-0 top-1 right-1 group-hover:opacity-100"
-                  onPress={() => handleDeleteFile(index, 'image')}>
-                  <XIcon className="size-4" />
-                </Button>
-              </div>
-            ))}
-          </CardBody>
-        </Card>
-      )}
-
-      <div className="flex flex-col gap-4 p-4 rounded-lg bg-default-50">
-        <Switch
-          isSelected={formState.autoPublish}
-          onValueChange={(value) => setFormState((prev) => ({ ...prev, autoPublish: value }))}
-          startContent={<BotIcon className="size-4" />}
-          endContent={<HandIcon className="size-4" />}>
-          {chrome.i18n.getMessage('optionsAutoPublish')}
-        </Switch>
-
-        <div className="flex flex-col gap-2">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <p className="text-sm font-medium">{chrome.i18n.getMessage('optionsSelectPublishPlatforms')}</p>
-            </div>
-            {formState.selectedPlatforms.length > 0 && (
-              <Button
-                isIconOnly
-                size="sm"
-                variant="light"
-                color="danger"
-                onPress={clearSelectedPlatforms}
-                title="清空平台"
-                className="hover:bg-danger-100">
-                <Eraser className="size-4" />
-              </Button>
-            )}
-          </div>
-
-          <Accordion
-            variant="bordered"
-            selectionMode="multiple"
-            defaultExpandedKeys={['CN']}>
-            <AccordionItem
-              key="CN"
-              title={chrome.i18n.getMessage('optionsCNPlatforms')}
-              subtitle={`已选择 ${
-                formState.selectedPlatforms.filter((platform) => {
-                  const info = platforms.find((p) => p.name === platform);
-                  return info?.tags?.includes('CN');
-                }).length
-              } 个`}
-              className="py-1">
-              <div className="grid grid-cols-2 gap-2">
-                {platforms
-                  .filter((platform) => platform.tags?.includes('CN'))
-                  .map((platform) => (
-                    <PlatformCheckbox
-                      key={platform.name}
-                      platformInfo={platform}
-                      isSelected={formState.selectedPlatforms.includes(platform.name)}
-                      onChange={(_, isSelected) => handlePlatformChange(platform.name, isSelected)}
-                      isDisabled={false}
+            <Accordion
+              isCompact
+              variant="light"
+              selectionMode="multiple"
+              defaultExpandedKeys={['CN']}>
+              <AccordionItem
+                key="CN"
+                title={chrome.i18n.getMessage('optionsCNPlatforms')}
+                subtitle={`${
+                  formState.selectedPlatforms.filter((platform) => {
+                    const info = platforms.find((p) => p.name === platform);
+                    return info?.tags?.includes('CN');
+                  }).length
+                }/${platforms.filter((platform) => platform.tags?.includes('CN')).length}`}
+                startContent={
+                  <div className="w-8">
+                    <Icon
+                      icon="openmoji:flag-china"
+                      className="w-full h-max"
                     />
-                  ))}
-              </div>
-            </AccordionItem>
-            <AccordionItem
-              key="EN"
-              title={chrome.i18n.getMessage('optionsOverseasPlatforms')}
-              subtitle={`已选择 ${
-                formState.selectedPlatforms.filter((platform) => {
-                  const info = platforms.find((p) => p.name === platform);
-                  return info?.tags?.includes('EN');
-                }).length
-              } 个`}
-              className="py-1">
-              <div className="grid grid-cols-2 gap-2">
-                {platforms
-                  .filter((platform) => platform.tags?.includes('EN'))
-                  .map((platform) => (
-                    <PlatformCheckbox
-                      key={platform.name}
-                      platformInfo={platform}
-                      isSelected={formState.selectedPlatforms.includes(platform.name)}
-                      onChange={(_, isSelected) => handlePlatformChange(platform.name, isSelected)}
-                      isDisabled={false}
+                  </div>
+                }
+                className="py-1">
+                <div className="grid grid-cols-2 gap-2">
+                  {platforms
+                    .filter((platform) => platform.tags?.includes('CN'))
+                    .map((platform) => (
+                      <PlatformCheckbox
+                        key={platform.name}
+                        platformInfo={platform}
+                        isSelected={formState.selectedPlatforms.includes(platform.name)}
+                        onChange={(_, isSelected) => handlePlatformChange(platform.name, isSelected)}
+                        isDisabled={false}
+                      />
+                    ))}
+                </div>
+              </AccordionItem>
+              <AccordionItem
+                key="EN"
+                title={chrome.i18n.getMessage('optionsInternationalPlatforms')}
+                subtitle={`${
+                  formState.selectedPlatforms.filter((platform) => {
+                    const info = platforms.find((p) => p.name === platform);
+                    return info?.tags?.includes('EN');
+                  }).length
+                }/${platforms.filter((platform) => platform.tags?.includes('EN')).length}`}
+                startContent={
+                  <div className="w-8">
+                    <Icon
+                      icon="openmoji:globe-with-meridians"
+                      className="w-full h-max"
                     />
-                  ))}
-              </div>
-            </AccordionItem>
-          </Accordion>
+                  </div>
+                }
+                className="py-1">
+                <div className="grid grid-cols-2 gap-2">
+                  {platforms
+                    .filter((platform) => platform.tags?.includes('EN'))
+                    .map((platform) => (
+                      <PlatformCheckbox
+                        key={platform.name}
+                        platformInfo={platform}
+                        isSelected={formState.selectedPlatforms.includes(platform.name)}
+                        onChange={(_, isSelected) => handlePlatformChange(platform.name, isSelected)}
+                        isDisabled={false}
+                      />
+                    ))}
+                </div>
+              </AccordionItem>
+            </Accordion>
+
+            <Button
+              onPress={handlePublish}
+              color="primary"
+              variant="flat"
+              disabled={!formState.title || !formState.content || formState.selectedPlatforms.length === 0}
+              className="mt-2 w-full font-medium shadow-none">
+              <SendIcon className="mr-2 size-4" />
+              {chrome.i18n.getMessage('optionsSyncDynamic')}
+            </Button>
+          </div>
         </div>
       </div>
-
-      <Button
-        onPress={handlePublish}
-        color="primary"
-        variant="flat"
-        disabled={!formState.title || !formState.content || formState.selectedPlatforms.length === 0}
-        className="w-full font-medium shadow-none">
-        <SendIcon className="mr-2 size-4" />
-        {chrome.i18n.getMessage('optionsSyncDynamic')}
-      </Button>
-
-      {formState.videos.length > 0 && (
-        <Card className="my-2 shadow-none bg-default-50">
-          <CardBody className="flex flex-col gap-4">
-            {formState.videos.map((file, index) => (
-              <div
-                key={index}
-                className="relative w-full group aspect-video">
-                <Player
-                  playsInline
-                  src={file.url}>
-                  <source src={file.url} />
-                </Player>
-                <Button
-                  isIconOnly
-                  size="sm"
-                  color="danger"
-                  variant="light"
-                  className="absolute z-50 transition-opacity opacity-0 top-2 right-2 group-hover:opacity-100"
-                  onPress={() => handleDeleteFile(index, 'video')}>
-                  <XIcon className="size-4" />
-                </Button>
-              </div>
-            ))}
-          </CardBody>
-        </Card>
-      )}
 
       <Viewer
         visible={viewerState.visible}

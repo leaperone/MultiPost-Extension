@@ -19,6 +19,8 @@ import { getPlatformInfosWithAccount } from '~sync/account';
 import type { PlatformInfo } from '~sync/common';
 import TurndownService from 'turndown';
 import { Storage } from '@plasmohq/storage';
+import { Icon } from '@iconify/react';
+
 interface ArticleTabProps {
   funcPublish: (data: SyncData) => void;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -319,208 +321,230 @@ const ArticleTab: React.FC<ArticleTabProps> = ({ funcPublish, funcScraper }) => 
 
   return (
     <>
-      <Card className="mb-4 shadow-none h-fit bg-default-50">
-        <CardBody>
-          <div className="flex items-center space-x-2">
-            <Input
-              placeholder={chrome.i18n.getMessage('optionsEnterUrl')}
-              value={url}
-              onChange={(e) => setUrl(e.target.value)}
-              className="grow"
-            />
-            <Button
-              onPress={handleImport}
-              isDisabled={!url}>
-              <DownloadIcon />
-              {chrome.i18n.getMessage('optionsImport')}
-            </Button>
-          </div>
-        </CardBody>
-
-        {isProcessing && (
-          <CardFooter>
-            <div className="flex flex-col gap-2">
-              <p className="text-sm">{processStatus}</p>
-              <Progress
-                value={processProgress}
-                color="primary"
-                className="w-full"
-              />
-            </div>
-          </CardFooter>
-        )}
-      </Card>
-
-      <Card className="mb-4 shadow-none h-fit bg-default-50">
-        <CardHeader>
-          <h3 className="text-sm font-medium">{chrome.i18n.getMessage('optionsCoverImage')}</h3>
-        </CardHeader>
-        <CardBody>
-          <div className="flex items-center justify-center">
-            <input
-              type="file"
-              ref={coverInputRef}
-              accept="image/*"
-              onChange={handleCoverChange}
-              className="hidden"
-            />
-            {coverImage ? (
-              <div className="relative group">
-                <Image
-                  src={coverImage.url}
-                  alt={coverImage.name}
-                  width={200}
-                  height={150}
-                  className="object-cover rounded-md"
+      <div className="flex flex-col md:flex-row gap-4">
+        <div className="flex flex-col gap-4 w-full md:w-1/2">
+          <Card className="mb-4 shadow-none h-fit bg-default-50">
+            <CardBody>
+              <div className="flex items-center space-x-2">
+                <Input
+                  placeholder={chrome.i18n.getMessage('optionsEnterUrl')}
+                  value={url}
+                  onChange={(e) => setUrl(e.target.value)}
+                  className="grow"
                 />
                 <Button
-                  isIconOnly
-                  size="sm"
-                  color="danger"
-                  className="absolute top-0 right-0 z-50 m-1 transition-opacity opacity-0 group-hover:opacity-100"
-                  onPress={handleDeleteCover}>
-                  <XIcon className="size-4" />
+                  onPress={handleImport}
+                  isDisabled={!url}>
+                  <DownloadIcon />
+                  {chrome.i18n.getMessage('optionsImport')}
                 </Button>
               </div>
-            ) : (
-              <Button
-                variant="light"
-                onPress={() => coverInputRef.current?.click()}>
-                <ImagePlusIcon className="w-6 h-6 mr-2" />
-                {chrome.i18n.getMessage('optionsUploadCover')}
-              </Button>
+            </CardBody>
+
+            {isProcessing && (
+              <CardFooter>
+                <div className="flex flex-col gap-2">
+                  <p className="text-sm">{processStatus}</p>
+                  <Progress
+                    value={processProgress}
+                    color="primary"
+                    className="w-full"
+                  />
+                </div>
+              </CardFooter>
             )}
-          </div>
-        </CardBody>
-      </Card>
+          </Card>
 
-      <Card className="shadow-none h-fit bg-default-50">
-        <CardHeader>
-          <Input
-            placeholder={chrome.i18n.getMessage('optionsEnterArticleTitle')}
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-            className="w-full"
-          />
-        </CardHeader>
+          <Card className="mb-4 shadow-none h-fit bg-default-50">
+            <CardHeader>
+              <h3 className="text-sm font-medium">{chrome.i18n.getMessage('optionsCoverImage')}</h3>
+            </CardHeader>
+            <CardBody>
+              <div className="flex justify-center items-center">
+                <input
+                  type="file"
+                  ref={coverInputRef}
+                  accept="image/*"
+                  onChange={handleCoverChange}
+                  className="hidden"
+                />
+                {coverImage ? (
+                  <div className="relative group">
+                    <Image
+                      src={coverImage.url}
+                      alt={coverImage.name}
+                      width={200}
+                      height={150}
+                      className="object-cover rounded-md"
+                    />
+                    <Button
+                      isIconOnly
+                      size="sm"
+                      color="danger"
+                      className="absolute top-0 right-0 z-50 m-1 opacity-0 transition-opacity group-hover:opacity-100"
+                      onPress={handleDeleteCover}>
+                      <XIcon className="size-4" />
+                    </Button>
+                  </div>
+                ) : (
+                  <Button
+                    variant="light"
+                    onPress={() => coverInputRef.current?.click()}>
+                    <ImagePlusIcon className="mr-2 w-6 h-6" />
+                    {chrome.i18n.getMessage('optionsUploadCover')}
+                  </Button>
+                )}
+              </div>
+            </CardBody>
+          </Card>
 
-        <CardBody>
-          <Textarea
-            placeholder={chrome.i18n.getMessage('optionsEnterArticleDigest')}
-            value={digest}
-            onChange={(e) => setDigest(e.target.value)}
-            fullWidth
-            minRows={5}
-            autoFocus
-          />
-        </CardBody>
-      </Card>
+          <Card className="shadow-none h-fit bg-default-50">
+            <CardHeader>
+              <Input
+                placeholder={chrome.i18n.getMessage('optionsEnterArticleTitle')}
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
+                className="w-full"
+              />
+            </CardHeader>
 
-      <div className="flex flex-col gap-4 p-4 rounded-lg bg-default-50">
-        <div className="flex flex-col gap-2">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <p className="text-sm font-medium">{chrome.i18n.getMessage('optionsSelectPublishPlatforms')}</p>
+            <CardBody>
+              <Textarea
+                placeholder={chrome.i18n.getMessage('optionsEnterArticleDigest')}
+                value={digest}
+                onChange={(e) => setDigest(e.target.value)}
+                fullWidth
+                minRows={5}
+                autoFocus
+              />
+            </CardBody>
+          </Card>
+
+          {importedContent && (
+            <Card className="my-4 shadow-none bg-default-50">
+              <CardHeader>
+                <h3 className="text-lg font-bold">{chrome.i18n.getMessage('optionsImportedContent')}</h3>
+                <Image
+                  src={importedContent.cover}
+                  alt={importedContent.title}
+                  width={100}
+                  height={100}
+                  className="object-cover rounded-md cursor-pointer"
+                />
+              </CardHeader>
+              <CardBody>
+                <h4 className="mb-2 font-semibold">{importedContent.title}</h4>
+                <p className="mb-4 text-sm">{importedContent.digest}</p>
+                <div
+                  className="max-w-none prose"
+                  dangerouslySetInnerHTML={{ __html: importedContent.content }}
+                />
+              </CardBody>
+            </Card>
+          )}
+        </div>
+
+        <div className="flex flex-col gap-4 w-full md:w-1/2">
+          <div className="flex flex-col gap-4 p-4 rounded-lg bg-default-50">
+            <div className="flex flex-col gap-2">
+              <div className="flex justify-between items-center mb-2">
+                <div className="flex gap-2 items-center"></div>
+                {selectedPlatforms.length > 0 && (
+                  <Button
+                    isIconOnly
+                    size="sm"
+                    variant="light"
+                    color="danger"
+                    onPress={clearSelectedPlatforms}
+                    title="清空平台"
+                    className="hover:bg-danger-100">
+                    <Eraser className="size-4" />
+                  </Button>
+                )}
+              </div>
+
+              <Accordion
+                isCompact
+                variant="light"
+                selectionMode="multiple"
+                defaultExpandedKeys={['CN']}>
+                <AccordionItem
+                  key="CN"
+                  title={chrome.i18n.getMessage('optionsCNPlatforms')}
+                  subtitle={`${
+                    selectedPlatforms.filter((platform) => {
+                      const info = platforms.find((p) => p.name === platform);
+                      return info?.tags?.includes('CN');
+                    }).length
+                  }/${platforms.filter((platform) => platform.tags?.includes('CN')).length}`}
+                  startContent={
+                    <div className="w-8">
+                      <Icon
+                        icon="openmoji:flag-china"
+                        className="w-full h-max"
+                      />
+                    </div>
+                  }
+                  className="py-1">
+                  <div className="grid grid-cols-2 gap-2">
+                    {platforms
+                      .filter((platform) => platform.tags?.includes('CN'))
+                      .map((platform) => (
+                        <PlatformCheckbox
+                          key={platform.name}
+                          platformInfo={platform}
+                          isSelected={selectedPlatforms.includes(platform.name)}
+                          onChange={(_, isSelected) => handlePlatformChange(platform.name, isSelected)}
+                          isDisabled={false}
+                        />
+                      ))}
+                  </div>
+                </AccordionItem>
+                <AccordionItem
+                  key="EN"
+                  title={chrome.i18n.getMessage('optionsInternationalPlatforms')}
+                  subtitle={`${
+                    selectedPlatforms.filter((platform) => {
+                      const info = platforms.find((p) => p.name === platform);
+                      return info?.tags?.includes('EN');
+                    }).length
+                  }/${platforms.filter((platform) => platform.tags?.includes('EN')).length}`}
+                  startContent={
+                    <div className="w-8">
+                      <Icon
+                        icon="openmoji:globe-with-meridians"
+                        className="w-full h-max"
+                      />
+                    </div>
+                  }
+                  className="py-1">
+                  <div className="grid grid-cols-2 gap-2">
+                    {platforms
+                      .filter((platform) => platform.tags?.includes('EN'))
+                      .map((platform) => (
+                        <PlatformCheckbox
+                          key={platform.name}
+                          platformInfo={platform}
+                          isSelected={selectedPlatforms.includes(platform.name)}
+                          onChange={(_, isSelected) => handlePlatformChange(platform.name, isSelected)}
+                          isDisabled={false}
+                        />
+                      ))}
+                  </div>
+                </AccordionItem>
+              </Accordion>
             </div>
-            {selectedPlatforms.length > 0 && (
-              <Button
-                isIconOnly
-                size="sm"
-                variant="light"
-                color="danger"
-                onPress={clearSelectedPlatforms}
-                title="清空平台"
-                className="hover:bg-danger-100">
-                <Eraser className="size-4" />
-              </Button>
-            )}
-          </div>
 
-          <Accordion
-            variant="bordered"
-            selectionMode="multiple"
-            defaultExpandedKeys={['CN']}>
-            <AccordionItem
-              key="CN"
-              title={chrome.i18n.getMessage('optionsCNPlatforms')}
-              subtitle={`已选择 ${
-                selectedPlatforms.filter((platform) => {
-                  const info = platforms.find((p) => p.name === platform);
-                  return info?.tags?.includes('CN');
-                }).length
-              } 个`}
-              className="py-1">
-              <div className="grid grid-cols-2 gap-2">
-                {platforms
-                  .filter((platform) => platform.tags?.includes('CN'))
-                  .map((platform) => (
-                    <PlatformCheckbox
-                      key={platform.name}
-                      platformInfo={platform}
-                      isSelected={selectedPlatforms.includes(platform.name)}
-                      onChange={(_, isSelected) => handlePlatformChange(platform.name, isSelected)}
-                      isDisabled={false}
-                    />
-                  ))}
-              </div>
-            </AccordionItem>
-            <AccordionItem
-              key="EN"
-              title={chrome.i18n.getMessage('optionsOverseasPlatforms')}
-              subtitle={`已选择 ${
-                selectedPlatforms.filter((platform) => {
-                  const info = platforms.find((p) => p.name === platform);
-                  return info?.tags?.includes('EN');
-                }).length
-              } 个`}
-              className="py-1">
-              <div className="grid grid-cols-2 gap-2">
-                {platforms
-                  .filter((platform) => platform.tags?.includes('EN'))
-                  .map((platform) => (
-                    <PlatformCheckbox
-                      key={platform.name}
-                      platformInfo={platform}
-                      isSelected={selectedPlatforms.includes(platform.name)}
-                      onChange={(_, isSelected) => handlePlatformChange(platform.name, isSelected)}
-                      isDisabled={false}
-                    />
-                  ))}
-              </div>
-            </AccordionItem>
-          </Accordion>
+            <Button
+              onPress={handlePublish}
+              color="primary"
+              disabled={!title || selectedPlatforms.length === 0}
+              className="px-4 py-2 w-full font-bold mt-2">
+              {chrome.i18n.getMessage('optionsSyncArticle')}
+            </Button>
+          </div>
         </div>
       </div>
-      <Button
-        onPress={handlePublish}
-        color="primary"
-        disabled={!title || selectedPlatforms.length === 0}
-        className="w-full px-4 py-2 font-bold">
-        {chrome.i18n.getMessage('optionsSyncArticle')}
-      </Button>
-
-      {importedContent && (
-        <Card className="my-4 shadow-none bg-default-50">
-          <CardHeader>
-            <h3 className="text-lg font-bold">{chrome.i18n.getMessage('optionsImportedContent')}</h3>
-            <Image
-              src={importedContent.cover}
-              alt={importedContent.title}
-              width={100}
-              height={100}
-              className="object-cover rounded-md cursor-pointer"
-            />
-          </CardHeader>
-          <CardBody>
-            <h4 className="mb-2 font-semibold">{importedContent.title}</h4>
-            <p className="mb-4 text-sm">{importedContent.digest}</p>
-            <div
-              className="prose max-w-none"
-              dangerouslySetInnerHTML={{ __html: importedContent.content }}
-            />
-          </CardBody>
-        </Card>
-      )}
     </>
   );
 };
