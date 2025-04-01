@@ -43,6 +43,9 @@ pnpm build
 
 ### 开发文档
 
+需要注意的是，不同平台的开发在细节上存在不同，不过大体上遵循类似的实现模式。脱离不开 `查找元素 - 编辑元素 - 自动发布` 的实现模式。
+
+- [通用功能开发记录](development/common.md)
 - [抖音动态发布功能开发记录](development/douyin-dynamic.md)
 - [抖音账号信息获取](development/douyin-account.md)
 - [B站动态发布功能开发记录](development/bilibili-dynamic.md)
