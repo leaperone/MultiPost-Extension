@@ -25,7 +25,7 @@ export default function OnInstallPage() {
       blendingValue="hard-light"
       className="min-h-screen dark">
       {/* Extension Instructions */}
-      <div className="fixed right-4 top-8">
+      <div className="fixed right-4 top-20">
         <div className="relative w-[280px] overflow-hidden rounded-xl bg-gradient-to-br from-blue-600/90 to-purple-600/90 p-4 shadow-2xl">
           {/* Top Arrow */}
           <div className="absolute -top-2 right-6 size-4 -translate-y-1/2 rotate-45 bg-gradient-to-br from-blue-600 to-purple-600" />

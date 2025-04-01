@@ -7,7 +7,7 @@ export const metadata: Metadata = {
 
 export default function PrivacyPolicy() {
   return (
-    <div className="prose dark:prose-invert prose-slate mx-auto max-w-4xl space-y-6 px-4 py-8">
+    <div className="prose prose-slate mx-auto max-w-4xl space-y-6 px-4 py-8 dark:prose-invert">
       <h1 className="mb-8 text-3xl font-bold">「致唯MultiPost」隐私政策</h1>
       <p className="text-sm text-gray-500 dark:text-gray-400">最近更新时间：2024年4月28日</p>
 

@@ -6,7 +6,6 @@ import { Button, Link } from '@heroui/react';
 import { PuzzleIcon, AlertCircleIcon, ArrowRight } from 'lucide-react';
 import { Icon } from '@iconify/react';
 import confetti from 'canvas-confetti';
-import HomePageHeader from '@/components/HomePage/Header';
 import { checkServiceStatus, openOptions } from '@/lib/extension';
 import { useTranslation } from '@/i18n/client';
 
@@ -120,7 +119,6 @@ const ExtensionPage: React.FC = () => {
   return (
     <div className="min-h-screen bg-gradient-to-b from-background to-muted/20">
       <div className="relative z-10">
-        <HomePageHeader />
         <main className="container mx-auto px-4 py-16">
           <div className="mx-auto mb-12 max-w-2xl text-center">
             <h1 className="mb-4 text-3xl font-semibold">{t('title')}</h1>

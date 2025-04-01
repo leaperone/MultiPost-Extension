@@ -11,7 +11,7 @@ export default async function AboutPage() {
   const { t } = await createTranslation('about');
 
   return (
-    <div className="container mx-auto h-screen overflow-y-auto px-4 py-8">
+    <div className="container mx-auto mt-10 px-4 py-8">
       {/* 页面标题 */}
       <div className="mb-12 text-center">
         <h1 className="mb-4 text-4xl font-bold">{t('title')}</h1>
