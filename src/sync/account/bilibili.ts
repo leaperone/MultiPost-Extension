@@ -17,7 +17,7 @@ export async function getBilibiliAccountInfo(): Promise<AccountInfo> {
 
   const responseData = await response.json();
 
-  if (!responseData.data.code) {
+  if (!responseData.data.isLogin) {
     return null
   }
 
