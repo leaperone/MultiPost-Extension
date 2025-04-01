@@ -47,7 +47,7 @@ window.postMessage(
 
 ### 未授权响应
 
-如果网页调用扩展程序的接口时，扩展程序用户未授权过该网页的域名，则会返回未授权的响应。
+如果网页调用扩展程序的接口时，扩展程序用户未授权过该网页的域名，则会返回未授权的响应。为了获取授权，可以调用 `MUTLIPOST_EXTENSION_REQUEST_TRUST_DOMAIN` 接口。
 
 ```typescript
 {
@@ -140,6 +140,9 @@ interface PlatformInfo {
   userAvatarUrl?: string;
   injectUrl: string;
   injectFunction: (data: SyncData) => Promise<void>;
+  accountKey: string;
+  tags: string[];
+  accountInfo: AccountInfo;
 }
 ```
 
@@ -168,10 +171,37 @@ window.postMessage({
 });
 ```
 
-## 參考
+### 获取当前已登录账号信息
+
+```js
+window.postMessage({
+  type: 'request',
+  traceId: '',
+  action: 'MUTLIPOST_EXTENSION_GET_ACCOUNT_INFOS',
+  data: {},
+});
+```
+
+响应体：
 
 ```typescript
-import { v4 as uuidv4 } from 'uuid';
+interface AccountInfoResponse {
+  accountInfos: Record<string, AccountInfo>;
+}
+
+interface AccountInfo {
+  provider: string; // 账号提供商
+  accountId: string; // 账号 ID
+  username: string; // 账号名称
+  description?: string; // 账号描述
+  profileUrl?: string; // 账号链接
+  avatarUrl?: string; // 账号头像
+  extraData: any; // 账号额外数据
+}
+```
+
+## 參考
+
 
 export type ExtensionExternalRequest<T> = {
   type: 'request';
