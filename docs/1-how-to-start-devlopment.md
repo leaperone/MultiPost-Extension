@@ -43,7 +43,7 @@ pnpm build
 
 ### 开发文档
 
-- [B站动态发布功能开发记录](development/bilibili/dynamic-development.md)
+- [B站动态发布功能开发记录](development/bilibili-dynamic.md)
 
 ### 开发环境
 
