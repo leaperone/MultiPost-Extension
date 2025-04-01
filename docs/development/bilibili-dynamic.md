@@ -36,7 +36,7 @@
 
 动态发布函数是动态发布功能的核心，该函数会根据 `injectUrl` 打开的页面然后将其注入到页面中。
 
-我们在 `src/sync/dynamic/bilibili.ts` 文件中实现 `DynamicBilibili` 函数。具体代码可以点击 [这里](https://github.com/x-lab-sh/bilibili-dynamic-publish/blob/main/src/sync/dynamic/bilibili.ts) 查看。
+我们在 `src/sync/dynamic/bilibili.ts` 文件中实现 `DynamicBilibili` 函数。具体代码可以点击 [这里](https://github.com/leaperone/MultiPost-Extension/blob/main/src/sync/dynamic/bilibili.ts) 查看。
 
 下面的记录是我们从 `DynamicBilibili` 函数中抽离出来的，主要记录了动态发布的一些关键步骤。
 
