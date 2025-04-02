@@ -513,6 +513,10 @@
     "message": "WeiXinVideo",
     "description": "Platform name for WeiXinVideo"
   },
+  "platformWebhook": {
+    "message": "Webhook",
+    "description": "Platform name for Webhook"
+  },
   "optionsFeedbackPrefix": {
     "message": "Missing a platform you need?"
   },

@@ -99,7 +99,7 @@ export async function createTabsForPlatforms(data: SyncData) {
     const info = getDefaultPlatformInfo(platform.name);
     if (info) {
       const tab = await chrome.tabs.create({ url: info.injectUrl });
-      tabs.push([tab, platform]);
+      tabs.push([tab, platform.name]);
     }
   }
 
@@ -115,6 +115,7 @@ export async function createTabsForPlatforms(data: SyncData) {
 }
 
 export async function injectScriptsToTabs(tabs: [chrome.tabs.Tab, string][], data: SyncData) {
+  console.log('tabs', tabs);
   for (const t of tabs) {
     const tab = t[0];
     const platform = t[1];
@@ -123,6 +124,7 @@ export async function injectScriptsToTabs(tabs: [chrome.tabs.Tab, string][], dat
         if (tabId === tab.id && info.status === 'complete') {
           chrome.tabs.onUpdated.removeListener(listener);
           const info = getDefaultPlatformInfo(platform);
+          console.log('info', info);
           if (info) {
             chrome.scripting.executeScript({
               target: { tabId: tab.id },

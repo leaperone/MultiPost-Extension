@@ -6,6 +6,7 @@ import { DynamicDedao } from './dynamic/dedao';
 import { DynamicDouban } from './dynamic/douban';
 import { DynamicDouyin } from './dynamic/douyin';
 import { DynamicFacebook } from './dynamic/facebook';
+import { DynamicWebhook } from './dynamic/webhook';
 import { DynamicInstagram } from './dynamic/instagram';
 import { DynamicKuaishou } from './dynamic/kuaishou';
 import { DynamicLinkedin } from './dynamic/linkedin';
@@ -270,5 +271,16 @@ export const DynamicInfoMap: Record<string, PlatformInfo> = {
     injectFunction: DynamicWeixin,
     tags: ['CN'],
     accountKey: 'weixin',
+  },
+  DYNAMIC_WEBHOOK: {
+    type: 'DYNAMIC',
+    name: 'DYNAMIC_WEBHOOK',
+    homeUrl: 'https://multipost.app/about/',
+    faviconUrl: 'https://multipost.app/favicon.ico',
+    platformName: chrome.i18n.getMessage('platformWebhook'),
+    injectUrl: 'https://multipost.app/about/',
+    injectFunction: DynamicWebhook,
+    tags: ['International'],
+    accountKey: 'webhook',
   },
 };

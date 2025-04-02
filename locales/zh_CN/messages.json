@@ -520,6 +520,10 @@
     "message": "微信视频号",
     "description": "微信视频号平台名称"
   },
+  "platformWebhook": {
+    "message": "Webhook",
+    "description": "Webhook 平台名称"
+  },
   "optionsFeedbackPrefix": {
     "message": "没有你需要的平台？"
   },

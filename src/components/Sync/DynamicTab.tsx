@@ -235,7 +235,7 @@ const DynamicTab: React.FC<DynamicTabProps> = ({ funcPublish }) => {
   );
 
   // 发布处理
-  const handlePublish = useCallback(async () => {
+  const handlePublish = async () => {
     if (!formState.content) {
       alert(chrome.i18n.getMessage('optionsEnterDynamicContent'));
       return;
@@ -264,7 +264,7 @@ const DynamicTab: React.FC<DynamicTabProps> = ({ funcPublish }) => {
       console.error('发布时出错:', error);
       funcPublish(data);
     }
-  }, [formState, funcPublish]);
+  }
 
   // 清空所有内容
   const handleClearAll = useCallback(() => {

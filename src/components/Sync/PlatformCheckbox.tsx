@@ -2,6 +2,7 @@ import { Image, Checkbox, Link } from '@heroui/react';
 import type { PlatformInfo } from '~sync/common';
 import React from 'react';
 import { Icon } from '@iconify/react';
+import ExtraInfoConfig from './ExtraInfoConfig';
 
 interface PlatformCheckboxProps {
   platformInfo: PlatformInfo;
@@ -10,7 +11,12 @@ interface PlatformCheckboxProps {
   onChange: (key: string, isSelected: boolean) => void;
 }
 
-export default function PlatformCheckbox({ platformInfo, isSelected, isDisabled, onChange }: PlatformCheckboxProps) {
+export default function PlatformCheckbox({
+  platformInfo,
+  isSelected,
+  isDisabled,
+  onChange,
+}: PlatformCheckboxProps) {
   const profileUrl = platformInfo.accountInfo?.profileUrl || platformInfo.homeUrl;
 
   return (
@@ -68,6 +74,7 @@ export default function PlatformCheckbox({ platformInfo, isSelected, isDisabled,
           </div>
         </div>
       </Checkbox>
+      <ExtraInfoConfig platformInfo={platformInfo} />
     </div>
   );
 }
