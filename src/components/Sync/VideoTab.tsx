@@ -17,9 +17,12 @@ import 'video-react/dist/video-react.css';
 import { type SyncData, type FileData } from '~sync/common';
 import type { PlatformInfo } from '~sync/common';
 import PlatformCheckbox from './PlatformCheckbox';
-import { getPlatformInfosWithAccount } from '~sync/account';
+import { getPlatformInfos } from '~sync/common';
 import { Storage } from '@plasmohq/storage';
 import { Icon } from '@iconify/react';
+import  { useStorage } from '@plasmohq/storage/hook';
+import { ACCOUNT_INFO_STORAGE_KEY } from '~sync/account';
+import { EXTRA_CONFIG_STORAGE_KEY } from '~sync/extraconfig';
 
 interface VideoTabProps {
   funcPublish: (data: SyncData) => void;
@@ -35,6 +38,16 @@ const VideoTab: React.FC<VideoTabProps> = ({ funcPublish }) => {
   const storage = new Storage({
     area: 'local', // 明确指定使用 localStorage
   });
+
+  const [accountInfos] = useStorage({
+    key: ACCOUNT_INFO_STORAGE_KEY,
+    instance: storage,
+  });
+  const [extraConfigMap] = useStorage({
+    key: EXTRA_CONFIG_STORAGE_KEY,
+    instance: storage,
+  });
+
   useEffect(() => {
     if (process.env.NODE_ENV === 'development') {
       setTitle('开发环境标题');
@@ -47,7 +60,7 @@ const VideoTab: React.FC<VideoTabProps> = ({ funcPublish }) => {
   useEffect(() => {
     const loadPlatformInfos = async () => {
       try {
-        const infos = await getPlatformInfosWithAccount('VIDEO');
+        const infos = await getPlatformInfos('VIDEO');
         setPlatforms(infos);
       } catch (error) {
         console.error('加载平台信息失败:', error);
@@ -55,7 +68,7 @@ const VideoTab: React.FC<VideoTabProps> = ({ funcPublish }) => {
     };
 
     loadPlatformInfos();
-  }, []);
+  }, [accountInfos, extraConfigMap]);
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFile = event.target.files?.[0];
@@ -108,7 +121,7 @@ const VideoTab: React.FC<VideoTabProps> = ({ funcPublish }) => {
     }
 
     const data: SyncData = {
-      platforms: selectedPlatforms,
+      platforms: selectedPlatforms.map((platform) => platforms.find((p) => p.name === platform)),
       data: {
         title,
         content,

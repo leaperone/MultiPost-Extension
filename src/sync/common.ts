@@ -1,9 +1,11 @@
+import { getAccountInfoFromPlatformInfos } from './account';
 import { ArticleInfoMap } from './article';
 import { DynamicInfoMap } from './dynamic';
+import { getExtraConfigFromPlatformInfo } from './extraconfig';
 import { VideoInfoMap } from './video';
 
 export interface SyncData {
-  platforms: string[];
+  platforms: PlatformInfo[];
   auto_publish: boolean;
   data: DynamicData | ArticleData | VideoData;
 }
@@ -55,8 +57,9 @@ export interface PlatformInfo {
   injectUrl: string;
   injectFunction: (data: SyncData) => Promise<void>;
   tags?: string[];
-  accountKey: string
+  accountKey: string;
   accountInfo?: AccountInfo;
+  extraConfig?: unknown;
 }
 
 export interface AccountInfo {
@@ -79,16 +82,21 @@ export function getDefaultPlatformInfo(platform: string): PlatformInfo | null {
   return infoMap[platform] || null;
 }
 
-export function getPlatformInfos(type?: 'DYNAMIC' | 'VIDEO' | 'ARTICLE'): PlatformInfo[] {
-  if (!type) return Object.values(infoMap);
-  return Object.values(infoMap).filter((info) => info.type === type);
+export async function getPlatformInfos(type?: 'DYNAMIC' | 'VIDEO' | 'ARTICLE'): Promise<PlatformInfo[]> {
+  const platformInfos: PlatformInfo[] = [];
+  for (const info of Object.values(infoMap)) {
+    if (type && info.type !== type) continue;
+    platformInfos.push(info);
+  }
+
+  return await getExtraConfigFromPlatformInfo(await getAccountInfoFromPlatformInfos(platformInfos));
 }
 
 // Inject || 注入 || START
 export async function createTabsForPlatforms(data: SyncData) {
   const tabs = [];
   for (const platform of data.platforms) {
-    const info = getDefaultPlatformInfo(platform);
+    const info = getDefaultPlatformInfo(platform.name);
     if (info) {
       const tab = await chrome.tabs.create({ url: info.injectUrl });
       tabs.push([tab, platform]);

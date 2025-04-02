@@ -8,10 +8,10 @@ import {
   tabsManagerMessageHandler,
 } from './services/tabs';
 import QuantumEntanglementKeepAlive from '../utils/keep-alive';
-import { createTabsForPlatforms, injectScriptsToTabs, type SyncData } from '~sync/common';
+import { createTabsForPlatforms, getPlatformInfos, injectScriptsToTabs, type SyncData } from '~sync/common';
 import { trustDomainMessageHandler } from './services/trust-domain';
 import { Storage } from '@plasmohq/storage';
-import { getAllAccountInfo, getPlatformInfosWithAccount } from '~sync/account';
+import { getAllAccountInfo } from '~sync/account';
 
 const storage = new Storage({
   area: 'local',
@@ -87,7 +87,7 @@ const defaultMessageHandler = (request, sender, sendResponse) => {
     }
   }
   if (request.action === 'MUTLIPOST_EXTENSION_PLATFORMS') {
-    getPlatformInfosWithAccount().then((platforms) => {
+    getPlatformInfos().then((platforms) => {
       sendResponse({ platforms });
     });
   }
