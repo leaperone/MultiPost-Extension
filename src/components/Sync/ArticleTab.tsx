@@ -501,14 +501,14 @@ const ArticleTab: React.FC<ArticleTabProps> = ({ funcPublish, funcScraper }) => 
                   </div>
                 </AccordionItem>
                 <AccordionItem
-                  key="EN"
+                  key="International"
                   title={chrome.i18n.getMessage('optionsInternationalPlatforms')}
                   subtitle={`${
                     selectedPlatforms.filter((platform) => {
                       const info = platforms.find((p) => p.name === platform);
-                      return info?.tags?.includes('EN');
+                      return info?.tags?.includes('International');
                     }).length
-                  }/${platforms.filter((platform) => platform.tags?.includes('EN')).length}`}
+                  }/${platforms.filter((platform) => platform.tags?.includes('International')).length}`}
                   startContent={
                     <div className="w-8">
                       <Icon
@@ -520,7 +520,7 @@ const ArticleTab: React.FC<ArticleTabProps> = ({ funcPublish, funcScraper }) => 
                   className="py-1">
                   <div className="grid grid-cols-2 gap-2">
                     {platforms
-                      .filter((platform) => platform.tags?.includes('EN'))
+                      .filter((platform) => platform.tags?.includes('International'))
                       .map((platform) => (
                         <PlatformCheckbox
                           key={platform.name}

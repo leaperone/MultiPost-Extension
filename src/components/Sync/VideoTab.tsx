@@ -146,8 +146,8 @@ const VideoTab: React.FC<VideoTabProps> = ({ funcPublish }) => {
 
   return (
     <div className="flex flex-col gap-4">
-      <div className="flex flex-col md:flex-row gap-4">
-        <div className="flex flex-col gap-4 w-full md:w-1/2">
+      <div className="flex flex-col gap-4 md:flex-row">
+        <div className="flex flex-col w-full gap-4 md:w-1/2">
           <Card className="shadow-none bg-default-50">
             <CardHeader className="flex flex-col gap-4">
               <Input
@@ -231,7 +231,7 @@ const VideoTab: React.FC<VideoTabProps> = ({ funcPublish }) => {
           )}
         </div>
 
-        <div className="flex flex-col gap-4 w-full md:w-1/2">
+        <div className="flex flex-col w-full gap-4 md:w-1/2">
           <div className="flex flex-col gap-4 p-4 rounded-lg bg-default-50">
             <div className="flex flex-col gap-2">
               <div className="flex items-center justify-between mb-2">
@@ -288,14 +288,14 @@ const VideoTab: React.FC<VideoTabProps> = ({ funcPublish }) => {
                   </div>
                 </AccordionItem>
                 <AccordionItem
-                  key="EN"
+                  key="International"
                   title={chrome.i18n.getMessage('optionsInternationalPlatforms')}
                   subtitle={`${
                     selectedPlatforms.filter((platform) => {
                       const info = platforms.find((p) => p.name === platform);
-                      return info?.tags?.includes('EN');
+                      return info?.tags?.includes('International');
                     }).length
-                  }/${platforms.filter((platform) => platform.tags?.includes('EN')).length}`}
+                  }/${platforms.filter((platform) => platform.tags?.includes('International')).length}`}
                   startContent={
                     <div className="w-8">
                       <Icon
@@ -307,7 +307,7 @@ const VideoTab: React.FC<VideoTabProps> = ({ funcPublish }) => {
                   className="py-1">
                   <div className="grid grid-cols-2 gap-2">
                     {platforms
-                      .filter((platform) => platform.tags?.includes('EN'))
+                      .filter((platform) => platform.tags?.includes('International'))
                       .map((platform) => (
                         <PlatformCheckbox
                           key={platform.name}
@@ -327,7 +327,7 @@ const VideoTab: React.FC<VideoTabProps> = ({ funcPublish }) => {
               color="primary"
               variant="flat"
               disabled={!videoFile || !title || !content || selectedPlatforms.length === 0}
-              className="w-full font-medium shadow-none mt-2">
+              className="w-full mt-2 font-medium shadow-none">
               <SendIcon className="mr-2 size-4" />
               {chrome.i18n.getMessage('optionsSyncVideo')}
             </Button>

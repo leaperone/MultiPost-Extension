@@ -43,7 +43,7 @@ export const DynamicInfoMap: Record<string, PlatformInfo> = {
     platformName: chrome.i18n.getMessage('platformX'),
     injectUrl: 'https://x.com/home',
     injectFunction: DynamicX,
-    tags: ['EN'],
+    tags: ['International'],
     accountKey: 'x',
   },
   DYNAMIC_BILIBILI: {
@@ -112,7 +112,7 @@ export const DynamicInfoMap: Record<string, PlatformInfo> = {
     platformName: chrome.i18n.getMessage('platformInstagram'),
     injectUrl: 'https://www.instagram.com/',
     injectFunction: DynamicInstagram,
-    tags: ['EN'],
+    tags: ['International'],
     accountKey: 'instagram',
   },
   DYNAMIC_FACEBOOK: {
@@ -124,7 +124,7 @@ export const DynamicInfoMap: Record<string, PlatformInfo> = {
     platformName: chrome.i18n.getMessage('platformFacebook'),
     injectUrl: 'https://www.facebook.com/',
     injectFunction: DynamicFacebook,
-    tags: ['EN'],
+    tags: ['International'],
     accountKey: 'facebook',
   },
   DYNAMIC_LINKEDIN: {
@@ -136,7 +136,7 @@ export const DynamicInfoMap: Record<string, PlatformInfo> = {
     platformName: chrome.i18n.getMessage('platformLinkedin'),
     injectUrl: 'https://www.linkedin.com/feed',
     injectFunction: DynamicLinkedin,
-    tags: ['EN'],
+    tags: ['International'],
     accountKey: 'linkedin',
   },
   DYNAMIC_OKJIKE: {
@@ -158,7 +158,7 @@ export const DynamicInfoMap: Record<string, PlatformInfo> = {
     platformName: chrome.i18n.getMessage('platformReddit'),
     injectUrl: 'https://www.reddit.com/submit?type=TEXT',
     injectFunction: DynamicReddit,
-    tags: ['EN'],
+    tags: ['International'],
     accountKey: 'reddit',
   },
   DYNAMIC_KUAISHOU: {
@@ -202,7 +202,7 @@ export const DynamicInfoMap: Record<string, PlatformInfo> = {
     platformName: chrome.i18n.getMessage('platformThreads'),
     injectUrl: 'https://www.threads.net/web',
     injectFunction: DynamicThreads,
-    tags: ['EN'],
+    tags: ['International'],
     accountKey: 'threads',
   },
   DYNAMIC_WEIXINCHANNEL: {
@@ -224,7 +224,7 @@ export const DynamicInfoMap: Record<string, PlatformInfo> = {
     platformName: chrome.i18n.getMessage('platformBluesky'),
     injectUrl: 'https://bsky.app/',
     injectFunction: DynamicBluesky,
-    tags: ['EN'],
+    tags: ['International'],
     accountKey: 'bluesky',
   },
   DYNAMIC_V2EX: {

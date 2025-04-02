@@ -44,7 +44,7 @@ export const VideoInfoMap: Record<string, PlatformInfo> = {
     platformName: chrome.i18n.getMessage('platformYoutube'),
     injectUrl: 'https://studio.youtube.com/',
     injectFunction: VideoYoutube,
-    tags: ['EN'],
+    tags: ['International'],
     accountKey: 'youtube',
   },
   VIDEO_REDNOTE: {
@@ -67,7 +67,7 @@ export const VideoInfoMap: Record<string, PlatformInfo> = {
     platformName: chrome.i18n.getMessage('platformTiktok'),
     injectUrl: 'https://www.tiktok.com/tiktokstudio/upload',
     injectFunction: VideoTiktok,
-    tags: ['EN'],
+    tags: ['International'],
     accountKey: 'tiktok',
   },
   VIDEO_WEIXINCHANNEL: {
@@ -133,7 +133,7 @@ export const VideoInfoMap: Record<string, PlatformInfo> = {
     platformName: chrome.i18n.getMessage('platformBluesky'),
     injectUrl: 'https://bsky.app/',
     injectFunction: VideoBluesky,
-    tags: ['EN'],
+    tags: ['International'],
     accountKey: 'bluesky',
   },
   VIDEO_ZHIHU: {
