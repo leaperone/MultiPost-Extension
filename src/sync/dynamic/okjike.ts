@@ -1,5 +1,10 @@
 import type { DynamicData, SyncData } from '../common';
 
+interface OkjikeConfig {
+  selectedTopic: string;
+  historyTopics: string[];
+}
+
 // 优先发布图文
 export async function DynamicOkjike(data: SyncData) {
   const { title, content, images } = data.data as DynamicData;
@@ -33,43 +38,50 @@ export async function DynamicOkjike(data: SyncData) {
   }
 
   // 辅助函数：处理话题选择
-  //   async function handleTopicSelection(topic: string) {
-  //     const groupArea = document.querySelector('textarea')?.nextElementSibling?.nextElementSibling
-  //       ?.children[0] as HTMLElement;
-  //     if (!groupArea) {
-  //       console.error('未找到话题区域');
-  //       return;
-  //     }
+  async function handleTopicSelection(topic: string) {
+    const topicInput = (await waitForElement('input[placeholder="未选择圈子"]')) as HTMLInputElement;
+    if (!topicInput) {
+      console.error('未找到话题输入框');
+      return;
+    }
 
-  //     groupArea.click();
-  //     await new Promise((resolve) => setTimeout(resolve, 500));
+    // 点击输入框以显示下拉列表
+    topicInput.click();
 
-  //     const topicInput = (await waitForElement('input#topic-search-downshift-input')) as HTMLInputElement;
-  //     if (!topicInput) {
-  //       console.error('未找到话题输入框');
-  //       return;
-  //     }
+    topicInput.value = topic;
+    topicInput.dispatchEvent(new Event('change', { bubbles: true }));
+    topicInput.dispatchEvent(new Event('input', { bubbles: true }));
 
-  //     topicInput.value = topic;
-  //     topicInput.dispatchEvent(new Event('change', { bubbles: true }));
-  //     topicInput.dispatchEvent(new Event('input', { bubbles: true }));
+    // 等待下拉列表出现
+    await new Promise((resolve) => setTimeout(resolve, 2000));
 
-  //     await new Promise((resolve) => setTimeout(resolve, 1000));
-  //     const topicMenu = await waitForElement('ul#topic-search-downshift-menu');
+    // 在指定的父元素内查找话题
+    const topicContainer = document.querySelector('div[name="topic"]');
+    if (!topicContainer) {
+      console.error('未找到话题容器');
+      return;
+    }
 
-  //     if (topicMenu) {
-  //       for (let i = 0; i < 10; i++) {
-  //         await new Promise((resolve) => setTimeout(resolve, 1000));
-  //         const items = topicMenu.querySelectorAll('li');
-  //         const targetItem = Array.from(items).find((item) => item.textContent?.includes(topic));
+    // 查找所有可点击的话题元素
+    const topicElements = Array.from(topicContainer.querySelectorAll('div[tabindex="0"]'));
 
-  //         if (targetItem) {
-  //           (targetItem as HTMLElement).click();
-  //           break;
-  //         }
-  //       }
-  //     }
-  //   }
+    // 首先尝试找到指定的话题
+    let topicItem = topicElements.find((element) => element.textContent?.trim() === topic.trim());
+
+    // 如果没找到指定话题，选择第一个可用的话题
+    if (!topicItem && topicElements.length > 0) {
+      console.log('未找到指定话题，选择第一个可用话题');
+      topicItem = topicElements[0];
+    }
+
+    console.log('选择的话题元素:', topicItem);
+
+    if (topicItem) {
+      (topicItem as HTMLElement).click();
+    } else {
+      console.error('没有找到任何可用的话题');
+    }
+  }
 
   // 填写内容
   async function fillContent() {
@@ -127,6 +139,10 @@ export async function DynamicOkjike(data: SyncData) {
     if (images && images.length > 0) {
       await uploadFiles();
     }
+
+    await handleTopicSelection(
+      (data.platforms.find((p) => p.name === 'DYNAMIC_OKJIKE')?.extraConfig as OkjikeConfig).selectedTopic || '',
+    );
 
     if (data.auto_publish) {
       await new Promise((resolve) => setTimeout(resolve, 3000));
