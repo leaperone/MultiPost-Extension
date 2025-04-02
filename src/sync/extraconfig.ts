@@ -58,7 +58,7 @@ export async function removeExtraConfig(platformKey: string): Promise<void> {
   }
 }
 
-export async function getExtraConfigFromPlatformInfo(platformInfos: PlatformInfo[]): Promise<PlatformInfo[]> {
+export async function getExtraConfigFromPlatformInfos(platformInfos: PlatformInfo[]): Promise<PlatformInfo[]> {
   const extraConfigMap: Record<string, unknown> = (await storage.get(EXTRA_CONFIG_STORAGE_KEY)) || {};
 
   // 为每个平台填充额外配置信息
@@ -69,4 +69,12 @@ export async function getExtraConfigFromPlatformInfo(platformInfos: PlatformInfo
   }
 
   return platformInfos;
+}
+
+export async function getExtraConfigFromPlatformInfo(platformInfo: PlatformInfo): Promise<PlatformInfo> {
+  const extraConfigMap: Record<string, unknown> = (await storage.get(EXTRA_CONFIG_STORAGE_KEY)) || {};
+  if (platformInfo.name && extraConfigMap[platformInfo.name]) {
+    platformInfo.extraConfig = extraConfigMap[platformInfo.name];
+  }
+  return platformInfo;
 }

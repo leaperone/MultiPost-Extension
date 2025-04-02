@@ -158,3 +158,11 @@ export async function getAccountInfoFromPlatformInfos(platformInfos: PlatformInf
 
   return platformInfos;
 }
+
+export async function getAccountInfoFromPlatformInfo(platformInfo: PlatformInfo): Promise<PlatformInfo> {
+  const accountInfoMap: Record<string, AccountInfo> = (await storage.get(ACCOUNT_INFO_STORAGE_KEY)) || {};
+  if (platformInfo.accountKey && accountInfoMap[platformInfo.accountKey]) {
+    platformInfo.accountInfo = accountInfoMap[platformInfo.accountKey];
+  }
+  return platformInfo;
+}

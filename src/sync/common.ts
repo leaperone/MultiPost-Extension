@@ -1,7 +1,7 @@
-import { getAccountInfoFromPlatformInfos } from './account';
+import { getAccountInfoFromPlatformInfo, getAccountInfoFromPlatformInfos } from './account';
 import { ArticleInfoMap } from './article';
 import { DynamicInfoMap } from './dynamic';
-import { getExtraConfigFromPlatformInfo } from './extraconfig';
+import { getExtraConfigFromPlatformInfo, getExtraConfigFromPlatformInfos } from './extraconfig';
 import { VideoInfoMap } from './video';
 
 export interface SyncData {
@@ -78,8 +78,16 @@ export const infoMap: Record<string, PlatformInfo> = {
   ...VideoInfoMap,
 };
 
-export function getDefaultPlatformInfo(platform: string): PlatformInfo | null {
-  return infoMap[platform] || null;
+export async function getPlatformInfo(platform: string): Promise<PlatformInfo | null> {
+  const platformInfo = infoMap[platform];
+  if (platformInfo) {
+    return await getExtraConfigFromPlatformInfo(await getAccountInfoFromPlatformInfo(platformInfo));
+  }
+  return null;
+}
+
+export function getRawPlatformInfo(platform: string): PlatformInfo | null {
+  return infoMap[platform];
 }
 
 export async function getPlatformInfos(type?: 'DYNAMIC' | 'VIDEO' | 'ARTICLE'): Promise<PlatformInfo[]> {
@@ -89,17 +97,25 @@ export async function getPlatformInfos(type?: 'DYNAMIC' | 'VIDEO' | 'ARTICLE'): 
     platformInfos.push(info);
   }
 
-  return await getExtraConfigFromPlatformInfo(await getAccountInfoFromPlatformInfos(platformInfos));
+  return await getExtraConfigFromPlatformInfos(await getAccountInfoFromPlatformInfos(platformInfos));
 }
 
 // Inject || 注入 || START
 export async function createTabsForPlatforms(data: SyncData) {
   const tabs = [];
   for (const platform of data.platforms) {
-    const info = getDefaultPlatformInfo(platform.name);
+    const info = await getPlatformInfo(platform.name);
     if (info) {
-      const tab = await chrome.tabs.create({ url: info.injectUrl });
-      tabs.push([tab, platform.name]);
+      const extraConfig = info.extraConfig as { customInjectUrls?: string[] };
+      if (extraConfig?.customInjectUrls) {
+        for (const url of extraConfig.customInjectUrls) {
+          const tab = await chrome.tabs.create({ url });
+          tabs.push([tab, platform.name]);
+        }
+      } else {
+        const tab = await chrome.tabs.create({ url: info.injectUrl });
+        tabs.push([tab, platform.name]);
+      }
     }
   }
 
@@ -123,15 +139,15 @@ export async function injectScriptsToTabs(tabs: [chrome.tabs.Tab, string][], dat
       chrome.tabs.onUpdated.addListener(function listener(tabId, info) {
         if (tabId === tab.id && info.status === 'complete') {
           chrome.tabs.onUpdated.removeListener(listener);
-          const info = getDefaultPlatformInfo(platform);
-          console.log('info', info);
-          if (info) {
-            chrome.scripting.executeScript({
-              target: { tabId: tab.id },
-              func: info.injectFunction,
-              args: [data],
-            });
-          }
+          getPlatformInfo(platform).then((info) => {
+            if (info) {
+              chrome.scripting.executeScript({
+                target: { tabId: tab.id },
+                func: info.injectFunction,
+                args: [data],
+              });
+            }
+          });
         }
       });
     }
