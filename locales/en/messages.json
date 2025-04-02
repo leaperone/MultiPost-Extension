@@ -744,5 +744,8 @@
   },
   "optionViewHomePageDashboard": {
     "message": "Dashboard"
+  },
+  "optionsSelectPublishPlatforms": {
+    "message": "Please select at least one platform"
   }
 }

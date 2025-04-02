@@ -717,5 +717,8 @@
   },
   "optionViewHomePageDashboard": {
     "message": "控制台"
+  },
+  "optionsSelectPublishPlatforms": {
+    "message": "请至少选择一个平台"
   }
 }
