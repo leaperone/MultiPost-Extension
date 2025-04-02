@@ -1,6 +1,6 @@
 'use server';
 
-import { Card, CardBody, CardHeader } from '@heroui/react';
+import { Card, CardBody, CardHeader, Chip, Tooltip } from '@heroui/react';
 import Link from 'next/link';
 import { BarChart3Icon } from 'lucide-react';
 import { auth } from '@/auth';
@@ -40,22 +40,49 @@ export async function WebsiteList() {
   }
 
   return (
-    <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+    <div className="space-y-4">
       {websites.map((website) => (
         <Link
           key={website.id}
           href={`/dashboard/analytics/web/${website.id}`}>
-          <Card className="cursor-pointer transition-all hover:scale-[1.02]">
+          <Card className="w-full cursor-pointer transition-all hover:bg-muted/50">
             <CardHeader className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <BarChart3Icon className="size-5" />
-                <h3 className="text-lg font-semibold">{website.name}</h3>
+                <Tooltip content={website.domain}>
+                  <h3 className="font-semibold">{website.name}</h3>
+                </Tooltip>
               </div>
+              <Chip
+                variant="flat"
+                color="default"
+                size="sm">
+                创建于
+                {new Date(website.createdAt).toLocaleDateString('zh-CN', {
+                  year: 'numeric',
+                  month: '2-digit',
+                  day: '2-digit',
+                })}
+              </Chip>
             </CardHeader>
-            <CardBody>
-              <div className="space-y-2">
-                {website.domain && <p className="text-sm text-gray-500">{website.domain}</p>}
-                <p className="text-sm text-gray-500">创建于 {new Date(website.createdAt).toLocaleDateString()}</p>
+            <CardBody className="flex justify-between p-4">
+              <div className="grid w-full grid-cols-4 gap-4">
+                <div className="flex flex-col items-center">
+                  <span className="text-sm text-gray-500">今日访问</span>
+                  <span className="font-semibold">238</span>
+                </div>
+                <div className="flex flex-col items-center">
+                  <span className="text-sm text-gray-500">本周访问</span>
+                  <span className="font-semibold">1,893</span>
+                </div>
+                <div className="flex flex-col items-center">
+                  <span className="text-sm text-gray-500">跳出率</span>
+                  <span className="font-semibold">32.4%</span>
+                </div>
+                <div className="flex flex-col items-center">
+                  <span className="text-sm text-gray-500">平均停留</span>
+                  <span className="font-semibold">4m 26s</span>
+                </div>
               </div>
             </CardBody>
           </Card>

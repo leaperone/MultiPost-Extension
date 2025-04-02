@@ -89,7 +89,7 @@ export function CreateWebsiteButton() {
         color="primary"
         startContent={<PlusIcon />}
         onPress={onOpen}>
-        添加
+        添加网站
       </Button>
 
       {/* 添加网站表单模态框 */}

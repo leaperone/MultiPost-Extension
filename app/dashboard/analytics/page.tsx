@@ -1,8 +1,9 @@
 import { Suspense } from 'react';
 import { CreateWebsiteButton } from './components/CreateWebsiteButton';
-import { WebsiteList } from './components/WebsitesList';
 import { InfoButton } from './components/InfoButton';
+import { WebsiteList } from './components/WebsitesList';
 import LinkSocialMediaButton from './components/LinkSocialMediaButton';
+import { Divider } from '@heroui/react';
 export default async function AnalyticsPage() {
   return (
     <div className="mx-auto h-full max-w-7xl space-y-6 overflow-y-auto p-4">
@@ -11,14 +12,27 @@ export default async function AnalyticsPage() {
           <h1 className="text-2xl font-bold">Analytics</h1>
           <InfoButton />
         </div>
-        <CreateWebsiteButton />
-        <LinkSocialMediaButton />
+        <div className="flex flex-row gap-2">
+          <LinkSocialMediaButton />
+          <CreateWebsiteButton />
+        </div>
       </div>
 
-      <div className="grid gap-6">
-        <div className="col-span-full">
+      <div className="flex flex-row justify-between gap-8">
+        <div className="w-1/2">
           <Suspense fallback={<WebsiteListSkeleton />}>
+            <h2 className="mb-4 text-lg font-semibold">Your Websites</h2>
             <WebsiteList />
+          </Suspense>
+        </div>
+        <Divider
+          orientation="vertical"
+          className="h-full"
+        />
+        <div className="w-1/2">
+          <Suspense fallback={<WebsiteListSkeleton />}>
+            <h2 className="mb-4 text-lg font-semibold">Your Social Media</h2>
+            WIP...
           </Suspense>
         </div>
       </div>
