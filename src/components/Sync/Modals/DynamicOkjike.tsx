@@ -68,7 +68,7 @@ export default function DynamicOkjike({ platformKey }: OkjikeProps) {
         onPress={() => setIsOpen(true)}
         className="flex items-center gap-1">
         <Settings className="w-4 h-4" />
-        {selectedTopic || '选择圈子'}
+        {selectedTopic || chrome.i18n.getMessage('extraConfigOkjikeSelectTopic')}
       </Button>
 
       <Modal
@@ -78,12 +78,12 @@ export default function DynamicOkjike({ platformKey }: OkjikeProps) {
         placement="center"
         backdrop="blur">
         <ModalContent>
-          <ModalHeader>配置即刻圈子</ModalHeader>
+          <ModalHeader>{chrome.i18n.getMessage('extraConfigOkjikeConfigureTopic')}</ModalHeader>
           <ModalBody>
             <div className="space-y-4">
               <div className="flex items-center gap-2">
                 <Input
-                  placeholder="输入圈子名称"
+                  placeholder={chrome.i18n.getMessage('extraConfigOkjikeEnterTopicName')}
                   value={newTopic}
                   onChange={(e) => setNewTopic(e.target.value)}
                   onKeyDown={handleKeyDown}
@@ -95,7 +95,7 @@ export default function DynamicOkjike({ platformKey }: OkjikeProps) {
                   isDisabled={!newTopic.trim() || topics.includes(newTopic.trim())}
                   className="flex items-center gap-1">
                   <Plus className="w-4 h-4" />
-                  添加
+                  {chrome.i18n.getMessage('extraConfigOkjikeAdd')}
                 </Button>
               </div>
 
@@ -117,12 +117,12 @@ export default function DynamicOkjike({ platformKey }: OkjikeProps) {
             <Button
               variant="light"
               onPress={() => setIsOpen(false)}>
-              取消
+              {chrome.i18n.getMessage('extraConfigOkjikeCancel')}
             </Button>
             <Button
               variant="solid"
               onPress={handleSave}>
-              保存配置
+              {chrome.i18n.getMessage('extraConfigOkjikeSaveConfig')}
             </Button>
           </ModalFooter>
         </ModalContent>

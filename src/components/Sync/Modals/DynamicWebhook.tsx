@@ -16,17 +16,17 @@ const SUPPORTED_WEBHOOKS = {
   feishu: {
     hostname: 'open.feishu.cn',
     docs: 'https://open.feishu.cn/document/client-docs/bot-v3/add-custom-bot',
-    name: '飞书',
+    name: chrome.i18n.getMessage('extraConfigWebhookFeishu'),
   },
   wecom: {
     hostname: 'qyapi.weixin.qq.com',
     docs: 'https://developer.work.weixin.qq.com/document/path/99110',
-    name: '企业微信',
+    name: chrome.i18n.getMessage('extraConfigWebhookWecom'),
   },
   dingtalk: {
     hostname: 'oapi.dingtalk.com',
     docs: 'https://open.dingtalk.com/document/orgapp/custom-robot-access',
-    name: '钉钉',
+    name: chrome.i18n.getMessage('extraConfigWebhookDingtalk'),
   },
 };
 
@@ -45,20 +45,11 @@ const getMessageBody = (url: string) => {
   const urlObj = new URL(url);
   const hostname = urlObj.hostname;
 
-  if (hostname === 'qyapi.weixin.qq.com') {
+  if (hostname === 'qyapi.weixin.qq.com' || hostname === 'oapi.dingtalk.com') {
     return {
       msgtype: 'text',
       text: {
-        content: '测试消息',
-      },
-    };
-  }
-
-  if (hostname === 'oapi.dingtalk.com') {
-    return {
-      msgtype: 'text',
-      text: {
-        content: '测试消息',
+        content: 'Hello, World!',
       },
     };
   }
@@ -67,7 +58,7 @@ const getMessageBody = (url: string) => {
     return {
       msg_type: 'text',
       content: {
-        text: '测试消息',
+        text: 'Hello, World!',
       },
     };
   }
@@ -79,7 +70,7 @@ const sendMessageCheck = async (url: string): Promise<boolean> => {
   try {
     const messageBody = getMessageBody(url);
     if (!messageBody) {
-      throw new Error('不支持的 Webhook 平台');
+      throw new Error(chrome.i18n.getMessage('extraConfigWebhookUnsupportedPlatform'));
     }
 
     const response = await fetch(url, {
@@ -98,9 +89,9 @@ const sendMessageCheck = async (url: string): Promise<boolean> => {
   } catch (error) {
     console.error('Webhook test failed:', error);
     if (error instanceof Error) {
-      alert(`Webhook测试失败: ${error.message}`);
+      alert(chrome.i18n.getMessage('extraConfigWebhookTestFailed', [error.message]));
     } else {
-      alert('Webhook测试失败: 网络错误');
+      alert(chrome.i18n.getMessage('extraConfigWebhookNetworkError'));
     }
     return false;
   }
@@ -155,7 +146,7 @@ export default function DynamicWebhook({ platformKey }: WebhookProps) {
   const checkUrl = async (index: number) => {
     const url = urls[index];
     if (!isValidUrl(url)) {
-      alert('URL格式无效，请输入正确的URL地址');
+      alert(chrome.i18n.getMessage('extraConfigWebhookInvalidUrl'));
       return;
     }
 
@@ -163,7 +154,7 @@ export default function DynamicWebhook({ platformKey }: WebhookProps) {
     try {
       const isValid = await sendMessageCheck(url);
       if (isValid) {
-        alert('Webhook测试成功！');
+        alert(chrome.i18n.getMessage('extraConfigWebhookTestSuccess'));
       }
       setUrlStates((prev) => ({ ...prev, [index]: isValid }));
     } finally {
@@ -182,7 +173,7 @@ export default function DynamicWebhook({ platformKey }: WebhookProps) {
     // 验证所有URL
     const invalidUrls = validUrls.filter((url) => !isValidUrl(url));
     if (invalidUrls.length > 0) {
-      alert(`以下URL格式无效：\n${invalidUrls.join('\n')}`);
+      alert(chrome.i18n.getMessage('extraConfigWebhookInvalidUrl'));
       return;
     }
 
@@ -198,7 +189,7 @@ export default function DynamicWebhook({ platformKey }: WebhookProps) {
         onPress={() => setIsOpen(true)}
         className="flex items-center gap-1">
         <Settings className="w-4 h-4" />
-        配置
+        {chrome.i18n.getMessage('extraConfigWebhookConfigure')}
       </Button>
       <Modal
         isOpen={isOpen}
@@ -207,36 +198,19 @@ export default function DynamicWebhook({ platformKey }: WebhookProps) {
         placement="center"
         backdrop="blur">
         <ModalContent>
-          <ModalHeader>配置Webhook</ModalHeader>
+          <ModalHeader>{chrome.i18n.getMessage('extraConfigWebhookConfigure')}</ModalHeader>
           <ModalBody>
             <div className="mb-4 text-sm text-gray-500">
-              <p>
-                目前仅支持
-                <a
-                  href={SUPPORTED_WEBHOOKS.feishu.docs || ''}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-primary-600 hover:underline">
-                  飞书
-                </a>
-                、
-                <a
-                  href={SUPPORTED_WEBHOOKS.wecom.docs || ''}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-primary-600 hover:underline">
-                  企业微信
-                </a>
-                、
-                <a
-                  href={SUPPORTED_WEBHOOKS.dingtalk.docs || ''}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-primary-600 hover:underline">
-                  钉钉
-                </a>
-                的自定义机器人 Webhook。点击链接查看对应平台的配置文档。
-              </p>
+              <p>{chrome.i18n.getMessage('extraConfigWebhookSupportedPlatforms')}</p>
+              <div className="flex flex-wrap gap-2">
+              {Object.values(SUPPORTED_WEBHOOKS).map((webhook) => (
+                <p key={webhook.hostname}>
+                  <a href={webhook.docs} target="_blank" rel="noopener noreferrer" className="text-blue-500">
+                    {webhook.name}
+                  </a>
+                  </p>
+                ))}
+              </div>
             </div>
             <div className="space-y-2">
               {urls.map((url, index) => (
@@ -244,7 +218,7 @@ export default function DynamicWebhook({ platformKey }: WebhookProps) {
                   key={index}
                   className="flex items-center gap-2">
                   <Input
-                    placeholder="输入Webhook URL"
+                    placeholder={chrome.i18n.getMessage('extraConfigWebhookEnterUrl')}
                     value={url}
                     onChange={(e) => handleUrlChange(index, e.target.value)}
                     className={`flex-1 ${
@@ -264,7 +238,7 @@ export default function DynamicWebhook({ platformKey }: WebhookProps) {
                     {!checkingStates[index] && (
                       <>
                         <CheckCircle2 className="w-4 h-4 mr-1" />
-                        测试
+                        {chrome.i18n.getMessage('extraConfigWebhookTest')}
                       </>
                     )}
                   </Button>
@@ -283,19 +257,19 @@ export default function DynamicWebhook({ platformKey }: WebhookProps) {
               onPress={addUrl}
               className="flex items-center gap-2 mt-4">
               <Plus className="w-4 h-4" />
-              添加URL
+              {chrome.i18n.getMessage('extraConfigWebhookAdd')}
             </Button>
           </ModalBody>
           <ModalFooter>
             <Button
               variant="light"
               onPress={() => setIsOpen(false)}>
-              取消
+              {chrome.i18n.getMessage('extraConfigWebhookCancel')}
             </Button>
             <Button
               variant="solid"
               onPress={handleSave}>
-              保存配置
+              {chrome.i18n.getMessage('extraConfigWebhookSaveConfig')}
             </Button>
           </ModalFooter>
         </ModalContent>
