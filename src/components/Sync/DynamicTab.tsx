@@ -295,7 +295,7 @@ const DynamicTab: React.FC<DynamicTabProps> = ({ funcPublish }) => {
       className="flex flex-col gap-4"
       ref={dropAreaRef}>
       <div className="flex flex-col gap-4 md:flex-row">
-        <div className="flex flex-col gap-4 w-full md:w-1/2">
+        <div className="flex flex-col w-full gap-4 md:w-1/2">
           <Card className="shadow-none bg-default-50">
             <CardHeader className="flex flex-col gap-4">
               <Input
@@ -324,7 +324,7 @@ const DynamicTab: React.FC<DynamicTabProps> = ({ funcPublish }) => {
             </CardBody>
 
             <CardFooter>
-              <div className="flex justify-between items-center w-full">
+              <div className="flex items-center justify-between w-full">
                 <div className="flex gap-2">
                   <input
                     type="file"
@@ -376,7 +376,7 @@ const DynamicTab: React.FC<DynamicTabProps> = ({ funcPublish }) => {
 
           {formState.images.length > 0 && (
             <Card className="shadow-none bg-default-50">
-              <CardBody className="flex flex-row flex-wrap gap-3 justify-start items-start p-4">
+              <CardBody className="flex flex-row flex-wrap items-start justify-start gap-3 p-4">
                 {formState.images.map((file, index) => (
                   <div
                     key={index}
@@ -394,7 +394,7 @@ const DynamicTab: React.FC<DynamicTabProps> = ({ funcPublish }) => {
                       size="sm"
                       color="danger"
                       variant="light"
-                      className="absolute top-1 right-1 z-50 opacity-0 transition-opacity duration-200 group-hover:opacity-100"
+                      className="absolute z-50 transition-opacity duration-200 opacity-0 top-1 right-1 group-hover:opacity-100"
                       onPress={() => handleDeleteFile(index, 'image')}>
                       <XIcon className="size-4" />
                     </Button>
@@ -421,7 +421,7 @@ const DynamicTab: React.FC<DynamicTabProps> = ({ funcPublish }) => {
                       size="sm"
                       color="danger"
                       variant="light"
-                      className="absolute top-2 right-2 z-50 opacity-0 transition-opacity group-hover:opacity-100"
+                      className="absolute z-50 transition-opacity opacity-0 top-2 right-2 group-hover:opacity-100"
                       onPress={() => handleDeleteFile(index, 'video')}>
                       <XIcon className="size-4" />
                     </Button>
@@ -432,9 +432,9 @@ const DynamicTab: React.FC<DynamicTabProps> = ({ funcPublish }) => {
           )}
         </div>
 
-        <div className="flex flex-col gap-4 w-full md:w-1/2">
+        <div className="flex flex-col w-full gap-4 md:w-1/2">
           <div className="flex flex-col gap-4 p-4 rounded-lg bg-default-50">
-            <div className="flex justify-between items-center mb-2">
+            <div className="flex items-center justify-between mb-2">
               <Switch
                 isSelected={formState.autoPublish}
                 onValueChange={(value) => setFormState((prev) => ({ ...prev, autoPublish: value }))}
@@ -495,14 +495,14 @@ const DynamicTab: React.FC<DynamicTabProps> = ({ funcPublish }) => {
                 </div>
               </AccordionItem>
               <AccordionItem
-                key="EN"
+                key="International"
                 title={chrome.i18n.getMessage('optionsInternationalPlatforms')}
                 subtitle={`${
                   formState.selectedPlatforms.filter((platform) => {
                     const info = platforms.find((p) => p.name === platform);
-                    return info?.tags?.includes('EN');
+                    return info?.tags?.includes('International');
                   }).length
-                }/${platforms.filter((platform) => platform.tags?.includes('EN')).length}`}
+                }/${platforms.filter((platform) => platform.tags?.includes('International')).length}`}
                 startContent={
                   <div className="w-8">
                     <Icon
@@ -514,7 +514,7 @@ const DynamicTab: React.FC<DynamicTabProps> = ({ funcPublish }) => {
                 className="py-1">
                 <div className="grid grid-cols-2 gap-2">
                   {platforms
-                    .filter((platform) => platform.tags?.includes('EN'))
+                    .filter((platform) => platform.tags?.includes('International'))
                     .map((platform) => (
                       <PlatformCheckbox
                         key={platform.name}
@@ -533,7 +533,7 @@ const DynamicTab: React.FC<DynamicTabProps> = ({ funcPublish }) => {
               color="primary"
               variant="flat"
               disabled={!formState.title || !formState.content || formState.selectedPlatforms.length === 0}
-              className="mt-2 w-full font-medium shadow-none">
+              className="w-full mt-2 font-medium shadow-none">
               <SendIcon className="mr-2 size-4" />
               {chrome.i18n.getMessage('optionsSyncDynamic')}
             </Button>
