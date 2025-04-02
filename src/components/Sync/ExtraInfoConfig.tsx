@@ -1,11 +1,12 @@
-import type { PlatformInfo } from '~sync/common';
+import type { PlatformInfo, SyncData } from '~sync/common';
 import React, { useState } from 'react';
 import { Button } from '@heroui/react';
 import { Settings } from 'lucide-react';
-import Webhook from './Modals/Webhook';
+import DynamicWebhook from './Modals/DynamicWebhook';
 
 interface ExtraInfoConfigProps {
   platformInfo: PlatformInfo;
+  syncData?: SyncData;
 }
 
 export default function ExtraInfoConfig({ platformInfo }: ExtraInfoConfigProps) {
@@ -22,7 +23,7 @@ export default function ExtraInfoConfig({ platformInfo }: ExtraInfoConfigProps) 
           <Settings className="w-4 h-4" />
           配置
         </Button>
-        <Webhook
+        <DynamicWebhook
           platformKey={platformInfo.name}
           isOpen={isOpen}
           onOpenChange={setIsOpen}

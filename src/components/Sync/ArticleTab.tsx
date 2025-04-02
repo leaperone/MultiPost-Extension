@@ -158,7 +158,6 @@ const ArticleTab: React.FC<ArticleTabProps> = ({ funcPublish, funcScraper }) => 
       },
       auto_publish: false,
     };
-    console.log(data);
 
     try {
       chrome.windows.getCurrent({ populate: true }, (window) => {

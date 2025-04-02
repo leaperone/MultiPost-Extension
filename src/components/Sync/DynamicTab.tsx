@@ -234,6 +234,19 @@ const DynamicTab: React.FC<DynamicTabProps> = ({ funcPublish }) => {
     [formState.selectedPlatforms, storage],
   );
 
+  const getSyncData = () => {
+    return {
+      platforms: formState.selectedPlatforms.map((platform) => platforms.find((p) => p.name === platform)),
+      data: {
+        title: formState.title,
+        content: formState.content,
+        images: formState.images,
+        videos: formState.videos,
+      },
+      auto_publish: formState.autoPublish,
+    };
+  };
+
   // 发布处理
   const handlePublish = async () => {
     if (!formState.content) {
@@ -245,16 +258,7 @@ const DynamicTab: React.FC<DynamicTabProps> = ({ funcPublish }) => {
       return;
     }
 
-    const data: SyncData = {
-      platforms: formState.selectedPlatforms.map((platform) => platforms.find((p) => p.name === platform)),
-      data: {
-        title: formState.title,
-        content: formState.content,
-        images: formState.images,
-        videos: formState.videos,
-      },
-      auto_publish: formState.autoPublish,
-    };
+    const data: SyncData = getSyncData();
 
     try {
       const window = await chrome.windows.getCurrent({ populate: true });
@@ -264,7 +268,7 @@ const DynamicTab: React.FC<DynamicTabProps> = ({ funcPublish }) => {
       console.error('发布时出错:', error);
       funcPublish(data);
     }
-  }
+  };
 
   // 清空所有内容
   const handleClearAll = useCallback(() => {
@@ -501,6 +505,7 @@ const DynamicTab: React.FC<DynamicTabProps> = ({ funcPublish }) => {
                         isSelected={formState.selectedPlatforms.includes(platform.name)}
                         onChange={(_, isSelected) => handlePlatformChange(platform.name, isSelected)}
                         isDisabled={false}
+                        syncData={getSyncData()}
                       />
                     ))}
                 </div>
@@ -533,6 +538,7 @@ const DynamicTab: React.FC<DynamicTabProps> = ({ funcPublish }) => {
                         isSelected={formState.selectedPlatforms.includes(platform.name)}
                         onChange={(_, isSelected) => handlePlatformChange(platform.name, isSelected)}
                         isDisabled={false}
+                        syncData={getSyncData()}
                       />
                     ))}
                 </div>

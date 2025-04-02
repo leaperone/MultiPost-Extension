@@ -73,7 +73,7 @@ const sendMessageCheck = async (url: string): Promise<boolean> => {
   }
 };
 
-export default function Webhook({ platformKey, isOpen, onOpenChange }: WebhookProps) {
+export default function DynamicWebhook({ platformKey, isOpen, onOpenChange }: WebhookProps) {
   const [urls, setUrls] = useState<string[]>(['']);
   const [checkingStates, setCheckingStates] = useState<Record<number, boolean>>({});
   const [urlStates, setUrlStates] = useState<Record<number, boolean>>({});

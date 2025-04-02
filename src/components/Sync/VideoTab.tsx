@@ -108,6 +108,18 @@ const VideoTab: React.FC<VideoTabProps> = ({ funcPublish }) => {
   };
   loadPlatforms();
 
+  const getSyncData = () => {
+    return {
+      platforms: selectedPlatforms.map((platform) => platforms.find((p) => p.name === platform)),
+      data: {
+        title,
+        content,
+        video: videoFile,
+      },
+      auto_publish: false,
+    };
+  };
+
   const handlePublish = async () => {
     if (!title || !videoFile) {
       console.log('请输入标题并上传视频');
@@ -120,16 +132,7 @@ const VideoTab: React.FC<VideoTabProps> = ({ funcPublish }) => {
       return;
     }
 
-    const data: SyncData = {
-      platforms: selectedPlatforms.map((platform) => platforms.find((p) => p.name === platform)),
-      data: {
-        title,
-        content,
-        video: videoFile,
-      },
-      auto_publish: false,
-    };
-    console.log(data);
+    const data: SyncData = getSyncData();
 
     try {
       chrome.windows.getCurrent({ populate: true }, (window) => {
@@ -296,6 +299,7 @@ const VideoTab: React.FC<VideoTabProps> = ({ funcPublish }) => {
                           isSelected={selectedPlatforms.includes(platform.name)}
                           onChange={(_, isSelected) => handlePlatformChange(platform.name, isSelected)}
                           isDisabled={false}
+                          syncData={getSyncData()}
                         />
                       ))}
                   </div>
@@ -328,6 +332,7 @@ const VideoTab: React.FC<VideoTabProps> = ({ funcPublish }) => {
                           isSelected={selectedPlatforms.includes(platform.name)}
                           onChange={(_, isSelected) => handlePlatformChange(platform.name, isSelected)}
                           isDisabled={false}
+                          syncData={getSyncData()}
                         />
                       ))}
                   </div>
