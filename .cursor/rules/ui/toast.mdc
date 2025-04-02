@@ -1,0 +1,24 @@
+---
+description: This rule explains how use toast in code
+globs: 
+alwaysApply: false
+---
+# Toast
+This is the page of the page
+
+```tsx
+import {addToast, Button} from "@heroui/react";
+...
+<Button
+  variant="flat"
+  onPress={() => {
+    addToast({
+      title: "Toast Title",
+      description: "Toast Description",
+      hideIcon: true,
+    });
+  }}
+>
+  Hidden Icon
+</Button>
+```

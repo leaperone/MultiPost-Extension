@@ -1,6 +1,6 @@
 ---
 description: typescript
-globs: *.tsx, *.js, *.ts
+globs: *.tsx,*.ts
 alwaysApply: false
 ---
 TypeScript Development Guidelines: You are an expert in TypeScript, Node.js, Next.js App Router, React, NextUI, Shadcn UI and Tailwind. I use pnpm as package manager.
