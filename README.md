@@ -27,7 +27,7 @@
 
 ## How to start
 - [multipost.app](https://multipost.app) - Official website
-- [MultiPost Article Editor](https://md.multipost.app/) - [(Repo)](https://github.com/leaper-one/multipost-wechat-markdown-editor) - Online editor for creating and publishing content to multiple platforms.
+- [MultiPost Article Editor](https://md.multipost.app/) - [(Repo)](https://github.com/leaperone/multipost-wechat-markdown-editor) - Online editor for creating and publishing content to multiple platforms.
 - [Chrome extension - ![Chrome Web Store Version Chrome网上商店版本](https://img.shields.io/chrome-web-store/v/dhohkaclnjgcikfoaacfgijgjgceofih)](https://chromewebstore.google.com/detail/multipost/dhohkaclnjgcikfoaacfgijgjgceofih) ![Chrome Web Store Users Chrome网上商店用户](https://img.shields.io/chrome-web-store/users/dhohkaclnjgcikfoaacfgijgjgceofih) ![Chrome Web Store Last Updated](https://img.shields.io/chrome-web-store/last-updated/dhohkaclnjgcikfoaacfgijgjgceofih)
 - [Edge extension - ![](https://img.shields.io/badge/dynamic/json?label=edge%20add-on&prefix=v&query=%24.version&url=https%3A%2F%2Fmicrosoftedge.microsoft.com%2Faddons%2Fgetproductdetailsbycrxid%2Fckoiphiceimehjkolnfffgbmihoppgjg)](https://microsoftedge.microsoft.com/addons/detail/multipost/ckoiphiceimehjkolnfffgbmihoppgjg) [![](https://img.shields.io/badge/dynamic/json?label=users&query=%24.activeInstallCount&url=https%3A%2F%2Fmicrosoftedge.microsoft.com%2Faddons%2Fgetproductdetailsbycrxid%2Fckoiphiceimehjkolnfffgbmihoppgjg)](https://microsoftedge.microsoft.com/addons/detail/multipost/ckoiphiceimehjkolnfffgbmihoppgjg)
 <!-- ![Edge add-on last updated](https://img.shields.io/badge/dynamic/json?label=last%20updated&query=%24.lastUpdateDate&url=https%3A%2F%2Fmicrosoftedge.microsoft.com%2Faddons%2Fgetproductdetailsbycrxid%2Fckoiphiceimehjkolnfffgbmihoppgjg) -->
@@ -90,13 +90,8 @@ You can find the build content in the `build` folder
 It is recommended to use the package management tool `pnpm@latest-9` with Node.js version 20.
 
 ## Star History
-<a href="https://www.star-history.com/#leaper-one/MultiPost-Extension&leaper-one/multipost-wechat-markdown-editor&Date">
- <picture>
-   <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/svg?repos=leaper-one/MultiPost-Extension,leaper-one/multipost-wechat-markdown-editor&type=Date&theme=dark" />
-   <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/svg?repos=leaper-one/MultiPost-Extension,leaper-one/multipost-wechat-markdown-editor&type=Date" />
-   <img alt="Star History Chart" src="https://api.star-history.com/svg?repos=leaper-one/MultiPost-Extension,leaper-one/multipost-wechat-markdown-editor&type=Date" />
- </picture>
-</a>
+
+[![Star History Chart](https://api.star-history.com/svg?repos=leaperone/MultiPost-Extension,leaperone/multipost-wechat-markdown-editor&type=Date)](https://www.star-history.com/#leaperone/MultiPost-Extension&leaperone/multipost-wechat-markdown-editor&Date)
 
 ## Contact Us
 

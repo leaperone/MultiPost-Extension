@@ -23,6 +23,18 @@ import { DynamicXueqiu } from './dynamic/xueqiu';
 import { DynamicZhihu } from './dynamic/zhihu';
 
 export const DynamicInfoMap: Record<string, PlatformInfo> = {
+  DYNAMIC_BILIBILI: {
+    type: 'DYNAMIC', // 标识该平台为动态发布平台
+    name: 'DYNAMIC_BILIBILI', // 平台名称，全局唯一
+    homeUrl: 'https://t.bilibili.com', // 平台首页，可以任意填写，可以填写为登录页面
+    faviconUrl: 'https://static.hdslb.com/images/favicon.ico', // 平台图标，可以在 F12 中找到网站的 Favicon 图标的地址
+    iconifyIcon: 'ant-design:bilibili-outlined', // 平台图标，可以在 [Iconify](https://icones.js.org/) 中找到图标，该字段非必须
+    platformName: chrome.i18n.getMessage('platformBilibili'), // 平台名称 | i18n 国际化
+    injectUrl: 'https://t.bilibili.com', // 动态发布页面，实际脚本执行的时候会首先打开该页面并注入脚本
+    injectFunction: DynamicBilibili, // 动态发布函数，该函数会根据 `injectUrl` 打开的页面然后将其注入到页面中
+    tags: ['CN'], // 平台标签 | CN 标签标识该平台为中文平台 （该标签为默认标签，类似的还有 EN 标签标识该平台为英文平台）
+    accountKey: 'bilibili', // 平台账号，该字段用于区分不同平台的账号，实际脚本执行的时候会根据该字段去 `src/sync/account/bilibili.ts` 文件中找到对应的账号信息
+  },
   DYNAMIC_DOUYIN: {
     type: 'DYNAMIC',
     name: 'DYNAMIC_DOUYIN',
@@ -45,18 +57,6 @@ export const DynamicInfoMap: Record<string, PlatformInfo> = {
     injectFunction: DynamicX,
     tags: ['International'],
     accountKey: 'x',
-  },
-  DYNAMIC_BILIBILI: {
-    type: 'DYNAMIC',
-    name: 'DYNAMIC_BILIBILI',
-    homeUrl: 'https://t.bilibili.com',
-    faviconUrl: 'https://static.hdslb.com/images/favicon.ico',
-    iconifyIcon: 'ant-design:bilibili-outlined',
-    platformName: chrome.i18n.getMessage('platformBilibili'),
-    injectUrl: 'https://t.bilibili.com',
-    injectFunction: DynamicBilibili,
-    tags: ['CN'],
-    accountKey: 'bilibili',
   },
   DYNAMIC_REDNOTE: {
     type: 'DYNAMIC',

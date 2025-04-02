@@ -4,11 +4,11 @@
 
 ![GitHub License GitHub许可证](https://img.shields.io/github/license/leaper-one/MultiPost-Extension) ![GitHub Repo stars GitHub星星](https://img.shields.io/github/stars/leaper-one/MultiPost-Extension) ![GitHub commit activity GitHub提交活动](https://img.shields.io/github/commit-activity/m/leaper-one/MultiPost-Extension) [![Website 网站](https://img.shields.io/website?url=https%3A%2F%2Fmultipost.app)](https://multipost.app)
 
-⭐ 如果这个项目对你有帮助，欢迎给我们一个 star！你的支持是我们前进的动力！⭐
-
 [English](../README.md) | [中文](README-zh.md) | [日本語](README-jp.md) | [Français](README-fr.md) | [한국어](README-kr.md)
 
-> 一键发布内容到多个社交平台的浏览器扩展
+> 一键发布内容到多个社交平台的浏览器扩展。
+
+⭐ 如果这个项目对你有帮助，欢迎给我们一个 star！你的支持是我们前进的动力！⭐
 
 </div>
 
