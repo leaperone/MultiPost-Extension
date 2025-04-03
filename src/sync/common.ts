@@ -107,7 +107,7 @@ export async function createTabsForPlatforms(data: SyncData) {
     const info = await getPlatformInfo(platform.name);
     if (info) {
       const extraConfig = info.extraConfig as { customInjectUrls?: string[] };
-      if (extraConfig?.customInjectUrls) {
+      if (extraConfig?.customInjectUrls && extraConfig.customInjectUrls.length > 0) {
         for (const url of extraConfig.customInjectUrls) {
           const tab = await chrome.tabs.create({ url });
           tabs.push([tab, platform.name]);
