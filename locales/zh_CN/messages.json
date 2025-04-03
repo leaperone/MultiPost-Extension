@@ -639,6 +639,9 @@
   "platformZSXQ": {
     "message": "知识星球"
   },
+  "platformWordpress": {
+    "message": "WordPress"
+  },
   "settingsTrustedDomainsOrigin": {
     "message": "来源域名"
   },
@@ -808,5 +811,23 @@
   },
   "extraConfigZsxqNoGroups": {
     "message": "未找到任何星球，请确认是否已登录知识星球并刷新页面"
+  },
+  "extraConfigWordpressInvalidUrl": {
+    "message": "URL 格式无效，请检查输入"
+  },
+  "extraConfigWordpressConfigure": {
+    "message": "配置"
+  },
+  "extraConfigWordpressEnterUrl": {
+    "message": "https://myweb.com/wp-admin/post-new.php"
+  },
+  "extraConfigWordpressAdd": {
+    "message": "添加 URL"
+  },
+  "extraConfigWordpressCancel": {
+    "message": "取消"
+  },
+  "extraConfigWordpressSaveConfig": {
+    "message": "保存"
   }
 }

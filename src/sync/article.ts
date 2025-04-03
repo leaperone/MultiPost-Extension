@@ -6,6 +6,7 @@ import { ArticleJuejin } from './article/juejin';
 import { ArticleSegmentfault } from './article/segmentfault';
 import { ArticleToutiao } from './article/toutiao';
 import { ArticleWeixin } from './article/weixin';
+import { ArticleWordpress } from './article/wordpress';
 import { ArticleZhihu } from './article/zhihu';
 import type { PlatformInfo } from './common';
 
@@ -108,5 +109,16 @@ export const ArticleInfoMap: Record<string, PlatformInfo> = {
     injectFunction: ArticleWeixin,
     tags: ['CN'],
     accountKey: 'weixin',
+  },
+  ARTICLE_WORDPRESS: {
+    type: 'ARTICLE',
+    name: 'ARTICLE_WORDPRESS',
+    homeUrl: 'https://wordpress.com/wp-admin/',
+    faviconUrl: 'https://s1.wp.com/i/favicon.ico',
+    platformName: chrome.i18n.getMessage('platformWordpress'),
+    injectUrl: 'https://wordpress.com/wp-admin/new-post.php',
+    injectFunction: ArticleWordpress,
+    tags: ['International'],
+    accountKey: 'wordpress',
   },
 };

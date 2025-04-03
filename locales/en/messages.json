@@ -661,6 +661,9 @@
   "platformZSXQ": {
     "message": "ZhiShiXingQiu"
   },
+  "platformWordpress": {
+    "message": "WordPress"
+  },
   "settingsTrustedDomainsOrigin": {
     "message": "Origin Domain"
   },
@@ -835,5 +838,23 @@
   },
   "extraConfigZsxqNoGroups": {
     "message": "No groups found. Please make sure you are logged in to ZSXQ and refresh the page"
+  },
+  "extraConfigWordpressInvalidUrl": {
+    "message": "Invalid URL format. Please check your input."
+  },
+  "extraConfigWordpressConfigure": {
+    "message": "Configure"
+  },
+  "extraConfigWordpressEnterUrl": {
+    "message": "https://myweb.com/wp-admin/post-new.php"
+  },
+  "extraConfigWordpressAdd": {
+    "message": "Add URL"
+  },
+  "extraConfigWordpressCancel": {
+    "message": "Cancel"
+  },
+  "extraConfigWordpressSaveConfig": {
+    "message": "Save"
   }
 }
