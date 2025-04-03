@@ -103,18 +103,17 @@ export async function getPlatformInfos(type?: 'DYNAMIC' | 'VIDEO' | 'ARTICLE'): 
 // Inject || 注入 || START
 export async function createTabsForPlatforms(data: SyncData) {
   const tabs = [];
-  for (const platform of data.platforms) {
-    const info = await getPlatformInfo(platform.name);
+  for (const info of data.platforms) {
     if (info) {
       const extraConfig = info.extraConfig as { customInjectUrls?: string[] };
       if (extraConfig?.customInjectUrls && extraConfig.customInjectUrls.length > 0) {
         for (const url of extraConfig.customInjectUrls) {
           const tab = await chrome.tabs.create({ url });
-          tabs.push([tab, platform.name]);
+          tabs.push([tab, info.name]);
         }
       } else {
         const tab = await chrome.tabs.create({ url: info.injectUrl });
-        tabs.push([tab, platform.name]);
+        tabs.push([tab, info.name]);
       }
     }
   }
@@ -131,7 +130,6 @@ export async function createTabsForPlatforms(data: SyncData) {
 }
 
 export async function injectScriptsToTabs(tabs: [chrome.tabs.Tab, string][], data: SyncData) {
-  console.log('tabs', tabs);
   for (const t of tabs) {
     const tab = t[0];
     const platform = t[1];
