@@ -1,0 +1,10 @@
+---
+description: detect device if mobile
+globs: 
+alwaysApply: false
+---
+# detect device if mobile
+```
+import { isMobile } from 'react-device-detect';
+
+```

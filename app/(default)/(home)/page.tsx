@@ -1,5 +1,5 @@
-import { Card, CardBody, Button, Link, Badge } from '@heroui/react';
-import { ArrowRight, Share2, Zap, Globe2, Sparkles, LayoutDashboardIcon, PenToolIcon } from 'lucide-react';
+import { Card, CardBody, Button, Link } from '@heroui/react';
+import { ArrowRight, Share2, Zap, Globe2, Sparkles, LayoutDashboardIcon, PenToolIcon, ChromeIcon } from 'lucide-react';
 import { Icon } from '@iconify/react';
 import { cn } from '@/lib/utils';
 import { BackgroundLines } from '@/components/background-lines';
@@ -8,7 +8,7 @@ import ScrollScreenChevronDown from '@/components/HomePage/ScrollScreenChevronDo
 import { createTranslation } from '@/i18n/server';
 import { auth } from '@/auth';
 import SocialShareNotifications from '@/components/HomePage/SocialShareNotifications';
-import { redirect } from 'next/navigation';
+// import { redirect } from 'next/navigation';
 
 export const metadata = {
   title: 'MultiPost - Open Source Social Media Publishing Tool',
@@ -47,26 +47,6 @@ function HeroSection({ t, className }: { t: TranslationFunction; className?: str
       ],
     },
     {
-      text: t('hero.features.save'),
-      hoverColor: 'text-purple-400',
-      emojis: [
-        {
-          emoji: '💾',
-          position: '-left-24 -top-6 group-hover:rotate-[15deg] group-hover:-translate-y-10 group-hover:-translate-x-8',
-        },
-        {
-          emoji: '📥',
-          position:
-            'left-[105px] -top-4 group-hover:rotate-[35deg] group-hover:translate-x-16 group-hover:-translate-y-12',
-        },
-        {
-          emoji: '✅',
-          position:
-            '-left-8 -top-12 group-hover:-rotate-[25deg] group-hover:-translate-y-16 group-hover:-translate-x-4',
-        },
-      ],
-    },
-    {
       text: t('hero.features.post'),
       hoverColor: 'text-orange-400',
       emojis: [
@@ -87,112 +67,120 @@ function HeroSection({ t, className }: { t: TranslationFunction; className?: str
         },
       ],
     },
+    {
+      text: t('hero.features.analytics'),
+      hoverColor: 'text-blue-400',
+      emojis: [
+        {
+          emoji: '📊',
+          position: '-left-20 -top-6 group-hover:rotate-[15deg] group-hover:-translate-y-12 group-hover:-translate-x-8',
+        },
+        {
+          emoji: '📈',
+          position: 'left-32 -top-8 group-hover:rotate-[25deg] group-hover:-translate-y-16 group-hover:translate-x-6',
+        },
+        {
+          emoji: '🔍',
+          position:
+            '-left-12 -top-2 group-hover:-rotate-[20deg] group-hover:-translate-y-10 group-hover:-translate-x-4',
+        },
+      ],
+    },
   ];
 
   return (
-    <BackgroundLines className={cn('relative w-full', className)}>
-      <div className="z-40 m-auto flex h-[80vh] w-[90%] flex-col items-center justify-center bg-transparent">
+    <BackgroundLines className={cn('relative w-full min-h-screen', className)}>
+      <div className="z-40 m-auto flex min-h-screen w-[90%] flex-col items-center justify-center py-20">
         <div className="flex w-full flex-col items-center">
-          <div className="relative min-h-[60px] w-full rounded-2xl pt-4">
-            <div className="flex flex-col items-center justify-center gap-3">
-              <div className="flex flex-wrap items-center justify-center gap-x-3 gap-y-2 p-4 text-2xl font-bold sm:text-3xl md:text-4xl lg:text-5xl">
-                {features.map((feature, featureIndex) => (
-                  <div
-                    key={featureIndex}
-                    className="group relative flex items-center">
+          {/* 特性文本展示 */}
+          <div className="flex flex-wrap items-center justify-center gap-x-3 gap-y-2 p-4 text-xl font-bold sm:text-2xl md:text-3xl lg:text-5xl">
+            {features.map((feature, index) => (
+              <div
+                key={index}
+                className="group relative flex items-center">
+                <span
+                  className={cn('text-foreground transition-colors duration-300', `group-hover:${feature.hoverColor}`)}>
+                  {feature.text}
+                </span>
+                {/* 悬停时显示的emoji */}
+                <div className="absolute inset-0 opacity-0 transition-opacity duration-400 group-hover:opacity-100">
+                  {feature.emojis.map((emoji, i) => (
                     <span
+                      key={i}
                       className={cn(
-                        'text-foreground transition-colors duration-300',
-                        `group-hover:${feature.hoverColor}`,
+                        'pointer-events-none absolute transform text-2xl transition-all duration-500 group-hover:scale-110 sm:text-3xl md:text-4xl lg:text-5xl',
+                        emoji.position,
                       )}>
-                      {feature.text}
+                      {emoji.emoji}
                     </span>
-                    <div className="absolute inset-0 cursor-pointer opacity-0 transition-opacity duration-400 group-hover:opacity-100">
-                      {feature.emojis.map((item, index) => (
-                        <span
-                          key={index}
-                          className={cn(
-                            'pointer-events-none absolute transform text-2xl transition-all duration-500 group-hover:scale-110 sm:text-3xl md:text-4xl lg:text-5xl',
-                            item.position,
-                          )}>
-                          {item.emoji}
-                        </span>
-                      ))}
-                    </div>
-                    {featureIndex < features.length - 1 && (
-                      <span className="ml-3 text-gray-400">
-                        {featureIndex === features.length - 2
-                          ? t('hero.features.conjunction.and')
-                          : t('hero.features.conjunction.comma')}
-                      </span>
-                    )}
-                  </div>
-                ))}
+                  ))}
+                </div>
+                {index < features.length - 1 && (
+                  <span className="ml-3 text-gray-400">
+                    {index === features.length - 2
+                      ? t('hero.features.conjunction.and')
+                      : t('hero.features.conjunction.comma')}
+                  </span>
+                )}
               </div>
-            </div>
+            ))}
           </div>
-          <p className="mb-8 w-full max-w-2xl text-center text-lg leading-8 text-foreground-600">
+
+          {/* 描述文本 */}
+          <p className="mb-8 w-full max-w-2xl px-4 text-center text-base leading-7 text-foreground-600 sm:text-lg sm:leading-8">
             {before}
             <span className="cursor-pointer underline decoration-blue-500 decoration-wavy dark:decoration-yellow-300">
               {platformText}
             </span>
             {after}
           </p>
-          <div className="flex justify-center gap-2">
+
+          {/* 操作按钮 */}
+          <div className="flex w-full flex-col justify-center gap-3 px-4 sm:flex-row sm:gap-2 sm:px-0">
             <Button
               as={Link}
               href="/dashboard/publish"
-              size="lg"
-              startContent={<LayoutDashboardIcon />}
-              className="bg-gradient-to-r from-blue-400 to-sky-300 text-white transition-opacity hover:opacity-90">
+              startContent={<LayoutDashboardIcon className="size-4 sm:size-5" />}
+              className="bg-gradient-to-r from-blue-400 to-sky-300">
               {t('hero.buttons.post')}
             </Button>
-            <Badge
-              color="danger"
-              content="New">
-              <Button
-                as={Link}
-                href="https://md.multipost.app"
-                target="_blank"
-                size="lg"
-                startContent={<PenToolIcon />}
-                className="bg-gradient-to-r from-green-600 to-lime-400 text-white transition-opacity hover:opacity-90">
-                Markdown 文章编辑器
-              </Button>
-            </Badge>
+            <Button
+              as={Link}
+              href="https://md.multipost.app"
+              target="_blank"
+              startContent={<PenToolIcon className="size-4 sm:size-5" />}
+              className="bg-gradient-to-r from-green-600 to-lime-400">
+              {t('hero.buttons.markdown')}
+            </Button>
             <Button
               as={Link}
               href="/extension"
-              size="lg"
-              startContent={
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  width="24"
-                  height="24"
-                  viewBox="0 0 24 24"
-                  fill="currentColor">
-                  <path d="M12 0C8.21 0 4.831 1.757 2.632 4.501l3.953 6.848A5.454 5.454 0 0 1 12 6.545h10.691A12 12 0 0 0 12 0zM1.931 5.47A11.943 11.943 0 0 0 0 12c0 6.012 4.42 10.991 10.189 11.864l3.953-6.847a5.45 5.45 0 0 1-6.865-2.29zm13.342 2.166a5.446 5.446 0 0 1 1.45 7.09l.002.001h-.002l-5.344 9.257c.206.01.413.016.621.016 6.627 0 12-5.373 12-12 0-1.54-.29-3.011-.818-4.364zM12 16.364a4.364 4.364 0 1 1 0-8.728 4.364 4.364 0 0 1 0 8.728Z" />
-                </svg>
-              }
-              className="bg-gradient-to-r from-purple-400 to-pink-300 text-white transition-opacity hover:opacity-90">
+              startContent={<ChromeIcon className="size-4 sm:size-5" />}
+              className="bg-gradient-to-r from-purple-400 to-pink-300">
               {t('hero.buttons.install')}
             </Button>
           </div>
         </div>
       </div>
-      <div className="absolute bottom-12 left-1/2 z-40 -translate-x-1/2">
-        <div className="flex flex-col items-center gap-2">
-          <ScrollScreenChevronDown />
-        </div>
+
+      {/* 滚动提示 */}
+      <div className="absolute bottom-8 left-1/2 z-40 -translate-x-1/2">
+        <ScrollScreenChevronDown />
       </div>
     </BackgroundLines>
   );
 }
 
+interface AnalyticsFeature {
+  title: string;
+  description: string;
+}
+
 export default async function HomePage() {
   const session = await auth();
   if (session) {
-    redirect('/dashboard');
+    // TODO: 测试阶段，暂时不跳转
+    // redirect('/dashboard');
   }
   const { t } = await createTranslation('home');
 
@@ -230,6 +218,10 @@ export default async function HomePage() {
     },
   ];
 
+  // 在 features 定义后添加
+  const webTraceFeatures = t('analytics.webTrace.features', { returnObjects: true }) as AnalyticsFeature[];
+  const socialMediaFeatures = t('analytics.socialMedia.features', { returnObjects: true }) as AnalyticsFeature[];
+
   return (
     <>
       <SocialShareNotifications />
@@ -265,6 +257,73 @@ export default async function HomePage() {
                 </CardBody>
               </Card>
             ))}
+          </div>
+        </div>
+      </section>
+
+      <section className="bg-default-50 py-20">
+        <div className="container mx-auto px-4">
+          <div className="mx-auto mb-12 max-w-3xl text-center">
+            <h2 className="mb-4 bg-gradient-to-r from-primary to-secondary bg-clip-text text-4xl font-bold text-transparent">
+              {t('analytics.title')}
+            </h2>
+            <p className="text-xl text-foreground/80">{t('analytics.subtitle')}</p>
+          </div>
+
+          <div className="grid gap-8 md:grid-cols-2">
+            {/* Web Trace */}
+            <Card className="overflow-hidden border-none shadow-md">
+              <div className="h-2 bg-gradient-to-r from-primary to-blue-400"></div>
+              <CardBody className="p-6">
+                <h3 className="mb-4 text-2xl font-semibold text-primary">{t('analytics.webTrace.title')}</h3>
+                <p className="mb-6 text-foreground/80">{t('analytics.webTrace.description')}</p>
+                <div className="space-y-4">
+                  {webTraceFeatures.map((feature, i) => (
+                    <div
+                      key={i}
+                      className="flex items-start gap-3">
+                      <div className="rounded-full bg-primary/10 p-2">
+                        <Icon
+                          icon={i === 0 ? 'lucide:activity' : i === 1 ? 'lucide:users' : 'lucide:gauge'}
+                          className="size-5 text-primary"
+                        />
+                      </div>
+                      <div>
+                        <h4 className="font-semibold text-foreground">{feature.title}</h4>
+                        <p className="text-sm text-foreground/70">{feature.description}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </CardBody>
+            </Card>
+
+            {/* Social Media Analytics */}
+            <Card className="overflow-hidden border-none shadow-md">
+              <div className="h-2 bg-gradient-to-r from-secondary to-purple-400"></div>
+              <CardBody className="p-6">
+                <h3 className="mb-4 text-2xl font-semibold text-secondary">{t('analytics.socialMedia.title')}</h3>
+                <p className="mb-6 text-foreground/80">{t('analytics.socialMedia.description')}</p>
+                <div className="space-y-4">
+                  {socialMediaFeatures.map((feature, i) => (
+                    <div
+                      key={i}
+                      className="flex items-start gap-3">
+                      <div className="rounded-full bg-secondary/10 p-2">
+                        <Icon
+                          icon={i === 0 ? 'lucide:bar-chart' : i === 1 ? 'lucide:users-2' : 'lucide:trending-up'}
+                          className="size-5 text-secondary"
+                        />
+                      </div>
+                      <div>
+                        <h4 className="font-semibold text-foreground">{feature.title}</h4>
+                        <p className="text-sm text-foreground/70">{feature.description}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </CardBody>
+            </Card>
           </div>
         </div>
       </section>

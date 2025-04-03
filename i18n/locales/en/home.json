@@ -46,6 +46,46 @@
       "description": "Automatically formats content for each platform's requirements"
     }
   },
+  "analytics": {
+    "title": "Powerful Analytics",
+    "subtitle": "Comprehensive data analysis to help you make informed decisions",
+    "webTrace": {
+      "title": "Web Trace",
+      "description": "Web Trace is a powerful website tracking tool that helps you understand and analyze your website traffic.",
+      "features": [
+        {
+          "title": "Real-time Statistics",
+          "description": "Track real-time website visitor data"
+        },
+        {
+          "title": "Visitor Analysis",
+          "description": "Understand visitor sources, locations, and behavior patterns"
+        },
+        {
+          "title": "Performance Monitoring",
+          "description": "Monitor website loading speed and performance metrics"
+        }
+      ]
+    },
+    "socialMedia": {
+      "title": "Social Media Analytics",
+      "description": "Comprehensive social media data analysis to help optimize your content strategy",
+      "features": [
+        {
+          "title": "Engagement Metrics",
+          "description": "Track likes, comments, shares, and other engagement metrics"
+        },
+        {
+          "title": "Audience Insights",
+          "description": "Understand your follower demographics and behavior"
+        },
+        {
+          "title": "Content Performance",
+          "description": "Analyze performance of different content types"
+        }
+      ]
+    }
+  },
   "demo": {
     "title": "Powerful Yet Simple",
     "features": [
@@ -90,16 +130,17 @@
     "github": "Star on GitHub"
   },
   "hero": {
-    "description": "All in one 🎯 tool that empowers 🚀 your content posting 📝 in all platforms.",
+    "description": "Publish content to all your social media accounts simultaneously, monitor and analyze all your websites and accounts",
     "platform": "all platforms",
     "buttons": {
       "post": "Go to post",
-      "install": "Install Extension"
+      "install": "Install Extension",
+      "markdown": "Markdown Editor"
     },
     "features": {
       "draft": "Draft",
-      "save": "Save",
       "post": "Post",
+      "analytics": "Analytics",
       "conjunction": {
         "and": "and",
         "comma": ","

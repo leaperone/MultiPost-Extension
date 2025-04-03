@@ -5,6 +5,7 @@ import { Card } from '@heroui/react';
 import { Icon } from '@iconify/react';
 import { cn } from '@/lib/utils';
 import { useTranslation } from '@/i18n/client';
+import { isMobile } from 'react-device-detect';
 
 interface SocialPlatform {
   id: string;
@@ -52,12 +53,12 @@ function Notification({ platform }: NotificationProps) {
 
 export default function SocialShareNotifications() {
   return (
-    <div className="fixed right-4 top-20 z-50">
+    <div className="fixed right-4 top-20 z-50 hidden sm:block">
       <AnimatedList
         delay={2500}
         loop={true}
-        maxVisible={5}
-        className="gap-3">
+        maxVisible={isMobile ? 1 : 3}
+        className="gap-2">
         {PLATFORMS.map((platform) => (
           <Notification
             key={platform.id}
