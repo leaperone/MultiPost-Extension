@@ -1,7 +1,7 @@
 'use client';
 
 import { Button } from '@heroui/react';
-import { Code } from 'lucide-react';
+import { CodeXmlIcon } from 'lucide-react';
 import { useState } from 'react';
 import { ScriptExampleModal } from './ScriptExampleModal';
 
@@ -17,9 +17,9 @@ export function ScriptModalButton({ websiteId }: ScriptModalButtonProps) {
       <Button
         size="lg"
         variant="bordered"
+        startContent={<CodeXmlIcon className="size-5" />}
         onPress={() => setIsOpen(true)}>
-        <Code className="mr-2 size-4" />
-        查看跟踪代码
+        添加跟踪代码
       </Button>
       <ScriptExampleModal
         websiteId={websiteId}
