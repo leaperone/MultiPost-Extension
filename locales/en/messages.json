@@ -817,5 +817,23 @@
   },
   "extraConfigWebhookUnsupportedPlatform": {
     "message": "Unsupported Webhook platform"
+  },
+  "extraConfigZsxqSelectGroups": {
+    "message": "Select Groups"
+  },
+  "extraConfigZsxqConfigureGroups": {
+    "message": "Configure ZSXQ Groups"
+  },
+  "extraConfigZsxqLoading": {
+    "message": "Loading groups..."
+  },
+  "extraConfigZsxqCancel": {
+    "message": "Cancel"
+  },
+  "extraConfigZsxqSaveConfig": {
+    "message": "Save Configuration"
+  },
+  "extraConfigZsxqNoGroups": {
+    "message": "No groups found. Please make sure you are logged in to ZSXQ and refresh the page"
   }
 }

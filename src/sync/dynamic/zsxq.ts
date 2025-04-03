@@ -29,7 +29,9 @@ export async function DynamicZSXQ(data: SyncData) {
     });
   }
 
-  const { content, images } = data.data as DynamicData;
+  const { title, content, images } = data.data as DynamicData;
+
+  const postContent = title ? `${title}\n\n${content}` : content;
 
   try {
     // 等待帖子头部元素
@@ -66,7 +68,7 @@ export async function DynamicZSXQ(data: SyncData) {
       cancelable: true,
       clipboardData: new DataTransfer(),
     });
-    pasteEvent.clipboardData.setData('text/plain', content || '');
+    pasteEvent.clipboardData.setData('text/plain', postContent || '');
     editor.dispatchEvent(pasteEvent);
     await new Promise((resolve) => setTimeout(resolve, 100));
     editor.blur();

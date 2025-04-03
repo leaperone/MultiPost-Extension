@@ -637,7 +637,7 @@
     "message": "V2EX"
   },
   "platformZSXQ": {
-    "message":"知识星球"
+    "message": "知识星球"
   },
   "settingsTrustedDomainsOrigin": {
     "message": "来源域名"
@@ -790,5 +790,23 @@
   },
   "extraConfigWebhookUnsupportedPlatform": {
     "message": "不支持的 Webhook 平台"
+  },
+  "extraConfigZsxqSelectGroups": {
+    "message": "选择星球"
+  },
+  "extraConfigZsxqConfigureGroups": {
+    "message": "配置知识星球"
+  },
+  "extraConfigZsxqLoading": {
+    "message": "加载星球列表中..."
+  },
+  "extraConfigZsxqCancel": {
+    "message": "取消"
+  },
+  "extraConfigZsxqSaveConfig": {
+    "message": "保存配置"
+  },
+  "extraConfigZsxqNoGroups": {
+    "message": "未找到任何星球，请确认是否已登录知识星球并刷新页面"
   }
 }
