@@ -31,7 +31,7 @@ export async function DynamicZSXQ(data: SyncData) {
 
   const { title, content, images } = data.data as DynamicData;
 
-  const postContent = title ? `${title}\n\n${content}` : content;
+  const postContent = title ? `${title}\n${content}` : content;
 
   try {
     // 等待帖子头部元素
