@@ -22,6 +22,7 @@ import { DynamicWeiXinChannel } from './dynamic/weixinchannel';
 import { DynamicX } from './dynamic/x';
 import { DynamicXueqiu } from './dynamic/xueqiu';
 import { DynamicZhihu } from './dynamic/zhihu';
+import { DynamicZSXQ } from './dynamic/zsxq';
 
 export const DynamicInfoMap: Record<string, PlatformInfo> = {
   DYNAMIC_BILIBILI: {
@@ -282,5 +283,16 @@ export const DynamicInfoMap: Record<string, PlatformInfo> = {
     injectFunction: DynamicWebhook,
     tags: ['International'],
     accountKey: 'webhook',
+  },
+  DYNAMIC_ZSXQ: {
+    type: 'DYNAMIC',
+    name: 'DYNAMIC_ZSXQ',
+    homeUrl: 'https://wx.zsxq.com/',
+    faviconUrl: 'https://wx.zsxq.com/assets_dweb/images/favicon_32.ico',
+    platformName: chrome.i18n.getMessage('platformZSXQ'),
+    injectUrl: 'https://wx.zsxq.com/',
+    injectFunction: DynamicZSXQ,
+    tags: ['CN'],
+    accountKey: 'zsxq',
   },
 };

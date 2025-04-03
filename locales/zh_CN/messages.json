@@ -636,6 +636,9 @@
   "platformV2ex": {
     "message": "V2EX"
   },
+  "platformZSXQ": {
+    "message":"知识星球"
+  },
   "settingsTrustedDomainsOrigin": {
     "message": "来源域名"
   },

@@ -658,6 +658,9 @@
   "platformV2ex": {
     "message": "V2EX"
   },
+  "platformZSXQ": {
+    "message": "ZhiShiXingQiu"
+  },
   "settingsTrustedDomainsOrigin": {
     "message": "Origin Domain"
   },
