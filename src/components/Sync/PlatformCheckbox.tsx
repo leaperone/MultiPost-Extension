@@ -23,12 +23,14 @@ export default function PlatformCheckbox({
 
   return (
     <div className="flex items-center p-2 transition-colors rounded-lg hover:bg-default-100">
-      <Checkbox
-        isSelected={isSelected}
-        isDisabled={isDisabled}
-        onChange={(e) => onChange(platformInfo.name, e.target.checked)}
-        size="sm"
-        className="mr-0.5">
+      <div className="flex items-center flex-1 gap-2">
+        <Checkbox
+          isSelected={isSelected}
+          isDisabled={isDisabled}
+          onChange={(e) => onChange(platformInfo.name, e.target.checked)}
+          size="sm"
+        />
+
         <div className="flex items-center gap-1.5">
           {platformInfo.iconifyIcon ? (
             <Icon
@@ -46,6 +48,7 @@ export default function PlatformCheckbox({
               />
             )
           )}
+
           <div className="flex items-center gap-2">
             <Link
               href={platformInfo.homeUrl}
@@ -75,8 +78,12 @@ export default function PlatformCheckbox({
             )}
           </div>
         </div>
-      </Checkbox>
-      <ExtraInfoConfig platformInfo={platformInfo} syncData={syncData} />
+      </div>
+
+      <ExtraInfoConfig
+        platformInfo={platformInfo}
+        syncData={syncData}
+      />
     </div>
   );
 }
