@@ -520,6 +520,10 @@
     "message": "微信视频号",
     "description": "微信视频号平台名称"
   },
+  "platformWebhook": {
+    "message": "Webhook",
+    "description": "Webhook 平台名称"
+  },
   "optionsFeedbackPrefix": {
     "message": "没有你需要的平台？"
   },
@@ -717,5 +721,71 @@
   },
   "optionViewHomePageDashboard": {
     "message": "控制台"
+  },
+  "optionsSelectPublishPlatforms": {
+    "message": "请至少选择一个平台"
+  },
+  "extraConfigOkjikeConfigureTopic": {
+    "message": "配置即刻圈子"
+  },
+  "extraConfigOkjikeSelectTopic": {
+    "message": "选择圈子"
+  },
+  "extraConfigOkjikeEnterTopicName": {
+    "message": "输入圈子名称"
+  },
+  "extraConfigOkjikeAdd": {
+    "message": "添加"
+  },
+  "extraConfigOkjikeCancel": {
+    "message": "取消"
+  },
+  "extraConfigOkjikeSaveConfig": {
+    "message": "保存配置"
+  },
+  "extraConfigWebhookConfigure": {
+    "message": "配置Webhook"
+  },
+  "extraConfigWebhookEnterUrl": {
+    "message": "输入Webhook URL"
+  },
+  "extraConfigWebhookTest": {
+    "message": "测试"
+  },
+  "extraConfigWebhookAdd": {
+    "message": "添加URL"
+  },
+  "extraConfigWebhookCancel": {
+    "message": "取消"
+  },
+  "extraConfigWebhookSaveConfig": {
+    "message": "保存配置"
+  },
+  "extraConfigWebhookSupportedPlatforms": {
+    "message": "目前仅支持飞书、企业微信、钉钉的自定义机器人 Webhook。点击链接查看对应平台的配置文档。"
+  },
+  "extraConfigWebhookFeishu": {
+    "message": "飞书"
+  },
+  "extraConfigWebhookWecom": {
+    "message": "企业微信"
+  },
+  "extraConfigWebhookDingtalk": {
+    "message": "钉钉"
+  },
+  "extraConfigWebhookTestSuccess": {
+    "message": "Webhook测试成功！"
+  },
+  "extraConfigWebhookTestFailed": {
+    "message": "Webhook测试失败: $1"
+  },
+  "extraConfigWebhookNetworkError": {
+    "message": "Webhook测试失败: 网络错误"
+  },
+  "extraConfigWebhookInvalidUrl": {
+    "message": "URL格式无效，请输入正确的URL地址"
+  },
+  "extraConfigWebhookUnsupportedPlatform": {
+    "message": "不支持的 Webhook 平台"
   }
 }

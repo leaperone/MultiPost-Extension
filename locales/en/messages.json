@@ -513,6 +513,10 @@
     "message": "WeiXinVideo",
     "description": "Platform name for WeiXinVideo"
   },
+  "platformWebhook": {
+    "message": "Webhook",
+    "description": "Platform name for Webhook"
+  },
   "optionsFeedbackPrefix": {
     "message": "Missing a platform you need?"
   },
@@ -744,5 +748,71 @@
   },
   "optionViewHomePageDashboard": {
     "message": "Dashboard"
+  },
+  "optionsSelectPublishPlatforms": {
+    "message": "Please select at least one platform"
+  },
+  "extraConfigOkjikeConfigureTopic": {
+    "message": "Configure Topic"
+  },
+  "extraConfigOkjikeSelectTopic": {
+    "message": "Select Topic"
+  },
+  "extraConfigOkjikeEnterTopicName": {
+    "message": "Enter topic name"
+  },
+  "extraConfigOkjikeAdd": {
+    "message": "Add"
+  },
+  "extraConfigOkjikeCancel": {
+    "message": "Cancel"
+  },
+  "extraConfigOkjikeSaveConfig": {
+    "message": "Save Configuration"
+  },
+  "extraConfigWebhookConfigure": {
+    "message": "Configure Webhook"
+  },
+  "extraConfigWebhookEnterUrl": {
+    "message": "Enter Webhook URL"
+  },
+  "extraConfigWebhookTest": {
+    "message": "Test"
+  },
+  "extraConfigWebhookAdd": {
+    "message": "Add URL"
+  },
+  "extraConfigWebhookCancel": {
+    "message": "Cancel"
+  },
+  "extraConfigWebhookSaveConfig": {
+    "message": "Save Configuration"
+  },
+  "extraConfigWebhookSupportedPlatforms": {
+    "message": "Currently only supports Feishu, WeCom, and DingTalk custom robot webhooks. Click the links to view the corresponding platform's configuration documentation."
+  },
+  "extraConfigWebhookFeishu": {
+    "message": "Feishu"
+  },
+  "extraConfigWebhookWecom": {
+    "message": "WeCom"
+  },
+  "extraConfigWebhookDingtalk": {
+    "message": "DingTalk"
+  },
+  "extraConfigWebhookTestSuccess": {
+    "message": "Webhook test successful!"
+  },
+  "extraConfigWebhookTestFailed": {
+    "message": "Webhook test failed: $1"
+  },
+  "extraConfigWebhookNetworkError": {
+    "message": "Webhook test failed: Network error"
+  },
+  "extraConfigWebhookInvalidUrl": {
+    "message": "Invalid URL format, please enter correct URL address"
+  },
+  "extraConfigWebhookUnsupportedPlatform": {
+    "message": "Unsupported Webhook platform"
   }
 }

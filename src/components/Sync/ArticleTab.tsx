@@ -15,11 +15,14 @@ import {
 import { ImagePlusIcon, XIcon, DownloadIcon, Eraser } from 'lucide-react';
 import type { FileData, SyncData } from '~sync/common';
 import PlatformCheckbox from './PlatformCheckbox';
-import { getPlatformInfosWithAccount } from '~sync/account';
+import { getPlatformInfos } from '~sync/common';
 import type { PlatformInfo } from '~sync/common';
 import TurndownService from 'turndown';
 import { Storage } from '@plasmohq/storage';
 import { Icon } from '@iconify/react';
+import { useStorage } from '@plasmohq/storage/hook';
+import { ACCOUNT_INFO_STORAGE_KEY } from '~sync/account';
+import { EXTRA_CONFIG_STORAGE_KEY } from '~sync/extraconfig';
 
 interface ArticleTabProps {
   funcPublish: (data: SyncData) => void;
@@ -58,6 +61,15 @@ const ArticleTab: React.FC<ArticleTabProps> = ({ funcPublish, funcScraper }) => 
     area: 'local', // 明确指定使用 localStorage
   });
 
+  const [accountInfos] = useStorage({
+    key: ACCOUNT_INFO_STORAGE_KEY,
+    instance: storage,
+  });
+  const [extraConfigMap] = useStorage({
+    key: EXTRA_CONFIG_STORAGE_KEY,
+    instance: storage,
+  });
+
   useEffect(() => {
     if (process.env.NODE_ENV === 'development') {
       setTitle(chrome.i18n.getMessage('devEnvironmentTitle') || '开发环境标题');
@@ -69,7 +81,7 @@ const ArticleTab: React.FC<ArticleTabProps> = ({ funcPublish, funcScraper }) => 
   useEffect(() => {
     const loadPlatformInfos = async () => {
       try {
-        const infos = await getPlatformInfosWithAccount('ARTICLE');
+        const infos = await getPlatformInfos('ARTICLE');
         setPlatforms(infos);
       } catch (error) {
         console.error('加载平台信息失败:', error);
@@ -77,7 +89,7 @@ const ArticleTab: React.FC<ArticleTabProps> = ({ funcPublish, funcScraper }) => 
     };
 
     loadPlatformInfos();
-  }, []);
+  }, [accountInfos, extraConfigMap]);
 
   const handlePlatformChange = async (platform: string, isSelected: boolean) => {
     const newSelectedPlatforms = isSelected
@@ -131,7 +143,7 @@ const ArticleTab: React.FC<ArticleTabProps> = ({ funcPublish, funcScraper }) => 
       : '';
 
     const data: SyncData = {
-      platforms: selectedPlatforms,
+      platforms: selectedPlatforms.map((platform) => platforms.find((p) => p.name === platform)),
       data: {
         title,
         content: content || digest || '',
@@ -146,7 +158,6 @@ const ArticleTab: React.FC<ArticleTabProps> = ({ funcPublish, funcScraper }) => 
       },
       auto_publish: false,
     };
-    console.log(data);
 
     try {
       chrome.windows.getCurrent({ populate: true }, (window) => {
@@ -321,8 +332,8 @@ const ArticleTab: React.FC<ArticleTabProps> = ({ funcPublish, funcScraper }) => 
 
   return (
     <>
-      <div className="flex flex-col md:flex-row gap-4">
-        <div className="flex flex-col gap-4 w-full md:w-1/2">
+      <div className="flex flex-col gap-4 md:flex-row">
+        <div className="flex flex-col w-full gap-4 md:w-1/2">
           <Card className="mb-4 shadow-none h-fit bg-default-50">
             <CardBody>
               <div className="flex items-center space-x-2">
@@ -360,7 +371,7 @@ const ArticleTab: React.FC<ArticleTabProps> = ({ funcPublish, funcScraper }) => 
               <h3 className="text-sm font-medium">{chrome.i18n.getMessage('optionsCoverImage')}</h3>
             </CardHeader>
             <CardBody>
-              <div className="flex justify-center items-center">
+              <div className="flex items-center justify-center">
                 <input
                   type="file"
                   ref={coverInputRef}
@@ -381,7 +392,7 @@ const ArticleTab: React.FC<ArticleTabProps> = ({ funcPublish, funcScraper }) => 
                       isIconOnly
                       size="sm"
                       color="danger"
-                      className="absolute top-0 right-0 z-50 m-1 opacity-0 transition-opacity group-hover:opacity-100"
+                      className="absolute top-0 right-0 z-50 m-1 transition-opacity opacity-0 group-hover:opacity-100"
                       onPress={handleDeleteCover}>
                       <XIcon className="size-4" />
                     </Button>
@@ -390,7 +401,7 @@ const ArticleTab: React.FC<ArticleTabProps> = ({ funcPublish, funcScraper }) => 
                   <Button
                     variant="light"
                     onPress={() => coverInputRef.current?.click()}>
-                    <ImagePlusIcon className="mr-2 w-6 h-6" />
+                    <ImagePlusIcon className="w-6 h-6 mr-2" />
                     {chrome.i18n.getMessage('optionsUploadCover')}
                   </Button>
                 )}
@@ -436,7 +447,7 @@ const ArticleTab: React.FC<ArticleTabProps> = ({ funcPublish, funcScraper }) => 
                 <h4 className="mb-2 font-semibold">{importedContent.title}</h4>
                 <p className="mb-4 text-sm">{importedContent.digest}</p>
                 <div
-                  className="max-w-none prose"
+                  className="prose max-w-none"
                   dangerouslySetInnerHTML={{ __html: importedContent.content }}
                 />
               </CardBody>
@@ -444,11 +455,11 @@ const ArticleTab: React.FC<ArticleTabProps> = ({ funcPublish, funcScraper }) => 
           )}
         </div>
 
-        <div className="flex flex-col gap-4 w-full md:w-1/2">
+        <div className="flex flex-col w-full gap-4 md:w-1/2">
           <div className="flex flex-col gap-4 p-4 rounded-lg bg-default-50">
             <div className="flex flex-col gap-2">
-              <div className="flex justify-between items-center mb-2">
-                <div className="flex gap-2 items-center"></div>
+              <div className="flex items-center justify-between mb-2">
+                <div className="flex items-center gap-2"></div>
                 {selectedPlatforms.length > 0 && (
                   <Button
                     isIconOnly
@@ -539,7 +550,7 @@ const ArticleTab: React.FC<ArticleTabProps> = ({ funcPublish, funcScraper }) => 
               onPress={handlePublish}
               color="primary"
               disabled={!title || selectedPlatforms.length === 0}
-              className="px-4 py-2 w-full font-bold mt-2">
+              className="w-full px-4 py-2 mt-2 font-bold">
               {chrome.i18n.getMessage('optionsSyncArticle')}
             </Button>
           </div>

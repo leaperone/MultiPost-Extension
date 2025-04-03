@@ -16,12 +16,14 @@ import { XIcon, TrashIcon, SendIcon, HandIcon, BotIcon, FileVideo2Icon, FileImag
 import Viewer from 'react-viewer';
 import { Player } from 'video-react';
 import 'video-react/dist/video-react.css';
-import type { FileData, SyncData } from '~sync/common';
+import { getPlatformInfos, type FileData, type SyncData } from '~sync/common';
 import PlatformCheckbox from './PlatformCheckbox';
-import { getPlatformInfosWithAccount } from '~sync/account';
 import { Storage } from '@plasmohq/storage';
+import { useStorage } from '@plasmohq/storage/hook';
 import type { PlatformInfo } from '~sync/common';
 import { Icon } from '@iconify/react';
+import { ACCOUNT_INFO_STORAGE_KEY } from '~sync/account';
+import { EXTRA_CONFIG_STORAGE_KEY } from '~sync/extraconfig';
 
 // Constants
 const STORAGE_KEY = 'dynamicPlatforms';
@@ -60,6 +62,15 @@ const DynamicTab: React.FC<DynamicTabProps> = ({ funcPublish }) => {
   const dropAreaRef = useRef<HTMLDivElement>(null);
   const storage = useMemo(() => new Storage({ area: 'local' }), []);
   const [platforms, setPlatforms] = useState<PlatformInfo[]>([]);
+
+  const [accountInfos] = useStorage({
+    key: ACCOUNT_INFO_STORAGE_KEY,
+    instance: storage,
+  });
+  const [extraConfigMap] = useStorage({
+    key: EXTRA_CONFIG_STORAGE_KEY,
+    instance: storage,
+  });
 
   // 文件处理函数
   const handleFileProcess = useCallback(
@@ -153,7 +164,7 @@ const DynamicTab: React.FC<DynamicTabProps> = ({ funcPublish }) => {
   useEffect(() => {
     const loadPlatformInfos = async () => {
       try {
-        const infos = await getPlatformInfosWithAccount('DYNAMIC');
+        const infos = await getPlatformInfos('DYNAMIC');
         setPlatforms(infos);
       } catch (error) {
         console.error('加载平台信息失败:', error);
@@ -161,7 +172,7 @@ const DynamicTab: React.FC<DynamicTabProps> = ({ funcPublish }) => {
     };
 
     loadPlatformInfos();
-  }, []);
+  }, [accountInfos, extraConfigMap]);
 
   // 添加事件监听器
   useEffect(() => {
@@ -223,8 +234,21 @@ const DynamicTab: React.FC<DynamicTabProps> = ({ funcPublish }) => {
     [formState.selectedPlatforms, storage],
   );
 
+  const getSyncData = () => {
+    return {
+      platforms: formState.selectedPlatforms.map((platform) => platforms.find((p) => p.name === platform)),
+      data: {
+        title: formState.title,
+        content: formState.content,
+        images: formState.images,
+        videos: formState.videos,
+      },
+      auto_publish: formState.autoPublish,
+    };
+  };
+
   // 发布处理
-  const handlePublish = useCallback(async () => {
+  const handlePublish = async () => {
     if (!formState.content) {
       alert(chrome.i18n.getMessage('optionsEnterDynamicContent'));
       return;
@@ -234,16 +258,7 @@ const DynamicTab: React.FC<DynamicTabProps> = ({ funcPublish }) => {
       return;
     }
 
-    const data: SyncData = {
-      platforms: formState.selectedPlatforms,
-      data: {
-        title: formState.title,
-        content: formState.content,
-        images: formState.images,
-        videos: formState.videos,
-      },
-      auto_publish: formState.autoPublish,
-    };
+    const data: SyncData = getSyncData();
 
     try {
       const window = await chrome.windows.getCurrent({ populate: true });
@@ -253,7 +268,7 @@ const DynamicTab: React.FC<DynamicTabProps> = ({ funcPublish }) => {
       console.error('发布时出错:', error);
       funcPublish(data);
     }
-  }, [formState, funcPublish]);
+  };
 
   // 清空所有内容
   const handleClearAll = useCallback(() => {
@@ -490,6 +505,7 @@ const DynamicTab: React.FC<DynamicTabProps> = ({ funcPublish }) => {
                         isSelected={formState.selectedPlatforms.includes(platform.name)}
                         onChange={(_, isSelected) => handlePlatformChange(platform.name, isSelected)}
                         isDisabled={false}
+                        syncData={getSyncData()}
                       />
                     ))}
                 </div>
@@ -522,6 +538,7 @@ const DynamicTab: React.FC<DynamicTabProps> = ({ funcPublish }) => {
                         isSelected={formState.selectedPlatforms.includes(platform.name)}
                         onChange={(_, isSelected) => handlePlatformChange(platform.name, isSelected)}
                         isDisabled={false}
+                        syncData={getSyncData()}
                       />
                     ))}
                 </div>

@@ -17,9 +17,12 @@ import 'video-react/dist/video-react.css';
 import { type SyncData, type FileData } from '~sync/common';
 import type { PlatformInfo } from '~sync/common';
 import PlatformCheckbox from './PlatformCheckbox';
-import { getPlatformInfosWithAccount } from '~sync/account';
+import { getPlatformInfos } from '~sync/common';
 import { Storage } from '@plasmohq/storage';
 import { Icon } from '@iconify/react';
+import  { useStorage } from '@plasmohq/storage/hook';
+import { ACCOUNT_INFO_STORAGE_KEY } from '~sync/account';
+import { EXTRA_CONFIG_STORAGE_KEY } from '~sync/extraconfig';
 
 interface VideoTabProps {
   funcPublish: (data: SyncData) => void;
@@ -35,6 +38,16 @@ const VideoTab: React.FC<VideoTabProps> = ({ funcPublish }) => {
   const storage = new Storage({
     area: 'local', // 明确指定使用 localStorage
   });
+
+  const [accountInfos] = useStorage({
+    key: ACCOUNT_INFO_STORAGE_KEY,
+    instance: storage,
+  });
+  const [extraConfigMap] = useStorage({
+    key: EXTRA_CONFIG_STORAGE_KEY,
+    instance: storage,
+  });
+
   useEffect(() => {
     if (process.env.NODE_ENV === 'development') {
       setTitle('开发环境标题');
@@ -47,7 +60,7 @@ const VideoTab: React.FC<VideoTabProps> = ({ funcPublish }) => {
   useEffect(() => {
     const loadPlatformInfos = async () => {
       try {
-        const infos = await getPlatformInfosWithAccount('VIDEO');
+        const infos = await getPlatformInfos('VIDEO');
         setPlatforms(infos);
       } catch (error) {
         console.error('加载平台信息失败:', error);
@@ -55,7 +68,7 @@ const VideoTab: React.FC<VideoTabProps> = ({ funcPublish }) => {
     };
 
     loadPlatformInfos();
-  }, []);
+  }, [accountInfos, extraConfigMap]);
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFile = event.target.files?.[0];
@@ -95,6 +108,18 @@ const VideoTab: React.FC<VideoTabProps> = ({ funcPublish }) => {
   };
   loadPlatforms();
 
+  const getSyncData = () => {
+    return {
+      platforms: selectedPlatforms.map((platform) => platforms.find((p) => p.name === platform)),
+      data: {
+        title,
+        content,
+        video: videoFile,
+      },
+      auto_publish: false,
+    };
+  };
+
   const handlePublish = async () => {
     if (!title || !videoFile) {
       console.log('请输入标题并上传视频');
@@ -107,16 +132,7 @@ const VideoTab: React.FC<VideoTabProps> = ({ funcPublish }) => {
       return;
     }
 
-    const data: SyncData = {
-      platforms: selectedPlatforms,
-      data: {
-        title,
-        content,
-        video: videoFile,
-      },
-      auto_publish: false,
-    };
-    console.log(data);
+    const data: SyncData = getSyncData();
 
     try {
       chrome.windows.getCurrent({ populate: true }, (window) => {
@@ -283,6 +299,7 @@ const VideoTab: React.FC<VideoTabProps> = ({ funcPublish }) => {
                           isSelected={selectedPlatforms.includes(platform.name)}
                           onChange={(_, isSelected) => handlePlatformChange(platform.name, isSelected)}
                           isDisabled={false}
+                          syncData={getSyncData()}
                         />
                       ))}
                   </div>
@@ -315,6 +332,7 @@ const VideoTab: React.FC<VideoTabProps> = ({ funcPublish }) => {
                           isSelected={selectedPlatforms.includes(platform.name)}
                           onChange={(_, isSelected) => handlePlatformChange(platform.name, isSelected)}
                           isDisabled={false}
+                          syncData={getSyncData()}
                         />
                       ))}
                   </div>

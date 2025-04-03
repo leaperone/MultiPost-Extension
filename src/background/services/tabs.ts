@@ -1,5 +1,4 @@
-import { injectScriptsToTabs, type SyncData } from '~sync/common';
-import { getDefaultPlatformInfo } from '~sync/common';
+import { getRawPlatformInfo, injectScriptsToTabs, type SyncData } from '~sync/common';
 
 // Tab Manager || 标签页管理 || START
 export interface TabManagerMessage {
@@ -43,7 +42,7 @@ export const tabsManagerMessageHandler = (request, sender, sendResponse) => {
     const tabInfo = tabGroup.tabs.find((t) => t.tab.id === tabId);
 
     if (tabInfo) {
-      const platformInfo = getDefaultPlatformInfo(tabInfo.platform);
+      const platformInfo = getRawPlatformInfo(tabInfo.platform);
 
       if (platformInfo) {
         chrome.tabs.update(tabId, { url: platformInfo.injectUrl, active: true }).then(() => {
