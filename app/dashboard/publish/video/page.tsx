@@ -71,7 +71,7 @@ export default function VideoPage() {
     }
 
     const data: SyncData = {
-      platforms: selectedPlatforms,
+      platforms: platforms.filter((platform) => selectedPlatforms.includes(platform.name)),
       data: {
         title,
         content,

@@ -7,7 +7,7 @@
 import { v4 as uuidv4 } from 'uuid';
 
 export interface SyncData {
-  platforms: string[];
+  platforms: PlatformInfo[];
   auto_publish: boolean;
   data: DynamicData | ArticleData | VideoData;
 }
