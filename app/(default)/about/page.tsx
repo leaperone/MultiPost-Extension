@@ -150,6 +150,24 @@ export default function AboutPage() {
                   </div>
                 </div>
 
+                {/* Feedback Form */}
+                <div className="w-full space-y-4">
+                  <h3 className="text-center text-xl font-semibold">Feature Requests</h3>
+                  <div className="text-center">
+                    <Button
+                      as={Link}
+                      href="https://mc1cz6k4he.feishu.cn/share/base/form/shrcnGyzsczESObZ72JhLanY8Xg"
+                      target="_blank"
+                      variant="bordered"
+                      className="flex items-center gap-2 border-primary px-6 py-2 text-primary">
+                      Submit Feedback & Platform Requests
+                    </Button>
+                    <p className="mt-2 text-sm text-muted-foreground">
+                      Request new platform support, submit suggestions, or report issues
+                    </p>
+                  </div>
+                </div>
+
                 {/* Other Contact Methods */}
                 <div className="w-full space-y-4 pt-4">
                   <p className="text-center text-muted-foreground">

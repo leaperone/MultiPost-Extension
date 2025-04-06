@@ -1,6 +1,6 @@
 'use client';
 
-import { Alert, Tabs, Tab } from '@heroui/react';
+import { Alert, Tabs, Tab, Button } from '@heroui/react';
 import Link from 'next/link';
 import { useTranslation } from '@/i18n/client';
 import { MessageCircleHeartIcon, VideoIcon, FileTextIcon } from 'lucide-react';
@@ -76,7 +76,16 @@ export default function PublishLayout({ children }: { children: React.ReactNode 
             className="text-blue-500 hover:underline">
             {t('contact.github')}
           </Link>{' '}
-          {t('contact.page')}.
+          {t('contact.page')}. {t('contact.survey')}{' '}
+          <Button
+            as={Link}
+            href="https://mc1cz6k4he.feishu.cn/share/base/form/shrcnGyzsczESObZ72JhLanY8Xg"
+            variant="flat"
+            color="secondary"
+            size="sm"
+            className="ml-1">
+            问卷 Survey
+          </Button>
         </div>
       </Alert>
     </div>

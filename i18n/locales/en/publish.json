@@ -41,7 +41,8 @@
     "message": "If your platform is not listed, please contact us via email at",
     "or": "or use our",
     "github": "GitHub Issues",
-    "page": "page"
+    "page": "page",
+    "survey": "For customization or other feedback, please fill out our survey at"
   },
   "validation": {
     "contentRequired": "Content is required",

@@ -38,10 +38,11 @@
     "description": "使用 Markdown 编写和编辑专业文章"
   },
   "contact": {
-    "message": "如果您需要的平台不在列表中，请通过邮件联系我们",
+    "message": "如无所需平台，请联系我们",
     "or": "或使用我们的",
     "github": "GitHub Issues",
-    "page": "页面"
+    "page": "页面",
+    "survey": "如需定制或其他反馈，请填写"
   },
   "validation": {
     "contentRequired": "内容不能为空",
