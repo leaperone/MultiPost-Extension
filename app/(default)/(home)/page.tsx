@@ -8,6 +8,7 @@ import ScrollScreenChevronDown from '@/components/HomePage/ScrollScreenChevronDo
 import { createTranslation } from '@/i18n/server';
 import { auth } from '@/auth';
 import SocialShareNotifications from '@/components/HomePage/SocialShareNotifications';
+import Image from 'next/image';
 // import { redirect } from 'next/navigation';
 
 export const metadata = {
@@ -355,7 +356,15 @@ export default async function HomePage() {
                 {t('demo.cta')}
               </Button>
             </div>
-            <div className="aspect-video rounded-xl bg-content1 shadow-xl" />
+            <div className="relative aspect-[4/3] overflow-hidden rounded-xl shadow-xl">
+              <Image
+                src="https://2someone-web-static.s3.bitiful.net/2025/04/40e625c0dfdc264852fc23eb3829fc79.png"
+                alt="Demo Preview"
+                fill
+                className="object-cover"
+                priority
+              />
+            </div>
           </div>
         </div>
       </section>

@@ -1,8 +1,7 @@
-import { createTranslation } from '@/i18n/server';
-import { Avatar, Button, Link } from '@heroui/react';
-import { Github, Globe, Twitter } from 'lucide-react';
+import { Button, Link } from '@heroui/react';
 import { Metadata } from 'next';
-import CommunityContact from './components/CommunityContact';
+import Image from 'next/image';
+import { Github } from 'lucide-react';
 
 interface FocusItem {
   title: string;
@@ -10,42 +9,56 @@ interface FocusItem {
 }
 
 export const metadata: Metadata = {
-  title: 'About Us',
-  description: 'Learn about our team and mission',
+  title: 'About MultiPost',
+  description: 'Learn about our team and mission - Join the MultiPost-Extension Open Source Community',
 };
 
-export default async function AboutPage() {
-  const { t } = await createTranslation('about');
+export default function AboutPage() {
+  const focusItems: FocusItem[] = [
+    {
+      title: 'Seamless Publishing',
+      description: 'Enabling content creators to share their work across multiple platforms with a single click.',
+    },
+    {
+      title: 'User Privacy',
+      description: 'Prioritizing user data protection with secure, client-side processing.',
+    },
+    {
+      title: 'Open Collaboration',
+      description: 'Building a community-driven tool through open source development and transparent processes.',
+    },
+  ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-background to-background/80 py-20">
-      {/* 页面标题 - 使用大号标题和动画下划线 */}
-      <div className="container mx-auto mb-16 px-4 text-center">
-        <h1 className="relative mb-6 inline-block text-5xl font-bold tracking-tight">
-          {t('title')}
-          <span className="absolute bottom-0 left-0 h-1 w-0 animate-[underline_3s_ease-in-out_forwards] bg-primary"></span>
-        </h1>
-        <p className="mx-auto max-w-2xl text-lg text-muted-foreground">{t('description')}</p>
+    <div className="min-h-screen bg-background py-16">
+      {/* Page Title */}
+      <div className="container mx-auto mb-12 px-4 text-center">
+        <h1 className="mb-6 text-4xl font-bold tracking-tight">About MultiPost</h1>
+        <div className="mx-auto mb-8 h-1 w-16 bg-primary"></div>
+        <p className="mx-auto max-w-2xl text-lg text-muted-foreground">
+          Our mission is to empower content creators with innovative tools for sharing across multiple platforms
+          effortlessly.
+        </p>
       </div>
 
-      {/* 机构介绍 - 使用现代卡片布局和悬停效果 */}
-      <div className="container mx-auto mb-24 px-4">
-        <div className="rounded-2xl bg-gradient-to-br from-primary/5 via-primary/10 to-primary/5 p-8 shadow-lg backdrop-blur-sm transition-all hover:shadow-xl dark:from-primary/10 dark:via-primary/15 dark:to-primary/10">
-          <div className="mb-12">
-            <h2 className="mb-6 text-center text-3xl font-bold">{t('organization.title')}</h2>
+      {/* Organization Introduction */}
+      <div className="container mx-auto mb-16 px-4">
+        <div className="rounded-lg border border-border bg-background p-8 shadow-sm">
+          <div className="mb-10">
+            <h2 className="mb-6 text-center text-3xl font-bold">Our Organization</h2>
             <p className="mx-auto max-w-3xl text-center text-lg text-muted-foreground">
-              {t('organization.description')}
+              MultiPost is a community-driven initiative focused on creating innovative publishing solutions. We believe
+              in the power of open source development and collaborative creation.
             </p>
           </div>
 
           <div>
-            <h3 className="mb-8 text-center text-2xl font-semibold">{t('organization.focus.title')}</h3>
+            <h3 className="mb-8 text-center text-2xl font-semibold">Our Focus Areas</h3>
             <div className="grid grid-cols-1 gap-8 md:grid-cols-3">
-              {(t('organization.focus.items', { returnObjects: true }) as FocusItem[]).map((item, index) => (
+              {focusItems.map((item, index) => (
                 <div
                   key={index}
-                  className="group relative overflow-hidden rounded-xl bg-background p-6 shadow-md transition-all duration-300 hover:-translate-y-1 hover:shadow-xl">
-                  <div className="absolute -right-20 -top-20 size-40 rounded-full bg-primary/10 opacity-0 transition-opacity duration-500 group-hover:opacity-100"></div>
+                  className="rounded-lg border border-border bg-background p-6 shadow-sm transition-all hover:shadow-md">
                   <h4 className="mb-3 text-xl font-semibold">{item.title}</h4>
                   <p className="text-muted-foreground">{item.description}</p>
                 </div>
@@ -55,106 +68,98 @@ export default async function AboutPage() {
         </div>
       </div>
 
-      {/* 团队成员 - 现代化的个人资料卡片 */}
-      <div className="container mx-auto mb-24 px-4">
-        <h2 className="mb-12 text-center text-3xl font-bold">{t('team.title', 'Our Team')}</h2>
-        <div className="grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-3">
-          {/* Harry Wong */}
-          <div className="group relative overflow-hidden rounded-xl bg-background p-1 shadow-md transition-all duration-300 hover:-translate-y-2 hover:shadow-xl">
-            <div className="absolute -z-10 size-full bg-gradient-to-br from-primary/20 via-primary/10 to-primary/5 opacity-0 blur-xl transition-opacity duration-500 group-hover:opacity-100"></div>
-            <div className="rounded-lg p-6">
-              <div className="mb-6 flex flex-col items-center">
-                <Avatar className="mb-4 size-24 border-4 border-background shadow-lg">
-                  <img
-                    src="https://github.com/harryisfish.png"
-                    alt="Harry Wong"
-                  />
-                </Avatar>
-                <h3 className="text-xl font-semibold">{t('team.harry.name')}</h3>
-                <p className="text-sm text-muted-foreground">{t('team.harry.role')}</p>
-              </div>
-              <p className="mb-6 text-center text-muted-foreground">{t('team.harry.description')}</p>
-              <div className="flex justify-center space-x-3">
-                <Button
-                  as={Link}
-                  href="https://x.com/harryisfish"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  variant="ghost"
-                  size="sm"
-                  className="rounded-full">
-                  <Twitter className="size-5" />
-                </Button>
-                <Button
-                  as={Link}
-                  href="https://github.com/harryisfish"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  variant="ghost"
-                  size="sm"
-                  className="rounded-full">
-                  <Github className="size-5" />
-                </Button>
-                <Button
-                  as={Link}
-                  href="https://bento.me/harrywong"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  variant="ghost"
-                  size="sm"
-                  className="rounded-full">
-                  <Globe className="size-5" />
-                </Button>
-              </div>
-            </div>
-          </div>
-
-          {/* Cunoe */}
-          <div className="group relative overflow-hidden rounded-xl bg-background p-1 shadow-md transition-all duration-300 hover:-translate-y-2 hover:shadow-xl">
-            <div className="absolute -z-10 size-full bg-gradient-to-br from-primary/20 via-primary/10 to-primary/5 opacity-0 blur-xl transition-opacity duration-500 group-hover:opacity-100"></div>
-            <div className="rounded-lg p-6">
-              <div className="mb-6 flex flex-col items-center">
-                <Avatar className="mb-4 size-24 border-4 border-background shadow-lg">
-                  <img
-                    src="https://ui-avatars.com/api/?name=Cunoe&background=random"
-                    alt="Cunoe"
-                  />
-                </Avatar>
-                <h3 className="text-xl font-semibold">{t('team.cunoe.name')}</h3>
-                <p className="text-sm text-muted-foreground">{t('team.cunoe.role')}</p>
-              </div>
-              <p className="mb-6 text-center text-muted-foreground">{t('team.cunoe.description')}</p>
-              <div className="flex justify-center space-x-3">
-                <Button
-                  as={Link}
-                  href="https://cunoe.com"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  variant="ghost"
-                  size="sm"
-                  className="rounded-full">
-                  <Globe className="size-5" />
-                </Button>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* 社区交流 - 现代互动卡片 */}
+      {/* Join the Community Section (integrated both sections) */}
       <div className="container mx-auto px-4">
-        <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-primary/5 to-primary/10 p-8 shadow-lg backdrop-blur-sm">
-          <div className="absolute -right-32 -top-32 size-64 rounded-full bg-primary/5 blur-3xl"></div>
-          <div className="absolute -bottom-32 -left-32 size-64 rounded-full bg-primary/5 blur-3xl"></div>
+        <div className="rounded-lg border border-border bg-background p-8 shadow-sm">
+          <div className="grid grid-cols-1 gap-12 lg:grid-cols-2">
+            {/* Left Column: Open Source Community */}
+            <div className="flex flex-col items-center justify-start">
+              <h2 className="mb-8 text-center text-3xl font-bold">Join Our Open Source Community</h2>
 
-          <h2 className="mb-8 text-center text-3xl font-bold">{t('community.title')}</h2>
+              {/* Hero Image */}
+              <div className="relative mb-6 aspect-[3/4] w-full max-w-xs">
+                <Image
+                  src="https://2someone-web-static.s3.bitiful.net/2025/04/83dd4f3c48d6f509c39f930cb84eb4f7.png"
+                  alt="I Want You"
+                  fill
+                  className="object-contain"
+                  priority
+                />
+              </div>
 
-          <CommunityContact
-            qqGroupNumber="921137242"
-            joinText={t('community.join', '加入我们')}
-            copyText={t('community.copy', '复制')}
-            qqLabel={t('community.qq')}
-          />
+              <div className="max-w-md space-y-6 text-center">
+                <p className="text-xl">
+                  We are looking for passionate developers to contribute to this one-click multi-platform publishing
+                  tool!
+                </p>
+
+                <div className="flex flex-wrap justify-center gap-4 pt-4">
+                  <Button
+                    as={Link}
+                    href="https://github.com/leaperone/MultiPost-Extension"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="bg-primary px-6 py-2 text-white">
+                    <Github className="mr-2 size-5" />
+                    View GitHub Repository
+                  </Button>
+
+                  <Button
+                    as={Link}
+                    href="https://github.com/leaperone/MultiPost-Extension/issues"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    variant="bordered"
+                    className="border-primary px-6 py-2 text-primary">
+                    Browse Open Issues
+                  </Button>
+                </div>
+              </div>
+            </div>
+
+            {/* Right Column: Contact Info */}
+            <div className="flex flex-col items-center justify-start">
+              <h2 className="mb-8 text-center text-3xl font-bold">Contact Us</h2>
+
+              <div className="flex size-full max-w-md flex-col items-center justify-center space-y-8 rounded-lg border border-border bg-card/50 p-8">
+                {/* QQ Group */}
+                <div className="w-full space-y-4">
+                  <h3 className="text-center text-xl font-semibold">QQ Group</h3>
+                  <div className="flex flex-col items-center space-y-2">
+                    <div className="text-2xl font-medium">921137242</div>
+                    <Button
+                      variant="ghost"
+                      className="rounded-full bg-background/50 px-6 backdrop-blur-sm hover:bg-background/80"
+                      as={Link}
+                      href="https://qm.qq.com/cgi-bin/qm/qr?k=oLmJfZ4fDX57d3f2KxiYO3UPYvKQHpr_&jump_from=webapi&authKey=MhYchsgbIHtjcbfGD3rjpplY3jlZvBur0fHA4ahzSFMYFrAXnZ+rR3pKBKdh+b9v"
+                      target="_blank">
+                      Join Us
+                    </Button>
+                  </div>
+                </div>
+
+                {/* Email Contact */}
+                <div className="w-full space-y-4">
+                  <h3 className="text-center text-xl font-semibold">Email</h3>
+                  <div className="text-center">
+                    <a
+                      href="mailto:support@leaper.one"
+                      className="text-lg font-medium text-primary hover:underline">
+                      support@leaper.one
+                    </a>
+                  </div>
+                </div>
+
+                {/* Other Contact Methods */}
+                <div className="w-full space-y-4 pt-4">
+                  <p className="text-center text-muted-foreground">
+                    We welcome contributions and feedback of any kind. Whether you want to join the team, report an
+                    issue, or share ideas, please reach out through the contact methods above.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </div>

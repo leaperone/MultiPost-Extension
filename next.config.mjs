@@ -7,6 +7,7 @@ const nextConfig = {
     remotePatterns: [
       { protocol: 'https', hostname: 'nextui.org' },
       { protocol: 'https', hostname: 'icons.duckduckgo.com' },
+      { protocol: 'https', hostname: '2someone-web-static.s3.bitiful.net' },
     ],
   },
   webpack: (config, { isServer }) => {
