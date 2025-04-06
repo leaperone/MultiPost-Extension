@@ -1,6 +1,5 @@
 import React from 'react';
 import { Card, CardBody, Link, Button } from '@heroui/react';
-import { Mail, Book, Globe, GithubIcon } from 'lucide-react';
 
 const AboutTab: React.FC = () => {
   return (
@@ -24,46 +23,15 @@ const AboutTab: React.FC = () => {
 
       <Card className="shadow-none bg-default-50">
         <CardBody className="gap-4">
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-            <Button
-              as={Link}
-              href="https://github.com/leaper-one/MultiPost-Extension"
-              target="_blank"
-              rel="noopener noreferrer"
-              variant="flat"
-              className="justify-start w-full">
-              <GithubIcon className="mr-2 w-5 h-5" />
-              GitHub
-            </Button>
-            <Button
-              as={Link}
-              href="https://multipost.app"
-              target="_blank"
-              rel="noopener noreferrer"
-              variant="flat"
-              className="justify-start w-full">
-              <Book className="mr-2 w-5 h-5" />
-              {chrome.i18n.getMessage('optionsViewDocs')}
-            </Button>
-            <Button
-              as={Link}
-              href="https://multipost.app"
-              target="_blank"
-              rel="noopener noreferrer"
-              variant="flat"
-              className="justify-start w-full">
-              <Globe className="mr-2 w-5 h-5" />
-              {chrome.i18n.getMessage('options2SOMErenHomepage')}
-            </Button>
-            <Button
-              as={Link}
-              href="mailto:support@leaper.one"
-              variant="flat"
-              className="justify-start w-full">
-              <Mail className="mr-2 w-5 h-5" />
-              {chrome.i18n.getMessage('optionsFeedbackEmail')}
-            </Button>
-          </div>
+          <Button
+            as={Link}
+            href="https://multipost.app/about"
+            target="_blank"
+            rel="noopener noreferrer"
+            variant="flat"
+            className="justify-center w-full">
+            {chrome.i18n.getMessage('readMore') || 'Read More'}
+          </Button>
         </CardBody>
       </Card>
     </div>

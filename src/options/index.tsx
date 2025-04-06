@@ -1,8 +1,22 @@
 import '~style.css';
 import React, { useState } from 'react';
 import { HeroUIProvider } from '@heroui/react';
-import { Tabs, Tab, Spacer, Popover, PopoverTrigger, PopoverContent, Button } from '@heroui/react';
+import {
+  Tabs,
+  Tab,
+  Spacer,
+  Popover,
+  PopoverTrigger,
+  PopoverContent,
+  Button,
+  Modal,
+  ModalContent,
+  ModalHeader,
+  ModalBody,
+  ModalFooter,
+} from '@heroui/react';
 import { Icon } from '@iconify/react';
+import { ExternalLink } from 'lucide-react';
 import cssText from 'data-text:~style.css';
 import Header from '~/components/Header';
 import DynamicTab from '~/components/Sync/DynamicTab';
@@ -45,6 +59,7 @@ export const getStyle = () => {
 const Options = () => {
   const [isReady, setIsReady] = useState(false);
   const [hashParams, setHashParams] = useState<Record<string, string>>({});
+  const [isWebAppModalOpen, setIsWebAppModalOpen] = useState(true);
 
   /**
    * Initialize the options page
@@ -232,6 +247,21 @@ const Options = () => {
             support@leaper.one
           </Button>
 
+          <Button
+            as="a"
+            href="https://mc1cz6k4he.feishu.cn/share/base/form/shrcnGyzsczESObZ72JhLanY8Xg"
+            target="_blank"
+            rel="noopener noreferrer"
+            size="sm"
+            startContent={
+              <Icon
+                icon="material-symbols:feedback"
+                className="size-5"
+              />
+            }>
+            {chrome.i18n.getMessage('optionsFeedback') || 'Feedback'}
+          </Button>
+
           <Popover placement="top">
             <PopoverTrigger>
               <Button
@@ -272,6 +302,48 @@ const Options = () => {
           </Popover>
         </p>
       </footer>
+
+      {/* 网页版跳转模态框 */}
+      <Modal
+        isOpen={isWebAppModalOpen}
+        onOpenChange={setIsWebAppModalOpen}
+        size="md"
+        placement="center"
+        backdrop="blur">
+        <ModalContent>
+          <ModalHeader>{chrome.i18n.getMessage('webAppModalTitle')}</ModalHeader>
+          <ModalBody>
+            <div className="space-y-4">
+              <p className="text-sm text-gray-600">{chrome.i18n.getMessage('webAppModalDescription')}</p>
+              <div className="flex justify-center items-center">
+                <img
+                  src={chrome.runtime.getURL('assets/icon.png')}
+                  alt="MultiPost"
+                  className="w-24 h-24 rounded-xl shadow-md"
+                />
+              </div>
+            </div>
+          </ModalBody>
+          <ModalFooter>
+            <Button
+              variant="light"
+              onPress={() => setIsWebAppModalOpen(false)}>
+              {chrome.i18n.getMessage('webAppModalLater')}
+            </Button>
+            <Button
+              variant="solid"
+              color="primary"
+              as="a"
+              href="https://multipost.app/dashboard/publish"
+              target="_blank"
+              rel="noopener noreferrer"
+              startContent={<ExternalLink className="size-4" />}
+              onPress={() => setIsWebAppModalOpen(false)}>
+              {chrome.i18n.getMessage('webAppModalGo')}
+            </Button>
+          </ModalFooter>
+        </ModalContent>
+      </Modal>
     </HeroUIProvider>
   );
 };
