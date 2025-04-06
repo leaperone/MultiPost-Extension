@@ -15,3 +15,4 @@ A clear and concise description of what the problem is. Ex. I'm always frustrate
 
 ** 额外信息 Additional context**
 如果该平台十分小众，或有注册门槛，请提供测试账号到 support@leaper.one
+Please provide a test account if there is some difficulty when signing up the platform or it is not so popular.
