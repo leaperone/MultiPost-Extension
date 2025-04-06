@@ -103,7 +103,7 @@ export async function DynamicThreads(data: SyncData) {
 
     // 等待一段时间后尝试发布
     await new Promise((resolve) => setTimeout(resolve, 5000));
-    if (data.auto_publish) {
+    if (data.isAutoPublish) {
       const publishDiv = Array.from(dialog.querySelectorAll('div')).find((el) => el.textContent.trim() === '发布');
       const nextDiv = publishDiv?.querySelector('div');
       console.log(nextDiv);

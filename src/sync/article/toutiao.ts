@@ -139,7 +139,7 @@ export async function ArticleToutiao(data: SyncData) {
     const buttons = document.querySelectorAll('button.publish-btn');
     const publishButton = Array.from(buttons).find((btn) => btn.textContent?.includes('预览并发布'));
 
-    if (publishButton && data.auto_publish) {
+    if (publishButton && data.isAutoPublish) {
       console.log('sendButton clicked');
       publishButton.dispatchEvent(new Event('click', { bubbles: true }));
     } else {

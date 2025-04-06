@@ -98,7 +98,7 @@ export async function DynamicDouban(data: SyncData) {
   async function publishDynamic() {
     const sendButton = document.querySelector('#isay-submit') as HTMLButtonElement;
     if (sendButton) {
-      if (data.auto_publish) {
+      if (data.isAutoPublish) {
         console.debug('sendButton clicked');
         sendButton.click();
       }

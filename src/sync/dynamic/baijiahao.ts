@@ -109,7 +109,7 @@ export async function DynamicBaijiahao(data: SyncData) {
     const publishButton = document.querySelector('button.events-op-bar-pub-btn-blue') as HTMLButtonElement;
 
     if (publishButton) {
-      if (data.auto_publish) {
+      if (data.isAutoPublish) {
         console.log('点击发布按钮');
         publishButton.click();
       }

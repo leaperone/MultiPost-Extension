@@ -222,7 +222,7 @@ export async function ArticleSegmentfault(data: SyncData) {
     }, 3000);
 
     // 如果不是自动发布，跳转到预览页面
-    if (!data.auto_publish) {
+    if (!data.isAutoPublish) {
       window.location.href = `https://segmentfault.com/write?draftId=${draftId}`;
     }
   } catch (error) {

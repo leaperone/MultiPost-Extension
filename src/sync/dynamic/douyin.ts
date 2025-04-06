@@ -146,7 +146,7 @@ export async function DynamicDouyin(data: SyncData) {
 
     await checkImagesUploaded(images.length);
 
-    if (data.auto_publish) {
+    if (data.isAutoPublish) {
       const maxAttempts = 3;
       for (let attempt = 0; attempt < maxAttempts; attempt++) {
         try {

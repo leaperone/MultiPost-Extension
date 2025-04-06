@@ -236,14 +236,18 @@ const DynamicTab: React.FC<DynamicTabProps> = ({ funcPublish }) => {
 
   const getSyncData = () => {
     return {
-      platforms: formState.selectedPlatforms.map((platform) => platforms.find((p) => p.name === platform)),
+      platforms: formState.selectedPlatforms.map((platform) => ({
+        name: platform,
+        injectUrl: platforms.find((p) => p.name === platform)?.injectUrl || '',
+        extraConfig: platforms.find((p) => p.name === platform)?.extraConfig || {},
+      })),
       data: {
         title: formState.title,
         content: formState.content,
         images: formState.images,
         videos: formState.videos,
       },
-      auto_publish: formState.autoPublish,
+      isAutoPublish: formState.autoPublish,
     };
   };
 

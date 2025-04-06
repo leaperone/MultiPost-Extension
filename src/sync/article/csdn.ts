@@ -297,15 +297,15 @@ export async function ArticleCSDN(data: SyncData) {
     shadow.appendChild(tip);
 
     const articleId = await publishArticle(articleData);
-    
+
     if (articleId) {
       (tip.querySelector('.float-tip') as HTMLDivElement).textContent = '文章同步成功！';
-      
+
       setTimeout(() => {
         document.body.removeChild(host);
       }, 3000);
 
-      if (!data.auto_publish) {
+      if (!data.isAutoPublish) {
         window.location.href = `https://mp.csdn.net/mp_blog/creation/editor/${articleId}`;
       }
     }
@@ -319,7 +319,7 @@ export async function ArticleCSDN(data: SyncData) {
         document.body.removeChild(host);
       }, 3000);
     }
-    
+
     console.error('发布文章失败:', error);
     throw error;
   }

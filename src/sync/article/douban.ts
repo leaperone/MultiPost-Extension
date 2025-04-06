@@ -74,7 +74,7 @@ export async function ArticleDouban(data: SyncData) {
     console.debug('previewButton', previewButton);
 
     if (previewButton) {
-      if (data.auto_publish) {
+      if (data.isAutoPublish) {
         console.debug('previewButton clicked');
         const clickEvent = new Event('click', { bubbles: true });
         previewButton.dispatchEvent(clickEvent);

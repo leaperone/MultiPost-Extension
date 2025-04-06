@@ -131,7 +131,7 @@ export async function DynamicFacebook(data: SyncData) {
     await new Promise((resolve) => setTimeout(resolve, 5000));
 
     // 自动发布
-    if (data.auto_publish) {
+    if (data.isAutoPublish) {
       const maxAttempts = 5;
       let attempt = 0;
 

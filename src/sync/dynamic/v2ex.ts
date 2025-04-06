@@ -54,7 +54,7 @@ export async function DynamicV2EX(data: SyncData) {
     const publishButton = document.querySelector('button[class="super normal button"]') as HTMLButtonElement;
 
     if (publishButton) {
-      if (data.auto_publish) {
+      if (data.isAutoPublish) {
         console.log('点击发布按钮');
         publishButton.click();
       }

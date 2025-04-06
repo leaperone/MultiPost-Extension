@@ -87,7 +87,7 @@ export async function VideoDouyin(data: SyncData) {
     // editor.innerHTML = contentToInsert.replace(/\n/g, '<br>');
 
     // 如果需要自动发布，可以添加类似的逻辑
-    // if (data.auto_publish) {
+    // if (data.isAutoPublish) {
     //   // 自动发布逻辑
     // }
   } catch (error) {

@@ -58,7 +58,7 @@ export async function VideoOkjike(data: SyncData) {
     }
 
     const dataTransfer = new DataTransfer();
-    
+
     try {
       const response = await fetch(video.url);
       if (!response.ok) throw new Error(`HTTP 错误! 状态: ${response.status}`);
@@ -84,7 +84,7 @@ export async function VideoOkjike(data: SyncData) {
     await fillContent();
     await uploadVideo();
 
-    if (data.auto_publish) {
+    if (data.isAutoPublish) {
       await new Promise((resolve) => setTimeout(resolve, 3000));
       const buttons = document.querySelectorAll('button');
       const publishButton = Array.from(buttons).find(

@@ -99,7 +99,7 @@ export async function VideoRednote(data: SyncData) {
   await new Promise((resolve) => setTimeout(resolve, 3000));
 
   // 发布按钮
-  // if (data.auto_publish) {
+  // if (data.isAutoPublish) {
   //   const maxAttempts = 3;
   //   for (let attempt = 0; attempt < maxAttempts; attempt++) {
   //     try {

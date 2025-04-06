@@ -10,7 +10,7 @@
 // SyncData 是最外层的数据，用于组织每一次的发布行为
 export interface SyncData {
   platforms: string[]; // 需要发布的平台，为平台名称的数组
-  auto_publish: boolean; // 是否自动发布
+  isAutoPublish: boolean; // 是否自动发布
   data: DynamicData | ArticleData | VideoData; // 发布的数据，根据平台类型不同，数据类型不同
 }
 

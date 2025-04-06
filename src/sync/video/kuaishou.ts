@@ -34,7 +34,9 @@ export async function VideoKuaishou(data: SyncData) {
 
   // 辅助函数：上传视频
   async function uploadVideo() {
-    const fileInput = (await waitForElement('input[type=file][accept="video/*,.mp4,.mov,.flv,.f4v,.webm,.mkv,.rm,.rmvb,.m4v,.3gp,.3g2,.wmv,.avi,.asf,.mpg,.mpeg,.ts"]')) as HTMLInputElement;
+    const fileInput = (await waitForElement(
+      'input[type=file][accept="video/*,.mp4,.mov,.flv,.f4v,.webm,.mkv,.rm,.rmvb,.m4v,.3gp,.3g2,.wmv,.avi,.asf,.mpg,.mpeg,.ts"]',
+    )) as HTMLInputElement;
     if (!fileInput) {
       console.error('未找到文件输入元素');
       return;
@@ -97,7 +99,7 @@ export async function VideoKuaishou(data: SyncData) {
   // }
 
   // 发布按钮逻辑
-  if (data.auto_publish) {
+  if (data.isAutoPublish) {
     const maxAttempts = 3;
     for (let attempt = 0; attempt < maxAttempts; attempt++) {
       try {

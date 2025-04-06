@@ -153,7 +153,7 @@ interface PlatformInfo {
 ```js
 interface SyncData {
   platforms: string[];
-  auto_publish: boolean;
+  isAutoPublish: boolean;
   data: DynamicData | PostData | VideoData;
 }
 
@@ -163,7 +163,7 @@ window.postMessage({
   action: 'MUTLIPOST_EXTENSION_PUBLISH',
   data: {
     platforms: ['DYNAMIC', 'VIDEO'],
-    auto_publish: true,
+    isAutoPublish: true,
     data: {
       title: 'test',
     },

@@ -67,7 +67,7 @@ export async function DynamicBluesky(data: SyncData) {
     }
 
     // 发布动态
-    if (data.auto_publish) {
+    if (data.isAutoPublish) {
       const maxAttempts = 3;
       for (let attempt = 0; attempt < maxAttempts; attempt++) {
         const publishButton = document.querySelector(

@@ -130,7 +130,7 @@ export async function DynamicReddit(data: SyncData) {
     await new Promise((resolve) => setTimeout(resolve, 5000));
 
     // 自动提交
-    if (data.auto_publish) {
+    if (data.isAutoPublish) {
       const maxAttempts = 3;
       for (let attempt = 0; attempt < maxAttempts; attempt++) {
         try {

@@ -35,7 +35,7 @@ export async function DynamicZSXQ(data: SyncData) {
 
   try {
     // 等待帖子头部元素
-    const postTopicHead = await waitForElement('.post-topic-head') as HTMLElement;
+    const postTopicHead = (await waitForElement('.post-topic-head')) as HTMLElement;
     await new Promise((resolve) => setTimeout(resolve, 1000));
 
     // 点击发帖按钮
@@ -114,7 +114,7 @@ export async function DynamicZSXQ(data: SyncData) {
     const publishButton = Array.from(submitButtons).find((el) => el.textContent?.includes('发布'));
     console.debug('publishButton', publishButton);
 
-    if (publishButton && data.auto_publish) {
+    if (publishButton && data.isAutoPublish) {
       console.debug('publishButton clicked');
       const clickEvent = new Event('click', { bubbles: true });
       publishButton.dispatchEvent(clickEvent);

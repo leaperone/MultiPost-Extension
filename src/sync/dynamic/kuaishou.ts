@@ -131,7 +131,7 @@ export async function DynamicKuaishou(data: SyncData) {
     // 等待内容更新
     await new Promise((resolve) => setTimeout(resolve, 3000));
 
-    if (data.auto_publish) {
+    if (data.isAutoPublish) {
       console.log('开始自动发布');
       const maxAttempts = 3;
       for (let attempt = 0; attempt < maxAttempts; attempt++) {

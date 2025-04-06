@@ -78,7 +78,7 @@ export async function ArticleJuejin(data: SyncData) {
   console.debug('publishButton', publishButton);
 
   if (publishButton) {
-    if (data.auto_publish) {
+    if (data.isAutoPublish) {
       console.debug('publishButton clicked');
       const clickEvent = new Event('click', { bubbles: true });
       publishButton.dispatchEvent(clickEvent);

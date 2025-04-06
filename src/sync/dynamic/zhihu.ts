@@ -150,7 +150,7 @@ export async function DynamicZhihu(data: SyncData) {
     }
 
     // 发布内容
-    if (data.auto_publish) {
+    if (data.isAutoPublish) {
       const maxRetries = 3;
       const retryInterval = 2000; // 2秒
 

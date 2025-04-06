@@ -135,7 +135,7 @@ export async function ArticleZhihu(data: SyncData) {
       return;
     }
 
-    if (data.auto_publish) {
+    if (data.isAutoPublish) {
       console.debug('publishButton clicked');
       publishButton.dispatchEvent(new Event('click', { bubbles: true }));
     }

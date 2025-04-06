@@ -144,7 +144,7 @@ export async function DynamicOkjike(data: SyncData) {
       (data.platforms.find((p) => p.name === 'DYNAMIC_OKJIKE')?.extraConfig as OkjikeConfig).selectedTopic || '',
     );
 
-    if (data.auto_publish) {
+    if (data.isAutoPublish) {
       await new Promise((resolve) => setTimeout(resolve, 3000));
       const buttons = document.querySelectorAll('button');
       const publishButton = Array.from(buttons).find(
