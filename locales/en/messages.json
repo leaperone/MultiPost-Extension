@@ -281,8 +281,8 @@
     "message": "Content"
   },
   "options2SOMErenHomepage": {
-    "message": "Multipost Homepage",
-    "description": "Multipost homepage button text in options page"
+    "message": "Homepage",
+    "description": "Homepage button text"
   },
   "sidepanelTabsManagerTitle": {
     "message": "Tabs Manager",
@@ -522,6 +522,10 @@
   },
   "optionsFeedbackEmail": {
     "message": "Send an email"
+  },
+  "optionsFeedback": {
+    "message": "Feedback",
+    "description": "Button text for feedback form"
   },
   "optionsHelpPrefix": {
     "message": "Need help?"
@@ -856,5 +860,25 @@
   },
   "extraConfigWordpressSaveConfig": {
     "message": "Save"
+  },
+  "readMore": {
+    "message": "Read More",
+    "description": "Read more button text"
+  },
+  "webAppModalTitle": {
+    "message": "Publish On Web App",
+    "description": "Title for web app publish modal"
+  },
+  "webAppModalDescription": {
+    "message": "You can enjoy more advanced features and a smoother publishing experience on our web app. Jump to the web publishing page now to try more powerful multi-platform publishing features!",
+    "description": "Description text for web app modal"
+  },
+  "webAppModalLater": {
+    "message": "Later",
+    "description": "Button text to dismiss the modal"
+  },
+  "webAppModalGo": {
+    "message": "Go to Web App",
+    "description": "Button text to go to web app"
   }
 }

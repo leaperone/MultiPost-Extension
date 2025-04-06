@@ -288,8 +288,8 @@
     "message": "内容"
   },
   "options2SOMErenHomepage": {
-    "message": "Multipost 首页",
-    "description": "选项页面中 Multipost 首页按钮文本"
+    "message": "主页",
+    "description": "主页按钮文本"
   },
   "sidepanelTabsManagerTitle": {
     "message": "同步管理",
@@ -529,6 +529,10 @@
   },
   "optionsFeedbackEmail": {
     "message": "发送邮件"
+  },
+  "optionsFeedback": {
+    "message": "提交反馈",
+    "description": "Button text for feedback form"
   },
   "optionsHelpPrefix": {
     "message": "遇到使用问题？"
@@ -829,5 +833,25 @@
   },
   "extraConfigWordpressSaveConfig": {
     "message": "保存"
+  },
+  "readMore": {
+    "message": "阅读更多",
+    "description": "阅读更多按钮文本"
+  },
+  "webAppModalTitle": {
+    "message": "使用网页版发布更多内容",
+    "description": "Title for web app publish modal"
+  },
+  "webAppModalDescription": {
+    "message": "在我们的网页版中，您可以享受更多高级功能和更流畅的发布体验。立即跳转到网页版发布页面，尝试更强大的多平台发布功能！",
+    "description": "Description text for web app modal"
+  },
+  "webAppModalLater": {
+    "message": "稍后再说",
+    "description": "Button text to dismiss the modal"
+  },
+  "webAppModalGo": {
+    "message": "前往网页版",
+    "description": "Button text to go to web app"
   }
 }
