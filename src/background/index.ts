@@ -8,7 +8,7 @@ import {
   tabsManagerMessageHandler,
 } from './services/tabs';
 import QuantumEntanglementKeepAlive from '../utils/keep-alive';
-import { createTabsForPlatforms, getPlatformInfos, injectScriptsToTabs, type SyncData } from '~sync/common';
+import { createTabsForPlatforms, getPlatformInfos, injectScriptsToTabs, type SyncData, type SyncDataPlatform } from '~sync/common';
 import { trustDomainMessageHandler } from './services/trust-domain';
 import { Storage } from '@plasmohq/storage';
 import { getAllAccountInfo } from '~sync/account';
@@ -68,15 +68,15 @@ const defaultMessageHandler = (request, sender, sendResponse) => {
 
           addTabsManagerMessages({
             syncData: data,
-            tabs: tabs.map((t: [chrome.tabs.Tab, string]) => ({
-              tab: t[0],
-              platform: t[1],
+            tabs: tabs.map((t: { tab: chrome.tabs.Tab; platformInfo: SyncDataPlatform }) => ({
+              tab: t.tab,
+              platformInfo: t.platformInfo,
             })),
           });
 
-          for (const [tab] of tabs) {
-            if (tab.id) {
-              await chrome.tabs.update(tab.id, { active: true });
+          for (const t of tabs) {
+            if (t.tab.id) {
+              await chrome.tabs.update(t.tab.id, { active: true });
               await new Promise((resolve) => setTimeout(resolve, 2000));
             }
           }
@@ -103,7 +103,7 @@ const defaultMessageHandler = (request, sender, sendResponse) => {
     sendResponse({ extensionId: chrome.runtime.id });
   }
 };
-starter(1000 * 10);
+starter(1000 * 30);
 // Message Handler || 消息处理器 || END
 
 // Keep Alive || 保活机制 || START

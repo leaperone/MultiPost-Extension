@@ -1,11 +1,11 @@
-import { getRawPlatformInfo, injectScriptsToTabs, type SyncData } from '~sync/common';
+import { injectScriptsToTabs, type SyncData, type SyncDataPlatform } from '~sync/common';
 
 // Tab Manager || 标签页管理 || START
 export interface TabManagerMessage {
   syncData: SyncData;
   tabs: {
     tab: chrome.tabs.Tab;
-    platform: string;
+    platformInfo: SyncDataPlatform;
   }[];
 }
 
@@ -38,21 +38,14 @@ export const tabsManagerHandleTabRemoved = handleTabRemoved;
 
 export const tabsManagerMessageHandler = (request, sender, sendResponse) => {
   if (request.type === 'MUTLIPOST_EXTENSION_REQUEST_PUBLISH_RELOAD') {
-    const { tabId, tabGroup } = request.data;
-    const tabInfo = tabGroup.tabs.find((t) => t.tab.id === tabId);
+    const { tabId } = request.data;
+    const info = tabsManagerMessages.find((group) => group.tabs.some((t) => t.tab.id === tabId));
+    const tabInfo = info?.tabs.find((t) => t.tab.id === tabId);
 
     if (tabInfo) {
-      const platformInfo = getRawPlatformInfo(tabInfo.platform);
-
-      if (platformInfo) {
-        chrome.tabs.update(tabId, { url: platformInfo.injectUrl, active: true }).then(() => {
-          injectScriptsToTabs([[tabInfo.tab, tabInfo.platform]], tabGroup.syncData);
-        });
-      } else {
-        console.error(`无法获取平台 ${tabInfo.platform} 的信息`);
-        sendResponse('error');
-        return;
-      }
+      chrome.tabs.update(tabId, { url: tabInfo.platformInfo.injectUrl, active: true }).then(() => {
+        injectScriptsToTabs([{ tab: tabInfo.tab, platformInfo: tabInfo.platformInfo }], info.syncData);
+      });
     } else {
       console.error(`未找到标签页 ID ${tabId} 的信息`);
       sendResponse('error');
@@ -68,9 +61,9 @@ export const tabsManagerMessageHandler = (request, sender, sendResponse) => {
     const { data, tabs } = request;
     addTabsManagerMessages({
       syncData: data,
-      tabs: tabs.map((t: [chrome.tabs.Tab, string]) => ({
-        tab: t[0],
-        platform: t[1],
+      tabs: tabs.map((t: { tab: chrome.tabs.Tab; platformInfo: SyncDataPlatform }) => ({
+        tab: t.tab,
+        platformInfo: t.platformInfo,
       })),
     });
     sendResponse('success');
