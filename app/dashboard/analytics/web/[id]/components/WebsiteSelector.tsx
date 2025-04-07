@@ -37,7 +37,6 @@ export function WebsiteSelector({ websites, currentWebsiteId }: WebsiteSelectorP
       {websites.map((website) => (
         <SelectItem
           key={website.id}
-          value={website.id}
           textValue={website.name}>
           <div className="flex flex-col gap-0.5">
             <span>{website.name}</span>
