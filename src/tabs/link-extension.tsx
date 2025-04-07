@@ -58,7 +58,7 @@ const LinkExtension = () => {
     if (!params?.apiKey) {
       setFeedback({
         type: 'error',
-        message: '发生了一些错误，请稍后再试',
+        message: chrome.i18n.getMessage('linkExtensionError'),
       });
       setTimeout(() => {
         window.close();
@@ -72,13 +72,13 @@ const LinkExtension = () => {
         await storage.set('apiKey', params.apiKey);
         setFeedback({
           type: 'success',
-          message: '已连接到 MultiPost.app',
+          message: chrome.i18n.getMessage('linkExtensionSuccess'),
         });
       } else {
         await storage.remove('apiKey');
         setFeedback({
           type: 'error',
-          message: '已拒绝连接',
+          message: chrome.i18n.getMessage('linkExtensionRejected'),
         });
       }
 
@@ -95,7 +95,7 @@ const LinkExtension = () => {
       console.error('Error handling trust domain:', error);
       setFeedback({
         type: 'error',
-        message: '处理请求时发生错误',
+        message: chrome.i18n.getMessage('linkExtensionProcessError'),
       });
     } finally {
       setIsProcessing(false);
@@ -123,7 +123,7 @@ const LinkExtension = () => {
 
             <div className="flex items-center justify-center gap-3 mb-6 ju">
               <ShieldAlert className="w-6 h-6 text-amber-500" />
-              <h1 className="text-xl font-semibold text-gray-900">连接扩展到 MultiPost.app</h1>
+              <h1 className="text-xl font-semibold text-gray-900">{chrome.i18n.getMessage('linkExtensionTitle')}</h1>
             </div>
 
             {!feedback && (
@@ -135,7 +135,7 @@ const LinkExtension = () => {
                     onPress={() => handleLinkExtension(false)}
                     disabled={isProcessing}>
                     <XCircle className="w-4 h-4 mr-2" />
-                    拒绝
+                    {chrome.i18n.getMessage('linkExtensionReject')}
                   </Button>
                   <Button
                     isDisabled={isProcessing}
@@ -143,7 +143,7 @@ const LinkExtension = () => {
                     className="flex-1 h-10"
                     onPress={() => handleLinkExtension(true)}>
                     <Shield className="w-4 h-4 mr-2" />
-                    允许
+                    {chrome.i18n.getMessage('linkExtensionAllow')}
                   </Button>
                 </div>
               </>
