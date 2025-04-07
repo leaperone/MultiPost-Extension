@@ -143,7 +143,11 @@ const ArticleTab: React.FC<ArticleTabProps> = ({ funcPublish, funcScraper }) => 
       : '';
 
     const data: SyncData = {
-      platforms: selectedPlatforms.map((platform) => platforms.find((p) => p.name === platform)),
+      platforms: selectedPlatforms.map((platform) => ({
+        name: platform,
+        injectUrl: platforms.find((p) => p.name === platform)?.injectUrl || '',
+        extraConfig: platforms.find((p) => p.name === platform)?.extraConfig || {},
+      })),
       data: {
         title,
         content: content || digest || '',
@@ -156,7 +160,7 @@ const ArticleTab: React.FC<ArticleTabProps> = ({ funcPublish, funcScraper }) => 
         markdownContent,
         markdownOriginContent,
       },
-      auto_publish: false,
+      isAutoPublish: false,
     };
 
     try {

@@ -160,13 +160,13 @@ export async function ArticleJianshu(data: SyncData) {
   }
 
   // 主流程
-  const processedData = articleData
+  const processedData = articleData;
   processedData.content = await processContent(processedData.content, processedData.fileDatas);
 
   const publishUrl = await publishArticle(processedData);
 
   if (publishUrl) {
-    if (!data.auto_publish) {
+    if (!data.isAutoPublish) {
       window.location.href = publishUrl;
       window.location.reload();
     }

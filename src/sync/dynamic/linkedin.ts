@@ -100,7 +100,7 @@ export async function DynamicLinkedin(data: SyncData) {
 
     // 处理发布按钮
     const publishButton = document.querySelector('button.share-actions__primary-action') as HTMLButtonElement;
-    if (publishButton && data.auto_publish) {
+    if (publishButton && data.isAutoPublish) {
       console.debug('点击发布按钮');
       publishButton.click();
     }

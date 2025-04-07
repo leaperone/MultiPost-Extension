@@ -861,6 +861,34 @@
   "extraConfigWordpressSaveConfig": {
     "message": "Save"
   },
+  "linkExtensionTitle": {
+    "message": "Connect Extension to MultiPost.app",
+    "description": "Link extension page title"
+  },
+  "linkExtensionReject": {
+    "message": "Reject",
+    "description": "Reject connection button text"
+  },
+  "linkExtensionAllow": {
+    "message": "Allow",
+    "description": "Allow connection button text"
+  },
+  "linkExtensionSuccess": {
+    "message": "Connected to MultiPost.app",
+    "description": "Connection success message"
+  },
+  "linkExtensionRejected": {
+    "message": "Connection rejected",
+    "description": "Connection rejected message"
+  },
+  "linkExtensionError": {
+    "message": "An error occurred, please try again later",
+    "description": "Connection error message"
+  },
+  "linkExtensionProcessError": {
+    "message": "Error processing request",
+    "description": "Request processing error message"
+  },
   "readMore": {
     "message": "Read More",
     "description": "Read more button text"

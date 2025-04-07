@@ -117,7 +117,7 @@ export async function DynamicXueqiu(data: SyncData) {
     // 等待一段时间后尝试发布
     await new Promise((resolve) => setTimeout(resolve, 5000));
 
-    if (data.auto_publish) {
+    if (data.isAutoPublish) {
       const maxAttempts = 3;
       for (let attempt = 0; attempt < maxAttempts; attempt++) {
         try {

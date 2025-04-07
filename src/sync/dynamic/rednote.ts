@@ -106,7 +106,7 @@ export async function DynamicRednote(data: SyncData) {
     }
 
     // 自动发布
-    if (data.auto_publish) {
+    if (data.isAutoPublish) {
       await new Promise((resolve) => setTimeout(resolve, 2000));
       const buttons = document.querySelectorAll('button');
       const publishButton = Array.from(buttons).find(

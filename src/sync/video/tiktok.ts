@@ -79,7 +79,7 @@ ${content}`;
       'button.TUXButton.TUXButton--default.TUXButton--large.TUXButton--primary',
     ) as HTMLButtonElement;
 
-    if (publishButton && data.auto_publish) {
+    if (publishButton && data.isAutoPublish) {
       console.log('点击发布按钮');
       publishButton.click();
     }

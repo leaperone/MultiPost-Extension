@@ -334,7 +334,7 @@ async function checkImageUploadCompletion(
 具体代码在 `src/sync/dynamic/bilibili.ts` 文件中。
 
 ```ts
-if (data.auto_publish) {
+if (data.isAutoPublish) {
   const maxAttempts = 3;
   for (let attempt = 0; attempt < maxAttempts; attempt++) {
     const publishButton = document.querySelector('div.bili-dyn-publishing__action.launcher') as HTMLDivElement;

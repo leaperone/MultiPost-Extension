@@ -331,7 +331,7 @@ export async function ArticleBaijiahao(data: SyncData) {
         document.body.removeChild(host);
       }, 3000);
 
-      if (!data.auto_publish) {
+      if (!data.isAutoPublish) {
         window.location.href = `https://baijiahao.baidu.com/builder/rc/edit?type=news&article_id=${articleId}`;
       }
     }

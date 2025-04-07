@@ -4,9 +4,19 @@ import { DynamicInfoMap } from './dynamic';
 import { getExtraConfigFromPlatformInfo, getExtraConfigFromPlatformInfos } from './extraconfig';
 import { VideoInfoMap } from './video';
 
+export interface SyncDataPlatform {
+  name: string;
+  injectUrl: string;
+  extraConfig:
+    | {
+        customInjectUrls?: string[]; // Beta 功能，用于自定义注入 URL
+      }
+    | unknown;
+}
+
 export interface SyncData {
-  platforms: PlatformInfo[];
-  auto_publish: boolean;
+  platforms: SyncDataPlatform[];
+  isAutoPublish: boolean;
   data: DynamicData | ArticleData | VideoData;
 }
 
@@ -52,8 +62,6 @@ export interface PlatformInfo {
   faviconUrl?: string;
   iconifyIcon?: string;
   platformName: string;
-  username?: string;
-  userAvatarUrl?: string;
   injectUrl: string;
   injectFunction: (data: SyncData) => Promise<void>;
   tags?: string[];
@@ -102,23 +110,30 @@ export async function getPlatformInfos(type?: 'DYNAMIC' | 'VIDEO' | 'ARTICLE'): 
 
 // Inject || 注入 || START
 export async function createTabsForPlatforms(data: SyncData) {
-  const tabs = [];
+  const tabs: { tab: chrome.tabs.Tab; platformInfo: SyncDataPlatform }[] = [];
   for (const info of data.platforms) {
     if (info) {
       const extraConfig = info.extraConfig as { customInjectUrls?: string[] };
       if (extraConfig?.customInjectUrls && extraConfig.customInjectUrls.length > 0) {
         for (const url of extraConfig.customInjectUrls) {
           const tab = await chrome.tabs.create({ url });
-          tabs.push([tab, info.name]);
+          info.injectUrl = url;
+          tabs.push({
+            tab,
+            platformInfo: info,
+          });
         }
       } else {
         const tab = await chrome.tabs.create({ url: info.injectUrl });
-        tabs.push([tab, info.name]);
+        tabs.push({
+          tab,
+          platformInfo: info,
+        });
       }
     }
   }
 
-  const groupId = await chrome.tabs.group({ tabIds: tabs.map((t) => t[0].id!) });
+  const groupId = await chrome.tabs.group({ tabIds: tabs.map((t) => t.tab.id!) });
   const group = await chrome.tabGroups.get(groupId);
 
   await chrome.tabGroups.update(group.id, {
@@ -129,15 +144,15 @@ export async function createTabsForPlatforms(data: SyncData) {
   return tabs;
 }
 
-export async function injectScriptsToTabs(tabs: [chrome.tabs.Tab, string][], data: SyncData) {
+export async function injectScriptsToTabs(tabs: { tab: chrome.tabs.Tab; platformInfo: SyncDataPlatform }[], data: SyncData) {
   for (const t of tabs) {
-    const tab = t[0];
-    const platform = t[1];
+    const tab = t.tab;
+    const platform = t.platformInfo;
     if (tab.id) {
       chrome.tabs.onUpdated.addListener(function listener(tabId, info) {
         if (tabId === tab.id && info.status === 'complete') {
           chrome.tabs.onUpdated.removeListener(listener);
-          getPlatformInfo(platform).then((info) => {
+          getPlatformInfo(platform.name).then((info) => {
             if (info) {
               chrome.scripting.executeScript({
                 target: { tabId: tab.id },

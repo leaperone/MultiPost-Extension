@@ -834,6 +834,34 @@
   "extraConfigWordpressSaveConfig": {
     "message": "保存"
   },
+  "linkExtensionTitle": {
+    "message": "连接扩展到 MultiPost.app",
+    "description": "连接扩展页面标题"
+  },
+  "linkExtensionReject": {
+    "message": "拒绝",
+    "description": "拒绝连接按钮文本"
+  },
+  "linkExtensionAllow": {
+    "message": "允许",
+    "description": "允许连接按钮文本"
+  },
+  "linkExtensionSuccess": {
+    "message": "已连接到 MultiPost.app",
+    "description": "连接成功提示"
+  },
+  "linkExtensionRejected": {
+    "message": "已拒绝连接",
+    "description": "拒绝连接提示"
+  },
+  "linkExtensionError": {
+    "message": "发生了一些错误，请稍后再试",
+    "description": "连接错误提示"
+  },
+  "linkExtensionProcessError": {
+    "message": "处理请求时发生错误",
+    "description": "处理请求错误提示"
+  },
   "readMore": {
     "message": "阅读更多",
     "description": "阅读更多按钮文本"

@@ -109,7 +109,7 @@ export async function VideoBaijiahao(data: SyncData) {
     await new Promise((resolve) => setTimeout(resolve, 5000));
 
     // 如果需要自动发布
-    if (data.auto_publish) {
+    if (data.isAutoPublish) {
       const publishButton = document.querySelector(
         'button.cheetah-btn.cheetah-btn-circle.cheetah-btn-primary.cheetah-btn-icon-only.cheetah-public',
       ) as HTMLButtonElement;

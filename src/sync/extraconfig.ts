@@ -1,3 +1,4 @@
+import { ping } from '~background/services/api';
 import { type PlatformInfo } from './common';
 import { Storage } from '@plasmohq/storage';
 
@@ -23,6 +24,8 @@ export async function saveExtraConfig<T>(platformKey: string, extraConfig: T): P
 
   // 保存回storage
   await storage.set(EXTRA_CONFIG_STORAGE_KEY, extraConfigMap);
+
+  await ping(true);
 }
 
 /**

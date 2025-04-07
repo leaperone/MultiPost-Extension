@@ -96,7 +96,7 @@ export async function DynamicWeiXinChannel(data: SyncData) {
       (b) => b.textContent.trim() === '发表',
     ) as HTMLButtonElement;
 
-    if (publishButton && data.auto_publish) {
+    if (publishButton && data.isAutoPublish) {
       console.log('点击发布按钮');
       publishButton.click();
     }

@@ -110,7 +110,7 @@ export async function DynamicWeibo(data: SyncData) {
     console.log('成功填入微博内容和图片');
 
     // 处理自动发布
-    if (data.auto_publish) {
+    if (data.isAutoPublish) {
       const sendButtons = document.querySelectorAll('span.woo-button-content');
       const sendButton = Array.from(sendButtons).find((button) => button.textContent?.includes('发送'));
 

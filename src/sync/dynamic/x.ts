@@ -131,7 +131,7 @@ export async function DynamicX(data: SyncData) {
     // 等待内容加载
     await new Promise((resolve) => setTimeout(resolve, 1000));
 
-    if (data.auto_publish) {
+    if (data.isAutoPublish) {
       const maxAttempts = 3;
       for (let attempt = 0; attempt < maxAttempts; attempt++) {
         try {

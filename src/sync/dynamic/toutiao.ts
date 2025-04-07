@@ -104,7 +104,7 @@ export async function DynamicToutiao(data: SyncData) {
     // 发布内容
     const publishButton = document.querySelector('button.publish-content') as HTMLButtonElement;
     if (publishButton) {
-      if (data.auto_publish) {
+      if (data.isAutoPublish) {
         publishButton.dispatchEvent(new Event('click', { bubbles: true }));
       }
     }

@@ -5,6 +5,7 @@ import { getDouyinAccountInfo } from './account/douyin';
 import { getRednoteAccountInfo } from './account/rednote';
 import { getBilibiliAccountInfo } from './account/bilibili';
 import { Storage } from '@plasmohq/storage';
+import { ping } from '~background/services/api';
 
 // 存储账号信息的键名
 export const ACCOUNT_INFO_STORAGE_KEY = 'multipost_account_info';
@@ -143,6 +144,8 @@ export async function refreshAllAccountInfo(): Promise<Record<string, AccountInf
   if (Object.keys(results).length === 0 && Object.keys(errors).length > 0) {
     throw new Error('所有账号信息刷新失败');
   }
+
+  await ping(true);
 
   return results;
 }

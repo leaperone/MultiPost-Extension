@@ -151,10 +151,20 @@ interface PlatformInfo {
 有关 `SyncData` 的和其他的类型定义，请参考 `src/sync/common.ts` 中的 `SyncData` 类型。
 
 ```js
+interface SyncDataPlatform {
+  name: string;
+  injectUrl: string;
+  extraConfig:
+    | {
+        customInjectUrls?: string[]; // Beta 功能，用于自定义注入 URL
+      }
+    | unknown;
+}
+
 interface SyncData {
-  platforms: string[];
-  auto_publish: boolean;
-  data: DynamicData | PostData | VideoData;
+  platforms: SyncDataPlatform[];
+  isAutoPublish: boolean;
+  data: DynamicData | ArticleData | VideoData;
 }
 
 window.postMessage({
@@ -162,10 +172,17 @@ window.postMessage({
   traceId: '',
   action: 'MUTLIPOST_EXTENSION_PUBLISH',
   data: {
-    platforms: ['DYNAMIC', 'VIDEO'],
-    auto_publish: true,
+    platforms: [{
+      name: 'DYNAMIC_BILIBILI',
+      injectUrl: 'https://t.bilibili.com/',
+      extraConfig: {},
+    }],
+    isAutoPublish: true,
     data: {
       title: 'test',
+      content: 'test',
+      images: [],
+      videos: [],
     },
   },
 });

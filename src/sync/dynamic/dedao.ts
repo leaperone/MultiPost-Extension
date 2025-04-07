@@ -113,7 +113,7 @@ export async function DynamicDedao(data: SyncData) {
     const sendButton = Array.from(sendButtons).find((button) => button.textContent?.includes('发布'));
 
     if (sendButton) {
-      if (data.auto_publish) {
+      if (data.isAutoPublish) {
         // 等待图片上传完成
         await new Promise((resolve) => setTimeout(resolve, 3000));
         let retryCount = 0;

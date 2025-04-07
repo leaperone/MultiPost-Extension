@@ -253,7 +253,7 @@ export async function ArticleWordpress(data: SyncData) {
     }
 
     // 如果设置了自动发布，跳转到编辑页面
-    if (!data.auto_publish) {
+    if (!data.isAutoPublish) {
       window.location.href = `/wp-admin/post.php?post=${postId}&action=edit`;
     }
   } catch (error) {

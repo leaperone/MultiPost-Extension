@@ -20,7 +20,7 @@ import PlatformCheckbox from './PlatformCheckbox';
 import { getPlatformInfos } from '~sync/common';
 import { Storage } from '@plasmohq/storage';
 import { Icon } from '@iconify/react';
-import  { useStorage } from '@plasmohq/storage/hook';
+import { useStorage } from '@plasmohq/storage/hook';
 import { ACCOUNT_INFO_STORAGE_KEY } from '~sync/account';
 import { EXTRA_CONFIG_STORAGE_KEY } from '~sync/extraconfig';
 
@@ -110,13 +110,17 @@ const VideoTab: React.FC<VideoTabProps> = ({ funcPublish }) => {
 
   const getSyncData = () => {
     return {
-      platforms: selectedPlatforms.map((platform) => platforms.find((p) => p.name === platform)),
+      platforms: selectedPlatforms.map((platform) => ({
+        name: platform,
+        injectUrl: platforms.find((p) => p.name === platform)?.injectUrl || '',
+        extraConfig: platforms.find((p) => p.name === platform)?.extraConfig || {},
+      })),
       data: {
         title,
         content,
         video: videoFile,
       },
-      auto_publish: false,
+      isAutoPublish: false,
     };
   };
 

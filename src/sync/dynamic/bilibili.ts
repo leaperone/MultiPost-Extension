@@ -147,7 +147,7 @@ export async function DynamicBilibili(data: SyncData) {
     // } else {
     //     console.log('动态发布失败');
     // }
-    if (data.auto_publish) {
+    if (data.isAutoPublish) {
       const maxAttempts = 3;
       for (let attempt = 0; attempt < maxAttempts; attempt++) {
         const publishButton = document.querySelector('div.bili-dyn-publishing__action.launcher') as HTMLDivElement;
