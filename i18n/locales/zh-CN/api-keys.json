@@ -1,0 +1,43 @@
+{
+  "page": {
+    "title": "API Keys 管理",
+    "create_button": "创建新的 API Key",
+    "empty_message": "暂无 API Keys"
+  },
+  "table": {
+    "columns": {
+      "name": "名称",
+      "key": "API Key",
+      "created_at": "创建时间",
+      "actions": "操作"
+    },
+    "auto_created_label": "自动创建"
+  },
+  "create_dialog": {
+    "title": "创建新的 API Key",
+    "save_title": "保存 API Key",
+    "name_label": "名称",
+    "name_placeholder": "请输入 API Key 的名称",
+    "name_required": "API Key 名称不能为空",
+    "save_notice": "请保存好你的 API Key，它只会显示这一次。",
+    "copy_success": "API Key 已复制到剪贴板",
+    "copy_failed": "请手动复制",
+    "create_success": "新的 API Key 已生成",
+    "create_failed": "请稍后重试",
+    "buttons": {
+      "cancel": "取消",
+      "create": "创建",
+      "done": "完成"
+    }
+  },
+  "delete_dialog": {
+    "title": "删除确认",
+    "message": "确定要删除 API Key \"{{name}}\" 吗？此操作无法撤销。",
+    "success": "API Key 已删除",
+    "failed": "删除失败，请稍后重试",
+    "buttons": {
+      "cancel": "取消",
+      "confirm": "删除"
+    }
+  }
+}

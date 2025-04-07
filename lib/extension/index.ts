@@ -4,11 +4,12 @@
  * through window message events
  */
 
+import { PublishPostData, SchedulePublishPostData } from '@/app/api/extension/types';
 import { v4 as uuidv4 } from 'uuid';
 
 export interface SyncData {
   platforms: PlatformInfo[];
-  auto_publish: boolean;
+  isAutoPublish: boolean;
   data: DynamicData | ArticleData | VideoData;
 }
 
@@ -74,23 +75,33 @@ export interface AccountInfo {
 }
 
 /**
+ * 扩展消息响应的基础接口
+ */
+export interface ExtensionResponse<T> {
+  type: 'response';
+  action: string;
+  traceId: string;
+  data: T;
+}
+
+/**
  * Sends a request to the browser extension and waits for a response
  * @description Uses window.postMessage for communication with the extension,
  * with timeout and cleanup handling
  * @param {string} action - The action identifier for the extension to process
- * @param {T} data - Optional data to send with the request
+ * @param {D} data - Optional data to send with the request
  * @param {number} timeout - Timeout in milliseconds before the request fails
- * @returns {Promise<T>} Promise that resolves with the extension's response
+ * @returns {Promise<R>} Promise that resolves with the extension's response
  * @throws {Error} When the request times out
  * @example
- * const response = await sendRequest('SOME_ACTION', { data: 'value' }, 5000);
+ * const response = await sendRequest<void, boolean>('SOME_ACTION', undefined, 5000);
  */
-export async function sendRequest<T>(action: string, data?: T, timeout: number = 5000): Promise<T> {
+export async function sendRequest<D, R>(action: string, data?: D, timeout: number = 5000): Promise<R> {
   const traceId = uuidv4();
 
-  return new Promise<T>((resolve, reject) => {
+  return new Promise<R>((resolve, reject) => {
     // Create message handler
-    const messageHandler = (event: MessageEvent) => {
+    const messageHandler = (event: MessageEvent<ExtensionResponse<R>>) => {
       if (event.data.type === 'response' && event.data.action === action && event.data.traceId === traceId) {
         cleanup();
         resolve(event.data.data);
@@ -141,7 +152,7 @@ export async function sendRequest<T>(action: string, data?: T, timeout: number =
 export async function checkServiceStatus(timeout: number = 5000): Promise<boolean> {
   try {
     // Send request and wait for actual response
-    await sendRequest<void>('MUTLIPOST_EXTENSION_CHECK_SERVICE_STATUS', undefined, timeout);
+    await sendRequest<void, void>('MUTLIPOST_EXTENSION_CHECK_SERVICE_STATUS', undefined, timeout);
     return true;
   } catch (error) {
     console.error('Service check failed:', error);
@@ -159,7 +170,7 @@ export async function checkServiceStatus(timeout: number = 5000): Promise<boolea
  */
 export async function openOptions(timeout: number = 5000): Promise<boolean> {
   try {
-    await sendRequest<void>('MUTLIPOST_EXTENSION_OPEN_OPTIONS', undefined, timeout);
+    await sendRequest<void, void>('MUTLIPOST_EXTENSION_OPEN_OPTIONS', undefined, timeout);
     return true;
   } catch (error) {
     console.error('Failed to open extension options:', error);
@@ -167,12 +178,12 @@ export async function openOptions(timeout: number = 5000): Promise<boolean> {
   }
 }
 
-export const funcPublish = async (data: SyncData) => {
-  sendRequest('MUTLIPOST_EXTENSION_PUBLISH', data);
+export const funcPublish = async (data: SyncData | PublishPostData | SchedulePublishPostData) => {
+  sendRequest<SyncData | PublishPostData | SchedulePublishPostData, void>('MUTLIPOST_EXTENSION_PUBLISH', data);
 };
 
 export const funcGetPlatformInfos = async (): Promise<PlatformInfo[]> => {
-  return sendRequest('MUTLIPOST_EXTENSION_PLATFORMS');
+  return sendRequest<void, PlatformInfo[]>('MUTLIPOST_EXTENSION_PLATFORMS');
 };
 
 interface PermissionResponse {
@@ -181,7 +192,7 @@ interface PermissionResponse {
 }
 
 export const funcGetPermission = async (timeout: number = 30000) => {
-  return sendRequest<PermissionResponse>('MUTLIPOST_EXTENSION_REQUEST_TRUST_DOMAIN', undefined, timeout);
+  return sendRequest<void, PermissionResponse>('MUTLIPOST_EXTENSION_REQUEST_TRUST_DOMAIN', undefined, timeout);
 };
 
 interface PlatformResponse {
@@ -196,8 +207,16 @@ export const getPlatformInfos = async (type: string) => {
 };
 
 export const getAccountInfos = async (): Promise<Record<string, AccountInfo>> => {
-  const response = await sendRequest<{ accountInfo: Record<string, AccountInfo> }>(
+  const response = await sendRequest<void, { accountInfo: Record<string, AccountInfo> }>(
     'MUTLIPOST_EXTENSION_GET_ACCOUNT_INFOS',
   );
   return response.accountInfo;
+};
+
+export const linkExtensionClient = async (apiKey: string, timeout: number = 30000) => {
+  return sendRequest<{ apiKey: string }, { confirm: boolean }>(
+    'MUTLIPOST_EXTENSION_LINK_EXTENSION',
+    { apiKey },
+    timeout,
+  );
 };

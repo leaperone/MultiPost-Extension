@@ -3,6 +3,7 @@ import {
   ChartSplineIcon,
   GridIcon,
   Home,
+  KeyIcon,
   LayoutDashboardIcon,
   LogOut,
   PuzzleIcon,
@@ -74,6 +75,11 @@ const getSidebarFooterItems = (t: TranslationFunction): MenuItem[] => [
   //   url: '/dashboard/recharge',
   //   icon: CreditCardIcon,
   // },
+  {
+    title: t('sidebar.menu.apiKeys'),
+    url: '/dashboard/api-keys',
+    icon: KeyIcon,
+  },
   {
     title: t('sidebar.menu.extension'),
     url: '/extension',

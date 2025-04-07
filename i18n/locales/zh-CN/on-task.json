@@ -1,0 +1,22 @@
+{
+  "error": {
+    "title": "错误",
+    "task_id_required": "任务ID不能为空",
+    "fetch_failed": "获取任务数据失败"
+  },
+  "not_found": {
+    "title": "未找到任务",
+    "message": "没有找到ID为 {{taskId}} 的任务数据"
+  },
+  "task_details": {
+    "title": "任务详情",
+    "fields": {
+      "task_id": "任务ID",
+      "task_type": "任务类型",
+      "status": "任务状态",
+      "created_at": "创建时间",
+      "updated_at": "更新时间",
+      "task_data": "任务数据"
+    }
+  }
+}

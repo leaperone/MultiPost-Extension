@@ -48,5 +48,56 @@
     "contentRequired": "内容不能为空",
     "platformRequired": "请至少选择一个平台",
     "titleAndVideoRequired": "请输入标题并上传视频"
+  },
+  "client": {
+    "page": {
+      "title": "扩展客户端",
+      "description": "管理已连接的浏览器扩展客户端",
+      "alert": "请保持浏览器打开以确保客户端正常工作。关闭浏览器后，客户端将无法继续工作。",
+      "empty": "暂无已连接的客户端",
+      "last_seen": "{{time}}在线"
+    },
+    "link_button": {
+      "button": "连接扩展",
+      "modal": {
+        "title": "连接扩展",
+        "description": "我们将为您创建一个新的 API Key 用于连接扩展。请注意：",
+        "notes": {
+          "credential": "API Key 是连接扩展的唯一凭证",
+          "delete": "请不要随意删除已连接扩展的 API Key",
+          "manage": "您可以在 {{link}} 查看所有的 API Key",
+          "manage_link": "API Keys 管理页面"
+        },
+        "buttons": {
+          "cancel": "取消",
+          "confirm": "确认创建"
+        }
+      },
+      "toast": {
+        "error": {
+          "title": "链接失败",
+          "description": "请稍后重试"
+        }
+      }
+    },
+    "edit_button": {
+      "button": "编辑",
+      "modal": {
+        "title": "编辑名称",
+        "name_label": "名称",
+        "name_placeholder": "请输入名称",
+        "buttons": {
+          "cancel": "取消",
+          "save": "保存"
+        }
+      },
+      "toast": {
+        "success": "名称编辑成功",
+        "error": {
+          "title": "编辑失败",
+          "description": "请稍后重试"
+        }
+      }
+    }
   }
 }

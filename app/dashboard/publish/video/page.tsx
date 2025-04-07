@@ -77,9 +77,8 @@ export default function VideoPage() {
         content,
         video: videoFile,
       },
-      auto_publish: false,
+      isAutoPublish: false,
     };
-    console.log(data);
 
     funcPublish(data);
   };

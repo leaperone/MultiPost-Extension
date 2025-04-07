@@ -1,0 +1,43 @@
+{
+  "page": {
+    "title": "API Keys Management",
+    "create_button": "Create New API Key",
+    "empty_message": "No API Keys"
+  },
+  "table": {
+    "columns": {
+      "name": "Name",
+      "key": "API Key",
+      "created_at": "Created At",
+      "actions": "Actions"
+    },
+    "auto_created_label": "Auto-Created"
+  },
+  "create_dialog": {
+    "title": "Create New API Key",
+    "save_title": "Save API Key",
+    "name_label": "Name",
+    "name_placeholder": "Enter API Key name",
+    "name_required": "API Key name is required",
+    "save_notice": "Please save your API Key, it will only be shown once.",
+    "copy_success": "API Key copied to clipboard",
+    "copy_failed": "Please copy manually",
+    "create_success": "New API Key has been generated",
+    "create_failed": "Please try again later",
+    "buttons": {
+      "cancel": "Cancel",
+      "create": "Create",
+      "done": "Done"
+    }
+  },
+  "delete_dialog": {
+    "title": "Delete Confirmation",
+    "message": "Are you sure you want to delete API Key \"{{name}}\"? This action cannot be undone.",
+    "success": "API Key has been deleted",
+    "failed": "Failed to delete, please try again later",
+    "buttons": {
+      "cancel": "Cancel",
+      "confirm": "Delete"
+    }
+  }
+}

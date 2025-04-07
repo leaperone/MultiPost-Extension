@@ -21,9 +21,12 @@ model User {
   Authenticator      Authenticator[]
   SocialMediaAccount SocialMediaAccount[]
 
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
-  Website   Website[]
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+  Website         Website[]
+  APIKey          APIKey[]
+  ExtensionClient ExtensionClient[]
+  ExtensionTask   ExtensionTask[]
 }
 
 model Account {
@@ -227,4 +230,42 @@ model SocialMediaAccount {
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([userId, provider, accountId])
+}
+
+model APIKey {
+  id        String   @id @unique @default(cuid())
+  userId    String
+  name      String
+  key       String   @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model ExtensionClient {
+  id               String   @id @unique @default(cuid())
+  userId           String
+  name             String
+  extensionVersion String   @default("unknown")
+  platformInfos    Json
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  user          User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  ExtensionTask ExtensionTask[]
+}
+
+model ExtensionTask {
+  id             String   @id @unique @default(cuid())
+  userId         String
+  taskType       String
+  taskData       Json
+  status         String
+  targetClientId String
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  user         User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  targetClient ExtensionClient @relation(fields: [targetClientId], references: [id], onDelete: Cascade)
 }

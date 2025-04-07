@@ -1,0 +1,22 @@
+{
+  "error": {
+    "title": "Error",
+    "task_id_required": "Task ID is required",
+    "fetch_failed": "Failed to fetch task data"
+  },
+  "not_found": {
+    "title": "Task Not Found",
+    "message": "No task found with ID {{taskId}}"
+  },
+  "task_details": {
+    "title": "Task Details",
+    "fields": {
+      "task_id": "Task ID",
+      "task_type": "Task Type",
+      "status": "Status",
+      "created_at": "Created At",
+      "updated_at": "Updated At",
+      "task_data": "Task Data"
+    }
+  }
+}

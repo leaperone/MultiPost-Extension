@@ -109,7 +109,7 @@ export default function DynamicPage() {
         images,
         videos,
       },
-      auto_publish: autoPublish,
+      isAutoPublish: autoPublish,
     };
 
     try {

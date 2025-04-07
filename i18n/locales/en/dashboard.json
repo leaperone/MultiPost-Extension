@@ -28,7 +28,8 @@
       "publish": "Publish",
       "extension": "Browser Extension",
       "settings": "Settings",
-      "signout": "Sign Out"
+      "signout": "Sign Out",
+      "apiKeys": "API-Keys"
     },
     "collapse": "Collapse Sidebar"
   }

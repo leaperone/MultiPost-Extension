@@ -3,7 +3,7 @@
 import { Alert, Tabs, Tab, Button } from '@heroui/react';
 import Link from 'next/link';
 import { useTranslation } from '@/i18n/client';
-import { MessageCircleHeartIcon, VideoIcon, FileTextIcon } from 'lucide-react';
+import { MessageCircleHeartIcon, VideoIcon, FileTextIcon, UsersIcon } from 'lucide-react';
 import { usePathname } from 'next/navigation';
 import ForceInstallExtension from '@/components/ForceInstallExtension';
 import { useEffect } from 'react';
@@ -52,6 +52,15 @@ export default function PublishLayout({ children }: { children: React.ReactNode 
           title={
             <div className="flex items-center">
               <FileTextIcon className="size-4" />
+            </div>
+          }
+        />
+        <Tab
+          key="/dashboard/publish/client"
+          href="/dashboard/publish/client"
+          title={
+            <div className="flex items-center">
+              <UsersIcon className="size-4" />
             </div>
           }
         />

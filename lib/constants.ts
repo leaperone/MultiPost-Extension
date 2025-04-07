@@ -657,3 +657,5 @@ export const DETAIL_OPTIONS = [
   { key: 'screens', label: '屏幕分辨率' },
   { key: 'pagetitles', label: '页面标题' },
 ];
+
+export const BASE_URL = process.env.NODE_ENV === 'production' ? 'https://multipost.app' : 'http://localhost:3000';

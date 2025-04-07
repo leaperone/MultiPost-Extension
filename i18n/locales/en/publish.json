@@ -48,5 +48,56 @@
     "contentRequired": "Content is required",
     "platformRequired": "Please select at least one platform",
     "titleAndVideoRequired": "Please enter a title and upload a video"
+  },
+  "client": {
+    "page": {
+      "title": "Extension Clients",
+      "description": "Manage connected browser extension clients",
+      "alert": "Please keep the browser open to ensure the client works properly. The client will stop working after closing the browser.",
+      "empty": "No connected clients",
+      "last_seen": "Last seen {{time}}"
+    },
+    "link_button": {
+      "button": "Connect Extension",
+      "modal": {
+        "title": "Connect Extension",
+        "description": "We will create a new API Key for connecting the extension. Please note:",
+        "notes": {
+          "credential": "API Key is the only credential for connecting the extension",
+          "delete": "Please do not delete API Keys of connected extensions",
+          "manage": "You can view all API Keys in the {{link}}",
+          "manage_link": "API Keys Management Page"
+        },
+        "buttons": {
+          "cancel": "Cancel",
+          "confirm": "Create"
+        }
+      },
+      "toast": {
+        "error": {
+          "title": "Connection Failed",
+          "description": "Please try again later"
+        }
+      }
+    },
+    "edit_button": {
+      "button": "Edit",
+      "modal": {
+        "title": "Edit Name",
+        "name_label": "Name",
+        "name_placeholder": "Enter name",
+        "buttons": {
+          "cancel": "Cancel",
+          "save": "Save"
+        }
+      },
+      "toast": {
+        "success": "Name updated successfully",
+        "error": {
+          "title": "Update Failed",
+          "description": "Please try again later"
+        }
+      }
+    }
   }
 }

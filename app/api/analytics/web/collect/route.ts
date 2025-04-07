@@ -80,8 +80,6 @@ export async function POST(request: Request) {
       return badRequest('Invalid request body.');
     }
 
-    console.log('body', body);
-
     // 验证请求体格式
     const result = schema.safeParse(body);
     if (!result.success) {
