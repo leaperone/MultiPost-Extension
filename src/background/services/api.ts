@@ -5,13 +5,14 @@ const storage = new Storage({ area: 'local' });
 
 const host = process.env.NODE_ENV === 'development' ? 'http://localhost:3000' : 'https://multipost.app';
 
-const ping = async (withPlatforms: boolean = false) => {
+export const ping = async (withPlatforms: boolean = false) => {
   const apiKey = await storage.get('apiKey');
   if (!apiKey) {
     return;
   }
   const extensionClientId = (await storage.get('extensionClientId')) || '';
   const body = {
+    extensionVersion: chrome.runtime.getManifest().version,
     extensionClientId,
     platformInfos: undefined,
   };
@@ -38,12 +39,14 @@ const ping = async (withPlatforms: boolean = false) => {
   });
   if (response.ok) {
     const body = await response.json();
-    if (body.success && body.data.action === 'NEW_TASK') {
+    if (!body.success && body.error === 'KEY_EXPIRED') {
+      await storage.remove('apiKey');
+    } else if (!body.success && body.error === 'CLIENT_NOT_FOUND') {
+      await storage.remove('extensionClientId');
+    } else if (body.success && body.data.action === 'NEW_TASK') {
       chrome.tabs.create({ url: body.data.url });
     } else if (body.success && body.data.action === 'NEW_CLIENT') {
       await storage.set('extensionClientId', body.data.clientId);
-    } else if (body.success && body.data.action === 'KEY_EXPIRED') {
-      await storage.remove('apiKey');
     }
   }
   return null;
@@ -80,8 +83,6 @@ export const linkExtensionMessageHandler = async (request, sender, sendResponse)
 };
 
 export const starter = (interval: number) => {
+  ping(true);
   setInterval(ping, interval);
-  setInterval(() => {
-    ping(true);
-  }, interval * 10);
 };
