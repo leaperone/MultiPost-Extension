@@ -91,7 +91,7 @@ It is recommended to use the package management tool `pnpm@latest-9` with Node.j
 
 ## Star History
 
-[![Star History Chart](https://api.star-history.com/svg?repos=leaperone/MultiPost-Extension,leaperone/multipost-wechat-markdown-editor&type=Date)](https://www.star-history.com/#leaperone/MultiPost-Extension&leaperone/multipost-wechat-markdown-editor&Date)
+[![Star History Chart](https://api.star-history.com/svg?repos=leaperone/multipost-wechat-markdown-editor,leaperone/MultiPost-Extension&type=Date)](https://www.star-history.com/#leaperone/multipost-wechat-markdown-editor&leaperone/MultiPost-Extension&Date)
 
 ## Contact Us
 
