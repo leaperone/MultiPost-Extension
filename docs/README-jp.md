@@ -6,6 +6,8 @@
 
 ⭐ このプロジェクトが役立つと思われる場合は、スターを付けていただけると幸いです！皆様のサポートが私たちの成長と改善の原動力となります！⭐
 
+[MultiPost ドキュメント](https://docs.multipost.app)
+
 [English](../README.md) | [中文](README-zh.md) | [日本語](README-jp.md) | [Français](README-fr.md) | [한국어](README-kr.md)
 
 > 複数のソーシャルメディアプラットフォームにワンクリックでコンテンツを公開できるブラウザ拡張機能
@@ -26,6 +28,7 @@
 
 ## はじめに
 - [multipost.app](https://multipost.app) - 公式ウェブサイト
+- [MultiPost ドキュメント](https://docs.multipost.app)
 - [MultiPost 記事エディター](https://md.multipost.app/) - [(リポジトリ)](https://github.com/leaper-one/multipost-wechat-markdown-editor) - 複数のプラットフォームにコンテンツを作成・投稿するためのオンラインエディター
 - [Chrome拡張機能 - ![Chrome Web Store Version Chrome ウェブストアバージョン](https://img.shields.io/chrome-web-store/v/dhohkaclnjgcikfoaacfgijgjgceofih)](https://chromewebstore.google.com/detail/multipost/dhohkaclnjgcikfoaacfgijgjgceofih) ![Chrome Web Store Users Chrome ウェブストアユーザー](https://img.shields.io/chrome-web-store/users/dhohkaclnjgcikfoaacfgijgjgceofih) ![Chrome Web Store Last Updated](https://img.shields.io/chrome-web-store/last-updated/dhohkaclnjgcikfoaacfgijgjgceofih)
 - [Edge拡張機能 - ![](https://img.shields.io/badge/dynamic/json?label=edge%20add-on&prefix=v&query=%24.version&url=https%3A%2F%2Fmicrosoftedge.microsoft.com%2Faddons%2Fgetproductdetailsbycrxid%2Fckoiphiceimehjkolnfffgbmihoppgjg)](https://microsoftedge.microsoft.com/addons/detail/multipost/ckoiphiceimehjkolnfffgbmihoppgjg) [![](https://img.shields.io/badge/dynamic/json?label=users&query=%24.activeInstallCount&url=https%3A%2F%2Fmicrosoftedge.microsoft.com%2Faddons%2Fgetproductdetailsbycrxid%2Fckoiphiceimehjkolnfffgbmihoppgjg)](https://microsoftedge.microsoft.com/addons/detail/multipost/ckoiphiceimehjkolnfffgbmihoppgjg)
