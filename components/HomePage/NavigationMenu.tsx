@@ -56,6 +56,16 @@ export function HomePageNavigationMenu() {
         </NavigationMenuItem>
         <NavigationMenuItem>
           <Link
+            href="https://docs.multipost.app"
+            legacyBehavior
+            passHref>
+            <NavigationMenuLink className={cn(navigationMenuTriggerStyle(), 'group')}>
+              {t('navigation.docs')}
+            </NavigationMenuLink>
+          </Link>
+        </NavigationMenuItem>
+        <NavigationMenuItem>
+          <Link
             href="/about"
             legacyBehavior
             passHref>
