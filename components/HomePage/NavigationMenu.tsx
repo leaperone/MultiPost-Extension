@@ -12,7 +12,7 @@ import {
   navigationMenuTriggerStyle,
 } from '@/components/ui/navigation-menu';
 import Link from 'next/link';
-import { LayoutDashboard, PuzzleIcon, Users, SendIcon } from 'lucide-react';
+import { LayoutDashboard, PuzzleIcon, Users, SendIcon, BookOpenIcon } from 'lucide-react';
 import { useTranslation } from '@/i18n/client';
 
 export function HomePageNavigationMenu() {
@@ -60,6 +60,7 @@ export function HomePageNavigationMenu() {
             legacyBehavior
             passHref>
             <NavigationMenuLink className={cn(navigationMenuTriggerStyle(), 'group')}>
+              <BookOpenIcon className="mr-2 size-4 transition-transform" />
               {t('navigation.docs')}
             </NavigationMenuLink>
           </Link>
