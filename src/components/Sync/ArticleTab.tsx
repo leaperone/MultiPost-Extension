@@ -11,6 +11,9 @@ import {
   CardFooter,
   Accordion,
   AccordionItem,
+  Alert,
+  Spacer,
+  Link,
 } from '@heroui/react';
 import { ImagePlusIcon, XIcon, DownloadIcon, Eraser } from 'lucide-react';
 import type { FileData, SyncData } from '~sync/common';
@@ -336,8 +339,21 @@ const ArticleTab: React.FC<ArticleTabProps> = ({ funcPublish, funcScraper }) => 
 
   return (
     <>
+      <Alert
+        title={chrome.i18n.getMessage('articleEditorAlertTitle')}
+        description={chrome.i18n.getMessage('articleEditorAlertDescription')}
+        endContent={
+          <Button
+            as={Link}
+            href="https://md.multipost.app"
+            target="_blank">
+            {chrome.i18n.getMessage('articleEditorAlertButton')}
+          </Button>
+        }
+      />
+      <Spacer y={4} />
       <div className="flex flex-col gap-4 md:flex-row">
-        <div className="flex flex-col w-full gap-4 md:w-1/2">
+        <div className="flex flex-col gap-4 w-full md:w-1/2">
           <Card className="mb-4 shadow-none h-fit bg-default-50">
             <CardBody>
               <div className="flex items-center space-x-2">
@@ -375,7 +391,7 @@ const ArticleTab: React.FC<ArticleTabProps> = ({ funcPublish, funcScraper }) => 
               <h3 className="text-sm font-medium">{chrome.i18n.getMessage('optionsCoverImage')}</h3>
             </CardHeader>
             <CardBody>
-              <div className="flex items-center justify-center">
+              <div className="flex justify-center items-center">
                 <input
                   type="file"
                   ref={coverInputRef}
@@ -396,7 +412,7 @@ const ArticleTab: React.FC<ArticleTabProps> = ({ funcPublish, funcScraper }) => 
                       isIconOnly
                       size="sm"
                       color="danger"
-                      className="absolute top-0 right-0 z-50 m-1 transition-opacity opacity-0 group-hover:opacity-100"
+                      className="absolute top-0 right-0 z-50 m-1 opacity-0 transition-opacity group-hover:opacity-100"
                       onPress={handleDeleteCover}>
                       <XIcon className="size-4" />
                     </Button>
@@ -405,7 +421,7 @@ const ArticleTab: React.FC<ArticleTabProps> = ({ funcPublish, funcScraper }) => 
                   <Button
                     variant="light"
                     onPress={() => coverInputRef.current?.click()}>
-                    <ImagePlusIcon className="w-6 h-6 mr-2" />
+                    <ImagePlusIcon className="mr-2 w-6 h-6" />
                     {chrome.i18n.getMessage('optionsUploadCover')}
                   </Button>
                 )}
@@ -451,7 +467,7 @@ const ArticleTab: React.FC<ArticleTabProps> = ({ funcPublish, funcScraper }) => 
                 <h4 className="mb-2 font-semibold">{importedContent.title}</h4>
                 <p className="mb-4 text-sm">{importedContent.digest}</p>
                 <div
-                  className="prose max-w-none"
+                  className="max-w-none prose"
                   dangerouslySetInnerHTML={{ __html: importedContent.content }}
                 />
               </CardBody>
@@ -459,11 +475,11 @@ const ArticleTab: React.FC<ArticleTabProps> = ({ funcPublish, funcScraper }) => 
           )}
         </div>
 
-        <div className="flex flex-col w-full gap-4 md:w-1/2">
+        <div className="flex flex-col gap-4 w-full md:w-1/2">
           <div className="flex flex-col gap-4 p-4 rounded-lg bg-default-50">
             <div className="flex flex-col gap-2">
-              <div className="flex items-center justify-between mb-2">
-                <div className="flex items-center gap-2"></div>
+              <div className="flex justify-between items-center mb-2">
+                <div className="flex gap-2 items-center"></div>
                 {selectedPlatforms.length > 0 && (
                   <Button
                     isIconOnly
@@ -554,7 +570,7 @@ const ArticleTab: React.FC<ArticleTabProps> = ({ funcPublish, funcScraper }) => 
               onPress={handlePublish}
               color="primary"
               disabled={!title || selectedPlatforms.length === 0}
-              className="w-full px-4 py-2 mt-2 font-bold">
+              className="px-4 py-2 mt-2 w-full font-bold">
               {chrome.i18n.getMessage('optionsSyncArticle')}
             </Button>
           </div>
