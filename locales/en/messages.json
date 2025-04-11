@@ -491,7 +491,7 @@
   },
   "platformYoutube": {
     "message": "YouTube",
-    "description": "Platform name for YouTube"
+    "description": "YouTube platform name"
   },
   "platformTiktok": {
     "message": "Tiktok",
@@ -912,5 +912,17 @@
   "optionsViewAutomation": {
     "message": "Automation",
     "description": "View automation docs button text"
+  },
+  "articleEditorAlertTitle": {
+    "message": "New Article Editor",
+    "description": "Article editor alert title"
+  },
+  "articleEditorAlertDescription": {
+    "message": "Edit, format, and publish articles with our new editor, supporting WeChat Official Account and more",
+    "description": "Article editor alert description"
+  },
+  "articleEditorAlertButton": {
+    "message": "Try Now",
+    "description": "Article editor alert button text"
   }
 }

@@ -885,5 +885,17 @@
   "optionsViewAutomation": {
     "message": "自动化",
     "description": "查看自动化文档按钮文本"
+  },
+  "articleEditorAlertTitle": {
+    "message": "全新的文章排版编辑器",
+    "description": "文章编辑器 alert 标题"
+  },
+  "articleEditorAlertDescription": {
+    "message": "编辑、排版、发布，尽在文章编辑器，支持公众号等文章平台",
+    "description": "文章编辑器 alert 描述"
+  },
+  "articleEditorAlertButton": {
+    "message": "去体验",
+    "description": "文章编辑器 alert 按钮文本"
   }
 }
