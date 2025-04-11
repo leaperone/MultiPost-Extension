@@ -881,5 +881,9 @@
   "webAppModalGo": {
     "message": "前往网页版",
     "description": "Button text to go to web app"
+  },
+  "optionsViewAutomation": {
+    "message": "自动化",
+    "description": "查看自动化文档按钮文本"
   }
 }

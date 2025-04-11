@@ -908,5 +908,9 @@
   "webAppModalGo": {
     "message": "Go to Web App",
     "description": "Button text to go to web app"
+  },
+  "optionsViewAutomation": {
+    "message": "Automation",
+    "description": "View automation docs button text"
   }
 }

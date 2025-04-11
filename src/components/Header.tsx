@@ -1,5 +1,5 @@
-import { Button, Image } from '@heroui/react';
-import { BookOpenText, LayoutDashboardIcon, SendIcon } from 'lucide-react';
+import { Button, Image, Popover, PopoverContent, PopoverTrigger } from '@heroui/react';
+import { BookOpenText, BotIcon, LayoutDashboardIcon, SendIcon } from 'lucide-react';
 import React from 'react';
 
 const Header: React.FC = () => {
@@ -40,17 +40,41 @@ const Header: React.FC = () => {
             startContent={<SendIcon size={16} />}>
             <span className="text-sm">{chrome.i18n.getMessage('optionViewHomePagePublish')}</span>
           </Button>
-          <Button
-            isDisabled
-            size="sm"
-            variant="flat"
-            color="primary"
-            as="a"
-            target="_blank"
-            href="https://multipost.app"
-            startContent={<BookOpenText size={16} />}>
-            <span className="text-sm">{chrome.i18n.getMessage('optionsViewDocs')}</span>
-          </Button>
+          <Popover>
+            <PopoverTrigger>
+              <Button
+                size="sm"
+                variant="flat"
+                color="primary"
+                startContent={<BookOpenText size={16} />}>
+                <span className="text-sm">{chrome.i18n.getMessage('optionsViewDocs')}</span>
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent>
+              <div className="flex flex-col gap-2 p-2">
+                <Button
+                  size="sm"
+                  variant="light"
+                  color="primary"
+                  as="a"
+                  target="_blank"
+                  href="https://docs.multipost.app"
+                  startContent={<BookOpenText size={16} />}>
+                  <span className="text-sm">User Guide</span>
+                </Button>
+                <Button
+                  size="sm"
+                  variant="light"
+                  color="primary"
+                  as="a"
+                  target="_blank"
+                  href="https://docs.multipost.app/docs/api-reference"
+                  startContent={<BotIcon size={16} />}>
+                  <span className="text-sm">{chrome.i18n.getMessage('optionsViewAutomation')}</span>
+                </Button>
+              </div>
+            </PopoverContent>
+          </Popover>
         </div>
       </div>
     </header>
