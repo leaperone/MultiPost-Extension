@@ -27,6 +27,9 @@ model User {
   APIKey          APIKey[]
   ExtensionClient ExtensionClient[]
   ExtensionTask   ExtensionTask[]
+  Credit          Credit[]
+  CreditUsage     CreditUsage[]
+  RechargeCredit  RechargeCredit[]
 }
 
 model Account {
@@ -268,4 +271,39 @@ model ExtensionTask {
 
   user         User            @relation(fields: [userId], references: [id], onDelete: Cascade)
   targetClient ExtensionClient @relation(fields: [targetClientId], references: [id], onDelete: Cascade)
+}
+
+model Credit {
+  userId      String   @unique
+  credits     Decimal  @db.Decimal(38, 18)
+  freeCredits Decimal  @db.Decimal(38, 18)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model CreditUsage {
+  id        String   @id @unique @default(cuid())
+  userId    String
+  type      String
+  amount    Decimal  @db.Decimal(38, 18)
+  isFree    Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model RechargeCredit {
+  id        String   @id @unique @default(cuid())
+  userId    String
+  orderId   String   @unique
+  type      String
+  amount    Decimal  @db.Decimal(38, 18)
+  status    String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 }

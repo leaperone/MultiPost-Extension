@@ -29,7 +29,8 @@
       "extension": "Browser Extension",
       "settings": "Settings",
       "signout": "Sign Out",
-      "apiKeys": "API-Keys"
+      "apiKeys": "API-Keys",
+      "recharge": "Recharge"
     },
     "collapse": "Collapse Sidebar"
   }

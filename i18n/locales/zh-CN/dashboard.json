@@ -29,7 +29,8 @@
       "extension": "浏览器扩展",
       "settings": "设置",
       "signout": "退出登录",
-      "apiKeys": "API-Keys"
+      "apiKeys": "API-Keys",
+      "recharge": "充值"
     },
     "collapse": "收起侧边栏"
   }

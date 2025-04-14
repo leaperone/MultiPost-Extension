@@ -1,6 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import {
   ChartSplineIcon,
+  CreditCardIcon,
   GridIcon,
   Home,
   KeyIcon,
@@ -84,6 +85,11 @@ const getSidebarFooterItems = (t: TranslationFunction): MenuItem[] => [
     title: t('sidebar.menu.extension'),
     url: '/extension',
     icon: PuzzleIcon,
+  },
+  {
+    title: t('sidebar.menu.recharge'),
+    url: '/dashboard/recharge',
+    icon: CreditCardIcon,
   },
   {
     title: t('sidebar.menu.settings'),
