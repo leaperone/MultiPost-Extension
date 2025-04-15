@@ -1,6 +1,6 @@
 'use server';
 
-import { auth } from '@/auth';
+export * from '@/actions/authKey';
 import { prisma } from '@/lib/db';
 import { TaskStatus, TaskType, SchedulePublishPostData } from './types';
 
@@ -31,49 +31,4 @@ export async function taskNeedToHandle(targetClientId: string) {
   }
 
   return null;
-}
-
-export async function authKey(request: Request) {
-  const session = await auth();
-  if (session?.user) {
-    return {
-      success: true,
-      userId: session.user.id,
-    };
-  }
-
-  const authHeader = request.headers.get('Authorization');
-  if (!authHeader) {
-    return {
-      success: false,
-      error: 'UNAUTHORIZED',
-    };
-  }
-  const apiKey = authHeader.split(' ')[1];
-  if (!apiKey) {
-    return {
-      success: false,
-      error: 'UNAUTHORIZED',
-    };
-  }
-
-  const key = await prisma.aPIKey.findUnique({
-    where: {
-      key: apiKey,
-    },
-    select: {
-      userId: true,
-    },
-  });
-  if (!key) {
-    return {
-      success: false,
-      error: 'KEY_EXPIRED',
-    };
-  }
-
-  return {
-    success: true,
-    userId: key.userId,
-  };
 }

@@ -68,6 +68,11 @@ const getApplicationItems = (t: TranslationFunction): MenuItem[] => [
     url: '/dashboard/analytics',
     icon: ChartSplineIcon,
   },
+  {
+    title: 'Scraper',
+    url: '/dashboard/scraper',
+    icon: ChartSplineIcon,
+  },
 ];
 
 const getSidebarFooterItems = (t: TranslationFunction): MenuItem[] => [

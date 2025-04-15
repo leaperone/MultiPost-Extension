@@ -1,7 +1,13 @@
 import { Decimal } from '@prisma/client/runtime/library';
 
+export const CREDIT_PER_TOEKN = {
+  WEB_SCRAPER_API: new Decimal(0.0000002),
+  SEARCH_API: new Decimal(0.0000002),
+} as const;
+
 export const USAGE_TYPE_MAP = {
-  WEBSITE_SCRAPER_API: 'Website Scraper API',
+  WEB_SCRAPER_API: 'Web Scraper API',
+  SEARCH_API: 'Search API',
 } as const;
 
 export type UsageType = keyof typeof USAGE_TYPE_MAP;
@@ -26,4 +32,7 @@ export interface DeductCreditResult {
   success: boolean;
   remainingCredits?: CreditInfo;
   error?: string;
+  usage?: {
+    credits: number;
+  };
 }

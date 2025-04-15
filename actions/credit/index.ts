@@ -49,7 +49,7 @@ export async function deductCredit(params: DeductCreditParams): Promise<DeductCr
       if (!credit) {
         return {
           success: false,
-          error: 'Credit record not found',
+          error: 'Insufficient credits',
         };
       }
 
@@ -105,13 +105,15 @@ export async function deductCredit(params: DeductCreditParams): Promise<DeductCr
           freeCredits: Number(updatedCredit.freeCredits),
           totalCredits: Number(updatedCredit.credits.add(updatedCredit.freeCredits)),
         },
+        usage: {
+          credits: Number(amount),
+        },
       };
     });
   } catch (error) {
-    console.error('Failed to deduct credits:', error);
     return {
       success: false,
-      error: 'Failed to deduct credits',
+      error: `${(error as Error).message}`,
     };
   }
 }
