@@ -1,6 +1,5 @@
 'use server';
 
-export * from '@/actions/authKey';
 import { prisma } from '@/lib/db';
 import { TaskStatus, TaskType, SchedulePublishPostData } from './types';
 

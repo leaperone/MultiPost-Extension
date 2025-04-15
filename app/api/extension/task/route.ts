@@ -1,7 +1,7 @@
 import { prisma } from '@/lib/db';
 import { NextResponse } from 'next/server';
 import { z } from 'zod';
-import { authKey } from '../common';
+import { authKey } from '@/actions/authKey';
 import { taskSchema, TaskStatus } from '../types';
 
 export async function POST(request: Request) {

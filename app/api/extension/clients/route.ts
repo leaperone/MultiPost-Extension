@@ -1,7 +1,7 @@
 import { prisma } from '@/lib/db';
 import { NextResponse } from 'next/server';
 import { z } from 'zod';
-import { authKey } from '../common';
+import { authKey } from '@/actions/authKey';
 
 export async function GET(request: Request) {
   const { success, userId, error } = await authKey(request);

@@ -2,7 +2,8 @@ import { prisma } from '@/lib/db';
 import { nanoid } from 'nanoid';
 import { NextResponse } from 'next/server';
 import { z } from 'zod';
-import { authKey, taskNeedToHandle } from '../common';
+import { authKey } from '@/actions/authKey';
+import { taskNeedToHandle } from '../common';
 import { BASE_URL } from '@/lib/constants';
 
 const schema = z.object({
