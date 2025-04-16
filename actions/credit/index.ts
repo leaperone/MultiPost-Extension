@@ -1,3 +1,5 @@
+'use server';
+
 import { multipostDb } from '@/lib/db';
 import { CreditInfo, DeductCreditParams, DeductCreditResult } from './types';
 import { Decimal } from '@prisma/client/runtime/library';

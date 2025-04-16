@@ -1,7 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import {
   ChartSplineIcon,
-  CreditCardIcon,
   GridIcon,
   Home,
   KeyIcon,
@@ -11,6 +10,7 @@ import {
   ScanEyeIcon,
   SendIcon,
   Settings,
+  WalletIcon,
 } from 'lucide-react';
 
 import {
@@ -95,7 +95,7 @@ const getSidebarFooterItems = (t: TranslationFunction): MenuItem[] => [
   {
     title: t('sidebar.menu.recharge'),
     url: '/dashboard/recharge',
-    icon: CreditCardIcon,
+    icon: WalletIcon,
   },
   {
     title: t('sidebar.menu.settings'),
