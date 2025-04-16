@@ -59,7 +59,7 @@ export default function WebScraperPage() {
 
     try {
       setLoading(true);
-      const response = await fetch('/api/scraper/web', {
+      const response = await fetch('/api/v1/reader', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

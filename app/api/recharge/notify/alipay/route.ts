@@ -1,6 +1,6 @@
 import { type NextRequest, NextResponse } from 'next/server';
 import { multipostDb } from '@/lib/db';
-import { RechargeStatus } from '@/app/dashboard/recharge/types';
+import { RechargeStatus } from '@/actions/credit/types';
 import { Decimal } from '@prisma/client/runtime/library';
 
 export async function POST(request: NextRequest) {

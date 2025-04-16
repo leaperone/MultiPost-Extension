@@ -8,6 +8,7 @@ import {
   LayoutDashboardIcon,
   LogOut,
   PuzzleIcon,
+  ScanEyeIcon,
   SendIcon,
   Settings,
 } from 'lucide-react';
@@ -71,7 +72,7 @@ const getApplicationItems = (t: TranslationFunction): MenuItem[] => [
   {
     title: 'Scraper',
     url: '/dashboard/scraper',
-    icon: ChartSplineIcon,
+    icon: ScanEyeIcon,
   },
 ];
 

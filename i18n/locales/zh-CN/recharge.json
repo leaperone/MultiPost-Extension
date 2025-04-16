@@ -1,19 +1,11 @@
 {
-  "custom_recharge": {
-    "title": "自定义充值",
-    "subtitle": "灵活选择充值金额"
-  },
-  "view_pricing": "查看定价详情",
-  "input": {
-    "placeholder": "请输入充值余额（最低 10 Credit）"
-  },
-  "recharge_now": "立即充值",
-  "minimum_amount_notice": "* 最低充值余额为 10 Credit",
+  "title": "充值",
+  "placeholder": "输入金额（≥10）",
+  "recharge": "充值",
   "toast": {
-    "enter_amount": "请输入充值金额",
-    "order_success": "订单创建成功",
-    "order_failed": "订单创建失败",
-    "recharge_amount": "充值金额: ¥${amount}",
-    "minimum_amount": "充值余额不能低于 10 Credit"
+    "empty": "请输入金额",
+    "min": "金额不能低于10",
+    "success": "充值成功：¥${amount}",
+    "fail": "充值失败"
   }
 }

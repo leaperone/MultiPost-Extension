@@ -144,11 +144,11 @@ export async function POST(req: NextRequest) {
       return acc + (item.usage?.tokens || 0);
     }, 0);
 
-    const credit = CREDIT_PER_TOEKN.SEARCH_API.mul(totalTokens);
+    const credit = CREDIT_PER_TOEKN.WEB_SEARCH_API.mul(totalTokens);
 
     const result = await deductCredit({
       userId,
-      type: 'SEARCH_API',
+      type: 'WEB_SEARCH_API',
       amount: credit,
     });
 

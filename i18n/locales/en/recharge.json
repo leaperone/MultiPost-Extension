@@ -1,19 +1,11 @@
 {
-  "custom_recharge": {
-    "title": "Custom Recharge",
-    "subtitle": "Flexible recharge amount"
-  },
-  "view_pricing": "View Pricing Details",
-  "input": {
-    "placeholder": "Enter recharge amount (minimum 10 Credits)"
-  },
-  "recharge_now": "Recharge Now",
-  "minimum_amount_notice": "* Minimum recharge amount is 10 Credits",
+  "title": "Recharge",
+  "placeholder": "Enter amount (≥10)",
+  "recharge": "Recharge",
   "toast": {
-    "enter_amount": "Please enter recharge amount",
-    "order_success": "Order created successfully",
-    "order_failed": "Order creation failed",
-    "recharge_amount": "Recharge amount: $${amount}",
-    "minimum_amount": "Recharge amount cannot be less than 10 Credits"
+    "empty": "Please enter amount",
+    "min": "Amount must be at least 10",
+    "success": "Recharge successful: $${amount}",
+    "fail": "Recharge failed"
   }
 }

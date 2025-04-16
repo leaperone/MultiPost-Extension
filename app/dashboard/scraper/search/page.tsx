@@ -44,7 +44,7 @@ export default function SearchPage() {
   const handleSearch = async (query: string, page: number = 1) => {
     try {
       setLoading(true);
-      const response = await fetch('/api/scraper/search', {
+      const response = await fetch('/api/v1/search', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

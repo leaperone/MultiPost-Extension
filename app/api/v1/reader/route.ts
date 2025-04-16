@@ -144,11 +144,11 @@ export async function POST(req: NextRequest) {
 
     const data = responseData.data;
 
-    const credit = CREDIT_PER_TOEKN.WEB_SCRAPER_API.mul(data.usage.tokens);
+    const credit = CREDIT_PER_TOEKN.WEB_READER_API.mul(data.usage.tokens);
 
     const result = await deductCredit({
       userId,
-      type: 'WEB_SCRAPER_API',
+      type: 'WEB_READER_API',
       amount: credit,
     });
 

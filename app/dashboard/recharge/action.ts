@@ -5,7 +5,7 @@ import { multipostDb } from '@/lib/db';
 import { Decimal } from '@prisma/client/runtime/library';
 import { nanoid } from 'nanoid';
 import ky from 'ky';
-import { creditToYuan, RechargeStatus, RechargeType } from './types';
+import { dollarToYuan, RechargeStatus, RechargeType } from '@/actions/credit/types';
 
 interface RechargeResponse {
   success: boolean;
@@ -32,7 +32,7 @@ export async function recharge(amount: number, returnUrl: string): Promise<Recha
     if (!amount || amount < 10) {
       return {
         success: false,
-        error: 'Recharge amount must be greater than 10 Credit',
+        error: 'Recharge amount must be greater than 10 US dollar',
       };
     }
 
@@ -52,7 +52,7 @@ export async function recharge(amount: number, returnUrl: string): Promise<Recha
         json: {
           secret: process.env.INTERNAL_SECRET,
           orderId: recharge.orderId,
-          amount: recharge.amount.mul(creditToYuan).toString(),
+          amount: recharge.amount.mul(dollarToYuan).toString(),
           returnUrl,
         },
       })
