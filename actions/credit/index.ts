@@ -33,6 +33,17 @@ export async function getCredit(userId: string): Promise<CreditInfo> {
 }
 
 /**
+ * 预检查用户的信用点数
+ * @param userId 用户ID
+ * @param amount 需要检查的信用点数
+ * @returns 是否足够
+ */
+export async function preCheckCredit(userId: string, amount: number): Promise<boolean> {
+  const credit = await getCredit(userId);
+  return credit.totalCredits >= amount;
+}
+
+/**
  * 扣减用户的信用点数
  * @param params 扣减参数
  * @returns 扣减结果

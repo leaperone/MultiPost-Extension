@@ -1,5 +1,5 @@
 import { authKey } from '@/actions/authKey';
-import { deductCredit } from '@/actions/credit';
+import { deductCredit, preCheckCredit } from '@/actions/credit';
 import { CREDIT_PER_TOEKN } from '@/actions/credit/types';
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
@@ -49,6 +49,13 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({
         success: false,
         error,
+      });
+    }
+
+    if (!(await preCheckCredit(userId, Number(0.1)))) {
+      return NextResponse.json({
+        success: false,
+        error: 'Precheck failed, please top up over 0.1 credits',
       });
     }
 
