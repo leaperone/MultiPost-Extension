@@ -157,7 +157,9 @@ export async function POST(req: NextRequest) {
     }
 
     // 移除 usage 信息
-    delete responseData.data.usage;
+    for (const item of responseData.data) {
+      delete item.usage;
+    }
 
     return NextResponse.json({
       success: true,
