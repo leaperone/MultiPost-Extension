@@ -1,24 +1,16 @@
 import { prisma } from '@/lib/db';
-import { NextResponse } from 'next/server';
-import { z } from 'zod';
 import { authKey } from '@/actions/authKey';
-
+import { errorResponse, successResponse, unauthenticatedResponse } from '@/lib/response';
 export async function GET(request: Request) {
-  const { success, userId, error } = await authKey(request);
-  if (!success || !userId) {
-    return NextResponse.json({
-      success: false,
-      error,
-    });
+  const { userId } = await authKey(request);
+  if (!userId) {
+    return unauthenticatedResponse();
   }
 
   const searchParams = new URL(request.url).searchParams;
   const clientId = searchParams.get('clientId');
   if (!clientId) {
-    return NextResponse.json({
-      success: false,
-      error: 'CLIENT_ID_REQUIRED',
-    });
+    throw new Error('CLIENT_ID_REQUIRED');
   }
 
   try {
@@ -36,31 +28,18 @@ export async function GET(request: Request) {
       },
     });
     if (!client) {
-      return NextResponse.json({
-        success: false,
-        error: 'CLIENT_NOT_FOUND',
-      });
+      throw new Error('CLIENT_NOT_FOUND');
     }
-    return NextResponse.json({
-      success: true,
-      data: client,
-    });
+    return successResponse(client);
   } catch (error) {
-    console.error('Error fetching client:', error);
-    if (error instanceof z.ZodError) {
-      return new NextResponse(error.errors[0].message, { status: 400 });
-    }
-    return new NextResponse('Internal Server Error', { status: 500 });
+    return errorResponse(error);
   }
 }
 
 export async function PUT(request: Request) {
-  const { success, userId, error } = await authKey(request);
-  if (!success || !userId) {
-    return NextResponse.json({
-      success: false,
-      error,
-    });
+  const { userId } = await authKey(request);
+  if (!userId) {
+    return unauthenticatedResponse();
   }
 
   try {
@@ -75,15 +54,8 @@ export async function PUT(request: Request) {
         name,
       },
     });
-    return NextResponse.json({
-      success: true,
-      data: updatedClient,
-    });
+    return successResponse(updatedClient);
   } catch (error) {
-    console.error('Error updating client:', error);
-    return NextResponse.json({
-      success: false,
-      error: 'INTERNAL_SERVER_ERROR',
-    });
+    return errorResponse(error);
   }
 }

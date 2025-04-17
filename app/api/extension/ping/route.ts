@@ -3,14 +3,43 @@ import { nanoid } from 'nanoid';
 import { NextResponse } from 'next/server';
 import { z } from 'zod';
 import { authKey } from '@/actions/authKey';
-import { taskNeedToHandle } from '../common';
 import { BASE_URL } from '@/lib/constants';
+import { TaskStatus, TaskType, SchedulePublishPostData } from '../types';
 
 const schema = z.object({
   extensionClientId: z.string().optional(),
   platformInfos: z.any().optional(),
   extensionVersion: z.string().optional(),
 });
+
+async function taskNeedToHandle(targetClientId: string) {
+  const task = await prisma.extensionTask.findFirst({
+    where: {
+      targetClientId,
+      status: TaskStatus.PENDING,
+    },
+    orderBy: {
+      createdAt: 'asc',
+    },
+  });
+
+  if (!task) {
+    return null;
+  }
+
+  if (task.taskType === TaskType.PUBLISH_POST) {
+    return task;
+  }
+
+  if (task.taskType === TaskType.SCHEDULE_PUBLISH_POST) {
+    const schedulePublishPostData = task.taskData as unknown as SchedulePublishPostData;
+    if (schedulePublishPostData.timestamp <= Date.now() + 10 * 60 * 1000) {
+      return task;
+    }
+  }
+
+  return null;
+}
 
 export async function POST(request: Request) {
   const { success, userId, error } = await authKey(request);

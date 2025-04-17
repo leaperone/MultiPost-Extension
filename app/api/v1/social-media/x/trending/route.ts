@@ -1,9 +1,10 @@
 import { authKey } from '@/actions/authKey';
 import { deductCredit } from '@/actions/credit';
 import { CREDIT_PER_REQUEST_SOCIAL_MEDIA } from '@/actions/credit/types';
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest } from 'next/server';
 import { z } from 'zod';
-import { fetchTikhub } from '@/app/api/v1/social-media/tikhub';
+import { fetchTikhub } from '@/lib/tikhub';
+import { unauthenticatedResponse, successResponse, errorResponse } from '@/lib/response';
 
 // 定义支持的国家列表
 const SUPPORTED_COUNTRIES = [
@@ -77,9 +78,9 @@ const ENDPOINT = '/v1/twitter/web/fetch_trending';
 export async function GET(req: NextRequest) {
   try {
     // 验证授权
-    const { success, userId, error } = await authKey(req);
-    if (!success || !userId) {
-      throw new Error(error);
+    const { userId } = await authKey(req);
+    if (!userId) {
+      return unauthenticatedResponse();
     }
 
     // 获取并验证查询参数
@@ -102,18 +103,8 @@ export async function GET(req: NextRequest) {
     // 调用 TikHub API
     const response = await fetchTikhub('GET', ENDPOINT + '?' + new URLSearchParams({ country: params.country }));
 
-    return NextResponse.json({
-      success: true,
-      data: response.data,
-      meta: creditResult.usage,
-    });
+    return successResponse(response.data, creditResult.usage);
   } catch (error) {
-    if (error instanceof z.ZodError) {
-      return NextResponse.json(
-        { success: false, error: 'Invalid request data', details: error.errors },
-        { status: 400 },
-      );
-    }
-    return NextResponse.json({ success: false, error: (error as Error).message }, { status: 500 });
+    return errorResponse(error);
   }
 }

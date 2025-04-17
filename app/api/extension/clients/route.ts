@@ -1,15 +1,10 @@
 import { prisma } from '@/lib/db';
-import { NextResponse } from 'next/server';
-import { z } from 'zod';
 import { authKey } from '@/actions/authKey';
-
+import { errorResponse, successResponse, unauthenticatedResponse } from '@/lib/response';
 export async function GET(request: Request) {
-  const { success, userId, error } = await authKey(request);
-  if (!success || !userId) {
-    return NextResponse.json({
-      success: false,
-      error,
-    });
+  const { userId } = await authKey(request);
+  if (!userId) {
+    return unauthenticatedResponse();
   }
 
   try {
@@ -24,12 +19,8 @@ export async function GET(request: Request) {
         updatedAt: true,
       },
     });
-    return NextResponse.json({ success: true, data: clients });
+    return successResponse(clients);
   } catch (error) {
-    console.error('Error fetching clients:', error);
-    if (error instanceof z.ZodError) {
-      return new NextResponse(error.errors[0].message, { status: 400 });
-    }
-    return new NextResponse('Internal Server Error', { status: 500 });
+    return errorResponse(error);
   }
 }

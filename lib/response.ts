@@ -1,30 +1,22 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { serializeError } from 'serialize-error';
+import { NextResponse } from 'next/server';
+import { z } from 'zod';
 
-export function ok() {
-  return Response.json({ ok: true });
+export function successResponse(data: any, meta?: { credits: number }) {
+  return NextResponse.json({
+    success: true,
+    data,
+    meta,
+  });
 }
 
-export function json(data: any) {
-  return Response.json(data);
+export function unauthenticatedResponse() {
+  return NextResponse.json({ success: false, error: 'Unauthenticated' }, { status: 401 });
 }
 
-export function badRequest(error: any = 'Bad request') {
-  return Response.json({ error: serializeError(error) }, { status: 400 });
-}
-
-export function unauthorized(error: any = 'Unauthorized') {
-  return Response.json({ error: serializeError(error) }, { status: 401 });
-}
-
-export function forbidden(error: any = 'Forbidden') {
-  return Response.json({ error: serializeError(error) }, { status: 403 });
-}
-
-export function notFound(error: any = 'Not found') {
-  return Response.json({ error: serializeError(error) }, { status: 404 });
-}
-
-export function serverError(error: any = 'Server error') {
-  return Response.json({ error: serializeError(error) }, { status: 500 });
+export function errorResponse(error: unknown) {
+  if (error instanceof z.ZodError) {
+    return NextResponse.json({ success: false, error: 'Invalid request data', details: error.errors }, { status: 400 });
+  }
+  return NextResponse.json({ success: false, error: (error as Error).message }, { status: 500 });
 }

@@ -1,8 +1,9 @@
 import { authKey } from '@/actions/authKey';
 import { deductCredit, preCheckCredit } from '@/actions/credit';
 import { CREDIT_PER_TOEKN } from '@/actions/credit/types';
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest } from 'next/server';
 import { z } from 'zod';
+import { unauthenticatedResponse, successResponse, errorResponse } from '@/lib/response';
 
 const JINA_API_KEY = process.env.JINA_API_KEY;
 const JINA_API_URL = 'https://r.jina.ai/';
@@ -44,19 +45,13 @@ const requestSchema = z.object({
 export async function POST(req: NextRequest) {
   try {
     // 解析请求体
-    const { success, userId, error } = await authKey(req);
-    if (!success || !userId) {
-      return NextResponse.json({
-        success: false,
-        error,
-      });
+    const { userId } = await authKey(req);
+    if (!userId) {
+      return unauthenticatedResponse();
     }
 
     if (!(await preCheckCredit(userId, Number(0.1)))) {
-      return NextResponse.json({
-        success: false,
-        error: 'Precheck failed, please top up over 0.1 credits',
-      });
+      throw new Error('Precheck failed, please top up over 0.1 credits');
     }
 
     const body = await req.json();
@@ -165,14 +160,8 @@ export async function POST(req: NextRequest) {
       throw new Error(result.error);
     }
 
-    return NextResponse.json({ success: true, data: responseData.data, meta: result.usage });
+    return successResponse(responseData.data, result.usage);
   } catch (error) {
-    if (error instanceof z.ZodError) {
-      return NextResponse.json(
-        { success: false, error: 'Invalid request data', details: error.errors },
-        { status: 400 },
-      );
-    }
-    return NextResponse.json({ success: false, error: (error as Error).message }, { status: 500 });
+    return errorResponse(error);
   }
 }

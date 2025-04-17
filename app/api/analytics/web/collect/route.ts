@@ -5,7 +5,7 @@ import { secret, uuid, hash } from '@/lib/crypto';
 import { createToken, parseToken } from '@/lib/jwt';
 import { getClientInfo, hasBlockedIp } from '@/lib/detect';
 import { fetchWebsite, fetchSession, createSession, saveEvent, saveSessionData } from './db';
-import { json, badRequest, forbidden, serverError } from '@/lib/response';
+import { json, badRequest, forbidden, serverError } from './response';
 import { EVENT_TYPE, COLLECTION_TYPE } from '@/lib/constants';
 import { z } from 'zod';
 import { safeDecodeURI, safeDecodeURIComponent } from '@/lib/url';
