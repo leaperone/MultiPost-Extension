@@ -23,10 +23,44 @@ export const platformSchema = z.object({
     .optional(),
 });
 
+export const fileDataSchema = z.object({
+  name: z.string(),
+  url: z.string().url(),
+  type: z.string().optional(),
+  size: z.number().int().min(0).optional(),
+  originUrl: z.string().url().optional(),
+});
+
+export const dynamicDataSchema = z.object({
+  title: z.string(),
+  content: z.string(),
+  images: z.array(fileDataSchema).optional(),
+  videos: z.array(fileDataSchema).optional(),
+});
+
+export const articleDataSchema = z.object({
+  title: z.string(),
+  content: z.string(),
+  digest: z.string(),
+  cover: fileDataSchema,
+  images: z.array(fileDataSchema).optional(),
+  videos: z.array(fileDataSchema).optional(),
+  fileDatas: z.array(fileDataSchema).optional(),
+  originContent: z.string().optional(),
+  markdownContent: z.string().optional(),
+  markdownOriginContent: z.string().optional(),
+});
+
+export const videoDataSchema = z.object({
+  title: z.string(),
+  content: z.string(),
+  video: fileDataSchema,
+});
+
 export const publishPostSchema = z.object({
   platforms: z.array(platformSchema),
   isAutoPublish: z.boolean().default(false),
-  data: z.unknown(),
+  data: dynamicDataSchema,
 });
 
 export const schedulePublishPostSchema = publishPostSchema.extend({
