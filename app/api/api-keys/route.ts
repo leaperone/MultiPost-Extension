@@ -58,7 +58,7 @@ export async function POST(request: Request) {
       data: {
         userId: session.user.id,
         name,
-        key: `mp-${nanoid(32)}`, // 生成一个带前缀的随机 API Key
+        key: `sk-${nanoid(32)}`, // 生成一个带前缀的随机 API Key
       },
     });
 

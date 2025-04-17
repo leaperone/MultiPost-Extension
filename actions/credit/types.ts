@@ -21,10 +21,15 @@ export const CREDIT_PER_TOEKN = {
   WEB_SEARCH_API: new Decimal(0.0000002),
 } as const;
 
+export const CREDIT_PER_REQUEST_SOCIAL_MEDIA = {
+  X: new Decimal(0.01),
+} as const;
+
 // 使用类型
 export const USAGE_TYPE_MAP = {
   WEB_READER_API: 'Web Reader API',
   WEB_SEARCH_API: 'Web Search API',
+  SOCIAL_MEDIA_X: 'Social Media X',
 } as const;
 
 export type UsageType = keyof typeof USAGE_TYPE_MAP;

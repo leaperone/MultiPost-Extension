@@ -65,6 +65,7 @@ export async function POST(req: NextRequest) {
       Accept: 'application/json',
       'X-No-Cache': 'true',
       'X-With-Favicons': 'true',
+      'X-Respond-With': 'no-content',
     };
 
     // 添加可选请求头
@@ -93,6 +94,7 @@ export async function POST(req: NextRequest) {
       headers['X-Return-Format'] = validatedData.returnFormat;
     }
     if (validatedData.engine) {
+      delete headers['X-Respond-With'];
       headers['X-Engine'] = validatedData.engine;
     }
     if (validatedData.timeout) {
