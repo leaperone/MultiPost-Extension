@@ -8,7 +8,7 @@ import { errorResponse, successResponse, unauthenticatedResponse } from '@/lib/r
 
 // 请求参数验证 schema
 const requestSchema = z.object({
-  tweet_id: z.string(),
+  tweet_id: z.string().regex(/^\d+$/),
   cursor: z.string().optional(),
 });
 

@@ -10,7 +10,7 @@ import { errorResponse, successResponse, unauthenticatedResponse } from '@/lib/r
 const requestSchema = z
   .object({
     screen_name: z.string().optional(),
-    rest_id: z.number().optional(),
+    rest_id: z.string().regex(/^\d+$/).optional(),
     cursor: z.string().optional(),
   })
   .refine((data) => data.screen_name || data.rest_id, {
@@ -31,7 +31,7 @@ export async function GET(req: NextRequest) {
     const searchParams = Object.fromEntries(req.nextUrl.searchParams);
     const params = requestSchema.parse({
       screen_name: searchParams.screen_name,
-      rest_id: searchParams.rest_id ? parseInt(searchParams.rest_id) : undefined,
+      rest_id: searchParams.rest_id,
       cursor: searchParams.cursor,
     });
 

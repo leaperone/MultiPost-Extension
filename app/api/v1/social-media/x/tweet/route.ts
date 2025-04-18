@@ -8,7 +8,7 @@ import { errorResponse, successResponse, unauthenticatedResponse } from '@/lib/r
 
 // 请求参数验证 schema
 const requestSchema = z.object({
-  tweet_id: z.number(),
+  tweet_id: z.string().regex(/^\d+$/),
 });
 
 const ENDPOINT = '/v1/twitter/web/fetch_tweet_detail';
@@ -22,10 +22,9 @@ export async function GET(req: NextRequest) {
     }
 
     // 获取并验证查询参数
-    // 获取并验证查询参数
     const searchParams = Object.fromEntries(req.nextUrl.searchParams);
     const params = requestSchema.parse({
-      tweet_id: searchParams.tweet_id ? parseInt(searchParams.tweet_id) : undefined,
+      tweet_id: searchParams.tweet_id,
     });
 
     // 扣除积分
@@ -40,10 +39,7 @@ export async function GET(req: NextRequest) {
     }
 
     // 调用 TikHub API
-    const response = await fetchTikhub(
-      'GET',
-      ENDPOINT + '?' + new URLSearchParams({ tweet_id: params.tweet_id.toString() }),
-    );
+    const response = await fetchTikhub('GET', ENDPOINT + '?' + new URLSearchParams({ tweet_id: params.tweet_id }));
 
     return successResponse(response.data, creditResult.usage);
   } catch (error) {
