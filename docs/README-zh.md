@@ -1,10 +1,6 @@
-<div align="center">
-
 # MultiPost
 
 ![GitHub License GitHub许可证](https://img.shields.io/github/license/leaper-one/MultiPost-Extension) ![GitHub Repo stars GitHub星星](https://img.shields.io/github/stars/leaper-one/MultiPost-Extension) ![GitHub commit activity GitHub提交活动](https://img.shields.io/github/commit-activity/m/leaper-one/MultiPost-Extension) [![Website 网站](https://img.shields.io/website?url=https%3A%2F%2Fmultipost.app)](https://multipost.app)
-
-[MultiPost 文档](https://docs.multipost.app)
 
 [English](../README.md) | [中文](README-zh.md) | [日本語](README-jp.md) | [Français](README-fr.md) | [한국어](README-kr.md)
 
@@ -12,19 +8,27 @@
 
 ⭐ 如果这个项目对你有帮助，欢迎给我们一个 star！你的支持是我们前进的动力！⭐
 
-</div>
-
 ---
 
-<!-- 最新更新 -->
-<div align="center">
-  <h3>MultiPost Analytics: Web Trace</h3>
-  <p>Web Trace: 实时访问统计、访客分析、浏览分析和时长分析。</p>
-  <p>实时访问统计、访客分析、浏览分析和时长分析。</p>
-  <p>了解更多：<a href="https://multipost.app/dashboard/analytics">https://multipost.app/dashboard/analytics</a></p>
-</div>
+## 主要功能
 
----
+- 支持同步发布到知乎、微博、小红书、抖音等十多个主流平台
+- 免登录，免注册，免API Key。免费！
+- 支持发布文字、图片、视频等多种内容形式
+- 两种API接口:
+  - 扩展API：在您自己的Web应用中调用扩展的API发布内容
+  - RESTful API：在脚本或服务器中调用RESTful API发布内容
+- 数据分析：追踪您的内容在不同平台的表现。可以监控您的网站和社交媒体账号
+- 内容抓取功能：
+  - 阅读器：读取网页内容，返回Markdown或Json格式
+  - 搜索引擎结果：获取搜索引擎的搜索结果
+  - 社交媒体：获取社交媒体平台的内容
+- 支持网页的联动，可以开发你自己的网页并自己设置自动化，调用扩展的发布功能, 如：
+  - 自动抓取网页内容，自动发布到多个平台
+  - 定时发布
+  - 联动 AI 生成内容
+
+这个扩展主要解决了内容创作者在多平台发布时的痛点。通过一次编辑，就能将内容同步发布到所有平台，大大提高了工作效率。
 
 ## 快速开始
 - [multipost.app](https://multipost.app) - 官方网站
@@ -32,18 +36,6 @@
 - [MultiPost 文章编辑器](https://md.multipost.app/) - [(代码仓库)](https://github.com/leaper-one/multipost-wechat-markdown-editor) - 用于创建和发布内容到多个平台的在线编辑器
 - [Chrome 扩展 - ![Chrome Web Store Version Chrome网上商店版本](https://img.shields.io/chrome-web-store/v/dhohkaclnjgcikfoaacfgijgjgceofih)](https://chromewebstore.google.com/detail/multipost/dhohkaclnjgcikfoaacfgijgjgceofih) ![Chrome Web Store Users Chrome网上商店用户](https://img.shields.io/chrome-web-store/users/dhohkaclnjgcikfoaacfgijgjgceofih) ![Chrome Web Store Last Updated](https://img.shields.io/chrome-web-store/last-updated/dhohkaclnjgcikfoaacfgijgjgceofih)
 - [Edge 扩展 - ![](https://img.shields.io/badge/dynamic/json?label=edge%20add-on&prefix=v&query=%24.version&url=https%3A%2F%2Fmicrosoftedge.microsoft.com%2Faddons%2Fgetproductdetailsbycrxid%2Fckoiphiceimehjkolnfffgbmihoppgjg)](https://microsoftedge.microsoft.com/addons/detail/multipost/ckoiphiceimehjkolnfffgbmihoppgjg) [![](https://img.shields.io/badge/dynamic/json?label=users&query=%24.activeInstallCount&url=https%3A%2F%2Fmicrosoftedge.microsoft.com%2Faddons%2Fgetproductdetailsbycrxid%2Fckoiphiceimehjkolnfffgbmihoppgjg)](https://microsoftedge.microsoft.com/addons/detail/multipost/ckoiphiceimehjkolnfffgbmihoppgjg)
-
-## 主要功能
-
-- 支持同步发布到知乎、微博、小红书、抖音等十多个主流平台
-- 免登录，免注册，免API Key。免费！
-- 支持发布文字、图片、视频等多种内容形式
-- 支持网页的联动，可以开发你自己的网页并自己设置自动化，调用扩展的发布功能, 如：
-  - 自动抓取网页内容，自动发布到多个平台
-  - 定时发布
-  - 联动 AI 生成内容
-
-这个扩展主要解决了内容创作者在多平台发布时的痛点。通过一次编辑，就能将内容同步发布到所有平台，大大提高了工作效率。
 
 ## 开始使用
 
