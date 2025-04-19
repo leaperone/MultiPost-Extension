@@ -4,10 +4,12 @@ CREATE TABLE "PromotionTask" (
     "userId" TEXT NOT NULL,
     "taskType" TEXT NOT NULL,
     "title" TEXT NOT NULL,
-    "description" TEXT NOT NULL,
-    "link" TEXT NOT NULL,
+    "description" TEXT,
+    "link" TEXT,
     "keywords" TEXT[],
+    "examples" TEXT[],
     "expiredAt" TIMESTAMP(3) NOT NULL,
+    "reward" DECIMAL(38,18) NOT NULL DEFAULT 0,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
 
@@ -47,6 +49,9 @@ CREATE UNIQUE INDEX "PromotionTask_id_key" ON "PromotionTask"("id");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "PromotionCode_id_key" ON "PromotionCode"("id");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "PromotionCode_code_key" ON "PromotionCode"("code");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "PromotionCode_taskId_code_key" ON "PromotionCode"("taskId", "code");
