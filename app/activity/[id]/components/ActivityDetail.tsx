@@ -27,6 +27,7 @@ interface Props {
 }
 
 export default function ActivityDetail({ task: initialTask }: Props) {
+  const {data: session} = useSession();
   const router = useRouter();
   const [link, setLink] = useState<string>('');
   const [task, setTask] = useState<ClientPromotionTask>(initialTask);
@@ -37,6 +38,14 @@ export default function ActivityDetail({ task: initialTask }: Props) {
 
   const getCode = async () => {
     try {
+      if (!session) {
+        addToast({
+          title: '请先登录',
+        });
+        router.push('/signin?redirect=/activity/' + task.id);
+        return;
+      }
+
       const data = await getPromotionCode(task.id);
 
       // 更新本地状态
