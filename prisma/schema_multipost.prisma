@@ -21,15 +21,18 @@ model User {
   Authenticator      Authenticator[]
   SocialMediaAccount SocialMediaAccount[]
 
-  createdAt       DateTime          @default(now())
-  updatedAt       DateTime          @updatedAt
-  Website         Website[]
-  APIKey          APIKey[]
-  ExtensionClient ExtensionClient[]
-  ExtensionTask   ExtensionTask[]
-  Credit          Credit[]
-  CreditUsage     CreditUsage[]
-  RechargeCredit  RechargeCredit[]
+  createdAt           DateTime              @default(now())
+  updatedAt           DateTime              @updatedAt
+  Website             Website[]
+  APIKey              APIKey[]
+  ExtensionClient     ExtensionClient[]
+  ExtensionTask       ExtensionTask[]
+  Credit              Credit[]
+  CreditUsage         CreditUsage[]
+  RechargeCredit      RechargeCredit[]
+  PromotionTask       PromotionTask[]
+  PromotionCode       PromotionCode[]
+  PromotionSubmission PromotionSubmission[]
 }
 
 model Account {
@@ -306,4 +309,53 @@ model RechargeCredit {
   updatedAt DateTime @updatedAt
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model PromotionTask {
+  id          String   @id @unique @default(cuid())
+  userId      String
+  taskType    String
+  title       String
+  description String?
+  link        String?
+  keywords    String[]
+  examples    String[]
+  expiredAt   DateTime
+  reward      Decimal  @default(0) @db.Decimal(38, 18)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  user                 User                  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  promotionCodes       PromotionCode[]
+  promotionSubmissions PromotionSubmission[]
+}
+
+model PromotionCode {
+  id        String   @id @unique @default(cuid())
+  taskId    String
+  code      String   @unique
+  userId    String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  task PromotionTask @relation(fields: [taskId], references: [id], onDelete: Cascade)
+
+  @@unique([taskId, code])
+}
+
+model PromotionSubmission {
+  id           String   @id @unique @default(cuid())
+  taskId       String
+  userId       String
+  link         String
+  scrapedData  Json
+  verifiedData Json
+  status       String
+  reason       String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  user User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  task PromotionTask @relation(fields: [taskId], references: [id], onDelete: Cascade)
 }

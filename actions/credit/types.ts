@@ -3,6 +3,7 @@ import { Decimal } from '@prisma/client/runtime/library';
 export enum RechargeType {
   ALIPAY = 'alipay',
   FREE = 'free',
+  PROMOTION = 'promotion',
 }
 
 export enum RechargeStatus {

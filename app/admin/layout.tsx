@@ -13,7 +13,7 @@ import { isAdmin } from '@/actions/admin';
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
   const session = await auth();
   if (!session) {
-    redirect('/login');
+    redirect('/signin');
   }
   if (!isAdmin(session.user.email?.toString() ?? '')) {
     return <div>您不是管理员</div>;

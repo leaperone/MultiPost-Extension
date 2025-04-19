@@ -9,6 +9,7 @@ export async function authKey(request: Request) {
     return {
       success: true,
       userId: session.user.id,
+      email: session.user.email,
     };
   }
 
@@ -33,6 +34,11 @@ export async function authKey(request: Request) {
     },
     select: {
       userId: true,
+      user: {
+        select: {
+          email: true,
+        },
+      },
     },
   });
   if (!key) {
@@ -45,5 +51,6 @@ export async function authKey(request: Request) {
   return {
     success: true,
     userId: key.userId,
+    email: key.user.email,
   };
 }

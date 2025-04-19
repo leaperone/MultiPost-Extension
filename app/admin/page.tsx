@@ -28,6 +28,14 @@ export default function AdminPage() {
             充值管理
           </Button>
         </Link>
+        <Link
+          href="/admin/activity"
+          className="w-full">
+          <Button
+            className="h-24 w-full text-lg">
+            活动管理
+          </Button>
+        </Link>
       </div>
     </div>
   );
