@@ -4,7 +4,6 @@ import {
   GridIcon,
   Home,
   LayoutDashboardIcon,
-  LogOut,
   PuzzleIcon,
   ScanEyeIcon,
   SendIcon,
@@ -84,11 +83,6 @@ const getSidebarFooterItems = (t: TranslationFunction): MenuItem[] => [
     title: t('sidebar.menu.settings'),
     url: '/dashboard/settings',
     icon: Settings,
-  },
-  {
-    title: t('sidebar.menu.signout'),
-    url: '/signout',
-    icon: LogOut,
   },
 ];
 

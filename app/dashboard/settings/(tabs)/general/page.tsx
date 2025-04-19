@@ -1,11 +1,11 @@
 'use client';
-
-import { Card, CardBody, CardHeader, Divider } from '@heroui/react';
-import { useSession } from 'next-auth/react';
+import { Card, CardBody, CardHeader, Divider, Button } from '@heroui/react';
+import { useSession, signOut } from 'next-auth/react';
 import { signIn } from 'next-auth/webauthn';
 import { useTranslation } from '@/i18n/client';
 import { ThemeSwitcher } from '@/components/ThemeSwitcher';
 import LanguageSwitcher from '@/components/LanguageSwitcher';
+import { LogOutIcon } from 'lucide-react';
 
 export default function SettingsPage() {
   const { data: session } = useSession();
@@ -17,7 +17,17 @@ export default function SettingsPage() {
 
   return (
     <div className="mx-auto h-full max-w-3xl space-y-6 overflow-y-auto p-4">
-      <h1 className="text-2xl font-bold">{t('title')}</h1>
+      <div className="flex items-center justify-between">
+        <h1 className="text-2xl font-bold">{t('title')}</h1>
+        <Button
+          isIconOnly
+          color="danger"
+          variant="flat"
+          aria-label="Sign out"
+          onPress={() => signOut()}>
+          <LogOutIcon />
+        </Button>
+      </div>
 
       {/* Profile Section */}
       <Card>
