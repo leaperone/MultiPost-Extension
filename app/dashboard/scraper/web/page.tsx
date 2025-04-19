@@ -3,7 +3,7 @@
 import { Button, Card, CardBody, Input, Image, Skeleton, Alert } from '@heroui/react';
 import { useState } from 'react';
 import { toast } from 'sonner';
-import { ArrowRightIcon, GlobeIcon } from 'lucide-react';
+import { ArrowRightIcon, BookTextIcon, GlobeIcon } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import dynamic from 'next/dynamic';
@@ -78,6 +78,15 @@ export default function WebScraperPage() {
             className="w-full max-w-3xl"
             title={t('web_scraping')}
             description={t('web_scraping_description')}
+            endContent={
+              <Button
+                as="a"
+                href="https://api-docs.multipost.app/6485525m0"
+                target="_blank"
+                startContent={<BookTextIcon />}>
+                Docs
+              </Button>
+            }
           />
 
           {/* Search Input */}

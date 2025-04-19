@@ -3,7 +3,7 @@
 import { Button, Card, CardBody, Input, Image, Alert } from '@heroui/react';
 import { useState } from 'react';
 import { toast } from 'sonner';
-import { ArrowRightIcon, Search } from 'lucide-react';
+import { ArrowRightIcon, BookTextIcon, Search } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -82,6 +82,15 @@ export default function SearchPage() {
             className="w-full max-w-3xl"
             title={t('search')}
             description={t('search_description')}
+            endContent={
+              <Button
+                as="a"
+                href="https://api-docs.multipost.app/6485525m0"
+                target="_blank"
+                startContent={<BookTextIcon />}>
+                Docs
+              </Button>
+            }
           />
 
           {/* Search Input */}
