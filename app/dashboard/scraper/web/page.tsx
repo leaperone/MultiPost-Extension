@@ -1,6 +1,6 @@
 'use client';
 
-import { Button, Card, CardBody, Input, Image, Skeleton } from '@heroui/react';
+import { Button, Card, CardBody, Input, Image, Skeleton, Alert } from '@heroui/react';
 import { useState } from 'react';
 import { toast } from 'sonner';
 import { ArrowRightIcon, GlobeIcon } from 'lucide-react';
@@ -37,44 +37,25 @@ export default function WebScraperPage() {
   const [activeImageIndex, setActiveImageIndex] = useState(0);
   const { t } = useTranslation('scraper');
 
-  const formatUrl = (inputUrl: string) => {
-    // 移除首尾空格
-    let formattedUrl = inputUrl.trim();
-
-    // 如果 URL 不是以 http:// 或 https:// 开头，添加 https://
-    if (!/^https?:\/\//i.test(formattedUrl)) {
-      formattedUrl = `https://${formattedUrl}`;
-    }
-
-    return formattedUrl;
-  };
-
   const handleScrape = async () => {
     if (!url) {
       toast.error(t('url_required'));
       return;
     }
 
-    const formattedUrl = formatUrl(url);
+    // 格式化 URL
+    const formattedUrl = url.trim().replace(/^(?!https?:\/\/)/, 'https://');
 
     try {
       setLoading(true);
       const response = await fetch('/api/v1/reader', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          url: formattedUrl,
-          returnFormat: 'markdown',
-        }),
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ url: formattedUrl, returnFormat: 'markdown' }),
       });
 
       const data = await response.json();
-
-      if (!data.success) {
-        throw new Error(data.error);
-      }
+      if (!data.success) throw new Error(data.error);
 
       setResult(data);
       toast.success(t('scrape_success'));
@@ -91,37 +72,48 @@ export default function WebScraperPage() {
         'flex min-h-[80vh] w-full flex-col transition-all duration-500',
         !result && !loading ? 'justify-center' : 'justify-start',
       )}>
-      <div
-        className={cn('mx-auto w-full max-w-3xl transition-all duration-500', !result && !loading ? 'mb-20' : 'mb-6')}>
-        <div className="flex items-center gap-2">
-          <Input
-            placeholder={t('url_placeholder')}
-            value={url}
-            size="lg"
-            onChange={(e) => setUrl(e.target.value)}
-            disabled={loading}
-            startContent={<GlobeIcon className="size-4" />}
-            classNames={{
-              input: 'rounded-full bg-white/80 backdrop-blur-sm',
-              inputWrapper: 'rounded-full shadow-lg',
-            }}
+      {!result && !loading && (
+        <div className="flex flex-col items-center gap-4">
+          <Alert
+            className="w-full max-w-3xl"
+            title={t('web_scraping')}
+            description={t('web_scraping_description')}
           />
-          <Button
-            isIconOnly
-            color="primary"
-            isLoading={loading}
-            onPress={handleScrape}
-            className="rounded-full shadow-lg">
-            <ArrowRightIcon className="size-4" />
-          </Button>
-        </div>
-      </div>
 
+          {/* Search Input */}
+          <div className="w-full max-w-3xl">
+            <div className="flex items-center gap-2">
+              <Input
+                placeholder={t('url_placeholder')}
+                value={url}
+                size="lg"
+                onChange={(e) => setUrl(e.target.value)}
+                disabled={loading}
+                startContent={<GlobeIcon className="size-4" />}
+                classNames={{
+                  input: 'rounded-full bg-white/80 backdrop-blur-sm',
+                  inputWrapper: 'rounded-full shadow-lg',
+                }}
+              />
+              <Button
+                isIconOnly
+                color="primary"
+                isLoading={loading}
+                onPress={handleScrape}
+                className="rounded-full shadow-lg">
+                <ArrowRightIcon className="size-4" />
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Results */}
       {(loading || result) && (
-        <div className="mx-auto grid w-full max-w-7xl gap-6 px-4 animate-in fade-in slide-in-from-bottom-4 lg:grid-cols-[1fr,1.5fr]">
-          {/* 左侧列：基本信息、图片预览、链接列表 */}
+        <div className="m-8 mx-auto grid w-full max-w-7xl gap-6 px-4 animate-in fade-in slide-in-from-bottom-4 lg:grid-cols-[1fr,1.5fr]">
+          {/* Left Column */}
           <div className="space-y-6">
-            {/* 基本信息 */}
+            {/* Basic Info */}
             <Card>
               <CardBody>
                 <h3 className="mb-4 text-lg font-medium">{t('basic_info')}</h3>
@@ -147,9 +139,9 @@ export default function WebScraperPage() {
               </CardBody>
             </Card>
 
-            {/* 图片预览 */}
+            {/* Images */}
             <Card className="h-[400px]">
-              <CardBody className="h-full p-6">
+              <CardBody className="h-full">
                 <div className="flex h-full flex-col">
                   <h3 className="mb-4 text-lg font-medium">{t('image_preview')}</h3>
                   {loading ? (
@@ -189,9 +181,9 @@ export default function WebScraperPage() {
               </CardBody>
             </Card>
 
-            {/* 链接列表 */}
+            {/* Links */}
             <Card className="h-[400px]">
-              <CardBody className="h-full p-6">
+              <CardBody className="h-full">
                 <div className="flex h-full flex-col">
                   <h3 className="mb-4 text-lg font-medium">{t('link_list')}</h3>
                   {loading ? (
@@ -214,7 +206,7 @@ export default function WebScraperPage() {
                               href={url}
                               target="_blank"
                               rel="noopener noreferrer"
-                              className="truncate rounded-lg border p-2 transition-colors hover:bg-gray-50 dark:hover:bg-gray-800">
+                              className="truncate rounded-lg border p-2 transition-colors hover:bg-gray-50">
                               {name || url}
                             </a>
                           ))}
@@ -227,9 +219,9 @@ export default function WebScraperPage() {
             </Card>
           </div>
 
-          {/* 右侧列：正文内容 */}
+          {/* Right Column */}
           <Card className="h-[calc(100vh-12rem)]">
-            <CardBody className="h-full p-6">
+            <CardBody className="h-full">
               <div className="flex h-full flex-col">
                 <h3 className="mb-4 text-lg font-medium">{t('content')}</h3>
                 {loading ? (
@@ -256,6 +248,7 @@ export default function WebScraperPage() {
         </div>
       )}
 
+      {/* Image Viewer */}
       {result && (
         <Viewer
           visible={visible}

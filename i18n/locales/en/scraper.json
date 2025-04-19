@@ -1,7 +1,9 @@
 {
   "scraper_options": "Scraper Options",
   "web_scraping": "Web Scraping",
+  "web_scraping_description": "Support for Markdown, JSON, and HTML web content extraction, suitable for automated article and product information retrieval.",
   "search": "Search",
+  "search_description": "Get search engine results and social media data.",
   "contact_support": "For support, please contact",
   "search_keyword_required": "Please enter search keywords",
   "search_keyword_placeholder": "Enter search keywords...",

@@ -4,7 +4,7 @@ import { Icon } from '@iconify/react';
 
 import { auth } from '@/auth';
 import { createTranslation } from '@/i18n/server';
-import { SendIcon, FileTextIcon, ChartSplineIcon } from 'lucide-react';
+import { SendIcon, FileTextIcon, ChartSplineIcon, ScanEyeIcon } from 'lucide-react';
 
 interface DashboardCardProps {
   href: string;
@@ -58,6 +58,12 @@ export default async function DashboardPage() {
       title: t('welcome.analytics.title'),
       description: t('welcome.analytics.description'),
       icon: <ChartSplineIcon className="size-5 text-primary-600 dark:text-primary-400" />,
+    },
+    {
+      href: '/dashboard/scraper',
+      title: t('welcome.scraper.title'),
+      description: t('welcome.scraper.description'),
+      icon: <ScanEyeIcon className="size-5 text-primary-600 dark:text-primary-400" />,
     },
   ];
 

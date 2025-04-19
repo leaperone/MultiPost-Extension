@@ -17,6 +17,10 @@
     },
     "card": {
       "hover_tip": "Click for details"
+    },
+    "scraper": {
+      "title": "Content Scraper",
+      "description": "Scrape content from websites and convert formats"
     }
   },
   "sidebar": {

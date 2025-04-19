@@ -1,7 +1,6 @@
 'use client';
 
-import { Alert, Tabs, Tab } from '@heroui/react';
-import Link from 'next/link';
+import { Tabs, Tab } from '@heroui/react';
 import { useTranslation } from '@/i18n/client';
 import { GlobeIcon, SearchIcon } from 'lucide-react';
 import { usePathname } from 'next/navigation';
@@ -11,12 +10,14 @@ export default function ScraperLayout({ children }: { children: React.ReactNode 
   const pathname = usePathname();
 
   return (
-    <div className="mx-auto size-full space-y-6 overflow-y-auto p-4 scrollbar-hide">
-      <div className="mx-auto max-w-7xl">
+    <div className="mx-auto grid h-full grid-rows-[auto_1fr_auto] gap-4 p-4">
+      {/* Tabs Navigation */}
+      <div className="mx-auto w-full max-w-7xl">
         <Tabs
           aria-label={t('scraper_options')}
           selectedKey={pathname}
           fullWidth
+          size="sm"
           classNames={{
             tabList: 'w-full justify-start',
           }}>
@@ -43,22 +44,8 @@ export default function ScraperLayout({ children }: { children: React.ReactNode 
         </Tabs>
       </div>
 
-      <div className="mx-auto w-full">{children}</div>
-
-      <div className="mx-auto max-w-7xl">
-        <Alert
-          variant="flat"
-          color="secondary">
-          <div>
-            {t('contact_support')}
-            <Link
-              href="mailto:support@leaper.one"
-              className="text-blue-500 hover:underline">
-              support@leaper.one
-            </Link>
-          </div>
-        </Alert>
-      </div>
+      {/* Main Content */}
+      <div className="w-full overflow-auto">{children}</div>
     </div>
   );
 }

@@ -1,7 +1,9 @@
 {
   "scraper_options": "抓取工具选项",
   "web_scraping": "网页抓取",
+  "web_scraping_description": "支持 Markdown、JSON、HTML 格式的网页内容采集，适用于自动化获取文章及产品信息。",
   "search": "搜索",
+  "search_description": "获取搜索引擎结果和社交媒体数据。",
   "contact_support": "如有问题请联系",
   "search_keyword_required": "请输入搜索关键词",
   "search_keyword_placeholder": "请输入搜索关键词...",

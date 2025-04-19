@@ -17,6 +17,10 @@
     },
     "card": {
       "hover_tip": "点击查看详情"
+    },
+    "scraper": {
+      "title": "内容抓取",
+      "description": "从网页抓取内容并自动转换格式"
     }
   },
   "sidebar": {
