@@ -23,5 +23,19 @@
       "description": "Passkeys provide a secure, passwordless way to sign in to your account.",
       "register": "Register New Passkey"
     }
+  },
+  "recharge": {
+    "title": "Recharge",
+    "placeholder": "Enter amount (≥10)",
+    "button": "Recharge",
+    "toast": {
+      "empty": "Please enter amount",
+      "min": "Amount must be at least 10",
+      "success": "Recharge successful: $${amount}",
+      "fail": "Recharge failed"
+    },
+    "rate": "Exchange rate: 1 USD = 7.3 CNY",
+    "details": "View Details",
+    "alipay_only": "Currently only supports Alipay, credits will be added immediately after payment"
   }
 } 

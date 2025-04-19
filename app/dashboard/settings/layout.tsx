@@ -5,10 +5,6 @@ export const metadata: Metadata = {
   description: 'Settings for MultiPost',
 };
 
-export default function SettingsLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export default function SettingsLayout({ children }: { children: React.ReactNode }) {
   return <>{children}</>;
 }

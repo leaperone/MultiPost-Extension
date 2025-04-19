@@ -3,14 +3,12 @@ import {
   ChartSplineIcon,
   GridIcon,
   Home,
-  KeyIcon,
   LayoutDashboardIcon,
   LogOut,
   PuzzleIcon,
   ScanEyeIcon,
   SendIcon,
   Settings,
-  WalletIcon,
 } from 'lucide-react';
 
 import {
@@ -77,25 +75,10 @@ const getApplicationItems = (t: TranslationFunction): MenuItem[] => [
 ];
 
 const getSidebarFooterItems = (t: TranslationFunction): MenuItem[] => [
-  // {
-  //   title: 'Recharge',
-  //   url: '/dashboard/recharge',
-  //   icon: CreditCardIcon,
-  // },
-  {
-    title: t('sidebar.menu.apiKeys'),
-    url: '/dashboard/api-keys',
-    icon: KeyIcon,
-  },
   {
     title: t('sidebar.menu.extension'),
     url: '/extension',
     icon: PuzzleIcon,
-  },
-  {
-    title: t('sidebar.menu.recharge'),
-    url: '/dashboard/recharge',
-    icon: WalletIcon,
   },
   {
     title: t('sidebar.menu.settings'),
