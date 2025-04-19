@@ -21,6 +21,7 @@ import {
 import ExtensionPost from '../../components/ExtensionPost';
 import { Loader2, Copy, ExternalLink, ChevronRight, Check, MessageCircle, XIcon } from 'lucide-react';
 import { getPromotionCode, verifyPromotionTask } from '../actions';
+import { useSession } from 'next-auth/react';
 
 interface Props {
   task: ClientPromotionTask;
