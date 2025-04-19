@@ -21,6 +21,7 @@ import {
   SidebarMenuButton,
   SidebarHeader,
   SidebarFooter,
+  SidebarRail,
 } from '@/components/ui/sidebar';
 import { SidebarThemeSwitcher } from '../../../components/ThemeSwitcher';
 import MultiPostLogo from './Logo';
@@ -95,7 +96,7 @@ export async function DashboardSidebar() {
   return (
     <Sidebar
       side="left"
-      variant="floating"
+      variant="sidebar"
       collapsible="icon">
       <SidebarHeader>
         <SidebarMenu>
@@ -167,6 +168,7 @@ export async function DashboardSidebar() {
           </Tooltip>
         </SidebarMenu>
       </SidebarFooter>
+      <SidebarRail />
     </Sidebar>
   );
 }
