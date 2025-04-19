@@ -10,9 +10,9 @@ import { PromotionTaskType, PromotionTaskTypeLabelMap } from '@/app/api/promotio
 import { ExternalLink } from 'lucide-react';
 
 interface Props {
-  params: {
+  params: Promise<{
     id: string;
-  };
+  }>;
 }
 
 /**
@@ -48,7 +48,8 @@ async function getTaskDetail(id: string): Promise<ClientPromotionTask> {
 }
 
 export default async function ActivityDetailPage({ params }: Props) {
-  const task = await getTaskDetail(params.id);
+  const { id } = await params;
+  const task = await getTaskDetail(id);
   const isExpired = new Date(task.expiredAt).getTime() <= Date.now();
 
   return (
