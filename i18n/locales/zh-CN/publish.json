@@ -14,16 +14,11 @@
     "content": "请输入内容",
     "description": "创建并同步发布动态内容到多个社交媒体平台",
     "autoPublish": "自动发布",
-    "selectPlatforms": "选择发布平台",
-    "publish": "发布",
     "clearAll": "清空"
   },
   "video": {
     "title": "请输入标题",
-    "description": "上传并同步视频到不同的视频平台",
-    "upload": "上传视频",
-    "selectPlatforms": "选择发布平台",
-    "publish": "同步视频"
+    "description": "请输入描述，然后上传视频"
   },
   "grid": {
     "description": "为社交媒体创建精美的照片九宫格",
@@ -36,13 +31,6 @@
   },
   "article": {
     "description": "使用 Markdown 编写和编辑专业文章"
-  },
-  "contact": {
-    "message": "如无所需平台，请联系我们",
-    "or": "或使用我们的",
-    "github": "GitHub Issues",
-    "page": "页面",
-    "survey": "如需定制或其他反馈，请填写"
   },
   "validation": {
     "contentRequired": "内容不能为空",

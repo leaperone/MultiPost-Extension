@@ -8,9 +8,9 @@ import {
   TrashIcon,
   BotIcon,
   HandIcon,
-  SendIcon,
   ArrowLeftIcon,
   ArrowRightIcon,
+  SendHorizontal,
 } from 'lucide-react';
 import dynamic from 'next/dynamic';
 import React, { useState, useRef, useEffect } from 'react';
@@ -166,7 +166,7 @@ export default function DynamicPage() {
   return (
     <>
       {currentStep === 1 ? (
-        <>
+        <div className="flex flex-col gap-2">
           <Card className="h-fit bg-default-50 shadow-none">
             <CardHeader>
               <Input
@@ -306,37 +306,36 @@ export default function DynamicPage() {
           )}
 
           <Button
+            fullWidth
             onPress={handleNextStep}
-            color="primary"
-            disabled={!content}
-            className="mt-4 w-full px-4 py-2 font-bold"
-            endContent={<ArrowRightIcon className="size-4" />}>
-            {t('dynamic.selectPlatforms')}
+            disabled={!content}>
+            <ArrowRightIcon />
           </Button>
-        </>
+        </div>
       ) : (
         <>
           <Card className="mb-4 bg-default-50 shadow-none">
             <CardBody className="gap-2">
-              <Switch
-                isSelected={autoPublish}
-                onValueChange={setAutoPublish}
-                startContent={<BotIcon className="size-4" />}
-                endContent={<HandIcon className="size-4" />}>
-                {t('dynamic.autoPublish')}
-              </Switch>
               <div className="flex items-center justify-between">
-                <p className="mb-2 text-sm font-medium">{t('dynamic.selectPlatforms')}</p>
-                {selectedPlatforms.length > 0 && (
-                  <Button
-                    isIconOnly
-                    size="sm"
-                    variant="light"
-                    color="danger"
-                    onPress={() => setSelectedPlatforms([])}>
-                    <TrashIcon className="size-4" />
-                  </Button>
-                )}
+                <Switch
+                  isSelected={autoPublish}
+                  onValueChange={setAutoPublish}
+                  startContent={<BotIcon className="size-4" />}
+                  endContent={<HandIcon className="size-4" />}>
+                  {t('dynamic.autoPublish')}
+                </Switch>
+                <div className="flex items-center justify-between">
+                  {selectedPlatforms.length > 0 && (
+                    <Button
+                      isIconOnly
+                      size="sm"
+                      variant="light"
+                      color="danger"
+                      onPress={() => setSelectedPlatforms([])}>
+                      <TrashIcon className="size-4" />
+                    </Button>
+                  )}
+                </div>
               </div>
               <div className="grid grid-cols-2 gap-2">
                 {platforms.map((platform: PlatformInfo) => {
@@ -358,20 +357,18 @@ export default function DynamicPage() {
 
           <div className="flex gap-2">
             <Button
-              onPress={handlePrevStep}
-              variant="flat"
-              className="w-full px-4 py-2 font-bold"
-              startContent={<ArrowLeftIcon className="size-4" />}>
-              {t('dynamic.content')}
+              aria-label="back_to_edit"
+              onPress={handlePrevStep}>
+              <ArrowLeftIcon />
             </Button>
 
             <Button
-              onPress={handlePublish}
-              color="primary"
+              aria-label="publish"
+              fullWidth
+              color={selectedPlatforms.length === 0 ? 'default' : 'primary'}
               disabled={selectedPlatforms.length === 0}
-              className="w-full px-4 py-2 font-bold"
-              startContent={<SendIcon className="size-4" />}>
-              {t('dynamic.publish')}
+              onPress={handlePublish}>
+              <SendHorizontal />
             </Button>
           </div>
         </>

@@ -2,7 +2,7 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import { Card, Button, Input, Textarea, CardHeader, CardBody, CardFooter } from '@heroui/react';
-import { VideoIcon, XIcon } from 'lucide-react';
+import { VideoIcon, XIcon, ArrowLeftIcon, ArrowRightIcon, SendHorizontal, TrashIcon } from 'lucide-react';
 import dynamic from 'next/dynamic';
 import type { FileData, SyncData } from '@/lib/extension';
 import PlatformCheckbox from '../components/PlatformCheckbox';
@@ -17,6 +17,7 @@ const ReactPlayer = dynamic(() => import('react-player'), {
 
 export default function VideoPage() {
   const { t } = useTranslation('publish');
+  const [currentStep, setCurrentStep] = useState<number>(1);
   const [title, setTitle] = useState<string>('');
   const [content, setContent] = useState<string>('');
   const [videoFile, setVideoFile] = useState<FileData | null>(null);
@@ -46,6 +47,15 @@ export default function VideoPage() {
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
     }
+  };
+
+  const handleClearAll = () => {
+    setVideoFile(null);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+    setTitle('');
+    setContent('');
     setSelectedPlatforms([]);
     clearVideoPlatforms();
   };
@@ -87,98 +97,153 @@ export default function VideoPage() {
     fileInputRef.current?.click();
   };
 
+  const handleNextStep = () => {
+    if (!title || !videoFile) {
+      alert(t('validation.titleAndVideoRequired'));
+      return;
+    }
+    setCurrentStep(2);
+  };
+
+  const handlePrevStep = () => {
+    setCurrentStep(1);
+  };
+
   return (
     <>
-      <Card className="h-fit bg-default-50 shadow-none">
-        <CardHeader>
-          <Input
-            placeholder={t('video.title')}
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-            className="w-full"
-          />
-        </CardHeader>
+      {currentStep === 1 ? (
+        <div className="flex flex-col gap-2">
+          <Card className="h-fit bg-default-50 shadow-none">
+            <CardHeader>
+              <Input
+                isClearable
+                variant="underlined"
+                placeholder={t('video.title')}
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
+                onClear={() => setTitle('')}
+                className="w-full"
+              />
+            </CardHeader>
 
-        <CardBody>
-          <Textarea
-            placeholder={t('video.description')}
-            value={content}
-            onChange={(e) => setContent(e.target.value)}
-            fullWidth
-            minRows={5}
-            autoFocus
-          />
-        </CardBody>
+            <CardBody>
+              <Textarea
+                isClearable
+                variant="underlined"
+                placeholder={t('video.description')}
+                value={content}
+                onChange={(e) => setContent(e.target.value)}
+                onClear={() => setContent('')}
+                fullWidth
+                minRows={5}
+                autoFocus
+              />
+            </CardBody>
 
-        <CardFooter>
-          <div className="flex w-full flex-col items-center">
-            {!videoFile ? (
-              <>
-                <input
-                  type="file"
-                  ref={fileInputRef}
-                  accept="video/*"
-                  onChange={handleFileChange}
-                  className="hidden"
-                />
-                <Button
-                  isIconOnly
-                  variant="light"
-                  onPress={handleIconClick}>
-                  <VideoIcon className="size-8 text-gray-600" />
-                </Button>
-                <p className="mt-2 text-sm text-gray-500">{t('video.upload')}</p>
-              </>
-            ) : (
-              <div className="w-full">
-                <div className="relative mb-2 aspect-video w-full">
-                  <ReactPlayer
-                    url={videoFile.url}
-                    width="100%"
-                    height="100%"
-                    controls
-                    playing={false}
+            <CardFooter>
+              <div className="mb-4 flex w-full items-center justify-between">
+                <div className="flex">
+                  <input
+                    type="file"
+                    ref={fileInputRef}
+                    accept="video/*"
+                    onChange={handleFileChange}
+                    className="hidden"
                   />
                   <Button
                     isIconOnly
-                    size="sm"
-                    color="danger"
-                    variant="flat"
-                    className="absolute right-2 top-2 z-50"
-                    onPress={handleRemoveVideo}>
-                    <XIcon size={16} />
+                    variant="light"
+                    onPress={handleIconClick}>
+                    <VideoIcon className="size-8 text-gray-600" />
                   </Button>
                 </div>
-                <p className="text-sm text-gray-600">{videoFile.name}</p>
+                {(title || content || videoFile) && (
+                  <Button
+                    isIconOnly
+                    variant="light"
+                    color="danger"
+                    onPress={handleClearAll}
+                    title={t('dynamic.clearAll')}>
+                    <TrashIcon className="size-6" />
+                  </Button>
+                )}
               </div>
-            )}
-          </div>
-        </CardFooter>
-      </Card>
+            </CardFooter>
+          </Card>
 
-      <div className="mt-4">
-        <p className="mb-2 text-sm font-medium">{t('video.selectPlatforms')}</p>
-        <div className="grid grid-cols-2 gap-2">
-          {platforms.map((platform: PlatformInfo) => {
-            return (
-              <PlatformCheckbox
-                key={platform.name}
-                platformInfo={platform}
-                isSelected={selectedPlatforms.includes(platform.name)}
-                onChange={(_, isSelected) => handlePlatformChange(platform.name, isSelected)}
-                isDisabled={false}
-              />
-            );
-          })}
+          {/* 视频预览 Card */}
+          {videoFile && (
+            <Card className="my-2 bg-default-50 shadow-none">
+              <CardBody>
+                <div className="w-full">
+                  <div className="group relative mb-2 aspect-video w-full">
+                    <ReactPlayer
+                      url={videoFile.url}
+                      width="100%"
+                      height="100%"
+                      controls
+                      playing={false}
+                    />
+                    <Button
+                      isIconOnly
+                      size="sm"
+                      color="danger"
+                      className="absolute right-2 top-2 z-50 opacity-0 transition-opacity group-hover:opacity-100"
+                      onPress={handleRemoveVideo}>
+                      <XIcon className="size-4" />
+                    </Button>
+                  </div>
+                  <p className="text-sm text-gray-600">{videoFile.name}</p>
+                </div>
+              </CardBody>
+            </Card>
+          )}
+
+          <Button
+            fullWidth
+            onPress={handleNextStep}
+            disabled={!videoFile || !title}>
+            <ArrowRightIcon />
+          </Button>
         </div>
-      </div>
-      <Button
-        onPress={handlePublish}
-        color="primary"
-        disabled={!videoFile || !title || !content || selectedPlatforms.length === 0}
-        className="mt-4 w-full px-4 py-2 font-bold">
-        {t('video.publish')}
-      </Button>
+      ) : (
+        <>
+          <Card className="mb-4 bg-default-50 shadow-none">
+            <CardBody className="gap-2">
+              <div className="grid grid-cols-2 gap-2">
+                {platforms.map((platform: PlatformInfo) => {
+                  return (
+                    <PlatformCheckbox
+                      key={platform.name}
+                      platformInfo={platform}
+                      isSelected={selectedPlatforms.includes(platform.name)}
+                      onChange={(_, isSelected) => handlePlatformChange(platform.name, isSelected)}
+                      isDisabled={false}
+                    />
+                  );
+                })}
+              </div>
+            </CardBody>
+          </Card>
+
+          <div className="flex gap-2">
+            <Button
+              aria-label="back_to_edit"
+              onPress={handlePrevStep}>
+              <ArrowLeftIcon />
+            </Button>
+
+            <Button
+              aria-label="publish"
+              fullWidth
+              color={selectedPlatforms.length === 0 ? 'default' : 'primary'}
+              disabled={selectedPlatforms.length === 0}
+              onPress={handlePublish}>
+              <SendHorizontal />
+            </Button>
+          </div>
+        </>
+      )}
     </>
   );
 }

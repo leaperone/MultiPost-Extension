@@ -60,13 +60,7 @@ export default async function ClientsPage() {
   const { t } = await createTranslation('publish');
 
   return (
-    <div className="container space-y-6 py-6">
-      <Alert
-        variant="flat"
-        color="primary">
-        {t('client.page.alert')}
-      </Alert>
-
+    <div className="container space-y-6">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold tracking-tight">{t('client.page.title')}</h1>
@@ -74,6 +68,8 @@ export default async function ClientsPage() {
         </div>
         <LinkButton />
       </div>
+
+      <Alert variant="flat">{t('client.page.alert')}</Alert>
 
       <Suspense
         fallback={

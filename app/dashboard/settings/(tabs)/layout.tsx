@@ -1,7 +1,7 @@
 'use client';
 
 import { Tabs, Tab } from '@heroui/react';
-import { ToggleRightIcon, KeyIcon, WalletIcon } from 'lucide-react';
+import { ToggleRightIcon, KeyIcon, WalletIcon, ShieldCheckIcon } from 'lucide-react';
 import { usePathname } from 'next/navigation';
 
 export default function SettingsLayout({
@@ -54,6 +54,16 @@ export default function SettingsLayout({
             </div>
           }
           href={`${baseUrl}/credit-and-usage`}
+        />
+        <Tab
+          key={`${baseUrl}/trust-domains`}
+          title={
+            <div className="flex items-center space-x-2">
+              <ShieldCheckIcon className="size-4" />
+              <span>Trust Domains</span>
+            </div>
+          }
+          href={`${baseUrl}/trust-domains`}
         />
       </Tabs>
 

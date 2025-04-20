@@ -14,16 +14,11 @@
     "content": "Enter content",
     "description": "Create and publish dynamic content to multiple social media platforms simultaneously",
     "autoPublish": "Auto Publish",
-    "selectPlatforms": "Select Platforms to Publish",
-    "publish": "Publish",
     "clearAll": "Clear all"
   },
   "video": {
     "title": "Please enter a title",
-    "description": "Upload and sync videos across different video platforms",
-    "upload": "Upload Video",
-    "selectPlatforms": "Select Publishing Platforms",
-    "publish": "Sync Video"
+    "description": "Please enter a description, then upload video"
   },
   "grid": {
     "description": "Create beautiful photo grids for social media posts",
@@ -36,13 +31,6 @@
   },
   "article": {
     "description": "Write and edit professional articles with Markdown support"
-  },
-  "contact": {
-    "message": "If your platform is not listed, please contact us via email at",
-    "or": "or use our",
-    "github": "GitHub Issues",
-    "page": "page",
-    "survey": "For customization or other feedback, please fill out our survey at"
   },
   "validation": {
     "contentRequired": "Content is required",
