@@ -1,0 +1,68 @@
+{
+  "modal": {
+    "config": "Configure",
+    "cancel": "Cancel",
+    "save": "Save",
+    "test": "Test",
+    "add": "Add"
+  },
+  "wordpress": {
+    "urlPlaceholder": "https://myweb.com/wp-admin/post-new.php"
+  },
+  "okjike": {
+    "inputPlaceholder": "Please enter topic name",
+    "selectedTopic": "Selected"
+  },
+  "webhook": {
+    "description": "Currently only supports custom robot Webhooks for Feishu, WeCom, and DingTalk. Click the links to view the configuration documentation for each platform.",
+    "platforms": {
+      "feishu": "Feishu",
+      "wecom": "WeCom",
+      "dingtalk": "DingTalk"
+    },
+    "urlPlaceholder": "Please enter URL",
+    "testSuccess": {
+      "title": "Test Successful",
+      "description": "Test completed successfully"
+    },
+    "testFailed": {
+      "title": "Test Failed",
+      "description": "Please check your network connection"
+    },
+    "invalidUrl": {
+      "title": "Invalid URL",
+      "description": "Please enter a valid URL"
+    },
+    "unsupportedPlatform": "Unsupported platform"
+  },
+  "zsxq": {
+    "button": {
+      "default": "Add Knowledge Planet",
+      "selected": "Selected {{count}} planets"
+    },
+    "modal": {
+      "title": "Configure Knowledge Planet",
+      "groupName": {
+        "label": "Planet Name",
+        "placeholder": "Enter planet name",
+        "error": "Please enter planet name"
+      },
+      "groupUrl": {
+        "label": "Planet Link",
+        "placeholder": "Enter planet link (wx.zsxq.com/group/...)",
+        "error": "Please enter a valid Knowledge Planet link"
+      },
+      "addButton": "Add Planet",
+      "addedGroups": "Added Planets",
+      "noGroups": "No planets added yet",
+      "selected": "Selected",
+      "select": "Select"
+    },
+    "toast": {
+      "addSuccess": {
+        "title": "Added Successfully",
+        "description": "Planet added: {{name}}"
+      }
+    }
+  }
+}

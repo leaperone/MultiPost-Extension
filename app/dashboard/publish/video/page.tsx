@@ -10,6 +10,7 @@ import { funcPublish, getPlatformInfos } from '@/lib/extension';
 import type { PlatformInfo } from '@/lib/extension';
 import { useTranslation } from '@/i18n/client';
 import { usePlatformStore } from '@/store/publish.store';
+import { getPlatformExtraConfigList } from '../action';
 
 const ReactPlayer = dynamic(() => import('react-player'), {
   ssr: false,
@@ -27,8 +28,39 @@ export default function VideoPage() {
   const [platforms, setPlatforms] = useState<PlatformInfo[]>([]);
 
   useEffect(() => {
-    getPlatformInfos('VIDEO').then(setPlatforms);
+    async function fetchPlatforms() {
+      const [platformData, extraConfigList] = await Promise.all([
+        getPlatformInfos('VIDEO'),
+        getPlatformExtraConfigList(),
+      ]);
+
+      if (extraConfigList.success && extraConfigList.data) {
+        const extraConfigMap = extraConfigList.data.reduce(
+          (acc, item) => {
+            acc[item.platform] = item.data;
+            return acc;
+          },
+          {} as Record<string, unknown>,
+        );
+
+        const platformsWithExtra = platformData.map((platform) => ({
+          ...platform,
+          extraConfig: extraConfigMap[platform.name],
+        }));
+
+        setPlatforms(platformsWithExtra);
+      } else {
+        setPlatforms(platformData);
+      }
+    }
+    fetchPlatforms();
   }, []);
+
+  const handleExtraConfigChange = (platformKey: string, extraConfig: unknown) => {
+    setPlatforms((prevPlatforms) =>
+      prevPlatforms.map((platform) => (platform.name === platformKey ? { ...platform, extraConfig } : platform)),
+    );
+  };
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFile = event.target.files?.[0];
@@ -219,6 +251,7 @@ export default function VideoPage() {
                       isSelected={selectedPlatforms.includes(platform.name)}
                       onChange={(_, isSelected) => handlePlatformChange(platform.name, isSelected)}
                       isDisabled={false}
+                      onExtraConfigChange={handleExtraConfigChange}
                     />
                   );
                 })}

@@ -62,6 +62,8 @@ export interface PlatformInfo {
   tags?: string[];
   accountKey: string;
   accountInfo?: AccountInfo;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  extraConfig?: any;
 }
 
 export interface AccountInfo {
@@ -179,6 +181,9 @@ export async function openOptions(timeout: number = 5000): Promise<boolean> {
 }
 
 export const funcPublish = async (data: SyncData | PublishPostData | SchedulePublishPostData) => {
+  if (process.env.NODE_ENV === 'development') {
+    console.log('funcPublish', data);
+  }
   sendRequest<SyncData | PublishPostData | SchedulePublishPostData, void>('MUTLIPOST_EXTENSION_PUBLISH', data);
 };
 

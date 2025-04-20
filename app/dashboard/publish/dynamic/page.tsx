@@ -23,6 +23,7 @@ import type { FileData, SyncData } from '@/lib/extension';
 import { funcPublish, getPlatformInfos } from '@/lib/extension';
 import PlatformCheckbox from '../components/PlatformCheckbox';
 import { usePlatformStore } from '@/store/publish.store';
+import { getPlatformExtraConfigList } from '../action';
 
 const ReactPlayer = dynamic(() => import('react-player'), {
   ssr: false,
@@ -53,8 +54,31 @@ export default function DynamicPage() {
 
   useEffect(() => {
     async function fetchPlatforms() {
-      const platformData = await getPlatformInfos('DYNAMIC');
-      setPlatforms(platformData);
+      const [platformData, extraConfigList] = await Promise.all([
+        getPlatformInfos('DYNAMIC'),
+        getPlatformExtraConfigList(),
+      ]);
+
+      if (extraConfigList.success && extraConfigList.data) {
+        // 创建一个平台名称到 extraData 的映射
+        const extraConfigMap = extraConfigList.data.reduce(
+          (acc, item) => {
+            acc[item.platform] = item.data;
+            return acc;
+          },
+          {} as Record<string, unknown>,
+        );
+
+        // 将 extraData 直接合并到平台信息中
+        const platformsWithExtra = platformData.map((platform) => ({
+          ...platform,
+          extraConfig: extraConfigMap[platform.name],
+        })) satisfies PlatformInfo[];
+
+        setPlatforms(platformsWithExtra);
+      } else {
+        setPlatforms(platformData);
+      }
     }
     fetchPlatforms();
   }, []);
@@ -161,6 +185,12 @@ export default function DynamicPage() {
 
   const handlePrevStep = () => {
     setCurrentStep(1);
+  };
+
+  const handleExtraConfigChange = (platformKey: string, extraConfig: unknown) => {
+    setPlatforms((prevPlatforms) =>
+      prevPlatforms.map((platform) => (platform.name === platformKey ? { ...platform, extraConfig } : platform)),
+    );
   };
 
   return (
@@ -348,6 +378,7 @@ export default function DynamicPage() {
                       isSelected={selectedPlatforms.includes(platform.name)}
                       onChange={(_, isSelected) => handlePlatformChange(platform.name, isSelected)}
                       isDisabled={isDisabled}
+                      onExtraConfigChange={handleExtraConfigChange}
                     />
                   );
                 })}

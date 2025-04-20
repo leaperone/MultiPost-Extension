@@ -1,0 +1,68 @@
+{
+  "modal": {
+    "config": "配置",
+    "cancel": "取消",
+    "save": "保存",
+    "test": "测试",
+    "add": "添加"
+  },
+  "wordpress": {
+    "urlPlaceholder": "https://myweb.com/wp-admin/post-new.php"
+  },
+  "okjike": {
+    "inputPlaceholder": "请输入圈子名称",
+    "selectedTopic": "已选择"
+  },
+  "webhook": {
+    "description": "目前仅支持飞书、企业微信、钉钉的自定义机器人 Webhook。点击链接查看对应平台的配置文档。",
+    "platforms": {
+      "feishu": "飞书",
+      "wecom": "企业微信",
+      "dingtalk": "钉钉"
+    },
+    "urlPlaceholder": "请输入URL",
+    "testSuccess": {
+      "title": "测试成功",
+      "description": "测试成功"
+    },
+    "testFailed": {
+      "title": "测试失败",
+      "description": "请检查网络连接"
+    },
+    "invalidUrl": {
+      "title": "无效的URL",
+      "description": "请输入有效的URL"
+    },
+    "unsupportedPlatform": "不支持的平台"
+  },
+  "zsxq": {
+    "button": {
+      "default": "添加知识星球",
+      "selected": "已选择 {{count}} 个星球"
+    },
+    "modal": {
+      "title": "配置知识星球",
+      "groupName": {
+        "label": "星球名称",
+        "placeholder": "输入星球名称",
+        "error": "请输入星球名称"
+      },
+      "groupUrl": {
+        "label": "星球链接",
+        "placeholder": "输入星球链接 (wx.zsxq.com/group/...)",
+        "error": "请输入有效的知识星球链接"
+      },
+      "addButton": "添加星球",
+      "addedGroups": "已添加的星球",
+      "noGroups": "还没有添加任何星球",
+      "selected": "已选择",
+      "select": "选择"
+    },
+    "toast": {
+      "addSuccess": {
+        "title": "添加成功",
+        "description": "已添加星球：{{name}}"
+      }
+    }
+  }
+}
