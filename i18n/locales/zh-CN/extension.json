@@ -1,13 +1,10 @@
 {
-    "title": "MultiPost 扩展",
-    "description": "我们的扩展提供了增强的功能，以便为多帖体验提供更多的内容。",
-    "extension_ready": "扩展已准备好！",
-    "extension_not_detected": "未检测到扩展",
-    "extension_ready_desc": "您的多帖扩展已安装并准备好使用。",
-    "extension_not_detected_desc": "要使用多帖的所有功能，请安装我们的浏览器扩展。",
-    "open_extension": "打开扩展",
-    "start_publishing": "开始发布",
-    "chrome_store": "Chrome商店",
-    "edge_store": "Edge商店",
-    "pin_tip": "安装后，请点击浏览器工具栏中的拼图图标，然后点击MultiPost旁边的固定图标，以便轻松访问。"
-  } 
+  "title": "MultiPost 扩展",
+  "extension_ready": "扩展已准备好！",
+  "extension_not_detected": "未检测到扩展",
+  "open_extension": "打开扩展",
+  "start_publishing": "开始发布",
+  "chrome_store": "Chrome商店",
+  "edge_store": "Edge商店",
+  "pin_tip": "安装后，请点击浏览器工具栏中的拼图图标，然后点击MultiPost旁边的固定图标，以便轻松访问。"
+}

@@ -1,5 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import {
+  BookIcon,
   ChartSplineIcon,
   GridIcon,
   Home,
@@ -79,6 +80,11 @@ const getSidebarFooterItems = (t: TranslationFunction): MenuItem[] => [
     title: t('sidebar.menu.extension'),
     url: '/extension',
     icon: PuzzleIcon,
+  },
+  {
+    title: t('sidebar.menu.docs'),
+    url: 'https://docs.multipost.app',
+    icon: BookIcon,
   },
   {
     title: t('sidebar.menu.settings'),

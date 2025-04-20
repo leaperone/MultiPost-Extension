@@ -2,25 +2,12 @@
 
 import React, { useEffect, useState } from 'react';
 import { Card, CardBody } from '@heroui/card';
-import { Button, Link } from '@heroui/react';
-import { PuzzleIcon, AlertCircleIcon, ArrowRight } from 'lucide-react';
+import { Alert, Button, Link, Spacer } from '@heroui/react';
+import { PuzzleIcon, AlertCircleIcon, ArrowRightIcon } from 'lucide-react';
 import { Icon } from '@iconify/react';
 import confetti from 'canvas-confetti';
-import { checkServiceStatus, openOptions } from '@/lib/extension';
+import { checkServiceStatus } from '@/lib/extension';
 import { useTranslation } from '@/i18n/client';
-
-const PinTip = () => {
-  const { t } = useTranslation('extension');
-  return (
-    <div className="mt-8 flex items-center gap-3 rounded-lg border border-warning-200 bg-warning-50/50 p-4 text-sm text-warning-800 dark:border-warning-800 dark:bg-warning-900/20 dark:text-warning-500">
-      <Icon
-        icon="solar:pin-bold"
-        className="size-5 shrink-0"
-      />
-      <p>{t('pin_tip')}</p>
-    </div>
-  );
-};
 
 interface StatusCardProps {
   isInstalled: boolean;
@@ -42,26 +29,31 @@ const StatusCard: React.FC<StatusCardProps> = ({ isInstalled }) => {
 
         {isInstalled ? (
           <>
-            <p className="mb-6 text-foreground/80">{t('extension_ready_desc')}</p>
-            <div className="flex justify-evenly gap-3">
-              <Button
-                onPress={() => openOptions()}
-                startContent={<PuzzleIcon className="size-4" />}>
-                {t('open_extension')}
-              </Button>
-              <Button
-                as={Link}
-                href="/dashboard/publish"
-                startContent={<ArrowRight className="size-4" />}>
-                {t('start_publishing')}
-              </Button>
-            </div>
-            <PinTip />
+            {isInstalled && (
+              <Alert
+                variant="flat"
+                color="warning"
+                icon={
+                  <Icon
+                    icon="solar:pin-bold"
+                    className="size-4 shrink-0"
+                  />
+                }>
+                {t('pin_tip')}
+              </Alert>
+            )}
+            <Spacer y={4} />
+            <Button
+              as={Link}
+              href="/dashboard/publish"
+              size="lg"
+              startContent={<ArrowRightIcon className="size-4" />}>
+              {t('start_publishing')}
+            </Button>
           </>
         ) : (
           <>
-            <p className="mb-6 text-foreground/80">{t('extension_not_detected_desc')}</p>
-            <div className="flex flex-col gap-3">
+            <div className="flex gap-3">
               <Button
                 as={Link}
                 href="https://chromewebstore.google.com/detail/multipost/dhohkaclnjgcikfoaacfgijgjgceofih"
@@ -122,7 +114,6 @@ const ExtensionPage: React.FC = () => {
         <main className="container mx-auto px-4 py-16">
           <div className="mx-auto mb-12 max-w-2xl text-center">
             <h1 className="mb-4 text-3xl font-semibold">{t('title')}</h1>
-            <p className="text-foreground/80">{t('description')}</p>
           </div>
           <StatusCard isInstalled={isInstalled} />
         </main>

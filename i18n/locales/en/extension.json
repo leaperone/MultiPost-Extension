@@ -1,13 +1,10 @@
 {
   "title": "MultiPost Extension",
-  "description": "Our extension provides enhanced features for a richer MultiPost experience.",
   "extension_ready": "Extension is Ready!",
   "extension_not_detected": "Extension Not Detected",
-  "extension_ready_desc": "Your MultiPost extension is installed and ready to use.",
-  "extension_not_detected_desc": "To use all features of MultiPost, please install our browser extension.",
   "open_extension": "Open Extension",
   "start_publishing": "Start Publishing",
   "chrome_store": "Chrome Store",
   "edge_store": "Edge Store",
   "pin_tip": "After installation, click the puzzle icon in your browser's toolbar, then click the pin icon next to MultiPost to keep it easily accessible."
-} 
+}

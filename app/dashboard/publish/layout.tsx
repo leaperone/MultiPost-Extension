@@ -1,7 +1,7 @@
 'use client';
 
 import { Tabs, Tab } from '@heroui/react';
-import { MessageCircleHeartIcon, VideoIcon, FileTextIcon, UsersIcon } from 'lucide-react';
+import { MessageCircleHeartIcon, VideoIcon, FileTextIcon, RouterIcon } from 'lucide-react';
 import { usePathname } from 'next/navigation';
 import ForceInstallExtension from '@/components/ForceInstallExtension';
 import { useEffect } from 'react';
@@ -28,38 +28,22 @@ export default function PublishLayout({ children }: { children: React.ReactNode 
         <Tab
           key="/dashboard/publish/dynamic"
           href="/dashboard/publish/dynamic"
-          title={
-            <div className="flex items-center">
-              <MessageCircleHeartIcon />
-            </div>
-          }
+          title={<MessageCircleHeartIcon />}
         />
         <Tab
           key="/dashboard/publish/video"
           href="/dashboard/publish/video"
-          title={
-            <div className="flex items-center">
-              <VideoIcon />
-            </div>
-          }
+          title={<VideoIcon />}
         />
         <Tab
           key="https://md.multipost.app"
           href="https://md.multipost.app"
-          title={
-            <div className="flex items-center">
-              <FileTextIcon />
-            </div>
-          }
+          title={<FileTextIcon />}
         />
         <Tab
           key="/dashboard/publish/client"
           href="/dashboard/publish/client"
-          title={
-            <div className="flex items-center">
-              <UsersIcon />
-            </div>
-          }
+          title={<RouterIcon />}
         />
       </Tabs>
 
