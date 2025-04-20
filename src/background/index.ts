@@ -8,7 +8,13 @@ import {
   tabsManagerMessageHandler,
 } from './services/tabs';
 import QuantumEntanglementKeepAlive from '../utils/keep-alive';
-import { createTabsForPlatforms, getPlatformInfos, injectScriptsToTabs, type SyncData, type SyncDataPlatform } from '~sync/common';
+import {
+  createTabsForPlatforms,
+  getPlatformInfos,
+  injectScriptsToTabs,
+  type SyncData,
+  type SyncDataPlatform,
+} from '~sync/common';
 import { trustDomainMessageHandler } from './services/trust-domain';
 import { Storage } from '@plasmohq/storage';
 import { getAllAccountInfo } from '~sync/account';
