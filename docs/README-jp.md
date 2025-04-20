@@ -1,30 +1,34 @@
-<div align="center">
-
 # MultiPost
 
 ![GitHub License GitHub許可証](https://img.shields.io/github/license/leaper-one/MultiPost-Extension) ![GitHub Repo stars GitHubスター](https://img.shields.io/github/stars/leaper-one/MultiPost-Extension) ![GitHub commit activity GitHubコミット活動](https://img.shields.io/github/commit-activity/m/leaper-one/MultiPost-Extension) [![Website ウェブサイト](https://img.shields.io/website?url=https%3A%2F%2Fmultipost.app)](https://multipost.app)
-
-⭐ このプロジェクトが役立つと思われる場合は、スターを付けていただけると幸いです！皆様のサポートが私たちの成長と改善の原動力となります！⭐
-
-[MultiPost ドキュメント](https://docs.multipost.app)
 
 [English](../README.md) | [中文](README-zh.md) | [日本語](README-jp.md) | [Français](README-fr.md) | [한국어](README-kr.md)
 
 > 複数のソーシャルメディアプラットフォームにワンクリックでコンテンツを公開できるブラウザ拡張機能
 
-</div>
+⭐ このプロジェクトが役立つと思われる場合は、スターを付けていただけると幸いです！皆様のサポートが私たちの成長と改善の原動力となります！⭐
 
 ---
 
-<!-- 最新アップデート -->
-<div align="center">
-  <h3>MultiPost Analytics: Web Trace</h3>
-  <p>Web Trace: リアルタイムアクセス統計、訪問者分析、閲覧分析、滞在時間分析。</p>
-  <p>リアルタイムアクセス統計、訪問者分析、閲覧分析、滞在時間分析を提供します。</p>
-  <p>詳細はこちら：<a href="https://multipost.app/dashboard/analytics">https://multipost.app/dashboard/analytics</a></p>
-</div>
+## 主な機能
 
----
+- 知乎、Weibo、小紅書、TikTokなど10以上の主要プラットフォームへの同時投稿をサポート
+- ログイン不要、登録不要、APIキー不要。無料！
+- テキスト、画像、動画など、様々なコンテンツ形式をサポート
+- 2種類のAPIインターフェース:
+  - 拡張API：独自のWebアプリケーションで拡張機能のAPIを呼び出してコンテンツを投稿
+  - RESTful API：スクリプトやサーバーでRESTful APIを呼び出してコンテンツを投稿
+- データ分析：異なるプラットフォームでのコンテンツのパフォーマンスを追跡。ウェブサイトやソーシャルメディアアカウントを監視可能
+- コンテンツ抽出機能：
+  - リーダー：ウェブページの内容を読み取り、MarkdownまたはJson形式で返却
+  - 検索エンジン結果：検索エンジンの検索結果を取得
+  - ソーシャルメディア：ソーシャルメディアプラットフォームのコンテンツを取得
+- ウェブページとの連携をサポートし、拡張機能の投稿機能を利用して独自のウェブページを開発し、自動化を設定可能：
+  - ウェブコンテンツの自動取得と複数プラットフォームへの自動投稿
+  - 投稿のスケジュール設定
+  - AIコンテンツ生成との連携
+
+この拡張機能は、コンテンツクリエイターが複数のプラットフォームに投稿する際の課題を解決します。一度の編集で、すべてのプラットフォームにコンテンツを同期投稿でき、作業効率を大幅に向上させます。
 
 ## はじめに
 - [multipost.app](https://multipost.app) - 公式ウェブサイト
@@ -32,18 +36,6 @@
 - [MultiPost 記事エディター](https://md.multipost.app/) - [(リポジトリ)](https://github.com/leaper-one/multipost-wechat-markdown-editor) - 複数のプラットフォームにコンテンツを作成・投稿するためのオンラインエディター
 - [Chrome拡張機能 - ![Chrome Web Store Version Chrome ウェブストアバージョン](https://img.shields.io/chrome-web-store/v/dhohkaclnjgcikfoaacfgijgjgceofih)](https://chromewebstore.google.com/detail/multipost/dhohkaclnjgcikfoaacfgijgjgceofih) ![Chrome Web Store Users Chrome ウェブストアユーザー](https://img.shields.io/chrome-web-store/users/dhohkaclnjgcikfoaacfgijgjgceofih) ![Chrome Web Store Last Updated](https://img.shields.io/chrome-web-store/last-updated/dhohkaclnjgcikfoaacfgijgjgceofih)
 - [Edge拡張機能 - ![](https://img.shields.io/badge/dynamic/json?label=edge%20add-on&prefix=v&query=%24.version&url=https%3A%2F%2Fmicrosoftedge.microsoft.com%2Faddons%2Fgetproductdetailsbycrxid%2Fckoiphiceimehjkolnfffgbmihoppgjg)](https://microsoftedge.microsoft.com/addons/detail/multipost/ckoiphiceimehjkolnfffgbmihoppgjg) [![](https://img.shields.io/badge/dynamic/json?label=users&query=%24.activeInstallCount&url=https%3A%2F%2Fmicrosoftedge.microsoft.com%2Faddons%2Fgetproductdetailsbycrxid%2Fckoiphiceimehjkolnfffgbmihoppgjg)](https://microsoftedge.microsoft.com/addons/detail/multipost/ckoiphiceimehjkolnfffgbmihoppgjg)
-
-## 主な機能
-
-- 知乎、Weibo、小紅書、TikTokなど10以上の主要プラットフォームへの同時投稿をサポート
-- ログイン不要、登録不要、APIキー不要。無料！
-- テキスト、画像、動画など、様々なコンテンツ形式をサポート
-- ウェブページとの連携をサポートし、拡張機能の投稿機能を利用して独自のウェブページを開発し、自動化を設定可能：
-  - ウェブコンテンツの自動取得と複数プラットフォームへの自動投稿
-  - 投稿のスケジュール設定
-  - AIコンテンツ生成との連携
-
-この拡張機能は、コンテンツクリエイターが複数のプラットフォームに投稿する際の課題を解決します。一度の編集で、すべてのプラットフォームにコンテンツを同期投稿でき、作業効率を大幅に向上させます。
 
 ## 開発を始める
 
