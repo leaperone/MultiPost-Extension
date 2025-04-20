@@ -213,10 +213,15 @@ export async function verifyPromotionTask(taskId: string, link: string) {
         },
       });
 
-      await tx.credit.update({
+      await tx.credit.upsert({
         where: { userId: session.user.id },
-        data: {
+        update: {
           freeCredits: { increment: task.reward },
+        },
+        create: {
+          userId: session.user.id,
+          freeCredits: task.reward,
+          credits: 0,
         },
       });
     });
