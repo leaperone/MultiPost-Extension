@@ -39,7 +39,9 @@ export default function Header() {
               src="/favicon.ico"
               alt="MultiPost Logo"
             />
-            <span className="text-xl font-semibold">MultiPost</span>
+            <span className="bg-gradient-to-br from-blue-300 to-pink-600 bg-clip-text font-semibold text-transparent dark:from-blue-400 dark:to-pink-400">
+              MultiPost
+            </span>
           </Link>
         </NavbarBrand>
       </NavbarContent>
