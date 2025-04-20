@@ -1,5 +1,5 @@
 import { redirect } from 'next/navigation';
 
 export default function RechargePage() {
-  redirect('/dashboard/settings/usage');
+  redirect('/dashboard/settings/credit-and-usage');
 }

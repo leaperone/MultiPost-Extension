@@ -130,3 +130,43 @@ export async function deductCredit(params: DeductCreditParams): Promise<DeductCr
     };
   }
 }
+
+/**
+ * 增加用户的信用点数
+ * @param userId 用户ID
+ * @param amount 增加的信用点数
+ * @returns 增加结果
+ */
+export async function addCredit(userId: string, amount: Decimal, isFree: boolean) {
+  try {
+    const creditToAdd = isFree ? new Decimal(0) : amount;
+    const freeCreditToAdd = isFree ? amount : new Decimal(0);
+
+    const existingCredit = await multipostDb.credit.findUnique({
+      where: { userId },
+    });
+
+    const updatedCredit = await multipostDb.credit.upsert({
+      where: { userId },
+      update: {
+        credits: existingCredit?.credits.add(creditToAdd) ?? creditToAdd,
+        freeCredits: existingCredit?.freeCredits.add(freeCreditToAdd) ?? freeCreditToAdd,
+      },
+      create: {
+        userId,
+        credits: creditToAdd,
+        freeCredits: freeCreditToAdd,
+      },
+    });
+    return {
+      success: true,
+      remainingCredits: {
+        credits: Number(updatedCredit.credits),
+        freeCredits: Number(updatedCredit.freeCredits),
+        totalCredits: Number(updatedCredit.credits.add(updatedCredit.freeCredits)),
+      },
+    };
+  } catch (error) {
+    return { success: false, error: `${(error as Error).message}` };
+  }
+}

@@ -1,7 +1,7 @@
 import { type NextRequest, NextResponse } from 'next/server';
 import { multipostDb } from '@/lib/db';
 import { RechargeStatus } from '@/actions/credit/types';
-import { Decimal } from '@prisma/client/runtime/library';
+import { addCredit } from '@/actions/credit';
 
 export async function POST(request: NextRequest) {
   try {
@@ -34,19 +34,7 @@ export async function POST(request: NextRequest) {
       });
 
       // 2. 更新用户余额 - 使用 upsert 操作
-      await tx.credit.upsert({
-        where: { userId: recharge.userId },
-        create: {
-          userId: recharge.userId,
-          credits: new Decimal(recharge.amount.toString()),
-          freeCredits: new Decimal('0'),
-        },
-        update: {
-          credits: {
-            increment: new Decimal(recharge.amount.toString()),
-          },
-        },
-      });
+      await addCredit(recharge.userId, recharge.amount, false);
 
       // 3. 赠送积分
       //   await tx.rechargeCredit.create({

@@ -7,6 +7,7 @@ import { PromotionSubmissionStatus, PromotionTaskType } from '@/app/api/promotio
 import { RechargeType, RechargeStatus } from '@/actions/credit/types';
 import { fetchTikhub } from '@/lib/tikhub';
 import { auth } from '@/auth';
+import { addCredit } from '@/actions/credit';
 const getCodeSchema = z.object({
   taskId: z.string(),
 });
@@ -213,17 +214,7 @@ export async function verifyPromotionTask(taskId: string, link: string) {
         },
       });
 
-      await tx.credit.upsert({
-        where: { userId: session.user.id },
-        update: {
-          freeCredits: { increment: task.reward },
-        },
-        create: {
-          userId: session.user.id,
-          freeCredits: task.reward,
-          credits: 0,
-        },
-      });
+      await addCredit(session.user.id, task.reward, true);
     });
 
     return {
