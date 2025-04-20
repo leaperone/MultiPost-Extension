@@ -25,7 +25,7 @@
     }
   },
   "navigation": {
-    "dashboard": "控制台",
+    "dashboard": "仪表盘",
     "publish": "发布",
     "extension": "扩展",
     "docs": "文档",
