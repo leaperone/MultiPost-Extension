@@ -13,6 +13,8 @@ export function getShadowContainer() {
 
 export const getShadowHostId = () => 'test-shadow';
 
+const BASE_URL = process.env.NODE_ENV === 'development' ? 'http://localhost:3000' : 'https://multipost.app'
+
 export const getStyle = () => {
   const style = document.createElement('style');
 
@@ -22,7 +24,7 @@ export const getStyle = () => {
 
 const IndexPopup = () => {
   useEffect(() => {
-    chrome.tabs.create({ url: 'https://multipost.app/dashboard/publish' });
+    chrome.tabs.create({ url: `${BASE_URL}/dashboard/publish` });
   }, []);
 
   return <div></div>;
