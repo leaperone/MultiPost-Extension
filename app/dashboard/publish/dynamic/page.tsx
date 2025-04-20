@@ -1,6 +1,19 @@
 'use client';
 
-import { Card, Button, Image, Input, Textarea, CardHeader, CardBody, CardFooter, Switch, addToast } from '@heroui/react';
+import {
+  Card,
+  Button,
+  Image,
+  Input,
+  Textarea,
+  CardHeader,
+  CardBody,
+  CardFooter,
+  Switch,
+  addToast,
+  Accordion,
+  AccordionItem,
+} from '@heroui/react';
 import {
   ImagePlusIcon,
   VideoIcon,
@@ -11,11 +24,13 @@ import {
   ArrowLeftIcon,
   ArrowRightIcon,
   SendHorizontal,
+  Eraser,
 } from 'lucide-react';
 import dynamic from 'next/dynamic';
 import React, { useState, useRef, useEffect } from 'react';
 import Viewer from 'react-viewer';
 import { useTranslation } from '@/i18n/client';
+import { Icon } from '@iconify/react';
 
 import type { PlatformInfo } from '@/lib/extension';
 import type { FileData, SyncData } from '@/lib/extension';
@@ -60,7 +75,6 @@ export default function DynamicPage() {
       ]);
 
       if (extraConfigList.success && extraConfigList.data) {
-        // 创建一个平台名称到 extraData 的映射
         const extraConfigMap = extraConfigList.data.reduce(
           (acc, item) => {
             acc[item.platform] = item.data;
@@ -69,7 +83,6 @@ export default function DynamicPage() {
           {} as Record<string, unknown>,
         );
 
-        // 将 extraData 直接合并到平台信息中
         const platformsWithExtra = platformData.map((platform) => ({
           ...platform,
           extraConfig: extraConfigMap[platform.name],
@@ -280,7 +293,6 @@ export default function DynamicPage() {
             </CardFooter>
           </Card>
 
-          {/* 图片预览 Card */}
           {images.length > 0 && (
             <Card className="my-2 bg-default-50 shadow-none">
               <CardBody className="flex flex-row flex-wrap items-center justify-center gap-2">
@@ -317,7 +329,6 @@ export default function DynamicPage() {
             activeIndex={currentImage}
           />
 
-          {/* 视频预览 Card */}
           {videos.length > 0 && (
             <Card className="my-2 bg-default-50 shadow-none">
               <CardBody className="flex flex-col gap-4">
@@ -347,8 +358,7 @@ export default function DynamicPage() {
 
           <Button
             fullWidth
-            onPress={handleNextStep}
-            disabled={!content}>
+            onPress={handleNextStep}>
             <ArrowRightIcon />
           </Button>
         </div>
@@ -372,27 +382,84 @@ export default function DynamicPage() {
                       variant="light"
                       color="danger"
                       onPress={() => setSelectedPlatforms([])}>
-                      <TrashIcon className="size-4" />
+                      <Eraser className="size-4" />
                     </Button>
                   )}
                 </div>
               </div>
-              <div className="grid grid-cols-2 gap-2">
-                {platforms.map((platform: PlatformInfo) => {
-                  const isDisabled = false;
 
-                  return (
-                    <PlatformCheckbox
-                      key={platform.name}
-                      platformInfo={platform}
-                      isSelected={selectedPlatforms.includes(platform.name)}
-                      onChange={(_, isSelected) => handlePlatformChange(platform.name, isSelected)}
-                      isDisabled={isDisabled}
-                      onExtraConfigChange={handleExtraConfigChange}
-                    />
-                  );
-                })}
-              </div>
+              <Accordion
+                isCompact
+                variant="light"
+                selectionMode="multiple"
+                defaultExpandedKeys={['CN', 'International']}>
+                <AccordionItem
+                  key="CN"
+                  title={t('platforms.cn')}
+                  subtitle={`${
+                    selectedPlatforms.filter((platform) => {
+                      const info = platforms.find((p) => p.name === platform);
+                      return info?.tags?.includes('CN');
+                    }).length
+                  }/${platforms.filter((platform) => platform.tags?.includes('CN')).length}`}
+                  startContent={
+                    <div className="w-8">
+                      <Icon
+                        icon="openmoji:flag-china"
+                        className="h-max w-full"
+                      />
+                    </div>
+                  }
+                  className="py-1">
+                  <div className="grid grid-cols-2 gap-2">
+                    {platforms
+                      .filter((platform) => platform.tags?.includes('CN'))
+                      .map((platform) => (
+                        <PlatformCheckbox
+                          key={platform.name}
+                          platformInfo={platform}
+                          isSelected={selectedPlatforms.includes(platform.name)}
+                          onChange={(_, isSelected) => handlePlatformChange(platform.name, isSelected)}
+                          isDisabled={false}
+                          onExtraConfigChange={handleExtraConfigChange}
+                        />
+                      ))}
+                  </div>
+                </AccordionItem>
+                <AccordionItem
+                  key="International"
+                  title={t('platforms.international')}
+                  subtitle={`${
+                    selectedPlatforms.filter((platform) => {
+                      const info = platforms.find((p) => p.name === platform);
+                      return info?.tags?.includes('International');
+                    }).length
+                  }/${platforms.filter((platform) => platform.tags?.includes('International')).length}`}
+                  startContent={
+                    <div className="w-8">
+                      <Icon
+                        icon="openmoji:globe-with-meridians"
+                        className="h-max w-full"
+                      />
+                    </div>
+                  }
+                  className="py-1">
+                  <div className="grid grid-cols-2 gap-2">
+                    {platforms
+                      .filter((platform) => platform.tags?.includes('International'))
+                      .map((platform) => (
+                        <PlatformCheckbox
+                          key={platform.name}
+                          platformInfo={platform}
+                          isSelected={selectedPlatforms.includes(platform.name)}
+                          onChange={(_, isSelected) => handlePlatformChange(platform.name, isSelected)}
+                          isDisabled={false}
+                          onExtraConfigChange={handleExtraConfigChange}
+                        />
+                      ))}
+                  </div>
+                </AccordionItem>
+              </Accordion>
             </CardBody>
           </Card>
 

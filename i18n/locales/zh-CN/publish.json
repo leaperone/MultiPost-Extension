@@ -87,5 +87,9 @@
         }
       }
     }
+  },
+  "platforms": {
+    "cn": "中国平台",
+    "international": "国际平台"
   }
 }
