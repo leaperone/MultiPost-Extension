@@ -41,7 +41,7 @@ const IndexPopup = () => {
       <img
         src={icon}
         alt={chrome.i18n.getMessage('popupLogoAlt')}
-        className="object-contain w-16 h-16 mb-4"
+        className="object-contain mb-4 w-16 h-16"
       />
       <Loader2 className="w-10 h-10 animate-spin text-primary-600" />
       <p className="mt-4 text-sm text-gray-600 dark:text-gray-300">{chrome.i18n.getMessage('popupLoadingMessage')}</p>
