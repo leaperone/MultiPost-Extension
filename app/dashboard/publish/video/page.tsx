@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useRef, useEffect } from 'react';
-import { Card, Button, Input, Textarea, CardHeader, CardBody, CardFooter } from '@heroui/react';
+import { Card, Button, Input, Textarea, CardHeader, CardBody, CardFooter, addToast } from '@heroui/react';
 import { VideoIcon, XIcon, ArrowLeftIcon, ArrowRightIcon, SendHorizontal, TrashIcon } from 'lucide-react';
 import dynamic from 'next/dynamic';
 import type { FileData, SyncData } from '@/lib/extension';
@@ -102,13 +102,19 @@ export default function VideoPage() {
 
   const handlePublish = async () => {
     if (!title || !videoFile) {
-      console.log(t('validation.titleAndVideoRequired'));
-      alert(t('validation.titleAndVideoRequired'));
+      addToast({
+        title: t('validation.titleAndVideoRequired'),
+        description: t('validation.titleAndVideoRequired'),
+        color: 'danger',
+      });
       return;
     }
     if (selectedPlatforms.length === 0) {
-      console.log(t('validation.platformRequired'));
-      alert(t('validation.platformRequired'));
+      addToast({
+        title: t('validation.platformRequired'),
+        description: t('validation.platformRequired'),
+        color: 'danger',
+      });
       return;
     }
 
@@ -131,7 +137,11 @@ export default function VideoPage() {
 
   const handleNextStep = () => {
     if (!title || !videoFile) {
-      alert(t('validation.titleAndVideoRequired'));
+      addToast({
+        title: t('validation.titleAndVideoRequired'),
+        description: t('validation.titleAndVideoRequired'),
+        color: 'danger',
+      });
       return;
     }
     setCurrentStep(2);

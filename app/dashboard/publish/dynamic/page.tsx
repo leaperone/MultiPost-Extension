@@ -1,6 +1,6 @@
 'use client';
 
-import { Card, Button, Image, Input, Textarea, CardHeader, CardBody, CardFooter, Switch } from '@heroui/react';
+import { Card, Button, Image, Input, Textarea, CardHeader, CardBody, CardFooter, Switch, addToast } from '@heroui/react';
 import {
   ImagePlusIcon,
   VideoIcon,
@@ -115,13 +115,19 @@ export default function DynamicPage() {
 
   const handlePublish = async () => {
     if (!content) {
-      console.log(t('validation.contentRequired'));
-      alert(t('validation.contentRequired'));
+      addToast({
+        title: t('validation.contentRequired'),
+        description: t('validation.contentRequired'),
+        color: 'danger',
+      });
       return;
     }
     if (selectedPlatforms.length === 0) {
-      console.log(t('validation.platformRequired'));
-      alert(t('validation.platformRequired'));
+      addToast({
+        title: t('validation.platformRequired'),
+        description: t('validation.platformRequired'),
+        color: 'danger',
+      });
       return;
     }
 
@@ -177,7 +183,11 @@ export default function DynamicPage() {
 
   const handleNextStep = () => {
     if (!content) {
-      alert(t('validation.contentRequired'));
+      addToast({
+        title: t('validation.contentRequired'),
+        description: t('validation.contentRequired'),
+        color: 'danger',
+      });
       return;
     }
     setCurrentStep(2);
