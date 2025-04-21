@@ -7,7 +7,8 @@
     "dynamic": "Dynamic",
     "video": "Video",
     "grid": "Grid",
-    "article": "Article"
+    "article": "Article",
+    "podcast": "Podcast"
   },
   "dynamic": {
     "title": "Enter title",
@@ -15,6 +16,13 @@
     "description": "Create and publish dynamic content to multiple social media platforms simultaneously",
     "autoPublish": "Auto Publish",
     "clearAll": "Clear all"
+  },
+  "podcast": {
+    "title": "Enter podcast title",
+    "description": "Enter podcast description",
+    "autoPublish": "Auto Publish",
+    "clearAll": "Clear all",
+    "uploadAudio": "Upload audio file"
   },
   "video": {
     "title": "Please enter a title",
@@ -35,7 +43,10 @@
   "validation": {
     "contentRequired": "Content is required",
     "platformRequired": "Please select at least one platform",
-    "titleAndVideoRequired": "Please enter a title and upload a video"
+    "titleAndVideoRequired": "Please enter a title and upload a video",
+    "audioRequired": "Please upload an audio file",
+    "titleAndDescriptionRequired": "Please enter a title and description",
+    "podcastRequiredFields": "Please enter title, description and upload an audio file"
   },
   "client": {
     "page": {

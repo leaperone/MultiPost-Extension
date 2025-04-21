@@ -1,7 +1,7 @@
 'use client';
 
 import { Tabs, Tab } from '@heroui/react';
-import { MessageCircleHeartIcon, VideoIcon, FileTextIcon, RouterIcon } from 'lucide-react';
+import { MessageCircleHeartIcon, VideoIcon, FileTextIcon, RouterIcon, PodcastIcon } from 'lucide-react';
 import { usePathname } from 'next/navigation';
 import ForceInstallExtension from '@/components/ForceInstallExtension';
 import { useEffect } from 'react';
@@ -35,6 +35,11 @@ export default function PublishLayout({ children }: { children: React.ReactNode 
           href="/dashboard/publish/video"
           title={<VideoIcon />}
         />
+        <Tab
+          key="/dashboard/publish/podcast"
+          href="/dashboard/publish/podcast"
+          title={<PodcastIcon />}
+        />  
         <Tab
           key="https://md.multipost.app"
           href="https://md.multipost.app"

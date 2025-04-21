@@ -3,32 +3,27 @@
 import {
   Card,
   Button,
-  Image,
   Input,
   Textarea,
   CardHeader,
   CardBody,
   CardFooter,
-  Switch,
   addToast,
   Accordion,
   AccordionItem,
 } from '@heroui/react';
 import {
-  ImagePlusIcon,
-  VideoIcon,
+  AudioLinesIcon,
   XIcon,
   TrashIcon,
-  BotIcon,
-  HandIcon,
   ArrowLeftIcon,
   ArrowRightIcon,
   SendHorizontal,
   Eraser,
+  PlayIcon,
+  PauseIcon,
 } from 'lucide-react';
-import dynamic from 'next/dynamic';
 import React, { useState, useRef, useEffect } from 'react';
-import Viewer from 'react-viewer';
 import { useTranslation } from '@/i18n/client';
 import { Icon } from '@iconify/react';
 
@@ -40,37 +35,80 @@ import PlatformCheckbox from '../components/PlatformCheckbox';
 import { usePlatformStore } from '@/store/publish.store';
 import { getPlatformExtraConfigList } from '../action';
 
-const ReactPlayer = dynamic(() => import('react-player'), {
-  ssr: false,
-});
+interface AudioPlayerProps {
+  url: string;
+  name: string;
+  onDelete: () => void;
+}
 
-export default function DynamicPage() {
+const AudioPlayer: React.FC<AudioPlayerProps> = ({ url, name, onDelete }) => {
+  const [isPlaying, setIsPlaying] = useState(false);
+  const audioRef = useRef<HTMLAudioElement>(null);
+
+  const togglePlay = () => {
+    if (audioRef.current) {
+      if (isPlaying) {
+        audioRef.current.pause();
+      } else {
+        audioRef.current.play();
+      }
+      setIsPlaying(!isPlaying);
+    }
+  };
+
+  return (
+    <div className="group relative flex w-full items-center gap-4 rounded-lg border p-4">
+      <Button
+        isIconOnly
+        variant="light"
+        onPress={togglePlay}>
+        {isPlaying ? <PauseIcon className="size-6" /> : <PlayIcon className="size-6" />}
+      </Button>
+      <div className="flex-1">
+        <p className="text-sm">{name}</p>
+        <audio
+          ref={audioRef}
+          src={url}
+          onEnded={() => setIsPlaying(false)}
+          className="w-full"
+          controls
+        />
+      </div>
+      <Button
+        isIconOnly
+        size="sm"
+        color="danger"
+        className="absolute right-2 top-2 z-50 opacity-0 transition-opacity group-hover:opacity-100"
+        onPress={onDelete}>
+        <XIcon className="size-4" />
+      </Button>
+    </div>
+  );
+};
+
+export default function PodcastPage() {
   const { t } = useTranslation('publish');
   const [currentStep, setCurrentStep] = useState<number>(1);
-  const [images, setImages] = useState<FileData[]>([]);
-  const [videos, setVideos] = useState<FileData[]>([]);
+  const [audio, setAudio] = useState<FileData | null>(null);
   const [title, setTitle] = useState<string>('');
-  const [content, setContent] = useState<string>('');
-  const imageInputRef = useRef<HTMLInputElement>(null);
-  const videoInputRef = useRef<HTMLInputElement>(null);
-  const { dynamicPlatforms, setDynamicPlatforms, clearDynamicPlatforms } = usePlatformStore();
-  const [selectedPlatforms, setSelectedPlatforms] = useState<string[]>(dynamicPlatforms);
+  const [description, setDescription] = useState<string>('');
+  const audioInputRef = useRef<HTMLInputElement>(null);
+  const { podcastPlatforms, setPodcastPlatforms, clearPodcastPlatforms } = usePlatformStore();
+  const [selectedPlatforms, setSelectedPlatforms] = useState<string[]>(podcastPlatforms);
   const [autoPublish, setAutoPublish] = useState<boolean>(false);
-  const [viewerVisible, setViewerVisible] = useState(false);
-  const [currentImage, setCurrentImage] = useState(0);
   const [platforms, setPlatforms] = useState<PlatformInfo[]>([]);
 
   useEffect(() => {
     if (process.env.NODE_ENV === 'development') {
-      setTitle('Development title');
-      setContent('Development content');
+      setTitle('Development podcast title');
+      setDescription('Development podcast description');
     }
   }, []);
 
   useEffect(() => {
     async function fetchPlatforms() {
       const [platformData, extraConfigList] = await Promise.all([
-        getPlatformInfos('DYNAMIC'),
+        getPlatformInfos('PODCAST'),
         getPlatformExtraConfigList(),
       ]);
 
@@ -96,22 +134,16 @@ export default function DynamicPage() {
     fetchPlatforms();
   }, []);
 
-  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>, fileType: 'image' | 'video') => {
-    const selectedFiles = event.target.files;
-    if (selectedFiles) {
-      const newFiles: FileData[] = Array.from(selectedFiles)
-        .filter((file) => file.type.startsWith(`${fileType}/`))
-        .map((file) => ({
-          name: file.name,
-          type: file.type,
-          size: file.size,
-          url: URL.createObjectURL(file),
-        }));
-      if (fileType === 'image') {
-        setImages((prevImages) => [...prevImages, ...newFiles]);
-      } else {
-        setVideos((prevVideos) => [...prevVideos, ...newFiles]);
-      }
+  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const selectedFile = event.target.files?.[0];
+    if (selectedFile) {
+      const fileData: FileData = {
+        name: selectedFile.name,
+        type: selectedFile.type,
+        size: selectedFile.size,
+        url: URL.createObjectURL(selectedFile),
+      };
+      setAudio(fileData);
     }
   };
 
@@ -123,13 +155,20 @@ export default function DynamicPage() {
   };
 
   useEffect(() => {
-    setDynamicPlatforms(selectedPlatforms);
-  }, [selectedPlatforms, setDynamicPlatforms]);
+    setPodcastPlatforms(selectedPlatforms);
+  }, [selectedPlatforms, setPodcastPlatforms]);
 
   const handlePublish = async () => {
-    if (!content) {
+    if (!audio) {
       addToast({
-        title: t('validation.contentRequired'),
+        title: t('validation.audioRequired'),
+        color: 'danger',
+      });
+      return;
+    }
+    if (!title || !description) {
+      addToast({
+        title: t('validation.titleAndDescriptionRequired'),
         color: 'danger',
       });
       return;
@@ -146,9 +185,8 @@ export default function DynamicPage() {
       platforms: platforms.filter((platform) => selectedPlatforms.includes(platform.name)),
       data: {
         title,
-        content,
-        images,
-        videos,
+        description,
+        audio,
       },
       isAutoPublish: autoPublish,
     };
@@ -161,41 +199,23 @@ export default function DynamicPage() {
     }
   };
 
-  const handleIconClick = (type: 'image' | 'video') => {
-    if (type === 'image') {
-      imageInputRef.current?.click();
-    } else {
-      videoInputRef.current?.click();
-    }
-  };
-
-  const handleImageClick = (index: number) => {
-    setCurrentImage(index);
-    setViewerVisible(true);
-  };
-
-  const handleDeleteFile = (index: number, fileType: 'image' | 'video') => {
-    if (fileType === 'image') {
-      setImages((prevImages) => prevImages.filter((_, i) => i !== index));
-    } else {
-      setVideos((prevVideos) => prevVideos.filter((_, i) => i !== index));
-    }
+  const handleIconClick = () => {
+    audioInputRef.current?.click();
   };
 
   const handleClearAll = () => {
-    setImages([]);
-    setVideos([]);
+    setAudio(null);
     setTitle('');
-    setContent('');
+    setDescription('');
     setSelectedPlatforms([]);
-    clearDynamicPlatforms();
+    clearPodcastPlatforms();
     setAutoPublish(false);
   };
 
   const handleNextStep = () => {
-    if (!content) {
+    if (!audio || !title || !description) {
       addToast({
-        title: t('validation.contentRequired'),
+        title: t('validation.podcastRequiredFields'),
         color: 'danger',
       });
       return;
@@ -222,7 +242,7 @@ export default function DynamicPage() {
               <Input
                 isClearable
                 variant="underlined"
-                placeholder={t('dynamic.title')}
+                placeholder={t('podcast.title')}
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
                 onClear={() => setTitle('')}
@@ -230,17 +250,16 @@ export default function DynamicPage() {
               />
             </CardHeader>
 
-            <CardBody>
+            <CardBody className="gap-4">
               <Textarea
                 isClearable
                 variant="underlined"
-                placeholder={t('dynamic.content')}
-                value={content}
-                onChange={(e) => setContent(e.target.value)}
-                onClear={() => setContent('')}
+                placeholder={t('podcast.description')}
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                onClear={() => setDescription('')}
                 fullWidth
-                minRows={5}
-                autoFocus
+                minRows={3}
               />
             </CardBody>
 
@@ -249,40 +268,25 @@ export default function DynamicPage() {
                 <div className="flex">
                   <input
                     type="file"
-                    ref={imageInputRef}
-                    accept="image/*"
-                    onChange={(e) => handleFileChange(e, 'image')}
+                    ref={audioInputRef}
+                    accept="audio/*"
+                    onChange={handleFileChange}
                     className="hidden"
-                    multiple
                   />
                   <Button
                     isIconOnly
                     variant="light"
-                    onPress={() => handleIconClick('image')}>
-                    <ImagePlusIcon className="size-8 text-gray-600" />
-                  </Button>
-                  <input
-                    type="file"
-                    ref={videoInputRef}
-                    accept="video/*"
-                    onChange={(e) => handleFileChange(e, 'video')}
-                    className="hidden"
-                    multiple
-                  />
-                  <Button
-                    isIconOnly
-                    variant="light"
-                    onPress={() => handleIconClick('video')}>
-                    <VideoIcon className="size-8 text-gray-600" />
+                    onPress={handleIconClick}>
+                    <AudioLinesIcon className="size-8 text-gray-600" />
                   </Button>
                 </div>
-                {(title || content || images.length > 0 || videos.length > 0) && (
+                {(title || description || audio) && (
                   <Button
                     isIconOnly
                     variant="light"
                     color="danger"
                     onPress={handleClearAll}
-                    title={t('dynamic.clearAll')}>
+                    title={t('podcast.clearAll')}>
                     <TrashIcon className="size-6" />
                   </Button>
                 )}
@@ -290,65 +294,14 @@ export default function DynamicPage() {
             </CardFooter>
           </Card>
 
-          {images.length > 0 && (
+          {audio && (
             <Card className="my-2 bg-default-50 shadow-none">
-              <CardBody className="flex flex-row flex-wrap items-center justify-center gap-2">
-                {images.map((file, index) => (
-                  <div
-                    key={index}
-                    className="group relative">
-                    <Image
-                      src={file.url}
-                      alt={file.name}
-                      width={100}
-                      height={100}
-                      className="cursor-pointer rounded-md object-cover"
-                      onClick={() => handleImageClick(index)}
-                    />
-                    <Button
-                      isIconOnly
-                      size="sm"
-                      color="danger"
-                      className="absolute right-0 top-0 z-50 m-1 opacity-0 transition-opacity group-hover:opacity-100"
-                      onPress={() => handleDeleteFile(index, 'image')}>
-                      <XIcon className="size-4" />
-                    </Button>
-                  </div>
-                ))}
-              </CardBody>
-            </Card>
-          )}
-
-          <Viewer
-            visible={viewerVisible}
-            onClose={() => setViewerVisible(false)}
-            images={images.map((file) => ({ src: file.url, alt: file.name }))}
-            activeIndex={currentImage}
-          />
-
-          {videos.length > 0 && (
-            <Card className="my-2 bg-default-50 shadow-none">
-              <CardBody className="flex flex-col gap-4">
-                {videos.map((file, index) => (
-                  <div
-                    key={index}
-                    className="group relative aspect-video w-full">
-                    <ReactPlayer
-                      url={file.url}
-                      width="100%"
-                      height="100%"
-                      controls
-                    />
-                    <Button
-                      isIconOnly
-                      size="sm"
-                      color="danger"
-                      className="absolute right-2 top-2 z-50 opacity-0 transition-opacity group-hover:opacity-100"
-                      onPress={() => handleDeleteFile(index, 'video')}>
-                      <XIcon className="size-4" />
-                    </Button>
-                  </div>
-                ))}
+              <CardBody>
+                <AudioPlayer
+                  url={audio.url}
+                  name={audio.name}
+                  onDelete={() => setAudio(null)}
+                />
               </CardBody>
             </Card>
           )}
@@ -364,25 +317,16 @@ export default function DynamicPage() {
           <Card className="mb-4 bg-default-50 shadow-none">
             <CardBody className="gap-2">
               <div className="flex items-center justify-between">
-                <Switch
-                  isSelected={autoPublish}
-                  onValueChange={setAutoPublish}
-                  startContent={<BotIcon className="size-4" />}
-                  endContent={<HandIcon className="size-4" />}>
-                  {t('dynamic.autoPublish')}
-                </Switch>
-                <div className="flex items-center justify-between">
-                  {selectedPlatforms.length > 0 && (
-                    <Button
-                      isIconOnly
-                      size="sm"
-                      variant="light"
-                      color="danger"
-                      onPress={() => setSelectedPlatforms([])}>
-                      <Eraser className="size-4" />
-                    </Button>
-                  )}
-                </div>
+                {selectedPlatforms.length > 0 && (
+                  <Button
+                    isIconOnly
+                    size="sm"
+                    variant="light"
+                    color="danger"
+                    onPress={() => setSelectedPlatforms([])}>
+                    <Eraser className="size-4" />
+                  </Button>
+                )}
               </div>
 
               <Accordion

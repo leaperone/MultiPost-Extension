@@ -10,7 +10,7 @@ import { v4 as uuidv4 } from 'uuid';
 export interface SyncData {
   platforms: PlatformInfo[];
   isAutoPublish: boolean;
-  data: DynamicData | ArticleData | VideoData;
+  data: DynamicData | ArticleData | VideoData | PodcastData;
 }
 
 export interface DynamicData {
@@ -48,8 +48,14 @@ export interface VideoData {
   video: FileData;
 }
 
+export interface PodcastData {
+  title: string;
+  description: string;
+  audio: FileData;
+}
+
 export interface PlatformInfo {
-  type: 'DYNAMIC' | 'VIDEO' | 'ARTICLE';
+  type: 'DYNAMIC' | 'VIDEO' | 'ARTICLE' | 'PODCAST';
   name: string;
   homeUrl: string;
   faviconUrl?: string;

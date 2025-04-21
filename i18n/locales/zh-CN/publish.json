@@ -7,7 +7,8 @@
     "dynamic": "动态",
     "video": "视频",
     "grid": "九宫格",
-    "article": "文章"
+    "article": "文章",
+    "podcast": "播客"
   },
   "dynamic": {
     "title": "请输入标题",
@@ -15,6 +16,13 @@
     "description": "创建并同步发布动态内容到多个社交媒体平台",
     "autoPublish": "自动发布",
     "clearAll": "清空"
+  },
+  "podcast": {
+    "title": "请输入播客标题",
+    "description": "请输入播客描述",
+    "autoPublish": "自动发布",
+    "clearAll": "清空",
+    "uploadAudio": "上传音频文件"
   },
   "video": {
     "title": "请输入标题",
@@ -35,7 +43,10 @@
   "validation": {
     "contentRequired": "内容不能为空",
     "platformRequired": "请至少选择一个平台",
-    "titleAndVideoRequired": "请输入标题并上传视频"
+    "titleAndVideoRequired": "请输入标题并上传视频",
+    "audioRequired": "请上传音频文件",
+    "titleAndDescriptionRequired": "请输入标题和描述",
+    "podcastRequiredFields": "请输入标题、描述并上传音频文件"
   },
   "client": {
     "page": {
