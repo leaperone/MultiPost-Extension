@@ -929,5 +929,29 @@
   },
   "platformLizhi": {
     "message": "LiZhi"
+  },
+  "refreshAccountsTitle": {
+    "message": "Refresh Accounts",
+    "description": "Refresh accounts page title"
+  },
+  "refreshAccountsButton": {
+    "message": "Refresh Accounts",
+    "description": "Refresh accounts button text"
+  },
+  "refreshAccountsLoading": {
+    "message": "Refreshing account information...",
+    "description": "Refresh accounts loading state text"
+  },
+  "refreshAccountsError": {
+    "message": "Failed to refresh accounts",
+    "description": "Refresh accounts error state text"
+  },
+  "refreshAccountsNoAccounts": {
+    "message": "No account information available",
+    "description": "Text displayed when no accounts"
+  },
+  "refreshAccountsAutoClose": {
+    "message": "Auto Close",
+    "description": "Auto close switch text"
   }
 }

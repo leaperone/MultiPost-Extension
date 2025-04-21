@@ -903,5 +903,29 @@
   },
   "platformLizhi": {
     "message": "荔枝"
+  },
+  "refreshAccountsTitle": {
+    "message": "刷新账号",
+    "description": "刷新账号页面标题"
+  },
+  "refreshAccountsButton": {
+    "message": "刷新账号",
+    "description": "刷新账号按钮文本"
+  },
+  "refreshAccountsLoading": {
+    "message": "正在刷新账号信息...",
+    "description": "刷新账号加载状态文本"
+  },
+  "refreshAccountsError": {
+    "message": "刷新账号失败",
+    "description": "刷新账号错误状态文本"
+  },
+  "refreshAccountsNoAccounts": {
+    "message": "暂无账号信息",
+    "description": "无账号信息时显示的文本"
+  },
+  "refreshAccountsAutoClose": {
+    "message": "下次自动关闭",
+    "description": "自动关闭设置的开关文本"
   }
 }
