@@ -897,5 +897,11 @@
   "articleEditorAlertButton": {
     "message": "去体验",
     "description": "文章编辑器 alert 按钮文本"
+  },
+  "platformQQMusic": {
+    "message": "QQ音乐（TME）"
+  },
+  "platformLizhi": {
+    "message": "荔枝"
   }
 }

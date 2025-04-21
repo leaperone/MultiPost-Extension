@@ -719,7 +719,6 @@
     "message": "QQ Group",
     "description": "Title for QQ group popover"
   },
-
   "optionsEmailTitle": {
     "message": "Email Support",
     "description": "Title for email support popover"
@@ -924,5 +923,11 @@
   "articleEditorAlertButton": {
     "message": "Try Now",
     "description": "Article editor alert button text"
+  },
+  "platformQQMusic": {
+    "message": "QQMusic(TME)"
+  },
+  "platformLizhi": {
+    "message": "LiZhi"
   }
 }
