@@ -15,6 +15,53 @@ const storage = new Storage({
   area: 'local',
 });
 
+export const refreshAccountInfoMap: Record<
+  string,
+  {
+    platformName: string;
+    accountKey: string;
+    homeUrl: string;
+    faviconUrl: string;
+    getAccountInfo: () => Promise<AccountInfo>;
+  }
+> = {
+  x: {
+    platformName: chrome.i18n.getMessage('platformX'),
+    accountKey: 'x',
+    homeUrl: 'https://x.com',
+    faviconUrl: 'https://x.com/favicon.ico',
+    getAccountInfo: getXAccountInfo,
+  },
+  tiktok: {
+    platformName: chrome.i18n.getMessage('platformTiktok'),
+    accountKey: 'tiktok',
+    homeUrl: 'https://www.tiktok.com',
+    faviconUrl: 'https://pic1.zhimg.com/80/v2-9ad49e8e52b473e4c366b69bc9653a45_1440w.png',
+    getAccountInfo: getTiktokAccountInfo,
+  },
+  douyin: {
+    platformName: chrome.i18n.getMessage('platformDouyin'),
+    accountKey: 'douyin',
+    homeUrl: 'https://creator.douyin.com',
+    faviconUrl: 'https://lf1-cdn-tos.bytegoofy.com/goofy/ies/douyin_web/public/favicon.ico',
+    getAccountInfo: getDouyinAccountInfo,
+  },
+  rednote: {
+    platformName: chrome.i18n.getMessage('platformRednote'),
+    accountKey: 'rednote',
+    homeUrl: 'https://creator.xiaohongshu.com',
+    faviconUrl: 'https://fe-video-qc.xhscdn.com/fe-platform/ed8fe781ce9e16c1bfac2cd962f0721edabe2e49.ico',
+    getAccountInfo: getRednoteAccountInfo,
+  },
+  bilibili: {
+    platformName: chrome.i18n.getMessage('platformBilibili'),
+    accountKey: 'bilibili',
+    homeUrl: 'https://t.bilibili.com',
+    faviconUrl: 'https://static.hdslb.com/images/favicon.ico',
+    getAccountInfo: getBilibiliAccountInfo,
+  },
+};
+
 /**
  * 获取指定平台账号的最新信息
  * @param accountKey 账号标识符
@@ -27,22 +74,7 @@ export async function refreshAccountInfo(accountKey: string): Promise<AccountInf
     throw new Error(`找不到账号信息: ${accountKey}`);
   }
 
-  let accountInfo: AccountInfo;
-
-  // 根据平台类型获取账号信息
-  if (accountKey === 'x') {
-    accountInfo = await getXAccountInfo();
-  } else if (accountKey === 'tiktok') {
-    accountInfo = await getTiktokAccountInfo();
-  } else if (accountKey === 'douyin') {
-    accountInfo = await getDouyinAccountInfo();
-  } else if (accountKey === 'rednote') {
-    accountInfo = await getRednoteAccountInfo();
-  } else if (accountKey === 'bilibili') {
-    accountInfo = await getBilibiliAccountInfo();
-  } else {
-    return null;
-  }
+  const accountInfo = await refreshAccountInfoMap[accountKey].getAccountInfo();
 
   if (!accountInfo) {
     console.error(`获取账号信息失败: ${accountKey}`);
@@ -115,39 +147,44 @@ export async function removeAccountInfo(accountKey: string): Promise<void> {
   }
 }
 
+export interface RefreshResult {
+  accounts: Record<string, AccountInfo>;
+  errors: Record<string, string>;
+}
+
 /**
  * 刷新所有平台的账号信息
- * @returns 所有账号信息的映射表
+ * @returns 所有账号信息的映射表和错误信息
  */
-export async function refreshAllAccountInfo(): Promise<Record<string, AccountInfo>> {
-  // 获取所有平台信息
-  const platformInfos = await getPlatformInfos();
+export async function refreshAllAccountInfo(): Promise<RefreshResult> {
   const results: Record<string, AccountInfo> = {};
-  const errors: Record<string, Error> = {};
+  const errors: Record<string, string> = {};
 
   // 并行刷新所有账号信息
   await Promise.allSettled(
-    platformInfos.map(async (platformInfo) => {
+    Object.entries(refreshAccountInfoMap).map(async ([accountKey]) => {
       try {
-        if (platformInfo.accountKey) {
-          const accountInfo = await refreshAccountInfo(platformInfo.accountKey);
-          results[platformInfo.accountKey] = accountInfo;
+        if (accountKey) {
+          const accountInfo = await refreshAccountInfo(accountKey);
+          if (accountInfo) {
+            results[accountKey] = accountInfo;
+          } else {
+            errors[accountKey] = chrome.i18n.getMessage('refreshAccountsNotLoggedIn');
+          }
         }
       } catch (error) {
-        console.error(`刷新账号信息失败: ${platformInfo.accountKey}`, error);
-        errors[platformInfo.accountKey] = error as Error;
+        console.error(`刷新账号信息失败: ${accountKey}`, error);
+        errors[accountKey] = (error as Error).message || chrome.i18n.getMessage('refreshAccountsError');
       }
     }),
   );
 
-  // 如果所有请求都失败了，抛出错误
-  if (Object.keys(results).length === 0 && Object.keys(errors).length > 0) {
-    throw new Error('所有账号信息刷新失败');
-  }
-
   await ping(true);
 
-  return results;
+  return {
+    accounts: results,
+    errors,
+  };
 }
 
 export async function getAccountInfoFromPlatformInfos(platformInfos: PlatformInfo[]): Promise<PlatformInfo[]> {
