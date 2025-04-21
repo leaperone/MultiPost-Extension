@@ -2,6 +2,7 @@ import { getAccountInfoFromPlatformInfo, getAccountInfoFromPlatformInfos } from 
 import { ArticleInfoMap } from './article';
 import { DynamicInfoMap } from './dynamic';
 import { getExtraConfigFromPlatformInfo, getExtraConfigFromPlatformInfos } from './extraconfig';
+import { PodcastInfoMap } from './podcast';
 import { VideoInfoMap } from './video';
 
 export interface SyncDataPlatform {
@@ -17,7 +18,7 @@ export interface SyncDataPlatform {
 export interface SyncData {
   platforms: SyncDataPlatform[];
   isAutoPublish: boolean;
-  data: DynamicData | ArticleData | VideoData;
+  data: DynamicData | ArticleData | VideoData | PodcastData;
 }
 
 export interface DynamicData {
@@ -25,6 +26,12 @@ export interface DynamicData {
   content: string;
   images: FileData[];
   videos: FileData[];
+}
+
+export interface PodcastData {
+  title: string;
+  description: string;
+  audio: FileData;
 }
 
 export interface FileData {
@@ -56,7 +63,7 @@ export interface VideoData {
 }
 
 export interface PlatformInfo {
-  type: 'DYNAMIC' | 'VIDEO' | 'ARTICLE';
+  type: 'DYNAMIC' | 'VIDEO' | 'ARTICLE' | 'PODCAST';
   name: string;
   homeUrl: string;
   faviconUrl?: string;
@@ -84,6 +91,7 @@ export const infoMap: Record<string, PlatformInfo> = {
   ...DynamicInfoMap,
   ...ArticleInfoMap,
   ...VideoInfoMap,
+  ...PodcastInfoMap,
 };
 
 export async function getPlatformInfo(platform: string): Promise<PlatformInfo | null> {
@@ -98,7 +106,7 @@ export function getRawPlatformInfo(platform: string): PlatformInfo | null {
   return infoMap[platform];
 }
 
-export async function getPlatformInfos(type?: 'DYNAMIC' | 'VIDEO' | 'ARTICLE'): Promise<PlatformInfo[]> {
+export async function getPlatformInfos(type?: 'DYNAMIC' | 'VIDEO' | 'ARTICLE' | 'PODCAST'): Promise<PlatformInfo[]> {
   const platformInfos: PlatformInfo[] = [];
   for (const info of Object.values(infoMap)) {
     if (type && info.type !== type) continue;
@@ -144,7 +152,10 @@ export async function createTabsForPlatforms(data: SyncData) {
   return tabs;
 }
 
-export async function injectScriptsToTabs(tabs: { tab: chrome.tabs.Tab; platformInfo: SyncDataPlatform }[], data: SyncData) {
+export async function injectScriptsToTabs(
+  tabs: { tab: chrome.tabs.Tab; platformInfo: SyncDataPlatform }[],
+  data: SyncData,
+) {
   for (const t of tabs) {
     const tab = t.tab;
     const platform = t.platformInfo;
