@@ -949,5 +949,9 @@
   "refreshAccountsNoAccounts": {
     "message": "No account information available",
     "description": "Text displayed when no accounts"
+  },
+  "refreshAccountsAutoClose": {
+    "message": "Auto Close",
+    "description": "Auto close switch text"
   }
 }

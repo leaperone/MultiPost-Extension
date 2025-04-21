@@ -108,6 +108,14 @@ const defaultMessageHandler = (request, sender, sendResponse) => {
     chrome.runtime.openOptionsPage();
     sendResponse({ extensionId: chrome.runtime.id });
   }
+  if (request.action === 'MUTLIPOST_EXTENSION_REFRESH_ACCOUNT_INFOS') {
+    chrome.windows.create({
+      url: chrome.runtime.getURL(`tabs/refresh-accounts.html`),
+      type: 'popup',
+      width: 800,
+      height: 600,
+    });
+  }
 };
 starter(1000 * 30);
 // Message Handler || 消息处理器 || END

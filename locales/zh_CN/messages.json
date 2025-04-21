@@ -923,5 +923,9 @@
   "refreshAccountsNoAccounts": {
     "message": "暂无账号信息",
     "description": "无账号信息时显示的文本"
+  },
+  "refreshAccountsAutoClose": {
+    "message": "下次自动关闭",
+    "description": "自动关闭设置的开关文本"
   }
 }

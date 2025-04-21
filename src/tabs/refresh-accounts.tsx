@@ -1,10 +1,17 @@
 import '~style.css';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback, useRef } from 'react';
 import { HeroUIProvider, Button, Image } from '@heroui/react';
 import { RefreshCw, CheckCircle2, XCircle, Loader2, ExternalLink } from 'lucide-react';
 import cssText from 'data-text:~style.css';
 import { refreshAllAccountInfo, refreshAccountInfoMap } from '~sync/account';
 import type { AccountInfo } from '~sync/common';
+import { Storage } from '@plasmohq/storage';
+
+const storage = new Storage({
+  area: 'local',
+});
+const AUTO_CLOSE_KEY = 'refresh-accounts-auto-close';
+const AUTO_CLOSE_DELAY = 3000; // 3 seconds
 
 export function getShadowContainer() {
   return document.querySelector('#test-shadow').shadowRoot.querySelector('#plasmo-shadow-container');
@@ -32,8 +39,10 @@ const RefreshAccounts = () => {
     accounts: {},
     errors: {},
   });
+  const [autoClose, setAutoClose] = useState(false);
+  const autoCloseTimerRef = useRef<number>();
 
-  const refreshAccounts = async () => {
+  const refreshAccounts = useCallback(async () => {
     setState((prev) => ({ ...prev, isLoading: true, error: null }));
     try {
       const result = await refreshAllAccountInfo();
@@ -43,6 +52,18 @@ const RefreshAccounts = () => {
         accounts: result.accounts,
         errors: result.errors,
       });
+
+      // 清除之前的定时器
+      if (autoCloseTimerRef.current) {
+        clearTimeout(autoCloseTimerRef.current);
+      }
+
+      // 如果启用了自动关闭，且有账号信息，延迟关闭窗口
+      if (autoClose && Object.keys(result.accounts).length > 0) {
+        autoCloseTimerRef.current = window.setTimeout(() => {
+          window.close();
+        }, AUTO_CLOSE_DELAY);
+      }
     } catch (error) {
       setState({
         isLoading: false,
@@ -51,11 +72,42 @@ const RefreshAccounts = () => {
         errors: {},
       });
     }
+  }, [autoClose]);
+
+  const handleAutoCloseChange = async (checked: boolean) => {
+    // 切换 autoClose 时清除之前的定时器
+    if (autoCloseTimerRef.current) {
+      clearTimeout(autoCloseTimerRef.current);
+    }
+    setAutoClose(checked);
+    await storage.set(AUTO_CLOSE_KEY, String(checked));
+
+    // 如果开启了自动关闭，且当前有账号信息，立即启动新的定时器
+    if (checked && Object.keys(state.accounts).length > 0) {
+      autoCloseTimerRef.current = window.setTimeout(() => {
+        window.close();
+      }, AUTO_CLOSE_DELAY);
+    }
   };
+
+  // 组件卸载时清除定时器
+  useEffect(() => {
+    return () => {
+      if (autoCloseTimerRef.current) {
+        clearTimeout(autoCloseTimerRef.current);
+      }
+    };
+  }, []);
 
   useEffect(() => {
     document.title = chrome.i18n.getMessage('refreshAccountsTitle') + ' - MultiPost';
     refreshAccounts();
+  }, [refreshAccounts]);
+
+  useEffect(() => {
+    storage.get(AUTO_CLOSE_KEY).then((value) => {
+      setAutoClose(value === 'true');
+    });
   }, []);
 
   return (
@@ -77,8 +129,8 @@ const RefreshAccounts = () => {
               </a>
             </div>
 
-            {/* 刷新按钮 */}
-            <div className="flex justify-center mb-6">
+            {/* 刷新按钮和自动关闭设置 */}
+            <div className="flex items-center justify-between mb-6">
               <Button
                 variant="ghost"
                 className="h-10"
@@ -87,6 +139,15 @@ const RefreshAccounts = () => {
                 <RefreshCw className={`w-4 h-4 mr-2 ${state.isLoading ? 'animate-spin' : ''}`} />
                 {chrome.i18n.getMessage('refreshAccountsButton')}
               </Button>
+
+              <div className="flex items-center gap-2">
+                <Button
+                  color={autoClose ? 'success' : 'default'}
+                  className="h-10"
+                  onPress={() => handleAutoCloseChange(!autoClose)}>
+                  {chrome.i18n.getMessage('refreshAccountsAutoClose')}
+                </Button>
+              </div>
             </div>
 
             {/* 加载状态 */}
