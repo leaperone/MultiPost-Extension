@@ -84,7 +84,7 @@
     "description": "动态标题输入框占位符"
   },
   "optionsEnterDynamicContent": {
-    "message": "正文",
+    "message": "请输入内容",
     "description": "动态内容输入框占位符"
   },
   "optionsSyncDynamic": {
@@ -300,11 +300,11 @@
     "description": "标签管理器中未命名分组的标题"
   },
   "sidepanelReloadTab": {
-    "message": "重新加载标签",
+    "message": "重新加载标签页",
     "description": "重新加载标签按钮的 aria 标签"
   },
   "sidepanelCloseTab": {
-    "message": "关闭标签",
+    "message": "关闭标签页",
     "description": "关闭标签按钮的 aria 标签"
   },
   "optionsAtLeastOneImage": {
@@ -733,7 +733,7 @@
     "message": "控制台"
   },
   "optionsSelectPublishPlatforms": {
-    "message": "请至少选择一个平台"
+    "message": "请选择发布平台"
   },
   "extraConfigOkjikeConfigureTopic": {
     "message": "配置即刻圈子"
@@ -927,5 +927,50 @@
   "refreshAccountsAutoClose": {
     "message": "下次自动关闭",
     "description": "自动关闭设置的开关文本"
+  },
+  "publishing": {
+    "message": "正在发布内容"
+  },
+  "publishingInProgress": {
+    "message": "正在发布..."
+  },
+  "processingContent": {
+    "message": "正在处理文章内容和图片..."
+  },
+  "processingComplete": {
+    "message": "处理完成，准备发布..."
+  },
+  "publishComplete": {
+    "message": "发布完成"
+  },
+  "errorMessages": {
+    "message": "错误信息"
+  },
+  "finishPublishing": {
+    "message": "完成发布"
+  },
+  "finishAndCloseTabs": {
+    "message": "完成并关闭所有标签页"
+  },
+  "errorGetSyncData": {
+    "message": "获取同步数据失败"
+  },
+  "errorProcessContent": {
+    "message": "处理内容时出错，请重试"
+  },
+  "errorProcessImage": {
+    "message": "处理图片失败: $1"
+  },
+  "errorProcessFile": {
+    "message": "处理文件失败: $1"
+  },
+  "errorReloadTab": {
+    "message": "重新加载标签页失败: $1"
+  },
+  "errorCloseTab": {
+    "message": "关闭标签页失败: $1"
+  },
+  "errorCloseAllTabs": {
+    "message": "关闭所有标签页失败: $1"
   }
 }

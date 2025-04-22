@@ -57,9 +57,9 @@ export default function Publish() {
   >([]);
 
   async function processArticle(data: SyncData): Promise<SyncData> {
-    setNotice('正在处理文章内容和图片...');
+    setNotice(chrome.i18n.getMessage('processingContent'));
     const parser = new DOMParser();
-    const { htmlContent, markdownContent, images } = data.data as ArticleData;
+    const { htmlContent, markdownContent, images, cover } = data.data as ArticleData;
     const doc = parser.parseFromString(htmlContent, 'text/html');
     const imgElements = Array.from(doc.getElementsByTagName('img')) as HTMLImageElement[];
     const blobUrls: string[] = [];
@@ -67,6 +67,7 @@ export default function Publish() {
     const processedImages: FileData[] = [];
     let processedHtmlContent = htmlContent;
     let processedMarkdownContent = markdownContent;
+    let processedCoverImage: FileData | null = null;
 
     // 处理所有图片
     for (const img of imgElements) {
@@ -101,9 +102,13 @@ export default function Publish() {
       } catch (error) {
         console.error('处理图片时出错:', error);
         // 继续处理下一张图片
-        setNotice(`处理图片失败: ${img.src}`);
-        setErrors((prev) => [...prev, `处理图片失败: ${img.src}`]);
+        setNotice(chrome.i18n.getMessage('errorProcessImage', [img.src]));
+        setErrors((prev) => [...prev, chrome.i18n.getMessage('errorProcessImage', [img.src])]);
       }
+    }
+
+    if (cover) {
+      processedCoverImage = await processFile(cover);
     }
 
     processedHtmlContent = doc.documentElement.outerHTML;
@@ -115,6 +120,7 @@ export default function Publish() {
         htmlContent: processedHtmlContent,
         markdownContent: processedMarkdownContent,
         images: processedImages,
+        cover: processedCoverImage || cover,
       },
     };
   }
@@ -130,25 +136,25 @@ export default function Publish() {
       };
     } catch (error) {
       console.error('处理文件时出错:', error);
-      setErrors((prev) => [...prev, `处理文件失败: ${file.name}`]);
+      setErrors((prev) => [...prev, chrome.i18n.getMessage('errorProcessFile', [file.name])]);
       return file;
     }
   };
 
   const processDynamic = async (data: SyncData) => {
-    setNotice('正在处理动态内容...');
+    setNotice(chrome.i18n.getMessage('processingContent'));
     const { images, videos } = data.data as DynamicData;
 
     const processedImages: FileData[] = [];
     const processedVideos: FileData[] = [];
 
     for (const image of images) {
-      setNotice(`正在处理图片: ${image.name}`);
+      setNotice(chrome.i18n.getMessage('errorProcessImage', [image.name]));
       processedImages.push(await processFile(image));
     }
 
     for (const video of videos) {
-      setNotice(`正在处理视频: ${video.name}`);
+      setNotice(chrome.i18n.getMessage('errorProcessFile', [video.name]));
       processedVideos.push(await processFile(video));
     }
 
@@ -163,7 +169,7 @@ export default function Publish() {
   };
 
   const processPodcast = async (data: SyncData) => {
-    setNotice('正在处理播客音频...');
+    setNotice(chrome.i18n.getMessage('processingContent'));
     const { audio } = data.data as PodcastData;
     const processedAudio = await processFile(audio);
     return {
@@ -176,7 +182,7 @@ export default function Publish() {
   };
 
   const processVideo = async (data: SyncData) => {
-    setNotice('正在处理视频内容...');
+    setNotice(chrome.i18n.getMessage('processingContent'));
     const { video } = data.data as VideoData;
     const processedVideo = await processFile(video);
     return {
@@ -221,7 +227,7 @@ export default function Publish() {
       setPublishedTabs((prev) => prev.map((item) => (item.tab.id === tabId ? { ...item, tab: updatedTab } : item)));
     } catch (error) {
       console.error('重新加载标签页失败:', error);
-      setErrors((prev) => [...prev, `重新加载标签页失败: ${error.message || '未知错误'}`]);
+      setErrors((prev) => [...prev, chrome.i18n.getMessage('errorReloadTab', [error.message || '未知错误'])]);
     }
   };
 
@@ -245,7 +251,7 @@ export default function Publish() {
       setPublishedTabs((prev) => prev.filter((t) => t.tab.id !== tabId));
     } catch (error) {
       console.error('关闭标签页失败:', error);
-      setErrors((prev) => [...prev, `关闭标签页失败: ${error.message || '未知错误'}`]);
+      setErrors((prev) => [...prev, chrome.i18n.getMessage('errorCloseTab', [error.message || '未知错误'])]);
     }
   };
 
@@ -258,7 +264,7 @@ export default function Publish() {
       setPublishedTabs([]);
     } catch (error) {
       console.error('关闭所有标签页失败:', error);
-      setErrors((prev) => [...prev, `关闭所有标签页失败: ${error.message || '未知错误'}`]);
+      setErrors((prev) => [...prev, chrome.i18n.getMessage('errorCloseAllTabs', [error.message || '未知错误'])]);
     }
   };
 
@@ -279,7 +285,7 @@ export default function Publish() {
     chrome.tabs.onRemoved.addListener(handleTabRemoved);
     chrome.runtime.sendMessage({ action: 'MUTLIPOST_EXTENSION_PUBLISH_REQUEST_SYNC_DATA' }, async (response) => {
       const data = response.syncData as SyncData;
-      if (!data) return setNotice('获取同步数据失败');
+      if (!data) return setNotice(chrome.i18n.getMessage('errorGetSyncData'));
       setTitle(getTitleFromData(data));
 
       let processedData = data;
@@ -303,7 +309,7 @@ export default function Publish() {
         }
 
         setData(processedData);
-        setNotice('处理完成，准备发布...');
+        setNotice(chrome.i18n.getMessage('processingComplete'));
 
         console.log(processedData);
 
@@ -313,7 +319,7 @@ export default function Publish() {
             { action: 'MUTLIPOST_EXTENSION_PUBLISH_NOW', data: processedData },
             async (response) => {
               setIsProcessing(false);
-              setNotice('发布完成');
+              setNotice(chrome.i18n.getMessage('publishComplete'));
 
               // 存储返回的 tabs 数据
               if (response?.tabs) {
@@ -342,7 +348,7 @@ export default function Publish() {
         }, 1000 * 1);
       } catch (error) {
         console.error('处理内容时出错:', error);
-        setNotice('处理内容时出错，请重试');
+        setNotice(chrome.i18n.getMessage('errorProcessContent'));
         setIsProcessing(false);
       }
     });
@@ -357,19 +363,19 @@ export default function Publish() {
     <HeroUIProvider>
       <div className="flex flex-col items-center justify-center min-h-screen p-4 bg-background">
         <div className="w-full max-w-md space-y-4">
-          <h2 className="text-xl font-semibold text-center text-foreground">正在发布内容</h2>
+          <h2 className="text-xl font-semibold text-center text-foreground">{chrome.i18n.getMessage('publishing')}</h2>
           {title && <p className="text-sm text-center truncate text-muted-foreground">{title}</p>}
           <Progress
             value={isProcessing ? undefined : 100}
             isIndeterminate={isProcessing}
-            aria-label={notice || '正在发布...'}
+            aria-label={notice || chrome.i18n.getMessage('publishingInProgress')}
             className={`w-full ${isProcessing ? 'bg-green-500' : ''}`}
             size="sm"
           />
           {notice && <p className="text-sm text-center text-muted-foreground">{notice}</p>}
           {errors.length > 0 && (
             <div className="space-y-2">
-              <p className="text-sm text-center text-muted-foreground">错误信息</p>
+              <p className="text-sm text-center text-muted-foreground">{chrome.i18n.getMessage('errorMessages')}</p>
               <ul className="space-y-2">
                 {errors.map((error, index) => (
                   <li key={index}>{error}</li>
@@ -434,7 +440,7 @@ export default function Publish() {
                 variant="solid"
                 onPress={handleCloseWindow}
                 className="flex-1">
-                完成发布
+                {chrome.i18n.getMessage('finishPublishing')}
               </Button>
               <Button
                 color="danger"
@@ -444,7 +450,7 @@ export default function Publish() {
                   handleCloseWindow();
                 }}
                 className="flex-1">
-                完成并关闭所有标签页
+                {chrome.i18n.getMessage('finishAndCloseTabs')}
               </Button>
             </div>
           )}

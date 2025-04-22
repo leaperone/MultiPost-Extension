@@ -953,5 +953,50 @@
   "refreshAccountsAutoClose": {
     "message": "Auto Close",
     "description": "Auto close switch text"
+  },
+  "publishing": {
+    "message": "Publishing Content"
+  },
+  "publishingInProgress": {
+    "message": "Publishing in progress..."
+  },
+  "processingContent": {
+    "message": "Processing content and images..."
+  },
+  "processingComplete": {
+    "message": "Processing complete, ready to publish..."
+  },
+  "publishComplete": {
+    "message": "Publishing complete"
+  },
+  "errorMessages": {
+    "message": "Error Messages"
+  },
+  "finishPublishing": {
+    "message": "Finish Publishing"
+  },
+  "finishAndCloseTabs": {
+    "message": "Finish and Close All Tabs"
+  },
+  "errorGetSyncData": {
+    "message": "Failed to get sync data"
+  },
+  "errorProcessContent": {
+    "message": "Error processing content, please try again"
+  },
+  "errorProcessImage": {
+    "message": "Failed to process image: $1"
+  },
+  "errorProcessFile": {
+    "message": "Failed to process file: $1"
+  },
+  "errorReloadTab": {
+    "message": "Failed to reload tab: $1"
+  },
+  "errorCloseTab": {
+    "message": "Failed to close tab: $1"
+  },
+  "errorCloseAllTabs": {
+    "message": "Failed to close all tabs: $1"
   }
 }
