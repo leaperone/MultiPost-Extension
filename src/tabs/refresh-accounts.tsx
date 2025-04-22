@@ -72,7 +72,7 @@ const RefreshAccounts = () => {
         errors: {},
       });
     }
-  }, [autoClose]);
+  }, []);
 
   const handleAutoCloseChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const checked = event.target.checked;
