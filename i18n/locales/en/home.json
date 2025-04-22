@@ -1,7 +1,7 @@
 {
   "footer": {
-    "slogan": "Streamline Your Social Media Workflow",
-    "copyright": "© 2024 LEAPERone Inc. All rights reserved.",
+    "slogan": "Simplify your social media workflow",
+    "copyright": "© 2024 LEAPERone Inc. All rights reserved",
     "sections": {
       "services": "Services",
       "support": "Support",
@@ -12,8 +12,8 @@
       "services": {},
       "support": {
         "pricing": "Pricing",
-        "userManual": "User Manual (Documentation)",
-        "devDocs": "LEAPERone Development Docs"
+        "userManual": "User Manual (Docs)",
+        "devDocs": "LEAPERone Developer Docs"
       },
       "aboutUs": {
         "team": "Our Team"
@@ -28,39 +28,23 @@
     "dashboard": "Dashboard",
     "publish": "Publish",
     "extension": "Extension",
-    "docs": "Documentation",
+    "docs": "Docs",
     "about": "About"
-  },
-  "features": {
-    "title": "Streamline Your Social Media Workflow",
-    "subtitle": "Save time and maintain consistency across all your social media platforms with our powerful features",
-    "oneClick": {
-      "title": "One-Click Publishing",
-      "description": "Post to multiple platforms simultaneously with a single click"
-    },
-    "noLogin": {
-      "title": "No Extra Login",
-      "description": "Uses your existing browser sessions - no additional authentication needed"
-    },
-    "optimization": {
-      "title": "Platform Optimization",
-      "description": "Automatically formats content for each platform's requirements"
-    }
   },
   "analytics": {
     "title": "Powerful Analytics",
     "subtitle": "Comprehensive data analysis to help you make informed decisions",
     "webTrace": {
       "title": "Web Trace",
-      "description": "Web Trace is a powerful website tracking tool that helps you understand and analyze your website traffic.",
+      "description": "Web Trace is a powerful website visitor tracking tool that helps you understand and analyze your website traffic.",
       "features": [
         {
-          "title": "Real-time Statistics",
-          "description": "Track real-time website visitor data"
+          "title": "Real-time Visitor Statistics",
+          "description": "Track real-time visitor data for your website"
         },
         {
           "title": "Visitor Analysis",
-          "description": "Understand visitor sources, locations, and behavior patterns"
+          "description": "Understand visitor sources, geographic locations, and behavioral patterns"
         },
         {
           "title": "Performance Monitoring",
@@ -70,28 +54,79 @@
     },
     "socialMedia": {
       "title": "Social Media Analytics",
-      "description": "Comprehensive social media data analysis to help optimize your content strategy",
+      "description": "Comprehensive social media data analysis to help you optimize your content strategy",
       "features": [
         {
-          "title": "Engagement Metrics",
+          "title": "Engagement Data",
           "description": "Track likes, comments, shares, and other engagement metrics"
         },
         {
-          "title": "Audience Insights",
-          "description": "Understand your follower demographics and behavior"
+          "title": "Audience Analysis",
+          "description": "Understand your follower demographics and behavioral patterns"
         },
         {
           "title": "Content Performance",
-          "description": "Analyze performance of different content types"
+          "description": "Analyze the performance of different types of content"
         }
       ]
     }
   },
+  "multiPost": {
+    "title": "Multi-Platform Publishing",
+    "subtitle": "Create once, publish everywhere to boost your social media presence",
+    "description": "After installing the extension, easily edit and publish various types of social media content, including posts, short videos, and blog articles",
+    "features": [
+      {
+        "title": "Multiple Content Formats",
+        "description": "Support for publishing text, images, videos, and links"
+      },
+      {
+        "title": "Platform-Specific Optimization",
+        "description": "Automatically optimize content to meet the requirements of each platform"
+      },
+      {
+        "title": "One-Click Publishing",
+        "description": "Simultaneously publish content to all connected social media platforms"
+      }
+    ],
+    "cta": "Install Extension to Get Started"
+  },
+  "combinedSection": {
+    "title": "Powerful & Simple",
+    "subtitle": "Create once, publish everywhere to maximize your social media impact",
+    "usageTitle": "With MultiPost you can:",
+    "dashboard": "Go to Dashboard"
+  },
+  "draftTools": {
+    "title": "Powerful Draft Tools",
+    "subtitle": "A rich set of tools to make content creation more efficient",
+    "description": "Providing comprehensive content collection and creation tools to make your social media content more professional and efficient",
+    "webreader": {
+      "title": "Webreader Interface",
+      "description": "Get webpage content via URL, convert to Markdown or JSON format",
+      "features": [
+        "Intelligent content extraction",
+        "Image content recognition and description",
+        "Support for multiple output formats"
+      ]
+    },
+    "search": {
+      "title": "Search Engine Interface",
+      "description": "Get search engine results directly to quickly gather writing materials",
+      "features": ["Real-time search results", "Multi-engine support", "Structured data output"]
+    },
+    "socialMedia": {
+      "title": "Social Media Platform Interface",
+      "description": "Obtain content and data from social media to enrich your creation",
+      "features": ["Tweet information retrieval", "Account data analysis", "Social media search"]
+    },
+    "cta": "Explore More Draft Tools"
+  },
   "demo": {
-    "title": "Powerful Yet Simple",
+    "title": "Powerful & Simple",
     "features": [
       "Write once, publish everywhere",
-      "Preview how your post will look on each platform",
+      "Preview posts as they'll appear on each platform",
       "Schedule posts for optimal timing",
       "Track post performance across platforms"
     ],
@@ -99,8 +134,8 @@
   },
   "openSource": {
     "badge": "Open Source",
-    "title": "Built by the Community, for the Community",
-    "description": "MultiPost is open source and free forever. Join us in building the future of social media management.",
+    "title": "Built by the community, for the community",
+    "description": "MultiPost is permanently open source and free. Join us in building the future of social media management.",
     "cta": "View on GitHub"
   },
   "faq": {
@@ -108,15 +143,15 @@
     "items": [
       {
         "question": "How does MultiPost work?",
-        "answer": "MultiPost is a browser extension that uses your existing social media logins to publish content. No need for additional authentication or API keys."
+        "answer": "MultiPost is a browser extension that uses your existing social media logins to post content. No additional authentication or API keys needed."
       },
       {
-        "question": "Which platforms are supported?",
-        "answer": "We currently support Twitter, Facebook, LinkedIn, Instagram, and more. The list is growing with community contributions."
+        "question": "What platforms are supported?",
+        "answer": "We currently support Twitter, Facebook, LinkedIn, Instagram and more. The list grows with community contributions."
       },
       {
         "question": "Is it really free?",
-        "answer": "Yes! MultiPost is completely free and open source. You can use all features without any restrictions."
+        "answer": "Yes! MultiPost is completely free and open source. You can use all features without limitations."
       },
       {
         "question": "How can I contribute?",
@@ -125,18 +160,18 @@
     ]
   },
   "finalCta": {
-    "title": "Start Publishing Smarter Today",
+    "title": "Start publishing smarter today",
     "description": "Join our growing community of content creators and developers",
     "install": "Install Extension",
     "github": "Star on GitHub"
   },
   "hero": {
     "description": "Publish content to all your social media accounts simultaneously, monitor and analyze all your websites and accounts",
-    "platform": "all platforms",
+    "platform": "All Platforms",
     "buttons": {
-      "post": "Go to post",
+      "post": "Start Posting",
       "install": "Install Extension",
-      "markdown": "Markdown Editor"
+      "markdown": "Markdown Article Editor"
     },
     "features": {
       "draft": "Draft",
@@ -144,8 +179,15 @@
       "analytics": "Analytics",
       "conjunction": {
         "and": "and",
-        "comma": ","
+        "comma": ", "
       }
     }
+  },
+  "sectionLabels": {
+    "powerfulTools": "Powerful Tools",
+    "analytics": "Analytics",
+    "openSource": "Open Source",
+    "powerfulSimple": "Powerful & Simple",
+    "faq": "FAQ"
   }
 }

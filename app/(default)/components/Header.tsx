@@ -24,8 +24,10 @@ export default function Header() {
 
   return (
     <Navbar
-      className="fixed inset-x-0 top-0 z-50"
-      onMenuOpenChange={setIsMenuOpen}>
+      maxWidth="full"
+      shouldHideOnScroll
+      onMenuOpenChange={setIsMenuOpen}
+      className="fixed inset-x-0 top-0 z-50">
       <NavbarContent>
         <NavbarMenuToggle
           aria-label={isMenuOpen ? '关闭菜单' : '打开菜单'}

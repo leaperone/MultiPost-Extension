@@ -31,22 +31,6 @@
     "docs": "文档",
     "about": "关于"
   },
-  "features": {
-    "title": "简化你的社交媒体工作流程",
-    "subtitle": "使用我们强大的功能，节省时间并在所有社交媒体平台上保持一致性",
-    "oneClick": {
-      "title": "一键发布",
-      "description": "一键同时发布到多个平台"
-    },
-    "noLogin": {
-      "title": "无需额外登录",
-      "description": "使用你现有的浏览器会话 - 无需额外认证"
-    },
-    "optimization": {
-      "title": "平台优化",
-      "description": "自动根据每个平台的要求格式化内容"
-    }
-  },
   "analytics": {
     "title": "强大的分析功能",
     "subtitle": "全方位的数据分析，助您做出明智决策",
@@ -86,6 +70,53 @@
         }
       ]
     }
+  },
+  "multiPost": {
+    "title": "多平台内容发布",
+    "subtitle": "一次编辑，多平台发布，提高您的社交媒体存在感",
+    "description": "安装扩展后，轻松编辑并发布各类社交媒体内容，包括动态、短视频和博客文章等",
+    "features": [
+      {
+        "title": "多种内容格式",
+        "description": "支持发布文本、图片、视频和链接等多种内容格式"
+      },
+      {
+        "title": "平台特性适配",
+        "description": "自动优化内容以符合各平台特性要求"
+      },
+      {
+        "title": "一键发布",
+        "description": "同时将内容发布到所有已连接的社交媒体平台"
+      }
+    ],
+    "cta": "安装扩展开始体验"
+  },
+  "combinedSection": {
+    "title": "强大而简单",
+    "subtitle": "一次创建，随处发布，全面提升您的社交媒体影响力",
+    "usageTitle": "使用 MultiPost 可以：",
+    "dashboard": "前往仪表盘"
+  },
+  "draftTools": {
+    "title": "强大的草稿工具",
+    "subtitle": "丰富的工具集，让内容创作更加高效",
+    "description": "提供全面的内容收集和创作工具，让您的社交媒体内容更专业、更高效",
+    "webreader": {
+      "title": "Webreader 网页阅读器",
+      "description": "通过URL获取网页内容，转换为Markdown或JSON格式",
+      "features": ["内容智能提取", "图片内容识别与描述", "多种输出格式支持"]
+    },
+    "search": {
+      "title": "搜索引擎接口",
+      "description": "直接获取搜索引擎结果，快速收集写作素材",
+      "features": ["实时搜索结果", "多引擎支持", "结构化数据输出"]
+    },
+    "socialMedia": {
+      "title": "社交媒体平台接口",
+      "description": "获取社交媒体上的内容和数据，丰富您的创作",
+      "features": ["推文信息获取", "账号数据分析", "社交媒体搜索"]
+    },
+    "cta": "探索更多草稿工具"
   },
   "demo": {
     "title": "强大而简单",
@@ -142,5 +173,12 @@
         "comma": "、"
       }
     }
+  },
+  "sectionLabels": {
+    "powerfulTools": "强大工具",
+    "analytics": "分析",
+    "openSource": "开源",
+    "powerfulSimple": "强大而简单",
+    "faq": "问答"
   }
 }

@@ -57,7 +57,7 @@ export default function SocialShareNotifications() {
       <AnimatedList
         delay={2500}
         loop={true}
-        maxVisible={isMobile ? 1 : 3}
+        maxVisible={isMobile ? 0 : 2}
         className="gap-2">
         {PLATFORMS.map((platform) => (
           <Notification
