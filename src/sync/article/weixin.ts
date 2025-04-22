@@ -432,7 +432,7 @@ export async function ArticleWeixin(data: SyncData) {
     });
 
     // 处理文章内容中的图片
-    const content = articleData.originContent;
+    const content = articleData.htmlContent;
 
     // 创建文章
     const appMsgId = await createArticle(content, cropedImages);

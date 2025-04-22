@@ -1,7 +1,8 @@
 import type { ArticleData, FileData, SyncData } from '~sync/common';
 
 export async function ArticleToutiao(data: SyncData) {
-  const articleData = data.data as ArticleData;
+  const articleData = data.origin as ArticleData;
+  const processedData = data.data as ArticleData;
   console.log('message', data);
   function waitForElement(selector: string, timeout = 10000): Promise<Element> {
     return new Promise((resolve, reject) => {
@@ -129,10 +130,10 @@ export async function ArticleToutiao(data: SyncData) {
 
   // 主流程
   try {
-    await processContent(articleData.content);
+    await processContent(articleData.htmlContent);
 
-    if (articleData.cover) {
-      await processCover(articleData.cover);
+    if (processedData.cover) {
+      await processCover(processedData.cover);
     }
 
     // 发布或预览

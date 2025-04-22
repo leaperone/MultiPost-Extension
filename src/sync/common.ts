@@ -19,6 +19,7 @@ export interface SyncData {
   platforms: SyncDataPlatform[];
   isAutoPublish: boolean;
   data: DynamicData | ArticleData | VideoData | PodcastData;
+  origin?: DynamicData | ArticleData | VideoData | PodcastData; // Beta 功能，用于临时存储，发布时不需要提供该字段
 }
 
 export interface DynamicData {
@@ -47,7 +48,7 @@ export interface ArticleData {
   cover: FileData;
   htmlContent: string;
   markdownContent: string;
-  images?: FileData[];
+  images?: FileData[]; // 发布时可不提供该字段
 }
 
 export interface VideoData {

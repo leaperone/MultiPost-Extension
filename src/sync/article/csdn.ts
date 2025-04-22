@@ -141,9 +141,9 @@ export async function ArticleCSDN(data: SyncData) {
   }
 
   // 处理文章内容中的图片
-  async function processContent(content: string, fileDatas: FileData[]): Promise<string> {
+  async function processContent(htmlContent: string, imageDatas: FileData[]): Promise<string> {
     const parser = new DOMParser();
-    const doc = parser.parseFromString(content, 'text/html');
+    const doc = parser.parseFromString(htmlContent, 'text/html');
     const images = Array.from(doc.getElementsByTagName('img'));
 
     console.log(`处理文章图片，共 ${images.length} 张`);
@@ -152,7 +152,7 @@ export async function ArticleCSDN(data: SyncData) {
       const src = img.getAttribute('src');
       if (!src) return;
 
-      const fileInfo = fileDatas.find((f) => f.url === src);
+      const fileInfo = imageDatas.find((f) => f.url === src);
       if (!fileInfo) return;
 
       const newUrl = await uploadSingleImage(fileInfo);
@@ -171,9 +171,7 @@ export async function ArticleCSDN(data: SyncData) {
   async function publishArticle(articleData: ArticleData): Promise<string | null> {
     console.log('开始发布文章:', articleData.title);
 
-    if (articleData.fileDatas) {
-      articleData.content = await processContent(articleData.content, articleData.fileDatas);
-    }
+    articleData.htmlContent = await processContent(articleData.htmlContent, articleData.images);
 
     let coverUrl = '';
     if (articleData.cover) {
@@ -197,7 +195,7 @@ export async function ArticleCSDN(data: SyncData) {
       article_id: '',
       title: articleData.title?.slice(0, 100),
       description: articleData.digest?.slice(0, 256),
-      content: articleData.content,
+      content: articleData.htmlContent,
       markdowncontent: '',
       tags: '经验分享',
       categories: '',

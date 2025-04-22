@@ -242,6 +242,7 @@ export default function Publish() {
       );
 
       let processedData = data;
+      processedData.origin = data.data
 
       try {
         if (data?.platforms.some((platform) => platform.name.includes('ARTICLE'))) {

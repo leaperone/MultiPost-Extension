@@ -36,7 +36,6 @@ interface ArticleTabProps {
 const ArticleTab: React.FC<ArticleTabProps> = ({ funcPublish, funcScraper }) => {
   const [title, setTitle] = useState<string>('');
   const [digest, setDigest] = useState<string>('');
-  const [content, setContent] = useState<string>('');
   const [selectedPlatforms, setSelectedPlatforms] = useState<string[]>([]);
   const [url, setUrl] = useState<string>('');
   const [importedContent, setImportedContent] = useState<{
@@ -49,8 +48,6 @@ const ArticleTab: React.FC<ArticleTabProps> = ({ funcPublish, funcScraper }) => 
   } | null>(null);
   const [coverImage, setCoverImage] = useState<FileData | null>(null);
   const [images, setImages] = useState<FileData[]>([]);
-  const [videos, setVideos] = useState<FileData[]>([]);
-  const [fileDatas, setFileDatas] = useState<FileData[]>([]);
   const coverInputRef = useRef<HTMLInputElement>(null);
   const [isProcessing, setIsProcessing] = useState(false);
   const [processStatus, setProcessStatus] = useState('');
@@ -140,7 +137,7 @@ const ArticleTab: React.FC<ArticleTabProps> = ({ funcPublish, funcScraper }) => 
       return;
     }
     // 将 HTML 转换为 Markdown
-    const markdownContent = turndownService.turndown(content || digest || '');
+    // const markdownContent = turndownService.turndown(content || digest || '');
     const markdownOriginContent = importedContent?.originContent
       ? turndownService.turndown(importedContent.originContent)
       : '';
@@ -153,15 +150,11 @@ const ArticleTab: React.FC<ArticleTabProps> = ({ funcPublish, funcScraper }) => 
       })),
       data: {
         title,
-        content: content || digest || '',
         digest: digest || '',
         cover: coverImage || null,
         images: images || [],
-        videos: videos || [],
-        fileDatas: [...fileDatas, ...images, ...videos],
-        originContent: importedContent?.originContent || '',
-        markdownContent,
-        markdownOriginContent,
+        markdownContent: markdownOriginContent,
+        htmlContent: importedContent?.originContent || digest || '',
       },
       isAutoPublish: false,
     };
@@ -205,7 +198,6 @@ const ArticleTab: React.FC<ArticleTabProps> = ({ funcPublish, funcScraper }) => 
           type: blob.type,
           size: blob.size,
           url: URL.createObjectURL(blob),
-          originUrl: src,
         };
         imageFileDatas.push(fileData);
 
@@ -236,7 +228,6 @@ const ArticleTab: React.FC<ArticleTabProps> = ({ funcPublish, funcScraper }) => 
           type: blob.type,
           size: blob.size,
           url: URL.createObjectURL(blob),
-          originUrl: src,
         };
         videoFileDatas.push(fileData);
 
@@ -261,7 +252,6 @@ const ArticleTab: React.FC<ArticleTabProps> = ({ funcPublish, funcScraper }) => 
             type: blob.type,
             size: blob.size,
             url: URL.createObjectURL(blob),
-            originUrl: href,
           };
           fileDatas.push(fileData);
 
@@ -294,9 +284,7 @@ const ArticleTab: React.FC<ArticleTabProps> = ({ funcPublish, funcScraper }) => 
       const res = await funcScraper(url);
       console.log('res', res);
       if (res && res.title && res.content) {
-        const { imageFileDatas, videoFileDatas, fileDatas, processedContent } = await processImportedContent(
-          res.content,
-        );
+        const { imageFileDatas, processedContent } = await processImportedContent(res.content);
 
         // 如果导入的内容有封面图，且当前没有设置封面，则设置为封面
         if (res.cover && !coverImage) {
@@ -308,7 +296,6 @@ const ArticleTab: React.FC<ArticleTabProps> = ({ funcPublish, funcScraper }) => 
               type: blob.type,
               size: blob.size,
               url: URL.createObjectURL(blob),
-              originUrl: res.cover,
             };
             setCoverImage(coverFileData);
           } catch (error) {
@@ -326,11 +313,8 @@ const ArticleTab: React.FC<ArticleTabProps> = ({ funcPublish, funcScraper }) => 
         });
 
         setTitle(res.title);
-        setContent(processedContent);
         setDigest(res.digest || '');
         setImages(imageFileDatas);
-        setVideos(videoFileDatas);
-        setFileDatas(fileDatas);
       }
     } catch (error) {
       console.error(chrome.i18n.getMessage('errorImportingContent') || '导入内容时出错:', error);

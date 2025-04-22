@@ -31,7 +31,8 @@ export async function ArticleZhihu(data: SyncData) {
     });
   }
 
-  const articleData = data.data as ArticleData;
+  const articleData = data.origin as ArticleData;
+  const processedData = data.data as ArticleData;
 
   // 处理文章内容中的图片
   async function processContent(content: string): Promise<string> {
@@ -66,7 +67,7 @@ export async function ArticleZhihu(data: SyncData) {
     }
 
     // 处理并填充内容
-    const processedContent = await processContent(articleData.originContent);
+    const processedContent = await processContent(articleData.htmlContent);
     editor.focus();
 
     // 使用粘贴事件插入内容
@@ -95,7 +96,7 @@ export async function ArticleZhihu(data: SyncData) {
     }
 
     try {
-      const coverFile = articleData.cover;
+      const coverFile = processedData.cover;
       const dataTransfer = new DataTransfer();
       console.debug('try upload file', coverFile);
 
