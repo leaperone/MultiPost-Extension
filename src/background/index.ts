@@ -61,38 +61,23 @@ chrome.tabs.onRemoved.addListener((tabId) => {
 // Listen Message || 监听消息 || END
 
 // Message Handler || 消息处理器 || START
+let currentSyncData: SyncData | null = null;
+let currentPublishPopup: chrome.windows.Window | null = null;
 const defaultMessageHandler = (request, sender, sendResponse) => {
   if (request.action === 'MUTLIPOST_EXTENSION_CHECK_SERVICE_STATUS') {
     sendResponse({ extensionId: chrome.runtime.id });
   }
   if (request.action === 'MUTLIPOST_EXTENSION_PUBLISH') {
     const data = request.data as SyncData;
-    if (Array.isArray(data.platforms) && data.platforms.length > 0) {
-      createTabsForPlatforms(data)
-        .then(async (tabs) => {
-          injectScriptsToTabs(tabs, data);
-
-          addTabsManagerMessages({
-            syncData: data,
-            tabs: tabs.map((t: { tab: chrome.tabs.Tab; platformInfo: SyncDataPlatform }) => ({
-              tab: t.tab,
-              platformInfo: t.platformInfo,
-            })),
-          });
-
-          for (const t of tabs) {
-            if (t.tab.id) {
-              await chrome.tabs.update(t.tab.id, { active: true });
-              await new Promise((resolve) => setTimeout(resolve, 2000));
-            }
-          }
-        })
-        .catch((error) => {
-          console.error('创建标签页或分组时出错:', error);
-        });
-    } else {
-      console.error('没有指定有效的平台');
-    }
+    currentSyncData = data;
+    (async () => {
+      currentPublishPopup = await chrome.windows.create({
+        url: chrome.runtime.getURL(`tabs/publish.html`),
+        type: 'popup',
+        width: 800,
+        height: 600,
+      });
+    })();
   }
   if (request.action === 'MUTLIPOST_EXTENSION_PLATFORMS') {
     getPlatformInfos().then((platforms) => {
@@ -114,7 +99,49 @@ const defaultMessageHandler = (request, sender, sendResponse) => {
       type: 'popup',
       width: 800,
       height: 600,
+      focused: request.isFocused || true,
     });
+  }
+  if (request.action === 'MUTLIPOST_EXTENSION_PUBLISH_REQUEST_SYNC_DATA') {
+    sendResponse({ syncData: currentSyncData });
+  }
+  if (request.action === 'MUTLIPOST_EXTENSION_PUBLISH_NOW') {
+    const data = request.data as SyncData;
+    if (Array.isArray(data.platforms) && data.platforms.length > 0) {
+      (async () => {
+        try {
+          const tabs = await createTabsForPlatforms(data);
+          await injectScriptsToTabs(tabs, data);
+
+          addTabsManagerMessages({
+            syncData: data,
+            tabs: tabs.map((t: { tab: chrome.tabs.Tab; platformInfo: SyncDataPlatform }) => ({
+              tab: t.tab,
+              platformInfo: t.platformInfo,
+            })),
+          });
+
+          for (const t of tabs) {
+            if (t.tab.id) {
+              await chrome.tabs.update(t.tab.id, { active: true });
+              await new Promise((resolve) => setTimeout(resolve, 2000));
+            }
+          }
+          if (currentPublishPopup) {
+            await chrome.windows.update(currentPublishPopup.id, { focused: true });
+          }
+
+          sendResponse({
+            tabs: tabs.map((t: { tab: chrome.tabs.Tab; platformInfo: SyncDataPlatform }) => ({
+              tab: t.tab,
+              platformInfo: t.platformInfo,
+            })),
+          });
+        } catch (error) {
+          console.error('创建标签页或分组时出错:', error);
+        }
+      })();
+    }
   }
 };
 starter(1000 * 30);

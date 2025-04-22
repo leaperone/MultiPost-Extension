@@ -59,9 +59,9 @@ export async function ArticleJianshu(data: SyncData) {
   }
 
   // 处理文章内容中的图片
-  async function processContent(content: string, fileDatas: FileData[]): Promise<string> {
+  async function processContent(htmlContent: string, imageDatas: FileData[]): Promise<string> {
     const parser = new DOMParser();
-    const doc = parser.parseFromString(content, 'text/html');
+    const doc = parser.parseFromString(htmlContent, 'text/html');
     const images = doc.getElementsByTagName('img');
 
     console.log('images -->', images);
@@ -72,7 +72,7 @@ export async function ArticleJianshu(data: SyncData) {
 
       if (src) {
         console.log('try replace ', src);
-        const fileInfo = fileDatas.find((f) => f.url === src);
+        const fileInfo = imageDatas.find((f) => f.url === src);
         const newUrl = await uploadImage(fileInfo);
         if (newUrl) {
           img.setAttribute('src', newUrl);
@@ -138,7 +138,7 @@ export async function ArticleJianshu(data: SyncData) {
         id: noteId,
         autosave_control: 1,
         title: articleData.title,
-        content: articleData.content,
+        content: articleData.htmlContent,
       }),
     });
 
@@ -161,7 +161,7 @@ export async function ArticleJianshu(data: SyncData) {
 
   // 主流程
   const processedData = articleData;
-  processedData.content = await processContent(processedData.content, processedData.fileDatas);
+  processedData.htmlContent = await processContent(processedData.htmlContent, processedData.images);
 
   const publishUrl = await publishArticle(processedData);
 

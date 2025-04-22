@@ -3,7 +3,7 @@ import type { ArticleData, SyncData } from '~sync/common';
 export async function ArticleJuejin(data: SyncData) {
   console.debug('ArticleJuejin', data);
 
-  const articleData = data.data as ArticleData;
+  const articleData = data.origin as ArticleData;
 
   function waitForElement(selector: string, timeout = 10000): Promise<Element> {
     return new Promise((resolve, reject) => {
@@ -63,7 +63,7 @@ export async function ArticleJuejin(data: SyncData) {
     clipboardData: new DataTransfer(),
   });
 
-  pasteEvent.clipboardData.setData('text/html', articleData.originContent || '');
+  pasteEvent.clipboardData.setData('text/html', articleData.htmlContent || '');
   editor.dispatchEvent(pasteEvent);
   editor.dispatchEvent(new Event('input', { bubbles: true }));
   editor.dispatchEvent(new Event('change', { bubbles: true }));

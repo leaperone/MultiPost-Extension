@@ -1,4 +1,4 @@
-import type { ArticleData, SyncData } from '~sync/common';
+import type { ArticleData, FileData, SyncData } from '~sync/common';
 
 export async function ArticleSegmentfault(data: SyncData) {
   console.debug('ArticleSegmentfault', data);
@@ -12,7 +12,7 @@ export async function ArticleSegmentfault(data: SyncData) {
   }
 
   // 上传图片到思否服务器
-  async function uploadImage(file: { url: string; name: string; type: string }): Promise<string | null> {
+  async function uploadImage(file: FileData): Promise<string | null> {
     try {
       const response = await fetch(file.url);
       const blob = await response.blob();
@@ -79,13 +79,13 @@ export async function ArticleSegmentfault(data: SyncData) {
   }
 
   // 处理文章内容中的图片
-  async function processContent(content: string, fileDatas: ArticleData['fileDatas']): Promise<string> {
+  async function processContent(htmlContent: string, imageDatas: FileData[]): Promise<string> {
     const parser = new DOMParser();
-    const doc = parser.parseFromString(content, 'text/html');
+    const doc = parser.parseFromString(htmlContent, 'text/html');
     const images = Array.from(doc.getElementsByTagName('img'));
 
     console.debug('找到图片元素数量:', images.length);
-    console.debug('可用的文件数据:', fileDatas);
+    console.debug('可用的文件数据:', imageDatas);
 
     const uploadPromises = images.map(async (img) => {
       const src = img.getAttribute('src');
@@ -93,7 +93,7 @@ export async function ArticleSegmentfault(data: SyncData) {
 
       if (!src) return;
 
-      const fileInfo = fileDatas?.find((f) => f.url === src);
+      const fileInfo = imageDatas?.find((f) => f.url === src);
       console.debug('找到对应的文件信息:', fileInfo);
 
       if (fileInfo) {
@@ -111,10 +111,10 @@ export async function ArticleSegmentfault(data: SyncData) {
   }
 
   // 处理 Markdown 内容中的图片
-  async function processMarkdownContent(content: string, fileDatas: ArticleData['fileDatas']): Promise<string> {
+  async function processMarkdownContent(content: string, imageDatas: FileData[]): Promise<string> {
     console.debug('开始处理 Markdown 内容:', {
       contentLength: content.length,
-      fileDatasCount: fileDatas?.length ?? 0,
+      imageDatasCount: imageDatas?.length ?? 0,
     });
 
     let processedContent = content;
@@ -132,7 +132,7 @@ export async function ArticleSegmentfault(data: SyncData) {
 
     for (const match of matches) {
       const [fullMatch, alt, url] = match;
-      const fileInfo = fileDatas?.find((f) => f.url === url);
+      const fileInfo = imageDatas?.find((f) => f.url === url);
 
       if (fileInfo) {
         const newUrl = await uploadImage(fileInfo);
@@ -194,7 +194,7 @@ export async function ArticleSegmentfault(data: SyncData) {
 
     console.debug('开始处理文章:', {
       hasMarkdown: !!articleData.markdownContent,
-      filesCount: articleData.fileDatas?.length,
+      filesCount: articleData.images?.length,
     });
 
     // 上传封面图片
@@ -205,9 +205,9 @@ export async function ArticleSegmentfault(data: SyncData) {
 
     let processedContent;
     if (articleData.markdownContent) {
-      processedContent = await processMarkdownContent(articleData.markdownContent, articleData.fileDatas);
+      processedContent = await processMarkdownContent(articleData.markdownContent, articleData.images);
     } else {
-      processedContent = await processContent(articleData.content, articleData.fileDatas);
+      processedContent = await processContent(articleData.htmlContent, articleData.images);
     }
 
     // 发布文章

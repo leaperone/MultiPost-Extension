@@ -1,6 +1,6 @@
 import '~style.css';
 import React, { useEffect, useState, useCallback, useRef } from 'react';
-import { HeroUIProvider, Button, Image } from '@heroui/react';
+import { HeroUIProvider, Button, Image, Switch } from '@heroui/react';
 import { RefreshCw, CheckCircle2, XCircle, Loader2, ExternalLink } from 'lucide-react';
 import cssText from 'data-text:~style.css';
 import { refreshAllAccountInfo, refreshAccountInfoMap } from '~sync/account';
@@ -39,7 +39,7 @@ const RefreshAccounts = () => {
     accounts: {},
     errors: {},
   });
-  const [autoClose, setAutoClose] = useState(false);
+  const [autoClose, setAutoClose] = useState(true);
   const autoCloseTimerRef = useRef<number>();
 
   const refreshAccounts = useCallback(async () => {
@@ -74,7 +74,8 @@ const RefreshAccounts = () => {
     }
   }, [autoClose]);
 
-  const handleAutoCloseChange = async (checked: boolean) => {
+  const handleAutoCloseChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const checked = event.target.checked;
     // 切换 autoClose 时清除之前的定时器
     if (autoCloseTimerRef.current) {
       clearTimeout(autoCloseTimerRef.current);
@@ -106,7 +107,7 @@ const RefreshAccounts = () => {
 
   useEffect(() => {
     storage.get(AUTO_CLOSE_KEY).then((value) => {
-      setAutoClose(value === 'true');
+      setAutoClose(value === undefined ? true : value === 'true');
     });
   }, []);
 
@@ -141,12 +142,12 @@ const RefreshAccounts = () => {
               </Button>
 
               <div className="flex items-center gap-2">
-                <Button
-                  color={autoClose ? 'success' : 'default'}
-                  className="h-10"
-                  onPress={() => handleAutoCloseChange(!autoClose)}>
-                  {chrome.i18n.getMessage('refreshAccountsAutoClose')}
-                </Button>
+                <Switch
+                  isSelected={autoClose}
+                  onChange={handleAutoCloseChange}
+                  className="data-[state=checked]:bg-primary-600"
+                />
+                <span className="text-sm text-gray-600">{chrome.i18n.getMessage('refreshAccountsAutoClose')}</span>
               </div>
             </div>
 

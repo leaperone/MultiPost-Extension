@@ -7,8 +7,8 @@ import { VideoInfoMap } from './video';
 
 export interface SyncDataPlatform {
   name: string;
-  injectUrl: string;
-  extraConfig:
+  injectUrl?: string;
+  extraConfig?:
     | {
         customInjectUrls?: string[]; // Beta 功能，用于自定义注入 URL
       }
@@ -19,6 +19,7 @@ export interface SyncData {
   platforms: SyncDataPlatform[];
   isAutoPublish: boolean;
   data: DynamicData | ArticleData | VideoData | PodcastData;
+  origin?: DynamicData | ArticleData | VideoData | PodcastData; // Beta 功能，用于临时存储，发布时不需要提供该字段
 }
 
 export interface DynamicData {
@@ -37,23 +38,17 @@ export interface PodcastData {
 export interface FileData {
   name: string;
   url: string;
-  type: string;
-  size: number;
-  base64?: string;
-  originUrl?: string;
+  type?: string;
+  size?: number;
 }
 
 export interface ArticleData {
   title: string;
-  content: string;
   digest: string;
   cover: FileData;
-  images: FileData[];
-  videos: FileData[];
-  fileDatas: FileData[];
-  originContent?: string;
-  markdownContent?: string;
-  markdownOriginContent?: string;
+  htmlContent: string;
+  markdownContent: string;
+  images?: FileData[]; // 发布时可不提供该字段
 }
 
 export interface VideoData {
@@ -132,11 +127,22 @@ export async function createTabsForPlatforms(data: SyncData) {
           });
         }
       } else {
-        const tab = await chrome.tabs.create({ url: info.injectUrl });
-        tabs.push({
-          tab,
-          platformInfo: info,
-        });
+        if (info.injectUrl) {
+          const tab = await chrome.tabs.create({ url: info.injectUrl });
+          tabs.push({
+            tab,
+            platformInfo: info,
+          });
+        } else {
+          const platformInfo = infoMap[info.name];
+          if (platformInfo) {
+            const tab = await chrome.tabs.create({ url: platformInfo.homeUrl });
+            tabs.push({
+              tab,
+              platformInfo: info,
+            });
+          }
+        }
       }
     }
   }

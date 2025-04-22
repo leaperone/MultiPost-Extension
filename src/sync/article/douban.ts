@@ -31,7 +31,7 @@ export async function ArticleDouban(data: SyncData) {
     });
   }
 
-  const articleData = data.data as ArticleData;
+  const articleData = data.origin as ArticleData;
 
   // 填充文章内容
   async function fillArticleContent() {
@@ -59,7 +59,7 @@ export async function ArticleDouban(data: SyncData) {
       cancelable: true,
       clipboardData: new DataTransfer(),
     });
-    pasteEvent.clipboardData.setData('text/html', articleData.originContent || '');
+    pasteEvent.clipboardData.setData('text/html', articleData.htmlContent || '');
     editor.dispatchEvent(pasteEvent);
     editor.dispatchEvent(new Event('input', { bubbles: true }));
     editor.dispatchEvent(new Event('change', { bubbles: true }));

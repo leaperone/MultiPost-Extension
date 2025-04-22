@@ -101,7 +101,7 @@ export async function ArticleWordpress(data: SyncData) {
   ): Promise<ArticleData> {
     // 使用 DOMParser 解析内容
     const parser = new DOMParser();
-    const doc = parser.parseFromString(articleData.content, 'text/html');
+    const doc = parser.parseFromString(articleData.htmlContent, 'text/html');
     const images = doc.getElementsByTagName('img');
 
     // 处理每个图片
@@ -109,7 +109,7 @@ export async function ArticleWordpress(data: SyncData) {
       const originalSrc = img.getAttribute('src');
       if (originalSrc) {
         console.debug('try replace image:', originalSrc);
-        const fileData = articleData.fileDatas.find((file) => file.url === originalSrc);
+        const fileData = articleData.images.find((file) => file.url === originalSrc);
 
         if (fileData) {
           // 上传图片并获取新的 URL
@@ -128,8 +128,8 @@ export async function ArticleWordpress(data: SyncData) {
 
     // 更新内容
     console.log('doc.body.innerHTML -->', doc.body.innerHTML);
-    articleData.content = doc.body.innerHTML;
-    console.log('articleData.content -->', articleData.content);
+    articleData.htmlContent = doc.body.innerHTML;
+    console.log('articleData.htmlContent -->', articleData.htmlContent);
     return articleData;
   }
 
@@ -145,7 +145,7 @@ export async function ArticleWordpress(data: SyncData) {
     formData.append('data[wp_autosave][post_type]', 'post');
     formData.append('data[wp_autosave][post_author]', '1');
     formData.append('data[wp_autosave][post_title]', articleData.title);
-    formData.append('data[wp_autosave][content]', articleData.content);
+    formData.append('data[wp_autosave][content]', articleData.htmlContent);
     formData.append('data[wp_autosave][excerpt]', '');
     formData.append('data[wp_autosave][catslist]', '');
     formData.append('data[wp_autosave][comment_status]', 'open');
@@ -201,7 +201,7 @@ export async function ArticleWordpress(data: SyncData) {
         body: JSON.stringify({
           id: postId,
           title: articleData.title,
-          content: articleData.content,
+          content: articleData.htmlContent,
         }),
         headers: {
           'Content-Type': 'application/json',
