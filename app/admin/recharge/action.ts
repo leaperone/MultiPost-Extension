@@ -3,7 +3,7 @@
 import { z } from 'zod';
 import { prisma } from '@/lib/db';
 import { revalidatePath } from 'next/cache';
-import { RechargeType } from '@/actions/credit/types';
+import { RechargeStatus, RechargeType } from '@/actions/credit/types';
 import { nanoid } from 'nanoid';
 import { auth } from '@/auth';
 import { isAdmin } from '@/actions/admin';
@@ -52,9 +52,9 @@ export async function adminRecharge(formData: RechargeFormData) {
       data: {
         userId: user.id,
         orderId,
-        type: RechargeType.FREE,
+        type: RechargeType.ADMIN,
         amount,
-        status: 'completed',
+        status: RechargeStatus.SUCCESS,
       },
     });
 
