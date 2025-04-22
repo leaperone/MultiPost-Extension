@@ -2,6 +2,7 @@ import { Card, CardBody, CardHeader } from '@heroui/react';
 import { auth } from '@/auth';
 import { getCredit } from '@/actions/credit';
 import RechargeModal from './components/RechargeModal';
+import CreditUsageTable from './components/CreditUsageTable';
 
 export default async function RechargePage() {
   const session = await auth();
@@ -41,6 +42,16 @@ export default async function RechargePage() {
             </div>
             <RechargeModal />
           </div>
+        </CardBody>
+      </Card>
+
+      {/* 使用记录 */}
+      <Card className="mt-4">
+        <CardHeader>
+          <h3 className="text-lg font-medium">使用记录</h3>
+        </CardHeader>
+        <CardBody>
+          <CreditUsageTable />
         </CardBody>
       </Card>
     </div>

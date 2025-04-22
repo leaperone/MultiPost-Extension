@@ -69,3 +69,40 @@ export async function recharge(amount: number, returnUrl: string): Promise<Recha
     };
   }
 }
+
+/**
+ * 获取用户的信用使用记录
+ */
+export async function getCreditUsageHistory() {
+  try {
+    const session = await auth();
+    if (!session?.user?.id) {
+      return {
+        success: false,
+        error: 'Authentication failed',
+      };
+    }
+
+    const usageHistory = await multipostDb.creditUsage.findMany({
+      where: { userId: session.user.id },
+      orderBy: { createdAt: 'desc' },
+      take: 50,
+    });
+
+    return {
+      success: true,
+      data: usageHistory.map((usage) => ({
+        id: usage.id,
+        type: usage.type,
+        amount: Number(usage.amount),
+        isFree: usage.isFree,
+        createdAt: usage.createdAt,
+      })),
+    };
+  } catch (error) {
+    return {
+      success: false,
+      error: 'Failed to fetch credit usage history',
+    };
+  }
+}
