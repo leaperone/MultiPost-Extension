@@ -99,6 +99,7 @@ const defaultMessageHandler = (request, sender, sendResponse) => {
       type: 'popup',
       width: 800,
       height: 600,
+      focused: request.isFocused || true,
     });
   }
   if (request.action === 'MUTLIPOST_EXTENSION_PUBLISH_REQUEST_SYNC_DATA') {
@@ -107,9 +108,10 @@ const defaultMessageHandler = (request, sender, sendResponse) => {
   if (request.action === 'MUTLIPOST_EXTENSION_PUBLISH_NOW') {
     const data = request.data as SyncData;
     if (Array.isArray(data.platforms) && data.platforms.length > 0) {
-      createTabsForPlatforms(data)
-        .then(async (tabs) => {
-          injectScriptsToTabs(tabs, data);
+      (async () => {
+        try {
+          const tabs = await createTabsForPlatforms(data);
+          await injectScriptsToTabs(tabs, data);
 
           addTabsManagerMessages({
             syncData: data,
@@ -126,12 +128,19 @@ const defaultMessageHandler = (request, sender, sendResponse) => {
             }
           }
           if (currentPublishPopup) {
-            chrome.windows.update(currentPublishPopup.id, { focused: true });
+            await chrome.windows.update(currentPublishPopup.id, { focused: true });
           }
-        })
-        .catch((error) => {
+
+          sendResponse({
+            tabs: tabs.map((t: { tab: chrome.tabs.Tab; platformInfo: SyncDataPlatform }) => ({
+              tab: t.tab,
+              platformInfo: t.platformInfo,
+            })),
+          });
+        } catch (error) {
           console.error('创建标签页或分组时出错:', error);
-        });
+        }
+      })();
     }
   }
 };
