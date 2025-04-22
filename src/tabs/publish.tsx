@@ -1,16 +1,17 @@
 import '~style.css';
 import React, { useEffect, useState } from 'react';
 import { HeroUIProvider, Progress, Button } from '@heroui/react';
-import { AlertCircle, CheckCircle2, XCircle } from 'lucide-react';
+import { RefreshCw, X } from 'lucide-react';
 import cssText from 'data-text:~style.css';
 import {
-  infoMap,
   type ArticleData,
   type DynamicData,
   type FileData,
   type PodcastData,
   type SyncData,
   type VideoData,
+  type SyncDataPlatform,
+  injectScriptsToTabs,
 } from '~sync/common';
 
 export function getShadowContainer() {
@@ -34,12 +35,6 @@ const focusMainWindow = async () => {
   }
 };
 
-interface PlatformStatus {
-  name: string;
-  status: 'pending' | 'success' | 'error';
-  error?: string;
-}
-
 const getTitleFromData = (data: SyncData) => {
   const { data: contentData } = data;
   if ('content' in contentData) {
@@ -52,8 +47,14 @@ export default function Publish() {
   const [title, setTitle] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
   const [isProcessing, setIsProcessing] = useState<boolean>(true);
-  const [platformStatuses, setPlatformStatuses] = useState<PlatformStatus[]>([]);
-  const [processedData, setProcessedData] = useState<SyncData | null>(null);
+  const [data, setData] = useState<SyncData | null>(null);
+  const [errors, setErrors] = useState<string[]>([]);
+  const [publishedTabs, setPublishedTabs] = useState<
+    Array<{
+      tab: chrome.tabs.Tab;
+      platformInfo: SyncDataPlatform;
+    }>
+  >([]);
 
   async function processArticle(data: SyncData): Promise<SyncData> {
     setNotice('正在处理文章内容和图片...');
@@ -101,14 +102,7 @@ export default function Publish() {
         console.error('处理图片时出错:', error);
         // 继续处理下一张图片
         setNotice(`处理图片失败: ${img.src}`);
-        setPlatformStatuses((prev) => [
-          ...prev,
-          {
-            name: '图片处理',
-            status: 'error',
-            error: `处理图片失败: ${img.src}`,
-          },
-        ]);
+        setErrors((prev) => [...prev, `处理图片失败: ${img.src}`]);
       }
     }
 
@@ -136,14 +130,7 @@ export default function Publish() {
       };
     } catch (error) {
       console.error('处理文件时出错:', error);
-      setPlatformStatuses((prev) => [
-        ...prev,
-        {
-          name: '文件处理',
-          status: 'error',
-          error: `处理文件失败: ${file.name}`,
-        },
-      ]);
+      setErrors((prev) => [...prev, `处理文件失败: ${file.name}`]);
       return file;
     }
   };
@@ -201,48 +188,102 @@ export default function Publish() {
     };
   };
 
-  const handleRetry = async (platformName: string) => {
-    setNotice(`正在重试发布到 ${platformName}...`);
-    if (!processedData) return;
+  const handleReloadTab = async (tabId: number) => {
+    try {
+      const tabInfo = publishedTabs.find((t) => t.tab.id === tabId);
+      if (!tabInfo) {
+        console.error('找不到要重新加载的标签页信息');
+        return;
+      }
 
-    // 更新平台状态为pending
-    setPlatformStatuses((prev) =>
-      prev.map((p) => (p.name === platformName ? { ...p, status: 'pending' as const, error: undefined } : p)),
-    );
+      // 更新标签页 URL
+      const updatedTab = await chrome.tabs.update(tabId, {
+        url: tabInfo.platformInfo.injectUrl,
+        active: true,
+      });
 
-    // 只发布到指定平台
-    const platformData = {
-      ...processedData,
-      platforms: processedData.platforms.filter((p) => p.name === platformName),
-    };
+      if (chrome.runtime.lastError) {
+        throw new Error(chrome.runtime.lastError.message);
+      }
 
-    await focusMainWindow();
-    chrome.runtime.sendMessage({
-      action: 'MUTLIPOST_EXTENSION_PUBLISH_NOW',
-      data: platformData,
-    });
+      // 注入脚本
+      await injectScriptsToTabs(
+        [
+          {
+            tab: updatedTab,
+            platformInfo: tabInfo.platformInfo,
+          },
+        ],
+        data,
+      );
 
-    setPlatformStatuses((prev) =>
-      prev.map((p) => (p.name === platformName ? { ...p, status: 'success' as const, error: undefined } : p)),
-    );
+      // 更新本地状态
+      setPublishedTabs((prev) => prev.map((item) => (item.tab.id === tabId ? { ...item, tab: updatedTab } : item)));
+    } catch (error) {
+      console.error('重新加载标签页失败:', error);
+      setErrors((prev) => [...prev, `重新加载标签页失败: ${error.message || '未知错误'}`]);
+    }
+  };
+
+  const handleTabClick = (tabId: number) => {
+    chrome.tabs.update(tabId, { active: true });
+  };
+
+  const handleTabMiddleClick = (e: React.MouseEvent<HTMLButtonElement>, tabId: number) => {
+    if (e.button === 1 || e.buttons === 4) {
+      e.preventDefault();
+      handleCloseTab(tabId);
+    }
+  };
+
+  const handleCloseTab = async (tabId: number) => {
+    try {
+      await chrome.tabs.remove(tabId);
+      if (chrome.runtime.lastError) {
+        throw new Error(chrome.runtime.lastError.message);
+      }
+      setPublishedTabs((prev) => prev.filter((t) => t.tab.id !== tabId));
+    } catch (error) {
+      console.error('关闭标签页失败:', error);
+      setErrors((prev) => [...prev, `关闭标签页失败: ${error.message || '未知错误'}`]);
+    }
+  };
+
+  const handleCloseAllTabs = async () => {
+    try {
+      const tabIds = publishedTabs.map((tab) => tab.tab.id).filter((id): id is number => id !== undefined);
+      if (tabIds.length > 0) {
+        await chrome.tabs.remove(tabIds);
+      }
+      setPublishedTabs([]);
+    } catch (error) {
+      console.error('关闭所有标签页失败:', error);
+      setErrors((prev) => [...prev, `关闭所有标签页失败: ${error.message || '未知错误'}`]);
+    }
+  };
+
+  const handleCloseWindow = () => {
+    window.close();
+  };
+
+  const handleTabUpdated = (tabId: number, changeInfo: chrome.tabs.TabChangeInfo, tab: chrome.tabs.Tab) => {
+    setPublishedTabs((prev) => prev.map((item) => (item.tab.id === tabId ? { ...item, tab } : item)));
+  };
+
+  const handleTabRemoved = (tabId: number) => {
+    setPublishedTabs((prev) => prev.filter((tab) => tab.tab.id !== tabId));
   };
 
   useEffect(() => {
+    chrome.tabs.onUpdated.addListener(handleTabUpdated);
+    chrome.tabs.onRemoved.addListener(handleTabRemoved);
     chrome.runtime.sendMessage({ action: 'MUTLIPOST_EXTENSION_PUBLISH_REQUEST_SYNC_DATA' }, async (response) => {
       const data = response.syncData as SyncData;
       if (!data) return setNotice('获取同步数据失败');
       setTitle(getTitleFromData(data));
 
-      // 初始化平台状态
-      setPlatformStatuses(
-        data.platforms.map((p) => ({
-          name: p.name,
-          status: 'pending',
-        })),
-      );
-
       let processedData = data;
-      processedData.origin = data.data
+      processedData.origin = data.data;
 
       try {
         if (data?.platforms.some((platform) => platform.name.includes('ARTICLE'))) {
@@ -261,17 +302,43 @@ export default function Publish() {
           processedData = await processPodcast(data);
         }
 
-        setProcessedData(processedData);
+        setData(processedData);
         setNotice('处理完成，准备发布...');
 
         console.log(processedData);
 
         setTimeout(async () => {
           await focusMainWindow();
-          chrome.runtime.sendMessage({ action: 'MUTLIPOST_EXTENSION_PUBLISH_NOW', data: processedData });
-          setIsProcessing(false);
-          setNotice('发布完成');
-          setPlatformStatuses((prev) => prev.map((p) => ({ ...p, status: 'success' })));
+          chrome.runtime.sendMessage(
+            { action: 'MUTLIPOST_EXTENSION_PUBLISH_NOW', data: processedData },
+            async (response) => {
+              setIsProcessing(false);
+              setNotice('发布完成');
+
+              // 存储返回的 tabs 数据
+              if (response?.tabs) {
+                // 获取最新的 tab 信息
+                const updatedTabs = await Promise.all(
+                  response.tabs.map(async (tabInfo) => {
+                    try {
+                      if (tabInfo.tab.id) {
+                        const updatedTab = await chrome.tabs.get(tabInfo.tab.id);
+                        return {
+                          ...tabInfo,
+                          tab: updatedTab,
+                        };
+                      }
+                      return tabInfo;
+                    } catch (error) {
+                      console.error('获取标签页信息失败:', error);
+                      return tabInfo;
+                    }
+                  }),
+                );
+                setPublishedTabs(updatedTabs);
+              }
+            },
+          );
         }, 1000 * 1);
       } catch (error) {
         console.error('处理内容时出错:', error);
@@ -279,6 +346,11 @@ export default function Publish() {
         setIsProcessing(false);
       }
     });
+
+    return () => {
+      chrome.tabs.onUpdated.removeListener(handleTabUpdated);
+      chrome.tabs.onRemoved.removeListener(handleTabRemoved);
+    };
   }, []);
 
   return (
@@ -295,29 +367,87 @@ export default function Publish() {
             size="sm"
           />
           {notice && <p className="text-sm text-center text-muted-foreground">{notice}</p>}
-
+          {errors.length > 0 && (
+            <div className="space-y-2">
+              <p className="text-sm text-center text-muted-foreground">错误信息</p>
+              <ul className="space-y-2">
+                {errors.map((error, index) => (
+                  <li key={index}>{error}</li>
+                ))}
+              </ul>
+            </div>
+          )}
           <div className="space-y-2">
-            {platformStatuses.map((platform) => (
-              <div
-                key={platform.name}
-                className="flex items-center justify-between p-2 rounded-lg bg-card">
-                <div className="flex items-center space-x-2">
-                  {platform.status === 'pending' && <AlertCircle className="w-4 h-4 text-yellow-500" />}
-                  {platform.status === 'success' && <CheckCircle2 className="w-4 h-4 text-green-500" />}
-                  {platform.status === 'error' && <XCircle className="w-4 h-4 text-red-500" />}
-                  <span className="text-sm font-medium">{infoMap[platform.name]?.platformName || platform.name}</span>
-                </div>
-
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onPress={() => handleRetry(platform.name)}
-                  className="text-primary hover:text-primary-dark">
-                  重试
-                </Button>
-              </div>
-            ))}
+            {publishedTabs.length > 0 &&
+              publishedTabs.map((tab) => {
+                return (
+                  <div
+                    key={tab.tab.id}
+                    className="mb-6">
+                    <ul className="space-y-2">
+                      <li
+                        key={tab.tab.id}
+                        className="relative flex items-center">
+                        <Button
+                          isIconOnly
+                          size="sm"
+                          variant="light"
+                          className="mr-2"
+                          onPress={() => handleReloadTab(tab.tab.id)}
+                          aria-label={chrome.i18n.getMessage('sidepanelReloadTab')}>
+                          <RefreshCw className="w-4 h-4" />
+                        </Button>
+                        <Button
+                          className="justify-start pl-2 pr-10 text-left grow"
+                          onPress={() => handleTabClick(tab.tab.id)}
+                          onMouseDown={(e) => handleTabMiddleClick(e, tab.tab.id)}>
+                          {tab.tab.favIconUrl && (
+                            <img
+                              src={tab.tab.favIconUrl}
+                              alt=""
+                              className="w-4 h-4 mr-2 shrink-0"
+                              onError={(e) => (e.currentTarget.style.display = 'none')}
+                            />
+                          )}
+                          <span className="truncate">{tab.tab.title || tab.tab.url}</span>
+                        </Button>
+                        <Button
+                          isIconOnly
+                          size="sm"
+                          color="danger"
+                          variant="light"
+                          className="absolute -translate-y-1/2 right-2 top-1/2"
+                          onPress={() => handleCloseTab(tab.tab.id)}
+                          aria-label={chrome.i18n.getMessage('sidepanelCloseTab')}>
+                          <X className="w-4 h-4" />
+                        </Button>
+                      </li>
+                    </ul>
+                  </div>
+                );
+              })}
           </div>
+          {!isProcessing && (
+            <div className="flex justify-center gap-2 mt-4">
+              <Button
+                color="primary"
+                variant="solid"
+                onPress={handleCloseWindow}
+                className="flex-1">
+                完成发布
+              </Button>
+              <Button
+                color="danger"
+                variant="solid"
+                onPress={async () => {
+                  await handleCloseAllTabs();
+                  handleCloseWindow();
+                }}
+                className="flex-1">
+                完成并关闭所有标签页
+              </Button>
+            </div>
+          )}
         </div>
       </div>
     </HeroUIProvider>
