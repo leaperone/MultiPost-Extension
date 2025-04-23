@@ -24,14 +24,12 @@ export default function DynamicOkjike({ platformInfo, onExtraConfigChange }: Okj
   const [newTopic, setNewTopic] = useState('');
 
   useEffect(() => {
-    const config = platformInfo.extraConfig;
-    if (config) {
-      if (config.historyTopics.length > 0) {
-        setTopics(config.data.historyTopics);
-      }
-      if (config.data.selectedTopic) {
-        setSelectedTopic(config.data.selectedTopic);
-      }
+    const config = platformInfo.extraConfig as OkjikeConfig;
+    if (config?.historyTopics?.length > 0) {
+      setTopics(config.historyTopics);
+    }
+    if (config?.selectedTopic) {
+      setSelectedTopic(config.selectedTopic);
     }
   }, [platformInfo.extraConfig]);
 
