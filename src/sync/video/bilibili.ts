@@ -66,7 +66,7 @@ export async function VideoBilibili(data: SyncData) {
   }
 
   try {
-    const { content, video, title } = data.data as VideoData;
+    const { content, video, title, tags } = data.data as VideoData;
     // 处理视频上传
     if (video) {
       const response = await fetch(video.url);
@@ -120,24 +120,63 @@ export async function VideoBilibili(data: SyncData) {
 
     console.log('简介已输入:', contentToInsert);
 
-    const hotTagContainers = document.querySelectorAll('div[class="hot-tag-container"]');
-    const topThreeTags = Array.from(hotTagContainers).slice(0, 3);
+    // 处理标签
+    await new Promise((resolve) => setTimeout(resolve, 5000));
 
-    for (const tag of topThreeTags) {
-      const tagElement = tag as HTMLDivElement;
-      tagElement.click();
-      await new Promise((resolve) => setTimeout(resolve, 500)); // 添加短暂延迟，确保点击生效
+    // 清除已有标签
+    const existingTags = document.querySelectorAll('div.tag-pre-wrp > div.label-item-v2-container');
+    console.log('正在清除已有标签...');
+    for (let i = 0; i < 20 && existingTags.length > 0; i++) {
+      const tag = existingTags[0] as HTMLElement;
+      tag.click();
+      await new Promise((resolve) => setTimeout(resolve, 400));
     }
 
-    console.log('已自动选择前三个热门标签');
+    if (!tags || tags.length === 0) {
+      // 如果没有指定标签，选择热门标签
+      console.log('未指定标签，选择热门标签...');
+      const hotTags = document.querySelectorAll('.hot-tag-item');
+      if (hotTags) {
+        for (let i = 0; i < 3 && i < hotTags.length; i++) {
+          const tag = hotTags[i] as HTMLElement;
+          tag.click();
+          await new Promise((resolve) => setTimeout(resolve, 1000));
+        }
+      }
+    } else {
+      // 添加指定的标签
+      console.log('添加指定标签...');
+      const tagInput = document.querySelector('input[placeholder="按回车键Enter创建标签"]') as HTMLInputElement;
+      if (tagInput) {
+        for (const tag of tags) {
+          tagInput.value = tag;
+          const enterEvent = new KeyboardEvent('keydown', {
+            bubbles: true,
+            cancelable: true,
+            key: 'Enter',
+            code: 'Enter',
+            keyCode: 13,
+            which: 13,
+          });
+          tagInput.dispatchEvent(enterEvent);
+          await new Promise((resolve) => setTimeout(resolve, 1000));
+        }
+      }
+    }
 
-    // 如果需要保留换行符，可以使用 innerHTML
-    // editor.innerHTML = contentToInsert.replace(/\n/g, '<br>');
+    // 等待标签处理完成
+    await new Promise((resolve) => setTimeout(resolve, 5000));
 
-    // 如果需要自动发布，可以添加类似的逻辑
-    // if (data.isAutoPublish) {
-    //   // 自动发布逻辑
-    // }
+    // 如果需要自动发布
+    if (data.isAutoPublish) {
+      const submitButton = document.querySelector('span.submit-add') as HTMLElement;
+      if (submitButton) {
+        console.log('点击发布按钮');
+        submitButton.click();
+      } else {
+        console.log('未找到"发送"按钮');
+      }
+    }
   } catch (error) {
     console.error('BilibiliVideo 发布过程中出错:', error);
   }

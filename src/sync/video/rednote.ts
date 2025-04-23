@@ -1,7 +1,8 @@
 import type { SyncData, VideoData } from '../common';
 
 export async function VideoRednote(data: SyncData) {
-  const { content, video, title } = data.data as VideoData;
+  const { content, video, title, tags } = data.data as VideoData;
+
   // 辅助函数：等待元素出现
   function waitForElement(selector: string, timeout = 10000): Promise<Element> {
     return new Promise((resolve, reject) => {
@@ -58,6 +59,7 @@ export async function VideoRednote(data: SyncData) {
     if (dataTransfer.files.length > 0) {
       fileInput.files = dataTransfer.files;
       fileInput.dispatchEvent(new Event('change', { bubbles: true }));
+      fileInput.dispatchEvent(new Event('input', { bubbles: true }));
       await new Promise((resolve) => setTimeout(resolve, 2000)); // 等待文件处理
       console.log('文件上传操作完成');
     } else {
@@ -67,55 +69,86 @@ export async function VideoRednote(data: SyncData) {
 
   // 等待页面加载
   await waitForElement('span[class="title"]');
-  await new Promise((resolve) => setTimeout(resolve, 2000));
+  await new Promise((resolve) => setTimeout(resolve, 1000));
 
   // 上传视频
   await uploadVideo();
 
+  // 等待标题输入框出现
+  await waitForElement('input[type="text"]');
+  await new Promise((resolve) => setTimeout(resolve, 1000));
+
   // 填写标题
-  const titleInput = (await waitForElement('input[placeholder="填写标题会有更多赞哦～"]')) as HTMLInputElement;
+  const titleInput = document.querySelector('input[type="text"]') as HTMLInputElement;
   if (titleInput) {
-    titleInput.value = title || content.slice(0, 20);
+    const finalTitle = title?.slice(0, 20) || content?.slice(0, 20) || '';
+    titleInput.value = finalTitle;
     titleInput.dispatchEvent(new Event('input', { bubbles: true }));
   }
 
-  // 填写内容
-  const editor = document.querySelector(
-    'div[data-placeholder="输入正文描述，真诚有价值的分享予人温暖"]',
-  ) as HTMLElement;
+  // 填写内容和标签
+  const editor = document.querySelector('div[contenteditable="true"]') as HTMLElement;
   if (!editor) {
-    throw new Error('未找到编辑器元素');
+    console.error('未找到编辑器元素');
+    return;
   }
+
+  // 填写正文内容
   editor.focus();
-  const pasteEvent = new ClipboardEvent('paste', {
+  const contentPasteEvent = new ClipboardEvent('paste', {
     bubbles: true,
     cancelable: true,
     clipboardData: new DataTransfer(),
   });
-  pasteEvent.clipboardData.setData('text/plain', `${content}` || '');
-  editor.dispatchEvent(pasteEvent);
+  contentPasteEvent.clipboardData.setData('text/plain', `${content}\n` || '');
+  editor.dispatchEvent(contentPasteEvent);
+  await new Promise((resolve) => setTimeout(resolve, 1000));
+  editor.blur();
 
-  // 等待内容更新
-  await new Promise((resolve) => setTimeout(resolve, 3000));
+  // 添加标签
+  if (tags && tags.length > 0) {
+    for (const tag of tags) {
+      editor.focus();
+      const tagPasteEvent = new ClipboardEvent('paste', {
+        bubbles: true,
+        cancelable: true,
+        clipboardData: new DataTransfer(),
+      });
+      tagPasteEvent.clipboardData.setData('text/plain', `#${tag}`);
+      editor.dispatchEvent(tagPasteEvent);
+      await new Promise((resolve) => setTimeout(resolve, 2000));
 
-  // 发布按钮
-  // if (data.isAutoPublish) {
-  //   const maxAttempts = 3;
-  //   for (let attempt = 0; attempt < maxAttempts; attempt++) {
-  //     try {
-  //       const publishButton = (await waitForElement('button[class="el-button publishBtn"]', 5000)) as HTMLButtonElement;
-  //       publishButton.click();
-  //       console.log('发布按钮已点击');
-  //       await new Promise((resolve) => setTimeout(resolve, 3000));
-  //       window.location.href = 'https://creator.xiaohongshu.com/new/note-manager';
-  //       break; // 成功点击后退出循环
-  //     } catch (error) {
-  //       console.warn(`第 ${attempt + 1} 次尝试查找发布按钮失败:`, error);
-  //       if (attempt === maxAttempts - 1) {
-  //         console.error('达到最大尝试次数，无法找到发布按钮');
-  //       }
-  //       await new Promise((resolve) => setTimeout(resolve, 2000)); // 等待2秒后重试
-  //     }
-  //   }
-  // }
+      // 模拟回车键按下以确认标签
+      const enterEvent = new KeyboardEvent('keydown', {
+        bubbles: true,
+        cancelable: true,
+        key: 'Enter',
+        code: 'Enter',
+        keyCode: 13,
+        which: 13,
+      });
+      editor.dispatchEvent(enterEvent);
+      await new Promise((resolve) => setTimeout(resolve, 2000));
+    }
+  }
+
+  // 处理发布按钮
+  const buttons = document.querySelectorAll('button');
+  const publishButton = Array.from(buttons).find((button) => button.textContent?.includes('发布'));
+
+  if (publishButton) {
+    // 等待按钮可用
+    while (publishButton.getAttribute('aria-disabled') === 'true') {
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+    }
+
+    // 如果需要自动发布
+    if (data.isAutoPublish) {
+      publishButton.dispatchEvent(new Event('click', { bubbles: true }));
+      await new Promise((resolve) => setTimeout(resolve, 10000));
+      window.location.href = 'https://creator.xiaohongshu.com/new/note-manager';
+    }
+  } else {
+    console.error('未找到"发布"按钮');
+  }
 }

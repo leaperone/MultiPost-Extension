@@ -1,7 +1,7 @@
 import type { SyncData, VideoData } from '../common';
 
 export async function VideoKuaishou(data: SyncData) {
-  const { content, video, title } = data.data as VideoData;
+  const { content, video, title, tags = [] } = data.data as VideoData;
 
   // 辅助函数：等待元素出现
   function waitForElement(selector: string, timeout = 10000): Promise<Element> {
@@ -61,6 +61,7 @@ export async function VideoKuaishou(data: SyncData) {
     if (dataTransfer.files.length > 0) {
       fileInput.files = dataTransfer.files;
       fileInput.dispatchEvent(new Event('change', { bubbles: true }));
+      fileInput.dispatchEvent(new Event('input', { bubbles: true }));
       await new Promise((resolve) => setTimeout(resolve, 2000)); // 等待文件处理
       console.log('文件上传操作完成');
     } else {
@@ -78,44 +79,37 @@ export async function VideoKuaishou(data: SyncData) {
   // 填写内容
   const contentEditor = (await waitForElement('div#work-description-edit[contenteditable="true"]')) as HTMLDivElement;
   if (contentEditor) {
-    contentEditor.innerText = `${title || ''}\n\n${content}`;
-    contentEditor.dispatchEvent(new Event('input', { bubbles: true }));
+    // 组合标题、内容和标签
+    const formattedContent = `${title || ''}\n${content}\n${tags.map((tag) => `#${tag}`).join(' ')}`;
+
+    // 使用 ClipboardEvent 来粘贴内容
+    contentEditor.focus();
+    const pasteEvent = new ClipboardEvent('paste', {
+      bubbles: true,
+      cancelable: true,
+      clipboardData: new DataTransfer(),
+    });
+    pasteEvent.clipboardData?.setData('text/plain', formattedContent);
+    contentEditor.dispatchEvent(pasteEvent);
+    await new Promise((resolve) => setTimeout(resolve, 1000));
+    contentEditor.blur();
   }
 
   // 等待内容更新
-  await new Promise((resolve) => setTimeout(resolve, 3000));
-
-  // // 自动选择前三个标签
-  // const recommendationTitle = await waitForElement('div._recommend-title_oei9t_269'); // 等待"话题推荐"标题出现
-  // const tagsContainer = recommendationTitle.nextElementSibling; // 获取下一个兄弟元素作为标签容器
-  // if (tagsContainer) {
-  //   const tags = Array.from(tagsContainer.querySelectorAll('span._tag_oei9t_283')).filter((tag) => tag.textContent); // 获取所有标签
-  //   if (tags.length > 0) {
-  //     for (let i = 0; i < Math.min(3, tags.length); i++) {
-  //       const tag = tags[i] as HTMLElement; // 类型断言为 HTMLElement
-  //       tag.click(); // 点击选择标签
-  //     }
-  //   }
-  // }
+  await new Promise((resolve) => setTimeout(resolve, 5000));
 
   // 发布按钮逻辑
   if (data.isAutoPublish) {
-    const maxAttempts = 3;
-    for (let attempt = 0; attempt < maxAttempts; attempt++) {
-      try {
-        const publishButton = (await waitForElement('div[contains(., "发布")]', 5000)) as HTMLElement;
-        publishButton.click();
-        console.log('发布按钮已点击');
-        await new Promise((resolve) => setTimeout(resolve, 3000));
-        window.location.href = 'https://cp.kuaishou.com/article/manage/video';
-        break; // 成功点击后退出循环
-      } catch (error) {
-        console.warn(`第 ${attempt + 1} 次尝试查找发布按钮失败:`, error);
-        if (attempt === maxAttempts - 1) {
-          console.error('达到最大尝试次数，无法找到发布按钮');
-        }
-        await new Promise((resolve) => setTimeout(resolve, 2000)); // 等待2秒后重试
-      }
+    const divElements = document.querySelectorAll('div');
+    const publishButton = Array.from(divElements).find((el) => el.textContent === '发布') as HTMLElement;
+
+    if (publishButton) {
+      console.log('找到发布按钮，准备点击');
+      publishButton.click();
+      await new Promise((resolve) => setTimeout(resolve, 3000));
+      window.location.href = 'https://cp.kuaishou.com/article/manage/video';
+    } else {
+      console.error('未找到"发布"按钮');
     }
   }
 }

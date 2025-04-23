@@ -55,6 +55,7 @@ export interface VideoData {
   title: string;
   content: string;
   video: FileData;
+  tags?: string[];
 }
 
 export interface PlatformInfo {

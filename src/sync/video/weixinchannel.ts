@@ -48,7 +48,7 @@ export async function VideoWeiXinChannel(data: SyncData) {
   }
 
   try {
-    const { content, video, title } = data.data as VideoData;
+    const { content, video, title, tags = [] } = data.data as VideoData;
 
     // 处理视频上传
     if (video) {
@@ -63,39 +63,101 @@ export async function VideoWeiXinChannel(data: SyncData) {
 
     await new Promise((resolve) => setTimeout(resolve, 5000));
 
-    // 处理内容输入
-    const editorElement = (await waitForElement('div.input-editor')) as HTMLDivElement;
-    if (editorElement) {
-      editorElement.focus();
+    // 处理标题输入
+    const titleInput = (await waitForElement(
+      'input[placeholder="概括视频主要内容，字数建议6-16个字符"]',
+    )) as HTMLInputElement;
+    titleInput.value = title;
+    titleInput.dispatchEvent(new Event('input', { bubbles: true }));
+
+    // 处理内容和标签输入
+    const descriptionInput = (await waitForElement('div[data-placeholder="添加描述"]')) as HTMLDivElement;
+
+    if (descriptionInput) {
+      // 输入主要内容
+      descriptionInput.focus();
       const pasteEvent = new ClipboardEvent('paste', {
         bubbles: true,
         cancelable: true,
         clipboardData: new DataTransfer(),
       });
       pasteEvent.clipboardData.setData('text/plain', content || '');
-      editorElement.dispatchEvent(pasteEvent);
-      editorElement.dispatchEvent(new Event('input', { bubbles: true }));
-      editorElement.dispatchEvent(new Event('change', { bubbles: true }));
-      console.log('编辑器内容已更新');
+      descriptionInput.dispatchEvent(pasteEvent);
+
+      await new Promise((resolve) => setTimeout(resolve, 500));
+
+      // 添加标签
+      for (const tag of tags) {
+        console.log('添加标签:', tag);
+        descriptionInput.focus();
+
+        const tagPasteEvent = new ClipboardEvent('paste', {
+          bubbles: true,
+          cancelable: true,
+          clipboardData: new DataTransfer(),
+        });
+        tagPasteEvent.clipboardData.setData('text/plain', ` #${tag}`);
+        descriptionInput.dispatchEvent(tagPasteEvent);
+
+        await new Promise((resolve) => setTimeout(resolve, 1000));
+
+        const enterEvent = new KeyboardEvent('keydown', {
+          bubbles: true,
+          cancelable: true,
+          key: 'Enter',
+          code: 'Enter',
+          keyCode: 13,
+          which: 13,
+        });
+        descriptionInput.dispatchEvent(enterEvent);
+
+        await new Promise((resolve) => setTimeout(resolve, 1000));
+      }
     }
 
-    const titleInput = (await waitForElement(
-      'input[placeholder="概括视频主要内容，字数建议6-16个字符"]',
-    )) as HTMLTextAreaElement;
-    titleInput.value = title;
-    titleInput.dispatchEvent(new Event('input', { bubbles: true }));
+    // 处理原创声明
+    const originalInput = (await waitForElement(
+      'input[type="checkbox"][class="ant-checkbox-input"]',
+    )) as HTMLInputElement;
+
+    if (originalInput) {
+      originalInput.click();
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+
+      const declareInput = document.querySelector(
+        'div.declare-body-wrapper input[type="checkbox"][class="ant-checkbox-input"]',
+      ) as HTMLInputElement;
+
+      if (declareInput) {
+        declareInput.click();
+        await new Promise((resolve) => setTimeout(resolve, 1000));
+
+        const buttons = document.querySelectorAll('button[type="button"]');
+        for (const button of Array.from(buttons)) {
+          if (button.textContent === '声明原创') {
+            console.log('点击声明原创按钮');
+            (button as HTMLElement).click();
+            await new Promise((resolve) => setTimeout(resolve, 1000));
+            break;
+          }
+        }
+      }
+    }
 
     // 等待内容填写完成
     await new Promise((resolve) => setTimeout(resolve, 5000));
 
     // 处理发布按钮
-    const publishButton = [...document.querySelectorAll('button')].find(
-      (b) => b.textContent.trim() === '发表',
-    ) as HTMLButtonElement;
+    const buttons = document.querySelectorAll('button');
+    const publishButton = Array.from(buttons).find((b) => b.textContent.trim() === '发表') as HTMLButtonElement;
 
-    if (publishButton && data.isAutoPublish) {
-      console.log('点击发布按钮');
-      publishButton.click();
+    if (publishButton) {
+      if (data.isAutoPublish) {
+        console.log('点击发布按钮');
+        publishButton.click();
+      }
+    } else {
+      console.error('未找到"发表"按钮');
     }
   } catch (error) {
     console.error('WeiXinVideo 发布过程中出错:', error);
