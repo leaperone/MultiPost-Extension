@@ -71,7 +71,7 @@ export async function VideoBaijiahao(data: SyncData) {
   }
 
   try {
-    const { content, video, title } = data.data as VideoData;
+    const { content, video, title, tags } = data.data as VideoData;
 
     if (!video) {
       console.error('没有视频文件');
@@ -91,18 +91,45 @@ export async function VideoBaijiahao(data: SyncData) {
     await waitForUploadCompletion();
 
     // 等待页面状态稳定
-    await new Promise((resolve) => setTimeout(resolve, 5000));
+    await new Promise((resolve) => setTimeout(resolve, 2000));
+
+    // 处理标题输入
+    const titleInput = document.querySelector('textarea[placeholder="请输入标题"]') as HTMLTextAreaElement;
+    if (titleInput) {
+      titleInput.value = title || '';
+      titleInput.dispatchEvent(new Event('input', { bubbles: true }));
+      console.log('标题已输入:', title);
+    }
 
     // 处理描述输入
-    const descriptionInput = (await waitForElement(
-      'textarea[role="com-textarea"][placeholder="让别人更懂你"]',
-    )) as HTMLTextAreaElement;
+    const descriptionInput = document.querySelector('textarea[placeholder="让别人更懂你"]') as HTMLTextAreaElement;
 
     if (descriptionInput) {
       const description = (content || title || '').slice(0, 100);
       descriptionInput.value = description;
       descriptionInput.dispatchEvent(new Event('input', { bubbles: true }));
       console.log('描述已输入:', description);
+    }
+
+    // 处理标签输入
+    const tagInput = document.querySelector('input[placeholder="获得精准推荐"]') as HTMLInputElement;
+    if (tagInput && tags) {
+      for (const tag of tags) {
+        tagInput.value = tag;
+        console.log('正在输入标签:', tag);
+
+        // 触发回车事件来添加标签
+        const enterEvent = new KeyboardEvent('keydown', {
+          bubbles: true,
+          cancelable: true,
+          key: 'Enter',
+          code: 'Enter',
+          keyCode: 13,
+          which: 13,
+        });
+        tagInput.dispatchEvent(enterEvent);
+        await new Promise((resolve) => setTimeout(resolve, 1000));
+      }
     }
 
     // 等待页面响应

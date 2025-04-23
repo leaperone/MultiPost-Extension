@@ -31,6 +31,7 @@ export async function VideoTiktok(data: SyncData) {
 
   async function uploadVideo(file: File): Promise<void> {
     const fileInput = (await waitForElement('input[type="file"][accept="video/*"]')) as HTMLInputElement;
+    await new Promise((resolve) => setTimeout(resolve, 1000)); // 等待1秒确保元素完全加载
 
     const dataTransfer = new DataTransfer();
     dataTransfer.items.add(file);
@@ -46,13 +47,15 @@ export async function VideoTiktok(data: SyncData) {
   }
 
   try {
-    const { content, video, title } = data.data as VideoData;
+    const { content, video, title, tags = [] } = data.data as VideoData;
 
     // 处理视频上传
     if (video) {
       const response = await fetch(video.url);
-      const blob = await response.blob();
-      const videoFile = new File([blob], video.name, { type: video.type });
+      const arrayBuffer = await response.arrayBuffer();
+      const extension = video.name.split('.').pop();
+      const fileName = `${title || 'video'}.${extension}`;
+      const videoFile = new File([arrayBuffer], fileName, { type: video.type });
       console.log(`视频文件: ${videoFile.name} ${videoFile.type} ${videoFile.size}`);
 
       await uploadVideo(videoFile);
@@ -64,26 +67,39 @@ export async function VideoTiktok(data: SyncData) {
     // 处理内容输入
     const editor = (await waitForElement('div.public-DraftEditor-content[contenteditable="true"]')) as HTMLDivElement;
     if (editor) {
-      const contentDiv = editor.querySelector('div[data-contents="true"]');
-      if (contentDiv) {
-        contentDiv.innerHTML = `${title || ''}
-${content}`;
-      }
+      // 使用 ClipboardEvent 来模拟粘贴操作
+      const fullContent = `${title || ''}
+${content}
+${tags.map((tag) => `#${tag}`).join(' ')}`;
+
+      const pasteEvent = new ClipboardEvent('paste', {
+        bubbles: true,
+        cancelable: true,
+        clipboardData: new DataTransfer(),
+      });
+
+      (pasteEvent.clipboardData as DataTransfer).setData('text/plain', fullContent);
+      editor.dispatchEvent(pasteEvent);
+
+      await new Promise((resolve) => setTimeout(resolve, 1000));
     }
 
     // 等待内容填写完成
     await new Promise((resolve) => setTimeout(resolve, 5000));
 
     // 处理发布按钮
-    const publishButton = document.querySelector(
-      'button.TUXButton.TUXButton--default.TUXButton--large.TUXButton--primary',
-    ) as HTMLButtonElement;
-
-    if (publishButton && data.isAutoPublish) {
-      console.log('点击发布按钮');
-      publishButton.click();
+    const buttons = document.querySelectorAll('button');
+    for (const button of Array.from(buttons)) {
+      if (['發佈', '发布', 'Post'].includes(button.textContent?.trim() || '')) {
+        if (data.isAutoPublish) {
+          console.log('点击发布按钮');
+          button.click();
+        }
+        break;
+      }
     }
   } catch (error) {
     console.error('TiktokVideo 发布过程中出错:', error);
+    throw error; // 向上传递错误
   }
 }
