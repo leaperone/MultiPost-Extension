@@ -148,6 +148,23 @@ export async function createTabsForPlatforms(data: SyncData) {
         if (tab) {
           await injectScriptsToTabs([{ tab, platformInfo: info }], data);
           await chrome.tabs.update(tab.id!, { active: true });
+          tabs.push({
+            tab,
+            platformInfo: info,
+          });
+
+          // 如果是第一个标签页，创建一个新组
+          if (!groupId) {
+            groupId = await chrome.tabs.group({ tabIds: [tab.id!] });
+            await chrome.tabGroups.update(groupId, {
+              color: 'blue',
+              title: `MultiPost-${new Date().toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' })}`,
+            });
+          } else {
+            // 将新标签页添加到现有组中
+            await chrome.tabs.group({ tabIds: [tab.id!], groupId });
+          }
+          // 等待3秒再继续
           await new Promise<void>((resolve) => {
             chrome.tabs.onUpdated.addListener(function listener(tabId, info) {
               if (tabId === tab!.id && info.status === 'complete') {
@@ -156,28 +173,9 @@ export async function createTabsForPlatforms(data: SyncData) {
               }
             });
           });
+          await new Promise((resolve) => setTimeout(resolve, 3000));
         }
       }
-    }
-    if (tab) {
-      tabs.push({
-        tab,
-        platformInfo: info,
-      });
-
-      // 如果是第一个标签页，创建一个新组
-      if (!groupId) {
-        groupId = await chrome.tabs.group({ tabIds: [tab.id!] });
-        await chrome.tabGroups.update(groupId, {
-          color: 'blue',
-          title: `MultiPost-${new Date().toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' })}`,
-        });
-      } else {
-        // 将新标签页添加到现有组中
-        await chrome.tabs.group({ tabIds: [tab.id!], groupId });
-      }
-      // 等待3秒再继续
-      await new Promise((resolve) => setTimeout(resolve, 3000));
     }
   }
 
