@@ -14,8 +14,17 @@ export async function savePlatformExtraConfig<T>(platform: string, data: T) {
       };
     }
 
-    const platformExtraConfig = await multipostDb.platformExtraConfig.create({
-      data: {
+    const platformExtraConfig = await multipostDb.platformExtraConfig.upsert({
+      where: {
+        userId_platform: {
+          userId: session.user.id,
+          platform,
+        },
+      },
+      update: {
+        data: data as InputJsonValue,
+      },
+      create: {
         userId: session.user.id,
         platform,
         data: data as InputJsonValue,
