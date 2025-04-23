@@ -115,46 +115,71 @@ export async function getPlatformInfos(type?: 'DYNAMIC' | 'VIDEO' | 'ARTICLE' | 
 // Inject || 注入 || START
 export async function createTabsForPlatforms(data: SyncData) {
   const tabs: { tab: chrome.tabs.Tab; platformInfo: SyncDataPlatform }[] = [];
+  let groupId: number | undefined;
+
   for (const info of data.platforms) {
+    let tab: chrome.tabs.Tab | null = null;
     if (info) {
       const extraConfig = info.extraConfig as { customInjectUrls?: string[] };
       if (extraConfig?.customInjectUrls && extraConfig.customInjectUrls.length > 0) {
         for (const url of extraConfig.customInjectUrls) {
-          const tab = await chrome.tabs.create({ url });
+          tab = await chrome.tabs.create({ url });
           info.injectUrl = url;
-          tabs.push({
-            tab,
-            platformInfo: info,
+          // 等待标签页加载完成
+          await new Promise<void>((resolve) => {
+            chrome.tabs.onUpdated.addListener(function listener(tabId, info) {
+              if (tabId === tab!.id && info.status === 'complete') {
+                chrome.tabs.onUpdated.removeListener(listener);
+                resolve();
+              }
+            });
           });
         }
       } else {
         if (info.injectUrl) {
-          const tab = await chrome.tabs.create({ url: info.injectUrl });
-          tabs.push({
-            tab,
-            platformInfo: info,
-          });
+          tab = await chrome.tabs.create({ url: info.injectUrl });
         } else {
           const platformInfo = infoMap[info.name];
           if (platformInfo) {
-            const tab = await chrome.tabs.create({ url: platformInfo.homeUrl });
-            tabs.push({
-              tab,
-              platformInfo: info,
-            });
+            tab = await chrome.tabs.create({ url: platformInfo.homeUrl });
           }
+        }
+        // 等待标签页加载完成
+        if (tab) {
+          await injectScriptsToTabs([{ tab, platformInfo: info }], data);
+          await chrome.tabs.update(tab.id!, { active: true });
+          await new Promise<void>((resolve) => {
+            chrome.tabs.onUpdated.addListener(function listener(tabId, info) {
+              if (tabId === tab!.id && info.status === 'complete') {
+                chrome.tabs.onUpdated.removeListener(listener);
+                resolve();
+              }
+            });
+          });
         }
       }
     }
+    if (tab) {
+      tabs.push({
+        tab,
+        platformInfo: info,
+      });
+
+      // 如果是第一个标签页，创建一个新组
+      if (!groupId) {
+        groupId = await chrome.tabs.group({ tabIds: [tab.id!] });
+        await chrome.tabGroups.update(groupId, {
+          color: 'blue',
+          title: `MultiPost-${new Date().toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' })}`,
+        });
+      } else {
+        // 将新标签页添加到现有组中
+        await chrome.tabs.group({ tabIds: [tab.id!], groupId });
+      }
+      // 等待3秒再继续
+      await new Promise((resolve) => setTimeout(resolve, 3000));
+    }
   }
-
-  const groupId = await chrome.tabs.group({ tabIds: tabs.map((t) => t.tab.id!) });
-  const group = await chrome.tabGroups.get(groupId);
-
-  await chrome.tabGroups.update(group.id, {
-    color: 'blue',
-    title: `MultiPost-${new Date().toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' })}`,
-  });
 
   return tabs;
 }

@@ -11,7 +11,7 @@ import QuantumEntanglementKeepAlive from '../utils/keep-alive';
 import {
   createTabsForPlatforms,
   getPlatformInfos,
-  injectScriptsToTabs,
+  // injectScriptsToTabs,
   type SyncData,
   type SyncDataPlatform,
 } from '~sync/common';
@@ -111,7 +111,7 @@ const defaultMessageHandler = (request, sender, sendResponse) => {
       (async () => {
         try {
           const tabs = await createTabsForPlatforms(data);
-          await injectScriptsToTabs(tabs, data);
+          // await injectScriptsToTabs(tabs, data);
 
           addTabsManagerMessages({
             syncData: data,
@@ -121,12 +121,12 @@ const defaultMessageHandler = (request, sender, sendResponse) => {
             })),
           });
 
-          for (const t of tabs) {
-            if (t.tab.id) {
-              await chrome.tabs.update(t.tab.id, { active: true });
-              await new Promise((resolve) => setTimeout(resolve, 2000));
-            }
-          }
+          // for (const t of tabs) {
+          //   if (t.tab.id) {
+          //     await chrome.tabs.update(t.tab.id, { active: true });
+          //     await new Promise((resolve) => setTimeout(resolve, 2000));
+          //   }
+          // }
           if (currentPublishPopup) {
             await chrome.windows.update(currentPublishPopup.id, { focused: true });
           }
