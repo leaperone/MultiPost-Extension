@@ -33,7 +33,7 @@ export function PasskeyAuthButton({ redirect }: PasskeyAuthButtonProps) {
   return (
     <Button
       onPress={handlePasskeyAuth}
-      className="w-full bg-foreground/10 dark:bg-foreground/20"
+      className="w-full"
       startContent={
         <Icon
           icon="lucide:key"

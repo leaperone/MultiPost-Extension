@@ -48,13 +48,48 @@ const SigninPage = async (props: { searchParams: Promise<{ redirect?: string; er
       )}
 
       <form
+        action={async (formData: FormData) => {
+          'use server';
+          await signIn('mailgun', {
+            email: formData.get('email'),
+            redirectTo,
+          });
+        }}
+        className="w-full max-w-md">
+        <div className="flex flex-col gap-2">
+          <Input
+            type="email"
+            name="email"
+            placeholder={t('signin.email_placeholder')}
+            required
+            className="bg-transparent"
+          />
+          <Button
+            type="submit"
+            className="w-full">
+            {t('signin.email')}
+          </Button>
+        </div>
+      </form>
+      <Spacer y={2} />
+      <div className="relative w-full max-w-md">
+        <div className="absolute inset-0 flex items-center">
+          <span className="w-full border-t border-gray-200 dark:border-gray-800" />
+        </div>
+        <div className="relative flex justify-center text-xs uppercase">
+          <span className="bg-transparent px-4 text-muted-foreground/60">{t('signin.or')}</span>
+        </div>
+      </div>
+      <Spacer y={2} />
+      <form
         action={async () => {
           'use server';
           await signIn('google', { redirectTo });
-        }}>
+        }}
+        className="w-full max-w-md">
         <Button
           type="submit"
-          className="w-full bg-foreground/10 dark:bg-foreground/20"
+          className="w-full"
           startContent={
             <Icon
               icon="logos:google-icon"
@@ -69,10 +104,11 @@ const SigninPage = async (props: { searchParams: Promise<{ redirect?: string; er
         action={async () => {
           'use server';
           await signIn('github', { redirectTo });
-        }}>
+        }}
+        className="w-full max-w-md">
         <Button
           type="submit"
-          className="w-full bg-foreground/10 dark:bg-foreground/20"
+          className="w-full"
           startContent={
             <Icon
               icon="logos:github-icon"
@@ -83,7 +119,9 @@ const SigninPage = async (props: { searchParams: Promise<{ redirect?: string; er
         </Button>
       </form>
       <Spacer y={2} />
-      <PasskeyAuthButton redirect={redirectTo} />
+      <div className="w-full max-w-md">
+        <PasskeyAuthButton redirect={redirectTo} />
+      </div>
       {process.env.NODE_ENV === 'development' && (
         <>
           <Spacer y={2} />
