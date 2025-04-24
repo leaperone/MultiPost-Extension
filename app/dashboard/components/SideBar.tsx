@@ -5,7 +5,6 @@ import {
   GridIcon,
   Home,
   LayoutDashboardIcon,
-  PuzzleIcon,
   ScanEyeIcon,
   SendIcon,
   Settings,
@@ -76,11 +75,6 @@ const getApplicationItems = (t: TranslationFunction): MenuItem[] => [
 ];
 
 const getSidebarFooterItems = (t: TranslationFunction): MenuItem[] => [
-  {
-    title: t('sidebar.menu.extension'),
-    url: '/extension',
-    icon: PuzzleIcon,
-  },
   {
     title: t('sidebar.menu.docs'),
     url: 'https://docs.multipost.app',

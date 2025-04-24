@@ -4,6 +4,7 @@ import { Tabs, Tab } from '@heroui/react';
 import { useTranslation } from '@/i18n/client';
 import { GlobeIcon, SearchIcon } from 'lucide-react';
 import { usePathname } from 'next/navigation';
+import { ActivityAlert } from '../components/ActivityAlert';
 
 export default function ScraperLayout({ children }: { children: React.ReactNode }) {
   const { t } = useTranslation('scraper');
@@ -46,6 +47,7 @@ export default function ScraperLayout({ children }: { children: React.ReactNode 
 
       {/* Main Content */}
       <div className="w-full overflow-auto">{children}</div>
+      <ActivityAlert />
     </div>
   );
 }

@@ -4,7 +4,8 @@ import { Icon } from '@iconify/react';
 
 import { auth } from '@/auth';
 import { createTranslation } from '@/i18n/server';
-import { SendIcon, FileTextIcon, ChartSplineIcon, ScanEyeIcon } from 'lucide-react';
+import { SendIcon, FileTextIcon, ChartSplineIcon, ScanEyeIcon, SettingsIcon } from 'lucide-react';
+import { ActivityAlert } from './components/ActivityAlert';
 
 interface DashboardCardProps {
   href: string;
@@ -21,10 +22,10 @@ function DashboardCard({ href, title, description, icon, external }: DashboardCa
       href={href}
       target={external ? '_blank' : undefined}
       isPressable
-      className="group transition-all hover:scale-[1.02]">
-      <CardBody className="flex items-start gap-4 p-6">
-        <div className="rounded-lg bg-primary-50 p-2 dark:bg-primary-900/20">{icon}</div>
-        <div className="space-y-1.5">
+      className="group border shadow-none transition-all hover:scale-[1.01]">
+      <CardBody className="flex flex-row items-start gap-4 p-6">
+        <div className="rounded-lg bg-primary-50/80 p-2 dark:bg-primary-900/10">{icon}</div>
+        <div className="space-y-1">
           <h3 className="text-lg font-semibold text-foreground/90">{title}</h3>
           <p className="text-sm text-foreground/60">{description}</p>
         </div>
@@ -73,7 +74,14 @@ export default async function DashboardPage() {
         <div className="col-span-full space-y-4 md:col-span-3">
           <div className="flex items-center justify-between">
             <h2 className="text-2xl font-bold">{t('welcome.title', { name: user?.name || 'Dear' })}</h2>
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-4">
+              <Button
+                as={Link}
+                href="/dashboard/settings"
+                isIconOnly
+                variant="flat">
+                <SettingsIcon />
+              </Button>
               <Button
                 as={Link}
                 href="https://chromewebstore.google.com/detail/multipost/dhohkaclnjgcikfoaacfgijgjgceofih"
@@ -104,6 +112,9 @@ export default async function DashboardPage() {
               </Button>
             </div>
           </div>
+
+          <ActivityAlert />
+
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {cards.map((card, index) => (
               <DashboardCard

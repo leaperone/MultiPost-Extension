@@ -4,23 +4,23 @@
     "chrome_store": "Chrome Store",
     "edge_store": "Edge Store",
     "publish": {
-      "title": "Publish",
-      "description": "One-click publish to WeChat, Zhihu, JueJin and more"
+      "title": "Publish Content",
+      "description": "Publish to multiple platforms with one click"
     },
     "markdown": {
       "title": "Markdown Editor",
-      "description": "Real-time preview, image upload, math formulas and more"
+      "description": "Edit Markdown documents online"
     },
     "analytics": {
       "title": "Analytics",
-      "description": "Analyze anything with your data"
+      "description": "View your publishing data and statistics"
     },
     "card": {
       "hover_tip": "Click for details"
     },
     "scraper": {
       "title": "Content Scraper",
-      "description": "Scrape content from websites and convert formats"
+      "description": "Import content from other platforms"
     }
   },
   "sidebar": {
@@ -38,5 +38,9 @@
       "recharge": "Recharge"
     },
     "collapse": "Collapse Sidebar"
+  },
+  "activity": {
+    "title": "Activity Notice",
+    "description": "Check out latest balance bonus event, up to $10 free credits!"
   }
 }

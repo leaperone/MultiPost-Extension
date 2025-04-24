@@ -5,22 +5,22 @@
     "edge_store": "Edge 商店",
     "publish": {
       "title": "发布内容",
-      "description": "一键发布到微信公众号、知乎、掘金等平台"
+      "description": "一键发布到多个平台"
     },
     "markdown": {
       "title": "Markdown 编辑器",
-      "description": "支持实时预览、图片上传、数学公式等"
+      "description": "在线编辑 Markdown 文档"
     },
     "analytics": {
-      "title": "分析",
-      "description": "使用你的数据分析任何事情"
+      "title": "数据分析",
+      "description": "查看您的发布数据和统计"
     },
     "card": {
       "hover_tip": "点击查看详情"
     },
     "scraper": {
       "title": "内容抓取",
-      "description": "从网页抓取内容并自动转换格式"
+      "description": "从其他平台导入内容"
     }
   },
   "sidebar": {
@@ -38,5 +38,9 @@
       "recharge": "充值"
     },
     "collapse": "收起侧边栏"
+  },
+  "activity": {
+    "title": "活动通知",
+    "description": "查看最新的活动，领取高达 $10 的免费余额！"
   }
 }

@@ -6,6 +6,7 @@ import { usePathname } from 'next/navigation';
 import ForceInstallExtension from '@/components/ForceInstallExtension';
 import { useEffect } from 'react';
 import { funcGetPermission } from '@/lib/extension';
+import { ActivityAlert } from '../components/ActivityAlert';
 
 export default function PublishLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
@@ -39,7 +40,7 @@ export default function PublishLayout({ children }: { children: React.ReactNode 
           key="/dashboard/publish/podcast"
           href="/dashboard/publish/podcast"
           title={<PodcastIcon />}
-        />  
+        />
         <Tab
           key="https://md.multipost.app"
           href="https://md.multipost.app"
@@ -53,6 +54,7 @@ export default function PublishLayout({ children }: { children: React.ReactNode 
       </Tabs>
 
       <div className="mx-auto w-full">{children}</div>
+      <ActivityAlert />
     </div>
   );
 }
