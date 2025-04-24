@@ -11,26 +11,31 @@ export enum RechargeStatus {
   SUCCESS = 'success',
 }
 
-/**
- * 1 US dollar to CNY exchange rate
- */
 export const dollarToYuan = 7.3;
 
 // 定价
-export const CREDIT_PER_TOEKN = {
-  WEB_READER_API: new Decimal(0.0000002),
-  WEB_SEARCH_API: new Decimal(0.0000002),
+export const CREDIT_PER_REQUEST_SOCIAL_MEDIA = {
+  X: new Decimal(0.001 * 10),
 } as const;
 
-export const CREDIT_PER_REQUEST_SOCIAL_MEDIA = {
-  X: new Decimal(0.01),
+export const PRICING = {
+  WEB_READER_API: new Decimal(0.00000002 * 10), // per token
+  WEB_SEARCH_API: new Decimal(0.00000002 * 10), // per token
+  LLM: {
+    DEEPSEEK_CHAT: {
+      INPUT: new Decimal(0.027 * 10).div(new Decimal(10 ** 6)), // per token
+      OUTPUT: new Decimal(0.11 * 10).div(new Decimal(10 ** 6)), // per token
+    },
+  },
 } as const;
 
 // 使用类型
 export const USAGE_TYPE_MAP = {
-  WEB_READER_API: 'Web Reader API',
-  WEB_SEARCH_API: 'Web Search API',
-  SOCIAL_MEDIA_X: 'Social Media X',
+  WEB_READER_API: 'web_reader_api',
+  WEB_SEARCH_API: 'web_search_api',
+  SOCIAL_MEDIA_X: 'social_media_x',
+  LLM_DEEPSEEK_CHAT_INPUT: 'llm_deepseek_chat_input',
+  LLM_DEEPSEEK_CHAT_OUTPUT: 'llm_deepseek_chat_output',
 } as const;
 
 export type UsageType = keyof typeof USAGE_TYPE_MAP;
@@ -55,6 +60,28 @@ export interface DeductCreditResult {
   success: boolean;
   remainingCredits?: CreditInfo;
   error?: string;
+  usage?: {
+    credits: number;
+  };
+}
+
+export interface BatchDeductCreditParams {
+  userId: string;
+  records: Array<{
+    type: UsageType;
+    amount: Decimal;
+  }>;
+}
+
+export interface BatchDeductCreditResult {
+  success: boolean;
+  remainingCredits?: CreditInfo;
+  error?: string;
+  failedRecords?: Array<{
+    type: UsageType;
+    amount: Decimal;
+    error: string;
+  }>;
   usage?: {
     credits: number;
   };

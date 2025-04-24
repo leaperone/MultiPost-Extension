@@ -1,6 +1,6 @@
 import { authKey } from '@/actions/authKey';
 import { deductCredit, preCheckCredit } from '@/actions/credit';
-import { CREDIT_PER_TOEKN } from '@/actions/credit/types';
+import { PRICING } from '@/actions/credit/types';
 import { NextRequest } from 'next/server';
 import { z } from 'zod';
 import { unauthenticatedResponse, successResponse, errorResponse } from '@/lib/response';
@@ -148,7 +148,7 @@ export async function POST(req: NextRequest) {
       return acc + (item.usage?.tokens || 0);
     }, 0);
 
-    const credit = CREDIT_PER_TOEKN.WEB_SEARCH_API.mul(totalTokens);
+    const credit = PRICING.WEB_SEARCH_API.mul(totalTokens);
 
     const result = await deductCredit({
       userId,

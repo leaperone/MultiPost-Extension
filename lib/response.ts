@@ -1,8 +1,7 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { NextResponse } from 'next/server';
 import { z } from 'zod';
 
-export function successResponse(data: any, meta?: { credits: number }) {
+export function successResponse(data: unknown, meta?: { credits: number }) {
   return NextResponse.json({
     success: true,
     data,

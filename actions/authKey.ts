@@ -3,6 +3,25 @@
 import { auth } from '@/auth';
 import { multipostDb } from '@/lib/db';
 
+/**
+ * 验证用户身份
+ *
+ * 支持两种验证方式：
+ * 1. 通过 session 验证（适用于网页端）
+ * 2. 通过 API Key 验证（适用于 API 调用）
+ *
+ * @param request - 请求对象
+ * @returns 验证结果，包含用户 ID 和邮箱
+ *
+ * 返回格式：
+ * {
+ *   success: boolean;    // 是否验证成功
+ *   userId?: string;     // 用户 ID
+ *   email?: string;      // 用户邮箱
+ *   error?: string;      // 错误信息（验证失败时）
+ * }
+ */
+
 export async function authKey(request: Request) {
   const session = await auth();
   if (session?.user) {

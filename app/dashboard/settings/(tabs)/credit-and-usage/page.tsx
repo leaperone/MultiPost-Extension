@@ -1,4 +1,4 @@
-import { Card, CardBody, CardHeader } from '@heroui/react';
+import { Card, CardBody, Spacer } from '@heroui/react';
 import { auth } from '@/auth';
 import { getCredit } from '@/actions/credit';
 import RechargeModal from './components/RechargeModal';
@@ -16,9 +16,6 @@ export default async function RechargePage() {
     <div className="container mx-auto max-w-6xl gap-4 p-4">
       {/* 当前余额 */}
       <Card>
-        <CardHeader>
-          <h3 className="text-lg font-medium">当前余额</h3>
-        </CardHeader>
         <CardBody>
           <div className="flex items-center justify-between">
             <div className="space-y-1">
@@ -45,15 +42,10 @@ export default async function RechargePage() {
         </CardBody>
       </Card>
 
+      <Spacer y={4} />
+
       {/* 使用记录 */}
-      <Card className="mt-4">
-        <CardHeader>
-          <h3 className="text-lg font-medium">使用记录</h3>
-        </CardHeader>
-        <CardBody>
-          <CreditUsageTable />
-        </CardBody>
-      </Card>
+      <CreditUsageTable />
     </div>
   );
 }

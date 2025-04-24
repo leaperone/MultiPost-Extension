@@ -1,46 +1,9 @@
 import { authKey } from '@/actions/authKey';
 import { deductCredit, preCheckCredit } from '@/actions/credit';
-import { CREDIT_PER_TOEKN } from '@/actions/credit/types';
+import { PRICING } from '@/actions/credit/types';
 import { NextRequest } from 'next/server';
-import { z } from 'zod';
 import { unauthenticatedResponse, successResponse, errorResponse } from '@/lib/response';
-
-const JINA_API_KEY = process.env.JINA_API_KEY;
-const JINA_API_URL = 'https://r.jina.ai/';
-
-// 请求体验证 schema
-const requestSchema = z.object({
-  url: z.string().url(),
-  viewport: z
-    .object({
-      width: z.number(),
-      height: z.number(),
-    })
-    .optional(),
-  injectPageScript: z.string().optional(),
-  targetSelector: z.union([z.string(), z.array(z.string())]).optional(),
-  removeSelector: z.union([z.string(), z.array(z.string())]).optional(),
-  timeout: z.number().optional(), // 单位：秒
-  waitForSelector: z.union([z.string(), z.array(z.string())]).optional(),
-  withLinks: z.boolean().optional().default(true),
-  withImages: z.boolean().optional().default(true),
-  withGeneratedAlt: z.boolean().optional().default(true),
-  withIframe: z.boolean().optional(),
-  returnFormat: z.enum(['markdown', 'html', 'text', 'screenshot', 'pageshot']).default('markdown'),
-  noCache: z.boolean().default(true),
-  cookies: z
-    .union([
-      z.string(),
-      z.array(
-        z.object({
-          name: z.string(),
-          value: z.string(),
-          domain: z.string().optional(),
-        }),
-      ),
-    ])
-    .optional(),
-});
+import { fetchJinaReader, requestSchema } from './lib';
 
 export async function POST(req: NextRequest) {
   try {
@@ -50,103 +13,21 @@ export async function POST(req: NextRequest) {
       return unauthenticatedResponse();
     }
 
-    if (!(await preCheckCredit(userId, Number(0.1)))) {
+    // 检查用户余额
+    if (!(await preCheckCredit(userId))) {
       throw new Error('Precheck failed, please top up over 0.1 credits');
     }
 
     const body = await req.json();
     const validatedData = requestSchema.parse(body);
 
-    // 构建请求头
-    const headers: HeadersInit = {
-      Authorization: `Bearer ${JINA_API_KEY}`,
-      'Content-Type': 'application/json',
-      Accept: 'application/json',
-      'X-With-Links-Summary': 'true',
-      'X-With-Images-Summary': 'true',
-      'X-With-Generated-Alt': 'true',
-      'X-No-Cache': 'true',
-    };
+    // 调用封装的函数获取 Jina Reader 数据
+    const responseData = await fetchJinaReader(validatedData);
+    const data = responseData.data; // 获取 Jina Reader 数据
 
-    // 添加可选请求头
-    if (validatedData.targetSelector) {
-      headers['X-Target-Selector'] = Array.isArray(validatedData.targetSelector)
-        ? validatedData.targetSelector.join(',')
-        : validatedData.targetSelector;
-    }
-    if (validatedData.removeSelector) {
-      headers['X-Remove-Selector'] = Array.isArray(validatedData.removeSelector)
-        ? validatedData.removeSelector.join(',')
-        : validatedData.removeSelector;
-    }
-    if (validatedData.timeout) {
-      headers['X-Timeout'] = validatedData.timeout.toString();
-    }
-    if (validatedData.waitForSelector) {
-      headers['X-Wait-For-Selector'] = Array.isArray(validatedData.waitForSelector)
-        ? validatedData.waitForSelector.join(',')
-        : validatedData.waitForSelector;
-    }
-    if (validatedData.cookies) {
-      if (typeof validatedData.cookies === 'string') {
-        headers['X-Set-Cookie'] = validatedData.cookies;
-      } else {
-        headers['X-Set-Cookie'] = validatedData.cookies
-          .map((cookie) => {
-            const cookieStr = `${cookie.name}=${cookie.value}`;
-            return cookie.domain ? `${cookieStr}; domain=${cookie.domain}` : cookieStr;
-          })
-          .join(', ');
-      }
-    }
-    if (validatedData.withIframe) {
-      headers['X-With-Iframe'] = 'true';
-    }
-    if (validatedData.returnFormat) {
-      headers['X-Return-Format'] = validatedData.returnFormat;
-    }
+    // TODO: 把 Jina Reader 数据，给到 LLM 处理数据
 
-    // 如果明确设置为 false，则移除对应的请求头
-    if (validatedData.withLinks === false) {
-      delete headers['X-With-Links-Summary'];
-    }
-    if (validatedData.withImages === false) {
-      delete headers['X-With-Images-Summary'];
-    }
-    if (validatedData.withGeneratedAlt === false) {
-      delete headers['X-With-Generated-Alt'];
-    }
-    if (validatedData.noCache === false) {
-      delete headers['X-No-Cache'];
-    }
-
-    // 构建请求体
-    const requestBody = {
-      url: validatedData.url,
-      ...(validatedData.viewport && { viewport: validatedData.viewport }),
-      ...(validatedData.injectPageScript && { injectPageScript: validatedData.injectPageScript }),
-    };
-
-    // 调用 Jina Reader API
-    const response = await fetch(JINA_API_URL, {
-      method: 'POST',
-      headers,
-      body: JSON.stringify(requestBody),
-    });
-
-    if (!response.ok) {
-      throw new Error(`Internal server error`);
-    }
-
-    const responseData = await response.json();
-
-    if (responseData.code !== 200) {
-      throw new Error(responseData.readableMessage);
-    }
-
-    const data = responseData.data;
-
-    const credit = CREDIT_PER_TOEKN.WEB_READER_API.mul(data.usage.tokens);
+    const credit = PRICING.WEB_READER_API.mul(data.usage.tokens);
 
     const result = await deductCredit({
       userId,
