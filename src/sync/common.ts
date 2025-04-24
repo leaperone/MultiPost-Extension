@@ -141,7 +141,7 @@ export async function createTabsForPlatforms(data: SyncData) {
         } else {
           const platformInfo = infoMap[info.name];
           if (platformInfo) {
-            tab = await chrome.tabs.create({ url: platformInfo.homeUrl });
+            tab = await chrome.tabs.create({ url: platformInfo.injectUrl });
           }
         }
         // 等待标签页加载完成
