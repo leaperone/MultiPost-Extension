@@ -25,12 +25,14 @@ import {
   ArrowRightIcon,
   SendHorizontal,
   Eraser,
+  UploadIcon,
 } from 'lucide-react';
 import dynamic from 'next/dynamic';
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 import Viewer from 'react-viewer';
 import { useTranslation } from '@/i18n/client';
 import { Icon } from '@iconify/react';
+import { cn } from '@/lib/utils';
 
 import type { PlatformInfo } from '@/lib/extension';
 import type { FileData, SyncData } from '@/lib/extension';
@@ -43,6 +45,70 @@ import { getPlatformExtraConfigList } from '../action';
 const ReactPlayer = dynamic(() => import('react-player'), {
   ssr: false,
 });
+
+const DropZone = ({ onFilesDrop }: { onFilesDrop: (files: File[], type: 'image' | 'video') => void }) => {
+  const { t } = useTranslation('publish');
+  const [isDragging, setIsDragging] = useState(false);
+
+  const handleDragEnter = useCallback((event: React.DragEvent) => {
+    event.preventDefault();
+    event.stopPropagation();
+    setIsDragging(true);
+  }, []);
+
+  const handleDragLeave = useCallback((event: React.DragEvent) => {
+    event.preventDefault();
+    event.stopPropagation();
+    setIsDragging(false);
+  }, []);
+
+  const handleDragOver = useCallback((event: React.DragEvent) => {
+    event.preventDefault();
+    event.stopPropagation();
+  }, []);
+
+  const handleDrop = useCallback(
+    (event: React.DragEvent) => {
+      event.preventDefault();
+      event.stopPropagation();
+      setIsDragging(false);
+
+      const files = Array.from(event.dataTransfer.files);
+      const imageFiles = files.filter((file) => file.type.startsWith('image/'));
+      const videoFiles = files.filter((file) => file.type.startsWith('video/'));
+
+      if (imageFiles.length > 0) {
+        onFilesDrop(imageFiles, 'image');
+      }
+      if (videoFiles.length > 0) {
+        onFilesDrop(videoFiles, 'video');
+      }
+    },
+    [onFilesDrop],
+  );
+
+  return (
+    <div
+      className={cn(
+        'relative flex min-h-[120px] w-full cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed p-4 transition-all',
+        isDragging
+          ? 'border-primary bg-primary/10'
+          : 'border-gray-200 hover:bg-gray-50 dark:border-gray-800 dark:hover:bg-gray-800/50',
+      )}
+      onDragEnter={handleDragEnter}
+      onDragLeave={handleDragLeave}
+      onDragOver={handleDragOver}
+      onDrop={handleDrop}>
+      <div className="flex flex-col items-center justify-center gap-2 text-center">
+        <UploadIcon className={cn('size-8', isDragging ? 'text-primary' : 'text-gray-500')} />
+        <div className="flex flex-col gap-1">
+          <p className="text-sm font-medium">{isDragging ? t('dynamic.tips.drop') : t('dynamic.tips.dragAndDrop')}</p>
+          <p className="text-xs text-gray-500">{t('dynamic.tips.supportedFiles')}</p>
+        </div>
+      </div>
+    </div>
+  );
+};
 
 export default function DynamicPage() {
   const { t } = useTranslation('publish');
@@ -213,6 +279,50 @@ export default function DynamicPage() {
     );
   };
 
+  // 处理粘贴事件
+  const handlePaste = useCallback(async (event: ClipboardEvent) => {
+    const items = event.clipboardData?.items;
+    if (!items) return;
+
+    for (const item of items) {
+      if (item.type.startsWith('image/')) {
+        const file = item.getAsFile();
+        if (file) {
+          const fileData: FileData = {
+            name: `pasted-image-${Date.now()}.${item.type.split('/')[1]}`,
+            type: item.type,
+            size: file.size,
+            url: URL.createObjectURL(file),
+          };
+          setImages((prev) => [...prev, fileData]);
+        }
+      }
+    }
+  }, []);
+
+  const handleFilesDrop = useCallback((files: File[], type: 'image' | 'video') => {
+    const newFiles: FileData[] = files.map((file) => ({
+      name: file.name,
+      type: file.type,
+      size: file.size,
+      url: URL.createObjectURL(file),
+    }));
+
+    if (type === 'image') {
+      setImages((prev) => [...prev, ...newFiles]);
+    } else {
+      setVideos((prev) => [...prev, ...newFiles]);
+    }
+  }, []);
+
+  // 添加粘贴事件监听
+  useEffect(() => {
+    document.addEventListener('paste', handlePaste);
+    return () => {
+      document.removeEventListener('paste', handlePaste);
+    };
+  }, [handlePaste]);
+
   return (
     <>
       {currentStep === 1 ? (
@@ -245,47 +355,51 @@ export default function DynamicPage() {
             </CardBody>
 
             <CardFooter>
-              <div className="mb-4 flex w-full items-center justify-between">
-                <div className="flex">
-                  <input
-                    type="file"
-                    ref={imageInputRef}
-                    accept="image/*"
-                    onChange={(e) => handleFileChange(e, 'image')}
-                    className="hidden"
-                    multiple
-                  />
-                  <Button
-                    isIconOnly
-                    variant="light"
-                    onPress={() => handleIconClick('image')}>
-                    <ImagePlusIcon className="size-8 text-gray-600" />
-                  </Button>
-                  <input
-                    type="file"
-                    ref={videoInputRef}
-                    accept="video/*"
-                    onChange={(e) => handleFileChange(e, 'video')}
-                    className="hidden"
-                    multiple
-                  />
-                  <Button
-                    isIconOnly
-                    variant="light"
-                    onPress={() => handleIconClick('video')}>
-                    <VideoIcon className="size-8 text-gray-600" />
-                  </Button>
+              <div className="mb-4 flex w-full flex-col gap-4">
+                <div className="flex items-center justify-between">
+                  <div className="flex">
+                    <input
+                      type="file"
+                      ref={imageInputRef}
+                      accept="image/*"
+                      onChange={(e) => handleFileChange(e, 'image')}
+                      className="hidden"
+                      multiple
+                    />
+                    <Button
+                      isIconOnly
+                      variant="light"
+                      onPress={() => handleIconClick('image')}>
+                      <ImagePlusIcon className="size-8 text-gray-600" />
+                    </Button>
+                    <input
+                      type="file"
+                      ref={videoInputRef}
+                      accept="video/*"
+                      onChange={(e) => handleFileChange(e, 'video')}
+                      className="hidden"
+                      multiple
+                    />
+                    <Button
+                      isIconOnly
+                      variant="light"
+                      onPress={() => handleIconClick('video')}>
+                      <VideoIcon className="size-8 text-gray-600" />
+                    </Button>
+                  </div>
+                  {(title || content || images.length > 0 || videos.length > 0) && (
+                    <Button
+                      isIconOnly
+                      variant="light"
+                      color="danger"
+                      onPress={handleClearAll}
+                      title={t('dynamic.clearAll')}>
+                      <TrashIcon className="size-6" />
+                    </Button>
+                  )}
                 </div>
-                {(title || content || images.length > 0 || videos.length > 0) && (
-                  <Button
-                    isIconOnly
-                    variant="light"
-                    color="danger"
-                    onPress={handleClearAll}
-                    title={t('dynamic.clearAll')}>
-                    <TrashIcon className="size-6" />
-                  </Button>
-                )}
+
+                <DropZone onFilesDrop={handleFilesDrop} />
               </div>
             </CardFooter>
           </Card>

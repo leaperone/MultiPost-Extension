@@ -72,7 +72,7 @@ export default async function DashboardPage() {
     <div className="mx-auto h-full max-w-7xl space-y-6 overflow-y-auto p-4">
       <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
         <div className="col-span-full space-y-4 md:col-span-3">
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col items-center justify-between gap-2 md:flex-row">
             <h2 className="text-2xl font-bold">{t('welcome.title', { name: user?.name || 'Dear' })}</h2>
             <div className="flex items-center gap-4">
               <Button

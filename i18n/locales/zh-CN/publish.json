@@ -15,7 +15,12 @@
     "content": "请输入内容",
     "description": "创建并同步发布动态内容到多个社交媒体平台",
     "autoPublish": "自动发布",
-    "clearAll": "清空"
+    "clearAll": "清空",
+    "tips": {
+      "dragAndDrop": "拖放文件到此处上传",
+      "drop": "松开鼠标上传文件",
+      "supportedFiles": "支持图片和视频文件"
+    }
   },
   "podcast": {
     "title": "请输入播客标题",

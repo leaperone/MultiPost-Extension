@@ -15,7 +15,12 @@
     "content": "Enter content",
     "description": "Create and publish dynamic content to multiple social media platforms simultaneously",
     "autoPublish": "Auto Publish",
-    "clearAll": "Clear all"
+    "clearAll": "Clear all",
+    "tips": {
+      "dragAndDrop": "Drag and drop files here",
+      "drop": "Release to upload files",
+      "supportedFiles": "Supports images and videos"
+    }
   },
   "podcast": {
     "title": "Enter podcast title",

@@ -1,5 +1,5 @@
 import { SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar';
-import React from 'react';
+import React, { CSSProperties } from 'react';
 import { DashboardSidebar } from './components/SideBar';
 import { redirect } from 'next/navigation';
 import { auth } from '@/auth';
@@ -26,12 +26,19 @@ export default async function DashboardLayout({
     redirect(`/signin?redirect=${encodeURIComponent(pathname)}`);
   }
   return (
-    <div className="flex h-screen w-full overflow-y-hidden">
-      <SidebarProvider defaultOpen={false}>
+    <div className="flex h-screen w-full overflow-y-auto">
+      <SidebarProvider
+        defaultOpen={true}
+        style={
+          {
+            '--sidebar-width': '12rem',
+            '--sidebar-width-mobile': '12rem',
+          } as CSSProperties
+        }>
         <TimezoneProvider />
         <DashboardSidebar />
         <div className="flex-1">
-          <div className="flex w-full justify-between sm:hidden md:hidden">
+          <div className="flex w-full justify-between p-2 sm:hidden md:hidden">
             <SidebarTrigger />
             <ThemeSwitcher isBlur={false} />
           </div>
