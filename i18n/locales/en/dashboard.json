@@ -21,6 +21,10 @@
     "scraper": {
       "title": "Content Scraper",
       "description": "Import content from other platforms"
+    },
+    "images": {
+      "title": "Image Generation",
+      "description": "Generate images with AI"
     }
   },
   "sidebar": {

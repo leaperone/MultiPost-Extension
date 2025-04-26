@@ -21,6 +21,10 @@
     "scraper": {
       "title": "内容抓取",
       "description": "从其他平台导入内容"
+    },
+    "images": {
+      "title": "图片生成",
+      "description": "使用 AI 生成图片"
     }
   },
   "sidebar": {

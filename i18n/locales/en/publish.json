@@ -107,5 +107,9 @@
   "platforms": {
     "cn": "Chinese Platforms",
     "international": "International Platforms"
+  },
+  "upload": {
+    "duplicateFiles": "Duplicate Files Detected",
+    "duplicateFilesDesc": "The following files already exist"
   }
 }

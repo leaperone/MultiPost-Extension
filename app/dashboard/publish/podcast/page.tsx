@@ -22,10 +22,12 @@ import {
   Eraser,
   PlayIcon,
   PauseIcon,
+  UploadIcon,
 } from 'lucide-react';
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { useTranslation } from '@/i18n/client';
 import { Icon } from '@iconify/react';
+import { cn } from '@/lib/utils';
 
 import type { PlatformInfo } from '@/lib/extension';
 import type { FileData, SyncData } from '@/lib/extension';
@@ -86,6 +88,64 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({ url, name, onDelete }) => {
   );
 };
 
+// 拖放区域组件
+const DropZone = ({ onFileDrop }: { onFileDrop: (file: File) => void }) => {
+  const { t } = useTranslation('publish');
+  const [isDragging, setIsDragging] = useState(false);
+
+  const handleDragEnter = useCallback((event: React.DragEvent) => {
+    event.preventDefault();
+    event.stopPropagation();
+    setIsDragging(true);
+  }, []);
+
+  const handleDragLeave = useCallback((event: React.DragEvent) => {
+    event.preventDefault();
+    event.stopPropagation();
+    setIsDragging(false);
+  }, []);
+
+  const handleDragOver = useCallback((event: React.DragEvent) => {
+    event.preventDefault();
+    event.stopPropagation();
+  }, []);
+
+  const handleDrop = useCallback(
+    (event: React.DragEvent) => {
+      event.preventDefault();
+      event.stopPropagation();
+      setIsDragging(false);
+      const file = Array.from(event.dataTransfer.files).find((f) => f.type.startsWith('audio/'));
+      if (file) {
+        onFileDrop(file);
+      }
+    },
+    [onFileDrop],
+  );
+
+  return (
+    <div
+      className={cn(
+        'relative flex min-h-[120px] w-full cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed p-4 transition-all',
+        isDragging
+          ? 'border-primary bg-primary/10'
+          : 'border-gray-200 hover:bg-gray-50 dark:border-gray-800 dark:hover:bg-gray-800/50',
+      )}
+      onDragEnter={handleDragEnter}
+      onDragLeave={handleDragLeave}
+      onDragOver={handleDragOver}
+      onDrop={handleDrop}>
+      <div className="flex flex-col items-center justify-center gap-2 text-center">
+        <UploadIcon className={cn('size-8', isDragging ? 'text-primary' : 'text-gray-500')} />
+        <div className="flex flex-col gap-1">
+          <p className="text-sm font-medium">{isDragging ? t('dynamic.tips.drop') : t('dynamic.tips.dragAndDrop')}</p>
+          <p className="text-xs text-gray-500">{t('dynamic.tips.supportedFiles')}</p>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 export default function PodcastPage() {
   const { t } = useTranslation('publish');
   const [currentStep, setCurrentStep] = useState<number>(1);
@@ -134,16 +194,52 @@ export default function PodcastPage() {
     fetchPlatforms();
   }, []);
 
+  // 粘贴上传
+  const handlePaste = useCallback((event: ClipboardEvent) => {
+    const items = event.clipboardData?.items;
+    if (!items) return;
+    for (const item of items) {
+      if (item.type.startsWith('audio/')) {
+        const file = item.getAsFile();
+        if (file) {
+          setAudio({
+            name: file.name,
+            url: URL.createObjectURL(file),
+            type: file.type,
+            size: file.size,
+          });
+        }
+      }
+    }
+  }, []);
+
+  useEffect(() => {
+    document.addEventListener('paste', handlePaste);
+    return () => {
+      document.removeEventListener('paste', handlePaste);
+    };
+  }, [handlePaste]);
+
+  // 拖放上传
+  const handleFileDrop = useCallback((file: File) => {
+    setAudio({
+      name: file.name,
+      url: URL.createObjectURL(file),
+      type: file.type,
+      size: file.size,
+    });
+  }, []);
+
+  // input 上传
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFile = event.target.files?.[0];
     if (selectedFile) {
-      const fileData: FileData = {
+      setAudio({
         name: selectedFile.name,
+        url: URL.createObjectURL(selectedFile),
         type: selectedFile.type,
         size: selectedFile.size,
-        url: URL.createObjectURL(selectedFile),
-      };
-      setAudio(fileData);
+      });
     }
   };
 
@@ -264,32 +360,37 @@ export default function PodcastPage() {
             </CardBody>
 
             <CardFooter>
-              <div className="mb-4 flex w-full items-center justify-between">
-                <div className="flex">
-                  <input
-                    type="file"
-                    ref={audioInputRef}
-                    accept="audio/*"
-                    onChange={handleFileChange}
-                    className="hidden"
-                  />
-                  <Button
-                    isIconOnly
-                    variant="light"
-                    onPress={handleIconClick}>
-                    <AudioLinesIcon className="size-8 text-gray-600" />
-                  </Button>
+              <div className="mb-4 flex w-full flex-col gap-4">
+                <div className="flex items-center justify-between">
+                  <div className="flex">
+                    <input
+                      type="file"
+                      ref={audioInputRef}
+                      accept="audio/*"
+                      onChange={handleFileChange}
+                      className="hidden"
+                    />
+                    <Button
+                      isIconOnly
+                      variant="light"
+                      onPress={handleIconClick}
+                      disabled={!!audio}
+                      className={audio ? 'cursor-not-allowed opacity-50' : ''}>
+                      <AudioLinesIcon className="size-8 text-gray-600" />
+                    </Button>
+                  </div>
+                  {(title || description || audio) && (
+                    <Button
+                      isIconOnly
+                      variant="light"
+                      color="danger"
+                      onPress={handleClearAll}
+                      title={t('podcast.clearAll')}>
+                      <TrashIcon className="size-6" />
+                    </Button>
+                  )}
                 </div>
-                {(title || description || audio) && (
-                  <Button
-                    isIconOnly
-                    variant="light"
-                    color="danger"
-                    onPress={handleClearAll}
-                    title={t('podcast.clearAll')}>
-                    <TrashIcon className="size-6" />
-                  </Button>
-                )}
+                {!audio && <DropZone onFileDrop={handleFileDrop} />}
               </div>
             </CardFooter>
           </Card>

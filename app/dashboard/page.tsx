@@ -4,7 +4,7 @@ import { Icon } from '@iconify/react';
 
 import { auth } from '@/auth';
 import { createTranslation } from '@/i18n/server';
-import { SendIcon, FileTextIcon, ChartSplineIcon, ScanEyeIcon, SettingsIcon } from 'lucide-react';
+import { SendIcon, FileTextIcon, ChartSplineIcon, ScanEyeIcon, SettingsIcon, ImageIcon } from 'lucide-react';
 import { ActivityAlert } from './components/ActivityAlert';
 
 interface DashboardCardProps {
@@ -65,6 +65,12 @@ export default async function DashboardPage() {
       title: t('welcome.scraper.title'),
       description: t('welcome.scraper.description'),
       icon: <ScanEyeIcon className="size-5 text-primary-600 dark:text-primary-400" />,
+    },
+    {
+      href: '/dashboard/images/generation',
+      title: t('welcome.images.title'),
+      description: t('welcome.images.description'),
+      icon: <ImageIcon className="size-5 text-primary-600 dark:text-primary-400" />,
     },
   ];
 

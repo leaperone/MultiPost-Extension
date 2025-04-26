@@ -1,5 +1,15 @@
 'use client';
 
+// Define interfaces at the top
+interface FileData {
+  name: string;
+  type: string;
+  size: number;
+  url: string;
+  hash?: string;
+  file?: File;
+}
+
 import {
   Card,
   Button,
@@ -26,16 +36,34 @@ import {
   SendHorizontal,
   Eraser,
   UploadIcon,
+  GripVerticalIcon,
 } from 'lucide-react';
 import dynamic from 'next/dynamic';
 import React, { useState, useRef, useEffect, useCallback } from 'react';
-import Viewer from 'react-viewer';
 import { useTranslation } from '@/i18n/client';
 import { Icon } from '@iconify/react';
 import { cn } from '@/lib/utils';
+import {
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  DragEndEvent,
+} from '@dnd-kit/core';
+import {
+  arrayMove,
+  SortableContext,
+  sortableKeyboardCoordinates,
+  useSortable,
+  verticalListSortingStrategy,
+  horizontalListSortingStrategy,
+} from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
 
 import type { PlatformInfo } from '@/lib/extension';
-import type { FileData, SyncData } from '@/lib/extension';
+import type { SyncData } from '@/lib/extension';
 
 import { funcPublish, getPlatformInfos } from '@/lib/extension';
 import PlatformCheckbox from '../components/PlatformCheckbox';
@@ -110,6 +138,97 @@ const DropZone = ({ onFilesDrop }: { onFilesDrop: (files: File[], type: 'image' 
   );
 };
 
+interface SortableMediaProps {
+  id: string;
+  file: FileData;
+  index: number;
+  type: 'image' | 'video';
+  onDelete: (index: number, type: 'image' | 'video') => void;
+  onImageClick?: (index: number) => void;
+}
+
+const SortableMedia = ({ id, file, index, type, onDelete, onImageClick }: SortableMediaProps) => {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    zIndex: isDragging ? 1 : 0,
+    opacity: isDragging ? 0.5 : 1,
+  };
+
+  return (
+    <div
+      ref={setNodeRef}
+      style={style}
+      className={cn('group relative', type === 'video' && 'aspect-video w-full')}>
+      <div
+        {...attributes}
+        {...listeners}
+        className="absolute left-0 top-0 z-50 m-1 cursor-grab opacity-0 transition-opacity group-hover:opacity-100">
+        <GripVerticalIcon className="size-4" />
+      </div>
+      {type === 'image' ? (
+        <Image
+          src={file.url}
+          alt={file.name}
+          width={100}
+          height={100}
+          className="cursor-pointer rounded-md object-cover"
+          onClick={() => onImageClick?.(index)}
+        />
+      ) : (
+        <ReactPlayer
+          url={file.url}
+          width="100%"
+          height="100%"
+          controls
+        />
+      )}
+      <Button
+        isIconOnly
+        size="sm"
+        color="danger"
+        className={cn(
+          'absolute right-0 z-50 m-1 opacity-0 transition-opacity group-hover:opacity-100',
+          type === 'image' ? 'top-0' : 'right-2 top-2',
+        )}
+        onPress={() => onDelete(index, type)}>
+        <XIcon className="size-4" />
+      </Button>
+    </div>
+  );
+};
+
+// Add these helper functions before the DynamicPage component
+const getFileHash = async (file: File): Promise<string> => {
+  const buffer = await file.arrayBuffer();
+  const hashBuffer = await crypto.subtle.digest('SHA-256', buffer);
+  const hashArray = Array.from(new Uint8Array(hashBuffer));
+  return hashArray.map((b) => b.toString(16).padStart(2, '0')).join('');
+};
+
+const isDuplicateFile = async (file: File, existingFiles: FileData[]): Promise<boolean> => {
+  const newFileHash = await getFileHash(file);
+  for (const existingFile of existingFiles) {
+    // 如果文件已经有哈希值，直接比较
+    if (existingFile.hash === newFileHash) {
+      return true;
+    }
+    // 如果文件没有哈希值（旧文件），则需要重新计算
+    if (!existingFile.hash && existingFile.file) {
+      const existingHash = await getFileHash(existingFile.file);
+      existingFile.hash = existingHash; // 保存计算结果以备后用
+      if (existingHash === newFileHash) {
+        return true;
+      }
+    }
+  }
+  return false;
+};
+
+const Viewer = dynamic(() => import('react-viewer'), { ssr: false });
+
 export default function DynamicPage() {
   const { t } = useTranslation('publish');
   const [currentStep, setCurrentStep] = useState<number>(1);
@@ -125,6 +244,35 @@ export default function DynamicPage() {
   const [viewerVisible, setViewerVisible] = useState(false);
   const [currentImage, setCurrentImage] = useState(0);
   const [platforms, setPlatforms] = useState<PlatformInfo[]>([]);
+
+  const sensors = useSensors(
+    useSensor(PointerSensor),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    }),
+  );
+
+  const handleDragEnd = (event: DragEndEvent, type: 'image' | 'video') => {
+    const { active, over } = event;
+    if (!over) return;
+
+    if (active.id !== over.id) {
+      const oldIndex =
+        type === 'image'
+          ? images.findIndex((item) => `image-${item.name}` === active.id)
+          : videos.findIndex((item) => `video-${item.name}` === active.id);
+      const newIndex =
+        type === 'image'
+          ? images.findIndex((item) => `image-${item.name}` === over.id)
+          : videos.findIndex((item) => `video-${item.name}` === over.id);
+
+      if (type === 'image') {
+        setImages((items) => arrayMove(items, oldIndex, newIndex));
+      } else {
+        setVideos((items) => arrayMove(items, oldIndex, newIndex));
+      }
+    }
+  };
 
   useEffect(() => {
     if (process.env.NODE_ENV === 'development') {
@@ -162,21 +310,47 @@ export default function DynamicPage() {
     fetchPlatforms();
   }, []);
 
-  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>, fileType: 'image' | 'video') => {
+  const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>, fileType: 'image' | 'video') => {
     const selectedFiles = event.target.files;
-    if (selectedFiles) {
-      const newFiles: FileData[] = Array.from(selectedFiles)
-        .filter((file) => file.type.startsWith(`${fileType}/`))
-        .map((file) => ({
-          name: file.name,
-          type: file.type,
-          size: file.size,
-          url: URL.createObjectURL(file),
-        }));
+    if (!selectedFiles) return;
+
+    const existingFiles = fileType === 'image' ? images : videos;
+    const newFiles: FileData[] = [];
+    const duplicates: string[] = [];
+
+    for (const file of Array.from(selectedFiles)) {
+      if (!file.type.startsWith(fileType + '/')) continue;
+
+      const isDuplicate = await isDuplicateFile(file, existingFiles);
+      if (isDuplicate) {
+        duplicates.push(file.name);
+        continue;
+      }
+
+      const fileHash = await getFileHash(file);
+      newFiles.push({
+        name: file.name,
+        type: file.type,
+        size: file.size,
+        url: URL.createObjectURL(file),
+        hash: fileHash,
+        file: file,
+      });
+    }
+
+    if (duplicates.length > 0) {
+      addToast({
+        title: t('upload.duplicateFiles'),
+        description: `${t('upload.duplicateFilesDesc')}: ${duplicates.join(', ')}`,
+        color: 'warning',
+      });
+    }
+
+    if (newFiles.length > 0) {
       if (fileType === 'image') {
-        setImages((prevImages) => [...prevImages, ...newFiles]);
+        setImages((prev) => [...prev, ...newFiles]);
       } else {
-        setVideos((prevVideos) => [...prevVideos, ...newFiles]);
+        setVideos((prev) => [...prev, ...newFiles]);
       }
     }
   };
@@ -300,20 +474,50 @@ export default function DynamicPage() {
     }
   }, []);
 
-  const handleFilesDrop = useCallback((files: File[], type: 'image' | 'video') => {
-    const newFiles: FileData[] = files.map((file) => ({
-      name: file.name,
-      type: file.type,
-      size: file.size,
-      url: URL.createObjectURL(file),
-    }));
+  const handleFilesDrop = useCallback(
+    async (files: File[], type: 'image' | 'video') => {
+      const existingFiles = type === 'image' ? images : videos;
+      const newFiles: FileData[] = [];
+      const duplicates: string[] = [];
 
-    if (type === 'image') {
-      setImages((prev) => [...prev, ...newFiles]);
-    } else {
-      setVideos((prev) => [...prev, ...newFiles]);
-    }
-  }, []);
+      for (const file of files) {
+        if (!file.type.startsWith(type + '/')) continue;
+
+        const isDuplicate = await isDuplicateFile(file, existingFiles);
+        if (isDuplicate) {
+          duplicates.push(file.name);
+          continue;
+        }
+
+        const fileHash = await getFileHash(file);
+        newFiles.push({
+          name: file.name,
+          type: file.type,
+          size: file.size,
+          url: URL.createObjectURL(file),
+          hash: fileHash,
+          file: file,
+        });
+      }
+
+      if (duplicates.length > 0) {
+        addToast({
+          title: t('upload.duplicateFiles'),
+          color: 'warning',
+          description: `${t('upload.duplicateFilesDesc')}: ${duplicates.join(', ')}`,
+        });
+      }
+
+      if (newFiles.length > 0) {
+        if (type === 'image') {
+          setImages((prev) => [...prev, ...newFiles]);
+        } else {
+          setVideos((prev) => [...prev, ...newFiles]);
+        }
+      }
+    },
+    [images, videos],
+  );
 
   // 添加粘贴事件监听
   useEffect(() => {
@@ -406,29 +610,29 @@ export default function DynamicPage() {
 
           {images.length > 0 && (
             <Card className="my-2 bg-default-50 shadow-none">
-              <CardBody className="flex flex-row flex-wrap items-center justify-center gap-2">
-                {images.map((file, index) => (
-                  <div
-                    key={index}
-                    className="group relative">
-                    <Image
-                      src={file.url}
-                      alt={file.name}
-                      width={100}
-                      height={100}
-                      className="cursor-pointer rounded-md object-cover"
-                      onClick={() => handleImageClick(index)}
-                    />
-                    <Button
-                      isIconOnly
-                      size="sm"
-                      color="danger"
-                      className="absolute right-0 top-0 z-50 m-1 opacity-0 transition-opacity group-hover:opacity-100"
-                      onPress={() => handleDeleteFile(index, 'image')}>
-                      <XIcon className="size-4" />
-                    </Button>
-                  </div>
-                ))}
+              <CardBody>
+                <DndContext
+                  sensors={sensors}
+                  collisionDetection={closestCenter}
+                  onDragEnd={(event) => handleDragEnd(event, 'image')}>
+                  <SortableContext
+                    items={images.map((file) => `image-${file.name}`)}
+                    strategy={horizontalListSortingStrategy}>
+                    <div className="flex flex-row flex-wrap items-center justify-center gap-2">
+                      {images.map((file, index) => (
+                        <SortableMedia
+                          key={`image-${file.name}`}
+                          id={`image-${file.name}`}
+                          file={file}
+                          index={index}
+                          type="image"
+                          onDelete={handleDeleteFile}
+                          onImageClick={handleImageClick}
+                        />
+                      ))}
+                    </div>
+                  </SortableContext>
+                </DndContext>
               </CardBody>
             </Card>
           )}
@@ -442,27 +646,28 @@ export default function DynamicPage() {
 
           {videos.length > 0 && (
             <Card className="my-2 bg-default-50 shadow-none">
-              <CardBody className="flex flex-col gap-4">
-                {videos.map((file, index) => (
-                  <div
-                    key={index}
-                    className="group relative aspect-video w-full">
-                    <ReactPlayer
-                      url={file.url}
-                      width="100%"
-                      height="100%"
-                      controls
-                    />
-                    <Button
-                      isIconOnly
-                      size="sm"
-                      color="danger"
-                      className="absolute right-2 top-2 z-50 opacity-0 transition-opacity group-hover:opacity-100"
-                      onPress={() => handleDeleteFile(index, 'video')}>
-                      <XIcon className="size-4" />
-                    </Button>
-                  </div>
-                ))}
+              <CardBody>
+                <DndContext
+                  sensors={sensors}
+                  collisionDetection={closestCenter}
+                  onDragEnd={(event) => handleDragEnd(event, 'video')}>
+                  <SortableContext
+                    items={videos.map((file) => `video-${file.name}`)}
+                    strategy={verticalListSortingStrategy}>
+                    <div className="flex flex-col gap-4">
+                      {videos.map((file, index) => (
+                        <SortableMedia
+                          key={`video-${file.name}`}
+                          id={`video-${file.name}`}
+                          file={file}
+                          index={index}
+                          type="video"
+                          onDelete={handleDeleteFile}
+                        />
+                      ))}
+                    </div>
+                  </SortableContext>
+                </DndContext>
               </CardBody>
             </Card>
           )}

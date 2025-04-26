@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 import {
   Card,
   Button,
@@ -13,7 +13,16 @@ import {
   Accordion,
   AccordionItem,
 } from '@heroui/react';
-import { VideoIcon, XIcon, ArrowLeftIcon, ArrowRightIcon, SendHorizontal, TrashIcon, Eraser } from 'lucide-react';
+import {
+  VideoIcon,
+  XIcon,
+  ArrowLeftIcon,
+  ArrowRightIcon,
+  SendHorizontal,
+  TrashIcon,
+  Eraser,
+  UploadIcon,
+} from 'lucide-react';
 import dynamic from 'next/dynamic';
 import type { FileData, SyncData } from '@/lib/extension';
 import PlatformCheckbox from '../components/PlatformCheckbox';
@@ -23,10 +32,69 @@ import { useTranslation } from '@/i18n/client';
 import { usePlatformStore } from '@/store/publish.store';
 import { getPlatformExtraConfigList } from '../action';
 import { Icon } from '@iconify/react';
+import { cn } from '@/lib/utils';
 
 const ReactPlayer = dynamic(() => import('react-player'), {
   ssr: false,
 });
+
+// 拖放区域组件
+const DropZone = ({ onFileDrop }: { onFileDrop: (file: File) => void }) => {
+  const { t } = useTranslation('publish');
+  const [isDragging, setIsDragging] = useState(false);
+
+  const handleDragEnter = useCallback((event: React.DragEvent) => {
+    event.preventDefault();
+    event.stopPropagation();
+    setIsDragging(true);
+  }, []);
+
+  const handleDragLeave = useCallback((event: React.DragEvent) => {
+    event.preventDefault();
+    event.stopPropagation();
+    setIsDragging(false);
+  }, []);
+
+  const handleDragOver = useCallback((event: React.DragEvent) => {
+    event.preventDefault();
+    event.stopPropagation();
+  }, []);
+
+  const handleDrop = useCallback(
+    (event: React.DragEvent) => {
+      event.preventDefault();
+      event.stopPropagation();
+      setIsDragging(false);
+      const file = Array.from(event.dataTransfer.files).find((f) => f.type.startsWith('video/'));
+      if (file) {
+        onFileDrop(file);
+      }
+    },
+    [onFileDrop],
+  );
+
+  return (
+    <div
+      className={cn(
+        'relative flex min-h-[120px] w-full cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed p-4 transition-all',
+        isDragging
+          ? 'border-primary bg-primary/10'
+          : 'border-gray-200 hover:bg-gray-50 dark:border-gray-800 dark:hover:bg-gray-800/50',
+      )}
+      onDragEnter={handleDragEnter}
+      onDragLeave={handleDragLeave}
+      onDragOver={handleDragOver}
+      onDrop={handleDrop}>
+      <div className="flex flex-col items-center justify-center gap-2 text-center">
+        <UploadIcon className={cn('size-8', isDragging ? 'text-primary' : 'text-gray-500')} />
+        <div className="flex flex-col gap-1">
+          <p className="text-sm font-medium">{isDragging ? t('dynamic.tips.drop') : t('dynamic.tips.dragAndDrop')}</p>
+          <p className="text-xs text-gray-500">{t('dynamic.tips.supportedFiles')}</p>
+        </div>
+      </div>
+    </div>
+  );
+};
 
 export default function VideoPage() {
   const { t } = useTranslation('publish');
@@ -74,6 +142,43 @@ export default function VideoPage() {
     );
   };
 
+  // 粘贴上传
+  const handlePaste = useCallback((event: ClipboardEvent) => {
+    const items = event.clipboardData?.items;
+    if (!items) return;
+    for (const item of items) {
+      if (item.type.startsWith('video/')) {
+        const file = item.getAsFile();
+        if (file) {
+          setVideoFile({
+            name: file.name,
+            url: URL.createObjectURL(file),
+            type: file.type,
+            size: file.size,
+          });
+        }
+      }
+    }
+  }, []);
+
+  useEffect(() => {
+    document.addEventListener('paste', handlePaste);
+    return () => {
+      document.removeEventListener('paste', handlePaste);
+    };
+  }, [handlePaste]);
+
+  // 拖放上传
+  const handleFileDrop = useCallback((file: File) => {
+    setVideoFile({
+      name: file.name,
+      url: URL.createObjectURL(file),
+      type: file.type,
+      size: file.size,
+    });
+  }, []);
+
+  // input 上传
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFile = event.target.files?.[0];
     if (selectedFile && selectedFile.type.startsWith('video/')) {
@@ -116,7 +221,6 @@ export default function VideoPage() {
     if (!title || !videoFile) {
       addToast({
         title: t('validation.titleAndVideoRequired'),
-        description: t('validation.titleAndVideoRequired'),
         color: 'danger',
       });
       return;
@@ -124,7 +228,6 @@ export default function VideoPage() {
     if (selectedPlatforms.length === 0) {
       addToast({
         title: t('validation.platformRequired'),
-        description: t('validation.platformRequired'),
         color: 'danger',
       });
       return;
@@ -194,32 +297,37 @@ export default function VideoPage() {
             </CardBody>
 
             <CardFooter>
-              <div className="mb-4 flex w-full items-center justify-between">
-                <div className="flex">
-                  <input
-                    type="file"
-                    ref={fileInputRef}
-                    accept="video/*"
-                    onChange={handleFileChange}
-                    className="hidden"
-                  />
-                  <Button
-                    isIconOnly
-                    variant="light"
-                    onPress={handleIconClick}>
-                    <VideoIcon className="size-8 text-gray-600" />
-                  </Button>
+              <div className="mb-4 flex w-full flex-col gap-4">
+                <div className="flex items-center justify-between">
+                  <div className="flex">
+                    <input
+                      type="file"
+                      ref={fileInputRef}
+                      accept="video/*"
+                      onChange={handleFileChange}
+                      className="hidden"
+                    />
+                    <Button
+                      isIconOnly
+                      variant="light"
+                      onPress={handleIconClick}
+                      disabled={!!videoFile}
+                      className={videoFile ? 'cursor-not-allowed opacity-50' : ''}>
+                      <VideoIcon className="size-8 text-gray-600" />
+                    </Button>
+                  </div>
+                  {(title || content || videoFile) && (
+                    <Button
+                      isIconOnly
+                      variant="light"
+                      color="danger"
+                      onPress={handleClearAll}
+                      title={t('dynamic.clearAll')}>
+                      <TrashIcon className="size-6" />
+                    </Button>
+                  )}
                 </div>
-                {(title || content || videoFile) && (
-                  <Button
-                    isIconOnly
-                    variant="light"
-                    color="danger"
-                    onPress={handleClearAll}
-                    title={t('dynamic.clearAll')}>
-                    <TrashIcon className="size-6" />
-                  </Button>
-                )}
+                {!videoFile && <DropZone onFileDrop={handleFileDrop} />}
               </div>
             </CardFooter>
           </Card>
@@ -283,7 +391,7 @@ export default function VideoPage() {
                 <AccordionItem
                   key="CN"
                   title={t('platforms.cn')}
-                  subtitle={`${
+                  subtitle={`$${
                     selectedPlatforms.filter((platform) => {
                       const info = platforms.find((p) => p.name === platform);
                       return info?.tags?.includes('CN');
@@ -316,7 +424,7 @@ export default function VideoPage() {
                 <AccordionItem
                   key="International"
                   title={t('platforms.international')}
-                  subtitle={`${
+                  subtitle={`$${
                     selectedPlatforms.filter((platform) => {
                       const info = platforms.find((p) => p.name === platform);
                       return info?.tags?.includes('International');

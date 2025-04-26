@@ -107,5 +107,9 @@
   "platforms": {
     "cn": "中国平台",
     "international": "国际平台"
+  },
+  "upload": {
+    "duplicateFiles": "检测到重复文件",
+    "duplicateFilesDesc": "以下文件已存在"
   }
 }
