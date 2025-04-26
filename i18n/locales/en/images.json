@@ -3,7 +3,7 @@
   "generation": "Generate Images",
   "gallery": "Gallery",
   "generation_page": {
-    "title": "GPT Image Generation",
+    "title": "Image Generation",
     "description": "From text to image, generate any image you want",
     "prompt_placeholder": "Describe the image you want to generate...",
     "edit_prompt_placeholder": "Describe the modifications you want...",

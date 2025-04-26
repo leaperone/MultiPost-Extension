@@ -3,7 +3,7 @@
   "generation": "生成图像",
   "gallery": "图片库",
   "generation_page": {
-    "title": "GPT图像生成",
+    "title": "画图",
     "description": "从文字到图像，生成你想要的任何图像",
     "prompt_placeholder": "描述你想要生成的图像...",
     "edit_prompt_placeholder": "描述你想要的修改效果...",
