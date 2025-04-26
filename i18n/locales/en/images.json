@@ -15,19 +15,19 @@
       "portrait": "Portrait"
     },
     "style": {
-      "label": "Art Style",
-      "none": "No Style",
-      "anime": "Anime Style",
-      "cartoon": "Cartoon Style",
-      "realistic": "Realistic Style",
-      "vintage": "Vintage Style"
+      "label": "Art",
+      "none": "No",
+      "anime": "Anime",
+      "cartoon": "Cartoon",
+      "realistic": "Realistic",
+      "vintage": "Vintage"
     },
     "color": {
-      "label": "Color Tone",
-      "none": "No Tone",
-      "neutral": "Natural Tone",
-      "cold": "Cold Tone",
-      "warm": "Warm Tone",
+      "label": "Color",
+      "none": "No Color",
+      "neutral": "Natural",
+      "cold": "Cold",
+      "warm": "Warm",
       "monochrome": "Black & White"
     },
     "composition": {
