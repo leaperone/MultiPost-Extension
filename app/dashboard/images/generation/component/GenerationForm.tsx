@@ -44,7 +44,7 @@ export function GenerationForm({ onSubmit, loading }: GenerationFormProps) {
       />
 
       {/* 生成参数设置 */}
-      <div className="flex flex-wrap gap-2">
+      <div className="flex flex-wrap justify-between gap-2">
         <Select
           label={t('generation_page.size.label')}
           size="sm"
@@ -118,10 +118,10 @@ export function GenerationForm({ onSubmit, loading }: GenerationFormProps) {
         color="primary"
         size="lg"
         isLoading={loading}
+        fullWidth
         onPress={() => form.handleSubmit(onSubmit)()}
-        className="w-full rounded-full shadow-lg">
+        startContent={!loading && <ImageIcon />}>
         {loading ? t('generation_page.button.generating') : t('generation_page.button.generate')}
-        {!loading && <ImageIcon className="ml-2 size-4" />}
       </Button>
     </div>
   );

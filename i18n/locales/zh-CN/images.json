@@ -1,10 +1,9 @@
 {
   "images_options": "图片选项",
-  "generation": "生成图像",
+  "generation": "画图",
+  "edit": "修改",
   "gallery": "图片库",
   "generation_page": {
-    "title": "画图",
-    "description": "从文字到图像，生成你想要的任何图像",
     "prompt_placeholder": "描述你想要生成的图像...",
     "edit_prompt_placeholder": "描述你想要的修改效果...",
     "no_image": "暂无图片",

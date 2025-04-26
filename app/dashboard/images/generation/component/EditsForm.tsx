@@ -71,7 +71,7 @@ export function EditsForm({ onSubmit, loading, images = [] }: EditsFormProps) {
       />
 
       {/* 生成参数设置 */}
-      <div className="flex flex-wrap gap-2">
+      <div className="flex flex-wrap justify-between gap-2">
         <Select
           label={t('generation_page.size.label')}
           size="sm"

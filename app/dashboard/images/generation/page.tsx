@@ -75,19 +75,13 @@ export default function ImageGenerationPage() {
       )}>
       <Card className="mx-auto mb-8 w-full max-w-3xl">
         <CardBody className="space-y-6">
-          <div className="space-y-1">
-            <h2 className="text-xl font-semibold">{t('generation_page.title')}</h2>
-            <p className="text-default-600">{t('generation_page.description')}</p>
-          </div>
-
           <div className="flex gap-4">
             <Tabs
               selectedKey={selected}
               onSelectionChange={(key) => setSelected(key as string)}
-              variant="light"
               color="primary"
               isVertical={isVertical}
-              className="min-w-[120px]"
+              className="min-w-fit"
               classNames={{
                 tabList: 'gap-2',
                 cursor: 'w-full',
@@ -99,7 +93,7 @@ export default function ImageGenerationPage() {
               />
               <Tab
                 key="edits"
-                title={t('generation_page.button.edit')}
+                title={t('edit')}
               />
             </Tabs>
 
