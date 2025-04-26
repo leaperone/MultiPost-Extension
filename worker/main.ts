@@ -29,6 +29,23 @@ const openai = new OpenAI({
 
 const app = Fastify();
 
+async function recovryReceivedImageGeneration() {
+  const receivedImageGeneration = await multipostDb.imageGeneration.findMany({
+    where: {
+      status: ImageGenerationStatus.PROCESSING,
+      updatedAt: {
+        lt: new Date(Date.now() - 1000 * 60 * 30), // 30分钟
+      },
+    },
+  });
+
+  for (const imageGeneration of receivedImageGeneration) {
+    processImageGenerationByChat(imageGeneration.id).catch((error) => {
+      console.error('后台任务处理失败:', error);
+    });
+  }
+}
+
 // 处理图片生成的后台任务
 async function processImageGenerationByChat(id: string, retry: boolean = false) {
   try {
@@ -293,6 +310,7 @@ const PORT = 8080;
 
 const start = async () => {
   try {
+    await recovryReceivedImageGeneration();
     await app.listen({ port: PORT });
     console.log(`服务器正在监听端口 ${PORT}`);
   } catch (err) {
