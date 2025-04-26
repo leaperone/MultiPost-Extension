@@ -19,6 +19,7 @@ FROM base AS builder
 ENV NODE_OPTIONS="--max-old-space-size=8192"
 RUN --mount=type=cache,id=pnpm-multipost,target=/pnpm/store pnpm install --frozen-lockfile
 RUN sh prisma/generate.sh && sh scripts/tracker/build.sh
+RUN pnpm run build:worker
 RUN pnpm run build
 
 FROM node:20.18.1-alpine3.20 AS final
@@ -43,5 +44,7 @@ COPY --from=builder /app/public ./public
 COPY --from=builder /app/.next/standalone ./
 COPY --from=builder /app/.next/static ./.next/static
 COPY --from=builder /app/geo ./geo
+COPY --from=builder /app/worker/dist ./worker/dist
+COPY --from=builder /app/docker/start.sh ./start.sh
 EXPOSE 3000
-CMD [ "node", "server.js" ]
+CMD [ "sh", "start.sh" ]

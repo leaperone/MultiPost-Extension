@@ -4,6 +4,7 @@ import {
   ChartSplineIcon,
   GridIcon,
   Home,
+  ImageIcon,
   LayoutDashboardIcon,
   ScanEyeIcon,
   SendIcon,
@@ -71,6 +72,11 @@ const getApplicationItems = (t: TranslationFunction): MenuItem[] => [
     title: 'Scraper',
     url: '/dashboard/scraper',
     icon: ScanEyeIcon,
+  },
+  {
+    title: 'Images',
+    url: '/dashboard/images',
+    icon: ImageIcon,
   },
 ];
 

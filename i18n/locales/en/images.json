@@ -1,0 +1,79 @@
+{
+  "images_options": "Image Options",
+  "generation": "Generate Images",
+  "gallery": "Gallery",
+  "generation_page": {
+    "title": "GPT Image Generation",
+    "description": "From text to image, generate any image you want",
+    "prompt_placeholder": "Describe the image you want to generate...",
+    "edit_prompt_placeholder": "Describe the modifications you want...",
+    "no_image": "No image",
+    "size": {
+      "label": "Image Size",
+      "auto": "Auto",
+      "square": "Square",
+      "landscape": "Landscape",
+      "portrait": "Portrait"
+    },
+    "style": {
+      "label": "Art Style",
+      "none": "No Style",
+      "anime": "Anime Style",
+      "cartoon": "Cartoon Style",
+      "realistic": "Realistic Style",
+      "vintage": "Vintage Style"
+    },
+    "color": {
+      "label": "Color Tone",
+      "none": "No Tone",
+      "neutral": "Natural Tone",
+      "cold": "Cold Tone",
+      "warm": "Warm Tone",
+      "monochrome": "Black & White"
+    },
+    "composition": {
+      "label": "Composition",
+      "none": "No Composition",
+      "full_body": "Full Body",
+      "half_body": "Half Body",
+      "headshot": "Headshot",
+      "close_up": "Close-up",
+      "bokeh": "Bokeh"
+    },
+    "button": {
+      "generate": "Start Generation",
+      "generating": "Generating...",
+      "edit": "Start Editing",
+      "editing": "Editing..."
+    }
+  },
+  "result_waiter": {
+    "loading": "Fetching generation results...",
+    "pending": "Waiting for generation...",
+    "processing": "Generating...",
+    "processing_description": "Image generation takes 2-3 minutes, please be patient. You can check the results in the gallery later.",
+    "failed": "Generation failed",
+    "unknown_error": "Unknown error",
+    "download": "Download original image",
+    "continue_edit": "Continue editing",
+    "generated_image": "Generated image",
+    "task_submitted": "Task submitted successfully",
+    "submit_failed": "Failed to submit task"
+  },
+  "gallery_page": {
+    "title": "My Images",
+    "new_image": "Generate New Image",
+    "get_image_failed": "Failed to fetch images",
+    "tabs": {
+      "all": "All",
+      "done": "Completed",
+      "pending": "Queued",
+      "processing": "Processing",
+      "failed": "Failed"
+    },
+    "empty": {
+      "title": "No images generated yet",
+      "action": "Start generating"
+    }
+  }
+}

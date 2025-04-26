@@ -1,0 +1,79 @@
+{
+  "images_options": "图片选项",
+  "generation": "生成图像",
+  "gallery": "图片库",
+  "generation_page": {
+    "title": "GPT图像生成",
+    "description": "从文字到图像，生成你想要的任何图像",
+    "prompt_placeholder": "描述你想要生成的图像...",
+    "edit_prompt_placeholder": "描述你想要的修改效果...",
+    "no_image": "暂无图片",
+    "size": {
+      "label": "图片尺寸",
+      "auto": "自动",
+      "square": "正方形",
+      "landscape": "横版",
+      "portrait": "竖版"
+    },
+    "style": {
+      "label": "画面风格",
+      "none": "无风格",
+      "anime": "动漫风格",
+      "cartoon": "卡通风格",
+      "realistic": "写实风格",
+      "vintage": "复古风格"
+    },
+    "color": {
+      "label": "色调",
+      "none": "无色调",
+      "neutral": "自然色调",
+      "cold": "冷色调",
+      "warm": "暖色调",
+      "monochrome": "黑白"
+    },
+    "composition": {
+      "label": "构图",
+      "none": "无构图",
+      "full_body": "全身像",
+      "half_body": "半身像",
+      "headshot": "头像",
+      "close_up": "特写",
+      "bokeh": "景深"
+    },
+    "button": {
+      "generate": "开始生成",
+      "generating": "生成中...",
+      "edit": "开始修改",
+      "editing": "修改中..."
+    }
+  },
+  "result_waiter": {
+    "loading": "正在获取生成结果...",
+    "pending": "等待生成...",
+    "processing": "正在生成中...",
+    "processing_description": "生成图像需要耗时2-3分钟，请耐心等待。你可以稍后在画廊查看结果。",
+    "failed": "生成失败",
+    "unknown_error": "未知错误",
+    "download": "下载原图",
+    "continue_edit": "继续编辑",
+    "generated_image": "生成图片",
+    "task_submitted": "任务提交成功",
+    "submit_failed": "提交失败"
+  },
+  "gallery_page": {
+    "title": "我的图片",
+    "new_image": "生成新图片",
+    "get_image_failed": "获取图片失败",
+    "tabs": {
+      "all": "全部",
+      "done": "已完成",
+      "pending": "排队中",
+      "processing": "生成中",
+      "failed": "失败"
+    },
+    "empty": {
+      "title": "还没有生成过图片",
+      "action": "开始生成"
+    }
+  }
+}

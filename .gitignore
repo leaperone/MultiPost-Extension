@@ -52,3 +52,5 @@ geo/*.mmdb
 public/tracker/
 
 .devcontainer/.env.dev
+
+worker/dist

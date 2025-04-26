@@ -27,6 +27,7 @@ export const PRICING = {
       OUTPUT: new Decimal(0.11 * 10).div(new Decimal(10 ** 6)), // per token
     },
   },
+  IMAGE_GENERATION: new Decimal(0.04 * 10), // per image
 } as const;
 
 // 使用类型
@@ -36,6 +37,7 @@ export const USAGE_TYPE_MAP = {
   SOCIAL_MEDIA_X: 'social_media_x',
   LLM_DEEPSEEK_CHAT_INPUT: 'llm_deepseek_chat_input',
   LLM_DEEPSEEK_CHAT_OUTPUT: 'llm_deepseek_chat_output',
+  IMAGE_GENERATION: 'image_generation',
 } as const;
 
 export type UsageType = keyof typeof USAGE_TYPE_MAP;
