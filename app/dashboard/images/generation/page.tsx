@@ -89,7 +89,7 @@ export default function ImageGenerationPage() {
               }}>
               <Tab
                 key="generation"
-                title={t('generation')}
+                title={t('generate')}
               />
               <Tab
                 key="edits"

@@ -1,7 +1,7 @@
 {
   "images_options": "Image Options",
-  "generation": "Generate Images",
-  "edit": "Edit Images",
+  "generate": "Generate",
+  "edit": "Edit",
   "gallery": "Gallery",
   "generation_page": {
     "prompt_placeholder": "Describe the image you want to generate...",
