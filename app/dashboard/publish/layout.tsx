@@ -1,19 +1,33 @@
 'use client';
 
-import { Tabs, Tab } from '@heroui/react';
+import { Tabs, Tab, addToast } from '@heroui/react';
 import { MessageCircleHeartIcon, VideoIcon, FileTextIcon, RouterIcon, PodcastIcon } from 'lucide-react';
 import { usePathname } from 'next/navigation';
 import ForceInstallExtension from '@/components/ForceInstallExtension';
 import { useEffect } from 'react';
-import { funcGetPermission } from '@/lib/extension';
+import { checkServiceStatus, funcGetPermission } from '@/lib/extension';
 import { ActivityAlert } from '../components/ActivityAlert';
+import { useRouter } from 'next/navigation';
 
 export default function PublishLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
+  const router = useRouter();
 
   useEffect(() => {
-    funcGetPermission().then(() => {});
+    checkServiceStatus().then((status) => {
+      if (!status) {
+        addToast({
+          title: '未检测到 MultiPost 扩展',
+          description: '请先安装扩展',
+        });
+        router.push('/extension');
+        return;
+      }
+      funcGetPermission().then(() => {});
+      return;
+    });
   }, []);
+
   return (
     <div className="mx-auto h-full max-w-2xl space-y-6 overflow-y-auto p-4 scrollbar-hide">
       {process.env.NODE_ENV !== 'development' && <ForceInstallExtension />}

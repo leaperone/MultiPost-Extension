@@ -84,24 +84,6 @@ export default function Header() {
           </Link>
         </NavbarMenuItem>
         <NavbarMenuItem>
-          <Link
-            className="w-full"
-            color="foreground"
-            href="/extension"
-            size="lg">
-            {t('navigation.extension')}
-          </Link>
-        </NavbarMenuItem>
-        <NavbarMenuItem>
-          <Link
-            className="w-full"
-            color="foreground"
-            href="/about"
-            size="lg">
-            {t('navigation.about')}
-          </Link>
-        </NavbarMenuItem>
-        <NavbarMenuItem>
           <LanguageSwitcher />
         </NavbarMenuItem>
         <NavbarMenuItem>

@@ -40,7 +40,7 @@ const websiteSchema = z.object({
  * 2. 将网站加入到监控列表中
  * 3. 实时验证输入的有效性
  */
-export function CreateWebsiteButton() {
+export function AddWebsiteButton() {
   const { isOpen, onOpen, onClose } = useDisclosure();
   const [isLoading, setIsLoading] = useState(false);
   const [validationErrors, setValidationErrors] = useState<Record<string, string>>({});
@@ -99,7 +99,10 @@ export function CreateWebsiteButton() {
         size="xl"
         backdrop="blur">
         <ModalContent>
-          <ModalHeader>添加新网站</ModalHeader>
+          <ModalHeader className="flex flex-col gap-1">
+            <h2 className="text-lg font-semibold">添加新网站</h2>
+            <p className="text-sm text-gray-500">为你的网站（Blog、Saas、独立开发）添加监控，了解用户行为和需求。</p>
+          </ModalHeader>
           <ModalBody className="gap-4">
             <Form
               onSubmit={handleSubmit}

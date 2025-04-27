@@ -60,17 +60,17 @@ const getApplicationItems = (t: TranslationFunction): MenuItem[] => [
     icon: SendIcon,
   },
   {
-    title: 'Grid',
+    title: t('sidebar.menu.grid'),
     url: '/dashboard/grid',
     icon: GridIcon,
   },
   {
-    title: 'WebTrace',
+    title: 'Analytics',
     url: '/dashboard/analytics',
     icon: ChartSplineIcon,
   },
   {
-    title: 'Scraper',
+    title: 'Browse',
     url: '/dashboard/scraper',
     icon: ScanEyeIcon,
   },

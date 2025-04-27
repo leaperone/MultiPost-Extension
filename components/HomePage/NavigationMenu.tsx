@@ -12,7 +12,7 @@ import {
   navigationMenuTriggerStyle,
 } from '@/components/ui/navigation-menu';
 import Link from 'next/link';
-import { LayoutDashboard, PuzzleIcon, Users, SendIcon, BookOpenIcon } from 'lucide-react';
+import { LayoutDashboard, SendIcon, BookOpenIcon } from 'lucide-react';
 import { useTranslation } from '@/i18n/client';
 
 export function HomePageNavigationMenu() {
@@ -45,34 +45,12 @@ export function HomePageNavigationMenu() {
         </NavigationMenuItem>
         <NavigationMenuItem>
           <Link
-            href="/extension"
-            legacyBehavior
-            passHref>
-            <NavigationMenuLink className={cn(navigationMenuTriggerStyle(), 'group')}>
-              <PuzzleIcon className="mr-2 size-4 transition-transform" />
-              {t('navigation.extension')}
-            </NavigationMenuLink>
-          </Link>
-        </NavigationMenuItem>
-        <NavigationMenuItem>
-          <Link
             href="https://docs.multipost.app"
             legacyBehavior
             passHref>
             <NavigationMenuLink className={cn(navigationMenuTriggerStyle(), 'group')}>
               <BookOpenIcon className="mr-2 size-4 transition-transform" />
               {t('navigation.docs')}
-            </NavigationMenuLink>
-          </Link>
-        </NavigationMenuItem>
-        <NavigationMenuItem>
-          <Link
-            href="/about"
-            legacyBehavior
-            passHref>
-            <NavigationMenuLink className={cn(navigationMenuTriggerStyle(), 'group')}>
-              <Users className="mr-2 size-4 transition-transform" />
-              {t('navigation.about')}
             </NavigationMenuLink>
           </Link>
         </NavigationMenuItem>

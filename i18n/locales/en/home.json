@@ -27,9 +27,7 @@
   "navigation": {
     "dashboard": "Dashboard",
     "publish": "Publish",
-    "extension": "Extension",
-    "docs": "Docs",
-    "about": "About"
+    "docs": "Docs"
   },
   "analytics": {
     "title": "Powerful Analytics",
@@ -167,11 +165,8 @@
   },
   "hero": {
     "description": "Publish content to all your social media accounts simultaneously, monitor and analyze all your websites and accounts",
-    "platform": "All Platforms",
     "buttons": {
-      "post": "Start Posting",
-      "install": "Install Extension",
-      "markdown": "Markdown Article Editor"
+      "post": "Start Posting"
     },
     "features": {
       "draft": "Draft",

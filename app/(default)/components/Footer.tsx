@@ -3,7 +3,7 @@
 import type { IconProps } from '@iconify/react';
 
 import React from 'react';
-import { Divider, Link } from '@heroui/react';
+import { Button, Divider, Link } from '@heroui/react';
 import { Icon } from '@iconify/react';
 import { ThemeSwitcher } from '@/components/ThemeSwitcher';
 import { useTranslation } from '@/i18n/client';
@@ -21,6 +21,14 @@ export default function Footer() {
       { name: '2SOMEone', href: 'https://2some.one' },
       { name: '2SOMEren', href: 'https://2some.ren' },
     ],
+    support: [
+      { name: 'Documentation', href: 'https://docs.multipost.app' },
+      { name: 'Discord', href: 'https://discord.gg/GNsCX9zFwQ' },
+      {
+        name: 'QQ Group',
+        href: 'http://qm.qq.com/cgi-bin/qm/qr?_wv=1027&k=c5BjhD8JxNAuwjKh6qvCoROU301PppYU&authKey=NfKianfDwngrwJyVQbefIQET9vUQs46xb0PfOYUm6KzdeCjPd5YbvlRoO8trJUUZ&noverify=0&group_code=921137242',
+      },
+    ],
     legal: [
       { name: t('footer.navigation.legal.privacy'), href: '/legal/privacy' },
       { name: t('footer.navigation.legal.terms'), href: '/legal/terms' },
@@ -32,7 +40,37 @@ export default function Footer() {
         icon: (props: SocialIconProps) => (
           <Icon
             {...props}
-            icon="lucide:github"
+            icon="logos:github-icon"
+          />
+        ),
+      },
+      {
+        name: 'Discord',
+        href: 'https://discord.gg/GNsCX9zFwQ',
+        icon: (props: SocialIconProps) => (
+          <Icon
+            {...props}
+            icon="logos:discord-icon"
+          />
+        ),
+      },
+      {
+        name: 'X',
+        href: 'https://x.com/harry_is_fish',
+        icon: (props: SocialIconProps) => (
+          <Icon
+            {...props}
+            icon="logos:x"
+          />
+        ),
+      },
+      {
+        name: 'QQ Group',
+        href: 'http://qm.qq.com/cgi-bin/qm/qr?_wv=1027&k=c5BjhD8JxNAuwjKh6qvCoROU301PppYU&authKey=NfKianfDwngrwJyVQbefIQET9vUQs46xb0PfOYUm6KzdeCjPd5YbvlRoO8trJUUZ&noverify=0&group_code=921137242',
+        icon: (props: SocialIconProps) => (
+          <Icon
+            {...props}
+            icon="mingcute:qq-line"
           />
         ),
       },
@@ -69,27 +107,25 @@ export default function Footer() {
             <p className="text-small text-default-500">{t('footer.slogan')}</p>
             <div className="flex space-x-6">
               {footerNavigation.social.map((item) => (
-                <Link
+                <Button
                   key={item.name}
-                  isExternal
-                  className="text-default-400 transition-colors hover:text-primary"
+                  as={Link}
                   href={item.href}
-                  title={item.name}>
-                  <span className="sr-only">{item.name}</span>
+                  target="_blank"
+                  size="sm"
+                  isIconOnly>
                   <item.icon
                     aria-hidden="true"
                     className="size-5"
                   />
-                </Link>
+                </Button>
               ))}
             </div>
           </div>
           <div className="mt-16 grid grid-cols-2 gap-8 xl:col-span-2 xl:mt-0">
             <div className="md:grid md:grid-cols-2 md:gap-8">
               <div>{renderList({ title: 'Services', items: footerNavigation.services })}</div>
-              <div className="mt-10 md:mt-0">
-                {/* {renderList({ title: 'Support', items: footerNavigation.supportOptions })} */}
-              </div>
+              <div className="mt-10 md:mt-0">{renderList({ title: 'Support', items: footerNavigation.support })}</div>
             </div>
             <div className="md:grid md:grid-cols-2 md:gap-8">
               {/* <div>{renderList({ title: 'About Us', items: footerNavigation.aboutUs })}</div> */}

@@ -1,5 +1,5 @@
 import { Suspense } from 'react';
-import { CreateWebsiteButton } from './components/CreateWebsiteButton';
+import { AddWebsiteButton } from './components/AddWebsiteButton';
 import { InfoButton } from './components/InfoButton';
 import { WebsiteList } from './components/WebsitesList';
 import LinkSocialMediaButton from './components/LinkSocialMediaButton';
@@ -14,7 +14,7 @@ export default async function AnalyticsPage() {
         </div>
         <div className="flex flex-row gap-2">
           <LinkSocialMediaButton />
-          <CreateWebsiteButton />
+          <AddWebsiteButton />
         </div>
       </div>
 

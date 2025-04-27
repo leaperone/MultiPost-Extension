@@ -27,9 +27,7 @@
   "navigation": {
     "dashboard": "仪表盘",
     "publish": "发布",
-    "extension": "扩展",
-    "docs": "文档",
-    "about": "关于"
+    "docs": "文档"
   },
   "analytics": {
     "title": "强大的分析功能",
@@ -94,7 +92,7 @@
   "combinedSection": {
     "title": "强大而简单",
     "subtitle": "一次创建，随处发布，全面提升您的社交媒体影响力",
-    "usageTitle": "使用 MultiPost 可以：",
+    "usageTitle": "使用 MultiPost 可以",
     "dashboard": "前往仪表盘"
   },
   "draftTools": {
@@ -157,12 +155,9 @@
     "github": "在 GitHub 上点星"
   },
   "hero": {
-    "description": "在你的所有社交媒体账号同时发布内容，监控分析你的所有网站和账号",
-    "platform": "所有平台",
+    "description": "从你所有社媒账号同时发内容，监控、分析你的网站和账号",
     "buttons": {
-      "post": "开始发布",
-      "install": "安装扩展",
-      "markdown": "Markdown 文章编辑器"
+      "post": "开始发布"
     },
     "features": {
       "draft": "草稿",

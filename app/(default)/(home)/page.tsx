@@ -1,5 +1,5 @@
 import { Card, CardBody, Button, Link } from '@heroui/react';
-import { Sparkles, LayoutDashboardIcon, PenToolIcon, ChromeIcon } from 'lucide-react';
+import { Sparkles, SendIcon } from 'lucide-react';
 import { Icon } from '@iconify/react';
 import { cn } from '@/lib/utils';
 import { BackgroundLines } from '@/components/background-lines';
@@ -24,8 +24,6 @@ interface TranslationFunction {
 
 function HeroSection({ t, className }: { t: TranslationFunction; className?: string }) {
   const description = t('hero.description');
-  const platformText = t('hero.platform');
-  const [before, after] = description.split('all platforms');
 
   const features = [
     {
@@ -136,49 +134,19 @@ function HeroSection({ t, className }: { t: TranslationFunction; className?: str
 
           {/* 描述文本 - 修改样式 */}
           <p className="mb-10 mt-4 w-full max-w-2xl px-4 text-center text-lg leading-7 text-foreground-600 sm:text-xl sm:leading-8">
-            {before}
-            <span className="cursor-pointer font-semibold underline decoration-blue-500 decoration-wavy dark:decoration-yellow-300">
-              {platformText}
-            </span>
-            {after}
+            {description}
           </p>
 
           {/* 操作按钮 - 修改样式 */}
-          <div className="flex w-full flex-col justify-center gap-4 px-4 sm:flex-row sm:gap-4 sm:px-0">
-            <Button
-              as={Link}
-              href="/dashboard/publish"
-              startContent={<LayoutDashboardIcon className="size-4 sm:size-5" />}
-              className="rounded-xl bg-gradient-to-r from-blue-400 to-sky-300 py-6 text-lg font-medium">
-              {t('hero.buttons.post')}
-            </Button>
-            <Button
-              as={Link}
-              href="https://md.multipost.app"
-              target="_blank"
-              startContent={<PenToolIcon className="size-4 sm:size-5" />}
-              className="rounded-xl bg-gradient-to-r from-green-600 to-lime-400 py-6 text-lg font-medium">
-              {t('hero.buttons.markdown')}
-            </Button>
-            <Button
-              as={Link}
-              href="/extension"
-              startContent={<ChromeIcon className="size-4 sm:size-5" />}
-              className="rounded-xl bg-gradient-to-r from-purple-400 to-pink-300 py-6 text-lg font-medium">
-              {t('hero.buttons.install')}
-            </Button>
-          </div>
-
-          {/* 装饰元素 - 新增 */}
-          <div className="mt-12 flex items-center justify-center gap-3">
-            <span className="size-3 animate-pulse rounded-full bg-blue-400"></span>
-            <span
-              className="size-3 animate-pulse rounded-full bg-green-400"
-              style={{ animationDelay: '0.3s' }}></span>
-            <span
-              className="size-3 animate-pulse rounded-full bg-purple-400"
-              style={{ animationDelay: '0.6s' }}></span>
-          </div>
+          <Button
+            as={Link}
+            href="/dashboard/publish"
+            color="primary"
+            size="lg"
+            startContent={<SendIcon />}
+            className="mx-auto">
+            {t('hero.buttons.post')}
+          </Button>
         </div>
       </div>
 
