@@ -9,7 +9,7 @@ import { Category, PosterGenerationSchema } from '../types';
 import { generatePoster, getPosterGeneration } from '../action';
 import { GenerationForm } from './component/GenerationForm';
 import { ResultWaiter } from './component/ResultWaiter';
-import { Template } from './component/Template';
+// import { Template } from './component/Template';
 import { useSearchParams } from 'next/navigation';
 import { useTranslation } from '@/i18n/client';
 
@@ -19,7 +19,7 @@ export default function PosterGenerationPage() {
   const editId = searchParams.get('editId');
   const [loading, setLoading] = useState(false);
   const [taskId, setTaskId] = useState<string | null>(null);
-  const [formValues, setFormValues] = useState<z.infer<typeof PosterGenerationSchema> | null>(null);
+  const [formValues] = useState<z.infer<typeof PosterGenerationSchema> | null>(null);
   const [category, setCategory] = useState<string>('category.social_media_generator');
 
   const handleGenerate = async (data: z.infer<typeof PosterGenerationSchema>) => {
@@ -48,26 +48,26 @@ export default function PosterGenerationPage() {
     toast.error(error);
   };
 
-  const handleTemplateSelect = (template: {
-    prompt: string;
-    width: number;
-    height: number;
-    model: string;
-    category: string;
-  }) => {
-    setFormValues({
-      prompt: template.prompt,
-      width: template.width,
-      height: template.height,
-      model: template.model,
-      category: template.category,
-    });
+  // const handleTemplateSelect = (template: {
+  //   prompt: string;
+  //   width: number;
+  //   height: number;
+  //   model: string;
+  //   category: string;
+  // }) => {
+  //   setFormValues({
+  //     prompt: template.prompt,
+  //     width: template.width,
+  //     height: template.height,
+  //     model: template.model,
+  //     category: template.category,
+  //   });
 
-    // 滚动到表单位置
-    document.getElementById('generation-form')?.scrollIntoView({
-      behavior: 'smooth',
-    });
-  };
+  //   // 滚动到表单位置
+  //   document.getElementById('generation-form')?.scrollIntoView({
+  //     behavior: 'smooth',
+  //   });
+  // };
 
   useEffect(() => {
     if (editId) {
@@ -124,14 +124,14 @@ export default function PosterGenerationPage() {
       )}
 
       {/* 模板选择 */}
-      {!taskId && (
+      {/* {!taskId && (
         <div className="mx-auto w-full max-w-7xl px-6 py-8">
           <Template
             onSelect={handleTemplateSelect}
             category={Category.find((item) => item.name === category) || Category[0]}
           />
         </div>
-      )}
+      )} */}
     </div>
   );
 }
