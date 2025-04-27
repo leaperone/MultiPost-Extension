@@ -35,6 +35,7 @@ model User {
   PromotionSubmission PromotionSubmission[]
   PlatformExtraConfig PlatformExtraConfig[]
   ImageGeneration     ImageGeneration[]
+  PosterGeneration    PosterGeneration[]
 }
 
 model Account {
@@ -391,6 +392,26 @@ model ImageGeneration {
   result      Json?
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model PosterGeneration {
+  id           String   @id @unique @default(cuid())
+  userId       String
+  prompt       String
+  width        Int      @default(1080)
+  height       Int      @default(1480)
+  model        String   @default("deepseek-v3")
+  status       String   @default("pending")
+  taskId       String?
+  ownerId      String?
+  projectId    String?
+  urls         Json?
+  error        String?
+  lastImageUrl String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 }

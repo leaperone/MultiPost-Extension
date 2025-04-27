@@ -22,7 +22,7 @@ const nextConfig = {
       headers: [
         {
           key: 'Content-Security-Policy',
-          value: 'frame-src *.cloudflare.com',
+          value: 'frame-src *.cloudflare.com seede.ai',
         },
       ],
     },

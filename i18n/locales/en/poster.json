@@ -1,0 +1,62 @@
+{
+  "posters_options": "Poster Options",
+  "generation": "Generate Poster",
+  "gallery": "Poster Gallery",
+  "size": {
+    "social_media": {
+      "instagram_poster": "Instagram Poster",
+      "rednote_poster": "Rednote Poster"
+    },
+    "ratio": {
+      "1010": "1:1",
+      "1609": "16:9",
+      "4030": "4:3"
+    }
+  },
+  "generation_page": {
+    "prompt_placeholder": "Describe the poster content you want to generate...",
+    "size": {
+      "label": "Size",
+      "square": "Square (1:1)",
+      "portrait": "Portrait (3:4)",
+      "landscape": "Landscape (4:3)"
+    },
+    "model": {
+      "label": "Model",
+      "loading": "Loading..."
+    },
+    "button": {
+      "generate": "Generate Poster",
+      "generating": "Generating..."
+    }
+  },
+  "result_waiter": {
+    "loading": "Loading...",
+    "task_submitted": "Task submitted",
+    "submit_failed": "Submit failed",
+    "unknown_error": "Unknown error",
+    "pending": "Pending",
+    "processing": "Processing",
+    "processing_description": "Please wait, this may take a few minutes",
+    "failed": "Generation failed",
+    "generated_image": "Generated poster",
+    "download": "Download",
+    "exporting": "Exporting..."
+  },
+  "gallery_page": {
+    "title": "My Posters",
+    "new_image": "Create New Poster",
+    "tabs": {
+      "all": "All",
+      "done": "Completed",
+      "pending": "Pending",
+      "processing": "Processing",
+      "failed": "Failed"
+    },
+    "empty": {
+      "title": "No posters yet",
+      "action": "Create your first poster"
+    },
+    "get_image_failed": "Failed to get posters"
+  }
+}

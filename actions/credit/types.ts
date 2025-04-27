@@ -29,6 +29,7 @@ export const PRICING = {
     },
   },
   IMAGE_GENERATION: new Decimal(0.04 * 10), // per image
+  POSTER_GENERATION: new Decimal(0.04 * 10), // per image
 } as const;
 
 // 使用类型
@@ -41,6 +42,7 @@ export const USAGE_TYPE_MAP = {
   LLM_DEEPSEEK_CHAT_INPUT: 'llm_deepseek_chat_input',
   LLM_DEEPSEEK_CHAT_OUTPUT: 'llm_deepseek_chat_output',
   IMAGE_GENERATION: 'image_generation',
+  POSTER_GENERATION: 'poster_generation',
 } as const;
 
 export type UsageType = keyof typeof USAGE_TYPE_MAP;

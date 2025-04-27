@@ -2,6 +2,7 @@
 import {
   BookIcon,
   ChartSplineIcon,
+  FileImageIcon,
   GridIcon,
   Home,
   ImageIcon,
@@ -77,6 +78,11 @@ const getApplicationItems = (t: TranslationFunction): MenuItem[] => [
     title: 'Images',
     url: '/dashboard/images',
     icon: ImageIcon,
+  },
+  {
+    title: 'Poster',
+    url: '/dashboard/poster',
+    icon: FileImageIcon,
   },
 ];
 

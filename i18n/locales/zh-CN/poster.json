@@ -1,0 +1,63 @@
+{
+  "posters_options": "海报选项",
+  "generation": "生成海报",
+  "gallery": "海报库",
+  "size": {
+    "social_media": {
+      "instagram_poster": "Instagram 海报",
+      "rednote_poster": "Rednote 海报"
+    },
+    "ratio": {
+      "title": "尺寸比例",
+      "1010": "1:1",
+      "1609": "16:9",
+      "4030": "4:3"
+    }
+  },
+  "generation_page": {
+    "prompt_placeholder": "描述您想要生成的海报内容...",
+    "size": {
+      "label": "尺寸",
+      "square": "方形 (1:1)",
+      "portrait": "竖向 (3:4)",
+      "landscape": "横向 (4:3)"
+    },
+    "model": {
+      "label": "模型",
+      "loading": "加载中..."
+    },
+    "button": {
+      "generate": "生成海报",
+      "generating": "生成中..."
+    }
+  },
+  "result_waiter": {
+    "loading": "加载中...",
+    "task_submitted": "任务已提交",
+    "submit_failed": "提交失败",
+    "unknown_error": "未知错误",
+    "pending": "等待中",
+    "processing": "处理中",
+    "processing_description": "请耐心等待，这可能需要几分钟时间",
+    "failed": "生成失败",
+    "generated_image": "生成的海报",
+    "download": "下载",
+    "exporting": "导出中..."
+  },
+  "gallery_page": {
+    "title": "我的海报",
+    "new_image": "创建新海报",
+    "tabs": {
+      "all": "全部",
+      "done": "已完成",
+      "pending": "等待中",
+      "processing": "处理中",
+      "failed": "失败"
+    },
+    "empty": {
+      "title": "暂无海报",
+      "action": "创建第一张海报"
+    },
+    "get_image_failed": "获取海报失败"
+  }
+}
