@@ -2,12 +2,35 @@
   "posters_options": "Poster Options",
   "generation": "Generate Poster",
   "gallery": "Poster Gallery",
+  "category": {
+    "wechat_cover_generator": "WeChat Cover",
+    "social_media_generator": "Social Media Post",
+    "poster_generator": "Event Poster",
+    "infographic_generator": "Infographic",
+    "ai_flyer_generator": "Flyer",
+    "menu_generator": "Menu",
+    "invitation_generator": "Invitation",
+    "music_album_generator": "Music Album Cover",
+    "signage_generator": "Signage",
+    "event_promotion_generator": "Event Promotion"
+  },
+  "template": {
+    "label": "Template",
+    "no_templates": "No templates found",
+    "use_template": "Use Template"
+  },
   "size": {
+    "label": "Size",
+    "width": "Width",
+    "height": "Height",
+    "custom": "Custom Size",
     "social_media": {
+      "label": "Social Media",
       "instagram_poster": "Instagram Poster",
       "rednote_poster": "Rednote Poster"
     },
     "ratio": {
+      "label": "Ratio",
       "1010": "1:1",
       "1609": "16:9",
       "4030": "4:3"

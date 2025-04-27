@@ -59,15 +59,15 @@ export function EditsForm({ onSubmit, loading, images = [] }: EditsFormProps) {
 
       {/* 提示词输入 */}
       <Textarea
+        isRequired
+        isClearable
+        label={'Prompt'}
+        minRows={5}
         placeholder={t('generation_page.edit_prompt_placeholder')}
         {...form.register('prompt')}
         disabled={loading}
         isInvalid={!!form.formState.errors.prompt}
         errorMessage={form.formState.errors.prompt?.message}
-        classNames={{
-          input: 'bg-white/80 backdrop-blur-sm min-h-[100px]',
-          inputWrapper: 'shadow-lg',
-        }}
       />
 
       {/* 生成参数设置 */}

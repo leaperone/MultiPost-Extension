@@ -32,15 +32,15 @@ export function GenerationForm({ onSubmit, loading }: GenerationFormProps) {
     <div className="space-y-4">
       {/* 提示词输入 */}
       <Textarea
+        isRequired
+        isClearable
+        label={'Prompt'}
+        minRows={5}
         placeholder={t('generation_page.prompt_placeholder')}
         {...form.register('prompt')}
         disabled={loading}
         isInvalid={!!form.formState.errors.prompt}
         errorMessage={form.formState.errors.prompt?.message}
-        classNames={{
-          input: 'bg-white/80 backdrop-blur-sm min-h-[100px]',
-          inputWrapper: 'shadow-lg',
-        }}
       />
 
       {/* 生成参数设置 */}

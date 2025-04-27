@@ -404,6 +404,7 @@ model PosterGeneration {
   height       Int      @default(1480)
   model        String   @default("deepseek-v3")
   status       String   @default("pending")
+  systemPrompt String?
   taskId       String?
   ownerId      String?
   projectId    String?

@@ -2,19 +2,42 @@
   "posters_options": "海报选项",
   "generation": "生成海报",
   "gallery": "海报库",
+  "category": {
+    "wechat_cover_generator": "微信公众号封面",
+    "social_media_generator": "社交媒体图文",
+    "poster_generator": "活动海报",
+    "infographic_generator": "知识卡片",
+    "ai_flyer_generator": "传单",
+    "menu_generator": "餐饮菜单",
+    "invitation_generator": "邀请函",
+    "music_album_generator": "专辑封面",
+    "signage_generator": "标识牌",
+    "event_promotion_generator": "活动推广"
+  },
+  "template": {
+    "label": "模板",
+    "no_templates": "没有找到模板",
+    "use_template": "使用模板"
+  },
   "size": {
+    "label": "尺寸",
+    "width": "宽度",
+    "height": "高度",
+    "custom": "自定义尺寸",
     "social_media": {
+      "label": "社交平台",
       "instagram_poster": "Instagram 海报",
       "rednote_poster": "Rednote 海报"
     },
     "ratio": {
-      "title": "尺寸比例",
+      "label": "尺寸比例",
       "1010": "1:1",
       "1609": "16:9",
       "4030": "4:3"
     }
   },
   "generation_page": {
+    "category": "选择模板类型",
     "prompt_placeholder": "描述您想要生成的海报内容...",
     "size": {
       "label": "尺寸",

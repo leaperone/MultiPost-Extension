@@ -1,7 +1,7 @@
 'use server';
 
 import { multipostDb } from '@/lib/db';
-import { PosterGenerationSchema, PosterGenerationStatus } from './types';
+import { PosterGenerationSchema, PosterGenerationStatus, Category } from './types';
 import { auth } from '@/auth';
 import { preCheckCredit } from '@/actions/credit';
 import { PRICING } from '@/actions/credit/types';
@@ -48,6 +48,7 @@ export async function generatePoster(data: PosterGenerationSchema) {
           width: data.width,
           height: data.height,
           model: data.model,
+          systemPrompt: Category.find((item) => item.name === data.category)?.systemPrompt,
         },
       });
 
@@ -67,6 +68,7 @@ export async function generatePoster(data: PosterGenerationSchema) {
           model: data.model,
           format: 'webp',
           webhookURL: process.env.SEEDE_WEBHOOK_URL!,
+          systemPrompt: Category.find((item) => item.name === data.category)?.systemPrompt,
         }),
       });
 
