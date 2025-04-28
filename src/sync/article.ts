@@ -3,6 +3,7 @@ import { ArticleBaijiahao } from './article/baijiahao';
 import { ArticleBilibili } from './article/bilibili';
 import { ArticleCSDN } from './article/csdn';
 import { ArticleDouban } from './article/douban';
+import { ArticleEastmoney } from './article/eastmoney';
 import { ArticleJianshu } from './article/jianshu';
 import { ArticleJuejin } from './article/juejin';
 import { ArticleSegmentfault } from './article/segmentfault';
@@ -180,6 +181,17 @@ export const ArticleInfoMap: Record<string, PlatformInfo> = {
     injectFunction: ArticleWeibo,
     tags: ['CN'],
     accountKey: 'weibo',
+  },
+  ARTICLE_EASTMONEY: {
+    type: 'ARTICLE',
+    name: 'ARTICLE_EASTMONEY',
+    homeUrl: 'https://www.eastmoney.com/',
+    faviconUrl: 'https://mycaifuhao.eastmoney.com/public/publish/favicon.ico',
+    platformName: chrome.i18n.getMessage('platformEastmoney'),
+    injectUrl: 'https://mp.eastmoney.com/collect/pc_article/index.html',
+    injectFunction: ArticleEastmoney,
+    tags: ['CN'],
+    accountKey: 'eastmoney',
   },
 };
 

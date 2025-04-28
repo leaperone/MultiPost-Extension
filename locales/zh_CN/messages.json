@@ -440,6 +440,10 @@
     "message": "51CTO",
     "description": "51CTO 平台名称"
   },
+  "platformEastmoney": {
+    "message": "东方财富",
+    "description": "东方财富平台名称"
+  },
   "platformCSDN": {
     "message": "CSDN",
     "description": "CSDN 平台名称"
