@@ -429,6 +429,10 @@
     "message": "SSPai",
     "description": "Platform name for SSPai"
   },
+  "platformEastmoney": {
+    "message": "Eastmoney",
+    "description": "Platform name for Eastmoney"
+  },
   "platform51CTO": {
     "message": "51CTO",
     "description": "Platform name for 51CTO"
