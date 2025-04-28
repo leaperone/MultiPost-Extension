@@ -39,7 +39,7 @@ export async function PodcastLiZhi(data: SyncData) {
 
       const fileInput = document.querySelector('input[type="file"]') as HTMLInputElement;
       console.debug('try upload file', audio);
-      console.debug('fileInput -->', fileInput);
+      console.debug('fileInput', fileInput);
 
       // 获取文件数据
       const response = await fetch(audio.url);

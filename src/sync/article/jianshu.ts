@@ -24,10 +24,10 @@ export async function ArticleJianshu(data: SyncData) {
 
   // 上传单个图片
   async function uploadImage(fileInfo: FileData): Promise<string | null> {
-    console.log('uploadImage -->', fileInfo);
+    console.log('uploadImage', fileInfo);
 
     const config = await getUploadConfig(fileInfo.name);
-    console.log('uploadConfig -->', config);
+    console.log('uploadConfig', config);
 
     const response = await fetch(fileInfo.url);
     const blob = await response.blob();
@@ -64,7 +64,7 @@ export async function ArticleJianshu(data: SyncData) {
     const doc = parser.parseFromString(htmlContent, 'text/html');
     const images = doc.getElementsByTagName('img');
 
-    console.log('images -->', images);
+    console.log('images', images);
 
     for (let i = 0; i < images.length; i++) {
       const img = images[i];

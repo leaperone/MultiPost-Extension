@@ -142,7 +142,7 @@ export async function ArticleWeixin(data: SyncData) {
       y2_abs,
     };
 
-    console.debug('calculateCropConfig config -->', ratio, config);
+    console.debug('calculateCropConfig config', ratio, config);
     return config;
   }
 
@@ -152,7 +152,7 @@ export async function ArticleWeixin(data: SyncData) {
 
     // 获取文件blob
     const blob = await (await fetch(file.url)).blob();
-    console.debug('uploadImage file -->', file, blob);
+    console.debug('uploadImage file', file, blob);
 
     // 构建表单数据
     formData.append('type', blob.type);
@@ -180,7 +180,7 @@ export async function ArticleWeixin(data: SyncData) {
     url.searchParams.append('seq', seq);
     url.searchParams.append('t', Math.random().toString());
 
-    console.debug('uploadImage url -->', url, url.toString());
+    console.debug('uploadImage url', url, url.toString());
 
     const response = await fetch(url.toString(), {
       method: 'POST',
@@ -188,7 +188,7 @@ export async function ArticleWeixin(data: SyncData) {
     });
 
     const result = await response.json();
-    console.debug('uploadImage res -->', result);
+    console.debug('uploadImage res', result);
 
     if (result.base_resp.err_msg !== 'ok') return null;
 
@@ -409,7 +409,7 @@ export async function ArticleWeixin(data: SyncData) {
     const doc = parser.parseFromString(content, 'text/html');
     const images = doc.getElementsByTagName('img');
 
-    console.debug('images -->', images);
+    console.debug('images', images);
 
     for (let i = 0; i < images.length; i++) {
       updateProgress(`开始上传 ${i + 1}/${images.length} 张图片`);

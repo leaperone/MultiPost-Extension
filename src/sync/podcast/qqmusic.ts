@@ -1,6 +1,5 @@
 import type { SyncData, PodcastData } from '~sync/common';
 
-
 export async function PodcastQQMusic(data: SyncData) {
   const { title, audio } = data.data as PodcastData;
 
@@ -40,7 +39,7 @@ export async function PodcastQQMusic(data: SyncData) {
       await new Promise((resolve) => setTimeout(resolve, 1000));
 
       console.debug('try upload file', audio);
-      console.debug('fileInput -->', fileInput);
+      console.debug('fileInput', fileInput);
 
       // 获取文件数据
       const response = await fetch(audio.url);

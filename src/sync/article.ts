@@ -1,4 +1,5 @@
 import { ArticleBaijiahao } from './article/baijiahao';
+import { ArticleBilibili } from './article/bilibili';
 import { ArticleCSDN } from './article/csdn';
 import { ArticleDouban } from './article/douban';
 import { ArticleJianshu } from './article/jianshu';
@@ -120,5 +121,16 @@ export const ArticleInfoMap: Record<string, PlatformInfo> = {
     injectFunction: ArticleWordpress,
     tags: ['International'],
     accountKey: 'wordpress',
+  },
+  ARTICLE_BILIBILI: {
+    type: 'ARTICLE',
+    name: 'ARTICLE_BILIBILI',
+    homeUrl: 'https://www.bilibili.com/',
+    faviconUrl: 'https://www.bilibili.com/favicon.ico',
+    platformName: chrome.i18n.getMessage('platformBilibili'),
+    injectUrl: 'https://member.bilibili.com/article-text/home?newEditor=-1',
+    injectFunction: ArticleBilibili,
+    tags: ['CN'],
+    accountKey: 'bilibili',
   },
 };

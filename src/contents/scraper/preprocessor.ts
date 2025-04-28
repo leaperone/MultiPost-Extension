@@ -23,10 +23,9 @@ export function preprocessor(content: string, options: PreprocessorOptions = def
       const dataSrc = img.getAttribute('data-src');
       if (dataSrc) {
         img.setAttribute('src', dataSrc);
-        console.debug('设置src为data-src -->', dataSrc);
+        console.debug('设置src为data-src', dataSrc);
       }
     });
-
 
     // 处理视频
     Array.from(doc.getElementsByTagName('video')).forEach((video) => {
@@ -35,8 +34,7 @@ export function preprocessor(content: string, options: PreprocessorOptions = def
         const img = doc.createElement('img');
         img.setAttribute('src', poster);
         video.parentNode.replaceChild(img, video);
-        console.debug('将视频替换为图片 -->', video, img);
-
+        console.debug('将视频替换为图片', video, img);
       } else if (video.parentNode) {
         video.parentNode.removeChild(video);
       }
@@ -52,10 +50,9 @@ export function preprocessor(content: string, options: PreprocessorOptions = def
     // 移除不可编辑的元素
     if (options.removeNonEditableElements) {
       const nonEditableElements = doc.querySelectorAll('*[contenteditable="false"]');
-      console.debug('不可编辑的元素 --> ', nonEditableElements);
+      console.debug('不可编辑的元素 ', nonEditableElements);
       nonEditableElements.forEach((el) => el.remove());
     }
-
 
     // 移除空段落
     if (options.removeEmptyParagraphs) {
@@ -71,5 +68,4 @@ export function preprocessor(content: string, options: PreprocessorOptions = def
     console.error('预处理内容时出错:', error);
     return content; // 发生错误时返回原始内容
   }
-
 }

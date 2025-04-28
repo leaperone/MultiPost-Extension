@@ -6,12 +6,12 @@ export async function ArticleWordpress(data: SyncData) {
 
   // 通过 classic editor 上传图片
   async function uploadMediaClassic(fileData: FileData, postId: string): Promise<string | undefined> {
-    console.debug('uploadMediaClassic -->', fileData);
+    console.debug('uploadMediaClassic', fileData);
 
     // 获取上传 nonce
     const uploadNonceMatch = document.body.innerHTML.match(/{"action":"upload-attachment","_wpnonce":"([^"]+)"}/);
     const uploadNonce = uploadNonceMatch?.[1];
-    console.debug('uploadAttachmentNonce -->', uploadNonce);
+    console.debug('uploadAttachmentNonce', uploadNonce);
 
     const uploadUrl = `${window.location.origin}/wp-admin/async-upload.php`;
 
@@ -50,14 +50,14 @@ export async function ArticleWordpress(data: SyncData) {
 
   // 通过 API 上传图片
   async function uploadMediaApi(fileData: FileData, postId: string): Promise<string | undefined> {
-    console.debug('uploadMediaApi -->', fileData);
+    console.debug('uploadMediaApi', fileData);
 
     // 获取 nonce
     const nonceMatch = document.body.innerHTML.match(/wp\.apiFetch\.createNonceMiddleware\(([^)]+)\)/);
     const nonceQuote = nonceMatch?.[1];
-    console.debug('nonceQuote -->', nonceQuote);
+    console.debug('nonceQuote', nonceQuote);
     const nonce = nonceQuote?.match(/"([^"]+)"/)?.[1];
-    console.debug('nonce -->', nonce);
+    console.debug('nonce', nonce);
 
     const uploadUrl = `${window.location.origin}/wp-json/wp/v2/media?_locale=user`;
 
@@ -117,7 +117,7 @@ export async function ArticleWordpress(data: SyncData) {
             ? await uploadMediaClassic(fileData, postId)
             : await uploadMediaApi(fileData, postId);
 
-          console.debug('newUrl -->', newUrl);
+          console.debug('newUrl', newUrl);
           // 替换图片 URL
           if (newUrl) {
             img.setAttribute('src', newUrl);
@@ -127,15 +127,15 @@ export async function ArticleWordpress(data: SyncData) {
     }
 
     // 更新内容
-    console.log('doc.body.innerHTML -->', doc.body.innerHTML);
+    console.log('doc.body.innerHTML', doc.body.innerHTML);
     articleData.htmlContent = doc.body.innerHTML;
-    console.log('articleData.htmlContent -->', articleData.htmlContent);
+    console.log('articleData.htmlContent', articleData.htmlContent);
     return articleData;
   }
 
   // 通过 classic editor 发布草稿
   async function publishDraftClassic(articleData: ArticleData, postId: string): Promise<boolean> {
-    console.debug('publishDraftClassic -->');
+    console.debug('publishDraftClassic');
 
     const ajaxUrl = `${window.location.origin}/wp-admin/admin-ajax.php`;
     const formData = new FormData();
@@ -186,7 +186,7 @@ export async function ArticleWordpress(data: SyncData) {
 
   // 通过 API 发布草稿
   async function publishDraftApi(articleData: ArticleData, postId: string): Promise<boolean> {
-    console.debug('publishDraftApi -->');
+    console.debug('publishDraftApi');
 
     // 获取 nonce
     const nonceMatch = document.body.innerHTML.match(/wp\.apiFetch\.createNonceMiddleware\(([^)]+)\)/);
@@ -241,7 +241,7 @@ export async function ArticleWordpress(data: SyncData) {
     const articleData = data.data as ArticleData;
     const processedData = await processContent(articleData, postId, isClassicEditor);
 
-    console.debug('processedData -->', processedData);
+    console.debug('processedData', processedData);
 
     // 发布草稿
     const success = isClassicEditor

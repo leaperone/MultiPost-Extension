@@ -41,7 +41,7 @@ async function defaultScraper(): Promise<ArticleData | undefined> {
 
   const article = new Readability(document.cloneNode(true) as Document).parse();
 
-  console.debug('Readability article -->', article);
+  console.debug('Readability article', article);
 
   if (!article?.content || !article?.title) {
     // alert(chrome.i18n.getMessage("failedToGetArticleContent"));
