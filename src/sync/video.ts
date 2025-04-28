@@ -3,6 +3,7 @@ import { VideoBaijiahao } from './video/baijiahao';
 import { VideoBilibili } from './video/bilibili';
 import { VideoBluesky } from './video/bluesky';
 import { VideoDouyin } from './video/douyin';
+import { VideoEastmoney } from './video/eastmoney';
 import { VideoKuaishou } from './video/kuaishou';
 import { VideoOkjike } from './video/okjike';
 import { VideoRednote } from './video/rednote';
@@ -146,5 +147,16 @@ export const VideoInfoMap: Record<string, PlatformInfo> = {
     injectFunction: VideoZhihu,
     tags: ['CN'],
     accountKey: 'zhihu',
+  },
+  VIDEO_EASTMONEY: {
+    type: 'VIDEO',
+    name: 'VIDEO_EASTMONEY',
+    homeUrl: 'https://www.eastmoney.com/',
+    faviconUrl: 'https://mycaifuhao.eastmoney.com/public/publish/favicon.ico',
+    platformName: chrome.i18n.getMessage('platformEastmoney'),
+    injectUrl: 'https://mp.eastmoney.com/collect/pc_writer/index.html#/publish/video',
+    injectFunction: VideoEastmoney,
+    tags: ['CN'],
+    accountKey: 'eastmoney',
   },
 };
