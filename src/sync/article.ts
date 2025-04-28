@@ -10,6 +10,7 @@ import { ArticleSSPai } from './article/sspai';
 import { ArticleToutiao } from './article/toutiao';
 import { ArticleWeixin } from './article/weixin';
 import { ArticleWordpress } from './article/wordpress';
+import { ArticleXueqiu } from './article/xueqiu';
 import { ArticleZhihu } from './article/zhihu';
 import type { PlatformInfo } from './common';
 
@@ -156,5 +157,16 @@ export const ArticleInfoMap: Record<string, PlatformInfo> = {
     injectFunction: Article51CTO,
     tags: ['CN'],
     accountKey: '51cto',
+  },
+  ARTICLE_XUEQIU: {
+    type: 'ARTICLE',
+    name: 'ARTICLE_XUEQIU',
+    homeUrl: 'https://xueqiu.com/',
+    faviconUrl: 'https://assets.imedao.com/images/favicon.png',
+    platformName: chrome.i18n.getMessage('platformXueqiu'),
+    injectUrl: 'https://mp.xueqiu.com/writeV2?position=pc_home_primary',
+    injectFunction: ArticleXueqiu,
+    tags: ['CN'],
+    accountKey: 'xueqiu',
   },
 };
