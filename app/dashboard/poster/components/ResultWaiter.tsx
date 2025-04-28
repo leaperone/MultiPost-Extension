@@ -130,8 +130,26 @@ export function ResultWaiter({ taskId, onError }: ResultWaiterProps) {
     }
   }, [manualCooldown, waitingTime]);
 
-  const handleDownload = (url: string) => {
-    window.open(url, '_blank');
+  const handleDownload = async (url: string) => {
+    try {
+      toast.loading('Downloading...');
+      const response = await fetch(url);
+      const blob = await response.blob();
+      const downloadUrl = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = downloadUrl;
+      // 从URL中提取原始文件名
+      const fileName = `poster-${new Date().getTime()}.webp`;
+      link.download = fileName;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(downloadUrl);
+      toast.dismiss();
+    } catch (error) {
+      console.error('下载失败:', error);
+      toast.error('Download failed');
+    }
   };
 
   if (!result) {
