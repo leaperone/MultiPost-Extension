@@ -231,3 +231,7 @@ export const linkExtensionClient = async (apiKey: string, timeout: number = 3000
     timeout,
   );
 };
+
+export const requestRefreshAccountInfo = async (isFocused: boolean = false) => {
+  return sendRequest<{ isFocused: boolean }, void>('MUTLIPOST_EXTENSION_REFRESH_ACCOUNT_INFOS', { isFocused });
+};
