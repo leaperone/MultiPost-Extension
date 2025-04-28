@@ -31,7 +31,8 @@
   },
   "video": {
     "title": "请输入标题",
-    "description": "请输入描述，然后上传视频"
+    "description": "请输入描述，然后上传视频",
+    "tags": "请输入标签，用回车或逗号分隔"
   },
   "grid": {
     "description": "为社交媒体创建精美的照片九宫格",

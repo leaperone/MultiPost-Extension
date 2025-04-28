@@ -25,27 +25,23 @@ export interface FileData {
   url: string;
   type: string;
   size: number;
-  base64?: string;
   originUrl?: string;
 }
 
 export interface ArticleData {
   title: string;
-  content: string;
   digest: string;
   cover: FileData;
-  images: FileData[];
-  videos: FileData[];
-  fileDatas: FileData[];
-  originContent?: string;
-  markdownContent?: string;
-  markdownOriginContent?: string;
+  htmlContent: string;
+  markdownContent: string;
+  images?: FileData[];
 }
 
 export interface VideoData {
   title: string;
   content: string;
   video: FileData;
+  tags: string[];
 }
 
 export interface PodcastData {

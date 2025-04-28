@@ -19,6 +19,7 @@ import {
   addToast,
   Accordion,
   AccordionItem,
+  Chip,
 } from '@heroui/react';
 import {
   VideoIcon,
@@ -29,6 +30,7 @@ import {
   TrashIcon,
   Eraser,
   UploadIcon,
+  PlusIcon,
 } from 'lucide-react';
 import dynamic from 'next/dynamic';
 import type { FileData, SyncData } from '@/lib/extension';
@@ -44,6 +46,84 @@ import { cn } from '@/lib/utils';
 const ReactPlayer = dynamic(() => import('react-player'), {
   ssr: false,
 });
+
+// HeroUI版本的TagInput组件
+const HeroTagInput = React.forwardRef<
+  HTMLInputElement,
+  {
+    value: string[];
+    onChange: (value: string[]) => void;
+    placeholder?: string;
+    className?: string;
+  }
+>(({ value, onChange, placeholder, className, ...props }, ref) => {
+  const [inputValue, setInputValue] = React.useState('');
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter' || e.key === ',') {
+      e.preventDefault();
+      addTag();
+    } else if (e.key === 'Backspace' && !inputValue && value.length > 0) {
+      onChange(value.slice(0, -1));
+    }
+  };
+
+  const addTag = () => {
+    const newTag = inputValue.trim();
+    if (newTag && !value.includes(newTag)) {
+      onChange([...value, newTag]);
+      setInputValue('');
+    }
+  };
+
+  const removeTag = (tagToRemove: string) => {
+    onChange(value.filter((tag) => tag !== tagToRemove));
+  };
+
+  return (
+    <div
+      className={cn(
+        'flex min-h-10 w-full flex-wrap items-center gap-2 rounded-md bg-transparent px-0 py-2 text-sm mt-4',
+        className,
+      )}>
+      {value.map((tag) => (
+        <Chip
+          key={tag}
+          size="sm"
+          variant="flat"
+          color="primary"
+          onClose={() => removeTag(tag)}
+          className="text-sm">
+          {tag}
+        </Chip>
+      ))}
+      <div className="flex flex-1 items-center">
+        <Input
+          ref={ref}
+          type="text"
+          value={inputValue}
+          onChange={(e) => setInputValue(e.target.value)}
+          onKeyDown={handleKeyDown}
+          variant="underlined"
+          className="flex-1 px-0"
+          placeholder={value.length === 0 ? placeholder : ''}
+          {...props}
+        />
+        {inputValue.trim() && (
+          <Button
+            isIconOnly
+            variant="light"
+            size="sm"
+            onPress={addTag}
+            title="添加标签">
+            <PlusIcon className="size-4" />
+          </Button>
+        )}
+      </div>
+    </div>
+  );
+});
+HeroTagInput.displayName = 'HeroTagInput';
 
 // 拖放区域组件
 const DropZone = ({ onFileDrop }: { onFileDrop: (file: File) => void }) => {
@@ -113,6 +193,7 @@ export default function VideoPage() {
   const { videoPlatforms, setVideoPlatforms, clearVideoPlatforms } = usePlatformStore();
   const [selectedPlatforms, setSelectedPlatforms] = useState<string[]>(videoPlatforms);
   const [platforms, setPlatforms] = useState<PlatformInfo[]>([]);
+  const [tags, setTags] = useState<string[]>([]);
 
   useEffect(() => {
     async function fetchPlatforms() {
@@ -258,6 +339,7 @@ export default function VideoPage() {
         title,
         content,
         video: videoFile,
+        tags,
       },
       isAutoPublish: false,
     };
@@ -312,6 +394,12 @@ export default function VideoPage() {
                 fullWidth
                 minRows={5}
                 autoFocus
+              />
+              <HeroTagInput
+                value={tags}
+                onChange={setTags}
+                placeholder={t('video.tags')}
+                className="mt-2"
               />
             </CardBody>
 

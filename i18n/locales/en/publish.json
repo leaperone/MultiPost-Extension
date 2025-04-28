@@ -31,7 +31,8 @@
   },
   "video": {
     "title": "Please enter a title",
-    "description": "Please enter a description, then upload video"
+    "description": "Please enter a description, then upload video",
+    "tags": "Enter tags, separated by commas or enter"
   },
   "grid": {
     "description": "Create beautiful photo grids for social media posts",

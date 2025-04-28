@@ -14,25 +14,20 @@ export const TaskType = {
 // Zod schemas
 export const platformSchema = z.object({
   name: z.string(),
-  injectUrl: z.string().url(),
-  extraConfig: z
-    .object({
-      customInjectUrls: z.array(z.string().url()).optional(),
-    })
-    .or(z.unknown())
-    .optional(),
+  injectUrl: z.string().url().optional(),
+  extraConfig: z.unknown().optional(),
 });
 
 export const fileDataSchema = z.object({
-  name: z.string(),
   url: z.string().url(),
+  name: z.string().optional(),
   type: z.string().optional(),
   size: z.number().int().min(0).optional(),
   originUrl: z.string().url().optional(),
 });
 
 export const dynamicDataSchema = z.object({
-  title: z.string(),
+  title: z.string().optional(),
   content: z.string(),
   images: z.array(fileDataSchema).optional(),
   videos: z.array(fileDataSchema).optional(),
@@ -40,27 +35,30 @@ export const dynamicDataSchema = z.object({
 
 export const articleDataSchema = z.object({
   title: z.string(),
-  content: z.string(),
-  digest: z.string(),
   cover: fileDataSchema,
+  htmlContent: z.string(),
+  markdownContent: z.string(),
+  digest: z.string().optional(),
   images: z.array(fileDataSchema).optional(),
-  videos: z.array(fileDataSchema).optional(),
-  fileDatas: z.array(fileDataSchema).optional(),
-  originContent: z.string().optional(),
-  markdownContent: z.string().optional(),
-  markdownOriginContent: z.string().optional(),
 });
 
 export const videoDataSchema = z.object({
   title: z.string(),
   content: z.string(),
   video: fileDataSchema,
+  tags: z.array(z.string()).optional(),
+});
+
+export const podcastDataSchema = z.object({
+  title: z.string(),
+  description: z.string(),
+  audio: fileDataSchema,
 });
 
 export const publishPostSchema = z.object({
   platforms: z.array(platformSchema),
   isAutoPublish: z.boolean().default(false),
-  data: dynamicDataSchema,
+  data: z.union([dynamicDataSchema, articleDataSchema, videoDataSchema, podcastDataSchema]),
 });
 
 export const schedulePublishPostSchema = publishPostSchema.extend({
