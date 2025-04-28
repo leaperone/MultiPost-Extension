@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { Button, Spinner } from '@heroui/react';
 import { useTranslation } from '@/i18n/client';
 import { toast } from 'sonner';
-import { PosterTemplate, Category } from '../../types';
+import { PosterTemplate, Category } from '../types';
 import { Maximize2 } from 'lucide-react';
 import dynamic from 'next/dynamic';
 

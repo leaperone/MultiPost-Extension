@@ -2,8 +2,8 @@
 
 import { Card, CardBody, Image, Button } from '@heroui/react';
 import { useEffect, useState } from 'react';
-import { getImageGeneration } from '../../action';
-import { ImageGenerationStatus } from '../../types';
+import { getImageGeneration } from '../action';
+import { ImageGenerationStatus } from '../types';
 import { cn } from '@/lib/utils';
 import dynamic from 'next/dynamic';
 import { Download, Edit } from 'lucide-react';
