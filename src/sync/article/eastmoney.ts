@@ -12,7 +12,7 @@ export async function ArticleEastmoney(data: SyncData) {
   // 上传单个图片
   async function uploadImage(fileInfo: FileData): Promise<string | null> {
     try {
-      console.debug('uploadImage -->', fileInfo);
+      console.debug('uploadImage', fileInfo);
 
       // 构建上传 URL
       const url = new URL('https://gbapi.eastmoney.com/iimage/image');
@@ -63,7 +63,7 @@ export async function ArticleEastmoney(data: SyncData) {
     }
     return doc.body.innerHTML;
 
-    console.debug('images -->', images);
+    console.debug('images', images);
 
     for (let i = 0; i < images.length; i++) {
       updateTip(`正在上传第 ${i + 1}/${images.length} 张图片`);

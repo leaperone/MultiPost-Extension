@@ -54,14 +54,14 @@ export async function ArticleWeibo(data: SyncData) {
     }
 
     const croppedImageData = canvas.toDataURL(fileInfo.type);
-    console.debug('croppedImageData', croppedImageData, 'ratio -->', ratio);
+    console.debug('croppedImageData', croppedImageData, 'ratio', ratio);
 
     return { ...fileInfo, base64Data: croppedImageData };
   }
 
   // 上传图片
   async function uploadImage(fileInfo: FileData): Promise<string | null> {
-    console.debug('uploadImage -->', fileInfo);
+    console.debug('uploadImage', fileInfo);
 
     const uploadUrl = new URL('https://picupload.weibo.com/interface/pic_upload.php');
     uploadUrl.searchParams.set('app', 'miniblog');
@@ -110,7 +110,7 @@ export async function ArticleWeibo(data: SyncData) {
       doc = parser.parseFromString(htmlContent, 'text/html'),
       images = doc.getElementsByTagName('img');
 
-    console.debug('images -->', images);
+    console.debug('images', images);
 
     for (let i = 0; i < images.length; i++) {
       const img = images[i];
@@ -125,12 +125,12 @@ export async function ArticleWeibo(data: SyncData) {
           const newUrl = await uploadImage(fileInfo);
           if (newUrl) {
             img.setAttribute('src', newUrl);
-            console.debug('newUrl -->', newUrl);
+            console.debug('newUrl', newUrl);
           }
         }
       }
     }
-    console.debug('doc.body.innerHTML -->', doc.body.innerHTML);
+    console.debug('doc.body.innerHTML', doc.body.innerHTML);
     return doc.body.innerHTML;
   }
 
@@ -224,7 +224,7 @@ export async function ArticleWeibo(data: SyncData) {
     formData.append('ver', '4.0');
     formData.append('_rid', new Date().getTime().toString());
 
-    console.debug('formData -->', formData);
+    console.debug('formData', formData);
 
     const saveResponse = await fetch(saveUrlString, {
       method: 'POST',

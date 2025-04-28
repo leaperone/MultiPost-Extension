@@ -65,10 +65,10 @@ export async function Article51CTO(data: SyncData) {
   // 上传单个图片
   async function uploadImage(fileInfo: FileData): Promise<string | null> {
     try {
-      console.debug('uploadImage -->', fileInfo);
+      console.debug('uploadImage', fileInfo);
 
       const config = await getUploadConfig(fileInfo.type, fileInfo.name);
-      console.debug('uploadConfig -->', config);
+      console.debug('uploadConfig', config);
 
       const blob = await (await fetch(fileInfo.url)).blob();
       const file = new File([blob], fileInfo.name, { type: fileInfo.type });
@@ -104,7 +104,7 @@ export async function Article51CTO(data: SyncData) {
     const doc = parser.parseFromString(htmlContent, 'text/html');
     const images = doc.getElementsByTagName('img');
 
-    console.debug('images -->', images);
+    console.debug('images', images);
 
     for (let i = 0; i < images.length; i++) {
       updateTip(`正在上传第 ${i + 1}/${images.length} 张图片`);
