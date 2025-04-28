@@ -425,6 +425,10 @@
   "dashboardSendBiliPrivateMsg": {
     "message": "Send Bilibili Private Message"
   },
+  "platformSSPai": {
+    "message": "SSPai",
+    "description": "Platform name for SSPai"
+  },
   "platformCSDN": {
     "message": "CSDN",
     "description": "Platform name for CSDN"
