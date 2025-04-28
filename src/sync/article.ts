@@ -8,6 +8,7 @@ import { ArticleJuejin } from './article/juejin';
 import { ArticleSegmentfault } from './article/segmentfault';
 import { ArticleSSPai } from './article/sspai';
 import { ArticleToutiao } from './article/toutiao';
+import { ArticleWeibo } from './article/weibo';
 import { ArticleWeixin } from './article/weixin';
 import { ArticleWordpress } from './article/wordpress';
 import { ArticleXueqiu } from './article/xueqiu';
@@ -169,4 +170,16 @@ export const ArticleInfoMap: Record<string, PlatformInfo> = {
     tags: ['CN'],
     accountKey: 'xueqiu',
   },
+  ARTICLE_WEIBO: {
+    type: 'ARTICLE',
+    name: 'ARTICLE_WEIBO',
+    homeUrl: 'https://weibo.com/',
+    faviconUrl: 'https://weibo.com/favicon.ico',
+    platformName: chrome.i18n.getMessage('platformWeibo'),
+    injectUrl: 'https://card.weibo.com/article/v3/editor',
+    injectFunction: ArticleWeibo,
+    tags: ['CN'],
+    accountKey: 'weibo',
+  },
 };
+
