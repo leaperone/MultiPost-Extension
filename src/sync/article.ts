@@ -121,4 +121,11 @@ export const ArticleInfoMap: Record<string, PlatformInfo> = {
     tags: ['International'],
     accountKey: 'wordpress',
   },
+  ARTICLE_BILIBILI: {
+    type: 'ARTICLE',
+    name: 'ARTICLE_BILIBILI',
+    homeUrl: 'https://www.bilibili.com/',
+    faviconUrl: 'https://www.bilibili.com/favicon.ico',
+    
+  }
 };

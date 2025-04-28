@@ -54,7 +54,7 @@ export async function VideoYoutube(data: SyncData) {
     }
 
     const fileInput = document.querySelector('input[type="file"]') as HTMLInputElement;
-    console.debug('fileInput -->', fileInput);
+    console.debug('fileInput', fileInput);
 
     if (!fileInput) {
       console.error('未找到文件输入框');
