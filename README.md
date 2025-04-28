@@ -1,18 +1,4 @@
-# nextjs-i18n-prisma-authjs-tailwindcss-template
-
-## Technologies Used
-
-- [Next.js 14](https://nextjs.org/docs/getting-started)
-- [Tailwind CSS](https://tailwindcss.com/)
-- [Tailwind Variants](https://tailwind-variants.org)
-- [TypeScript](https://www.typescriptlang.org/)
-- [auth.js](https://authjs.dev/)
-- [next-themes](https://github.com/pacocoursey/next-themes)
-- [prisma](https://www.prisma.io/)
-- [heroui](https://heroui.net/)
-- [shadcn/ui](https://ui.shadcn.com/)
-- [Framer Motion](https://www.framer.com/motion/)
-- [lucide-react](https://lucide.dev/)
+# MultiPost
 
 ## How to Use
 
