@@ -68,42 +68,6 @@ export async function ArticleBilibili(data: SyncData) {
     }
   }
 
-  // 上传单个图片
-  async function uploadSingleImage(fileInfo: FileData): Promise<string | null> {
-    try {
-      if (!fileInfo) return null;
-
-      const blob = await (await fetch(fileInfo.url)).blob();
-      const file = new File([blob], fileInfo.name, { type: fileInfo.type });
-
-      const formData = new FormData();
-      formData.append('csrf', getBiliJct());
-      formData.append('file_up', file);
-
-      const response = await fetch('https://api.bilibili.com/x/article/creative/article/upload', {
-        method: 'POST',
-        body: formData,
-        credentials: 'include',
-      });
-
-      if (!response.ok) {
-        throw new Error(`上传失败: ${response.status}`);
-      }
-
-      const result = await response.json();
-      if (result.code === 0 && result.data?.url) {
-        console.debug('图片上传成功:', result.data.url);
-        return result.data.url;
-      }
-
-      console.debug('图片上传失败:', result.message);
-      return null;
-    } catch (error) {
-      console.debug('上传图片失败:', error);
-      return null;
-    }
-  }
-
   // 获取B站CSRF令牌
   function getBiliJct(): string {
     const biliJct = document.cookie
@@ -116,15 +80,61 @@ export async function ArticleBilibili(data: SyncData) {
     return biliJct || '';
   }
 
-  // 预处理文章数据
-  async function preprocessArticleData(data: ArticleData): Promise<ArticleData> {
-    if (data.markdownContent) {
-      // 如果需要转换markdown，这里应该引入markdownIt
-      // data.htmlContent = markdownIt.render(data.markdownContent);
-    }
+  // 获取buvid3
+  function getBuvid3(): string {
+    const buvid = document.cookie
+      .split(';')
+      .find((c) => c.trim().startsWith('buvid3='))
+      ?.trim()
+      .split('=')[1];
 
-    console.debug('preprocess', data);
-    return data;
+    console.debug('buvid', buvid);
+    return buvid || '';
+  }
+
+  // 上传单个图片
+  async function uploadSingleImage(fileInfo: FileData): Promise<string | null> {
+    try {
+      if (!fileInfo) return null;
+
+      console.debug('uploadDynamicImage', fileInfo);
+      const blob = await (await fetch(fileInfo.url)).blob();
+
+      const formData = new FormData();
+      formData.append('file_up', blob);
+      formData.append('biz', 'new_dyn');
+      formData.append('category', 'daily');
+      formData.append('csrf', getBiliJct());
+
+      try {
+        const response = await fetch('https://api.bilibili.com/x/dynamic/feed/draw/upload_bfs', {
+          method: 'POST',
+          body: formData,
+          headers: {
+            Cookie: `bili_jct=${getBiliJct()}; buvid3=${getBuvid3()};`,
+          },
+          credentials: 'include',
+        });
+
+        if (!response.ok) throw Error(`HTTP error! status: ${response.status}`);
+
+        const result = await response.json();
+        console.debug('Image upload result:', result);
+
+        if (result.code === 0 && result.data) {
+          return result.data.image_url;
+        }
+
+        throw Error(`Upload failed: ${result.message}`);
+      } catch (error) {
+        console.error('Error uploading image:', error);
+      }
+
+      return null;
+    } catch (error) {
+      console.debug('上传图片失败:', error);
+      return null;
+    }
   }
 
   // 处理文章内容中的图片
@@ -155,17 +165,16 @@ export async function ArticleBilibili(data: SyncData) {
 
   // 发布文章
   async function publishArticle(articleData: ArticleData): Promise<string | null> {
-    const processedData = await preprocessArticleData(articleData);
-    processedData.htmlContent = await processContent(processedData.htmlContent, processedData.images || []);
+    const processedContent = await processContent(articleData.htmlContent, articleData.images || []);
 
     const formData = new FormData();
-    formData.append('title', processedData.title?.slice(0, 40) || '');
-    formData.append('content', processedData.htmlContent || '');
-    formData.append('summary', processedData.digest || '');
+    formData.append('title', articleData.title?.slice(0, 40) || '');
+    formData.append('content', processedContent || '');
+    formData.append('summary', articleData.digest || '');
     formData.append('banner_url', '');
 
     const parser = new DOMParser();
-    const doc = parser.parseFromString(processedData.htmlContent || '', 'text/html');
+    const doc = parser.parseFromString(articleData.htmlContent || '', 'text/html');
     const wordCount = doc.documentElement.textContent?.length || 0;
 
     formData.append('words', wordCount.toString());
