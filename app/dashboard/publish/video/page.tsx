@@ -1,5 +1,12 @@
 'use client';
 
+// 为Google Analytics添加类型声明
+declare global {
+  interface Window {
+    gtag: (command: string, action: string, params: Record<string, unknown>) => void;
+  }
+}
+
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import {
   Card,
@@ -231,6 +238,18 @@ export default function VideoPage() {
         color: 'danger',
       });
       return;
+    }
+
+    // 向Google Analytics发送自定义事件
+    if (typeof window !== 'undefined' && window.gtag) {
+      window.gtag('event', 'video_publish', {
+        event_category: 'publish',
+        event_label: selectedPlatforms.join(','),
+        platform_count: selectedPlatforms.length,
+        has_description: content.trim().length > 0,
+        video_name: videoFile?.name || '',
+        auto_publish: false,
+      });
     }
 
     const data: SyncData = {

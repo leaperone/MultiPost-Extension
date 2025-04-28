@@ -1,5 +1,12 @@
 'use client';
 
+// 为Google Analytics添加类型声明
+declare global {
+  interface Window {
+    gtag: (command: string, action: string, params: Record<string, unknown>) => void;
+  }
+}
+
 import {
   Card,
   Button,
@@ -275,6 +282,17 @@ export default function PodcastPage() {
         color: 'danger',
       });
       return;
+    }
+
+    // 向Google Analytics发送自定义事件
+    if (typeof window !== 'undefined' && window.gtag) {
+      window.gtag('event', 'podcast_publish', {
+        event_category: 'publish',
+        event_label: selectedPlatforms.join(','),
+        platform_count: selectedPlatforms.length,
+        audio_name: audio?.name || '',
+        auto_publish: autoPublish,
+      });
     }
 
     const data: SyncData = {

@@ -10,6 +10,13 @@ interface FileData {
   file?: File;
 }
 
+// 为Google Analytics添加类型声明
+declare global {
+  interface Window {
+    gtag: (command: string, action: string, params: Record<string, unknown>) => void;
+  }
+}
+
 import {
   Card,
   Button,
@@ -380,6 +387,18 @@ export default function DynamicPage() {
         color: 'danger',
       });
       return;
+    }
+
+    // 向Google Analytics发送自定义事件
+    if (typeof window !== 'undefined' && window.gtag) {
+      window.gtag('event', 'dynamic_publish', {
+        event_category: 'publish',
+        event_label: selectedPlatforms.join(','),
+        platform_count: selectedPlatforms.length,
+        has_images: images.length > 0,
+        has_videos: videos.length > 0,
+        auto_publish: autoPublish,
+      });
     }
 
     const data: SyncData = {
