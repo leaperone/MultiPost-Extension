@@ -5,6 +5,7 @@ import { ArticleDouban } from './article/douban';
 import { ArticleJianshu } from './article/jianshu';
 import { ArticleJuejin } from './article/juejin';
 import { ArticleSegmentfault } from './article/segmentfault';
+import { ArticleSSPai } from './article/sspai';
 import { ArticleToutiao } from './article/toutiao';
 import { ArticleWeixin } from './article/weixin';
 import { ArticleWordpress } from './article/wordpress';
@@ -132,5 +133,16 @@ export const ArticleInfoMap: Record<string, PlatformInfo> = {
     injectFunction: ArticleBilibili,
     tags: ['CN'],
     accountKey: 'bilibili',
+  },
+  ARTICLE_SSPAI: {
+    type: 'ARTICLE',
+    name: 'ARTICLE_SSPAI',
+    homeUrl: 'https://sspai.com/',
+    faviconUrl: 'https://cdn-static.sspai.com/favicon/sspai.ico',
+    platformName: chrome.i18n.getMessage('platformSSPai'),
+    injectUrl: 'https://sspai.com/write',
+    injectFunction: ArticleSSPai,
+    tags: ['CN'],
+    accountKey: 'sspai',
   },
 };

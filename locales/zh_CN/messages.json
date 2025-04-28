@@ -432,6 +432,10 @@
   "dashboardSendBiliPrivateMsg": {
     "message": "发送 B 站私信"
   },
+  "platformSSPai": {
+    "message": "少数派",
+    "description": "少数派平台名称"
+  },
   "platformCSDN": {
     "message": "CSDN",
     "description": "CSDN 平台名称"
