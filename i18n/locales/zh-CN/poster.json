@@ -59,13 +59,16 @@
     "task_submitted": "任务已提交",
     "submit_failed": "提交失败",
     "unknown_error": "未知错误",
-    "pending": "等待中",
-    "processing": "处理中",
-    "processing_description": "请耐心等待，这可能需要几分钟时间",
+    "pending": "等待生成...",
+    "processing": "正在生成中...",
+    "processing_description": "海报生成需要2-3分钟，请耐心等待，稍后可以在海报库中查看结果",
     "failed": "生成失败",
     "generated_image": "生成的海报",
     "download": "下载",
-    "exporting": "导出中..."
+    "exporting": "导出中...",
+    "manual_update": "手动刷新",
+    "manual_update_cooldown": "{{seconds}}秒后可再次刷新",
+    "manual_update_toast": "手动刷新中..."
   },
   "gallery_page": {
     "title": "我的海报",

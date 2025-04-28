@@ -2,11 +2,12 @@
 
 import { Card, CardBody, Image, Button } from '@heroui/react';
 import { useEffect, useState } from 'react';
-import { getPosterGeneration } from '../action';
+import { getPosterGeneration, updatePosterGeneration } from '../action';
 import { PosterGenerationStatus } from '../types';
 import dynamic from 'next/dynamic';
 import { Download } from 'lucide-react';
 import { useTranslation } from '@/i18n/client';
+import { toast } from 'sonner';
 
 const Viewer = dynamic(() => import('react-viewer'), { ssr: false });
 
@@ -17,7 +18,6 @@ interface ResultWaiterProps {
 
 interface TaskResult {
   status: string;
-  response?: string;
   image?: string;
   error?: string;
 }
@@ -27,6 +27,9 @@ export function ResultWaiter({ taskId, onError }: ResultWaiterProps) {
   const [result, setResult] = useState<TaskResult | null>(null);
   const [viewerVisible, setViewerVisible] = useState(false);
   const [activeIndex, setActiveIndex] = useState(0);
+  const [canManualUpdate, setCanManualUpdate] = useState(false);
+  const [manualCooldown, setManualCooldown] = useState(0);
+  const [waitingTime, setWaitingTime] = useState(0);
 
   // 当 taskId 变化时重置状态
   useEffect(() => {
@@ -43,6 +46,15 @@ export function ResultWaiter({ taskId, onError }: ResultWaiterProps) {
 
         if (!response.success || !response.data) {
           throw new Error(response.error || t('result_waiter.unknown_error'));
+        }
+
+        if (
+          response.data.status === PosterGenerationStatus.PENDING ||
+          response.data.status === PosterGenerationStatus.PROCESSING
+        ) {
+          setResult({
+            status: response.data.status,
+          });
         }
 
         if (response.data.status === PosterGenerationStatus.DONE && response.data.lastImageUrl) {
@@ -75,6 +87,48 @@ export function ResultWaiter({ taskId, onError }: ResultWaiterProps) {
       if (timeoutId) clearTimeout(timeoutId);
     };
   }, [taskId, onError, t]);
+
+  // 计时器：用于判断等待时间
+  useEffect(() => {
+    if (
+      !result ||
+      (result.status !== PosterGenerationStatus.PENDING && result.status !== PosterGenerationStatus.PROCESSING)
+    ) {
+      setWaitingTime(0);
+      setCanManualUpdate(false);
+      setManualCooldown(0);
+      return;
+    }
+    setWaitingTime(0);
+    const timer = setInterval(() => {
+      setWaitingTime((prev) => prev + 1);
+    }, 1000);
+    return () => clearInterval(timer);
+  }, [result?.status]);
+
+  // 超过3分钟允许手动刷新
+  useEffect(() => {
+    if (waitingTime >= 180 && manualCooldown === 0) {
+      setCanManualUpdate(true);
+    }
+  }, [waitingTime, manualCooldown]);
+
+  // 30秒冷却倒计时
+  useEffect(() => {
+    if (manualCooldown > 0) {
+      const timer = setInterval(() => {
+        setManualCooldown((prev) => {
+          if (prev <= 1) {
+            setCanManualUpdate(waitingTime >= 180);
+            clearInterval(timer);
+            return 0;
+          }
+          return prev - 1;
+        });
+      }, 1000);
+      return () => clearInterval(timer);
+    }
+  }, [manualCooldown, waitingTime]);
 
   const handleDownload = (url: string) => {
     window.open(url, '_blank');
@@ -111,10 +165,29 @@ export function ResultWaiter({ taskId, onError }: ResultWaiterProps) {
                   : t('result_waiter.processing')}
               </p>
               <p className="text-default-400">{t('result_waiter.processing_description')}</p>
-              {result.response && (
-                <p className="text-default-400">
-                  <pre>{result.response}</pre>
-                </p>
+              {canManualUpdate && (
+                <Button
+                  color="primary"
+                  variant="bordered"
+                  disabled={manualCooldown > 0}
+                  onPress={async () => {
+                    setCanManualUpdate(false);
+                    setManualCooldown(30);
+                    try {
+                      toast.loading(t('result_waiter.manual_update_toast'));
+                      await updatePosterGeneration(taskId);
+                      toast.dismiss();
+                      window.location.reload();
+                    } catch (e) {
+                      toast.dismiss();
+                      toast.error(t('result_waiter.manual_update_failed'));
+                    }
+                  }}
+                  className="mt-2 w-fit self-start">
+                  {manualCooldown > 0
+                    ? `${t('result_waiter.manual_update_cooldown', { seconds: manualCooldown })}`
+                    : t('result_waiter.manual_update')}
+                </Button>
               )}
             </div>
           </div>
@@ -129,7 +202,7 @@ export function ResultWaiter({ taskId, onError }: ResultWaiterProps) {
         <CardBody className="flex items-center justify-center py-8">
           <div className="flex flex-col items-center gap-2">
             <p className="text-danger">
-              {t('result_waiter.failed')}: {result.response || t('result_waiter.unknown_error')}
+              {t('result_waiter.failed')}: {result.error || t('result_waiter.unknown_error')}
             </p>
           </div>
         </CardBody>

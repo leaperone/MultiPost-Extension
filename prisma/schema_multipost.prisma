@@ -406,7 +406,6 @@ model PosterGeneration {
   status       String   @default("pending")
   systemPrompt String?
   taskId       String?
-  ownerId      String?
   projectId    String?
   urls         Json?
   error        String?

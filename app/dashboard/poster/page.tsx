@@ -6,12 +6,12 @@ import { toast } from 'sonner';
 import { z } from 'zod';
 import { cn } from '@/lib/utils';
 import { Category, PosterGenerationSchema, PosterGenerationStatus } from './types';
-import { generatePoster, getPosterGeneration, getPosterGenerations } from './action';
+import { generatePoster, getPosterGeneration, getPosterGenerations, updatePosterGeneration } from './action';
 import { GenerationForm } from './components/GenerationForm';
 import { ResultWaiter } from './components/ResultWaiter';
 import { useSearchParams } from 'next/navigation';
 import { useTranslation } from '@/i18n/client';
-import { ImageIcon, Download, Calendar, Maximize2 } from 'lucide-react';
+import { ImageIcon, Download, Calendar, Maximize2, RefreshCcw } from 'lucide-react';
 import dynamic from 'next/dynamic';
 
 const Viewer = dynamic(() => import('react-viewer'), { ssr: false });
@@ -328,6 +328,26 @@ function GallerySection() {
                       )}>
                       {getStatusDisplay(poster)}
                     </p>
+                    {new Date(poster.createdAt).getTime() + 1000 * 60 * 5 < Date.now() && (
+                      <Button
+                        isIconOnly
+                        size="sm"
+                        variant="flat"
+                        className="bg-white/10 backdrop-blur-sm"
+                        onPress={async () => {
+                          toast.loading(t('result_waiter.manual_update_toast'));
+                          const response = await updatePosterGeneration(poster.id);
+                          if (!response.success || !response.data) {
+                            toast.dismiss();
+                            toast.error(response.error);
+                            return;
+                          }
+                          toast.dismiss();
+                          window.location.reload();
+                        }}>
+                        <RefreshCcw className="size-4 text-white" />
+                      </Button>
+                    )}
                   </div>
                 </div>
               )}

@@ -58,13 +58,16 @@
     "task_submitted": "Task submitted",
     "submit_failed": "Submit failed",
     "unknown_error": "Unknown error",
-    "pending": "Pending",
-    "processing": "Processing",
-    "processing_description": "Please wait, this may take a few minutes",
+    "pending": "Waiting for generation...",
+    "processing": "Generating...",
+    "processing_description": "Poster generation takes 2-3 minutes, please be patient. You can check the results in the gallery later.",
     "failed": "Generation failed",
     "generated_image": "Generated poster",
     "download": "Download",
-    "exporting": "Exporting..."
+    "exporting": "Exporting...",
+    "manual_update": "Manual update",
+    "manual_update_cooldown": "Manual update available in {{seconds}}s",
+    "manual_update_toast": "Manual update in progress..."
   },
   "gallery_page": {
     "title": "My Posters",

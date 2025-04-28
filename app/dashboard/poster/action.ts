@@ -3,7 +3,7 @@
 import { multipostDb } from '@/lib/db';
 import { PosterGenerationSchema, PosterGenerationStatus, Category } from './types';
 import { auth } from '@/auth';
-import { preCheckCredit } from '@/actions/credit';
+import { deductCredit, preCheckCredit } from '@/actions/credit';
 import { PRICING } from '@/actions/credit/types';
 import { Prisma } from '@/prisma/client_multipost';
 
@@ -111,7 +111,7 @@ export async function getPosterGeneration(id: string) {
       throw new Error('Unauthorized');
     }
     const result = await multipostDb.posterGeneration.findUnique({
-      where: { id, userId: session.user.id },
+      where: { id },
     });
 
     if (!result) {
@@ -201,6 +201,104 @@ export async function getIframeUrl(id: string) {
         status: result.status,
         url: `https://seede.ai/design-embed/${result.projectId}?token=${responseData.token}`,
       },
+    };
+  } catch (error) {
+    console.error(error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Unknown error',
+    };
+  }
+}
+
+export async function updatePosterGeneration(id: string) {
+  try {
+    const result = await multipostDb.posterGeneration.findUnique({
+      where: { id },
+    });
+
+    if (!result) {
+      throw new Error('Poster generation not found');
+    }
+
+    if (result.status === PosterGenerationStatus.DONE) {
+      return {
+        success: true,
+        data: result,
+      };
+    }
+
+    if (result.status === PosterGenerationStatus.FAILED) {
+      return {
+        success: true,
+        data: result,
+      };
+    }
+
+    const response = await fetch(`https://api.seede.ai/api/task/${result.taskId}`, {
+      headers: {
+        authorization: process.env.SEEDE_API_TOKEN!,
+        'content-type': 'application/json',
+      },
+    });
+
+    const responseData = await response.json();
+
+    if (!responseData.success) {
+      throw new Error(responseData.error);
+    }
+
+    const updateData: {
+      status: string;
+      urls: {
+        task: string;
+        image: string;
+        project: string;
+      };
+      lastImageUrl?: string;
+      error?: string;
+      projectId: string;
+      taskId: string;
+    } = {
+      status: responseData.task.status,
+      urls: responseData.task.metadata.urls,
+      projectId: responseData.task.project_id,
+      taskId: responseData.task.task_id,
+    };
+
+    // 如果是完成状态，添加最后的图片URL
+    if (responseData.task.status === 'completed') {
+      updateData.lastImageUrl = responseData.task.metadata.urls.image;
+      updateData.status = PosterGenerationStatus.DONE;
+
+      // 扣除用户积分
+      try {
+        await deductCredit({
+          userId: result.userId,
+          type: 'IMAGE_GENERATION', // 使用现有的图像生成类型
+          amount: PRICING.POSTER_GENERATION,
+        });
+      } catch (error) {
+        console.error('扣除积分失败:', error);
+        // 继续处理，不中断流程
+      }
+    }
+
+    // 如果是失败状态，记录错误信息
+    else if (responseData.task.status === 'failed') {
+      updateData.error = responseData.task.error || 'Poster generation failed: Internal Server Error';
+      updateData.status = PosterGenerationStatus.FAILED;
+    }
+
+    // 更新数据库
+    const updated = await multipostDb.posterGeneration.update({
+      where: { id: result.id },
+      data: updateData,
+    });
+
+    return {
+      success: true,
+      data: updated,
     };
   } catch (error) {
     console.error(error);
