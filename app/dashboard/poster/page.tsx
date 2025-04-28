@@ -328,26 +328,28 @@ function GallerySection() {
                       )}>
                       {getStatusDisplay(poster)}
                     </p>
-                    {new Date(poster.createdAt).getTime() + 1000 * 60 * 5 < Date.now() && (
-                      <Button
-                        isIconOnly
-                        size="sm"
-                        variant="flat"
-                        className="bg-white/10 backdrop-blur-sm"
-                        onPress={async () => {
-                          toast.loading(t('result_waiter.manual_update_toast'));
-                          const response = await updatePosterGeneration(poster.id);
-                          if (!response.success || !response.data) {
+                    {(poster.status === PosterGenerationStatus.PENDING ||
+                      poster.status === PosterGenerationStatus.PROCESSING) &&
+                      new Date(poster.createdAt).getTime() + 1000 * 60 * 5 < Date.now() && (
+                        <Button
+                          isIconOnly
+                          size="sm"
+                          variant="flat"
+                          className="bg-white/10 backdrop-blur-sm"
+                          onPress={async () => {
+                            toast.loading(t('result_waiter.manual_update_toast'));
+                            const response = await updatePosterGeneration(poster.id);
+                            if (!response.success || !response.data) {
+                              toast.dismiss();
+                              toast.error(response.error);
+                              return;
+                            }
                             toast.dismiss();
-                            toast.error(response.error);
-                            return;
-                          }
-                          toast.dismiss();
-                          window.location.reload();
-                        }}>
-                        <RefreshCcw className="size-4 text-white" />
-                      </Button>
-                    )}
+                            window.location.reload();
+                          }}>
+                          <RefreshCcw className="size-4 text-white" />
+                        </Button>
+                      )}
                   </div>
                 </div>
               )}
