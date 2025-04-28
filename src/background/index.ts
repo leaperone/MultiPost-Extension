@@ -99,7 +99,7 @@ const defaultMessageHandler = (request, sender, sendResponse) => {
       type: 'popup',
       width: 800,
       height: 600,
-      focused: request.isFocused || true,
+      focused: request.data.isFocused || false,
     });
   }
   if (request.action === 'MUTLIPOST_EXTENSION_PUBLISH_REQUEST_SYNC_DATA') {
