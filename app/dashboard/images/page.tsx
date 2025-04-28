@@ -191,22 +191,29 @@ function GallerySection() {
         throw new Error(response.error);
       }
       if (response.data) {
-        const results = response.data.map(
-          (item: {
-            id: string;
-            prompt: string;
-            status: string;
-            content?: string;
-            result?: { url: string }[];
-            createdAt: Date;
-            response?: { content: string };
-          }) => ({
-            ...item,
-            content: (item.response as { content: string })?.content,
-            result: item.result as { url: string }[],
-            createdAt: item.createdAt.toISOString(),
-          }),
-        );
+        const results = response.data.map((item) => {
+          // 处理 result 字段
+          let result: { url: string }[] | undefined;
+          if (Array.isArray(item.result)) {
+            result = item.result as { url: string }[];
+          }
+
+          // 处理 content 字段
+          let content: string | undefined;
+          if (item.response && typeof item.response === 'object' && 'content' in item.response) {
+            content = (item.response as { content: string }).content;
+          }
+
+          return {
+            id: item.id,
+            prompt: item.prompt,
+            status: item.status,
+            content,
+            result,
+            createdAt:
+              item.createdAt instanceof Date ? item.createdAt.toISOString() : new Date(item.createdAt).toISOString(),
+          };
+        });
         setImages(results);
       }
     } catch (error) {
