@@ -3,11 +3,10 @@
 export {};
 import type { PlasmoCSConfig } from 'plasmo';
 import { handleBilibiliImageUpload } from './helper/bilibili';
-import { handleWeiboVideoUpload } from './helper/weibo';
 import { handleBlueskyVideoUpload, handleBlueskyImageUpload } from './helper/bluesky';
 
 export const config: PlasmoCSConfig = {
-  matches: ['<all_urls>'],
+  matches: ['https://t.bilibili.com/*', 'https://bsky.app/*', 'https://www.v2ex.com/write*', 'https://v2ex.com/write*'],
   world: 'MAIN',
   run_at: 'document_start',
 };
@@ -34,8 +33,6 @@ function handleMessage(event: MessageEvent) {
 
   if (data.type === 'BILIBILI_DYNAMIC_UPLOAD_IMAGES') {
     handleBilibiliImageUpload(event);
-  } else if (data.type === 'WEIBO_VIDEO_UPLOAD') {
-    handleWeiboVideoUpload(event);
   } else if (data.type === 'BLUESKY_VIDEO_UPLOAD') {
     handleBlueskyVideoUpload(event);
   } else if (data.type === 'BLUESKY_IMAGE_UPLOAD') {
