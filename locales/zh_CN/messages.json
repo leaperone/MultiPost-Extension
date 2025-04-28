@@ -436,6 +436,10 @@
     "message": "少数派",
     "description": "少数派平台名称"
   },
+  "platform51CTO": {
+    "message": "51CTO",
+    "description": "51CTO 平台名称"
+  },
   "platformCSDN": {
     "message": "CSDN",
     "description": "CSDN 平台名称"

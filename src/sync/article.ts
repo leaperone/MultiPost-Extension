@@ -1,3 +1,4 @@
+import { Article51CTO } from './article/51cto';
 import { ArticleBaijiahao } from './article/baijiahao';
 import { ArticleBilibili } from './article/bilibili';
 import { ArticleCSDN } from './article/csdn';
@@ -144,5 +145,16 @@ export const ArticleInfoMap: Record<string, PlatformInfo> = {
     injectFunction: ArticleSSPai,
     tags: ['CN'],
     accountKey: 'sspai',
+  },
+  ARTICLE_51CTO: {
+    type: 'ARTICLE',
+    name: 'ARTICLE_51CTO',
+    homeUrl: 'https://www.51cto.com/',
+    faviconUrl: 'https://blog.51cto.com/favicon.ico',
+    platformName: chrome.i18n.getMessage('platform51CTO'),
+    injectUrl: 'https://blog.51cto.com/blogger/publish?old=1',
+    injectFunction: Article51CTO,
+    tags: ['CN'],
+    accountKey: '51cto',
   },
 };
