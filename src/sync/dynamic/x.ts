@@ -31,41 +31,23 @@ export async function DynamicX(data: SyncData) {
     });
   }
 
-  // 辅助函数：等待多个元素出现
-  function waitForElements(selector: string, count: number, timeout = 30000): Promise<Element[]> {
-    return new Promise((resolve, reject) => {
-      const checkElements = () => {
-        const elements = document.querySelectorAll(selector);
-        if (elements.length >= count) {
-          resolve(Array.from(elements));
-          return;
-        }
-
-        if (Date.now() - startTime > timeout) {
-          reject(new Error(`未能在 ${timeout}ms 内找到 ${count} 个 "${selector}" 元素`));
-          return;
-        }
-
-        setTimeout(checkElements, 100);
-      };
-
-      const startTime = Date.now();
-      checkElements();
-    });
-  }
-
-  // 拼接标题和内容
-  const combinedText = `${title}\n${content}`;
-
   try {
     // 等待编辑器元素出现
-    const editor = await waitForElement('div[data-contents="true"]');
+    await waitForElement('div[data-contents="true"]');
     await new Promise((resolve) => setTimeout(resolve, 1000));
+
+    // 获取编辑器元素
+    const editor = document.querySelector('div[data-contents="true"]');
+    if (!editor) {
+      console.debug('未找到编辑器元素');
+      return;
+    }
 
     // 聚焦编辑器
     (editor as HTMLElement).focus();
 
     // 使用 ClipboardEvent 粘贴文本
+    const combinedText = title ? `${title}\n${content || ''}` : content || '';
     const pasteEvent = new ClipboardEvent('paste', {
       bubbles: true,
       cancelable: true,
@@ -75,83 +57,103 @@ export async function DynamicX(data: SyncData) {
     editor.dispatchEvent(pasteEvent);
 
     // 处理媒体上传（图片和视频）
-    if ((images && images.length > 0) || (videos && videos.length > 0)) {
-      const fileInput = (await waitForElement('input[type="file"]')) as HTMLInputElement;
+    const mediaFiles = [...(images || []), ...(videos || [])];
+    if (mediaFiles.length > 0) {
+      // 查找文件输入元素
+      const fileInput = document.querySelector('input[type="file"]') as HTMLInputElement;
       if (!fileInput) {
-        console.error('未找到文件输入元素');
+        console.debug('未找到文件输入元素');
         return;
       }
 
+      // 创建数据传输对象
       const dataTransfer = new DataTransfer();
-      let totalUploaded = 0;
 
-      if (images && images.length > 0) {
-        const remainingSlots = 4 - totalUploaded;
-        const imageUploadCount = Math.min(images.length, remainingSlots);
-        for (let i = 0; i < imageUploadCount; i++) {
-          const fileInfo = images[i];
-          console.log('尝试上传图片', fileInfo.url);
-          const response = await fetch(fileInfo.url);
-          const blob = await response.blob();
-          const file = new File([blob], fileInfo.name, { type: fileInfo.type });
-          dataTransfer.items.add(file);
-          totalUploaded++;
+      // 上传文件（最多4个）
+      for (let i = 0; i < mediaFiles.length; i++) {
+        if (i >= 4) {
+          console.debug('X 最多支持 4 张 ，跳过');
+          break;
         }
+
+        const fileInfo = mediaFiles[i];
+        console.debug('try upload file', fileInfo);
+
+        // 获取文件内容
+        const response = await fetch(fileInfo.url);
+        const arrayBuffer = await response.arrayBuffer();
+        const file = new File([arrayBuffer], fileInfo.name, { type: fileInfo.type });
+        console.log('file', file);
+        dataTransfer.items.add(file);
       }
 
-      if (videos && videos.length > 0) {
-        const remainingSlots = 4 - totalUploaded;
-        const videoUploadCount = Math.min(videos.length, remainingSlots);
-        for (let i = 0; i < videoUploadCount; i++) {
-          const videoInfo = videos[i];
-          console.log('尝试上传视频', videoInfo.url);
-          const response = await fetch(videoInfo.url);
-          const blob = await response.blob();
-          const file = new File([blob], videoInfo.name, { type: videoInfo.type });
-          dataTransfer.items.add(file);
-          totalUploaded++;
-        }
-      }
-
+      // 设置文件并触发事件
       fileInput.files = dataTransfer.files;
-      fileInput.dispatchEvent(new Event('change', { bubbles: true }));
-      fileInput.dispatchEvent(new Event('input', { bubbles: true }));
 
-      // 等待媒体上传完成
-      try {
-        const totalMediaCount = (images?.length || 0) + (videos?.length > 0 ? 1 : 0);
-        const uploadCount = Math.min(totalMediaCount, 4); // X 最多允许4个媒体文件
-        const removeButtons = await waitForElements('button[aria-label="Remove media"]', uploadCount, 60000); // 增加超时时间，因为视频上传可能较慢
-        console.log(`成功上传 ${removeButtons.length} 个媒体文件`);
-      } catch (error) {
-        console.error('媒体上传可能未完成:', error);
-      }
+      // 触发change事件
+      const changeEvent = new Event('change', { bubbles: true });
+      fileInput.dispatchEvent(changeEvent);
+
+      // 触发input事件
+      const inputEvent = new Event('input', { bubbles: true });
+      fileInput.dispatchEvent(inputEvent);
+
+      console.debug('文件上传操作完成');
     }
 
-    // 等待内容加载
-    await new Promise((resolve) => setTimeout(resolve, 1000));
+    // 判断是否自动发布
+    if (!data.isAutoPublish) return;
 
-    if (data.isAutoPublish) {
-      const maxAttempts = 3;
-      for (let attempt = 0; attempt < maxAttempts; attempt++) {
-        try {
-          const publishButton = (await waitForElement(
-            'button[data-testid="tweetButtonInline"]',
-            5000,
-          )) as HTMLButtonElement;
-          publishButton.click();
-          console.log('发布按钮已点击');
-          await new Promise((resolve) => setTimeout(resolve, 3000));
-          window.location.reload();
-          break; // 成功点击后退出循环
-        } catch (error) {
-          console.warn(`第 ${attempt + 1} 次尝试查找发布按钮失败:`, error);
-          if (attempt === maxAttempts - 1) {
-            console.error('达到最大尝试次数，无法找到发布按钮');
-          }
-          await new Promise((resolve) => setTimeout(resolve, 2000)); // 等待2秒后重试
-        }
+    // 等待一段时间确保文件上传完成
+    await new Promise((resolve) => setTimeout(resolve, 3000));
+
+    // 查找发布按钮
+    const allButtons = document.querySelectorAll('button');
+    const publishButton = Array.from(allButtons).find(
+      (button) =>
+        button.textContent?.includes('发帖') ||
+        button.textContent?.includes('Post') ||
+        button.textContent?.includes('發佈'),
+    );
+
+    console.debug('sendButton', publishButton);
+
+    if (publishButton) {
+      // 如果找到发布按钮，检查是否可点击
+      let attempts = 0;
+      while (publishButton.disabled && attempts < 10) {
+        await new Promise((resolve) => setTimeout(resolve, 3000));
+        attempts++;
+        console.debug(`Waiting for send button to be enabled. Attempt ${attempts}/10`);
       }
+
+      if (publishButton.disabled) {
+        console.debug('Send button is still disabled after 10 attempts');
+        return;
+      }
+
+      console.debug('sendButton clicked');
+      // 点击发布按钮
+      const clickEvent = new Event('click', { bubbles: true });
+      publishButton.dispatchEvent(clickEvent);
+    } else {
+      // 如果没找到发布按钮，尝试使用快捷键发布
+      console.debug("未找到'发送'按钮");
+      const keyEvent = new KeyboardEvent('keydown', {
+        bubbles: true,
+        cancelable: true,
+        key: 'Enter',
+        code: 'Enter',
+        keyCode: 13,
+        which: 13,
+        metaKey: true,
+        composed: true,
+      });
+
+      // 再次聚焦编辑器并发送快捷键
+      (editor as HTMLElement).focus();
+      editor.dispatchEvent(keyEvent);
+      console.debug('CMD+Enter 事件触发完成');
     }
   } catch (error) {
     console.error('X 发布过程中出错:', error);
