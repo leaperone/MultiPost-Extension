@@ -5,7 +5,7 @@ import { MessageCircleHeartIcon, VideoIcon, FileTextIcon, RouterIcon, PodcastIco
 import { usePathname } from 'next/navigation';
 import ForceInstallExtension from '@/components/ForceInstallExtension';
 import { useEffect } from 'react';
-import { checkServiceStatus, funcGetPermission, requestRefreshAccountInfo } from '@/lib/extension';
+import { checkServiceStatus, funcGetPermission } from '@/lib/extension';
 import { ActivityAlert } from '../components/ActivityAlert';
 import { useRouter } from 'next/navigation';
 
@@ -24,7 +24,6 @@ export default function PublishLayout({ children }: { children: React.ReactNode 
         return;
       }
       funcGetPermission().then(() => {});
-      requestRefreshAccountInfo().then(() => {});
       return;
     });
   }, []);

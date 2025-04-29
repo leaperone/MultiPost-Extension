@@ -72,7 +72,7 @@ import { CSS } from '@dnd-kit/utilities';
 import type { PlatformInfo } from '@/lib/extension';
 import type { SyncData } from '@/lib/extension';
 
-import { funcPublish, getPlatformInfos } from '@/lib/extension';
+import { funcPublish, getPlatformInfos, requestRefreshAccountInfo } from '@/lib/extension';
 import PlatformCheckbox from '../components/PlatformCheckbox';
 import { usePlatformStore } from '@/store/publish.store';
 import { getPlatformExtraConfigList } from '../action';
@@ -258,6 +258,10 @@ export default function DynamicPage() {
       coordinateGetter: sortableKeyboardCoordinates,
     }),
   );
+
+  useEffect(() => {
+    requestRefreshAccountInfo().then(() => {});
+  }, []);
 
   const handleDragEnd = (event: DragEndEvent, type: 'image' | 'video') => {
     const { active, over } = event;
