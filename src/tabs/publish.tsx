@@ -70,40 +70,42 @@ export default function Publish() {
     let processedCoverImage: FileData | null = null;
 
     // 处理所有图片
-    for (const img of imgElements) {
-      try {
-        const originalUrl = img.src;
-        // 跳过已经是 blob URL 的图片
-        if (originalUrl.startsWith('blob:')) continue;
+    if (Array.isArray(imgElements) && imgElements.length > 0) {
+      for (const img of imgElements) {
+        try {
+          const originalUrl = img.src;
+          // 跳过已经是 blob URL 的图片
+          if (originalUrl.startsWith('blob:')) continue;
 
-        // 下载图片并创建 blob URL
-        const response = await fetch(originalUrl);
-        const blob = await response.blob();
-        const blobUrl = URL.createObjectURL(blob);
+          // 下载图片并创建 blob URL
+          const response = await fetch(originalUrl);
+          const blob = await response.blob();
+          const blobUrl = URL.createObjectURL(blob);
 
-        // 替换 HTML 中的图片 URL
-        img.src = blobUrl;
-        blobUrls.push(blobUrl);
+          // 替换 HTML 中的图片 URL
+          img.src = blobUrl;
+          blobUrls.push(blobUrl);
 
-        processedImages.push({
-          name: images?.find((image) => image.url === originalUrl)?.name || originalUrl.split('/').pop() || blobUrl,
-          url: blobUrl,
-          type: blob.type,
-          size: blob.size,
-        });
+          processedImages.push({
+            name: images?.find((image) => image.url === originalUrl)?.name || originalUrl.split('/').pop() || blobUrl,
+            url: blobUrl,
+            type: blob.type,
+            size: blob.size,
+          });
 
-        // 替换 markdown 中的图片 URL
-        // 使用正则表达式匹配 markdown 中的图片语法
-        const escapedUrl = originalUrl.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-        const imgRegex = new RegExp(`!\\[.*?\\]\\(${escapedUrl}\\)`, 'g');
-        processedMarkdownContent = processedMarkdownContent.replace(imgRegex, (match) => {
-          return match.replace(originalUrl, blobUrl);
-        });
-      } catch (error) {
-        console.error('处理图片时出错:', error);
-        // 继续处理下一张图片
-        setNotice(chrome.i18n.getMessage('errorProcessImage', [img.src]));
-        setErrors((prev) => [...prev, chrome.i18n.getMessage('errorProcessImage', [img.src])]);
+          // 替换 markdown 中的图片 URL
+          // 使用正则表达式匹配 markdown 中的图片语法
+          const escapedUrl = originalUrl.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+          const imgRegex = new RegExp(`!\\[.*?\\]\\(${escapedUrl}\\)`, 'g');
+          processedMarkdownContent = processedMarkdownContent.replace(imgRegex, (match) => {
+            return match.replace(originalUrl, blobUrl);
+          });
+        } catch (error) {
+          console.error('处理图片时出错:', error);
+          // 继续处理下一张图片
+          setNotice(chrome.i18n.getMessage('errorProcessImage', [img.src]));
+          setErrors((prev) => [...prev, chrome.i18n.getMessage('errorProcessImage', [img.src])]);
+        }
       }
     }
 
@@ -143,19 +145,29 @@ export default function Publish() {
 
   const processDynamic = async (data: SyncData) => {
     setNotice(chrome.i18n.getMessage('processingContent'));
-    const { images, videos } = data.data as DynamicData;
+    const { images = [], videos = [] } = data.data as DynamicData;
 
     const processedImages: FileData[] = [];
     const processedVideos: FileData[] = [];
 
-    for (const image of images) {
-      setNotice(chrome.i18n.getMessage('errorProcessImage', [image.name]));
-      processedImages.push(await processFile(image));
+    // 确保 images 是可迭代的数组
+    if (Array.isArray(images) && images.length > 0) {
+      for (const image of images) {
+        setNotice(chrome.i18n.getMessage('errorProcessImage', [image.name]));
+        processedImages.push(await processFile(image));
+      }
+    } else {
+      console.warn('images 不是一个数组或可迭代对象', images);
     }
 
-    for (const video of videos) {
-      setNotice(chrome.i18n.getMessage('errorProcessFile', [video.name]));
-      processedVideos.push(await processFile(video));
+    // 确保 videos 是可迭代的数组
+    if (Array.isArray(videos) && videos.length > 0) {
+      for (const video of videos) {
+        setNotice(chrome.i18n.getMessage('errorProcessFile', [video.name]));
+        processedVideos.push(await processFile(video));
+      }
+    } else {
+      console.warn('videos 不是一个数组或可迭代对象', videos);
     }
 
     return {
@@ -171,6 +183,12 @@ export default function Publish() {
   const processPodcast = async (data: SyncData) => {
     setNotice(chrome.i18n.getMessage('processingContent'));
     const { audio } = data.data as PodcastData;
+
+    if (!audio) {
+      console.warn('音频数据不存在');
+      return data;
+    }
+
     const processedAudio = await processFile(audio);
     return {
       ...data,
@@ -184,6 +202,12 @@ export default function Publish() {
   const processVideo = async (data: SyncData) => {
     setNotice(chrome.i18n.getMessage('processingContent'));
     const { video } = data.data as VideoData;
+
+    if (!video) {
+      console.warn('视频数据不存在');
+      return data;
+    }
+
     const processedVideo = await processFile(video);
     return {
       ...data,
@@ -284,6 +308,7 @@ export default function Publish() {
     chrome.tabs.onUpdated.addListener(handleTabUpdated);
     chrome.tabs.onRemoved.addListener(handleTabRemoved);
     chrome.runtime.sendMessage({ action: 'MUTLIPOST_EXTENSION_PUBLISH_REQUEST_SYNC_DATA' }, async (response) => {
+      console.log(response);
       const data = response.syncData as SyncData;
       if (!data) return setNotice(chrome.i18n.getMessage('errorGetSyncData'));
       setTitle(getTitleFromData(data));
