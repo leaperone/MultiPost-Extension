@@ -3,6 +3,8 @@ import { auth } from '@/auth';
 import { getCredit } from '@/actions/credit';
 import RechargeModal from './components/RechargeModal';
 import CreditUsageTable from './components/CreditUsageTable';
+import { ActivityAlert } from '@/app/dashboard/components/ActivityAlert';
+import RechargeActivityModal from './components/RechargeActivityModal';
 
 export default async function RechargePage() {
   const session = await auth();
@@ -43,9 +45,14 @@ export default async function RechargePage() {
       </Card>
 
       <Spacer y={4} />
+      <ActivityAlert />
+      <Spacer y={4} />
 
       {/* 使用记录 */}
       <CreditUsageTable />
+
+      {/* 充值活动弹窗 */}
+      <RechargeActivityModal />
     </div>
   );
 }

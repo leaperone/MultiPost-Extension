@@ -25,6 +25,10 @@
     "images": {
       "title": "图片生成",
       "description": "使用 AI 生成图片"
+    },
+    "poster": {
+      "title": "海报设计",
+      "description": "使用模板创建精美海报"
     }
   },
   "sidebar": {
@@ -47,5 +51,15 @@
   "activity": {
     "title": "活动通知",
     "description": "查看最新的活动，领取高达 $10 的免费余额！"
+  },
+  "recharge": {
+    "activity": {
+      "title": "充值说明",
+      "minAmount": "充值说明",
+      "minAmountDesc": "最低充值金额为 $1"
+    }
+  },
+  "common": {
+    "close": "关闭"
   }
 }

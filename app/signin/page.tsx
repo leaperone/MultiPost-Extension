@@ -47,31 +47,6 @@ const SigninPage = async (props: { searchParams: Promise<{ redirect?: string; er
         </Card>
       )}
 
-      <form
-        action={async (formData: FormData) => {
-          'use server';
-          await signIn('mailgun', {
-            email: formData.get('email'),
-            redirectTo,
-          });
-        }}
-        className="w-full max-w-md">
-        <div className="flex flex-col gap-2">
-          <Input
-            type="email"
-            name="email"
-            placeholder={t('signin.email_placeholder')}
-            required
-            className="bg-transparent"
-          />
-          <Button
-            type="submit"
-            className="w-full">
-            {t('signin.email')}
-          </Button>
-        </div>
-      </form>
-      <Spacer y={2} />
       <div className="relative w-full max-w-md">
         <div className="absolute inset-0 flex items-center">
           <span className="w-full border-t border-gray-200 dark:border-gray-800" />
@@ -122,6 +97,33 @@ const SigninPage = async (props: { searchParams: Promise<{ redirect?: string; er
       <div className="w-full max-w-md">
         <PasskeyAuthButton redirect={redirectTo} />
       </div>
+      <Spacer y={2} />
+
+      <form
+        action={async (formData: FormData) => {
+          'use server';
+          await signIn('mailgun', {
+            email: formData.get('email'),
+            redirectTo,
+          });
+        }}
+        className="w-full max-w-md">
+        <div className="flex flex-col gap-2">
+          <Input
+            type="email"
+            name="email"
+            placeholder={t('signin.email_placeholder')}
+            required
+            className="bg-transparent"
+          />
+          <Button
+            type="submit"
+            className="w-full">
+            {t('signin.email')}
+          </Button>
+        </div>
+      </form>
+
       {process.env.NODE_ENV === 'development' && (
         <>
           <Spacer y={2} />

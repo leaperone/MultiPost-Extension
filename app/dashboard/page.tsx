@@ -4,8 +4,17 @@ import { Icon } from '@iconify/react';
 
 import { auth } from '@/auth';
 import { createTranslation } from '@/i18n/server';
-import { SendIcon, FileTextIcon, ChartSplineIcon, ScanEyeIcon, SettingsIcon, ImageIcon } from 'lucide-react';
+import {
+  SendIcon,
+  FileTextIcon,
+  ChartSplineIcon,
+  ScanEyeIcon,
+  SettingsIcon,
+  ImageIcon,
+  PaletteIcon,
+} from 'lucide-react';
 import { ActivityAlert } from './components/ActivityAlert';
+import { BalanceButton } from './components/BalanceButton';
 
 interface DashboardCardProps {
   href: string;
@@ -67,10 +76,16 @@ export default async function DashboardPage() {
       icon: <ScanEyeIcon className="size-5 text-primary-600 dark:text-primary-400" />,
     },
     {
-      href: '/dashboard/images/generation',
+      href: '/dashboard/images',
       title: t('welcome.images.title'),
       description: t('welcome.images.description'),
       icon: <ImageIcon className="size-5 text-primary-600 dark:text-primary-400" />,
+    },
+    {
+      href: '/dashboard/poster',
+      title: t('welcome.poster.title'),
+      description: t('welcome.poster.description'),
+      icon: <PaletteIcon className="size-5 text-primary-600 dark:text-primary-400" />,
     },
   ];
 
@@ -81,6 +96,7 @@ export default async function DashboardPage() {
           <div className="flex flex-col items-center justify-between gap-2 md:flex-row">
             <h2 className="text-2xl font-bold">{t('welcome.title', { name: user?.name || 'Dear' })}</h2>
             <div className="flex items-center gap-4">
+              <BalanceButton alert={1} />
               <Button
                 as={Link}
                 href="/dashboard/settings"

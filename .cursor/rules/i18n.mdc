@@ -6,7 +6,7 @@ alwaysApply: false
 Internationalization (i18n) Guidelines:
 
 Message Structure:
-- Store all text content in `/i18n/locales/[locale]/*.json`
+- Store all text content in `@/i18n/locales/[locale]/*.json`
 - Use descriptive message keys in SNAKE_CASE
 - Include placeholders with $PLACEHOLDER$ syntax
 - Add descriptions for translators in message files
