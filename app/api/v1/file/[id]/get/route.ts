@@ -11,7 +11,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
   try {
     const fileId = (await params).id;
     if (!fileId) {
-      return errorResp('fileId is required');
+      throw new Error('fileId is required');
     }
 
     const { success, file, error } = await initFile(fileId);
@@ -19,9 +19,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
       throw new Error(error);
     }
 
-    const expiresIn = file.expiredAt ? (file.expiredAt.getTime() - new Date().getTime()) / 1000 : 60 * 60 * 24 * 7; // 7天
-
-    const url = await getPresignedDownloadUrl(file.key, expiresIn);
+    const url = await getPresignedDownloadUrl(file.key, 3600);
 
     await prisma.fileHosting.update({
       where: { id: fileId },
