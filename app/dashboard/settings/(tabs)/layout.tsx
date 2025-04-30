@@ -66,14 +66,14 @@ export default function SettingsLayout({
           href={`${baseUrl}/trust-domains`}
         />
         <Tab
-          key={`${baseUrl}/client`}
+          key={`/dashboard/settings/client`}
           title={
             <div className="flex items-center space-x-2">
               <RouterIcon className="size-4" />
               <span>Clients</span>
             </div>
           }
-          href={`${baseUrl}/client`}
+          href={`/dashboard/settings/client`}
         />
       </Tabs>
 
