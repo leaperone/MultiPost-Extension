@@ -7,9 +7,10 @@ import { BookOpenIcon, SettingsIcon } from 'lucide-react';
 interface HeaderProps {
   title: string;
   description?: string;
+  isShowBalance?: boolean;
 }
 
-export default async function Header({ title, description }: HeaderProps) {
+export default async function Header({ title, description, isShowBalance = true }: HeaderProps) {
   return (
     <div className="flex items-center justify-between p-2">
       <div>
@@ -17,7 +18,7 @@ export default async function Header({ title, description }: HeaderProps) {
         {description && <p className="text-sm text-gray-500">{description}</p>}
       </div>
       <div className="flex items-center gap-2">
-        <BalanceButton alert={1} />
+        {isShowBalance && <BalanceButton alert={1} />}
         <Button
           as={Link}
           href="/dashboard/settings"

@@ -1,7 +1,7 @@
 'use client';
 
 import { Tabs, Tab } from '@heroui/react';
-import { ToggleRightIcon, KeyIcon, WalletIcon, ShieldCheckIcon } from 'lucide-react';
+import { ToggleRightIcon, KeyIcon, WalletIcon, ShieldCheckIcon, RouterIcon } from 'lucide-react';
 import { usePathname } from 'next/navigation';
 
 export default function SettingsLayout({
@@ -64,6 +64,16 @@ export default function SettingsLayout({
             </div>
           }
           href={`${baseUrl}/trust-domains`}
+        />
+        <Tab
+          key={`${baseUrl}/client`}
+          title={
+            <div className="flex items-center space-x-2">
+              <RouterIcon className="size-4" />
+              <span>Clients</span>
+            </div>
+          }
+          href={`${baseUrl}/client`}
         />
       </Tabs>
 

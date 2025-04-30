@@ -62,7 +62,7 @@ export default function PublishLayout({ children }: { children: React.ReactNode 
         />
         <Tab
           key="/dashboard/publish/client"
-          href="/dashboard/publish/client"
+          href="/dashboard/settings/client"
           title={<RouterIcon />}
         />
       </Tabs>
