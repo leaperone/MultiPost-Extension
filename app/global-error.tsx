@@ -1,5 +1,6 @@
 'use client'; // Error components must be Client Components
 
+import { Button } from '@heroui/react';
 import Link from 'next/link';
 import { useEffect } from 'react';
 
@@ -29,13 +30,7 @@ export default function Error({ error, reset }: { error: Error & { digest?: stri
             前往首页
           </Link>
 
-          <button
-            onClick={
-              // Attempt to recover by trying to re-render the segment
-              () => reset()
-            }>
-            Try again
-          </button>
+          <Button onPress={() => reset()}>Try again</Button>
         </div>
       </div>
     </div>

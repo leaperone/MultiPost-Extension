@@ -3,7 +3,7 @@ import { PrismaClient as PrismaMultipostClient } from '../prisma/client_multipos
 import { OpenAI } from 'openai';
 import { config } from 'dotenv';
 import { resolve } from 'path';
-import { ImageGenerationStatus } from '@/app/dashboard/images/types';
+import { ImageGenerationStatus } from '@/app/dashboard/draw/image/types';
 import { deductCreditWorker } from '@/actions/credit/worker';
 import { PRICING } from '@/actions/credit/types';
 

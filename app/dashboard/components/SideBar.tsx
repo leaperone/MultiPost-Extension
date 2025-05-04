@@ -4,7 +4,6 @@ import {
   ChartSplineIcon,
   GridIcon,
   Home,
-  ImageIcon,
   LayoutDashboardIcon,
   PaletteIcon,
   ScanEyeIcon,
@@ -65,23 +64,18 @@ const getApplicationItems = (t: TranslationFunction): MenuItem[] => [
     icon: GridIcon,
   },
   {
-    title: 'Analytics',
+    title: t('sidebar.menu.analytics'),
     url: '/dashboard/analytics',
     icon: ChartSplineIcon,
   },
   {
-    title: 'Browse',
+    title: t('sidebar.menu.browse'),
     url: '/dashboard/scraper',
     icon: ScanEyeIcon,
   },
   {
-    title: 'Images',
-    url: '/dashboard/images',
-    icon: ImageIcon,
-  },
-  {
-    title: 'Poster',
-    url: '/dashboard/poster',
+    title: t('sidebar.menu.draw'),
+    url: '/dashboard/draw',
     icon: PaletteIcon,
   },
 ];
