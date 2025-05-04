@@ -1,6 +1,6 @@
 import React from 'react';
 import { signIn } from '@/auth';
-import { Button, Input, Spacer, Card, CardBody } from '@heroui/react';
+import { Button, Input, Card, CardBody, Divider } from '@heroui/react';
 import { Icon } from '@iconify/react/dist/iconify.js';
 import { createTranslation } from '@/i18n/server';
 import { PasskeyAuthButton } from './PasskeyAuthButton';
@@ -29,9 +29,8 @@ const SigninPage = async (props: { searchParams: Promise<{ redirect?: string; er
   }
 
   return (
-    <div className="flex min-h-[40px] flex-col items-center gap-2 pb-2">
-      <h1 className="text-xl font-medium">{t('signin.title')}</h1>
-      <Spacer y={4} />
+    <div className="flex min-h-[40px] flex-col items-center gap-4">
+      <h1 className="text-xl font-medium">Sign In</h1>
 
       {error && errorToI18nKey[error as SignInError] && (
         <Card className="mb-4 w-full max-w-md border-red-200">
@@ -47,15 +46,6 @@ const SigninPage = async (props: { searchParams: Promise<{ redirect?: string; er
         </Card>
       )}
 
-      <div className="relative w-full max-w-md">
-        <div className="absolute inset-0 flex items-center">
-          <span className="w-full border-t border-gray-200 dark:border-gray-800" />
-        </div>
-        <div className="relative flex justify-center text-xs uppercase">
-          <span className="bg-transparent px-4 text-muted-foreground/60">{t('signin.or')}</span>
-        </div>
-      </div>
-      <Spacer y={2} />
       <form
         action={async () => {
           'use server';
@@ -74,7 +64,6 @@ const SigninPage = async (props: { searchParams: Promise<{ redirect?: string; er
           {t('signin.google')}
         </Button>
       </form>
-      <Spacer y={2} />
       <form
         action={async () => {
           'use server';
@@ -93,11 +82,11 @@ const SigninPage = async (props: { searchParams: Promise<{ redirect?: string; er
           {t('signin.github')}
         </Button>
       </form>
-      <Spacer y={2} />
       <div className="w-full max-w-md">
         <PasskeyAuthButton redirect={redirectTo} />
       </div>
-      <Spacer y={2} />
+
+      <Divider />
 
       <form
         action={async (formData: FormData) => {
@@ -126,7 +115,7 @@ const SigninPage = async (props: { searchParams: Promise<{ redirect?: string; er
 
       {process.env.NODE_ENV === 'development' && (
         <>
-          <Spacer y={2} />
+          <Divider />
           <form
             action={async (formData: FormData) => {
               'use server';
@@ -134,13 +123,14 @@ const SigninPage = async (props: { searchParams: Promise<{ redirect?: string; er
                 email: formData.get('email'),
                 redirectTo,
               });
-            }}>
+            }}
+            className="flex w-full flex-row gap-2">
             <Input
               type="email"
               name="email"
               placeholder="Email"
             />
-            <Button type="submit">Sign in with Email</Button>
+            <Button type="submit">Dev In</Button>
           </form>
         </>
       )}
