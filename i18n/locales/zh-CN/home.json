@@ -27,6 +27,7 @@
   "navigation": {
     "dashboard": "仪表盘",
     "publish": "发布",
+    "draw": "绘图",
     "docs": "文档"
   },
   "analytics": {

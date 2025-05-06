@@ -78,6 +78,15 @@ export default function Header() {
           <Link
             className="w-full"
             color="foreground"
+            href="/dashboard/draw"
+            size="lg">
+            {t('navigation.draw')}
+          </Link>
+        </NavbarMenuItem>
+        <NavbarMenuItem>
+          <Link
+            className="w-full"
+            color="foreground"
             href="/dashboard/publish"
             size="lg">
             {t('navigation.publish')}

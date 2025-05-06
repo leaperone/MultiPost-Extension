@@ -12,7 +12,7 @@ import {
   navigationMenuTriggerStyle,
 } from '@/components/ui/navigation-menu';
 import Link from 'next/link';
-import { LayoutDashboard, SendIcon, BookOpenIcon } from 'lucide-react';
+import { LayoutDashboard, SendIcon, BookOpenIcon, PaletteIcon } from 'lucide-react';
 import { useTranslation } from '@/i18n/client';
 
 export function HomePageNavigationMenu() {
@@ -40,6 +40,17 @@ export function HomePageNavigationMenu() {
             <NavigationMenuLink className={cn(navigationMenuTriggerStyle(), 'group')}>
               <SendIcon className="mr-2 size-4 transition-transform" />
               {t('navigation.publish')}
+            </NavigationMenuLink>
+          </Link>
+        </NavigationMenuItem>
+        <NavigationMenuItem>
+          <Link
+            href="/dashboard/draw"
+            legacyBehavior
+            passHref>
+            <NavigationMenuLink className={cn(navigationMenuTriggerStyle(), 'group')}>
+              <PaletteIcon className="mr-2 size-4 transition-transform" />
+              {t('navigation.draw')}
             </NavigationMenuLink>
           </Link>
         </NavigationMenuItem>

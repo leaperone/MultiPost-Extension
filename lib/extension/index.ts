@@ -100,7 +100,7 @@ export interface ExtensionResponse<T> {
  * @example
  * const response = await sendRequest<void, boolean>('SOME_ACTION', undefined, 5000);
  */
-export async function sendRequest<D, R>(action: string, data?: D, timeout: number = 5000): Promise<R> {
+export async function sendRequest<D, R>(action: string, data?: D, timeout: number = 10000): Promise<R> {
   const traceId = uuidv4();
 
   return new Promise<R>((resolve, reject) => {

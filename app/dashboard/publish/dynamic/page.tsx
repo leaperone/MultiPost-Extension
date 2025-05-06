@@ -1,6 +1,5 @@
 'use client';
 
-// Define interfaces at the top
 interface FileData {
   name: string;
   type: string;
@@ -32,8 +31,6 @@ import {
   AccordionItem,
 } from '@heroui/react';
 import {
-  ImagePlusIcon,
-  VideoIcon,
   XIcon,
   TrashIcon,
   BotIcon,
@@ -42,11 +39,10 @@ import {
   ArrowRightIcon,
   SendHorizontal,
   Eraser,
-  UploadIcon,
   GripVerticalIcon,
 } from 'lucide-react';
 import dynamic from 'next/dynamic';
-import React, { useState, useRef, useEffect, useCallback } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useTranslation } from '@/i18n/client';
 import { Icon } from '@iconify/react';
 import { cn } from '@/lib/utils';
@@ -70,80 +66,16 @@ import {
 import { CSS } from '@dnd-kit/utilities';
 
 import type { PlatformInfo } from '@/lib/extension';
-import type { SyncData } from '@/lib/extension';
 
-import { funcPublish, getPlatformInfos, requestRefreshAccountInfo } from '@/lib/extension';
+import { getPlatformInfos, requestRefreshAccountInfo } from '@/lib/extension';
 import PlatformCheckbox from '../components/PlatformCheckbox';
 import { usePlatformStore } from '@/store/publish.store';
 import { getPlatformExtraConfigList } from '../action';
+import LibraryModal from './components/LibraryModal';
 
 const ReactPlayer = dynamic(() => import('react-player'), {
   ssr: false,
 });
-
-const DropZone = ({ onFilesDrop }: { onFilesDrop: (files: File[], type: 'image' | 'video') => void }) => {
-  const { t } = useTranslation('publish');
-  const [isDragging, setIsDragging] = useState(false);
-
-  const handleDragEnter = useCallback((event: React.DragEvent) => {
-    event.preventDefault();
-    event.stopPropagation();
-    setIsDragging(true);
-  }, []);
-
-  const handleDragLeave = useCallback((event: React.DragEvent) => {
-    event.preventDefault();
-    event.stopPropagation();
-    setIsDragging(false);
-  }, []);
-
-  const handleDragOver = useCallback((event: React.DragEvent) => {
-    event.preventDefault();
-    event.stopPropagation();
-  }, []);
-
-  const handleDrop = useCallback(
-    (event: React.DragEvent) => {
-      event.preventDefault();
-      event.stopPropagation();
-      setIsDragging(false);
-
-      const files = Array.from(event.dataTransfer.files);
-      const imageFiles = files.filter((file) => file.type.startsWith('image/'));
-      const videoFiles = files.filter((file) => file.type.startsWith('video/'));
-
-      if (imageFiles.length > 0) {
-        onFilesDrop(imageFiles, 'image');
-      }
-      if (videoFiles.length > 0) {
-        onFilesDrop(videoFiles, 'video');
-      }
-    },
-    [onFilesDrop],
-  );
-
-  return (
-    <div
-      className={cn(
-        'relative flex min-h-[120px] w-full cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed p-4 transition-all',
-        isDragging
-          ? 'border-primary bg-primary/10'
-          : 'border-gray-200 hover:bg-gray-50 dark:border-gray-800 dark:hover:bg-gray-800/50',
-      )}
-      onDragEnter={handleDragEnter}
-      onDragLeave={handleDragLeave}
-      onDragOver={handleDragOver}
-      onDrop={handleDrop}>
-      <div className="flex flex-col items-center justify-center gap-2 text-center">
-        <UploadIcon className={cn('size-8', isDragging ? 'text-primary' : 'text-gray-500')} />
-        <div className="flex flex-col gap-1">
-          <p className="text-sm font-medium">{isDragging ? t('dynamic.tips.drop') : t('dynamic.tips.dragAndDrop')}</p>
-          <p className="text-xs text-gray-500">{t('dynamic.tips.supportedFiles')}</p>
-        </div>
-      </div>
-    </div>
-  );
-};
 
 interface SortableMediaProps {
   id: string;
@@ -207,33 +139,6 @@ const SortableMedia = ({ id, file, index, type, onDelete, onImageClick }: Sortab
   );
 };
 
-// Add these helper functions before the DynamicPage component
-const getFileHash = async (file: File): Promise<string> => {
-  const buffer = await file.arrayBuffer();
-  const hashBuffer = await crypto.subtle.digest('SHA-256', buffer);
-  const hashArray = Array.from(new Uint8Array(hashBuffer));
-  return hashArray.map((b) => b.toString(16).padStart(2, '0')).join('');
-};
-
-const isDuplicateFile = async (file: File, existingFiles: FileData[]): Promise<boolean> => {
-  const newFileHash = await getFileHash(file);
-  for (const existingFile of existingFiles) {
-    // 如果文件已经有哈希值，直接比较
-    if (existingFile.hash === newFileHash) {
-      return true;
-    }
-    // 如果文件没有哈希值（旧文件），则需要重新计算
-    if (!existingFile.hash && existingFile.file) {
-      const existingHash = await getFileHash(existingFile.file);
-      existingFile.hash = existingHash; // 保存计算结果以备后用
-      if (existingHash === newFileHash) {
-        return true;
-      }
-    }
-  }
-  return false;
-};
-
 const Viewer = dynamic(() => import('react-viewer'), { ssr: false });
 
 export default function DynamicPage() {
@@ -243,8 +148,6 @@ export default function DynamicPage() {
   const [videos, setVideos] = useState<FileData[]>([]);
   const [title, setTitle] = useState<string>('');
   const [content, setContent] = useState<string>('');
-  const imageInputRef = useRef<HTMLInputElement>(null);
-  const videoInputRef = useRef<HTMLInputElement>(null);
   const { dynamicPlatforms, setDynamicPlatforms, clearDynamicPlatforms } = usePlatformStore();
   const [selectedPlatforms, setSelectedPlatforms] = useState<string[]>(dynamicPlatforms);
   const [autoPublish, setAutoPublish] = useState<boolean>(false);
@@ -321,49 +224,37 @@ export default function DynamicPage() {
     fetchPlatforms();
   }, []);
 
-  const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>, fileType: 'image' | 'video') => {
-    const selectedFiles = event.target.files;
-    if (!selectedFiles) return;
-
-    const existingFiles = fileType === 'image' ? images : videos;
-    const newFiles: FileData[] = [];
-    const duplicates: string[] = [];
-
-    for (const file of Array.from(selectedFiles)) {
-      if (!file.type.startsWith(fileType + '/')) continue;
-
-      const isDuplicate = await isDuplicateFile(file, existingFiles);
-      if (isDuplicate) {
-        duplicates.push(file.name);
-        continue;
-      }
-
-      const fileHash = await getFileHash(file);
-      newFiles.push({
-        name: file.name,
-        type: file.type,
-        size: file.size,
-        url: URL.createObjectURL(file),
-        hash: fileHash,
-        file: file,
-      });
+  const handleDeleteFile = (index: number, fileType: 'image' | 'video') => {
+    if (fileType === 'image') {
+      setImages((prevImages) => prevImages.filter((_, i) => i !== index));
+    } else {
+      setVideos((prevVideos) => prevVideos.filter((_, i) => i !== index));
     }
+  };
 
-    if (duplicates.length > 0) {
+  const handleClearAll = () => {
+    setImages([]);
+    setVideos([]);
+    setTitle('');
+    setContent('');
+    setSelectedPlatforms([]);
+    clearDynamicPlatforms();
+    setAutoPublish(false);
+  };
+
+  const handleNextStep = () => {
+    if (!content) {
       addToast({
-        title: t('upload.duplicateFiles'),
-        description: `${t('upload.duplicateFilesDesc')}: ${duplicates.join(', ')}`,
-        color: 'warning',
+        title: t('validation.contentRequired'),
+        color: 'danger',
       });
+      return;
     }
+    setCurrentStep(2);
+  };
 
-    if (newFiles.length > 0) {
-      if (fileType === 'image') {
-        setImages((prev) => [...prev, ...newFiles]);
-      } else {
-        setVideos((prev) => [...prev, ...newFiles]);
-      }
-    }
+  const handlePrevStep = () => {
+    setCurrentStep(1);
   };
 
   const handlePlatformChange = (platform: string, isSelected: boolean) => {
@@ -405,7 +296,7 @@ export default function DynamicPage() {
       });
     }
 
-    const data: SyncData = {
+    const data = {
       platforms: platforms.filter((platform) => selectedPlatforms.includes(platform.name)),
       data: {
         title,
@@ -417,57 +308,11 @@ export default function DynamicPage() {
     };
 
     try {
-      funcPublish(data);
+      // TODO: 实现发布功能
+      console.log('Publishing:', data);
     } catch (error) {
       console.error('Error publishing:', error);
-      funcPublish(data);
     }
-  };
-
-  const handleIconClick = (type: 'image' | 'video') => {
-    if (type === 'image') {
-      imageInputRef.current?.click();
-    } else {
-      videoInputRef.current?.click();
-    }
-  };
-
-  const handleImageClick = (index: number) => {
-    setCurrentImage(index);
-    setViewerVisible(true);
-  };
-
-  const handleDeleteFile = (index: number, fileType: 'image' | 'video') => {
-    if (fileType === 'image') {
-      setImages((prevImages) => prevImages.filter((_, i) => i !== index));
-    } else {
-      setVideos((prevVideos) => prevVideos.filter((_, i) => i !== index));
-    }
-  };
-
-  const handleClearAll = () => {
-    setImages([]);
-    setVideos([]);
-    setTitle('');
-    setContent('');
-    setSelectedPlatforms([]);
-    clearDynamicPlatforms();
-    setAutoPublish(false);
-  };
-
-  const handleNextStep = () => {
-    if (!content) {
-      addToast({
-        title: t('validation.contentRequired'),
-        color: 'danger',
-      });
-      return;
-    }
-    setCurrentStep(2);
-  };
-
-  const handlePrevStep = () => {
-    setCurrentStep(1);
   };
 
   const handleExtraConfigChange = (platformKey: string, extraConfig: unknown) => {
@@ -476,84 +321,15 @@ export default function DynamicPage() {
     );
   };
 
-  // 处理粘贴事件
-  const handlePaste = useCallback(async (event: ClipboardEvent) => {
-    const items = event.clipboardData?.items;
-    if (!items) return;
-
-    for (const item of items) {
-      if (item.type.startsWith('image/')) {
-        const file = item.getAsFile();
-        if (file) {
-          const fileData: FileData = {
-            name: `pasted-image-${Date.now()}.${item.type.split('/')[1]}`,
-            type: item.type,
-            size: file.size,
-            url: URL.createObjectURL(file),
-          };
-          setImages((prev) => [...prev, fileData]);
-        }
-      }
-    }
-  }, []);
-
-  const handleFilesDrop = useCallback(
-    async (files: File[], type: 'image' | 'video') => {
-      const existingFiles = type === 'image' ? images : videos;
-      const newFiles: FileData[] = [];
-      const duplicates: string[] = [];
-
-      for (const file of files) {
-        if (!file.type.startsWith(type + '/')) continue;
-
-        const isDuplicate = await isDuplicateFile(file, existingFiles);
-        if (isDuplicate) {
-          duplicates.push(file.name);
-          continue;
-        }
-
-        const fileHash = await getFileHash(file);
-        newFiles.push({
-          name: file.name,
-          type: file.type,
-          size: file.size,
-          url: URL.createObjectURL(file),
-          hash: fileHash,
-          file: file,
-        });
-      }
-
-      if (duplicates.length > 0) {
-        addToast({
-          title: t('upload.duplicateFiles'),
-          color: 'warning',
-          description: `${t('upload.duplicateFilesDesc')}: ${duplicates.join(', ')}`,
-        });
-      }
-
-      if (newFiles.length > 0) {
-        if (type === 'image') {
-          setImages((prev) => [...prev, ...newFiles]);
-        } else {
-          setVideos((prev) => [...prev, ...newFiles]);
-        }
-      }
-    },
-    [images, videos],
-  );
-
-  // 添加粘贴事件监听
-  useEffect(() => {
-    document.addEventListener('paste', handlePaste);
-    return () => {
-      document.removeEventListener('paste', handlePaste);
-    };
-  }, [handlePaste]);
+  const handleImageClick = (index: number) => {
+    setCurrentImage(index);
+    setViewerVisible(true);
+  };
 
   return (
     <>
       {currentStep === 1 ? (
-        <div className="flex flex-col gap-2">
+        <div className="flex flex-col gap-2 overflow-y-auto">
           <Card className="h-fit bg-default-50 shadow-none">
             <CardHeader>
               <Input
@@ -582,38 +358,14 @@ export default function DynamicPage() {
             </CardBody>
 
             <CardFooter>
-              <div className="mb-4 flex w-full flex-col gap-4">
+              <div className="flex w-full flex-col gap-4">
                 <div className="flex items-center justify-between">
-                  <div className="flex">
-                    <input
-                      type="file"
-                      ref={imageInputRef}
-                      accept="image/*"
-                      onChange={(e) => handleFileChange(e, 'image')}
-                      className="hidden"
-                      multiple
-                    />
-                    <Button
-                      isIconOnly
-                      variant="light"
-                      onPress={() => handleIconClick('image')}>
-                      <ImagePlusIcon className="size-8 text-gray-600" />
-                    </Button>
-                    <input
-                      type="file"
-                      ref={videoInputRef}
-                      accept="video/*"
-                      onChange={(e) => handleFileChange(e, 'video')}
-                      className="hidden"
-                      multiple
-                    />
-                    <Button
-                      isIconOnly
-                      variant="light"
-                      onPress={() => handleIconClick('video')}>
-                      <VideoIcon className="size-8 text-gray-600" />
-                    </Button>
-                  </div>
+                  <LibraryModal
+                    onSelectImage={async (fileData) => {
+                      setImages((prev) => [...prev, fileData]);
+                    }}
+                    existingFiles={images}
+                  />
                   {(title || content || images.length > 0 || videos.length > 0) && (
                     <Button
                       isIconOnly
@@ -625,8 +377,6 @@ export default function DynamicPage() {
                     </Button>
                   )}
                 </div>
-
-                <DropZone onFilesDrop={handleFilesDrop} />
               </div>
             </CardFooter>
           </Card>

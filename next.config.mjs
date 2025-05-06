@@ -8,6 +8,8 @@ const nextConfig = {
       { protocol: 'https', hostname: 'nextui.org' },
       { protocol: 'https', hostname: 'icons.duckduckgo.com' },
       { protocol: 'https', hostname: '2someone-web-static.s3.bitiful.net' },
+      { protocol: 'https', hostname: 'filesystem.site' },
+      { protocol: 'https', hostname: 'assets.seede.ai' },
     ],
   },
   webpack: (config, { isServer }) => {

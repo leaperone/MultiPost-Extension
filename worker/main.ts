@@ -23,8 +23,8 @@ const createMultipostClient = () => new PrismaMultipostClient();
 const multipostDb = createMultipostClient();
 
 const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-  baseURL: process.env.OPENAI_API_URL,
+  apiKey: process.env.TUZI_API_KEY,
+  baseURL: process.env.TUZI_BASE_URL,
 });
 
 const app = Fastify();

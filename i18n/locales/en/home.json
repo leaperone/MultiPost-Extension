@@ -27,6 +27,7 @@
   "navigation": {
     "dashboard": "Dashboard",
     "publish": "Publish",
+    "draw": "Draw",
     "docs": "Docs"
   },
   "analytics": {
