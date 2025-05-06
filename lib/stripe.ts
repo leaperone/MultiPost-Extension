@@ -3,8 +3,8 @@ import { auth } from '@/auth';
 import Decimal from 'decimal.js';
 
 // 初始化Stripe客户端
-const stripeClient = new Stripe(process.env.STRIPE_SECRET_KEY || '', {
-  apiVersion: '2025-02-24.acacia', // 使用Acacia版本
+const stripeClient = new Stripe(process.env.STRIPE_SECRET_KEY || 'secret', {
+  apiVersion: '2024-06-20', // 使用Acacia版本
 });
 
 /**
