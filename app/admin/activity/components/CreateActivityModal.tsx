@@ -44,7 +44,7 @@ export function CreateActivityModal() {
 
   const handleDateChange = (value: DateValue | null) => {
     if (value) {
-      const date = new Date(value.toString());
+      const date = value.toDate('UTC');
       setExpiredAt(date);
     } else {
       setExpiredAt(undefined);
