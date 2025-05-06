@@ -67,7 +67,7 @@ import { CSS } from '@dnd-kit/utilities';
 
 import type { PlatformInfo } from '@/lib/extension';
 
-import { getPlatformInfos, requestRefreshAccountInfo } from '@/lib/extension';
+import { funcPublish, getPlatformInfos, requestRefreshAccountInfo } from '@/lib/extension';
 import PlatformCheckbox from '../components/PlatformCheckbox';
 import { usePlatformStore } from '@/store/publish.store';
 import { getPlatformExtraConfigList } from '../action';
@@ -308,10 +308,11 @@ export default function DynamicPage() {
     };
 
     try {
-      // TODO: 实现发布功能
+      funcPublish(data);
       console.log('Publishing:', data);
     } catch (error) {
       console.error('Error publishing:', error);
+      funcPublish(data);
     }
   };
 
