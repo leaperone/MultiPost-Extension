@@ -26,16 +26,20 @@
   },
   "recharge": {
     "title": "Recharge",
-    "placeholder": "Enter amount (≥10)",
+    "placeholder": "Enter amount (≥1)",
     "button": "Recharge",
     "toast": {
       "empty": "Please enter amount",
-      "min": "Amount must be at least 10",
-      "success": "Recharge successful: $${amount}",
+      "min": "Amount must be at least 1",
+      "success": "Recharge successful: ${{amount}}",
       "fail": "Recharge failed"
     },
-    "rate": "Exchange rate: 1 USD = 7.3 CNY",
+    "rate": "Exchange rate: 1 USD = 7.5 CNY",
     "details": "View Details",
-    "alipay_only": "Currently only supports Alipay, credits will be added immediately after payment"
+    "payment_method": "Payment Method",
+    "payment_methods": {
+      "alipay": "Continue with Alipay",
+      "stripe": "Continue with Stripe ($10 min)"
+    }
   }
 } 

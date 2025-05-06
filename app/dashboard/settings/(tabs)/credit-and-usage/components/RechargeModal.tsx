@@ -25,15 +25,15 @@ export default function RechargeModal() {
   const [customAmount, setCustomAmount] = useState('');
   const { t } = useTranslation('settings');
 
-  const handleRecharge = async (price: number) => {
-    if (!price) {
+  const handleRecharge = async (price: number, paymentType: 'alipay' | 'stripe') => {
+    if (!price || price < 1) {
       addToast({
-        title: t('recharge.toast.empty'),
+        title: t('recharge.toast.min'),
       });
       return;
     }
 
-    const result = await recharge(price, window.location.origin + '/dashboard/recharge');
+    const result = await recharge(price, window.location.origin + '/dashboard/recharge', paymentType);
 
     if (result.success) {
       addToast({
@@ -85,38 +85,21 @@ export default function RechargeModal() {
                 }>
                 {t('recharge.rate')}
               </Alert>
-
-              <Alert color="warning">{t('recharge.alipay_only')}</Alert>
             </div>
 
             <Spacer y={4} />
+
             <div className="space-y-4">
               <div className="flex items-center gap-2">
                 <Input
                   type="number"
-                  min={10}
+                  min={1}
                   placeholder={t('recharge.placeholder')}
                   size="md"
                   startContent={<DollarSignIcon />}
                   value={customAmount}
                   onValueChange={setCustomAmount}
                 />
-                <Button
-                  size="md"
-                  className="min-w-fit"
-                  onPress={() => {
-                    const amount = Number(customAmount);
-                    if (amount < 10) {
-                      addToast({
-                        title: t('recharge.toast.min'),
-                      });
-                      return;
-                    }
-                    handleRecharge(amount);
-                  }}
-                  startContent={<Icon icon="lucide:credit-card" />}>
-                  {t('recharge.button')}
-                </Button>
               </div>
 
               {/* 快速充值金额 */}
@@ -133,6 +116,38 @@ export default function RechargeModal() {
                     ${amount}
                   </Button>
                 ))}
+              </div>
+
+              {/* New Payment Method Buttons */}
+              <Spacer y={4} />
+              <p className="mb-2 font-medium">{t('recharge.payment_method')}</p>
+              <div className="flex flex-col gap-3 sm:flex-row">
+                <Button
+                  fullWidth
+                  color="primary"
+                  onPress={() => handleRecharge(Number(customAmount), 'alipay')}
+                  startContent={
+                    <Icon
+                      icon="simple-icons:alipay"
+                      className="size-6"
+                    />
+                  }>
+                  {t('recharge.payment_methods.alipay')}
+                </Button>
+                <Button
+                  fullWidth
+                  color="secondary"
+                  onPress={() => handleRecharge(Number(customAmount), 'stripe')}
+                  startContent={
+                    <span className="flex size-6 items-center justify-center rounded-md bg-white p-0.5 shadow-sm">
+                      <Icon
+                        icon="logos:stripe"
+                        className="size-5"
+                      />
+                    </span>
+                  }>
+                  {t('recharge.payment_methods.stripe')}
+                </Button>
               </div>
             </div>
           </ModalBody>

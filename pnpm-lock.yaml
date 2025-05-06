@@ -148,7 +148,7 @@ importers:
         specifier: ^3.1.1
         version: 3.5.1(@stripe/stripe-js@5.10.0)(react-dom@19.0.0(react@19.0.0))(react@19.0.0)
       '@stripe/stripe-js':
-        specifier: ^5.5.0
+        specifier: ^5.10.0
         version: 5.10.0
       '@tsparticles/engine':
         specifier: ^3.8.1
@@ -388,7 +388,7 @@ importers:
         specifier: ^1.7.4
         version: 1.7.4(react-dom@19.0.0(react@19.0.0))(react@19.0.0)
       stripe:
-        specifier: ^17.6.0
+        specifier: ^17.7.0
         version: 17.7.0
       styled-components:
         specifier: 6.1.15

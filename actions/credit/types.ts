@@ -2,6 +2,7 @@ import { Decimal } from '@prisma/client/runtime/library';
 
 export enum RechargeType {
   ALIPAY = 'alipay',
+  STRIPE = 'stripe',
   ADMIN = 'admin',
   PROMOTION = 'promotion',
   SIGNUP = 'signup',
@@ -12,7 +13,7 @@ export enum RechargeStatus {
   SUCCESS = 'success',
 }
 
-export const dollarToYuan = 7.3;
+export const dollarToYuan = 7.5;
 
 // 定价
 export const CREDIT_PER_REQUEST_SOCIAL_MEDIA = {

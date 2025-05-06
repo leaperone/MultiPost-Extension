@@ -31,11 +31,15 @@
     "toast": {
       "empty": "请输入金额",
       "min": "金额不能低于10",
-      "success": "充值成功：¥${amount}",
+      "success": "充值成功：${{amount}}",
       "fail": "充值失败"
     },
-    "rate": "充值汇率：1 USD = 7.3 CNY",
+    "rate": "充值汇率：1 USD = 7.5 CNY",
     "details": "查看详情",
-    "alipay_only": "目前仅支持支付宝充值，充值后立即到账"
+    "payment_method": "支付方式",
+    "payment_methods": {
+      "alipay": "使用支付宝",
+      "stripe": "使用Stripe（$10起）"
+    }
   }
 } 
