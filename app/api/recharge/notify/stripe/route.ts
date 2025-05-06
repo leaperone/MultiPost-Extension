@@ -4,6 +4,8 @@ import { RechargeStatus } from '@/actions/credit/types';
 import { addCredit } from '@/actions/credit';
 import { Stripe } from 'stripe';
 
+export const dynamic = 'force-dynamic';
+
 // 初始化Stripe客户端
 const stripeClient = new Stripe(process.env.STRIPE_SECRET_KEY || '', {
   apiVersion: '2025-02-24.acacia',
