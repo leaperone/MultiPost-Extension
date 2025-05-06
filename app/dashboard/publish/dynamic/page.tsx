@@ -1,6 +1,6 @@
 'use client';
 
-interface FileData {
+export interface FileData {
   name: string;
   type: string;
   size: number;
@@ -72,6 +72,7 @@ import PlatformCheckbox from '../components/PlatformCheckbox';
 import { usePlatformStore } from '@/store/publish.store';
 import { getPlatformExtraConfigList } from '../action';
 import LibraryModal from './components/LibraryModal';
+import { ImageGenerationModal } from './components/ImageGenerationModal';
 
 const ReactPlayer = dynamic(() => import('react-player'), {
   ssr: false,
@@ -327,6 +328,10 @@ export default function DynamicPage() {
     setViewerVisible(true);
   };
 
+  const handleAiImageGenerated = (newImage: FileData) => {
+    setImages((prevImages) => [...prevImages, newImage]);
+  };
+
   return (
     <>
       {currentStep === 1 ? (
@@ -361,12 +366,18 @@ export default function DynamicPage() {
             <CardFooter>
               <div className="flex w-full flex-col gap-4">
                 <div className="flex items-center justify-between">
-                  <LibraryModal
-                    onSelectImage={async (fileData) => {
-                      setImages((prev) => [...prev, fileData]);
-                    }}
-                    existingFiles={images}
-                  />
+                  <div className="flex gap-2">
+                    <LibraryModal
+                      onSelectImage={async (fileData) => {
+                        setImages((prev) => [...prev, fileData]);
+                      }}
+                      existingFiles={images}
+                    />
+                    <ImageGenerationModal
+                      onImageGenerated={handleAiImageGenerated}
+                      initialPromptBasis={{ title, content }}
+                    />
+                  </div>
                   {(title || content || images.length > 0 || videos.length > 0) && (
                     <Button
                       isIconOnly
