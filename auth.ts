@@ -9,6 +9,8 @@ import Google from 'next-auth/providers/google';
 import Mailgun from 'next-auth/providers/mailgun';
 import { nanoid } from 'nanoid';
 import { Decimal } from '@prisma/client/runtime/library';
+import { RechargeStatus, RechargeType } from './actions/credit/types';
+import { addCredit } from './actions/credit';
 
 declare module 'next-auth' {
   interface Session {
@@ -67,13 +69,17 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         });
       }
       // 创建 Credit 记录
-      await prisma.credit.create({
+      await prisma.rechargeCredit.create({
         data: {
           userId: user.id,
-          credits: new Decimal(0),
-          freeCredits: new Decimal(0),
+          amount: new Decimal(0.5),
+          orderId: `MP-${nanoid(32)}`,
+          type: RechargeType.SIGNUP,
+          status: RechargeStatus.SUCCESS,
         },
       });
+
+      await addCredit(user.id, new Decimal(0.5), true);
     },
   },
 });

@@ -4,6 +4,7 @@ export enum RechargeType {
   ALIPAY = 'alipay',
   ADMIN = 'admin',
   PROMOTION = 'promotion',
+  SIGNUP = 'signup',
 }
 
 export enum RechargeStatus {
