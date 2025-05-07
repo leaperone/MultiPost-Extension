@@ -56,7 +56,7 @@ export default function Header() {
         <NavbarItem className="hidden sm:block">
           <ThemeSwitcher isBlur={false} />
         </NavbarItem>
-        <NavbarItem className="hidden w-28 sm:block">
+        <NavbarItem className="hidden sm:block">
           <LanguageSwitcher />
         </NavbarItem>
         <NavbarItem>

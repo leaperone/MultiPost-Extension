@@ -1,31 +1,39 @@
 'use client';
 import React from 'react';
-import { Select, SelectItem } from "@heroui/react";
+import { Dropdown, DropdownTrigger, DropdownMenu, DropdownItem, Button } from '@heroui/react';
 import { switchLocaleAction } from '@/i18n/switch-locale';
 import { useTranslation } from '@/i18n/client';
 import { languages } from '@/i18n/settings';
+import { LanguagesIcon } from 'lucide-react';
 
 export default function LanguageSwitcher() {
   const { i18n } = useTranslation('home');
 
-  const handleLocaleChange = (value: string) => {
-    switchLocaleAction(value);
+  const handleLocaleChange = (key: React.Key) => {
+    switchLocaleAction(key as string);
   };
 
   return (
     <>
-      <Select
-        onChange={(e) => handleLocaleChange(e.target.value)}
-        defaultSelectedKeys={i18n.resolvedLanguage ? [i18n.resolvedLanguage] : []}
-        placeholder="Select language"
-      >
-        {languages.map((language) => (
-          <SelectItem
-            key={language.value}>
-            {language.label}
-          </SelectItem>
-        ))}
-      </Select>
+      <Dropdown>
+        <DropdownTrigger>
+          <Button
+            isIconOnly
+            variant="light"
+            aria-label="Select language">
+            <LanguagesIcon />
+          </Button>
+        </DropdownTrigger>
+        <DropdownMenu
+          aria-label="Language selection"
+          onAction={handleLocaleChange}
+          defaultSelectedKeys={i18n.resolvedLanguage ? [i18n.resolvedLanguage] : []}
+          selectionMode="single">
+          {languages.map((language) => (
+            <DropdownItem key={language.value}>{language.label}</DropdownItem>
+          ))}
+        </DropdownMenu>
+      </Dropdown>
     </>
   );
 }
