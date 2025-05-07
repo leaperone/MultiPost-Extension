@@ -47,6 +47,7 @@ export const USAGE_TYPE_MAP = {
   IMAGE_GENERATION: 'image_generation',
   POSTER_GENERATION: 'poster_generation',
   FILE_HOSTING: 'file_hosting',
+  MINIMUM_CONSUMPTION_ADJUSTMENT: 'minimum_consumption_adjustment',
 } as const;
 
 export type UsageType = keyof typeof USAGE_TYPE_MAP;
