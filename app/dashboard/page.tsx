@@ -4,15 +4,7 @@ import { Icon } from '@iconify/react';
 
 import { auth } from '@/auth';
 import { createTranslation } from '@/i18n/server';
-import {
-  SendIcon,
-  FileTextIcon,
-  ChartSplineIcon,
-  ScanEyeIcon,
-  SettingsIcon,
-  ImageIcon,
-  PaletteIcon,
-} from 'lucide-react';
+import { SendIcon, FileTextIcon, ChartSplineIcon, ScanEyeIcon, SettingsIcon, PaletteIcon } from 'lucide-react';
 import { ActivityAlert } from './components/ActivityAlert';
 import { BalanceButton } from './components/BalanceButton';
 
@@ -76,15 +68,9 @@ export default async function DashboardPage() {
       icon: <ScanEyeIcon className="size-5 text-primary-600 dark:text-primary-400" />,
     },
     {
-      href: '/dashboard/images',
-      title: t('welcome.images.title'),
-      description: t('welcome.images.description'),
-      icon: <ImageIcon className="size-5 text-primary-600 dark:text-primary-400" />,
-    },
-    {
-      href: '/dashboard/poster',
-      title: t('welcome.poster.title'),
-      description: t('welcome.poster.description'),
+      href: '/dashboard/draw',
+      title: t('welcome.draw.title'),
+      description: t('welcome.draw.description'),
       icon: <PaletteIcon className="size-5 text-primary-600 dark:text-primary-400" />,
     },
   ];

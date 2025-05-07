@@ -22,13 +22,9 @@
       "title": "Content Scraper",
       "description": "Import content from other platforms"
     },
-    "images": {
-      "title": "Image Generation",
-      "description": "Generate images with AI"
-    },
-    "poster": {
-      "title": "Poster Design",
-      "description": "Create beautiful posters with templates"
+    "draw": {
+      "title": "AI Draw",
+      "description": "Generate images, posters with AI"
     }
   },
   "sidebar": {

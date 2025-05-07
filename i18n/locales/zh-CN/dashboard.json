@@ -22,13 +22,9 @@
       "title": "内容抓取",
       "description": "从其他平台导入内容"
     },
-    "images": {
-      "title": "图片生成",
-      "description": "使用 AI 生成图片"
-    },
-    "poster": {
-      "title": "海报设计",
-      "description": "使用模板创建精美海报"
+    "draw": {
+      "title": "AI 绘图 ",
+      "description": "使用 AI 生成图片、海报"
     }
   },
   "sidebar": {
