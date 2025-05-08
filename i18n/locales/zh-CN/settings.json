@@ -25,7 +25,6 @@
     }
   },
   "recharge": {
-    "title": "充值",
     "placeholder": "输入金额（≥10）",
     "button": "充值",
     "toast": {
@@ -34,9 +33,8 @@
       "success": "充值成功：${{amount}}",
       "fail": "充值失败"
     },
-    "rate": "充值汇率：1 USD = 7.5 CNY",
-    "details": "查看详情",
-    "payment_method": "支付方式",
+    "rate": "支付宝汇率：1 USD = 7.5 CNY",
+    "details": "查看文档",
     "payment_methods": {
       "alipay": "使用支付宝",
       "stripe": "使用Stripe（$10起）"

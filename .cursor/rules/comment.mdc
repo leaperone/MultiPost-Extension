@@ -1,7 +1,7 @@
 ---
-description: writing or editing code
-globs: *.tsx, *.js, *.ts
-alwaysApply: false
+description: 
+globs: 
+alwaysApply: true
 ---
 # Code Commenting Guidelines
 

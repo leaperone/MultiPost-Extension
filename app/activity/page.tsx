@@ -9,7 +9,6 @@ export default async function ActivityPage() {
       <Spacer y={16} />
       <div className="flex flex-col items-center justify-center">
         <h1 className="mb-8 text-3xl font-bold">活动中心</h1>
-
         <ActivityList />
       </div>
     </div>

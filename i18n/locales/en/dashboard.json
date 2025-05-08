@@ -51,13 +51,6 @@
     "title": "Activity Notice",
     "description": "Check out latest balance bonus event, up to $10 free credits!"
   },
-  "recharge": {
-    "activity": {
-      "title": "Recharge Information",
-      "minAmount": "Recharge Info",
-      "minAmountDesc": "Minimum recharge amount is $1"
-    }
-  },
   "common": {
     "close": "Close"
   }

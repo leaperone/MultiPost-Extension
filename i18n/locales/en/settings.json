@@ -25,7 +25,6 @@
     }
   },
   "recharge": {
-    "title": "Recharge",
     "placeholder": "Enter amount (≥1)",
     "button": "Recharge",
     "toast": {
@@ -34,12 +33,11 @@
       "success": "Recharge successful: ${{amount}}",
       "fail": "Recharge failed"
     },
-    "rate": "Exchange rate: 1 USD = 7.5 CNY",
-    "details": "View Details",
-    "payment_method": "Payment Method",
+    "rate": "Alipay Exchange Rate: 1 USD = 7.5 CNY",
+    "details": "Documentation",
     "payment_methods": {
-      "alipay": "Continue with Alipay",
-      "stripe": "Continue with Stripe ($10 min)"
+      "alipay": "Pay with Alipay",
+      "stripe": "Pay with Stripe ($10 min)"
     }
   }
 } 
