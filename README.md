@@ -99,7 +99,8 @@ It is recommended to use the package management tool `pnpm@latest-9` with Node.j
 
 - QQ Group: [921137242](http://qm.qq.com/cgi-bin/qm/qr?_wv=1027&k=c5BjhD8JxNAuwjKh6qvCoROU301PppYU&authKey=NfKianfDwngrwJyVQbefIQET9vUQs46xb0PfOYUm6KzdeCjPd5YbvlRoO8trJUUZ&noverify=0&group_code=921137242)
 - Email: support@leaper.one
-- Twitter: [@harry_wong_](https://x.com/harry_wong_)
+- Twitter: [@harry_wong_](https://x.com/harry_is_fish)
+- Bento: [Click me](https://bento.me/harryisfish)
 - GitHub Issues: https://github.com/MultiPost-Extension/MultiPost-Extension/issues
 
 ![QQ Group](docs/MultiPost-Extension_2025-02-28T14_17_15.717Z.png)
