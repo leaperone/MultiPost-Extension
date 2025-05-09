@@ -70,7 +70,9 @@ const SimplePlatform = ({ platformInfo, isSelected, onChange }: SimplePlatformPr
             )
           )}
 
-          <span className="truncate text-sm font-medium">{platformInfo.platformName || platformInfo.name}</span>
+          <span className="truncate text-sm font-medium text-foreground">
+            {platformInfo.platformName || platformInfo.name}
+          </span>
         </div>
 
         {platformInfo.accountInfo && (
@@ -185,22 +187,20 @@ export default function OnInstallPage() {
   };
 
   return (
-    <div className="h-full min-h-screen">
+    <div className="h-full min-h-screen bg-background">
       {/* Extension Instructions */}
       <ExtensionInstructions />
       <div className="relative z-10 mx-auto max-w-3xl space-y-8 pt-20">
         {/* Header */}
         <div className="space-y-4 text-center">
-          <h1 className="bg-gradient-to-r from-blue-400 via-blue-200 to-purple-400 bg-clip-text text-4xl font-bold tracking-tight text-transparent">
-            {t('title')}
-          </h1>
-          <p className="text-gray-300">{t('subtitle')}</p>
+          <h1 className="text-4xl font-bold tracking-tight text-foreground">{t('title')}</h1>
+          <p className="text-foreground/80">{t('subtitle')}</p>
         </div>
 
         {/* First Post Form */}
-        <Card className="border-border/40 bg-card/30 p-6 backdrop-blur-xl supports-[backdrop-filter]:bg-background/60">
+        <Card className="border-border/40 bg-card/30 backdrop-blur-xl supports-[backdrop-filter]:bg-background/60">
           <CardBody className="space-y-4">
-            <h2 className="text-xl font-semibold text-white">{t('firstPost.title')}</h2>
+            <h2 className="text-xl font-semibold text-foreground">{t('firstPost.title')}</h2>
 
             {currentStep === 1 ? (
               <div className="flex flex-col gap-4">
@@ -359,7 +359,7 @@ export default function OnInstallPage() {
         </Card>
 
         {/* Main Features */}
-        <Card className="border-border/40 bg-card/30 p-6 backdrop-blur-xl supports-[backdrop-filter]:bg-background/60">
+        <Card className="border-border/40 bg-card/30 backdrop-blur-xl supports-[backdrop-filter]:bg-background/60">
           <CardBody>
             <div className="space-y-6">
               <div className="flex items-start gap-4">
@@ -367,8 +367,8 @@ export default function OnInstallPage() {
                   <Share2 className="size-6 text-blue-400" />
                 </div>
                 <div>
-                  <h3 className="font-semibold text-white">{t('features.multiPlatform.title')}</h3>
-                  <p className="text-sm text-gray-300">{t('features.multiPlatform.description')}</p>
+                  <h3 className="font-semibold text-foreground">{t('features.multiPlatform.title')}</h3>
+                  <p className="text-sm text-foreground/70">{t('features.multiPlatform.description')}</p>
                 </div>
               </div>
 
@@ -377,8 +377,8 @@ export default function OnInstallPage() {
                   <Globe className="size-6 text-blue-400" />
                 </div>
                 <div>
-                  <h3 className="font-semibold text-white">{t('features.noLogin.title')}</h3>
-                  <p className="text-sm text-gray-300">{t('features.noLogin.description')}</p>
+                  <h3 className="font-semibold text-foreground">{t('features.noLogin.title')}</h3>
+                  <p className="text-sm text-foreground/70">{t('features.noLogin.description')}</p>
                 </div>
               </div>
 
@@ -387,8 +387,8 @@ export default function OnInstallPage() {
                   <Pin className="size-6 text-blue-400" />
                 </div>
                 <div>
-                  <h3 className="font-semibold text-white">{t('features.integration.title')}</h3>
-                  <p className="text-sm text-gray-300">{t('features.integration.description')}</p>
+                  <h3 className="font-semibold text-foreground">{t('features.integration.title')}</h3>
+                  <p className="text-sm text-foreground/70">{t('features.integration.description')}</p>
                 </div>
               </div>
             </div>
