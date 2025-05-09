@@ -5,10 +5,6 @@ export const metadata: Metadata = {
   description: 'Install the MultiPost extension',
 };
 
-export default function ExtensionLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export default function ExtensionLayout({ children }: { children: React.ReactNode }) {
   return <>{children}</>;
 }

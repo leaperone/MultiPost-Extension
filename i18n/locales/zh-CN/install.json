@@ -1,23 +1,43 @@
 {
-  "title": "感谢安装 MultiPost",
-  "subtitle": "一键发布内容到多个平台的解决方案",
+  "title": "安装成功",
+  "subtitle": "让我们开始使用 MultiPost 吧",
   "instructions": {
-    "step1": "1. 点击浏览器工具栏中的扩展图标",
-    "step2": "2. 将扩展固定以方便访问"
+    "step1": "点击浏览器右上角的扩展图标",
+    "step2": "将扩展固定在工具栏中"
   },
   "features": {
     "multiPlatform": {
       "title": "多平台支持",
-      "description": "一键将内容发布到知乎、微博、小红书、抖音等超过10个主流平台。"
+      "description": "支持多个社交媒体平台，一键发布"
     },
     "noLogin": {
       "title": "无需登录",
-      "description": "立即开始使用 - 无需注册，无需 API 密钥，完全免费。"
+      "description": "使用浏览器已登录的账号，无需重复登录"
     },
     "integration": {
-      "title": "易于集成",
-      "description": "支持网页集成和自动化功能，如定时发布和 AI 内容生成。"
+      "title": "无缝集成",
+      "description": "与浏览器完美集成，使用更加便捷"
     }
   },
-  "cta": "开始使用 MultiPost"
-} 
+  "firstPost": {
+    "title": "发布你的第一条动态",
+    "titlePlaceholder": "标题（可选）",
+    "contentPlaceholder": "分享你的想法...",
+    "selectPlatforms": "选择要发布的平台",
+    "publish": "发布",
+    "autoPublish": "自动发布"
+  },
+  "platforms": {
+    "cn": "中国平台",
+    "international": "国际平台"
+  },
+  "validation": {
+    "contentRequired": "请输入内容",
+    "platformRequired": "请选择至少一个平台"
+  },
+  "publish": {
+    "success": "发布成功",
+    "error": "发布失败，请重试"
+  },
+  "cta": "开始使用"
+}

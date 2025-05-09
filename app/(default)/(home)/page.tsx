@@ -1,5 +1,5 @@
 import { Card, CardBody, Button, Link } from '@heroui/react';
-import { Sparkles, SendIcon } from 'lucide-react';
+import { Sparkles, PlaneTakeoffIcon } from 'lucide-react';
 import { Icon } from '@iconify/react';
 import { cn } from '@/lib/utils';
 import { BackgroundLines } from '@/components/background-lines';
@@ -14,7 +14,7 @@ import Image from 'next/image';
 export const metadata = {
   title: 'MultiPost - Open Source Social Media Publishing Tool',
   description:
-    'MultiPost是一个开源浏览器扩展，帮助您一键将内容发布到多个社交媒体平台。支持短视频、博客文章等多种内容格式，提供网页内容提取、搜索引擎接口和社交媒体数据分析功能，全面提升您的社交媒体存在感。',
+    'MultiPost is an open-source browser extension that helps you publish content to multiple social media platforms with one click. It supports various content formats including short videos and blog posts, offering web content extraction, search engine interfaces, and social media data analysis features to enhance your social media presence.',
 };
 
 interface TranslationFunction {
@@ -52,7 +52,7 @@ function HeroSection({ t, className }: { t: TranslationFunction; className?: str
         {
           emoji: '📤',
           position:
-            '-left-[100px] -top-7 group-hover:-rotate-[30deg] group-hover:-translate-y-14 md:-left-40 md:-top-16',
+            '-left-[100px] -top-7 group-hover:-rotate-[30deg] group-hover:-translate-y-14 md:-left-6 md:-top-16',
         },
         {
           emoji: '🚀',
@@ -143,7 +143,7 @@ function HeroSection({ t, className }: { t: TranslationFunction; className?: str
             href="/dashboard/publish"
             color="primary"
             size="lg"
-            startContent={<SendIcon />}
+            startContent={<PlaneTakeoffIcon />}
             className="mx-auto">
             {t('hero.buttons.post')}
           </Button>

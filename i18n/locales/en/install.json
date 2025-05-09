@@ -1,23 +1,43 @@
 {
-  "title": "Thank you for installing MultiPost",
-  "subtitle": "Your one-click solution for multi-platform content publishing",
+  "title": "Installation Complete",
+  "subtitle": "Let's get started with MultiPost",
   "instructions": {
-    "step1": "1. Click the extension icon in your browser's toolbar",
-    "step2": "2. Pin the extension to keep it easily accessible"
+    "step1": "Click the extension icon in the top right",
+    "step2": "Pin the extension to the toolbar"
   },
   "features": {
     "multiPlatform": {
       "title": "Multi-Platform Support",
-      "description": "Publish your content to over 10 mainstream platforms including Zhihu, Weibo, Xiaohongshu, TikTok, and more with just one click."
+      "description": "Support multiple social media platforms with one-click publishing"
     },
     "noLogin": {
       "title": "No Login Required",
-      "description": "Start publishing immediately - no registration, no API keys, and completely free to use."
+      "description": "Use your browser's logged-in accounts, no need to log in again"
     },
     "integration": {
-      "title": "Easy Integration",
-      "description": "Supports web page integration and automation features like scheduled posting and AI content generation."
+      "title": "Seamless Integration",
+      "description": "Perfect browser integration for convenient use"
     }
   },
-  "cta": "Start Using MultiPost"
-} 
+  "firstPost": {
+    "title": "Share Your First Post",
+    "titlePlaceholder": "Title (optional)",
+    "contentPlaceholder": "Share your thoughts...",
+    "selectPlatforms": "Select platforms to publish to",
+    "publish": "Publish",
+    "autoPublish": "Auto Publish"
+  },
+  "platforms": {
+    "cn": "Chinese Platforms",
+    "international": "International Platforms"
+  },
+  "validation": {
+    "contentRequired": "Please enter content",
+    "platformRequired": "Please select at least one platform"
+  },
+  "publish": {
+    "success": "Published successfully",
+    "error": "Failed to publish, please try again"
+  },
+  "cta": "Get Started"
+}

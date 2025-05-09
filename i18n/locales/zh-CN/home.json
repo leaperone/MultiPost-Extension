@@ -156,14 +156,14 @@
     "github": "在 GitHub 上点星"
   },
   "hero": {
-    "description": "从你所有社媒账号同时发内容，监控、分析你的网站和账号",
+    "description": "打造自媒体柔性流水线",
     "buttons": {
       "post": "开始发布"
     },
     "features": {
-      "draft": "草稿",
-      "post": "发布",
-      "analytics": "分析",
+      "draft": "撰稿",
+      "post": "多平台发布",
+      "analytics": "数据分析",
       "conjunction": {
         "and": "和",
         "comma": "、"
