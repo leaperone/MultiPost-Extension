@@ -88,7 +88,10 @@
         "description": "同时将内容发布到所有已连接的社交媒体平台"
       }
     ],
-    "cta": "安装扩展开始体验"
+    "cta": "安装扩展开始体验",
+    "featuresBadge": "MultiPost 功能",
+    "featuresTitle": "构建你的社交媒体流水线",
+    "featuresDesc": "MultiPost 提供丰富功能，助你高效构建社交媒体内容发布流程。"
   },
   "combinedSection": {
     "title": "强大而简单",

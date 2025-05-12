@@ -88,7 +88,10 @@
         "description": "Simultaneously publish content to all connected social media platforms"
       }
     ],
-    "cta": "Install Extension to Get Started"
+    "cta": "Install Extension to Get Started",
+    "featuresBadge": "MultiPost Features",
+    "featuresTitle": "Build Your Social Media Pipeline",
+    "featuresDesc": "MultiPost provides a variety of features to build your social media pipeline. You can"
   },
   "combinedSection": {
     "title": "Powerful & Simple",

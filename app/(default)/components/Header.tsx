@@ -11,12 +11,14 @@ import {
   NavbarMenuItem,
   Link,
   Image,
+  Button,
 } from '@heroui/react';
 import { HomePageNavigationMenu } from '@/components/HomePage/NavigationMenu';
 import { ThemeSwitcher } from '@/components/ThemeSwitcher';
 import LanguageSwitcher from '@/components/LanguageSwitcher';
 import SignInButton from '@/components/SignInButton';
 import { useTranslation } from '@/i18n/client';
+import { Icon } from '@iconify/react/dist/iconify.js';
 
 export default function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -59,6 +61,20 @@ export default function Header() {
         <NavbarItem className="hidden sm:block">
           <LanguageSwitcher />
         </NavbarItem>
+        <NavbarMenuItem className="hidden sm:block">
+          <Button
+            as={Link}
+            href="https://github.com/leaperone/MultiPost-Extension"
+            target="_blank"
+            isIconOnly
+            variant="light"
+            size="sm">
+            <Icon
+              icon="logos:github-icon"
+              className="size-5"
+            />
+          </Button>
+        </NavbarMenuItem>
         <NavbarItem>
           <SignInButton />
         </NavbarItem>
@@ -91,6 +107,21 @@ export default function Header() {
             size="lg">
             {t('navigation.publish')}
           </Link>
+        </NavbarMenuItem>
+        <NavbarMenuItem>
+          <Button
+            as={Link}
+            href="https://github.com/leaperone/MultiPost-Extension"
+            target="_blank"
+            variant="light"
+            startContent={
+              <Icon
+                icon="logos:github-icon"
+                className="size-5"
+              />
+            }>
+            GitHub
+          </Button>
         </NavbarMenuItem>
         <NavbarMenuItem>
           <LanguageSwitcher />

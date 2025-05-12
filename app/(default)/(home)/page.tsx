@@ -1,5 +1,5 @@
 import { Card, CardBody, Button, Link } from '@heroui/react';
-import { Sparkles, PlaneTakeoffIcon } from 'lucide-react';
+import { Sparkles, PlaneTakeoffIcon, Box, Settings, Send, SendIcon, FileTypeIcon } from 'lucide-react';
 import { Icon } from '@iconify/react';
 import { cn } from '@/lib/utils';
 import { BackgroundLines } from '@/components/background-lines';
@@ -9,7 +9,7 @@ import { createTranslation } from '@/i18n/server';
 import { auth } from '@/auth';
 import SocialShareNotifications from '@/components/HomePage/SocialShareNotifications';
 import Image from 'next/image';
-// import { redirect } from 'next/navigation';
+import { GlowingEffect } from '@/components/ui/glowing-effect';
 
 export const metadata = {
   title: 'MultiPost - Open Source Social Media Publishing Tool',
@@ -91,13 +91,6 @@ function HeroSection({ t, className }: { t: TranslationFunction; className?: str
     <BackgroundLines className={cn('relative w-full min-h-screen', className)}>
       <div className="z-40 m-auto flex min-h-screen w-[90%] flex-col items-center justify-center py-20">
         <div className="flex w-full flex-col items-center">
-          {/* 大标题 - 新增 */}
-          <h1 className="mb-6 text-center text-5xl font-bold tracking-tighter md:text-6xl lg:text-7xl">
-            <span className="bg-gradient-to-r from-blue-500 to-purple-500 bg-clip-text text-transparent">
-              MultiPost
-            </span>
-          </h1>
-
           {/* 特性文本展示 - 修改样式 */}
           <div className="flex flex-wrap items-center justify-center gap-x-3 gap-y-2 p-4 text-2xl font-bold sm:text-3xl md:text-4xl lg:text-5xl">
             {features.map((feature, index) => (
@@ -158,52 +151,49 @@ function HeroSection({ t, className }: { t: TranslationFunction; className?: str
   );
 }
 
-interface AnalyticsFeature {
+// 类型定义集中
+interface FeatureItem {
   title: string;
-  description: string;
+  description?: string;
 }
-
-interface MultiPostFeature {
-  title: string;
-  description: string;
-}
-
-// 修正类型定义，使用string[]类型而不是接口继承String
-type WebReaderFeature = string;
-type SearchFeature = string;
-type SocialMediaAPIFeature = string;
 
 export default async function HomePage() {
-  const session = await auth();
-  if (session) {
-    // TODO: 测试阶段，暂时不跳转
-    // redirect('/dashboard');
-  }
+  await auth();
+  // TODO: 测试阶段，暂时不跳转
+  // if (session) redirect('/dashboard');
   const { t } = await createTranslation('home');
 
-  // 定义类型
-  interface FAQItem {
-    question: string;
-    answer: string;
-  }
+  // 统一数据获取
+  const webTraceFeatures = t('analytics.webTrace.features', { returnObjects: true }) as FeatureItem[];
+  const socialMediaFeatures = t('analytics.socialMedia.features', { returnObjects: true }) as FeatureItem[];
+  const multiPostFeatures = t('multiPost.features', { returnObjects: true }) as FeatureItem[];
+  const webreaderFeatures = t('draftTools.webreader.features', { returnObjects: true }) as string[];
+  const searchFeatures = t('draftTools.search.features', { returnObjects: true }) as string[];
+  const socialMediaAPIFeatures = t('draftTools.socialMedia.features', { returnObjects: true }) as string[];
 
-  // 使用类型断言来处理数组
-  const features = t('demo.features', { returnObjects: true }) as string[];
-  const faqItems = t('faq.items', { returnObjects: true }) as FAQItem[];
-
-  // 在 features 定义后添加
-  const webTraceFeatures = t('analytics.webTrace.features', { returnObjects: true }) as AnalyticsFeature[];
-  const socialMediaFeatures = t('analytics.socialMedia.features', { returnObjects: true }) as AnalyticsFeature[];
-
-  // 获取多平台发布功能数据
-  const multiPostFeatures = t('multiPost.features', { returnObjects: true }) as MultiPostFeature[];
-
-  // 获取草稿工具功能数据
-  const webreaderFeatures = t('draftTools.webreader.features', { returnObjects: true }) as WebReaderFeature[];
-  const searchFeatures = t('draftTools.search.features', { returnObjects: true }) as SearchFeature[];
-  const socialMediaAPIFeatures = t('draftTools.socialMedia.features', {
-    returnObjects: true,
-  }) as SocialMediaAPIFeature[];
+  // 统一功能点数组
+  const unifiedFeatures = [
+    {
+      icon: <FileTypeIcon className="size-5 text-primary" />,
+      title: multiPostFeatures[0]?.title,
+      description: multiPostFeatures[0]?.description,
+    },
+    {
+      icon: <SendIcon className="size-5 text-primary" />,
+      title: multiPostFeatures[2]?.title,
+      description: multiPostFeatures[2]?.description,
+    },
+    {
+      icon: <Sparkles className="size-5 text-primary" />,
+      title: multiPostFeatures[1]?.title,
+      description: multiPostFeatures[1]?.description,
+    },
+    {
+      icon: <Sparkles className="size-5 text-primary" />,
+      title: t('analytics.webTrace.title'),
+      description: t('analytics.webTrace.description'),
+    },
+  ];
 
   return (
     <>
@@ -212,100 +202,128 @@ export default async function HomePage() {
         <HeroSection t={t} />
       </div>
 
+      {/* MultiPost Bento Grid Section */}
+      <section className="relative z-10 overflow-hidden bg-background py-24">
+        <div className="container mx-auto px-4">
+          <div className="mx-auto mb-16 max-w-3xl text-center">
+            <span className="mb-3 inline-block rounded-full bg-blue-100 px-4 py-1.5 text-sm font-medium text-blue-600 dark:bg-blue-900/30 dark:text-blue-300">
+              {t('multiPost.featuresBadge')}
+            </span>
+            <h2 className="mb-6 bg-gradient-to-r from-blue-500 to-indigo-500 bg-clip-text text-4xl font-bold text-transparent md:text-5xl">
+              {t('multiPost.featuresTitle')}
+            </h2>
+            <p className="mx-auto max-w-2xl text-xl text-foreground/80">{t('multiPost.featuresDesc')}</p>
+          </div>
+          <ul className="grid grid-cols-1 grid-rows-none gap-4 md:grid-cols-12 md:grid-rows-3 lg:gap-4 xl:max-h-[34rem] xl:grid-rows-2">
+            {/* Card 1: Multiple Content Formats */}
+            <BentoGridItem
+              area="md:[grid-area:1/1/2/7] xl:[grid-area:1/1/2/5]"
+              icon={<Box className="size-5 text-blue-500 dark:text-blue-300" />}
+              title={multiPostFeatures[0]?.title}
+              description={multiPostFeatures[0]?.description}
+            />
+            {/* Card 2: Platform-Specific Optimization */}
+            <BentoGridItem
+              area="md:[grid-area:1/7/2/13] xl:[grid-area:2/1/3/5]"
+              icon={<Settings className="size-5 text-blue-500 dark:text-blue-300" />}
+              title={multiPostFeatures[1]?.title}
+              description={multiPostFeatures[1]?.description}
+            />
+            {/* Card 3: One-Click Publishing */}
+            <BentoGridItem
+              area="md:[grid-area:2/1/3/7] xl:[grid-area:1/5/3/8]"
+              icon={<Send className="size-5 text-blue-500 dark:text-blue-300" />}
+              title={multiPostFeatures[2]?.title}
+              description={multiPostFeatures[2]?.description}
+            />
+            {/* Card 4: Web Content Extraction */}
+            <BentoGridItem
+              area="md:[grid-area:2/7/3/13] xl:[grid-area:1/8/2/13]"
+              icon={
+                <Icon
+                  icon="lucide:globe"
+                  className="size-5 text-blue-500 dark:text-blue-300"
+                />
+              }
+              title={t('draftTools.webreader.title')}
+              description={(t('draftTools.webreader.features', { returnObjects: true }) as string[])[0]}
+            />
+            {/* Card 5: Search Engine Writing Assistant */}
+            <BentoGridItem
+              area="md:[grid-area:3/1/4/13] xl:[grid-area:2/8/3/13]"
+              icon={
+                <Icon
+                  icon="lucide:search"
+                  className="size-5 text-blue-500 dark:text-blue-300"
+                />
+              }
+              title={t('draftTools.search.title')}
+              description={(t('draftTools.search.features', { returnObjects: true }) as string[])[0]}
+            />
+          </ul>
+        </div>
+      </section>
+
       {/* 融合多平台发布功能和演示 Section */}
-      <section className="relative py-24">
-        {/* 装饰背景 */}
+      <section className="relative py-16">
         <div className="absolute right-0 top-0 h-80 w-1/3 rounded-bl-[100px] bg-blue-50 opacity-50 dark:bg-blue-900/10"></div>
         <div className="absolute -bottom-32 -left-32 size-96 rounded-full bg-secondary/5 blur-3xl"></div>
 
         <div className="container mx-auto px-4">
-          <div className="mx-auto mb-16 max-w-3xl text-center">
+          <div className="mx-auto mb-12 max-w-3xl text-center">
             <span className="mb-3 inline-block rounded-full bg-blue-100 px-4 py-1.5 text-sm font-medium text-blue-600 dark:bg-blue-900/30 dark:text-blue-300">
               {t('sectionLabels.powerfulSimple')}
             </span>
-            <h2 className="mb-6 bg-gradient-to-r from-blue-500 to-indigo-500 bg-clip-text text-4xl font-bold text-transparent md:text-5xl">
+            <h2 className="mb-4 bg-gradient-to-r from-blue-500 to-indigo-500 bg-clip-text text-4xl font-bold text-transparent md:text-5xl">
               {t('multiPost.title')}
             </h2>
-            <p className="mx-auto max-w-2xl text-xl text-foreground/80">{t('multiPost.subtitle')}</p>
           </div>
 
-          {/* 多平台发布功能特性 */}
-          <div className="mb-20 grid items-center gap-12 md:grid-cols-2">
-            <div className="order-2 flex flex-col justify-center md:order-1">
-              <div className="mb-10 rounded-2xl bg-white p-6 shadow-lg backdrop-blur-sm dark:bg-gray-800/50">
-                <p className="text-lg leading-relaxed text-foreground/80">{t('multiPost.description')}</p>
-              </div>
-
-              <div className="space-y-8">
-                {multiPostFeatures.map((feature, i) => (
+          <div className="grid items-center gap-8 md:grid-cols-2">
+            <div>
+              <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-2">
+                {unifiedFeatures.map((feature, i) => (
                   <div
                     key={i}
-                    className="group flex items-start gap-5">
-                    <div className="rounded-2xl bg-blue-100 p-4 transition-all duration-300 group-hover:scale-110 group-hover:bg-blue-200 dark:bg-blue-900/30 dark:group-hover:bg-blue-800/40">
-                      <Icon
-                        icon={i === 0 ? 'lucide:file-type' : i === 1 ? 'lucide:settings' : 'lucide:send'}
-                        className="size-6 text-blue-600 dark:text-blue-300"
-                      />
-                    </div>
+                    className="flex items-start gap-4 rounded-xl bg-white p-4 shadow transition-shadow hover:shadow-md dark:bg-gray-800/50">
+                    <div className="rounded-full bg-primary/10 p-3">{feature.icon}</div>
                     <div>
-                      <h4 className="mb-2 text-xl font-semibold text-foreground transition-colors group-hover:text-blue-500 dark:group-hover:text-blue-300">
+                      <h4 className="text-lg font-semibold text-foreground transition-colors group-hover:text-blue-500 dark:group-hover:text-blue-300">
                         {feature.title}
                       </h4>
-                      <p className="text-lg text-foreground/70">{feature.description}</p>
+                      {feature.description && <p className="text-base text-foreground/70">{feature.description}</p>}
                     </div>
                   </div>
                 ))}
               </div>
-            </div>
 
-            <div className="relative order-1 md:order-2">
+              <div className="mt-10 flex flex-col items-center gap-4 sm:flex-row sm:justify-center">
+                <Button
+                  className="rounded-xl bg-gradient-to-r from-blue-500 to-indigo-500 px-10 py-4 text-base font-medium"
+                  size="lg"
+                  as={Link}
+                  href="/extension">
+                  {t('multiPost.cta')}
+                </Button>
+                <Button
+                  className="rounded-xl border border-gray-200 bg-white px-10 py-4 text-base font-medium text-foreground dark:border-gray-700 dark:bg-gray-800"
+                  size="lg"
+                  as={Link}
+                  href="/dashboard/publish">
+                  {t('demo.cta')}
+                </Button>
+              </div>
+            </div>
+            <div className="relative hidden md:block">
               <div className="relative z-10 aspect-video overflow-hidden rounded-2xl shadow-2xl">
                 <Image
-                  src="https://2someone-web-static.s3.bitiful.net/2025/04/40e625c0dfdc264852fc23eb3829fc79.png"
+                  src="https://2someone-web-static.s3.bitiful.net/2025/05/ea3bb50afe710d57a968c1ac5f4d055f.png"
                   alt="Multi Platform Publishing"
                   fill
-                  className="object-cover"
                 />
               </div>
-
-              {/* 装饰元素 */}
               <div className="absolute -bottom-6 -right-6 -z-0 size-32 rounded-2xl bg-blue-100 dark:bg-blue-900/30"></div>
               <div className="absolute -left-6 -top-6 -z-0 size-32 rounded-2xl bg-indigo-100 dark:bg-indigo-900/30"></div>
-            </div>
-          </div>
-
-          {/* 演示部分特性 */}
-          <div className="mx-auto mt-24 max-w-4xl">
-            <h3 className="mb-10 text-center text-3xl font-bold text-foreground">{t('combinedSection.usageTitle')}</h3>
-            <div className="grid gap-6 md:grid-cols-2">
-              {features.map((feature, i) => (
-                <div
-                  key={i}
-                  className="flex items-center gap-4 rounded-xl bg-white p-4 shadow-sm transition-shadow hover:shadow-md dark:bg-gray-800/50">
-                  <div className="rounded-full bg-primary/10 p-3">
-                    <Sparkles className="size-5 text-primary" />
-                  </div>
-                  <span className="text-lg font-medium text-foreground/90">{feature}</span>
-                </div>
-              ))}
-            </div>
-
-            <div className="mt-12 flex justify-center gap-4">
-              <Button
-                className="rounded-xl bg-gradient-to-r from-blue-500 to-indigo-500 py-6 text-lg font-medium"
-                size="lg"
-                as={Link}
-                href="/extension">
-                {t('multiPost.cta')}
-              </Button>
-
-              <Button
-                className="rounded-xl border border-gray-200 bg-white py-6 text-lg font-medium text-foreground dark:border-gray-700 dark:bg-gray-800"
-                size="lg"
-                as={Link}
-                href="/dashboard/publish">
-                {t('demo.cta')}
-              </Button>
             </div>
           </div>
         </div>
@@ -427,16 +445,6 @@ export default async function HomePage() {
               </CardBody>
             </Card>
           </div>
-
-          <div className="mt-16 text-center">
-            <Button
-              className="rounded-xl bg-gradient-to-r from-blue-500 to-purple-500 px-10 py-7 text-lg font-medium"
-              size="lg"
-              as={Link}
-              href="/dashboard/publish">
-              {t('draftTools.cta')}
-            </Button>
-          </div>
         </div>
       </section>
 
@@ -514,103 +522,58 @@ export default async function HomePage() {
         </div>
       </section>
 
-      <section className="bg-gray-50 py-24 dark:bg-gray-900/50">
-        <div className="container mx-auto px-4">
-          <div className="mx-auto mb-16 max-w-3xl text-center">
-            <span className="mb-3 inline-block rounded-full bg-green-100 px-4 py-1.5 text-sm font-medium text-green-600 dark:bg-green-900/30 dark:text-green-300">
-              {t('sectionLabels.openSource')}
-            </span>
-            <h2 className="mb-6 bg-gradient-to-r from-green-500 to-emerald-500 bg-clip-text text-4xl font-bold text-transparent md:text-5xl">
-              {t('openSource.title')}
-            </h2>
-            <p className="mx-auto max-w-2xl text-xl text-foreground/80">{t('openSource.description')}</p>
-          </div>
-
-          {/* GitHub 卡片 */}
-          <div className="mx-auto mb-10 max-w-2xl rounded-xl bg-white p-8 shadow-lg dark:bg-gray-800">
-            <div className="mb-4 flex items-center">
-              <Icon
-                icon="mdi:github"
-                className="mr-3 size-8"
-              />
-              <h3 className="text-2xl font-semibold">MultiPost-Extension</h3>
-            </div>
-            <div className="mb-6 flex items-center gap-6">
-              <div className="flex items-center">
-                <Icon
-                  icon="octicon:star-fill-16"
-                  className="mr-2 size-5 text-amber-400"
-                />
-                <span>1.4k</span>
-              </div>
-              <div className="flex items-center">
-                <Icon
-                  icon="octicon:repo-forked-16"
-                  className="mr-2 size-5"
-                />
-                <span>127</span>
-              </div>
-              <div className="flex items-center">
-                <Icon
-                  icon="octicon:issue-opened-16"
-                  className="mr-2 size-5"
-                />
-                <span>15</span>
-              </div>
-            </div>
-            <p className="mb-6 text-foreground/70">一个开源的浏览器扩展，帮助您一键发布内容到多个社交媒体平台。</p>
-          </div>
-
-          <div className="text-center">
-            <Button
-              as={Link}
-              href="https://github.com/leaperone/MultiPost-Extension"
-              target="_blank"
-              className="rounded-xl bg-default-100 px-10 py-6 text-foreground hover:bg-default-200"
-              size="lg"
-              startContent={
-                <Icon
-                  icon="mdi:github"
-                  className="size-5"
-                />
-              }>
-              {t('openSource.cta')}
-            </Button>
-          </div>
-        </div>
-      </section>
-
-      <section className="bg-default-50 py-24">
-        <div className="container mx-auto px-4">
-          <div className="mx-auto mb-16 max-w-3xl text-center">
-            <span className="mb-3 inline-block rounded-full bg-blue-100 px-4 py-1.5 text-sm font-medium text-blue-600 dark:bg-blue-900/30 dark:text-blue-300">
-              {t('sectionLabels.faq')}
-            </span>
-            <h2 className="mb-8 bg-gradient-to-r from-blue-500 to-purple-500 bg-clip-text text-4xl font-bold text-transparent md:text-5xl">
-              {t('faq.title')}
-            </h2>
-          </div>
-
-          <div className="mx-auto max-w-3xl space-y-6">
-            {faqItems.map((faq, i) => (
-              <Card
-                key={i}
-                className="border-none shadow-md transition-shadow hover:shadow-lg">
-                <CardBody className="p-6">
-                  <h3 className="mb-3 text-xl font-semibold">{faq.question}</h3>
-                  <p className="text-lg text-foreground/80">{faq.answer}</p>
-                </CardBody>
-              </Card>
-            ))}
-          </div>
-        </div>
-      </section>
-
       <section className="bg-gradient-to-r from-primary via-blue-500 to-secondary py-24 text-white">
         <div className="container mx-auto px-4">
           <div className="mx-auto max-w-4xl text-center">
             <h2 className="mb-8 text-5xl font-bold">{t('finalCta.title')}</h2>
             <p className="mx-auto mb-10 max-w-2xl text-xl text-white/90">{t('finalCta.description')}</p>
+            <div className="mx-auto mb-10 max-w-2xl rounded-xl bg-white/10 p-8 shadow-lg dark:bg-gray-800/30">
+              <div className="mb-4 flex items-center justify-center">
+                <Icon
+                  icon="mdi:github"
+                  className="mr-3 size-8"
+                />
+                <h3 className="text-2xl font-semibold">MultiPost-Extension</h3>
+              </div>
+              <div className="mb-6 flex items-center justify-center gap-6">
+                <div className="flex items-center">
+                  <Icon
+                    icon="octicon:star-fill-16"
+                    className="mr-2 size-5 text-amber-400"
+                  />
+                  <span>1.4k</span>
+                </div>
+                <div className="flex items-center">
+                  <Icon
+                    icon="octicon:repo-forked-16"
+                    className="mr-2 size-5"
+                  />
+                  <span>127</span>
+                </div>
+                <div className="flex items-center">
+                  <Icon
+                    icon="octicon:issue-opened-16"
+                    className="mr-2 size-5"
+                  />
+                  <span>15</span>
+                </div>
+              </div>
+              <p className="mb-6 text-white/80">{t('openSource.description')}</p>
+              <Button
+                as={Link}
+                href="https://github.com/leaperone/MultiPost-Extension"
+                target="_blank"
+                className="rounded-xl bg-default-100 px-10 py-6 text-foreground hover:bg-default-200"
+                size="lg"
+                startContent={
+                  <Icon
+                    icon="mdi:github"
+                    className="size-5"
+                  />
+                }>
+                {t('openSource.cta')}
+              </Button>
+            </div>
             <div className="flex flex-col justify-center gap-6 sm:flex-row">
               <Button
                 size="lg"
@@ -645,5 +608,44 @@ export default async function HomePage() {
         </div>
       </section>
     </>
+  );
+}
+
+// BentoGridItem 组件定义
+interface BentoGridItemProps {
+  area: string;
+  icon: React.ReactNode;
+  title: string;
+  description: React.ReactNode;
+}
+
+function BentoGridItem({ area, icon, title, description }: BentoGridItemProps) {
+  return (
+    <li className={`min-h-56 list-none ${area}`}>
+      <div className="relative h-full rounded-2xl border border-foreground/10 bg-background p-2 shadow-lg md:rounded-3xl md:p-3">
+        <GlowingEffect
+          blur={0}
+          borderWidth={3}
+          spread={80}
+          glow={true}
+          disabled={false}
+          proximity={64}
+          inactiveZone={0.01}
+        />
+        <div className="border-0.75 relative flex h-full flex-col justify-between gap-6 overflow-hidden rounded-xl p-6 dark:shadow-[0px_0px_27px_0px_#2D2D2D] md:p-6">
+          <div className="relative flex flex-1 flex-col justify-between gap-3">
+            <div className="w-fit rounded-lg border border-blue-200 p-2 dark:border-blue-900">{icon}</div>
+            <div className="space-y-3">
+              <h3 className="text-balance pt-0.5 font-sans text-xl/[1.375rem] font-semibold text-black dark:text-white md:text-2xl/[1.875rem]">
+                {title}
+              </h3>
+              <h2 className="font-sans text-sm/[1.125rem] text-black dark:text-neutral-400 md:text-base/[1.375rem]">
+                {description}
+              </h2>
+            </div>
+          </div>
+        </div>
+      </div>
+    </li>
   );
 }
