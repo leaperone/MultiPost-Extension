@@ -541,38 +541,24 @@ export default async function HomePage() {
                     icon="octicon:star-fill-16"
                     className="mr-2 size-5 text-amber-400"
                   />
-                  <span>1.4k</span>
+                  <span>1.5k</span>
                 </div>
                 <div className="flex items-center">
                   <Icon
                     icon="octicon:repo-forked-16"
                     className="mr-2 size-5"
                   />
-                  <span>127</span>
+                  <span>135</span>
                 </div>
                 <div className="flex items-center">
                   <Icon
                     icon="octicon:issue-opened-16"
                     className="mr-2 size-5"
                   />
-                  <span>15</span>
+                  <span>5</span>
                 </div>
               </div>
               <p className="mb-6 text-white/80">{t('openSource.description')}</p>
-              <Button
-                as={Link}
-                href="https://github.com/leaperone/MultiPost-Extension"
-                target="_blank"
-                className="rounded-xl bg-default-100 px-10 py-6 text-foreground hover:bg-default-200"
-                size="lg"
-                startContent={
-                  <Icon
-                    icon="mdi:github"
-                    className="size-5"
-                  />
-                }>
-                {t('openSource.cta')}
-              </Button>
             </div>
             <div className="flex flex-col justify-center gap-6 sm:flex-row">
               <Button
@@ -596,13 +582,6 @@ export default async function HomePage() {
                 }>
                 {t('finalCta.github')}
               </Button>
-            </div>
-
-            {/* 装饰元素 */}
-            <div className="mt-16 flex items-center justify-center gap-4">
-              <span className="h-2 w-16 rounded-full bg-white/30"></span>
-              <span className="h-2 w-6 rounded-full bg-white/60"></span>
-              <span className="h-2 w-10 rounded-full bg-white/30"></span>
             </div>
           </div>
         </div>
