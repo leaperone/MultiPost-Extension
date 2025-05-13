@@ -305,13 +305,6 @@ export default async function HomePage() {
                   href="/extension">
                   {t('multiPost.cta')}
                 </Button>
-                <Button
-                  className="rounded-xl border border-gray-200 bg-white px-10 py-4 text-base font-medium text-foreground dark:border-gray-700 dark:bg-gray-800"
-                  size="lg"
-                  as={Link}
-                  href="/dashboard/publish">
-                  {t('demo.cta')}
-                </Button>
               </div>
             </div>
             <div className="relative hidden md:block">

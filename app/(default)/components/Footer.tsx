@@ -23,11 +23,15 @@ export default function Footer() {
     ],
     support: [
       { name: 'Documentation', href: 'https://docs.multipost.app' },
+      { name: 'Status', href: 'https://monitor.leaper.one' },
+    ],
+    contact: [
       { name: 'Discord', href: 'https://discord.gg/GNsCX9zFwQ' },
       {
         name: 'QQ Group',
         href: 'http://qm.qq.com/cgi-bin/qm/qr?_wv=1027&k=c5BjhD8JxNAuwjKh6qvCoROU301PppYU&authKey=NfKianfDwngrwJyVQbefIQET9vUQs46xb0PfOYUm6KzdeCjPd5YbvlRoO8trJUUZ&noverify=0&group_code=921137242',
       },
+      { name: 'Email', href: 'mailto:support@leaper.one' },
     ],
     legal: [
       { name: t('footer.navigation.legal.privacy'), href: '/legal/privacy' },
@@ -128,7 +132,7 @@ export default function Footer() {
               <div className="mt-10 md:mt-0">{renderList({ title: 'Support', items: footerNavigation.support })}</div>
             </div>
             <div className="md:grid md:grid-cols-2 md:gap-8">
-              {/* <div>{renderList({ title: 'About Us', items: footerNavigation.aboutUs })}</div> */}
+              <div>{renderList({ title: 'Contact', items: footerNavigation.contact })}</div>
               <div className="mt-10 md:mt-0">{renderList({ title: 'Legal', items: footerNavigation.legal })}</div>
             </div>
           </div>
