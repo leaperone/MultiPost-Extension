@@ -71,7 +71,7 @@ export default function Header() {
             size="sm">
             <Icon
               icon="logos:github-icon"
-              className="size-5"
+              className="size-6"
             />
           </Button>
         </NavbarMenuItem>
