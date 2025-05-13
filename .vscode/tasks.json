@@ -1,0 +1,45 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"type": "shell",
+			"command": "pnpm i",
+			"group": "build",
+			"problemMatcher": [],
+			"label": "pnpm: install",
+			"presentation": {
+				"reveal": "silent",
+				"clear": true,
+				"panel": "dedicated",
+				"close": true
+			}
+		},
+		{
+			"type": "shell",
+			"command": "sh prisma/generate.sh",
+			"group": "build",
+			"problemMatcher": [],
+			"label": "pnpm: prisma:generate",
+			"presentation": {
+				"reveal": "silent",
+				"clear": true,
+				"panel": "dedicated",
+				"close": true
+			}
+		},
+		{
+			"label": "build before test",
+			"dependsOn": [
+				"pnpm: install",
+				"pnpm: prisma:generate",
+			],
+			"dependsOrder": "sequence",
+			"presentation": {
+				"reveal": "silent",
+				"clear": true,
+				"panel": "dedicated",
+				"close": true
+			}
+		}
+	]
+}
