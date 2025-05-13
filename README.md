@@ -96,11 +96,17 @@ It is recommended to use the package management tool `pnpm@latest-9` with Node.j
 [![Star History Chart](https://api.star-history.com/svg?repos=leaperone/multipost-wechat-markdown-editor,leaperone/MultiPost-Extension&type=Date)](https://www.star-history.com/#leaperone/multipost-wechat-markdown-editor&leaperone/MultiPost-Extension&Date)
 
 ## Contact Us
+- [Discord](https://discord.gg/GNsCX9zFwQ)
+- Email: [support@leaper.one](mailto:support@leaper.one)
+- Twitter: [@harry_is_fish](https://x.com/harry_is_fish)
+- [Bento.me](https://bento.me/harryisfish)
+- [GitHub Issues](https://github.com/leaperone/MultiPost-Extension/issues)
+- 腾讯频道
+  - 微信扫一扫
+    ![IMG_2206](https://github.com/user-attachments/assets/1044058f-036e-4942-af07-e4bd48a1e1d6)
+  - QQ 扫一扫
+    ![IMG_2205](https://github.com/user-attachments/assets/4f8a2771-47ca-4cc5-9ea8-b0e82b49c794)
 
-- QQ Group: [921137242](http://qm.qq.com/cgi-bin/qm/qr?_wv=1027&k=c5BjhD8JxNAuwjKh6qvCoROU301PppYU&authKey=NfKianfDwngrwJyVQbefIQET9vUQs46xb0PfOYUm6KzdeCjPd5YbvlRoO8trJUUZ&noverify=0&group_code=921137242)
-- Email: support@leaper.one
-- Twitter: [@harry_wong_](https://x.com/harry_is_fish)
-- Bento: [Click me](https://bento.me/harryisfish)
-- GitHub Issues: https://github.com/MultiPost-Extension/MultiPost-Extension/issues
 
-![QQ Group](docs/MultiPost-Extension_2025-02-28T14_17_15.717Z.png)
+
+
