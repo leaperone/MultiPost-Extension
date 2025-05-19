@@ -1,3 +1,6 @@
+// You can rename this file to index.tsx to use this file as the entry point
+// Then you can develop the extension option page as UI
+
 import '~style.css';
 import React, { useState } from 'react';
 import { HeroUIProvider } from '@heroui/react';
