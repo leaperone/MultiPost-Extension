@@ -1,6 +1,5 @@
 {
   "title": "Installation Complete",
-  "subtitle": "Let's get started with MultiPost",
   "instructions": {
     "step1": "Click the extension icon in the top right",
     "step2": "Pin the extension to the toolbar"
@@ -13,10 +12,6 @@
     "noLogin": {
       "title": "No Login Required",
       "description": "Use your browser's logged-in accounts, no need to log in again"
-    },
-    "integration": {
-      "title": "Seamless Integration",
-      "description": "Perfect browser integration for convenient use"
     }
   },
   "firstPost": {
@@ -39,5 +34,6 @@
     "success": "Published successfully",
     "error": "Failed to publish, please try again"
   },
-  "cta": "Get Started"
+  "cta": "Get Started",
+  "accessFullVersion": "Access Full Publishing Features"
 }

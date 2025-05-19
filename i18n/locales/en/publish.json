@@ -20,6 +20,12 @@
       "dragAndDrop": "Drag and drop files here",
       "drop": "Release to upload files",
       "supportedFiles": "Supports images and videos"
+    },
+    "buttons": {
+      "aiGenerateImage": "AI Generate Image"
+    },
+    "aiImageGenerationModal": {
+      "title": "AI Image Generation"
     }
   },
   "podcast": {

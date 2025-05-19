@@ -361,11 +361,9 @@ export function ImageGenerationModal({ onImageGenerated, initialPromptBasis }: I
   return (
     <>
       <Button
-        variant="flat"
         startContent={<PaletteIcon />}
-        onPress={openModal}
-        className="self-start">
-        {t('dynamic.buttons.aiGenerateImage', 'AI 配图')}
+        onPress={openModal}>
+        {t('dynamic.buttons.aiGenerateImage')}
       </Button>
 
       {modalVisible && (
@@ -376,7 +374,7 @@ export function ImageGenerationModal({ onImageGenerated, initialPromptBasis }: I
           size="3xl"
           scrollBehavior="inside">
           <ModalContent>
-            <ModalHeader>{t('dynamic.aiImageGenerationModal.title', 'AI Image Generation')}</ModalHeader>
+            <ModalHeader>{t('dynamic.aiImageGenerationModal.title')}</ModalHeader>
             <ModalBody className="space-y-6">{renderModalContent()}</ModalBody>
           </ModalContent>
         </Modal>

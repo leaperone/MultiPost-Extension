@@ -1,5 +1,5 @@
 import { Card, CardBody, Button, Link } from '@heroui/react';
-import { Sparkles, PlaneTakeoffIcon, Box, Settings, Send, SendIcon, FileTypeIcon } from 'lucide-react';
+import { Sparkles, Box, Settings, Send, SendIcon, FileTypeIcon } from 'lucide-react';
 import { Icon } from '@iconify/react';
 import { cn } from '@/lib/utils';
 import { BackgroundLines } from '@/components/background-lines';
@@ -136,7 +136,15 @@ function HeroSection({ t, className }: { t: TranslationFunction; className?: str
             href="/dashboard/publish"
             color="primary"
             size="lg"
-            startContent={<PlaneTakeoffIcon />}
+            variant="bordered"
+            startContent={
+              <Image
+                src="/MultiPost-Latest.png"
+                alt="MultiPost Latest Logo"
+                width={36}
+                height={36}
+              />
+            }
             className="mx-auto">
             {t('hero.buttons.post')}
           </Button>

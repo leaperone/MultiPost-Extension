@@ -40,8 +40,10 @@ export default function Header() {
             href="/"
             className="flex items-center gap-2">
             <Image
-              src="/favicon.ico"
-              alt="MultiPost Logo"
+              src="/MultiPost-Latest.png"
+              alt="MultiPost Latest Logo"
+              width={32}
+              height={32}
             />
             <span className="bg-gradient-to-br from-blue-300 to-pink-600 bg-clip-text font-semibold text-transparent dark:from-blue-400 dark:to-pink-400">
               MultiPost

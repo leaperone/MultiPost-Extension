@@ -59,9 +59,9 @@ const getApplicationItems = (t: TranslationFunction): MenuItem[] => [
     icon: SendIcon,
   },
   {
-    title: t('sidebar.menu.grid'),
-    url: '/dashboard/grid',
-    icon: GridIcon,
+    title: t('sidebar.menu.draw'),
+    url: '/dashboard/draw',
+    icon: PaletteIcon,
   },
   {
     title: t('sidebar.menu.analytics'),
@@ -74,9 +74,9 @@ const getApplicationItems = (t: TranslationFunction): MenuItem[] => [
     icon: ScanEyeIcon,
   },
   {
-    title: t('sidebar.menu.draw'),
-    url: '/dashboard/draw',
-    icon: PaletteIcon,
+    title: t('sidebar.menu.grid'),
+    url: '/dashboard/grid',
+    icon: GridIcon,
   },
 ];
 

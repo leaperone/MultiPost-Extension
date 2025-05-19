@@ -194,7 +194,6 @@ export default function OnInstallPage() {
         {/* Header */}
         <div className="space-y-4 text-center">
           <h1 className="text-4xl font-bold tracking-tight text-foreground">{t('title')}</h1>
-          <p className="text-foreground/80">{t('subtitle')}</p>
         </div>
 
         {/* First Post Form */}
@@ -381,16 +380,6 @@ export default function OnInstallPage() {
                   <p className="text-sm text-foreground/70">{t('features.noLogin.description')}</p>
                 </div>
               </div>
-
-              <div className="flex items-start gap-4">
-                <div className="rounded-lg bg-blue-500/20 p-2">
-                  <Pin className="size-6 text-blue-400" />
-                </div>
-                <div>
-                  <h3 className="font-semibold text-foreground">{t('features.integration.title')}</h3>
-                  <p className="text-sm text-foreground/70">{t('features.integration.description')}</p>
-                </div>
-              </div>
             </div>
           </CardBody>
           <CardFooter>
@@ -399,7 +388,7 @@ export default function OnInstallPage() {
               href="/dashboard/publish"
               color="primary"
               className="w-full">
-              Go to Publish
+              {t('accessFullVersion')}
             </Button>
           </CardFooter>
         </Card>

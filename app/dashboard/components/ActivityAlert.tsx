@@ -32,6 +32,20 @@ export function ActivityAlert() {
           <span className="text-sm">{t('activity.description')}</span>
         </div>
       </Alert>
+
+      <Alert
+        variant="flat"
+        color="secondary"
+        icon={<PartyPopperIcon className="size-5" />}
+        endContent={
+          <Button
+            variant="flat"
+            color="primary">
+            <ArrowRightIcon />
+          </Button>
+        }>
+        abc
+      </Alert>
     </div>
   );
 }

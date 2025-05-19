@@ -20,6 +20,12 @@
       "dragAndDrop": "拖放文件到此处上传",
       "drop": "松开鼠标上传文件",
       "supportedFiles": "支持图片和视频文件"
+    },
+    "buttons": {
+      "aiGenerateImage": "AI 配图"
+    },
+    "aiImageGenerationModal": {
+      "title": "AI 配图生成"
     }
   },
   "podcast": {

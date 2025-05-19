@@ -1,6 +1,5 @@
 {
   "title": "安装成功",
-  "subtitle": "让我们开始使用 MultiPost 吧",
   "instructions": {
     "step1": "点击浏览器右上角的扩展图标",
     "step2": "将扩展固定在工具栏中"
@@ -13,10 +12,6 @@
     "noLogin": {
       "title": "无需登录",
       "description": "使用浏览器已登录的账号，无需重复登录"
-    },
-    "integration": {
-      "title": "无缝集成",
-      "description": "与浏览器完美集成，使用更加便捷"
     }
   },
   "firstPost": {
@@ -39,5 +34,6 @@
     "success": "发布成功",
     "error": "发布失败，请重试"
   },
-  "cta": "开始使用"
+  "cta": "开始使用",
+  "accessFullVersion": "访问完整版发布功能"
 }
