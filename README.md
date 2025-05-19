@@ -1,4 +1,5 @@
 <div align="center">
+<img src="https://github.com/user-attachments/assets/b30c6c81-9c8b-4c78-a2df-9266b84b6f14" width="200" height="200" alt="MultiPost Logo" />
 
 # MultiPost
 
@@ -97,16 +98,13 @@ It is recommended to use the package management tool `pnpm@latest-9` with Node.j
 
 ## Contact Us
 - [Discord](https://discord.gg/GNsCX9zFwQ)
+- [点击加入腾讯频道【MultiPost】](https://pd.qq.com/s/ajj47bgjb) ，频道号：multipostapp
 - Email: [support@leaper.one](mailto:support@leaper.one)
 - Twitter: [@harry_is_fish](https://x.com/harry_is_fish)
 - [Bento.me](https://bento.me/harryisfish)
 - [GitHub Issues](https://github.com/leaperone/MultiPost-Extension/issues)
 - 腾讯频道
   - 微信扫一扫
-    ![IMG_2206](https://github.com/user-attachments/assets/1044058f-036e-4942-af07-e4bd48a1e1d6)
+    <img src="https://github.com/user-attachments/assets/1044058f-036e-4942-af07-e4bd48a1e1d6" width="350" alt="MultiPost Tencent Channel Wechat" />
   - QQ 扫一扫
-    ![IMG_2205](https://github.com/user-attachments/assets/4f8a2771-47ca-4cc5-9ea8-b0e82b49c794)
-
-
-
-
+    <img src="https://github.com/user-attachments/assets/fc9edf3b-1ed5-4aa7-99f9-b39dcab3f449" width="350" alt="MultiPost Tencent Channel QQ" />
