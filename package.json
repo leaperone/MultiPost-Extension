@@ -1,7 +1,7 @@
 {
   "name": "__MSG_extensionName__",
   "displayName": "__MSG_extensionDisplayName__",
-  "version": "1.2.0",
+  "version": "1.2.1",
   "description": "__MSG_extensionDescription__",
   "author": "leaperone",
   "scripts": {
