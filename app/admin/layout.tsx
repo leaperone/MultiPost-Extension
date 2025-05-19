@@ -19,5 +19,5 @@ export default async function AdminLayout({ children }: { children: React.ReactN
     return <div>您不是管理员</div>;
   }
 
-  return <main className="flex min-h-screen flex-col items-center bg-background p-4">{children}</main>;
+  return <main className="flex h-screen w-full overflow-y-auto bg-background">{children}</main>;
 }

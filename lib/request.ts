@@ -1,10 +1,10 @@
 import { NextResponse } from 'next/server';
 import { z } from 'zod';
 
-type RespT = {
+export type RespT<T = unknown> = {
   code: number; // 0 成功，-1 失败
   msg: string; // success 成功，失败具体
-  data: unknown;
+  data: T;
 };
 
 export function resp(

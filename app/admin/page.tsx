@@ -7,7 +7,7 @@
 
 import React from 'react';
 import { Button } from '@heroui/react';
-import { CreditCardIcon } from 'lucide-react';
+import { CreditCardIcon, UserIcon } from 'lucide-react';
 import { Link } from '@heroui/react';
 
 export default function AdminPage() {
@@ -20,6 +20,15 @@ export default function AdminPage() {
 
       <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
         <Link
+          href="/admin/users"
+          className="w-full">
+          <Button
+            className="h-24 w-full text-lg"
+            startContent={<UserIcon className="size-6" />}>
+            用户管理
+          </Button>
+        </Link>
+        <Link
           href="/admin/recharge"
           className="w-full">
           <Button
@@ -31,10 +40,7 @@ export default function AdminPage() {
         <Link
           href="/admin/activity"
           className="w-full">
-          <Button
-            className="h-24 w-full text-lg">
-            活动管理
-          </Button>
+          <Button className="h-24 w-full text-lg">活动管理</Button>
         </Link>
       </div>
     </div>
