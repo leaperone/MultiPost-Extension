@@ -4,7 +4,7 @@
  */
 'use client';
 
-import { useEffect, useState } from 'react';
+import { use, useEffect, useState } from 'react';
 import { getUserCreditBalance, searchUser } from './actions';
 import type { User } from '../users/actions';
 
@@ -12,12 +12,14 @@ import { Avatar, Link, Divider, CardHeader, CardBody, Card } from '@heroui/react
 import { CopyButton } from '@/components/CopyButton';
 import { EqualIcon, PlusIcon } from 'lucide-react';
 
-interface UserPageProps {
-  searchParams: { userid?: string; email?: string };
-}
+type SearchParams = Promise<{ [key: string]: string | string[] | undefined }>;
 
-export default function UserPage({ searchParams }: UserPageProps) {
-  const { userid, email } = searchParams;
+export default function UserPage(props: { searchParams: SearchParams }) {
+  const searchParams = use(props.searchParams);
+
+  const userid = searchParams.userid?.toString();
+  const email = searchParams.email?.toString();
+
   const [user, setUser] = useState<User | null>(null);
   const [credit, setCredit] = useState(0);
   const [freeCredits, setFreeCredits] = useState(0);
