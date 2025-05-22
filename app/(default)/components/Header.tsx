@@ -72,8 +72,8 @@ export default function Header() {
             variant="light"
             size="sm">
             <Icon
-              icon="logos:github-icon"
-              className="size-6"
+              icon="line-md:github-loop"
+              className="size-6 text-foreground"
             />
           </Button>
         </NavbarMenuItem>

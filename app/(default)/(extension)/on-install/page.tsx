@@ -197,168 +197,151 @@ export default function OnInstallPage() {
         </div>
 
         {/* First Post Form */}
-        <Card className="border-border/40 bg-card/30 backdrop-blur-xl supports-[backdrop-filter]:bg-background/60">
-          <CardBody className="space-y-4">
+        <Card className="border shadow-none">
+          <CardHeader>
             <h2 className="text-xl font-semibold text-foreground">{t('firstPost.title')}</h2>
-
-            {currentStep === 1 ? (
-              <div className="flex flex-col gap-4">
-                <Card className="h-fit bg-default-50 shadow-none">
-                  <CardHeader>
-                    <Input
-                      isClearable
-                      variant="underlined"
-                      placeholder={t('firstPost.titlePlaceholder')}
-                      value={title}
-                      onChange={(e) => setTitle(e.target.value)}
-                      onClear={() => setTitle('')}
-                      className="w-full"
-                    />
-                  </CardHeader>
-
-                  <CardBody>
-                    <Textarea
-                      isClearable
-                      variant="underlined"
-                      placeholder={t('firstPost.contentPlaceholder')}
-                      value={content}
-                      onChange={(e) => setContent(e.target.value)}
-                      onClear={() => setContent('')}
-                      fullWidth
-                      minRows={3}
-                      autoFocus
-                    />
-                  </CardBody>
-                </Card>
-
+          </CardHeader>
+          {currentStep === 1 ? (
+            <div className="flex flex-col gap-2">
+              <CardBody className="gap-2">
+                <Input
+                  isClearable
+                  variant="underlined"
+                  placeholder={t('firstPost.titlePlaceholder')}
+                  value={title}
+                  onChange={(e) => setTitle(e.target.value)}
+                  onClear={() => setTitle('')}
+                />
+                <Textarea
+                  isClearable
+                  variant="underlined"
+                  placeholder={t('firstPost.contentPlaceholder')}
+                  value={content}
+                  onChange={(e) => setContent(e.target.value)}
+                  onClear={() => setContent('')}
+                  minRows={3}
+                  autoFocus
+                />
+              </CardBody>
+              <CardFooter>
                 <Button
-                  className="w-full"
+                  fullWidth
                   color="primary"
                   onPress={handleNextStep}>
                   <ArrowRightIcon />
                 </Button>
-              </div>
-            ) : (
-              <>
-                <Card className="mb-4 bg-default-50 shadow-none">
-                  <CardBody className="gap-2">
-                    <div className="flex items-center justify-between">
-                      <Switch
-                        isSelected={autoPublish}
-                        onValueChange={setAutoPublish}
-                        startContent={<BotIcon className="size-4" />}
-                        endContent={<HandIcon className="size-4" />}>
-                        {t('firstPost.autoPublish')}
-                      </Switch>
-                      <div className="flex items-center justify-between">
-                        {selectedPlatforms.length > 0 && (
-                          <Button
-                            isIconOnly
-                            size="sm"
-                            variant="light"
-                            color="danger"
-                            onPress={() => setSelectedPlatforms([])}>
-                            <Eraser className="size-4" />
-                          </Button>
-                        )}
-                      </div>
-                    </div>
-
-                    <Accordion
-                      isCompact
-                      variant="light"
-                      selectionMode="multiple"
-                      defaultExpandedKeys={['CN', 'International']}>
-                      <AccordionItem
-                        key="CN"
-                        title={t('platforms.cn')}
-                        subtitle={`${
-                          selectedPlatforms.filter((platform) => {
-                            const info = platforms.find((p) => p.name === platform);
-                            return info?.tags?.includes('CN');
-                          }).length
-                        }/${platforms.filter((platform) => platform.tags?.includes('CN')).length}`}
-                        startContent={
-                          <div className="w-8">
-                            <Icon
-                              icon="openmoji:flag-china"
-                              className="h-max w-full"
-                            />
-                          </div>
-                        }
-                        className="py-1">
-                        <div className="grid grid-cols-2 gap-2">
-                          {platforms
-                            .filter((platform) => platform.tags?.includes('CN'))
-                            .map((platform) => (
-                              <SimplePlatform
-                                key={platform.name}
-                                platformInfo={platform}
-                                isSelected={selectedPlatforms.includes(platform.name)}
-                                onChange={handlePlatformChange}
-                              />
-                            ))}
-                        </div>
-                      </AccordionItem>
-                      <AccordionItem
-                        key="International"
-                        title={t('platforms.international')}
-                        subtitle={`${
-                          selectedPlatforms.filter((platform) => {
-                            const info = platforms.find((p) => p.name === platform);
-                            return info?.tags?.includes('International');
-                          }).length
-                        }/${platforms.filter((platform) => platform.tags?.includes('International')).length}`}
-                        startContent={
-                          <div className="w-8">
-                            <Icon
-                              icon="openmoji:globe-with-meridians"
-                              className="h-max w-full"
-                            />
-                          </div>
-                        }
-                        className="py-1">
-                        <div className="grid grid-cols-2 gap-2">
-                          {platforms
-                            .filter((platform) => platform.tags?.includes('International'))
-                            .map((platform) => (
-                              <SimplePlatform
-                                key={platform.name}
-                                platformInfo={platform}
-                                isSelected={selectedPlatforms.includes(platform.name)}
-                                onChange={handlePlatformChange}
-                              />
-                            ))}
-                        </div>
-                      </AccordionItem>
-                    </Accordion>
-                  </CardBody>
-                </Card>
-
-                <div className="flex gap-2">
-                  <Button
-                    color="default"
-                    aria-label="back_to_edit"
-                    onPress={handlePrevStep}>
-                    <ArrowLeftIcon />
-                  </Button>
-
-                  <Button
-                    aria-label="publish"
-                    className="w-full"
-                    color={selectedPlatforms.length === 0 ? 'default' : 'primary'}
-                    disabled={selectedPlatforms.length === 0}
-                    onPress={handlePublish}>
-                    <SendHorizontal />
-                  </Button>
+              </CardFooter>
+            </div>
+          ) : (
+            <>
+              <CardBody className="gap-2">
+                <div className="flex items-center justify-between">
+                  <Switch
+                    isSelected={autoPublish}
+                    onValueChange={setAutoPublish}
+                    startContent={<BotIcon className="size-4" />}
+                    endContent={<HandIcon className="size-4" />}>
+                    {t('firstPost.autoPublish')}
+                  </Switch>
+                  <div className="flex items-center">
+                    {selectedPlatforms.length > 0 && (
+                      <Button
+                        isIconOnly
+                        size="sm"
+                        variant="light"
+                        color="danger"
+                        onPress={() => setSelectedPlatforms([])}>
+                        <Eraser className="size-4" />
+                      </Button>
+                    )}
+                  </div>
                 </div>
-              </>
-            )}
-          </CardBody>
+
+                <Accordion
+                  isCompact
+                  variant="light"
+                  selectionMode="multiple"
+                  defaultExpandedKeys={['CN', 'International']}>
+                  <AccordionItem
+                    key="CN"
+                    title={t('platforms.cn')}
+                    subtitle={`${
+                      selectedPlatforms.filter((platform) => {
+                        const info = platforms.find((p) => p.name === platform);
+                        return info?.tags?.includes('CN');
+                      }).length
+                    }/${platforms.filter((platform) => platform.tags?.includes('CN')).length}`}
+                    startContent={
+                      <div className="w-8">
+                        <Icon icon="openmoji:flag-china" />
+                      </div>
+                    }
+                    className="py-1">
+                    <div className="grid grid-cols-2 gap-2">
+                      {platforms
+                        .filter((platform) => platform.tags?.includes('CN'))
+                        .map((platform) => (
+                          <SimplePlatform
+                            key={platform.name}
+                            platformInfo={platform}
+                            isSelected={selectedPlatforms.includes(platform.name)}
+                            onChange={handlePlatformChange}
+                          />
+                        ))}
+                    </div>
+                  </AccordionItem>
+                  <AccordionItem
+                    key="International"
+                    title={t('platforms.international')}
+                    subtitle={`${
+                      selectedPlatforms.filter((platform) => {
+                        const info = platforms.find((p) => p.name === platform);
+                        return info?.tags?.includes('International');
+                      }).length
+                    }/${platforms.filter((platform) => platform.tags?.includes('International')).length}`}
+                    startContent={
+                      <div className="w-8">
+                        <Icon icon="openmoji:globe-with-meridians" />
+                      </div>
+                    }
+                    className="py-1">
+                    <div className="grid grid-cols-2 gap-2">
+                      {platforms
+                        .filter((platform) => platform.tags?.includes('International'))
+                        .map((platform) => (
+                          <SimplePlatform
+                            key={platform.name}
+                            platformInfo={platform}
+                            isSelected={selectedPlatforms.includes(platform.name)}
+                            onChange={handlePlatformChange}
+                          />
+                        ))}
+                    </div>
+                  </AccordionItem>
+                </Accordion>
+              </CardBody>
+              <CardFooter className="flex gap-2">
+                <Button
+                  aria-label="back_to_edit"
+                  onPress={handlePrevStep}>
+                  <ArrowLeftIcon />
+                </Button>
+
+                <Button
+                  aria-label="publish"
+                  fullWidth
+                  color={selectedPlatforms.length === 0 ? 'default' : 'primary'}
+                  disabled={selectedPlatforms.length === 0}
+                  onPress={handlePublish}>
+                  <SendHorizontal />
+                </Button>
+              </CardFooter>
+            </>
+          )}
         </Card>
 
         {/* Main Features */}
-        <Card className="border-border/40 bg-card/30 backdrop-blur-xl supports-[backdrop-filter]:bg-background/60">
+        <Card className="border shadow-none">
           <CardBody>
             <div className="space-y-6">
               <div className="flex items-start gap-4">
@@ -384,10 +367,10 @@ export default function OnInstallPage() {
           </CardBody>
           <CardFooter>
             <Button
+              fullWidth
               as={Link}
               href="/dashboard/publish"
-              color="primary"
-              className="w-full">
+              color="primary">
               {t('accessFullVersion')}
             </Button>
           </CardFooter>
