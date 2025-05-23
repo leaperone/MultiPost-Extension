@@ -5,8 +5,6 @@
 
 ![GitHub License GitHub许可证](https://img.shields.io/github/license/leaper-one/MultiPost-Extension) ![GitHub Repo stars GitHub星星](https://img.shields.io/github/stars/leaper-one/MultiPost-Extension) ![GitHub commit activity GitHub提交活动](https://img.shields.io/github/commit-activity/m/leaper-one/MultiPost-Extension) [![Website 网站](https://img.shields.io/website?url=https%3A%2F%2Fmultipost.app)](https://multipost.app) [![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/leaperone/MultiPost-Extension)
 
-
-
 [English](README.md) | [中文](docs/README-zh.md) | [日本語](docs/README-jp.md) | [Français](docs/README-fr.md) | [한국어](docs/README-kr.md)
 
 > A browser extension that helps users publish content to multiple social media platforms with one click.
@@ -14,8 +12,6 @@
 
 ⭐ If you find this project helpful, please consider giving it a star! Your support helps us grow and improve! ⭐
 </div>
-
-
 
 ## 主要功能 / Key Features
 - 一键发布内容（文本、图片、视频等）到多个平台。（支持知乎、微博、小红书、抖音等10多个主流平台）无需登录、无需注册、无需API Key。完全免费！
@@ -45,52 +41,6 @@ This extension solves the pain points of content creators when publishing across
 - [Chrome extension - ![Chrome Web Store Version Chrome网上商店版本](https://img.shields.io/chrome-web-store/v/dhohkaclnjgcikfoaacfgijgjgceofih)](https://chromewebstore.google.com/detail/multipost/dhohkaclnjgcikfoaacfgijgjgceofih) ![Chrome Web Store Users Chrome网上商店用户](https://img.shields.io/chrome-web-store/users/dhohkaclnjgcikfoaacfgijgjgceofih) ![Chrome Web Store Last Updated](https://img.shields.io/chrome-web-store/last-updated/dhohkaclnjgcikfoaacfgijgjgceofih)
 - [Edge extension - ![](https://img.shields.io/badge/dynamic/json?label=edge%20add-on&prefix=v&query=%24.version&url=https%3A%2F%2Fmicrosoftedge.microsoft.com%2Faddons%2Fgetproductdetailsbycrxid%2Fckoiphiceimehjkolnfffgbmihoppgjg)](https://microsoftedge.microsoft.com/addons/detail/multipost/ckoiphiceimehjkolnfffgbmihoppgjg) [![](https://img.shields.io/badge/dynamic/json?label=users&query=%24.activeInstallCount&url=https%3A%2F%2Fmicrosoftedge.microsoft.com%2Faddons%2Fgetproductdetailsbycrxid%2Fckoiphiceimehjkolnfffgbmihoppgjg)](https://microsoftedge.microsoft.com/addons/detail/multipost/ckoiphiceimehjkolnfffgbmihoppgjg)
 <!-- ![Edge add-on last updated](https://img.shields.io/badge/dynamic/json?label=last%20updated&query=%24.lastUpdateDate&url=https%3A%2F%2Fmicrosoftedge.microsoft.com%2Faddons%2Fgetproductdetailsbycrxid%2Fckoiphiceimehjkolnfffgbmihoppgjg) -->
-
-
-## Getting Started
-
-First, run the development server:
-
-```bash
-pnpm i
-
-pnpm dev
-```
-
-In the browser extension page, open the developer mode, click `Load **unpacked** extension` and find `build/chrome-mv3-dev` to load it.
-
-## Building the Production Version
-
-Run the following command:
-
-```bash
-pnpm build
-```
-
-You can find the build content in the `build` folder
-
-## Development Instructions
-
-### Documents You Need to Know
-
-[Chrome Extension API Reference](https://developer.chrome.com/docs/extensions/reference/api)
-
-[Edge Extension](https://learn.microsoft.com/en-us/microsoft-edge/extensions-chromium/)
-
-[Plasmo Docs](https://docs.plasmo.com/)
-
-## Recommended Articles
-
-- [AI Full Stack Guide Vol.033: Learn One-Click Multi-Platform Content Publishing in 5 Minutes](https://mp.weixin.qq.com/s/K7yh6EsBLOGJzl8Gh8SwLw)
-
-### File Structure
-
-> src/sync: This folder contains the code for operating on different platforms, where dynamic is related to dynamic publishing, and video is related to video publishing; any added platform needs to be registered in common.ts.
-> components: This folder contains all the components for frontend interface operations.
-
-### Development Environment
-
-It is recommended to use the package management tool `pnpm@latest-9` with Node.js version 20.
 
 ## Star History
 
