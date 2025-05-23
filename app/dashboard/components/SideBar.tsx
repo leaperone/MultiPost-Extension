@@ -5,6 +5,7 @@ import {
   GridIcon,
   Home,
   LayoutDashboardIcon,
+  ListIcon,
   PaletteIcon,
   ScanEyeIcon,
   SendIcon,
@@ -34,70 +35,131 @@ interface MenuItem {
   title: string;
   url: string;
   icon: React.ComponentType;
+  isExternal?: boolean;
+}
+
+interface MenuGroup {
+  label: string;
+  items: MenuItem[];
 }
 
 type TranslationFunction = (key: string) => string;
 
-// Menu items.
-const getItems = (t: TranslationFunction): MenuItem[] => [
-  {
-    title: t('sidebar.menu.home'),
-    url: '/',
-    icon: Home,
-  },
-  {
-    title: t('sidebar.menu.dashboard'),
-    url: '/dashboard',
-    icon: LayoutDashboardIcon,
-  },
-];
+// Render menu items helper component
+function MenuItems({ items }: { items: MenuItem[] }) {
+  return (
+    <SidebarMenu>
+      {items.map((item) => (
+        <SidebarMenuItem key={item.title}>
+          <SidebarMenuButton asChild>
+            <a
+              href={item.url}
+              target={item.isExternal ? '_blank' : '_self'}>
+              <item.icon />
+              <span>{item.title}</span>
+            </a>
+          </SidebarMenuButton>
+        </SidebarMenuItem>
+      ))}
+    </SidebarMenu>
+  );
+}
 
-const getApplicationItems = (t: TranslationFunction): MenuItem[] => [
-  {
-    title: t('sidebar.menu.publish'),
-    url: '/dashboard/publish',
-    icon: SendIcon,
-  },
-  {
-    title: t('sidebar.menu.draw'),
-    url: '/dashboard/draw',
-    icon: PaletteIcon,
-  },
-  {
-    title: t('sidebar.menu.analytics'),
-    url: '/dashboard/analytics',
-    icon: ChartSplineIcon,
-  },
-  {
-    title: t('sidebar.menu.browse'),
-    url: '/dashboard/scraper',
-    icon: ScanEyeIcon,
-  },
-  {
-    title: t('sidebar.menu.grid'),
-    url: '/dashboard/grid',
-    icon: GridIcon,
-  },
-];
+// Render menu group helper component
+function MenuGroup({ label, items }: MenuGroup) {
+  return (
+    <SidebarGroup>
+      <SidebarGroupLabel>{label}</SidebarGroupLabel>
+      <SidebarGroupContent>
+        <MenuItems items={items} />
+      </SidebarGroupContent>
+    </SidebarGroup>
+  );
+}
 
-const getSidebarFooterItems = (t: TranslationFunction): MenuItem[] => [
-  {
-    title: t('sidebar.menu.docs'),
-    url: 'https://docs.multipost.app',
-    icon: BookIcon,
-  },
-  {
-    title: t('sidebar.menu.settings'),
-    url: '/dashboard/settings',
-    icon: Settings,
-  },
-];
+// Get all menu groups
+function getMenuGroups(t: TranslationFunction): MenuGroup[] {
+  return [
+    {
+      label: t('sidebar.basic'),
+      items: [
+        {
+          title: t('sidebar.menu.home'),
+          url: '/',
+          icon: Home,
+        },
+        {
+          title: t('sidebar.menu.dashboard'),
+          url: '/dashboard',
+          icon: LayoutDashboardIcon,
+        },
+      ],
+    },
+    {
+      label: t('sidebar.application'),
+      items: [
+        {
+          title: t('sidebar.menu.publish'),
+          url: '/dashboard/publish',
+          icon: SendIcon,
+        },
+        {
+          title: t('sidebar.menu.draw'),
+          url: '/dashboard/draw',
+          icon: PaletteIcon,
+        },
+        {
+          title: t('sidebar.menu.analytics'),
+          url: '/dashboard/analytics',
+          icon: ChartSplineIcon,
+        },
+        {
+          title: t('sidebar.menu.browse'),
+          url: '/dashboard/scraper',
+          icon: ScanEyeIcon,
+        },
+        {
+          title: t('sidebar.menu.grid'),
+          url: '/dashboard/grid',
+          icon: GridIcon,
+        },
+      ],
+    },
+    {
+      label: 'MultiGet',
+      items: [
+        {
+          title: 'MultiGet (Beta)',
+          url: 'https://docs.multipost.app/docs/user-guide/multiget',
+          icon: ListIcon,
+          isExternal: true,
+        },
+      ],
+    },
+  ];
+}
+
+// Get footer menu items
+function getFooterItems(t: TranslationFunction): MenuItem[] {
+  return [
+    {
+      title: t('sidebar.menu.docs'),
+      url: 'https://docs.multipost.app',
+      icon: BookIcon,
+      isExternal: true,
+    },
+    {
+      title: t('sidebar.menu.settings'),
+      url: '/dashboard/settings',
+      icon: Settings,
+    },
+  ];
+}
 
 export async function DashboardSidebar() {
   const { t } = await createTranslation('dashboard');
-  const items = getItems(t);
-  const applicationItems = getApplicationItems(t);
-  const sidebarFooterItems = getSidebarFooterItems(t);
+  const menuGroups = getMenuGroups(t);
+  const footerItems = getFooterItems(t);
 
   return (
     <Sidebar
@@ -113,41 +175,13 @@ export async function DashboardSidebar() {
       </SidebarHeader>
 
       <SidebarContent>
-        <SidebarGroup>
-          <SidebarGroupLabel>{t('sidebar.basic')}</SidebarGroupLabel>
-          <SidebarGroupContent>
-            <SidebarMenu>
-              {items.map((item) => (
-                <SidebarMenuItem key={item.title}>
-                  <SidebarMenuButton asChild>
-                    <a href={item.url}>
-                      <item.icon />
-                      <span>{item.title}</span>
-                    </a>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              ))}
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
-
-        <SidebarGroup>
-          <SidebarGroupLabel>{t('sidebar.application')}</SidebarGroupLabel>
-          <SidebarGroupContent>
-            <SidebarMenu>
-              {applicationItems.map((item) => (
-                <SidebarMenuItem key={item.title}>
-                  <SidebarMenuButton asChild>
-                    <a href={item.url}>
-                      <item.icon />
-                      <span>{item.title}</span>
-                    </a>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              ))}
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
+        {menuGroups.map((group) => (
+          <MenuGroup
+            key={group.label}
+            label={group.label}
+            items={group.items}
+          />
+        ))}
       </SidebarContent>
 
       <SidebarFooter>
@@ -155,10 +189,12 @@ export async function DashboardSidebar() {
           <SidebarMenuItem>
             <SidebarThemeSwitcher />
           </SidebarMenuItem>
-          {sidebarFooterItems.map((item) => (
+          {footerItems.map((item) => (
             <SidebarMenuItem key={item.title}>
               <SidebarMenuButton asChild>
-                <a href={item.url}>
+                <a
+                  href={item.url}
+                  target={item.isExternal ? '_blank' : '_self'}>
                   <item.icon />
                   <span>{item.title}</span>
                 </a>
