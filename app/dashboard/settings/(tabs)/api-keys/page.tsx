@@ -49,7 +49,7 @@ export default function APIKeysPage() {
   const loadApiKeys = async () => {
     try {
       const response = await fetch('/api/api-keys');
-      if (!response.ok) throw new Error('加载失败');
+      if (!response.ok) throw new Error('Failed to load');
       const data = await response.json();
 
       // 对 API Keys 进行排序，将 EXTENSION- 开头的放在后面
@@ -64,8 +64,8 @@ export default function APIKeysPage() {
       setApiKeys(sortedData);
     } catch (error) {
       addToast({
-        title: '加载失败',
-        description: '请刷新页面重试',
+        title: t('page.load_error.title'),
+        description: t('page.load_error.description'),
         color: 'danger',
       });
     }
@@ -90,7 +90,7 @@ export default function APIKeysPage() {
         method: 'DELETE',
       });
 
-      if (!response.ok) throw new Error('删除失败');
+      if (!response.ok) throw new Error('Failed to delete');
 
       setApiKeys(apiKeys.filter((key) => key.id !== selectedApiKey.id));
 

@@ -33,7 +33,7 @@ export default function LinkButton() {
         });
       }
     } catch (error) {
-      console.error('链接失败:', error);
+      console.error('Link failed:', error);
     }
   };
 

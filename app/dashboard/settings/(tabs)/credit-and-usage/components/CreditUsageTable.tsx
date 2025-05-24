@@ -16,6 +16,7 @@ import { formatDistance } from 'date-fns';
 import { zhCN } from 'date-fns/locale';
 import { getCreditUsageHistory } from '../action';
 import { getUsageType } from '../types';
+import { useTranslation } from '@/i18n/client';
 
 interface CreditUsage {
   id: string;
@@ -38,6 +39,7 @@ interface CreditUsageResponse {
 }
 
 export default function CreditUsageTable() {
+  const { t } = useTranslation('settings');
   const [usageData, setUsageData] = useState<CreditUsage[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [page, setPage] = useState(1);
@@ -56,7 +58,7 @@ export default function CreditUsageTable() {
         );
       }
     } catch (error) {
-      console.error('获取使用记录失败:', error);
+      console.error('Failed to fetch usage history:', error);
     } finally {
       setIsLoading(false);
     }
@@ -72,7 +74,7 @@ export default function CreditUsageTable() {
   return (
     <div className="w-full">
       <Table
-        aria-label="余额使用记录"
+        aria-label={t('credit_usage.usage_history.title')}
         bottomContent={
           pages > 0 ? (
             <div className="flex w-full justify-center">
@@ -89,15 +91,15 @@ export default function CreditUsageTable() {
           ) : null
         }>
         <TableHeader>
-          <TableColumn>类型</TableColumn>
-          <TableColumn>金额</TableColumn>
-          <TableColumn>类别</TableColumn>
-          <TableColumn>时间</TableColumn>
+          <TableColumn>{t('credit_usage.usage_history.columns.type')}</TableColumn>
+          <TableColumn>{t('credit_usage.usage_history.columns.amount')}</TableColumn>
+          <TableColumn>{t('credit_usage.usage_history.columns.category')}</TableColumn>
+          <TableColumn>{t('credit_usage.usage_history.columns.time')}</TableColumn>
         </TableHeader>
         <TableBody
-          loadingContent={<Spinner label="加载中..." />}
+          loadingContent={<Spinner label={t('credit_usage.usage_history.loading')} />}
           loadingState={isLoading ? 'loading' : 'idle'}
-          emptyContent={!isLoading ? '暂无使用记录' : null}>
+          emptyContent={!isLoading ? t('credit_usage.usage_history.empty') : null}>
           {items.map((item) => (
             <TableRow key={item.id}>
               <TableCell>{getUsageType(item.type)}</TableCell>
@@ -107,7 +109,9 @@ export default function CreditUsageTable() {
                   color={item.isFree ? 'success' : 'primary'}
                   variant="flat"
                   size="sm">
-                  {item.isFree ? '免费额度' : '付费额度'}
+                  {item.isFree
+                    ? t('credit_usage.usage_history.category_labels.free')
+                    : t('credit_usage.usage_history.category_labels.paid')}
                 </Chip>
               </TableCell>
               <TableCell>

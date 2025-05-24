@@ -29,7 +29,7 @@ async function ClientsList() {
             </div>
             <div>
               <h3 className="text-lg font-medium text-foreground">{t('client.page.empty')}</h3>
-              <p className="mt-1 text-sm text-foreground/60">连接您的浏览器扩展以开始使用</p>
+              <p className="mt-1 text-sm text-foreground/60">{t('clients.page.description', { ns: 'settings' })}</p>
             </div>
           </div>
         </CardBody>
@@ -105,7 +105,7 @@ export default async function ClientsPage() {
                 <Users className="size-5 text-primary" />
               </div>
               <div>
-                <p className="text-sm text-foreground/60">已连接客户端</p>
+                <p className="text-sm text-foreground/60">{t('clients.stats.connected_clients', { ns: 'settings' })}</p>
                 <p className="text-2xl font-bold text-foreground">{clientCount}</p>
               </div>
             </div>
@@ -119,8 +119,8 @@ export default async function ClientsPage() {
                 <Clock className="size-5 text-secondary" />
               </div>
               <div>
-                <p className="text-sm text-foreground/60">活跃状态</p>
-                <p className="text-2xl font-bold text-foreground">{clientCount > 0 ? '在线' : '离线'}</p>
+                <p className="text-sm text-foreground/60">{t('clients.stats.active_status', { ns: 'settings' })}</p>
+                <p className="text-2xl font-bold text-foreground">{clientCount > 0 ? t('clients.stats.online', { ns: 'settings' }) : t('clients.stats.offline', { ns: 'settings' })}</p>
               </div>
             </div>
           </CardHeader>

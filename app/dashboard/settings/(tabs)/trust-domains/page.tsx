@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { Card, Button, CardBody, CardHeader } from '@heroui/react';
 import { XIcon, Shield, Globe, AlertTriangle } from 'lucide-react';
 import { sendRequest } from '@/lib/extension';
+import { useTranslation } from '@/i18n/client';
 
 // 域名接口定义
 interface TrustedDomain {
@@ -24,6 +25,7 @@ interface DeleteDomainResponse {
 }
 
 export default function TrustDomainsPage() {
+  const { t } = useTranslation('settings');
   // 使用useState而不是直接从window获取值，避免服务器/客户端分支问题
   const [domains, setDomains] = useState<TrustedDomain[]>([]); // 默认为空数组
   const [isLoading, setIsLoading] = useState<boolean>(false);
@@ -148,8 +150,8 @@ export default function TrustDomainsPage() {
       {/* Header Section */}
       <div className="mb-8 flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-foreground">信任域名</h1>
-          <p className="mt-2 text-foreground/60">管理浏览器扩展的信任域名列表</p>
+          <h1 className="text-3xl font-bold text-foreground">{t('trust_domains.page.title')}</h1>
+          <p className="mt-2 text-foreground/60">{t('trust_domains.page.description')}</p>
         </div>
       </div>
 
@@ -162,7 +164,7 @@ export default function TrustDomainsPage() {
                 <Shield className="size-5 text-primary" />
               </div>
               <div>
-                <p className="text-sm text-foreground/60">信任域名数</p>
+                <p className="text-sm text-foreground/60">{t('trust_domains.stats.domain_count')}</p>
                 <p className="text-2xl font-bold text-foreground">{safeDomains.length}</p>
               </div>
             </div>
@@ -176,8 +178,12 @@ export default function TrustDomainsPage() {
                 <Globe className="size-5 text-success" />
               </div>
               <div>
-                <p className="text-sm text-foreground/60">安全状态</p>
-                <p className="text-2xl font-bold text-foreground">{safeDomains.length > 0 ? '已配置' : '未配置'}</p>
+                <p className="text-sm text-foreground/60">{t('trust_domains.stats.security_status')}</p>
+                <p className="text-2xl font-bold text-foreground">
+                  {safeDomains.length > 0
+                    ? t('trust_domains.status_labels.configured')
+                    : t('trust_domains.status_labels.not_configured')}
+                </p>
               </div>
             </div>
           </CardHeader>
@@ -190,8 +196,10 @@ export default function TrustDomainsPage() {
                 <AlertTriangle className="size-5 text-warning" />
               </div>
               <div>
-                <p className="text-sm text-foreground/60">扩展状态</p>
-                <p className="text-2xl font-bold text-foreground">{mounted ? '已连接' : '未连接'}</p>
+                <p className="text-sm text-foreground/60">{t('trust_domains.stats.extension_status')}</p>
+                <p className="text-2xl font-bold text-foreground">
+                  {mounted ? t('trust_domains.status_labels.connected') : t('trust_domains.status_labels.disconnected')}
+                </p>
               </div>
             </div>
           </CardHeader>
@@ -201,7 +209,7 @@ export default function TrustDomainsPage() {
       {/* Domains List */}
       <Card className="border border-default-200 shadow-none">
         <CardHeader>
-          <h2 className="text-xl font-semibold text-foreground">域名列表</h2>
+          <h2 className="text-xl font-semibold text-foreground">{t('trust_domains.domains_list.title')}</h2>
         </CardHeader>
         <CardBody>
           {error && (
@@ -217,8 +225,8 @@ export default function TrustDomainsPage() {
                   <Shield className="size-8 text-default-400" />
                 </div>
                 <div>
-                  <h3 className="text-lg font-medium text-foreground">暂无信任域名</h3>
-                  <p className="mt-1 text-sm text-foreground/60">通过浏览器扩展添加信任域名</p>
+                  <h3 className="text-lg font-medium text-foreground">{t('trust_domains.domains_list.empty.title')}</h3>
+                  <p className="mt-1 text-sm text-foreground/60">{t('trust_domains.domains_list.empty.description')}</p>
                 </div>
               </div>
             </div>

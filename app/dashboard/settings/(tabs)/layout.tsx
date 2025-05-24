@@ -15,7 +15,7 @@ export default function SettingsLayout({
   return (
     <div className="flex h-screen w-full flex-col gap-4 p-2">
       <Tabs
-        aria-label="设置选项"
+        aria-label="Settings Options"
         color="primary"
         variant="underlined"
         selectedKey={pathname}

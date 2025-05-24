@@ -49,7 +49,24 @@
   },
   "activity": {
     "title": "活动通知",
-    "description": "查看最新的活动，领取高达 $10 的免费余额！"
+    "description": "查看最新的活动，领取高达 $10 的免费余额！",
+    "alerts": [
+      {
+        "title": "余额奖励活动",
+        "description": "查看最新的活动，领取高达 $10 的免费余额！",
+        "href": "/activity"
+      },
+      {
+        "title": "新功能发布",
+        "description": "AI 配图、配海报功能上线！立即体验。",
+        "href": "/dashboard/publish"
+      },
+      {
+        "title": "充值活动",
+        "description": "支付宝限时 1 美元充值，立即充值。",
+        "href": "/dashboard/settings/credit-and-usage"
+      }
+    ]
   },
   "common": {
     "close": "关闭"

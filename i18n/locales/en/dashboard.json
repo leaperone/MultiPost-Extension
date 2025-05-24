@@ -49,7 +49,24 @@
   },
   "activity": {
     "title": "Activity Notice",
-    "description": "Check out latest balance bonus event, up to $10 free credits!"
+    "description": "Check out latest balance bonus event, up to $10 free credits!",
+    "alerts": [
+      {
+        "title": "Balance Bonus Event",
+        "description": "Check out latest balance bonus event, up to $10 free credits!",
+        "href": "/activity"
+      },
+      {
+        "title": "New Feature Release",
+        "description": "AI-powered image generation and poster generation is now available! Try it now.",
+        "href": "/dashboard/publish"
+      },
+      {
+        "title": "Recharge Event",
+        "description": "Alipay 1 USD recharge event, recharge now.",
+        "href": "/dashboard/settings/credit-and-usage"
+      }
+    ]
   },
   "common": {
     "close": "Close"

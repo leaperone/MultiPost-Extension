@@ -3,7 +3,11 @@
     "title": "API Keys Management",
     "description": "Manage your API keys and access permissions",
     "create_button": "Create New API Key",
-    "empty_message": "No API Keys"
+    "empty_message": "No API Keys",
+    "load_error": {
+      "title": "Failed to load",
+      "description": "Please refresh the page and try again"
+    }
   },
   "table": {
     "columns": {

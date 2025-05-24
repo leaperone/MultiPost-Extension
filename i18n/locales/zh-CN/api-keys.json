@@ -3,7 +3,11 @@
     "title": "API Keys 管理",
     "description": "管理您的 API 密钥和访问权限",
     "create_button": "创建新的 API Key",
-    "empty_message": "暂无 API Keys"
+    "empty_message": "暂无 API Keys",
+    "load_error": {
+      "title": "加载失败",
+      "description": "请刷新页面重试"
+    }
   },
   "table": {
     "columns": {
