@@ -39,5 +39,103 @@
       "alipay": "使用支付宝",
       "stripe": "使用Stripe（$10起）"
     }
+  },
+  "general": {
+    "page": {
+      "title": "设置",
+      "description": "管理您的账户设置和偏好",
+      "logout": "退出登录"
+    },
+    "advanced": {
+      "title": "高级设置",
+      "data_export": {
+        "title": "数据导出",
+        "description": "导出您的账户数据",
+        "button": "导出数据"
+      },
+      "account_deletion": {
+        "title": "账户删除",
+        "description": "永久删除您的账户",
+        "button": "删除账户"
+      },
+      "privacy_settings": {
+        "title": "隐私设置",
+        "description": "管理隐私偏好",
+        "button": "隐私设置"
+      }
+    }
+  },
+  "api_keys": {
+    "page": {
+      "title": "API Keys",
+      "description": "管理您的 API 密钥和访问权限"
+    },
+    "stats": {
+      "total_keys": "总密钥数",
+      "manual_created": "手动创建",
+      "auto_created": "自动创建"
+    }
+  },
+  "credit_usage": {
+    "page": {
+      "title": "余额与使用",
+      "description": "管理您的账户余额和查看使用记录"
+    },
+    "balance": {
+      "total": "总余额",
+      "paid": "付费余额",
+      "free": "免费余额"
+    },
+    "usage_history": {
+      "title": "使用记录",
+      "empty": "暂无使用记录",
+      "loading": "加载中...",
+      "columns": {
+        "type": "类型",
+        "amount": "金额",
+        "category": "类别",
+        "time": "时间"
+      },
+      "category_labels": {
+        "free": "免费额度",
+        "paid": "付费额度"
+      }
+    }
+  },
+  "trust_domains": {
+    "page": {
+      "title": "信任域名",
+      "description": "管理浏览器扩展的信任域名列表"
+    },
+    "stats": {
+      "domain_count": "信任域名数",
+      "security_status": "安全状态",
+      "extension_status": "扩展状态"
+    },
+    "status_labels": {
+      "configured": "已配置",
+      "not_configured": "未配置",
+      "connected": "已连接",
+      "disconnected": "未连接"
+    },
+    "domains_list": {
+      "title": "域名列表",
+      "empty": {
+        "title": "暂无信任域名",
+        "description": "通过浏览器扩展添加信任域名"
+      }
+    }
+  },
+  "clients": {
+    "page": {
+      "title": "扩展客户端",
+      "description": "管理已连接的浏览器扩展客户端"
+    },
+    "stats": {
+      "connected_clients": "已连接客户端",
+      "active_status": "活跃状态",
+      "online": "在线",
+      "offline": "离线"
+    }
   }
 } 

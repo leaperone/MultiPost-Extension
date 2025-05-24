@@ -1,6 +1,7 @@
 {
   "page": {
     "title": "API Keys 管理",
+    "description": "管理您的 API 密钥和访问权限",
     "create_button": "创建新的 API Key",
     "empty_message": "暂无 API Keys"
   },
@@ -39,5 +40,10 @@
       "cancel": "取消",
       "confirm": "删除"
     }
+  },
+  "stats": {
+    "total_keys": "总密钥数",
+    "manual_created": "手动创建",
+    "auto_created": "自动创建"
   }
 }

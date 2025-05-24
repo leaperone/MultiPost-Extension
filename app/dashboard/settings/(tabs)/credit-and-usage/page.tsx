@@ -21,8 +21,8 @@ export default async function RechargePage() {
       {/* Header Section */}
       <div className="mb-8 flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-foreground">余额与使用</h1>
-          <p className="mt-2 text-foreground/60">管理您的账户余额和查看使用记录</p>
+          <h1 className="text-3xl font-bold text-foreground">{t('credit_usage.page.title')}</h1>
+          <p className="mt-2 text-foreground/60">{t('credit_usage.page.description')}</p>
         </div>
         <Button
           variant="flat"
@@ -46,7 +46,7 @@ export default async function RechargePage() {
                 <Wallet className="size-6 text-primary" />
               </div>
               <div>
-                <p className="text-sm text-foreground/60">总余额</p>
+                <p className="text-sm text-foreground/60">{t('credit_usage.balance.total')}</p>
                 <p className="text-3xl font-bold text-primary">${balance.totalCredits.toFixed(2)}</p>
               </div>
             </div>
@@ -61,7 +61,7 @@ export default async function RechargePage() {
                 <DollarSign className="size-6 text-secondary" />
               </div>
               <div>
-                <p className="text-sm text-foreground/60">付费余额</p>
+                <p className="text-sm text-foreground/60">{t('credit_usage.balance.paid')}</p>
                 <p className="text-2xl font-bold text-foreground">${balance.credits.toFixed(2)}</p>
               </div>
             </div>
@@ -76,7 +76,7 @@ export default async function RechargePage() {
                 <Gift className="size-6 text-success" />
               </div>
               <div>
-                <p className="text-sm text-foreground/60">免费余额</p>
+                <p className="text-sm text-foreground/60">{t('credit_usage.balance.free')}</p>
                 <p className="text-2xl font-bold text-foreground">${balance.freeCredits.toFixed(2)}</p>
               </div>
             </div>
@@ -93,7 +93,7 @@ export default async function RechargePage() {
       {/* Usage History */}
       <Card className="border border-default-200 shadow-none">
         <CardHeader>
-          <h2 className="text-xl font-semibold text-foreground">使用记录</h2>
+          <h2 className="text-xl font-semibold text-foreground">{t('credit_usage.usage_history.title')}</h2>
         </CardHeader>
         <CardBody className="p-0">
           <CreditUsageTable />

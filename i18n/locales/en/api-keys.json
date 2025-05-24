@@ -1,6 +1,7 @@
 {
   "page": {
     "title": "API Keys Management",
+    "description": "Manage your API keys and access permissions",
     "create_button": "Create New API Key",
     "empty_message": "No API Keys"
   },
@@ -39,5 +40,10 @@
       "cancel": "Cancel",
       "confirm": "Delete"
     }
+  },
+  "stats": {
+    "total_keys": "Total Keys",
+    "manual_created": "Manual Created",
+    "auto_created": "Auto Created"
   }
 }

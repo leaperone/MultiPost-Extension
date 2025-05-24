@@ -157,7 +157,7 @@ export default function APIKeysPage() {
       <div className="mb-8 flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold text-foreground">{t('page.title')}</h1>
-          <p className="mt-2 text-foreground/60">管理您的 API 密钥和访问权限</p>
+          <p className="mt-2 text-foreground/60">{t('page.description')}</p>
         </div>
         <Button
           onPress={onCreateOpen}
@@ -177,7 +177,7 @@ export default function APIKeysPage() {
                 <Key className="size-5 text-primary" />
               </div>
               <div>
-                <p className="text-sm text-foreground/60">总密钥数</p>
+                <p className="text-sm text-foreground/60">{t('stats.total_keys', { ns: 'settings' })}</p>
                 <p className="text-2xl font-bold text-foreground">{apiKeys.length}</p>
               </div>
             </div>
@@ -191,7 +191,7 @@ export default function APIKeysPage() {
                 <Clock className="size-5 text-secondary" />
               </div>
               <div>
-                <p className="text-sm text-foreground/60">手动创建</p>
+                <p className="text-sm text-foreground/60">{t('stats.manual_created', { ns: 'settings' })}</p>
                 <p className="text-2xl font-bold text-foreground">
                   {apiKeys.filter((key) => !key.name.startsWith('EXTENSION-')).length}
                 </p>
@@ -207,7 +207,7 @@ export default function APIKeysPage() {
                 <Key className="size-5 text-warning" />
               </div>
               <div>
-                <p className="text-sm text-foreground/60">自动创建</p>
+                <p className="text-sm text-foreground/60">{t('stats.auto_created', { ns: 'settings' })}</p>
                 <p className="text-2xl font-bold text-foreground">
                   {apiKeys.filter((key) => key.name.startsWith('EXTENSION-')).length}
                 </p>

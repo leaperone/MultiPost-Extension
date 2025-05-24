@@ -20,8 +20,8 @@ export default function SettingsPage() {
       {/* Header Section */}
       <div className="mb-8 flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-foreground">{t('title')}</h1>
-          <p className="mt-2 text-foreground/60">管理您的账户设置和偏好</p>
+          <h1 className="text-3xl font-bold text-foreground">{t('general.page.title')}</h1>
+          <p className="mt-2 text-foreground/60">{t('general.page.description')}</p>
         </div>
         <Button
           color="danger"
@@ -29,7 +29,7 @@ export default function SettingsPage() {
           startContent={<LogOutIcon size={18} />}
           onPress={() => signOut()}
           className="border border-danger/20 shadow-none">
-          退出登录
+          {t('general.page.logout')}
         </Button>
       </div>
 
@@ -119,42 +119,42 @@ export default function SettingsPage() {
       <div className="mt-8">
         <Card className="border border-default-200 shadow-none transition-colors hover:border-default-300">
           <CardHeader>
-            <h2 className="text-xl font-semibold">高级设置</h2>
+            <h2 className="text-xl font-semibold">{t('general.advanced.title')}</h2>
           </CardHeader>
           <CardBody>
             <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
               <div className="rounded-lg bg-default-50 p-4 text-center">
-                <h3 className="mb-2 font-medium text-foreground">数据导出</h3>
-                <p className="mb-3 text-sm text-foreground/60">导出您的账户数据</p>
+                <h3 className="mb-2 font-medium text-foreground">{t('general.advanced.data_export.title')}</h3>
+                <p className="mb-3 text-sm text-foreground/60">{t('general.advanced.data_export.description')}</p>
                 <Button
                   size="sm"
                   variant="flat"
                   isDisabled
                   className="border border-default-200 shadow-none">
-                  导出数据
+                  {t('general.advanced.data_export.button')}
                 </Button>
               </div>
               <div className="rounded-lg bg-default-50 p-4 text-center">
-                <h3 className="mb-2 font-medium text-foreground">账户删除</h3>
-                <p className="mb-3 text-sm text-foreground/60">永久删除您的账户</p>
+                <h3 className="mb-2 font-medium text-foreground">{t('general.advanced.account_deletion.title')}</h3>
+                <p className="mb-3 text-sm text-foreground/60">{t('general.advanced.account_deletion.description')}</p>
                 <Button
                   size="sm"
                   color="danger"
                   variant="flat"
                   isDisabled
                   className="border border-danger/20 shadow-none">
-                  删除账户
+                  {t('general.advanced.account_deletion.button')}
                 </Button>
               </div>
               <div className="rounded-lg bg-default-50 p-4 text-center">
-                <h3 className="mb-2 font-medium text-foreground">隐私设置</h3>
-                <p className="mb-3 text-sm text-foreground/60">管理隐私偏好</p>
+                <h3 className="mb-2 font-medium text-foreground">{t('general.advanced.privacy_settings.title')}</h3>
+                <p className="mb-3 text-sm text-foreground/60">{t('general.advanced.privacy_settings.description')}</p>
                 <Button
                   size="sm"
                   variant="flat"
                   isDisabled
                   className="border border-default-200 shadow-none">
-                  隐私设置
+                  {t('general.advanced.privacy_settings.button')}
                 </Button>
               </div>
             </div>

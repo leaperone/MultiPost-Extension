@@ -39,5 +39,103 @@
       "alipay": "Pay with Alipay",
       "stripe": "Pay with Stripe ($10 min)"
     }
+  },
+  "general": {
+    "page": {
+      "title": "Settings",
+      "description": "Manage your account settings and preferences",
+      "logout": "Sign Out"
+    },
+    "advanced": {
+      "title": "Advanced Settings",
+      "data_export": {
+        "title": "Data Export",
+        "description": "Export your account data",
+        "button": "Export Data"
+      },
+      "account_deletion": {
+        "title": "Account Deletion",
+        "description": "Permanently delete your account",
+        "button": "Delete Account"
+      },
+      "privacy_settings": {
+        "title": "Privacy Settings",
+        "description": "Manage privacy preferences",
+        "button": "Privacy Settings"
+      }
+    }
+  },
+  "api_keys": {
+    "page": {
+      "title": "API Keys",
+      "description": "Manage your API keys and access permissions"
+    },
+    "stats": {
+      "total_keys": "Total Keys",
+      "manual_created": "Manual Created",
+      "auto_created": "Auto Created"
+    }
+  },
+  "credit_usage": {
+    "page": {
+      "title": "Credit & Usage",
+      "description": "Manage your account balance and view usage history"
+    },
+    "balance": {
+      "total": "Total Balance",
+      "paid": "Paid Balance",
+      "free": "Free Balance"
+    },
+    "usage_history": {
+      "title": "Usage History",
+      "empty": "No usage records",
+      "loading": "Loading...",
+      "columns": {
+        "type": "Type",
+        "amount": "Amount",
+        "category": "Category",
+        "time": "Time"
+      },
+      "category_labels": {
+        "free": "Free Credits",
+        "paid": "Paid Credits"
+      }
+    }
+  },
+  "trust_domains": {
+    "page": {
+      "title": "Trust Domains",
+      "description": "Manage trusted domains for browser extension"
+    },
+    "stats": {
+      "domain_count": "Trusted Domains",
+      "security_status": "Security Status",
+      "extension_status": "Extension Status"
+    },
+    "status_labels": {
+      "configured": "Configured",
+      "not_configured": "Not Configured",
+      "connected": "Connected",
+      "disconnected": "Disconnected"
+    },
+    "domains_list": {
+      "title": "Domain List",
+      "empty": {
+        "title": "No trusted domains",
+        "description": "Add trusted domains through browser extension"
+      }
+    }
+  },
+  "clients": {
+    "page": {
+      "title": "Extension Clients",
+      "description": "Manage connected browser extension clients"
+    },
+    "stats": {
+      "connected_clients": "Connected Clients",
+      "active_status": "Active Status",
+      "online": "Online",
+      "offline": "Offline"
+    }
   }
 } 
