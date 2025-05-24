@@ -125,20 +125,6 @@ export default async function ClientsPage() {
             </div>
           </CardHeader>
         </Card>
-
-        <Card className="border border-default-200 shadow-none transition-colors hover:border-default-300">
-          <CardHeader className="pb-3">
-            <div className="flex items-center gap-3">
-              <div className="flex size-10 items-center justify-center rounded-lg bg-warning/10">
-                <Router className="size-5 text-warning" />
-              </div>
-              <div>
-                <p className="text-sm text-foreground/60">扩展版本</p>
-                <p className="text-2xl font-bold text-foreground">v1.0</p>
-              </div>
-            </div>
-          </CardHeader>
-        </Card>
       </div>
 
       {/* Alert */}
