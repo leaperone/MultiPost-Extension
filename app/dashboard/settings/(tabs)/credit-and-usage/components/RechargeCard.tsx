@@ -40,7 +40,7 @@ export default function RechargeCard() {
   };
 
   return (
-    <Card className="flex flex-col gap-4 shadow-none">
+    <Card className="flex flex-col gap-4 border border-default-200 shadow-none">
       <CardBody className="flex w-full flex-row items-center gap-6">
         <NumberInput
           min={1}
@@ -74,6 +74,7 @@ export default function RechargeCard() {
             size="lg"
             color="primary"
             onPress={() => handleRecharge(Number(customAmount), 'alipay')}
+            className="border border-primary/20 shadow-none"
             startContent={
               <Icon
                 icon="simple-icons:alipay"
@@ -89,6 +90,7 @@ export default function RechargeCard() {
           size="lg"
           color="secondary"
           onPress={() => handleRecharge(Number(customAmount), 'stripe')}
+          className="border border-secondary/20 shadow-none"
           startContent={
             <span className="flex size-6 items-center justify-center rounded-md bg-white p-0.5 shadow-sm">
               <Icon

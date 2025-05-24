@@ -2,7 +2,7 @@ import { Suspense } from 'react';
 import { auth } from '@/auth';
 import { prisma } from '@/lib/db';
 import { Alert, Card, CardHeader, CardBody } from '@heroui/react';
-import { Loader2 } from 'lucide-react';
+import { Loader2, Router, Clock, Users } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import LinkButton from './LinkExtensionButton';
 import EditNameButton from './EditNameButton';
@@ -21,34 +21,54 @@ async function ClientsList() {
 
   if (clients.length === 0) {
     return (
-      <Card>
-        <CardBody>
-          <p className="text-center text-muted-foreground">{t('client.page.empty')}</p>
+      <Card className="border border-default-200 shadow-none">
+        <CardBody className="py-12 text-center">
+          <div className="flex flex-col items-center gap-4">
+            <div className="flex size-16 items-center justify-center rounded-full bg-default-100">
+              <Router className="size-8 text-default-400" />
+            </div>
+            <div>
+              <h3 className="text-lg font-medium text-foreground">{t('client.page.empty')}</h3>
+              <p className="mt-1 text-sm text-foreground/60">连接您的浏览器扩展以开始使用</p>
+            </div>
+          </div>
         </CardBody>
       </Card>
     );
   }
 
   return (
-    <div className="grid gap-4">
+    <div className="grid gap-6 lg:grid-cols-2 xl:grid-cols-3">
       {clients.map((client) => (
-        <Card key={client.id}>
-          <CardHeader className="flex items-center justify-between">
-            <div>
-              <h4 className="text-lg font-medium">{client.name}</h4>
-              <p className="text-sm text-default-500">
-                {t('client.page.last_seen', {
-                  time: formatDistanceToNow(client.updatedAt, { addSuffix: true }),
-                })}
-              </p>
+        <Card
+          key={client.id}
+          className="border border-default-200 shadow-none transition-colors hover:border-default-300">
+          <CardHeader className="pb-3">
+            <div className="flex items-center gap-3">
+              <div className="flex size-10 items-center justify-center rounded-lg bg-primary/10">
+                <Router className="size-5 text-primary" />
+              </div>
+              <div className="flex-1">
+                <h4 className="text-lg font-medium text-foreground">{client.name}</h4>
+                <p className="text-sm text-foreground/60">
+                  {t('client.page.last_seen', {
+                    time: formatDistanceToNow(client.updatedAt, { addSuffix: true }),
+                  })}
+                </p>
+              </div>
             </div>
-            <EditNameButton
-              clientId={client.id}
-              initialName={client.name}
-            />
           </CardHeader>
-          <CardBody>
-            <p>Client ID: {client.id}</p>
+          <CardBody className="space-y-4 pt-0">
+            <div className="rounded-lg bg-default-50 p-4">
+              <p className="mb-1 text-sm text-foreground/60">Client ID</p>
+              <p className="break-all font-mono text-sm text-foreground">{client.id}</p>
+            </div>
+            <div className="flex justify-end">
+              <EditNameButton
+                clientId={client.id}
+                initialName={client.name}
+              />
+            </div>
           </CardBody>
         </Card>
       ))}
@@ -58,22 +78,82 @@ async function ClientsList() {
 
 export default async function ClientsPage() {
   const { t } = await createTranslation('publish');
+  const session = await auth();
+  if (!session?.user?.id) return null;
+
+  const clientCount = await prisma.extensionClient.count({
+    where: { userId: session.user.id },
+  });
 
   return (
-    <div className="container space-y-6">
-      <div className="flex items-center justify-between">
+    <div className="size-full overflow-y-auto p-6">
+      {/* Header Section */}
+      <div className="mb-8 flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight">{t('client.page.title')}</h1>
-          <p className="text-muted-foreground">{t('client.page.description')}</p>
+          <h1 className="text-3xl font-bold text-foreground">{t('client.page.title')}</h1>
+          <p className="mt-2 text-foreground/60">{t('client.page.description')}</p>
         </div>
         <LinkButton />
       </div>
 
-      <Alert variant="flat">{t('client.page.alert')}</Alert>
+      {/* Stats Cards */}
+      <div className="mb-8 grid grid-cols-1 gap-6 md:grid-cols-3">
+        <Card className="border border-default-200 shadow-none transition-colors hover:border-default-300">
+          <CardHeader className="pb-3">
+            <div className="flex items-center gap-3">
+              <div className="flex size-10 items-center justify-center rounded-lg bg-primary/10">
+                <Users className="size-5 text-primary" />
+              </div>
+              <div>
+                <p className="text-sm text-foreground/60">已连接客户端</p>
+                <p className="text-2xl font-bold text-foreground">{clientCount}</p>
+              </div>
+            </div>
+          </CardHeader>
+        </Card>
 
+        <Card className="border border-default-200 shadow-none transition-colors hover:border-default-300">
+          <CardHeader className="pb-3">
+            <div className="flex items-center gap-3">
+              <div className="flex size-10 items-center justify-center rounded-lg bg-secondary/10">
+                <Clock className="size-5 text-secondary" />
+              </div>
+              <div>
+                <p className="text-sm text-foreground/60">活跃状态</p>
+                <p className="text-2xl font-bold text-foreground">{clientCount > 0 ? '在线' : '离线'}</p>
+              </div>
+            </div>
+          </CardHeader>
+        </Card>
+
+        <Card className="border border-default-200 shadow-none transition-colors hover:border-default-300">
+          <CardHeader className="pb-3">
+            <div className="flex items-center gap-3">
+              <div className="flex size-10 items-center justify-center rounded-lg bg-warning/10">
+                <Router className="size-5 text-warning" />
+              </div>
+              <div>
+                <p className="text-sm text-foreground/60">扩展版本</p>
+                <p className="text-2xl font-bold text-foreground">v1.0</p>
+              </div>
+            </div>
+          </CardHeader>
+        </Card>
+      </div>
+
+      {/* Alert */}
+      <div className="mb-8">
+        <Alert
+          variant="flat"
+          className="border border-warning/20 shadow-none">
+          {t('client.page.alert')}
+        </Alert>
+      </div>
+
+      {/* Clients List */}
       <Suspense
         fallback={
-          <div className="flex items-center justify-center py-8">
+          <div className="flex items-center justify-center py-12">
             <Loader2 className="size-6 animate-spin" />
           </div>
         }>

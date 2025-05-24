@@ -11,6 +11,7 @@ import {
   SelectItem,
   Card,
   CardBody,
+  Link,
 } from '@heroui/react';
 import { useState, useEffect } from 'react';
 import { useTranslation } from '@/i18n/client';
@@ -25,7 +26,7 @@ import {
 } from '@/app/dashboard/draw/image/types';
 import { generateImage, getImageGeneration } from '@/app/dashboard/draw/image/action';
 import type { FileData } from '../page';
-import { ImageIcon, PaletteIcon } from 'lucide-react';
+import { ExternalLinkIcon, ImageIcon, PaletteIcon, XIcon } from 'lucide-react';
 
 interface ImageGenerationModalProps {
   onImageGenerated: (imageData: FileData) => void;
@@ -205,6 +206,7 @@ export function ImageGenerationModal({ onImageGenerated, initialPromptBasis }: I
       isActive = false;
       if (timeoutId) clearTimeout(timeoutId);
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [taskId, onImageGenerated, t, tImage, initialPromptBasis.title, initialPromptBasis.content]);
 
   const handleInternalImageGenerated = (imageData: FileData) => {
@@ -371,10 +373,30 @@ export function ImageGenerationModal({ onImageGenerated, initialPromptBasis }: I
           isOpen={modalVisible}
           onClose={closeModal}
           isDismissable={false}
+          hideCloseButton
           size="3xl"
           scrollBehavior="inside">
           <ModalContent>
-            <ModalHeader>{t('dynamic.aiImageGenerationModal.title')}</ModalHeader>
+            <ModalHeader className="flex items-center justify-between">
+              <h1>{t('dynamic.aiImageGenerationModal.title')}</h1>
+              <div className="flex items-center gap-2">
+                <Button
+                  as={Link}
+                  href="https://docs.multipost.app/docs/user-guide/ai-draw"
+                  target="_blank"
+                  size="sm"
+                  endContent={<ExternalLinkIcon />}>
+                  Learn more
+                </Button>
+                <Button
+                  onPress={closeModal}
+                  size="sm"
+                  color="danger"
+                  isIconOnly>
+                  <XIcon />
+                </Button>
+              </div>
+            </ModalHeader>
             <ModalBody className="space-y-6">{renderModalContent()}</ModalBody>
           </ModalContent>
         </Modal>

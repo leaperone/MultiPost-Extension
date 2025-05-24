@@ -1,8 +1,8 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { Card, Button, CardBody } from '@heroui/react';
-import { XIcon } from 'lucide-react';
+import { Card, Button, CardBody, CardHeader } from '@heroui/react';
+import { XIcon, Shield, Globe, AlertTriangle } from 'lucide-react';
 import { sendRequest } from '@/lib/extension';
 
 // 域名接口定义
@@ -126,10 +126,14 @@ export default function TrustDomainsPage() {
   if (!mounted) {
     // 返回一个骨架屏或加载指示器而不是null，确保DOM结构一致
     return (
-      <div className="flex flex-col gap-4">
-        <Card className="bg-default-50 shadow-none">
+      <div className="size-full overflow-y-auto p-6">
+        <div className="mb-8">
+          <div className="h-8 w-48 animate-pulse rounded bg-default-200"></div>
+          <div className="mt-2 h-4 w-64 animate-pulse rounded bg-default-100"></div>
+        </div>
+        <Card className="border border-default-200 shadow-none">
           <CardBody>
-            <div className="h-10 w-full animate-pulse rounded bg-gray-200"></div>
+            <div className="h-10 w-full animate-pulse rounded bg-default-100"></div>
           </CardBody>
         </Card>
       </div>
@@ -140,20 +144,96 @@ export default function TrustDomainsPage() {
   const safeDomains = Array.isArray(domains) ? domains : [];
 
   return (
-    <div className="flex flex-col gap-4">
-      <Card className="bg-default-50 shadow-none">
+    <div className="size-full overflow-y-auto p-6">
+      {/* Header Section */}
+      <div className="mb-8 flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold text-foreground">信任域名</h1>
+          <p className="mt-2 text-foreground/60">管理浏览器扩展的信任域名列表</p>
+        </div>
+      </div>
+
+      {/* Stats Cards */}
+      <div className="mb-8 grid grid-cols-1 gap-6 md:grid-cols-3">
+        <Card className="border border-default-200 shadow-none transition-colors hover:border-default-300">
+          <CardHeader className="pb-3">
+            <div className="flex items-center gap-3">
+              <div className="flex size-10 items-center justify-center rounded-lg bg-primary/10">
+                <Shield className="size-5 text-primary" />
+              </div>
+              <div>
+                <p className="text-sm text-foreground/60">信任域名数</p>
+                <p className="text-2xl font-bold text-foreground">{safeDomains.length}</p>
+              </div>
+            </div>
+          </CardHeader>
+        </Card>
+
+        <Card className="border border-default-200 shadow-none transition-colors hover:border-default-300">
+          <CardHeader className="pb-3">
+            <div className="flex items-center gap-3">
+              <div className="flex size-10 items-center justify-center rounded-lg bg-success/10">
+                <Globe className="size-5 text-success" />
+              </div>
+              <div>
+                <p className="text-sm text-foreground/60">安全状态</p>
+                <p className="text-2xl font-bold text-foreground">{safeDomains.length > 0 ? '已配置' : '未配置'}</p>
+              </div>
+            </div>
+          </CardHeader>
+        </Card>
+
+        <Card className="border border-default-200 shadow-none transition-colors hover:border-default-300">
+          <CardHeader className="pb-3">
+            <div className="flex items-center gap-3">
+              <div className="flex size-10 items-center justify-center rounded-lg bg-warning/10">
+                <AlertTriangle className="size-5 text-warning" />
+              </div>
+              <div>
+                <p className="text-sm text-foreground/60">扩展状态</p>
+                <p className="text-2xl font-bold text-foreground">{mounted ? '已连接' : '未连接'}</p>
+              </div>
+            </div>
+          </CardHeader>
+        </Card>
+      </div>
+
+      {/* Domains List */}
+      <Card className="border border-default-200 shadow-none">
+        <CardHeader>
+          <h2 className="text-xl font-semibold text-foreground">域名列表</h2>
+        </CardHeader>
         <CardBody>
-          {error && <p className="mb-4 text-sm text-danger">{error}</p>}
+          {error && (
+            <div className="mb-4 rounded-lg bg-danger/10 p-4">
+              <p className="text-sm text-danger">{error}</p>
+            </div>
+          )}
 
           {safeDomains.length === 0 ? (
-            <p className="text-center text-gray-500">No trusted domains yet</p>
+            <div className="py-12 text-center">
+              <div className="flex flex-col items-center gap-4">
+                <div className="flex size-16 items-center justify-center rounded-full bg-default-100">
+                  <Shield className="size-8 text-default-400" />
+                </div>
+                <div>
+                  <h3 className="text-lg font-medium text-foreground">暂无信任域名</h3>
+                  <p className="mt-1 text-sm text-foreground/60">通过浏览器扩展添加信任域名</p>
+                </div>
+              </div>
+            </div>
           ) : (
-            <div className="space-y-2">
+            <div className="space-y-3">
               {safeDomains.map((domain) => (
                 <div
                   key={domain.id || domain.domain}
-                  className="flex items-center justify-between rounded-lg border border-gray-200 p-3">
-                  <span className="font-mono">{domain.domain}</span>
+                  className="flex items-center justify-between rounded-lg border border-default-200 bg-default-50 p-4 transition-colors hover:border-default-300">
+                  <div className="flex items-center gap-3">
+                    <div className="flex size-8 items-center justify-center rounded-lg bg-primary/10">
+                      <Globe className="size-4 text-primary" />
+                    </div>
+                    <span className="font-mono text-foreground">{domain.domain}</span>
+                  </div>
                   <Button
                     isIconOnly
                     size="sm"
@@ -166,7 +246,8 @@ export default function TrustDomainsPage() {
                         return;
                       }
                       handleDeleteDomain(domain.id);
-                    }}>
+                    }}
+                    className="shadow-none">
                     <XIcon className="size-4" />
                   </Button>
                 </div>

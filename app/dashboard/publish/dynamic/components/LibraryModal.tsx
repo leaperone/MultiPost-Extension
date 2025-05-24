@@ -1,19 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
-import {
-  Modal,
-  ModalContent,
-  ModalHeader,
-  ModalBody,
-  ModalFooter,
-  Button,
-  Link,
-  Tabs,
-  Tab,
-  Card,
-  Alert,
-  addToast,
-} from '@heroui/react';
-import { ConstructionIcon, PlusIcon, SquareLibraryIcon, ImagePlusIcon, VideoIcon, UploadIcon } from 'lucide-react';
+import { Modal, ModalContent, ModalHeader, ModalBody, Button, Link, Tabs, Tab, Card, addToast } from '@heroui/react';
+import { PlusIcon, SquareLibraryIcon, ImagePlusIcon, VideoIcon, UploadIcon } from 'lucide-react';
 import Image from 'next/image';
 import { listAllImages, listAllPosters } from '@/actions/draw/list';
 import { useTranslation } from '@/i18n/client';
@@ -259,6 +246,7 @@ export default function LibraryModal({ onSelectImage, existingFiles = [] }: Libr
 
     document.addEventListener('paste', handlePaste);
     return () => document.removeEventListener('paste', handlePaste);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [existingFiles, onSelectImage, t]);
 
   const renderGrid = (type: 'images' | 'posters') => {
@@ -450,15 +438,6 @@ export default function LibraryModal({ onSelectImage, existingFiles = [] }: Libr
               </Tabs>
             )}
           </ModalBody>
-          <ModalFooter>
-            <Alert
-              color="secondary"
-              variant="flat"
-              icon={<ConstructionIcon />}
-              title="施工中，尚未开放"
-              description="使用最新的 AI 技术，生成高质量的图片和海报"
-            />
-          </ModalFooter>
         </ModalContent>
       </Modal>
     </>

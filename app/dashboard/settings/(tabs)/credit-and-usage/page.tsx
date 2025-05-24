@@ -1,10 +1,10 @@
-import { Button, Card, CardBody, CardHeader, Divider, Spacer } from '@heroui/react';
+import { Button, Card, CardBody, CardHeader, Spacer } from '@heroui/react';
 import { auth } from '@/auth';
 import { getCredit } from '@/actions/credit';
 import RechargeCard from './components/RechargeCard';
 import CreditUsageTable from './components/CreditUsageTable';
 import { ActivityAlert } from '@/app/dashboard/components/ActivityAlert';
-import { ExternalLinkIcon } from 'lucide-react';
+import { ExternalLinkIcon, Wallet, DollarSign, Gift } from 'lucide-react';
 import { createTranslation } from '@/i18n/server';
 
 export default async function RechargePage() {
@@ -14,55 +14,91 @@ export default async function RechargePage() {
   }
 
   const balance = await getCredit(session.user.id);
-
   const { t } = await createTranslation('settings');
 
   return (
-    <div className="container mx-auto max-w-6xl gap-4 p-4">
-      {/* 当前余额 */}
-      <Card>
-        <CardHeader className="flex flex-row items-center justify-between">
-          <div className="space-y-1">
-            <div className="flex items-center gap-8">
-              <div className="flex flex-col items-center">
-                <p className="text-4xl font-bold text-primary">${balance.totalCredits.toFixed(2)}</p>
-                <p className="text-sm text-default-500">Total Balance</p>
+    <div className="size-full overflow-y-auto p-6">
+      {/* Header Section */}
+      <div className="mb-8 flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold text-foreground">余额与使用</h1>
+          <p className="mt-2 text-foreground/60">管理您的账户余额和查看使用记录</p>
+        </div>
+        <Button
+          variant="flat"
+          as="a"
+          href="https://docs.multipost.app/docs/user-guide/pricing"
+          target="_blank"
+          rel="noopener noreferrer"
+          startContent={<ExternalLinkIcon className="size-4" />}
+          className="border border-default-200 shadow-none">
+          {t('recharge.details')}
+        </Button>
+      </div>
+
+      {/* Balance Overview Cards */}
+      <div className="mb-8 grid grid-cols-1 gap-6 lg:grid-cols-3">
+        {/* Total Balance */}
+        <Card className="border border-default-200 shadow-none transition-colors hover:border-default-300 lg:col-span-1">
+          <CardHeader className="pb-3">
+            <div className="flex items-center gap-3">
+              <div className="flex size-12 items-center justify-center rounded-lg bg-primary/10">
+                <Wallet className="size-6 text-primary" />
               </div>
-              <div className="h-12 w-px bg-default-200" />
-              <div className="flex items-center gap-6">
-                <div>
-                  <p className="text-sm text-default-500">Paid Balance</p>
-                  <p className="text-lg font-medium text-default-600/80">${balance.credits.toFixed(2)}</p>
-                </div>
-                <div>
-                  <p className="text-sm text-default-500">Free Balance</p>
-                  <p className="text-lg font-medium text-default-600/80">${balance.freeCredits.toFixed(2)}</p>
-                </div>
+              <div>
+                <p className="text-sm text-foreground/60">总余额</p>
+                <p className="text-3xl font-bold text-primary">${balance.totalCredits.toFixed(2)}</p>
               </div>
             </div>
-          </div>
-          <Button
-            variant="flat"
-            as="a"
-            href="https://docs.multipost.app/docs/user-guide/pricing"
-            target="_blank"
-            rel="noopener noreferrer"
-            endContent={<ExternalLinkIcon className="size-4" />}>
-            {t('recharge.details')}
-          </Button>
-        </CardHeader>
-        <Divider />
-        <CardBody>
-          <RechargeCard />
-        </CardBody>
-      </Card>
+          </CardHeader>
+        </Card>
+
+        {/* Paid Balance */}
+        <Card className="border border-default-200 shadow-none transition-colors hover:border-default-300">
+          <CardHeader className="pb-3">
+            <div className="flex items-center gap-3">
+              <div className="flex size-12 items-center justify-center rounded-lg bg-secondary/10">
+                <DollarSign className="size-6 text-secondary" />
+              </div>
+              <div>
+                <p className="text-sm text-foreground/60">付费余额</p>
+                <p className="text-2xl font-bold text-foreground">${balance.credits.toFixed(2)}</p>
+              </div>
+            </div>
+          </CardHeader>
+        </Card>
+
+        {/* Free Balance */}
+        <Card className="border border-default-200 shadow-none transition-colors hover:border-default-300">
+          <CardHeader className="pb-3">
+            <div className="flex items-center gap-3">
+              <div className="flex size-12 items-center justify-center rounded-lg bg-success/10">
+                <Gift className="size-6 text-success" />
+              </div>
+              <div>
+                <p className="text-sm text-foreground/60">免费余额</p>
+                <p className="text-2xl font-bold text-foreground">${balance.freeCredits.toFixed(2)}</p>
+              </div>
+            </div>
+          </CardHeader>
+        </Card>
+      </div>
+
+      <RechargeCard />
 
       <Spacer y={4} />
       <ActivityAlert />
       <Spacer y={4} />
 
-      {/* 使用记录 */}
-      <CreditUsageTable />
+      {/* Usage History */}
+      <Card className="border border-default-200 shadow-none">
+        <CardHeader>
+          <h2 className="text-xl font-semibold text-foreground">使用记录</h2>
+        </CardHeader>
+        <CardBody className="p-0">
+          <CreditUsageTable />
+        </CardBody>
+      </Card>
     </div>
   );
 }

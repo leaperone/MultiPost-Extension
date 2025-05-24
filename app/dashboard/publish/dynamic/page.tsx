@@ -164,6 +164,9 @@ export default function DynamicPage() {
   );
 
   useEffect(() => {
+    if (process.env.NODE_ENV === 'development') {
+      return;
+    }
     requestRefreshAccountInfo().then(() => {});
   }, []);
 

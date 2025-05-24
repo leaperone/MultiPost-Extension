@@ -42,7 +42,8 @@ export default function LinkButton() {
       <Button
         onPress={onOpen}
         variant="bordered"
-        size="sm">
+        size="sm"
+        className="border border-default-200 shadow-none">
         <LinkIcon className="mr-2 size-4" />
         {t('client.link_button.button')}
       </Button>
@@ -76,12 +77,14 @@ export default function LinkButton() {
                 <Button
                   color="danger"
                   variant="light"
-                  onPress={onClose}>
+                  onPress={onClose}
+                  className="shadow-none">
                   {t('client.link_button.modal.buttons.cancel')}
                 </Button>
                 <Button
                   color="primary"
-                  onPress={handleLink}>
+                  onPress={handleLink}
+                  className="border border-primary/20 shadow-none">
                   {t('client.link_button.modal.buttons.confirm')}
                 </Button>
               </ModalFooter>

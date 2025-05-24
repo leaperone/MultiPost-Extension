@@ -58,7 +58,8 @@ export default function EditNameButton({ clientId, initialName }: { clientId: st
       <Button
         onPress={onOpen}
         variant="bordered"
-        size="sm">
+        size="sm"
+        className="border border-default-200 shadow-none">
         <Pencil className="mr-2 size-4" />
         {t('client.edit_button.button')}
       </Button>
@@ -82,12 +83,14 @@ export default function EditNameButton({ clientId, initialName }: { clientId: st
                 <Button
                   color="danger"
                   variant="light"
-                  onPress={onClose}>
+                  onPress={onClose}
+                  className="shadow-none">
                   {t('client.edit_button.modal.buttons.cancel')}
                 </Button>
                 <Button
                   color="primary"
-                  onPress={handleEdit}>
+                  onPress={handleEdit}
+                  className="border border-primary/20 shadow-none">
                   {t('client.edit_button.modal.buttons.save')}
                 </Button>
               </ModalFooter>
