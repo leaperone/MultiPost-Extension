@@ -37,7 +37,7 @@
   },
   "zsxq": {
     "button": {
-      "default": "添加知识星球",
+      "default": "配置",
       "selected": "已选择 {{count}} 个星球"
     },
     "modal": {

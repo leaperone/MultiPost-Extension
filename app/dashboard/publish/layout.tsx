@@ -29,7 +29,7 @@ export default function PublishLayout({ children }: { children: React.ReactNode 
   }, []);
 
   return (
-    <div className="mx-auto h-full max-w-2xl space-y-6 overflow-y-auto p-4 scrollbar-hide">
+    <div className="mx-auto h-full max-w-4xl space-y-6 overflow-y-auto p-4 scrollbar-hide">
       {process.env.NODE_ENV !== 'development' && <ForceInstallExtension />}
 
       <Tabs

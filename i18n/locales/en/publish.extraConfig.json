@@ -37,7 +37,7 @@
   },
   "zsxq": {
     "button": {
-      "default": "Add Knowledge Planet",
+      "default": "Configure",
       "selected": "Selected {{count}} planets"
     },
     "modal": {

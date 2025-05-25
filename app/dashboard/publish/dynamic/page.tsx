@@ -515,7 +515,7 @@ export default function DynamicPage() {
                     </div>
                   }
                   className="py-1">
-                  <div className="grid grid-cols-2 gap-2">
+                  <div className="grid grid-cols-3 gap-2">
                     {platforms
                       .filter((platform) => platform.tags?.includes('CN'))
                       .map((platform) => (
@@ -548,7 +548,7 @@ export default function DynamicPage() {
                     </div>
                   }
                   className="py-1">
-                  <div className="grid grid-cols-2 gap-2">
+                  <div className="grid grid-cols-3 gap-2">
                     {platforms
                       .filter((platform) => platform.tags?.includes('International'))
                       .map((platform) => (
