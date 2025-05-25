@@ -386,8 +386,8 @@ export default function Publish() {
 
   return (
     <HeroUIProvider>
-      <div className="flex flex-col items-center justify-center min-h-screen p-4 bg-background">
-        <div className="w-full max-w-md space-y-4">
+      <div className="flex flex-col justify-center items-center p-4 min-h-screen bg-background">
+        <div className="space-y-4 w-full max-w-md">
           <h2 className="text-xl font-semibold text-center text-foreground">{chrome.i18n.getMessage('publishing')}</h2>
           {title && <p className="text-sm text-center truncate text-muted-foreground">{title}</p>}
           <Progress
@@ -418,7 +418,7 @@ export default function Publish() {
                     <ul className="space-y-2">
                       <li
                         key={tab.tab.id}
-                        className="relative flex items-center">
+                        className="flex relative items-center">
                         <Button
                           isIconOnly
                           size="sm"
@@ -429,14 +429,14 @@ export default function Publish() {
                           <RefreshCw className="w-4 h-4" />
                         </Button>
                         <Button
-                          className="justify-start pl-2 pr-10 text-left grow"
+                          className="justify-start pr-10 pl-2 text-left grow"
                           onPress={() => handleTabClick(tab.tab.id)}
                           onMouseDown={(e) => handleTabMiddleClick(e, tab.tab.id)}>
                           {tab.tab.favIconUrl && (
                             <img
                               src={tab.tab.favIconUrl}
                               alt=""
-                              className="w-4 h-4 mr-2 shrink-0"
+                              className="mr-2 w-4 h-4 shrink-0"
                               onError={(e) => (e.currentTarget.style.display = 'none')}
                             />
                           )}
@@ -447,7 +447,7 @@ export default function Publish() {
                           size="sm"
                           color="danger"
                           variant="light"
-                          className="absolute -translate-y-1/2 right-2 top-1/2"
+                          className="absolute right-2 top-1/2 -translate-y-1/2"
                           onPress={() => handleCloseTab(tab.tab.id)}
                           aria-label={chrome.i18n.getMessage('sidepanelCloseTab')}>
                           <X className="w-4 h-4" />
@@ -459,7 +459,7 @@ export default function Publish() {
               })}
           </div>
           {!isProcessing && (
-            <div className="flex justify-center gap-2 mt-4">
+            <div className="flex gap-2 justify-center mt-4">
               <Button
                 color="primary"
                 variant="solid"
@@ -479,6 +479,20 @@ export default function Publish() {
               </Button>
             </div>
           )}
+        </div>
+
+        {/* Contact us footer tip */}
+        <div className="mt-8 text-center">
+          <p className="text-xs text-gray-500">
+            {chrome.i18n.getMessage('contactUsIfProblem')}
+            <a
+              href="https://docs.multipost.app/docs/user-guide/contact-us"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-blue-500 underline hover:text-blue-600">
+              Contact Us
+            </a>
+          </p>
         </div>
       </div>
     </HeroUIProvider>

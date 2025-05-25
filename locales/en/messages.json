@@ -1010,5 +1010,8 @@
   },
   "errorCloseAllTabs": {
     "message": "Failed to close all tabs: $1"
+  },
+  "contactUsIfProblem": {
+    "message": "If you have any issues or want us to support new platforms, please "
   }
 }

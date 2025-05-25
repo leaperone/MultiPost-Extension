@@ -984,5 +984,8 @@
   },
   "errorCloseAllTabs": {
     "message": "关闭所有标签页失败: $1"
+  },
+  "contactUsIfProblem": {
+    "message": "如果遇到任何问题，请"
   }
 }
