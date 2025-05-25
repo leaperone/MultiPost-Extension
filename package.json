@@ -14,7 +14,7 @@
     "prepare": "husky"
   },
   "dependencies": {
-    "@heroui/react": "2.6.14",
+    "@heroui/react": "2.7.8",
     "@heroui/theme": "2.4.6",
     "@mozilla/readability": "^0.5.0",
     "@plasmohq/storage": "^1.11.0",

@@ -1,6 +1,6 @@
 import '~style.css';
 import React, { useEffect, useState, useRef } from 'react';
-import { HeroUIProvider, Progress, Button, Switch } from '@heroui/react';
+import { HeroUIProvider, Progress, Button, Switch, Tooltip, NumberInput } from '@heroui/react';
 import { RefreshCw, X } from 'lucide-react';
 import cssText from 'data-text:~style.css';
 import {
@@ -19,7 +19,8 @@ const storage = new Storage({
   area: 'local',
 });
 const AUTO_CLOSE_KEY = 'publish-auto-close';
-const AUTO_CLOSE_DELAY = 3 * 60 * 1000; // 3 minutes
+const AUTO_CLOSE_DELAY_KEY = 'publish-auto-close-delay';
+const DEFAULT_AUTO_CLOSE_DELAY = 3 * 60; // 3 minutes in seconds
 
 export function getShadowContainer() {
   return document.querySelector('#test-shadow').shadowRoot.querySelector('#plasmo-shadow-container');
@@ -64,6 +65,7 @@ export default function Publish() {
   >([]);
   const [autoClose, setAutoClose] = useState(true);
   const [countdown, setCountdown] = useState<number>(0);
+  const [autoCloseDelay, setAutoCloseDelay] = useState<number>(DEFAULT_AUTO_CLOSE_DELAY);
   const autoCloseTimerRef = useRef<number>();
   const countdownTimerRef = useRef<number>();
 
@@ -330,8 +332,30 @@ export default function Publish() {
     }
   };
 
-  const startAutoCloseTimer = () => {
-    console.log('startAutoCloseTimer 被调用');
+  const handleDelayChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const minutes = parseInt(event.target.value);
+    if (isNaN(minutes) || minutes < 1) return;
+
+    const seconds = minutes * 60;
+    setAutoCloseDelay(seconds);
+    await storage.set(AUTO_CLOSE_DELAY_KEY, String(seconds));
+
+    // 如果当前正在倒计时，重新启动定时器
+    if (autoClose && countdown > 0) {
+      console.log('用户修改延迟时间，重新启动定时器:', seconds, '秒');
+      if (autoCloseTimerRef.current) {
+        clearTimeout(autoCloseTimerRef.current);
+      }
+      if (countdownTimerRef.current) {
+        clearInterval(countdownTimerRef.current);
+      }
+      startAutoCloseTimer(seconds);
+    }
+  };
+
+  const startAutoCloseTimer = (delaySeconds?: number) => {
+    const delay = delaySeconds || autoCloseDelay;
+    console.log('startAutoCloseTimer 被调用，延迟时间:', delay, '秒');
     // 清除之前的定时器
     if (autoCloseTimerRef.current) {
       clearTimeout(autoCloseTimerRef.current);
@@ -341,9 +365,8 @@ export default function Publish() {
     }
 
     // 设置倒计时
-    const countdownSeconds = AUTO_CLOSE_DELAY / 1000;
-    console.log('设置倒计时:', countdownSeconds, '秒');
-    setCountdown(countdownSeconds);
+    console.log('设置倒计时:', delay, '秒');
+    setCountdown(delay);
 
     // 倒计时更新
     countdownTimerRef.current = window.setInterval(() => {
@@ -362,7 +385,7 @@ export default function Publish() {
     autoCloseTimerRef.current = window.setTimeout(async () => {
       await handleCloseAllTabs();
       window.close();
-    }, AUTO_CLOSE_DELAY);
+    }, delay * 1000);
   };
 
   const handleTabUpdated = (tabId: number, changeInfo: chrome.tabs.TabChangeInfo, tab: chrome.tabs.Tab) => {
@@ -387,17 +410,22 @@ export default function Publish() {
 
   // 初始化自动关闭设置并启动倒计时
   useEffect(() => {
-    storage.get(AUTO_CLOSE_KEY).then((value) => {
-      const autoCloseValue = value === undefined ? true : value === 'true';
-      console.log('初始化 autoClose:', autoCloseValue, '原始值:', value);
-      setAutoClose(autoCloseValue);
+    Promise.all([storage.get(AUTO_CLOSE_KEY), storage.get(AUTO_CLOSE_DELAY_KEY)]).then(
+      ([autoCloseValue, delayValue]) => {
+        const shouldAutoClose = autoCloseValue === undefined ? true : autoCloseValue === 'true';
+        const delaySeconds = delayValue === undefined ? DEFAULT_AUTO_CLOSE_DELAY : parseInt(delayValue);
 
-      // 如果启用自动关闭，立即启动倒计时
-      if (autoCloseValue) {
-        console.log('页面加载时启动自动关闭定时器');
-        startAutoCloseTimer();
-      }
-    });
+        console.log('初始化 autoClose:', shouldAutoClose, '延迟时间:', delaySeconds, '秒');
+        setAutoClose(shouldAutoClose);
+        setAutoCloseDelay(delaySeconds);
+
+        // 如果启用自动关闭，立即启动倒计时，传入从存储读取的延迟时间
+        if (shouldAutoClose) {
+          console.log('页面加载时启动自动关闭定时器，使用延迟时间:', delaySeconds, '秒');
+          startAutoCloseTimer(delaySeconds);
+        }
+      },
+    );
   }, []);
 
   // 发布完成后的处理逻辑
@@ -569,20 +597,42 @@ export default function Publish() {
               })}
           </div>
           {/* 自动关闭设置和倒计时 */}
-          <div className="p-4 bg-gray-50 rounded-lg">
+          <div className="px-3 py-2 bg-gray-50 rounded-lg">
             <div className="flex justify-between items-center">
               <div className="flex gap-2 items-center">
-                <Switch
-                  isSelected={autoClose}
-                  onChange={handleAutoCloseChange}
-                  className="data-[state=checked]:bg-primary-600"
-                />
-                <span className="text-sm text-gray-600">{chrome.i18n.getMessage('publishAutoClose')}</span>
+                <Tooltip
+                  content="You can set a suitable delay for different social media platforms when automating"
+                  placement="top"
+                  className="max-w-xs">
+                  <Switch
+                    isSelected={autoClose}
+                    onChange={handleAutoCloseChange}
+                    size="sm"
+                    className="data-[state=checked]:bg-primary-600 cursor-help">
+                    <span className="text-sm text-gray-700">{chrome.i18n.getMessage('publishAutoClose')}</span>
+                  </Switch>
+                </Tooltip>
+                {autoClose && (
+                  <div className="flex gap-1 items-center ml-2">
+                    <NumberInput
+                      hideStepper
+                      size="sm"
+                      variant="underlined"
+                      min="1"
+                      max="30"
+                      // defaultValue={Math.floor(autoCloseDelay / 60)}
+                      value={Math.floor(autoCloseDelay / 60)}
+                      onChange={(e) => handleDelayChange(e)}
+                      className="w-14"
+                    />
+                    <span className="text-xs text-gray-500">min</span>
+                  </div>
+                )}
               </div>
               {autoClose && countdown > 0 && (
-                <div className="flex gap-2 items-center">
-                  <div className="w-2 h-2 bg-orange-500 rounded-full animate-pulse"></div>
-                  <span className="text-sm font-medium text-orange-700">
+                <div className="flex gap-1.5 items-center">
+                  <div className="w-1.5 h-1.5 bg-orange-500 rounded-full animate-pulse" />
+                  <span className="text-xs font-medium text-orange-700">
                     {chrome.i18n.getMessage('publishAutoCloseCountdown', [countdown.toString()])}
                   </span>
                 </div>
