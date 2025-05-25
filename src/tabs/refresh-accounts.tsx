@@ -114,13 +114,13 @@ const RefreshAccounts = () => {
   return (
     <HeroUIProvider>
       <div className="min-h-screen bg-gray-50/30">
-        <div className="max-w-2xl p-6 mx-auto">
-          <div className="p-6 bg-white border border-gray-200 rounded-lg shadow-sm">
-            <div className="flex flex-col items-center justify-center mb-8">
+        <div className="p-6 mx-auto max-w-2xl">
+          <div className="p-6 bg-white rounded-lg border border-gray-200 shadow-sm">
+            <div className="flex flex-col justify-center items-center mb-8">
               <Image
                 src={chrome.runtime.getURL('assets/icon.png')}
                 alt="logo"
-                className="w-16 h-16 mb-3 rounded-lg"
+                className="mb-3 w-16 h-16 rounded-lg"
               />
               <a
                 href="https://multipost.app"
@@ -131,7 +131,7 @@ const RefreshAccounts = () => {
             </div>
 
             {/* 刷新按钮和自动关闭设置 */}
-            <div className="flex items-center justify-between mb-6">
+            <div className="flex justify-between items-center mb-6">
               <Button
                 variant="ghost"
                 className="h-10"
@@ -141,7 +141,7 @@ const RefreshAccounts = () => {
                 {chrome.i18n.getMessage('refreshAccountsButton')}
               </Button>
 
-              <div className="flex items-center gap-2">
+              <div className="flex gap-2 items-center">
                 <Switch
                   isSelected={autoClose}
                   onChange={handleAutoCloseChange}
@@ -153,7 +153,7 @@ const RefreshAccounts = () => {
 
             {/* 加载状态 */}
             {state.isLoading && (
-              <div className="flex items-center justify-center p-4">
+              <div className="flex justify-center items-center p-4">
                 <Loader2 className="w-6 h-6 animate-spin text-primary-600" />
                 <span className="ml-2 text-gray-600">{chrome.i18n.getMessage('refreshAccountsLoading')}</span>
               </div>
@@ -161,7 +161,7 @@ const RefreshAccounts = () => {
 
             {/* 错误状态 */}
             {state.error && (
-              <div className="flex items-center justify-center p-4 mb-4 rounded-lg bg-red-50">
+              <div className="flex justify-center items-center p-4 mb-4 bg-red-50 rounded-lg">
                 <XCircle className="w-5 h-5 text-red-500" />
                 <span className="ml-2 text-red-700">{state.error}</span>
               </div>
@@ -177,15 +177,15 @@ const RefreshAccounts = () => {
                   return (
                     <div
                       key={platform}
-                      className="flex items-center justify-between p-4 rounded-lg bg-gray-50">
-                      <div className="flex items-center flex-1">
+                      className="flex justify-between items-center p-4 bg-gray-50 rounded-lg">
+                      <div className="flex flex-1 items-center">
                         <img
                           src={account?.avatarUrl || info.faviconUrl}
                           alt={info.platformName}
                           className={`w-10 h-10 ${account?.avatarUrl ? 'rounded-full' : 'rounded-md'}`}
                         />
                         <div className="flex-1 ml-3">
-                          <div className="flex items-center justify-between">
+                          <div className="flex justify-between items-center">
                             <div>
                               <div className="font-medium text-gray-900">
                                 {account?.username || chrome.i18n.getMessage('optionsNotLoggedIn')}
@@ -203,9 +203,9 @@ const RefreshAccounts = () => {
                         </div>
                       </div>
                       {account ? (
-                        <CheckCircle2 className="w-5 h-5 ml-4 text-green-500 shrink-0" />
+                        <CheckCircle2 className="ml-4 w-5 h-5 text-green-500 shrink-0" />
                       ) : (
-                        <XCircle className="w-5 h-5 ml-4 text-red-500 shrink-0" />
+                        <XCircle className="ml-4 w-5 h-5 text-red-500 shrink-0" />
                       )}
                     </div>
                   );
@@ -218,7 +218,7 @@ const RefreshAccounts = () => {
               !state.error &&
               Object.keys(state.accounts).length === 0 &&
               Object.keys(state.errors).length === 0 && (
-                <div className="flex flex-col items-center justify-center p-8 text-center">
+                <div className="flex flex-col justify-center items-center p-8 text-center">
                   <div className="text-gray-500">{chrome.i18n.getMessage('refreshAccountsNoAccounts')}</div>
                 </div>
               )}
