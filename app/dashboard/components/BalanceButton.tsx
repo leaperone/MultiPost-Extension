@@ -8,7 +8,7 @@ import { BadgeAlertIcon, DollarSignIcon } from 'lucide-react';
 export async function BalanceButton({
   alert = 99999,
   className,
-  size = 'sm',
+  size = 'md',
 }: {
   alert?: number;
   className?: string;
