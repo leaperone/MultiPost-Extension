@@ -62,9 +62,9 @@
         "href": "/dashboard/publish"
       },
       {
-        "title": "充值活动",
-        "description": "支付宝限时 1 美元充值，立即充值。",
-        "href": "/dashboard/settings/credit-and-usage"
+        "title": "自动化、自媒体工作流 ",
+        "description": "查看我们的开发文档 ",
+        "href": "https://docs.multipost.app"
       }
     ]
   },

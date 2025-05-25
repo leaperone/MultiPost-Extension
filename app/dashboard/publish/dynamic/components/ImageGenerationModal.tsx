@@ -27,6 +27,7 @@ import {
 import { generateImage, getImageGeneration } from '@/app/dashboard/draw/image/action';
 import type { FileData } from '../page';
 import { ExternalLinkIcon, ImageIcon, PaletteIcon, XIcon } from 'lucide-react';
+import { BalanceButtonClient } from '@/app/dashboard/components/BalanceButtonClient';
 
 interface ImageGenerationModalProps {
   onImageGenerated: (imageData: FileData) => void;
@@ -380,6 +381,7 @@ export function ImageGenerationModal({ onImageGenerated, initialPromptBasis }: I
             <ModalHeader className="flex items-center justify-between">
               <h1>{t('dynamic.aiImageGenerationModal.title')}</h1>
               <div className="flex items-center gap-2">
+                <BalanceButtonClient alert={0.1} />
                 <Button
                   as={Link}
                   href="https://docs.multipost.app/docs/user-guide/ai-draw"

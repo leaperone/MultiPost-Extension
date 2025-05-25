@@ -62,9 +62,9 @@
         "href": "/dashboard/publish"
       },
       {
-        "title": "Recharge Event",
-        "description": "Alipay 1 USD recharge event, recharge now.",
-        "href": "/dashboard/settings/credit-and-usage"
+        "title": "Automation and social media workflow",
+        "description": "Check out our development documentation",
+        "href": "https://docs.multipost.app"
       }
     ]
   },

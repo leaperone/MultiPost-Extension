@@ -9,6 +9,23 @@ import {
   BatchDeductCreditResult,
 } from './types';
 import { Decimal } from '@prisma/client/runtime/library';
+import { auth } from '@/auth';
+
+/**
+ * get userself credit
+ */
+export async function getUserSelfCredit(): Promise<CreditInfo> {
+  const session = await auth();
+  if (!session?.user?.id) {
+    return {
+      credits: 0,
+      freeCredits: 0,
+      totalCredits: 0,
+    };
+  }
+  const credit = await getCredit(session.user.id);
+  return credit;
+}
 
 /**
  * 获取用户的信用点数信息

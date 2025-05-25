@@ -1,7 +1,7 @@
 'use client';
 
 import { Tabs, Tab, addToast } from '@heroui/react';
-import { MessageCircleHeartIcon, VideoIcon, FileTextIcon, RouterIcon, PodcastIcon } from 'lucide-react';
+import { MessageCircleHeartIcon, VideoIcon, FileTextIcon, PodcastIcon } from 'lucide-react';
 import { usePathname } from 'next/navigation';
 import ForceInstallExtension from '@/components/ForceInstallExtension';
 import { useEffect } from 'react';
@@ -59,11 +59,6 @@ export default function PublishLayout({ children }: { children: React.ReactNode 
           key="https://md.multipost.app"
           href="https://md.multipost.app"
           title={<FileTextIcon />}
-        />
-        <Tab
-          key="/dashboard/publish/client"
-          href="/dashboard/settings/client"
-          title={<RouterIcon />}
         />
       </Tabs>
 

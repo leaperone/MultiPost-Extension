@@ -1,7 +1,7 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import React, { useEffect } from 'react';
+import { useEffect } from 'react';
 
 import { checkServiceStatus } from '@/lib/extension';
 
@@ -32,7 +32,7 @@ const ForceInstallExtension = () => {
     };
   }, [router]);
 
-  return <div></div>;
+  return null;
 };
 
 export default ForceInstallExtension;
