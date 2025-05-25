@@ -38,6 +38,15 @@ export default function AdminPage() {
           </Button>
         </Link>
         <Link
+          href="/admin/usage"
+          className="w-full">
+          <Button
+            className="h-24 w-full text-lg"
+            startContent={<CreditCardIcon className="size-6" />}>
+            Credit 使用记录
+          </Button>
+        </Link>
+        <Link
           href="/admin/activity"
           className="w-full">
           <Button className="h-24 w-full text-lg">活动管理</Button>
