@@ -364,6 +364,8 @@ export function ImageGenerationModal({ onImageGenerated, initialPromptBasis }: I
   return (
     <>
       <Button
+        color="secondary"
+        variant="flat"
         startContent={<PaletteIcon />}
         onPress={openModal}>
         {t('dynamic.buttons.aiGenerateImage')}

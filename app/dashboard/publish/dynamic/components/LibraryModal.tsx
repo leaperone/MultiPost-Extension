@@ -352,6 +352,7 @@ export default function LibraryModal({ onSelectImage, existingFiles = [] }: Libr
       <Button
         isIconOnly
         color="primary"
+        variant="flat"
         onPress={() => setIsOpen(true)}>
         <SquareLibraryIcon />
       </Button>

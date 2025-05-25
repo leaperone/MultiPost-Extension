@@ -339,7 +339,7 @@ export default function DynamicPage() {
     <>
       {currentStep === 1 ? (
         <div className="flex flex-col gap-2 overflow-y-auto">
-          <Card className="h-fit bg-default-50 shadow-none">
+          <Card className="h-fit border bg-default-50 shadow-none">
             <CardHeader>
               <Input
                 isClearable
@@ -397,7 +397,7 @@ export default function DynamicPage() {
           </Card>
 
           {images.length > 0 && (
-            <Card className="my-2 bg-default-50 shadow-none">
+            <Card className="my-2 border bg-default-50 shadow-none">
               <CardBody>
                 <DndContext
                   sensors={sensors}
@@ -433,7 +433,7 @@ export default function DynamicPage() {
           />
 
           {videos.length > 0 && (
-            <Card className="my-2 bg-default-50 shadow-none">
+            <Card className="my-2 border bg-default-50 shadow-none">
               <CardBody>
                 <DndContext
                   sensors={sensors}
@@ -468,7 +468,7 @@ export default function DynamicPage() {
         </div>
       ) : (
         <>
-          <Card className="mb-4 bg-default-50 shadow-none">
+          <Card className="mb-4 border bg-default-50 shadow-none">
             <CardBody className="gap-2">
               <div className="flex items-center justify-between">
                 <Switch

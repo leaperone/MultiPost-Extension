@@ -351,7 +351,7 @@ export default function PodcastPage() {
     <>
       {currentStep === 1 ? (
         <div className="flex flex-col gap-2">
-          <Card className="h-fit bg-default-50 shadow-none">
+          <Card className="h-fit border bg-default-50 shadow-none">
             <CardHeader>
               <Input
                 isClearable
@@ -414,7 +414,7 @@ export default function PodcastPage() {
           </Card>
 
           {audio && (
-            <Card className="my-2 bg-default-50 shadow-none">
+            <Card className="my-2 border bg-default-50 shadow-none">
               <CardBody>
                 <AudioPlayer
                   url={audio.url}
@@ -433,7 +433,7 @@ export default function PodcastPage() {
         </div>
       ) : (
         <>
-          <Card className="mb-4 bg-default-50 shadow-none">
+          <Card className="mb-4 border bg-default-50 shadow-none">
             <CardBody className="gap-2">
               <div className="flex items-center justify-between">
                 {selectedPlatforms.length > 0 && (

@@ -83,7 +83,7 @@ export function ActivityAlert() {
                     <ArrowRightIcon />
                   </Button>
                 }
-                className="group cursor-pointer transition-all hover:scale-[1.01]">
+                className="group cursor-pointer transition-all">
                 <div className="flex flex-col gap-1">
                   <span className="text-sm font-medium">{alert.title}</span>
                   <span className="text-sm">{alert.description}</span>
