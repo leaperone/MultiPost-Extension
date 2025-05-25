@@ -1,9 +1,11 @@
 ---
 description: typescript
-globs: *.tsx, *.js, *.ts
+globs: *.tsx
 alwaysApply: false
 ---
 TypeScript Development Guidelines:
+
+- Don't `npm run build` or `pnpm build` for testing
 
 Code Style:
 - Use TypeScript for all code; prefer interfaces over types

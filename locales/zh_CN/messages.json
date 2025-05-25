@@ -984,5 +984,16 @@
   },
   "errorCloseAllTabs": {
     "message": "关闭所有标签页失败: $1"
+  },
+  "contactUsIfProblem": {
+    "message": "如果遇到任何问题，请"
+  },
+  "publishAutoClose": {
+    "message": "自动关闭",
+    "description": "发布页面自动关闭开关文本"
+  },
+  "publishAutoCloseCountdown": {
+    "message": "$1 秒后自动关闭",
+    "description": "发布页面自动关闭倒计时文本"
   }
 }
