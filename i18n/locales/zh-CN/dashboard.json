@@ -52,6 +52,11 @@
     "description": "查看最新的活动，领取高达 $10 的免费余额！",
     "alerts": [
       {
+        "title": "加入社群，联系我们 ",
+        "description": "获取最新的资讯和更新消息，或者反馈问题",
+        "href": "https://docs.multipost.app/docs/user-guide/contact-us"
+      },
+      {
         "title": "余额奖励活动",
         "description": "查看最新的活动，领取高达 $10 的免费余额！",
         "href": "/activity"
@@ -63,7 +68,7 @@
       },
       {
         "title": "自动化、自媒体工作流 ",
-        "description": "查看我们的开发文档 ",
+        "description": "查看我们的开发文档",
         "href": "https://docs.multipost.app"
       }
     ]

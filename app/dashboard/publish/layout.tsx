@@ -26,10 +26,11 @@ export default function PublishLayout({ children }: { children: React.ReactNode 
       funcGetPermission().then(() => {});
       return;
     });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   return (
-    <div className="mx-auto h-full max-w-4xl space-y-6 overflow-y-auto p-4 scrollbar-hide">
+    <div className="mx-auto h-full max-w-3xl space-y-6 overflow-y-auto p-4 scrollbar-hide">
       {process.env.NODE_ENV !== 'development' && <ForceInstallExtension />}
 
       <Tabs
