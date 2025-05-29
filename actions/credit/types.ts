@@ -6,6 +6,7 @@ export enum RechargeType {
   ADMIN = 'admin',
   PROMOTION = 'promotion',
   SIGNUP = 'signup',
+  GITHUB_SIGNUP = 'github_signup',
 }
 
 export enum RechargeStatus {

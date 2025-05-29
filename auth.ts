@@ -81,5 +81,23 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
 
       await addCredit(user.id, new Decimal(0.5), true);
     },
+    async signIn({ user, account, isNewUser }) {
+      if (!user.id) {
+        return;
+      }
+      // 如果是Github注册，则赠送1Credit
+      if (account?.provider === 'github' && isNewUser) {
+        await prisma.rechargeCredit.create({
+          data: {
+            userId: user.id,
+            amount: new Decimal(1),
+            orderId: `MP-${nanoid(32)}`,
+            type: RechargeType.GITHUB_SIGNUP,
+            status: RechargeStatus.SUCCESS,
+          },
+        });
+        await addCredit(user.id, new Decimal(1), true);
+      }
+    },
   },
 });
