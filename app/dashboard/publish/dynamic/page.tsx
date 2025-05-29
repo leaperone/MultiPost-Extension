@@ -29,6 +29,8 @@ import {
   addToast,
   Accordion,
   AccordionItem,
+  Chip,
+  Tooltip,
 } from '@heroui/react';
 import {
   XIcon,
@@ -40,6 +42,7 @@ import {
   SendHorizontal,
   Eraser,
   GripVerticalIcon,
+  SigmaIcon,
 } from 'lucide-react';
 import dynamic from 'next/dynamic';
 import React, { useState, useEffect } from 'react';
@@ -368,8 +371,8 @@ export default function DynamicPage() {
 
             <CardFooter>
               <div className="flex w-full flex-col gap-4">
-                <div className="flex items-center justify-between">
-                  <div className="flex gap-2">
+                <div className="flex items-center justify-between gap-2">
+                  <div className="flex items-center gap-2">
                     <LibraryModal
                       onSelectImage={async (fileData) => {
                         setImages((prev) => [...prev, fileData]);
@@ -380,6 +383,23 @@ export default function DynamicPage() {
                       onImageGenerated={handleAiImageGenerated}
                       initialPromptBasis={{ title, content }}
                     />
+                    {(title.length > 0 || content.length > 0) && (
+                      <Tooltip content={`Total: ${title.length + content.length}`}>
+                        <Chip
+                          color="primary"
+                          variant="flat"
+                          size="lg"
+                          radius="sm"
+                          startContent={<SigmaIcon className="size-5" />}
+                          className="flex w-fit flex-row items-center gap-1">
+                          <p className="text-sm text-default-500">
+                            {title.length > 0 && content.length === 0 && title.length}
+                            {content.length > 0 && title.length === 0 && content.length}
+                            {title.length > 0 && content.length > 0 && `${title.length} + ${content.length}`}
+                          </p>
+                        </Chip>
+                      </Tooltip>
+                    )}
                   </div>
                   {(title || content || images.length > 0 || videos.length > 0) && (
                     <Button
