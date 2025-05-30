@@ -19,7 +19,7 @@
     "@mozilla/readability": "^0.5.0",
     "@plasmohq/storage": "^1.11.0",
     "lucide-react": "^0.447.0",
-    "plasmo": "0.90.3",
+    "plasmo": "0.90.5",
     "react": "18.2.0",
     "react-dom": "18.2.0",
     "react-viewer": "^3.2.2",
