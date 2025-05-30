@@ -20,6 +20,7 @@ const storage = new Storage({
 });
 const AUTO_CLOSE_KEY = 'publish-auto-close';
 const AUTO_CLOSE_DELAY_KEY = 'publish-auto-close-delay';
+const SYNC_CLOSE_TABS_KEY = 'publish-sync-close-tabs';
 const DEFAULT_AUTO_CLOSE_DELAY = 3 * 60; // 3 minutes in seconds
 
 export function getShadowContainer() {
@@ -64,10 +65,16 @@ export default function Publish() {
     }>
   >([]);
   const [autoClose, setAutoClose] = useState(true);
+  const [syncCloseTabs, setSyncCloseTabs] = useState(false);
   const [countdown, setCountdown] = useState<number>(0);
   const [autoCloseDelay, setAutoCloseDelay] = useState<number>(DEFAULT_AUTO_CLOSE_DELAY);
   const autoCloseTimerRef = useRef<number>();
   const countdownTimerRef = useRef<number>();
+  const sysnCloseTabsRef = useRef<boolean>(false);
+  const publishedTabsRef = useRef<Array<{
+    tab: chrome.tabs.Tab;
+    platformInfo: SyncDataPlatform;
+  }>>([]);
 
   async function processArticle(data: SyncData): Promise<SyncData> {
     setNotice(chrome.i18n.getMessage('processingContent'));
@@ -262,6 +269,7 @@ export default function Publish() {
 
       // 更新本地状态
       setPublishedTabs((prev) => prev.map((item) => (item.tab.id === tabId ? { ...item, tab: updatedTab } : item)));
+      publishedTabsRef.current = publishedTabsRef.current.map((t) => (t.tab.id === tabId ? { ...t, tab: updatedTab } : t));
     } catch (error) {
       console.error('重新加载标签页失败:', error);
       setErrors((prev) => [...prev, chrome.i18n.getMessage('errorReloadTab', [error.message || '未知错误'])]);
@@ -286,6 +294,7 @@ export default function Publish() {
         throw new Error(chrome.runtime.lastError.message);
       }
       setPublishedTabs((prev) => prev.filter((t) => t.tab.id !== tabId));
+      publishedTabsRef.current = publishedTabsRef.current.filter((t) => t.tab.id !== tabId);
     } catch (error) {
       console.error('关闭标签页失败:', error);
       setErrors((prev) => [...prev, chrome.i18n.getMessage('errorCloseTab', [error.message || '未知错误'])]);
@@ -294,11 +303,12 @@ export default function Publish() {
 
   const handleCloseAllTabs = async () => {
     try {
-      const tabIds = publishedTabs.map((tab) => tab.tab.id).filter((id): id is number => id !== undefined);
+      const tabIds = publishedTabsRef.current.map((tab) => tab.tab.id).filter((id): id is number => id !== undefined);
       if (tabIds.length > 0) {
         await chrome.tabs.remove(tabIds);
       }
       setPublishedTabs([]);
+      publishedTabsRef.current = [];
     } catch (error) {
       console.error('关闭所有标签页失败:', error);
       setErrors((prev) => [...prev, chrome.i18n.getMessage('errorCloseAllTabs', [error.message || '未知错误'])]);
@@ -383,17 +393,28 @@ export default function Publish() {
 
     // 自动关闭定时器
     autoCloseTimerRef.current = window.setTimeout(async () => {
-      await handleCloseAllTabs();
+      if (sysnCloseTabsRef.current) {
+        await handleCloseAllTabs();
+      }
       window.close();
     }, delay * 1000);
   };
 
   const handleTabUpdated = (tabId: number, changeInfo: chrome.tabs.TabChangeInfo, tab: chrome.tabs.Tab) => {
     setPublishedTabs((prev) => prev.map((item) => (item.tab.id === tabId ? { ...item, tab } : item)));
+    publishedTabsRef.current = publishedTabsRef.current.map((t) => (t.tab.id === tabId ? { ...t, tab } : t));
   };
 
   const handleTabRemoved = (tabId: number) => {
     setPublishedTabs((prev) => prev.filter((tab) => tab.tab.id !== tabId));
+    publishedTabsRef.current = publishedTabsRef.current.filter((t) => t.tab.id !== tabId);
+  };
+
+  const handleSyncCloseTabsChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const checked = event.target.checked;
+    setSyncCloseTabs(checked);
+    sysnCloseTabsRef.current = checked;
+    await storage.set(SYNC_CLOSE_TABS_KEY, String(checked));
   };
 
   // 组件卸载时清除定时器
@@ -410,22 +431,35 @@ export default function Publish() {
 
   // 初始化自动关闭设置并启动倒计时
   useEffect(() => {
-    Promise.all([storage.get(AUTO_CLOSE_KEY), storage.get(AUTO_CLOSE_DELAY_KEY)]).then(
-      ([autoCloseValue, delayValue]) => {
-        const shouldAutoClose = autoCloseValue === undefined ? true : autoCloseValue === 'true';
-        const delaySeconds = delayValue === undefined ? DEFAULT_AUTO_CLOSE_DELAY : parseInt(delayValue);
+    Promise.all([
+      storage.get(AUTO_CLOSE_KEY),
+      storage.get(AUTO_CLOSE_DELAY_KEY),
+      storage.get(SYNC_CLOSE_TABS_KEY),
+    ]).then(([autoCloseValue, delayValue, syncCloseTabsValue]) => {
+      const shouldAutoClose = autoCloseValue === undefined ? true : autoCloseValue === 'true';
+      const delaySeconds = delayValue === undefined ? DEFAULT_AUTO_CLOSE_DELAY : parseInt(delayValue);
+      const shouldSyncCloseTabs = syncCloseTabsValue === undefined ? false : syncCloseTabsValue === 'true';
 
-        console.log('初始化 autoClose:', shouldAutoClose, '延迟时间:', delaySeconds, '秒');
-        setAutoClose(shouldAutoClose);
-        setAutoCloseDelay(delaySeconds);
+      console.log(
+        '初始化 autoClose:',
+        shouldAutoClose,
+        '延迟时间:',
+        delaySeconds,
+        '秒',
+        'syncCloseTabs:',
+        shouldSyncCloseTabs,
+      );
+      setAutoClose(shouldAutoClose);
+      setAutoCloseDelay(delaySeconds);
+      setSyncCloseTabs(shouldSyncCloseTabs);
+      sysnCloseTabsRef.current = shouldSyncCloseTabs;
 
-        // 如果启用自动关闭，立即启动倒计时，传入从存储读取的延迟时间
-        if (shouldAutoClose) {
-          console.log('页面加载时启动自动关闭定时器，使用延迟时间:', delaySeconds, '秒');
-          startAutoCloseTimer(delaySeconds);
-        }
-      },
-    );
+      // 如果启用自动关闭，立即启动倒计时，传入从存储读取的延迟时间
+      if (shouldAutoClose) {
+        console.log('页面加载时启动自动关闭定时器，使用延迟时间:', delaySeconds, '秒');
+        startAutoCloseTimer(delaySeconds);
+      }
+    });
   }, []);
 
   // 发布完成后的处理逻辑
@@ -456,6 +490,7 @@ export default function Publish() {
         }),
       );
       setPublishedTabs(updatedTabs);
+      publishedTabsRef.current = updatedTabs;
     }
 
     // 发布完成，倒计时已经在页面加载时启动
@@ -518,8 +553,8 @@ export default function Publish() {
 
   return (
     <HeroUIProvider>
-      <div className="flex flex-col justify-center items-center p-4 min-h-screen bg-background">
-        <div className="space-y-4 w-full max-w-md">
+      <div className="flex flex-col items-center justify-center min-h-screen p-4 bg-background">
+        <div className="w-full max-w-md space-y-4">
           <h2 className="text-xl font-semibold text-center text-foreground">{chrome.i18n.getMessage('publishing')}</h2>
           {title && <p className="text-sm text-center truncate text-muted-foreground">{title}</p>}
           <Progress
@@ -556,7 +591,7 @@ export default function Publish() {
                     <ul className="space-y-2">
                       <li
                         key={tab.tab.id}
-                        className="flex relative items-center">
+                        className="relative flex items-center">
                         <Button
                           isIconOnly
                           size="sm"
@@ -567,14 +602,14 @@ export default function Publish() {
                           <RefreshCw className="w-4 h-4" />
                         </Button>
                         <Button
-                          className="justify-start pr-10 pl-2 text-left grow"
+                          className="justify-start pl-2 pr-10 text-left grow"
                           onPress={() => handleTabClick(tab.tab.id)}
                           onMouseDown={(e) => handleTabMiddleClick(e, tab.tab.id)}>
                           {tab.tab.favIconUrl && (
                             <img
                               src={tab.tab.favIconUrl}
                               alt=""
-                              className="mr-2 w-4 h-4 shrink-0"
+                              className="w-4 h-4 mr-2 shrink-0"
                               onError={(e) => (e.currentTarget.style.display = 'none')}
                             />
                           )}
@@ -585,7 +620,7 @@ export default function Publish() {
                           size="sm"
                           color="danger"
                           variant="light"
-                          className="absolute right-2 top-1/2 -translate-y-1/2"
+                          className="absolute -translate-y-1/2 right-2 top-1/2"
                           onPress={() => handleCloseTab(tab.tab.id)}
                           aria-label={chrome.i18n.getMessage('sidepanelCloseTab')}>
                           <X className="w-4 h-4" />
@@ -597,9 +632,9 @@ export default function Publish() {
               })}
           </div>
           {/* 自动关闭设置和倒计时 */}
-          <div className="px-3 py-2 bg-gray-50 rounded-lg">
-            <div className="flex justify-between items-center">
-              <div className="flex gap-2 items-center">
+          <div className="px-3 py-2 space-y-3 rounded-lg bg-gray-50">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
                 <Tooltip
                   content="You can set a suitable delay for different social media platforms when automating"
                   placement="top"
@@ -613,7 +648,7 @@ export default function Publish() {
                   </Switch>
                 </Tooltip>
                 {autoClose && (
-                  <div className="flex gap-1 items-center ml-2">
+                  <div className="flex items-center gap-1 ml-2">
                     <NumberInput
                       hideStepper
                       size="sm"
@@ -638,10 +673,28 @@ export default function Publish() {
                 </div>
               )}
             </div>
+
+            {/* 同步关闭标签页设置 - 只在启用自动关闭时显示 */}
+            {autoClose && (
+              <div className="flex items-center">
+                <Tooltip
+                  content="When enabled, closing the publish window will also close all opened platform tabs"
+                  placement="top"
+                  className="max-w-xs">
+                  <Switch
+                    isSelected={syncCloseTabs}
+                    onChange={handleSyncCloseTabsChange}
+                    size="sm"
+                    className="data-[state=checked]:bg-primary-600 cursor-help">
+                    <span className="text-sm text-gray-700">同步关闭标签页</span>
+                  </Switch>
+                </Tooltip>
+              </div>
+            )}
           </div>
 
           {!isProcessing && (
-            <div className="flex gap-2 justify-center mt-4">
+            <div className="flex justify-center gap-2 mt-4">
               <Button
                 color="primary"
                 variant="solid"
