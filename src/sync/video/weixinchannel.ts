@@ -1,44 +1,153 @@
+/**
+ * @file 微信视频号发布同步功能
+ * @description 处理视频同步发布到微信视频号，支持wujie微前端框架的shadow DOM环境
+ * @author Chrome Extension Team
+ * @date 2024-01-01
+ */
+
 import type { SyncData, VideoData } from '../common';
 
+/**
+ * 微信视频号视频发布处理函数
+ * @description 自动化填写视频标题、描述、标签，上传视频文件，处理原创声明和发布操作
+ * @param data - 同步数据，包含视频信息和发布配置
+ * @throws {Error} 当查找关键元素失败或发布过程出错时抛出错误
+ */
 export async function VideoWeiXinChannel(data: SyncData) {
+  /**
+   * 等待元素出现，支持Shadow DOM查询
+   * @param selector - CSS选择器
+   * @param timeout - 超时时间（毫秒）
+   * @returns Promise<Element> 找到的元素
+   */
   function waitForElement(selector: string, timeout = 10000): Promise<Element> {
     return new Promise((resolve, reject) => {
-      const element = document.querySelector(selector);
+      /**
+       * 在指定根节点下查找元素，支持Shadow DOM
+       * @param root - 根节点
+       * @returns Element | null 找到的元素或null
+       */
+      function findElementInRoot(root: Document | DocumentFragment | ShadowRoot): Element | null {
+        // 先在当前根节点下查找
+        const element = root.querySelector(selector);
+        if (element) return element;
+
+        // 查找所有可能包含shadow-root的元素
+        const allElements = root.querySelectorAll('*');
+        for (const el of allElements) {
+          if (el.shadowRoot) {
+            const found = findElementInRoot(el.shadowRoot);
+            if (found) return found;
+          }
+        }
+
+        return null;
+      }
+
+      /**
+       * 查找wujie-app的shadow-root并在其中搜索元素
+       * @returns Element | null 找到的元素或null
+       */
+      function findInWujieApp(): Element | null {
+        // 查找wujie-app元素
+        const wujieApp = document.querySelector('wujie-app');
+
+        if (wujieApp && wujieApp.shadowRoot) {
+          const element = wujieApp.shadowRoot.querySelector(selector);
+
+          if (element) {
+            return element;
+          }
+
+          // 如果直接查找失败，尝试递归查找
+          return findElementInRoot(wujieApp.shadowRoot);
+        }
+
+        // 如果没有找到wujie-app，尝试在整个文档中查找
+        return findElementInRoot(document);
+      }
+
+      // 首次查找
+      const element = findInWujieApp();
       if (element) {
         resolve(element);
         return;
       }
 
+      // 设置MutationObserver监听DOM变化
       const observer = new MutationObserver(() => {
-        const element = document.querySelector(selector);
+        const element = findInWujieApp();
         if (element) {
           resolve(element);
           observer.disconnect();
         }
       });
 
+      // 观察整个document的变化
       observer.observe(document.body, {
         childList: true,
         subtree: true,
       });
 
+      // 特别处理wujie-app的shadow-root
+      const checkWujieApp = () => {
+        const wujieApp = document.querySelector('wujie-app');
+        if (wujieApp && wujieApp.shadowRoot) {
+          const shadowObserver = new MutationObserver(() => {
+            const element = wujieApp.shadowRoot!.querySelector(selector);
+            if (element) {
+              resolve(element);
+              observer.disconnect();
+              shadowObserver.disconnect();
+            }
+          });
+
+          shadowObserver.observe(wujieApp.shadowRoot, {
+            childList: true,
+            subtree: true,
+          });
+
+          // 超时时也要断开shadow observer
+          setTimeout(() => {
+            shadowObserver.disconnect();
+          }, timeout);
+        }
+      };
+
+      // 立即检查一次
+      checkWujieApp();
+
+      // 定期重新检查wujie-app（防止wujie-app后加载）
+      const intervalCheck = setInterval(() => {
+        const element = findInWujieApp();
+        if (element) {
+          resolve(element);
+          observer.disconnect();
+          clearInterval(intervalCheck);
+        }
+      }, 1000);
+
+      // 设置超时
       setTimeout(() => {
         observer.disconnect();
+        clearInterval(intervalCheck);
         reject(new Error(`Element with selector "${selector}" not found within ${timeout}ms`));
       }, timeout);
     });
   }
 
+  /**
+   * 上传视频文件
+   * @param file - 视频文件
+   */
   async function uploadVideo(file: File): Promise<void> {
-    const fileInput = (await waitForElement(
-      'input[type="file"][accept="video/mp4,video/x-m4v,video/*"]',
-    )) as HTMLInputElement;
+    const fileInput = (await waitForElement('input[type="file"]')) as HTMLInputElement;
 
     const dataTransfer = new DataTransfer();
     dataTransfer.items.add(file);
     fileInput.files = dataTransfer.files;
 
-    // 触发必要的事件
+    // 触发文件选择变化事件
     const changeEvent = new Event('change', { bubbles: true });
     fileInput.dispatchEvent(changeEvent);
     const inputEvent = new Event('input', { bubbles: true });
@@ -61,6 +170,7 @@ export async function VideoWeiXinChannel(data: SyncData) {
       console.log('视频上传已初始化');
     }
 
+    // 等待视频上传完成
     await new Promise((resolve) => setTimeout(resolve, 5000));
 
     // 处理标题输入
@@ -124,15 +234,25 @@ export async function VideoWeiXinChannel(data: SyncData) {
       originalInput.click();
       await new Promise((resolve) => setTimeout(resolve, 1000));
 
-      const declareInput = document.querySelector(
-        'div.declare-body-wrapper input[type="checkbox"][class="ant-checkbox-input"]',
-      ) as HTMLInputElement;
+      // 在shadow-root中查找声明输入框
+      const wujieApp = document.querySelector('wujie-app');
+      let declareInput: HTMLInputElement | null = null;
+
+      if (wujieApp && wujieApp.shadowRoot) {
+        declareInput = wujieApp.shadowRoot.querySelector(
+          'div.declare-body-wrapper input[type="checkbox"][class="ant-checkbox-input"]',
+        ) as HTMLInputElement;
+      }
 
       if (declareInput) {
         declareInput.click();
         await new Promise((resolve) => setTimeout(resolve, 1000));
 
-        const buttons = document.querySelectorAll('button[type="button"]');
+        // 在shadow-root中查找声明原创按钮
+        const buttons =
+          wujieApp?.shadowRoot?.querySelectorAll('button[type="button"]') ||
+          document.querySelectorAll('button[type="button"]');
+
         for (const button of Array.from(buttons)) {
           if (button.textContent === '声明原创') {
             console.log('点击声明原创按钮');
@@ -147,9 +267,21 @@ export async function VideoWeiXinChannel(data: SyncData) {
     // 等待内容填写完成
     await new Promise((resolve) => setTimeout(resolve, 5000));
 
-    // 处理发布按钮
-    const buttons = document.querySelectorAll('button');
-    const publishButton = Array.from(buttons).find((b) => b.textContent.trim() === '发表') as HTMLButtonElement;
+    // 处理发布按钮 - 支持shadow DOM查询
+    const wujieApp = document.querySelector('wujie-app');
+    let publishButton: HTMLButtonElement | null = null;
+
+    // 优先在shadow-root中查找发布按钮
+    if (wujieApp && wujieApp.shadowRoot) {
+      const buttons = wujieApp.shadowRoot.querySelectorAll('button');
+      publishButton = Array.from(buttons).find((b) => b.textContent?.trim() === '发表') as HTMLButtonElement;
+    }
+
+    // 如果shadow-root中没找到，再在主文档中查找
+    if (!publishButton) {
+      const buttons = document.querySelectorAll('button');
+      publishButton = Array.from(buttons).find((b) => b.textContent?.trim() === '发表') as HTMLButtonElement;
+    }
 
     if (publishButton) {
       if (data.isAutoPublish) {
