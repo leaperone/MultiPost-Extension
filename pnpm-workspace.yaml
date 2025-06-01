@@ -1,3 +1,8 @@
 onlyBuiltDependencies:
   - '@heroui/shared-utils'
   - '@parcel/watcher'
+  - '@swc/core'
+  - esbuild
+  - lmdb
+  - msgpackr-extract
+  - sharp
