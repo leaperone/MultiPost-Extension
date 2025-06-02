@@ -113,7 +113,9 @@
   },
   "platforms": {
     "cn": "中国平台",
-    "international": "国际平台"
+    "international": "国际平台",
+    "popular": "热门平台",
+    "others": "其他平台"
   },
   "upload": {
     "duplicateFiles": "检测到重复文件",

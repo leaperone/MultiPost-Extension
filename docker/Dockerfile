@@ -10,7 +10,8 @@ RUN apk update --no-cache && apk add --no-cache \
     pixman-dev \
     cairo-dev \
     pango-dev \
-    pkgconfig
+    pkgconfig \
+    ffmpeg
 COPY . /app
 WORKDIR /app
 RUN wget 'https://git.io/GeoLite2-City.mmdb' -O geo/GeoLite2-City.mmdb
@@ -35,7 +36,8 @@ RUN apk update --no-cache && \
     pango \
     giflib \
     fontconfig \
-    ttf-dejavu
+    ttf-dejavu \
+    ffmpeg
 
 COPY --from=builder /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/ca-certificates.crt
 COPY --from=builder /usr/share/zoneinfo/Asia/Shanghai /usr/share/zoneinfo/Asia/Shanghai

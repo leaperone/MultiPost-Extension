@@ -113,7 +113,9 @@
   },
   "platforms": {
     "cn": "Chinese Platforms",
-    "international": "International Platforms"
+    "international": "International Platforms",
+    "popular": "Popular Platforms",
+    "others": "Other Platforms"
   },
   "upload": {
     "duplicateFiles": "Duplicate Files Detected",

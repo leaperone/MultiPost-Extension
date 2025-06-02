@@ -338,6 +338,27 @@ export default function DynamicPage() {
     setImages((prevImages) => [...prevImages, newImage]);
   };
 
+  // Define popular platforms for each region
+  const popularPlatformNames = {
+    CN: ['DYNAMIC_WEIBO', 'DYNAMIC_WEIXIN', 'DYNAMIC_DOUYIN', 'DYNAMIC_REDNOTE', 'DYNAMIC_BILIBILI'],
+    International: ['DYNAMIC_X', 'DYNAMIC_FACEBOOK', 'DYNAMIC_INSTAGRAM', 'DYNAMIC_LINKEDIN'],
+  };
+
+  const getPopularPlatforms = (region: 'CN' | 'International') => {
+    return platforms.filter(
+      (platform) => platform.tags?.includes(region) && popularPlatformNames[region].includes(platform.name),
+    );
+  };
+
+  const getOtherPlatforms = (region: 'CN' | 'International') => {
+    const popularPlatforms = getPopularPlatforms(region);
+    const popularPlatformIds = popularPlatforms.map((p) => p.name);
+
+    return platforms.filter(
+      (platform) => platform.tags?.includes(region) && !popularPlatformIds.includes(platform.name),
+    );
+  };
+
   return (
     <>
       {currentStep === 1 ? (
@@ -520,12 +541,12 @@ export default function DynamicPage() {
                 <AccordionItem
                   key="CN"
                   title={t('platforms.cn')}
-                  subtitle={`${
+                  subtitle={`${t('platforms.popular')}: ${
                     selectedPlatforms.filter((platform) => {
-                      const info = platforms.find((p) => p.name === platform);
-                      return info?.tags?.includes('CN');
+                      const info = getPopularPlatforms('CN').find((p) => p.name === platform);
+                      return info;
                     }).length
-                  }/${platforms.filter((platform) => platform.tags?.includes('CN')).length}`}
+                  }/${getPopularPlatforms('CN').length}`}
                   startContent={
                     <div className="w-8">
                       <Icon
@@ -536,29 +557,57 @@ export default function DynamicPage() {
                   }
                   className="py-1">
                   <div className="grid grid-cols-2 gap-2">
-                    {platforms
-                      .filter((platform) => platform.tags?.includes('CN'))
-                      .map((platform) => (
-                        <PlatformCheckbox
-                          key={platform.name}
-                          platformInfo={platform}
-                          isSelected={selectedPlatforms.includes(platform.name)}
-                          onChange={(_, isSelected) => handlePlatformChange(platform.name, isSelected)}
-                          isDisabled={false}
-                          onExtraConfigChange={handleExtraConfigChange}
-                        />
-                      ))}
+                    {getPopularPlatforms('CN').map((platform) => (
+                      <PlatformCheckbox
+                        key={platform.name}
+                        platformInfo={platform}
+                        isSelected={selectedPlatforms.includes(platform.name)}
+                        onChange={(_, isSelected) => handlePlatformChange(platform.name, isSelected)}
+                        isDisabled={false}
+                        onExtraConfigChange={handleExtraConfigChange}
+                      />
+                    ))}
                   </div>
+                  {getOtherPlatforms('CN').length > 0 && (
+                    <Accordion
+                      isCompact
+                      variant="light"
+                      className="mt-2">
+                      <AccordionItem
+                        key="CN-Others"
+                        title={t('platforms.others')}
+                        subtitle={`${
+                          selectedPlatforms.filter((platform) => {
+                            const info = getOtherPlatforms('CN').find((p) => p.name === platform);
+                            return info;
+                          }).length
+                        }/${getOtherPlatforms('CN').length}`}
+                        className="py-1">
+                        <div className="grid grid-cols-2 gap-2">
+                          {getOtherPlatforms('CN').map((platform) => (
+                            <PlatformCheckbox
+                              key={platform.name}
+                              platformInfo={platform}
+                              isSelected={selectedPlatforms.includes(platform.name)}
+                              onChange={(_, isSelected) => handlePlatformChange(platform.name, isSelected)}
+                              isDisabled={false}
+                              onExtraConfigChange={handleExtraConfigChange}
+                            />
+                          ))}
+                        </div>
+                      </AccordionItem>
+                    </Accordion>
+                  )}
                 </AccordionItem>
                 <AccordionItem
                   key="International"
                   title={t('platforms.international')}
-                  subtitle={`${
+                  subtitle={`${t('platforms.popular')}: ${
                     selectedPlatforms.filter((platform) => {
-                      const info = platforms.find((p) => p.name === platform);
-                      return info?.tags?.includes('International');
+                      const info = getPopularPlatforms('International').find((p) => p.name === platform);
+                      return info;
                     }).length
-                  }/${platforms.filter((platform) => platform.tags?.includes('International')).length}`}
+                  }/${getPopularPlatforms('International').length}`}
                   startContent={
                     <div className="w-8">
                       <Icon
@@ -569,19 +618,47 @@ export default function DynamicPage() {
                   }
                   className="py-1">
                   <div className="grid grid-cols-2 gap-2">
-                    {platforms
-                      .filter((platform) => platform.tags?.includes('International'))
-                      .map((platform) => (
-                        <PlatformCheckbox
-                          key={platform.name}
-                          platformInfo={platform}
-                          isSelected={selectedPlatforms.includes(platform.name)}
-                          onChange={(_, isSelected) => handlePlatformChange(platform.name, isSelected)}
-                          isDisabled={false}
-                          onExtraConfigChange={handleExtraConfigChange}
-                        />
-                      ))}
+                    {getPopularPlatforms('International').map((platform) => (
+                      <PlatformCheckbox
+                        key={platform.name}
+                        platformInfo={platform}
+                        isSelected={selectedPlatforms.includes(platform.name)}
+                        onChange={(_, isSelected) => handlePlatformChange(platform.name, isSelected)}
+                        isDisabled={false}
+                        onExtraConfigChange={handleExtraConfigChange}
+                      />
+                    ))}
                   </div>
+                  {getOtherPlatforms('International').length > 0 && (
+                    <Accordion
+                      isCompact
+                      variant="light"
+                      className="mt-2">
+                      <AccordionItem
+                        key="International-Others"
+                        title={t('platforms.others')}
+                        subtitle={`${
+                          selectedPlatforms.filter((platform) => {
+                            const info = getOtherPlatforms('International').find((p) => p.name === platform);
+                            return info;
+                          }).length
+                        }/${getOtherPlatforms('International').length}`}
+                        className="py-1">
+                        <div className="grid grid-cols-2 gap-2">
+                          {getOtherPlatforms('International').map((platform) => (
+                            <PlatformCheckbox
+                              key={platform.name}
+                              platformInfo={platform}
+                              isSelected={selectedPlatforms.includes(platform.name)}
+                              onChange={(_, isSelected) => handlePlatformChange(platform.name, isSelected)}
+                              isDisabled={false}
+                              onExtraConfigChange={handleExtraConfigChange}
+                            />
+                          ))}
+                        </div>
+                      </AccordionItem>
+                    </Accordion>
+                  )}
                 </AccordionItem>
               </Accordion>
             </CardBody>

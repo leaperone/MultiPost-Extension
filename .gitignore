@@ -54,3 +54,6 @@ public/tracker/
 .devcontainer/.env.dev
 
 worker/dist
+
+# temporary audio files
+temp/
