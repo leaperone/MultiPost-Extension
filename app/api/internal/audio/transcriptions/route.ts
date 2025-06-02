@@ -12,9 +12,9 @@ export async function POST(request: NextRequest) {
       return unauthenticatedResponse();
     }
 
-    const { duration } = await request.json();
+    const data = await request.json();
 
-    const durationSeconds = Number(duration);
+    const durationSeconds = Number(data.duration);
 
     const result = await deductCredit({
       userId,
@@ -26,7 +26,7 @@ export async function POST(request: NextRequest) {
       return errorResponse('Insufficient credits');
     }
 
-    return successResponse(null, result.usage);
+    return successResponse(data, result.usage);
   } catch (error) {
     return errorResponse(error);
   }
