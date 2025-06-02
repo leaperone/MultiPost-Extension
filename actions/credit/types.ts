@@ -34,6 +34,7 @@ export const PRICING = {
   IMAGE_GENERATION: new Decimal(0.004), // per image
   POSTER_GENERATION: new Decimal(0.004 * 10), // per image
   FILE_HOSTING: new Decimal(0.04), // 1GB Transfer
+  AUDIO_TRANSCRIPTION: new Decimal(0.000017 * 2), // per second
 } as const;
 
 // 使用类型
@@ -49,6 +50,7 @@ export const USAGE_TYPE_MAP = {
   POSTER_GENERATION: 'poster_generation',
   FILE_HOSTING: 'file_hosting',
   MINIMUM_CONSUMPTION_ADJUSTMENT: 'minimum_consumption_adjustment',
+  AUDIO_TRANSCRIPTION: 'audio_transcription',
 } as const;
 
 export type UsageType = keyof typeof USAGE_TYPE_MAP;
