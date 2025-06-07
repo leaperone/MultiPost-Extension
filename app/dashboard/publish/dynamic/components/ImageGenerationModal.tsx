@@ -352,7 +352,7 @@ export function ImageGenerationModal({ onImageGenerated, initialPromptBasis }: I
           isLoading={loading}
           fullWidth
           onPress={handleGenerate}
-          startContent={!loading && <ImageIcon className="size-5" />}>
+          startContent={!loading && <ImageIcon />}>
           {loading
             ? tImage('generation_page.button.generating', 'Generating...')
             : tImage('generation_page.button.generate', 'Generate')}
@@ -366,7 +366,7 @@ export function ImageGenerationModal({ onImageGenerated, initialPromptBasis }: I
       <Button
         color="secondary"
         variant="flat"
-        startContent={<PaletteIcon />}
+        startContent={<PaletteIcon className="size-5" />}
         onPress={openModal}>
         {t('dynamic.buttons.aiGenerateImage')}
       </Button>
