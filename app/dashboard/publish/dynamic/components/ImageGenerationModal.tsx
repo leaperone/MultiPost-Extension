@@ -352,7 +352,7 @@ export function ImageGenerationModal({ onImageGenerated, initialPromptBasis }: I
           isLoading={loading}
           fullWidth
           onPress={handleGenerate}
-          startContent={!loading && <ImageIcon />}>
+          startContent={!loading && <ImageIcon className="size-5" />}>
           {loading
             ? tImage('generation_page.button.generating', 'Generating...')
             : tImage('generation_page.button.generate', 'Generate')}

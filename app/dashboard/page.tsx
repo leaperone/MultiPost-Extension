@@ -1,10 +1,18 @@
 import { Button, Link, Skeleton, Card, CardBody } from '@heroui/react';
 import { Suspense } from 'react';
-import { Icon } from '@iconify/react';
 
 import { auth } from '@/auth';
 import { createTranslation } from '@/i18n/server';
-import { SendIcon, FileTextIcon, ChartSplineIcon, ScanEyeIcon, SettingsIcon, PaletteIcon } from 'lucide-react';
+import {
+  SendIcon,
+  FileTextIcon,
+  ChartSplineIcon,
+  ScanEyeIcon,
+  SettingsIcon,
+  PaletteIcon,
+  MessageSquareIcon,
+  PuzzleIcon,
+} from 'lucide-react';
 import { ActivityAlert } from './components/ActivityAlert';
 import { BalanceButton } from './components/BalanceButton';
 
@@ -92,31 +100,20 @@ export default async function DashboardPage() {
               </Button>
               <Button
                 as={Link}
-                href="https://chromewebstore.google.com/detail/multipost/dhohkaclnjgcikfoaacfgijgjgceofih"
+                href="https://docs.multipost.app/docs/user-guide/contact-us"
                 target="_blank"
                 variant="flat"
                 color="primary"
-                startContent={
-                  <Icon
-                    icon="logos:chrome"
-                    className="size-5"
-                  />
-                }>
-                {t('welcome.chrome_store')}
+                startContent={<MessageSquareIcon className="size-5" />}>
+                {t('welcome.contact_us')}
               </Button>
               <Button
                 as={Link}
-                href="https://microsoftedge.microsoft.com/addons/detail/multipost/ckoiphiceimehjkolnfffgbmihoppgjg"
-                target="_blank"
+                href="/extension"
                 variant="flat"
                 color="secondary"
-                startContent={
-                  <Icon
-                    icon="logos:microsoft-edge"
-                    className="size-5"
-                  />
-                }>
-                {t('welcome.edge_store')}
+                startContent={<PuzzleIcon className="size-5" />}>
+                {t('welcome.extension')}
               </Button>
             </div>
           </div>

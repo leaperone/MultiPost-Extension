@@ -1,6 +1,8 @@
 {
   "welcome": {
     "title": "Welcome back, {{name}}",
+    "contact_us": "Contact Us",
+    "extension": "Browser Extension",
     "chrome_store": "Chrome Store",
     "edge_store": "Edge Store",
     "publish": {

@@ -120,5 +120,6 @@
   "upload": {
     "duplicateFiles": "检测到重复文件",
     "duplicateFilesDesc": "以下文件已存在"
-  }
+  },
+  "contactUs": "联系我们"
 }

@@ -120,5 +120,6 @@
   "upload": {
     "duplicateFiles": "Duplicate Files Detected",
     "duplicateFilesDesc": "The following files already exist"
-  }
+  },
+  "contactUs": "Contact Us"
 }

@@ -29,8 +29,8 @@ import {
   addToast,
   Accordion,
   AccordionItem,
-  Chip,
   Tooltip,
+  Link,
 } from '@heroui/react';
 import {
   XIcon,
@@ -43,6 +43,7 @@ import {
   Eraser,
   GripVerticalIcon,
   SigmaIcon,
+  MessageSquareIcon,
 } from 'lucide-react';
 import dynamic from 'next/dynamic';
 import React, { useState, useEffect } from 'react';
@@ -404,21 +405,30 @@ export default function DynamicPage() {
                       onImageGenerated={handleAiImageGenerated}
                       initialPromptBasis={{ title, content }}
                     />
+                    <Button
+                      as={Link}
+                      href="https://docs.multipost.app/docs/user-guide/contact-us"
+                      target="_blank"
+                      variant="flat"
+                      color="primary"
+                      startContent={<MessageSquareIcon className="size-5" />}>
+                      {t('contactUs')}
+                    </Button>
                     {(title.length > 0 || content.length > 0) && (
                       <Tooltip content={`Total: ${title.length + content.length}`}>
-                        <Chip
-                          color="primary"
+                        <Button
+                          disableAnimation
+                          disableRipple
+                          color="default"
                           variant="flat"
-                          size="lg"
-                          radius="sm"
                           startContent={<SigmaIcon className="size-5" />}
-                          className="flex w-fit flex-row items-center gap-1">
+                          className="flex w-fit cursor-default flex-row items-center gap-1 ">
                           <p className="text-sm text-default-500">
                             {title.length > 0 && content.length === 0 && title.length}
                             {content.length > 0 && title.length === 0 && content.length}
                             {title.length > 0 && content.length > 0 && `${title.length} + ${content.length}`}
                           </p>
-                        </Chip>
+                        </Button>
                       </Tooltip>
                     )}
                   </div>

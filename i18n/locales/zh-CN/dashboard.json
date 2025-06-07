@@ -1,6 +1,8 @@
 {
   "welcome": {
     "title": "欢迎回来，{{name}}",
+    "contact_us": "联系我们",
+    "extension": "浏览器扩展",
     "chrome_store": "Chrome 商店",
     "edge_store": "Edge 商店",
     "publish": {
