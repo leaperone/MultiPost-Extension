@@ -20,7 +20,7 @@ export default function Error({ error, reset }: { error: Error & { digest?: stri
           We&apos;re sorry, an unexpected error occurred. Please try again later or contact support if the issue
           persists.
         </p>
-        <div className="mt-6 flex flex-row gap-4">
+        <div className="mx-auto mt-6 flex w-fit flex-row gap-4">
           <Button
             as={Link}
             href="/"
