@@ -1,19 +1,8 @@
 {
-  "title": "内容发布",
-  "action": {
-    "enter": "进入"
-  },
-  "tabs": {
-    "dynamic": "动态",
-    "video": "视频",
-    "grid": "九宫格",
-    "article": "文章",
-    "podcast": "播客"
-  },
+  "contactUs": "联系我们",
   "dynamic": {
     "title": "请输入标题",
     "content": "请输入内容",
-    "description": "创建并同步发布动态内容到多个社交媒体平台",
     "autoPublish": "自动发布",
     "clearAll": "清空",
     "tips": {
@@ -31,9 +20,7 @@
   "podcast": {
     "title": "请输入播客标题",
     "description": "请输入播客描述",
-    "autoPublish": "自动发布",
-    "clearAll": "清空",
-    "uploadAudio": "上传音频文件"
+    "clearAll": "清空"
   },
   "video": {
     "title": "请输入标题",
@@ -41,16 +28,12 @@
     "tags": "请输入标签，用回车或逗号分隔"
   },
   "grid": {
-    "description": "为社交媒体创建精美的照片九宫格",
     "uploadImage": "点击或拖拽上传图片",
     "preview": "原图预览",
     "result": "九宫格预览",
     "generate": "生成九宫格",
     "trimEdges": "修剪边缘（避免错位）",
     "download": "下载九宫格"
-  },
-  "article": {
-    "description": "使用 Markdown 编写和编辑专业文章"
   },
   "validation": {
     "contentRequired": "内容不能为空",
@@ -65,8 +48,7 @@
       "title": "扩展客户端",
       "description": "管理已连接的浏览器扩展客户端",
       "alert": "请保持浏览器打开以确保客户端正常工作。关闭浏览器后，客户端将无法继续工作。",
-      "empty": "暂无已连接的客户端",
-      "last_seen": "{{time}}在线"
+      "empty": "暂无已连接的客户端"
     },
     "link_button": {
       "button": "连接扩展",
@@ -76,7 +58,6 @@
         "notes": {
           "credential": "API Key 是连接扩展的唯一凭证",
           "delete": "请不要随意删除已连接扩展的 API Key",
-          "manage": "您可以在 {{link}} 查看所有的 API Key",
           "manage_link": "API Keys 管理页面"
         },
         "buttons": {
@@ -121,5 +102,67 @@
     "duplicateFiles": "检测到重复文件",
     "duplicateFilesDesc": "以下文件已存在"
   },
-  "contactUs": "联系我们"
+  "modal": {
+    "add": "添加",
+    "cancel": "取消",
+    "config": "配置",
+    "save": "保存",
+    "test": "测试"
+  },
+  "okjike": {
+    "inputPlaceholder": "请输入内容"
+  },
+  "webhook": {
+    "description": "Webhook 描述",
+    "urlPlaceholder": "请输入 Webhook URL",
+    "platforms": {
+      "dingtalk": "钉钉",
+      "feishu": "飞书",
+      "wecom": "企业微信"
+    },
+    "testSuccess": {
+      "title": "测试成功",
+      "description": "Webhook 测试成功"
+    },
+    "testFailed": {
+      "title": "测试失败",
+      "description": "Webhook 测试失败"
+    },
+    "invalidUrl": {
+      "title": "无效的 URL",
+      "description": "请输入有效的 Webhook URL"
+    },
+    "unsupportedPlatform": "不支持的平台"
+  },
+  "wordpress": {
+    "urlPlaceholder": "请输入 WordPress URL"
+  },
+  "zsxq": {
+    "button": {
+      "default": "选择知识星球"
+    },
+    "modal": {
+      "title": "知识星球配置",
+      "groupName": {
+        "label": "星球名称",
+        "placeholder": "请输入星球名称",
+        "error": "请输入星球名称"
+      },
+      "groupUrl": {
+        "label": "星球链接",
+        "placeholder": "请输入星球链接",
+        "error": "请输入有效的星球链接"
+      },
+      "addButton": "添加星球",
+      "addedGroups": "已添加的星球",
+      "select": "选择",
+      "selected": "已选择",
+      "noGroups": "暂无星球"
+    },
+    "toast": {
+      "addSuccess": {
+        "title": "添加成功"
+      }
+    }
+  }
 }

@@ -1,126 +1,264 @@
 'use client';
 
+export interface FileData {
+  name: string;
+  type: string;
+  size: number;
+  url: string;
+  hash?: string;
+  file?: File;
+}
+
+// 为Google Analytics添加类型声明
+declare global {
+  interface Window {
+    gtag: (command: string, action: string, params: Record<string, unknown>) => void;
+  }
+}
+
 import {
   Pin,
-  Globe,
-  Share2,
   PuzzleIcon,
   SendHorizontal,
-  ArrowLeftIcon,
-  ArrowRightIcon,
+  XIcon,
+  TrashIcon,
   BotIcon,
   HandIcon,
   Eraser,
+  GripVerticalIcon,
+  SigmaIcon,
+  MessageSquareIcon,
+  ImageIcon,
+  SparklesIcon,
+  LogInIcon,
 } from 'lucide-react';
 import { useTranslation } from '@/i18n/client';
 import {
+  Card,
+  Button,
+  Image,
   Input,
   Textarea,
-  addToast,
+  CardHeader,
+  CardBody,
+  CardFooter,
   Switch,
+  addToast,
   Accordion,
   AccordionItem,
-  Image as HeroImage,
+  Tooltip,
   Link,
-  Checkbox,
-  Button,
-  Card,
-  CardBody,
-  CardHeader,
-  CardFooter,
+  Modal,
+  ModalContent,
+  ModalHeader,
+  ModalBody,
+  ModalFooter,
+  useDisclosure,
 } from '@heroui/react';
-import { useState, useEffect } from 'react';
-import { funcPublish, getPlatformInfos } from '@/lib/extension';
-import type { PlatformInfo } from '@/lib/extension';
+import dynamic from 'next/dynamic';
+import React, { useState, useEffect } from 'react';
 import { Icon } from '@iconify/react';
+import { cn } from '@/lib/utils';
+import {
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  DragEndEvent,
+} from '@dnd-kit/core';
+import {
+  arrayMove,
+  SortableContext,
+  sortableKeyboardCoordinates,
+  useSortable,
+  verticalListSortingStrategy,
+  horizontalListSortingStrategy,
+} from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
+import { useRouter } from 'next/navigation';
 
-interface SimplePlatformProps {
-  platformInfo: PlatformInfo;
-  isSelected: boolean;
-  onChange: (platform: string, isSelected: boolean) => void;
+import type { PlatformInfo } from '@/lib/extension';
+
+import { funcPublish, getPlatformInfos, requestRefreshAccountInfo } from '@/lib/extension';
+import PlatformCheckbox from '@/app/dashboard/publish/components/PlatformCheckbox';
+import { usePlatformStore } from '@/store/publish.store';
+import { getPlatformExtraConfigList } from '@/app/dashboard/publish/action';
+
+const ReactPlayer = dynamic(() => import('react-player'), {
+  ssr: false,
+  loading: () => <div>Loading player...</div>,
+});
+
+interface SortableMediaProps {
+  id: string;
+  file: FileData;
+  index: number;
+  type: 'image' | 'video';
+  onDelete: (index: number, type: 'image' | 'video') => void;
+  onImageClick?: (index: number) => void;
 }
 
-const SimplePlatform = ({ platformInfo, isSelected, onChange }: SimplePlatformProps) => {
-  const profileUrl = platformInfo.accountInfo?.profileUrl || platformInfo.homeUrl;
+const SortableMedia = ({ id, file, index, type, onDelete, onImageClick }: SortableMediaProps) => {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    zIndex: isDragging ? 1 : 0,
+    opacity: isDragging ? 0.5 : 1,
+  };
 
   return (
-    <div className="flex items-center rounded-lg p-2 transition-colors hover:bg-default-100">
-      <div className="flex flex-1 items-center gap-2">
-        <Checkbox
-          isSelected={isSelected}
-          onChange={(e) => onChange(platformInfo.name, e.target.checked)}
-          size="sm"
-        />
-
-        <div className="flex items-center gap-1.5">
-          {platformInfo.iconifyIcon ? (
-            <Icon
-              icon={platformInfo.iconifyIcon}
-              className="size-5"
-            />
-          ) : (
-            platformInfo.faviconUrl && (
-              <HeroImage
-                src={platformInfo.faviconUrl}
-                alt={platformInfo.platformName}
-                width={20}
-                height={20}
-                className="rounded-sm"
-              />
-            )
-          )}
-
-          <span className="truncate text-sm font-medium text-foreground">
-            {platformInfo.platformName || platformInfo.name}
-          </span>
-        </div>
-
-        {platformInfo.accountInfo && (
-          <div className="ml-auto flex items-center gap-1">
-            {platformInfo.accountInfo.avatarUrl && (
-              <HeroImage
-                src={platformInfo.accountInfo.avatarUrl}
-                alt={`${platformInfo.platformName} avatar`}
-                width={18}
-                height={18}
-                className="rounded-full"
-              />
-            )}
-            <Link
-              href={profileUrl}
-              isExternal
-              className="flex max-w-[80px] items-center gap-1 truncate text-xs text-default-600 hover:text-primary">
-              {platformInfo.accountInfo.username}
-            </Link>
-          </div>
-        )}
+    <div
+      ref={setNodeRef}
+      style={style}
+      className={cn('group relative', type === 'video' && 'aspect-video w-full')}>
+      <div
+        {...attributes}
+        {...listeners}
+        className="absolute left-0 top-0 z-50 m-1 cursor-grab opacity-0 transition-opacity group-hover:opacity-100">
+        <GripVerticalIcon className="size-4" />
       </div>
+      {type === 'image' ? (
+        <Image
+          src={file.url}
+          alt={file.name}
+          width={100}
+          height={100}
+          className="cursor-pointer rounded-md object-cover"
+          onClick={() => onImageClick?.(index)}
+        />
+      ) : (
+        <ReactPlayer
+          url={file.url}
+          width="100%"
+          height="100%"
+          controls
+        />
+      )}
+      <Button
+        isIconOnly
+        size="sm"
+        color="danger"
+        className={cn(
+          'absolute right-0 z-50 m-1 opacity-0 transition-opacity group-hover:opacity-100',
+          type === 'image' ? 'top-0' : 'right-2 top-2',
+        )}
+        onPress={() => onDelete(index, type)}>
+        <XIcon className="size-4" />
+      </Button>
     </div>
   );
 };
 
+const Viewer = dynamic(() => import('react-viewer'), {
+  ssr: false,
+  loading: () => <div>Loading viewer...</div>,
+});
+
 export default function OnInstallPage() {
   const { t } = useTranslation('install');
-  const [currentStep, setCurrentStep] = useState<number>(1);
+  const router = useRouter();
+  const [images, setImages] = useState<FileData[]>([]);
+  const [videos, setVideos] = useState<FileData[]>([]);
   const [title, setTitle] = useState<string>('Hello World from MultiPost');
   const [content, setContent] = useState<string>(
     'My first post via #MultiPost , post your content to multiple platforms with one click',
   );
-  const [platforms, setPlatforms] = useState<PlatformInfo[]>([]);
-  const [selectedPlatforms, setSelectedPlatforms] = useState<string[]>([]);
+  const { dynamicPlatforms, setDynamicPlatforms, clearDynamicPlatforms } = usePlatformStore();
+  const [selectedPlatforms, setSelectedPlatforms] = useState<string[]>(dynamicPlatforms);
   const [autoPublish, setAutoPublish] = useState<boolean>(true);
+  const [viewerVisible, setViewerVisible] = useState(false);
+  const [currentImage, setCurrentImage] = useState(0);
+  const [platforms, setPlatforms] = useState<PlatformInfo[]>([]);
+
+  // Login modal state
+  const { isOpen, onOpen, onOpenChange } = useDisclosure();
+
+  const sensors = useSensors(
+    useSensor(PointerSensor),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    }),
+  );
+
+  useEffect(() => {
+    if (process.env.NODE_ENV === 'development') {
+      return;
+    }
+    requestRefreshAccountInfo().then(() => {});
+  }, []);
+
+  const handleDragEnd = (event: DragEndEvent, type: 'image' | 'video') => {
+    const { active, over } = event;
+    if (!over) return;
+
+    if (active.id !== over.id) {
+      const oldIndex =
+        type === 'image'
+          ? images.findIndex((item) => `image-${item.name}` === active.id)
+          : videos.findIndex((item) => `video-${item.name}` === active.id);
+      const newIndex =
+        type === 'image'
+          ? images.findIndex((item) => `image-${item.name}` === over.id)
+          : videos.findIndex((item) => `video-${item.name}` === over.id);
+
+      if (type === 'image') {
+        setImages((items) => arrayMove(items, oldIndex, newIndex));
+      } else {
+        setVideos((items) => arrayMove(items, oldIndex, newIndex));
+      }
+    }
+  };
 
   useEffect(() => {
     async function fetchPlatforms() {
-      try {
-        const platformData = await getPlatformInfos('DYNAMIC');
+      const [platformData, extraConfigList] = await Promise.all([
+        getPlatformInfos('DYNAMIC'),
+        getPlatformExtraConfigList(),
+      ]);
+
+      if (extraConfigList.success && extraConfigList.data) {
+        const extraConfigMap = extraConfigList.data.reduce(
+          (acc: Record<string, unknown>, item: { platform: string; data: unknown }) => {
+            acc[item.platform] = item.data;
+            return acc;
+          },
+          {} as Record<string, unknown>,
+        );
+
+        const platformsWithExtra = platformData.map((platform: PlatformInfo) => ({
+          ...platform,
+          extraConfig: extraConfigMap[platform.name],
+        })) satisfies PlatformInfo[];
+
+        setPlatforms(platformsWithExtra);
+      } else {
         setPlatforms(platformData);
-      } catch (error) {
-        console.error('Error fetching platforms:', error);
       }
     }
     fetchPlatforms();
   }, []);
+
+  const handleDeleteFile = (index: number, fileType: 'image' | 'video') => {
+    if (fileType === 'image') {
+      setImages((prevImages) => prevImages.filter((_, i) => i !== index));
+    } else {
+      setVideos((prevVideos) => prevVideos.filter((_, i) => i !== index));
+    }
+  };
+
+  const handleClearAll = () => {
+    setImages([]);
+    setVideos([]);
+    setTitle('');
+    setContent('');
+    setSelectedPlatforms([]);
+    clearDynamicPlatforms();
+    setAutoPublish(false);
+  };
 
   const handlePlatformChange = (platform: string, isSelected: boolean) => {
     setSelectedPlatforms((prev) => {
@@ -129,20 +267,36 @@ export default function OnInstallPage() {
     });
   };
 
+  useEffect(() => {
+    setDynamicPlatforms(selectedPlatforms);
+  }, [selectedPlatforms, setDynamicPlatforms]);
+
   const handlePublish = async () => {
     if (!content) {
       addToast({
-        title: t('validation.contentRequired'),
+        title: 'Content is required',
         color: 'danger',
       });
       return;
     }
     if (selectedPlatforms.length === 0) {
       addToast({
-        title: t('validation.platformRequired'),
+        title: 'Please select at least one platform',
         color: 'danger',
       });
       return;
+    }
+
+    // 向Google Analytics发送自定义事件
+    if (typeof window !== 'undefined' && window.gtag) {
+      window.gtag('event', 'dynamic_publish', {
+        event_category: 'publish',
+        event_label: selectedPlatforms.join(','),
+        platform_count: selectedPlatforms.length,
+        has_images: images.length > 0,
+        has_videos: videos.length > 0,
+        auto_publish: autoPublish,
+      });
     }
 
     const data = {
@@ -150,231 +304,442 @@ export default function OnInstallPage() {
       data: {
         title,
         content,
-        images: [],
-        videos: [],
+        images,
+        videos,
       },
       isAutoPublish: autoPublish,
     };
 
     try {
       funcPublish(data);
-      addToast({
-        title: t('publish.success'),
-        color: 'success',
-      });
+      console.log('Publishing:', data);
     } catch (error) {
       console.error('Error publishing:', error);
-      addToast({
-        title: t('publish.error'),
-        color: 'danger',
-      });
+      funcPublish(data);
     }
   };
 
-  const handleNextStep = () => {
-    if (!content) {
-      addToast({
-        title: t('validation.contentRequired'),
-        color: 'danger',
-      });
-      return;
-    }
-    setCurrentStep(2);
+  const handleExtraConfigChange = (platformKey: string, extraConfig: unknown) => {
+    setPlatforms((prevPlatforms) =>
+      prevPlatforms.map((platform) => (platform.name === platformKey ? { ...platform, extraConfig } : platform)),
+    );
   };
 
-  const handlePrevStep = () => {
-    setCurrentStep(1);
+  const handleImageClick = (index: number) => {
+    setCurrentImage(index);
+    setViewerVisible(true);
+  };
+
+  // Handle login modal actions
+  const handleLibraryClick = () => {
+    onOpen();
+  };
+
+  const handleAiImageClick = () => {
+    onOpen();
+  };
+
+  const handleGoToLogin = () => {
+    router.push('/dashboard/publish/dynamic');
+  };
+
+  // Define popular platforms for each region
+  const popularPlatformNames = {
+    CN: ['DYNAMIC_WEIBO', 'DYNAMIC_WEIXIN', 'DYNAMIC_DOUYIN', 'DYNAMIC_REDNOTE', 'DYNAMIC_BILIBILI'],
+    International: ['DYNAMIC_X', 'DYNAMIC_FACEBOOK', 'DYNAMIC_INSTAGRAM', 'DYNAMIC_LINKEDIN'],
+  };
+
+  const getPopularPlatforms = (region: 'CN' | 'International') => {
+    return platforms.filter(
+      (platform) => platform.tags?.includes(region) && popularPlatformNames[region].includes(platform.name),
+    );
+  };
+
+  const getOtherPlatforms = (region: 'CN' | 'International') => {
+    const popularPlatforms = getPopularPlatforms(region);
+    const popularPlatformIds = popularPlatforms.map((p) => p.name);
+
+    return platforms.filter(
+      (platform) => platform.tags?.includes(region) && !popularPlatformIds.includes(platform.name),
+    );
   };
 
   return (
     <div className="h-full min-h-screen bg-background">
       {/* Extension Instructions */}
       <ExtensionInstructions />
-      <div className="relative z-10 mx-auto max-w-3xl space-y-8 pt-20">
-        {/* Header */}
-        <div className="space-y-4 text-center">
-          <h1 className="text-4xl font-bold tracking-tight text-foreground">{t('title')}</h1>
+
+      <div className="container mx-auto max-w-4xl space-y-6 p-6 pt-20">
+        {/* Page Title */}
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold">{t('title')}</h1>
         </div>
 
-        {/* First Post Form */}
-        <Card className="border shadow-none">
+        {/* Content Editing Section */}
+        <Card className="border bg-default-50 shadow-none">
           <CardHeader>
-            <h2 className="text-xl font-semibold text-foreground">{t('firstPost.title')}</h2>
+            <Input
+              isClearable
+              variant="underlined"
+              placeholder={t('ui.titlePlaceholder')}
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              onClear={() => setTitle('')}
+              className="w-full"
+            />
           </CardHeader>
-          {currentStep === 1 ? (
-            <div className="flex flex-col gap-2">
-              <CardBody className="gap-2">
-                <Input
-                  isClearable
-                  variant="underlined"
-                  placeholder={t('firstPost.titlePlaceholder')}
-                  value={title}
-                  onChange={(e) => setTitle(e.target.value)}
-                  onClear={() => setTitle('')}
-                />
-                <Textarea
-                  isClearable
-                  variant="underlined"
-                  placeholder={t('firstPost.contentPlaceholder')}
-                  value={content}
-                  onChange={(e) => setContent(e.target.value)}
-                  onClear={() => setContent('')}
-                  minRows={3}
-                  autoFocus
-                />
-              </CardBody>
-              <CardFooter>
-                <Button
-                  fullWidth
-                  color="primary"
-                  onPress={handleNextStep}>
-                  <ArrowRightIcon />
-                </Button>
-              </CardFooter>
-            </div>
-          ) : (
-            <>
-              <CardBody className="gap-2">
-                <div className="flex items-center justify-between">
-                  <Switch
-                    isSelected={autoPublish}
-                    onValueChange={setAutoPublish}
-                    startContent={<BotIcon className="size-4" />}
-                    endContent={<HandIcon className="size-4" />}>
-                    {t('firstPost.autoPublish')}
-                  </Switch>
-                  <div className="flex items-center">
-                    {selectedPlatforms.length > 0 && (
-                      <Button
-                        isIconOnly
-                        size="sm"
-                        variant="light"
-                        color="danger"
-                        onPress={() => setSelectedPlatforms([])}>
-                        <Eraser className="size-4" />
-                      </Button>
-                    )}
-                  </div>
-                </div>
 
-                <Accordion
-                  isCompact
-                  variant="light"
-                  selectionMode="multiple"
-                  defaultExpandedKeys={['CN', 'International']}>
-                  <AccordionItem
-                    key="CN"
-                    title={t('platforms.cn')}
-                    subtitle={`${
-                      selectedPlatforms.filter((platform) => {
-                        const info = platforms.find((p) => p.name === platform);
-                        return info?.tags?.includes('CN');
-                      }).length
-                    }/${platforms.filter((platform) => platform.tags?.includes('CN')).length}`}
-                    startContent={
-                      <div className="w-8">
-                        <Icon icon="openmoji:flag-china" />
-                      </div>
-                    }
-                    className="py-1">
-                    <div className="grid grid-cols-2 gap-2">
-                      {platforms
-                        .filter((platform) => platform.tags?.includes('CN'))
-                        .map((platform) => (
-                          <SimplePlatform
-                            key={platform.name}
-                            platformInfo={platform}
-                            isSelected={selectedPlatforms.includes(platform.name)}
-                            onChange={handlePlatformChange}
-                          />
-                        ))}
-                    </div>
-                  </AccordionItem>
-                  <AccordionItem
-                    key="International"
-                    title={t('platforms.international')}
-                    subtitle={`${
-                      selectedPlatforms.filter((platform) => {
-                        const info = platforms.find((p) => p.name === platform);
-                        return info?.tags?.includes('International');
-                      }).length
-                    }/${platforms.filter((platform) => platform.tags?.includes('International')).length}`}
-                    startContent={
-                      <div className="w-8">
-                        <Icon icon="openmoji:globe-with-meridians" />
-                      </div>
-                    }
-                    className="py-1">
-                    <div className="grid grid-cols-2 gap-2">
-                      {platforms
-                        .filter((platform) => platform.tags?.includes('International'))
-                        .map((platform) => (
-                          <SimplePlatform
-                            key={platform.name}
-                            platformInfo={platform}
-                            isSelected={selectedPlatforms.includes(platform.name)}
-                            onChange={handlePlatformChange}
-                          />
-                        ))}
-                    </div>
-                  </AccordionItem>
-                </Accordion>
-              </CardBody>
-              <CardFooter className="flex gap-2">
-                <Button
-                  aria-label="back_to_edit"
-                  onPress={handlePrevStep}>
-                  <ArrowLeftIcon />
-                </Button>
-
-                <Button
-                  aria-label="publish"
-                  fullWidth
-                  color={selectedPlatforms.length === 0 ? 'default' : 'primary'}
-                  disabled={selectedPlatforms.length === 0}
-                  onPress={handlePublish}>
-                  <SendHorizontal />
-                </Button>
-              </CardFooter>
-            </>
-          )}
-        </Card>
-
-        {/* Main Features */}
-        <Card className="border shadow-none">
           <CardBody>
-            <div className="space-y-6">
-              <div className="flex items-start gap-4">
-                <div className="rounded-lg bg-blue-500/20 p-2">
-                  <Share2 className="size-6 text-blue-400" />
-                </div>
-                <div>
-                  <h3 className="font-semibold text-foreground">{t('features.multiPlatform.title')}</h3>
-                  <p className="text-sm text-foreground/70">{t('features.multiPlatform.description')}</p>
-                </div>
-              </div>
+            <Textarea
+              isClearable
+              variant="underlined"
+              placeholder={t('ui.contentPlaceholder')}
+              value={content}
+              onChange={(e) => setContent(e.target.value)}
+              onClear={() => setContent('')}
+              fullWidth
+              minRows={5}
+              autoFocus
+            />
+          </CardBody>
 
-              <div className="flex items-start gap-4">
-                <div className="rounded-lg bg-blue-500/20 p-2">
-                  <Globe className="size-6 text-blue-400" />
+          <CardFooter>
+            <div className="flex w-full flex-col gap-4">
+              <div className="flex items-center justify-between gap-2">
+                <div className="flex items-center gap-2">
+                  {/* Library Modal Placeholder */}
+                  <Button
+                    variant="flat"
+                    color="default"
+                    startContent={<ImageIcon className="size-5" />}
+                    onPress={handleLibraryClick}>
+                    {t('ui.imageLibrary')}
+                  </Button>
+
+                  {/* AI Image Generation Placeholder */}
+                  <Button
+                    variant="flat"
+                    color="secondary"
+                    startContent={<SparklesIcon className="size-5" />}
+                    onPress={handleAiImageClick}>
+                    {t('ui.aiGenerate')}
+                  </Button>
+
+                  <Button
+                    as={Link}
+                    href="https://docs.multipost.app/docs/user-guide/contact-us"
+                    target="_blank"
+                    variant="flat"
+                    color="primary"
+                    startContent={<MessageSquareIcon className="size-5" />}>
+                    {t('ui.contactUs')}
+                  </Button>
+                  {(title.length > 0 || content.length > 0) && (
+                    <Tooltip content={`${t('ui.total')}: ${title.length + content.length}`}>
+                      <Button
+                        disableAnimation
+                        disableRipple
+                        color="default"
+                        variant="flat"
+                        startContent={<SigmaIcon className="size-5" />}
+                        className="flex w-fit cursor-default flex-row items-center gap-1 ">
+                        <p className="text-sm text-default-500">
+                          {title.length > 0 && content.length === 0 && title.length}
+                          {content.length > 0 && title.length === 0 && content.length}
+                          {title.length > 0 && content.length > 0 && `${title.length} + ${content.length}`}
+                        </p>
+                      </Button>
+                    </Tooltip>
+                  )}
                 </div>
-                <div>
-                  <h3 className="font-semibold text-foreground">{t('features.noLogin.title')}</h3>
-                  <p className="text-sm text-foreground/70">{t('features.noLogin.description')}</p>
-                </div>
+                {(title || content || images.length > 0 || videos.length > 0) && (
+                  <Button
+                    isIconOnly
+                    variant="light"
+                    color="danger"
+                    onPress={handleClearAll}
+                    title={t('ui.clearAll')}>
+                    <TrashIcon className="size-6" />
+                  </Button>
+                )}
               </div>
             </div>
-          </CardBody>
-          <CardFooter>
-            <Button
-              fullWidth
-              as={Link}
-              href="/dashboard/publish"
-              color="primary">
-              {t('accessFullVersion')}
-            </Button>
           </CardFooter>
         </Card>
+
+        {/* Images Section */}
+        {images.length > 0 && (
+          <Card className="border bg-default-50 shadow-none">
+            <CardBody>
+              <DndContext
+                sensors={sensors}
+                collisionDetection={closestCenter}
+                onDragEnd={(event) => handleDragEnd(event, 'image')}>
+                <SortableContext
+                  items={images.map((file) => `image-${file.name}`)}
+                  strategy={horizontalListSortingStrategy}>
+                  <div className="flex flex-row flex-wrap items-center justify-center gap-2">
+                    {images.map((file, index) => (
+                      <SortableMedia
+                        key={`image-${file.name}`}
+                        id={`image-${file.name}`}
+                        file={file}
+                        index={index}
+                        type="image"
+                        onDelete={handleDeleteFile}
+                        onImageClick={handleImageClick}
+                      />
+                    ))}
+                  </div>
+                </SortableContext>
+              </DndContext>
+            </CardBody>
+          </Card>
+        )}
+
+        <Viewer
+          visible={viewerVisible}
+          onClose={() => setViewerVisible(false)}
+          images={images.map((file) => ({ src: file.url, alt: file.name }))}
+          activeIndex={currentImage}
+        />
+
+        {/* Videos Section */}
+        {videos.length > 0 && (
+          <Card className="border bg-default-50 shadow-none">
+            <CardBody>
+              <DndContext
+                sensors={sensors}
+                collisionDetection={closestCenter}
+                onDragEnd={(event) => handleDragEnd(event, 'video')}>
+                <SortableContext
+                  items={videos.map((file) => `video-${file.name}`)}
+                  strategy={verticalListSortingStrategy}>
+                  <div className="flex flex-col gap-4">
+                    {videos.map((file, index) => (
+                      <SortableMedia
+                        key={`video-${file.name}`}
+                        id={`video-${file.name}`}
+                        file={file}
+                        index={index}
+                        type="video"
+                        onDelete={handleDeleteFile}
+                      />
+                    ))}
+                  </div>
+                </SortableContext>
+              </DndContext>
+            </CardBody>
+          </Card>
+        )}
+
+        {/* Platform Selection Section */}
+        <Card className="border bg-default-50 shadow-none">
+          <CardBody className="gap-2">
+            <div className="flex items-center justify-between">
+              <Switch
+                isSelected={autoPublish}
+                onValueChange={setAutoPublish}
+                startContent={<BotIcon className="size-4" />}
+                endContent={<HandIcon className="size-4" />}>
+                {t('firstPost.autoPublish')}
+              </Switch>
+              <div className="flex items-center justify-between">
+                {selectedPlatforms.length > 0 && (
+                  <Button
+                    isIconOnly
+                    size="sm"
+                    variant="light"
+                    color="danger"
+                    onPress={() => setSelectedPlatforms([])}>
+                    <Eraser className="size-4" />
+                  </Button>
+                )}
+              </div>
+            </div>
+
+            <Accordion
+              isCompact
+              variant="light"
+              selectionMode="multiple"
+              defaultExpandedKeys={['CN', 'International']}>
+              <AccordionItem
+                key="CN"
+                title={t('platforms.cn')}
+                subtitle={`${t('platforms.popular')}: ${
+                  selectedPlatforms.filter((platform) => {
+                    const info = getPopularPlatforms('CN').find((p) => p.name === platform);
+                    return info;
+                  }).length
+                }/${getPopularPlatforms('CN').length}`}
+                startContent={
+                  <div className="w-8">
+                    <Icon
+                      icon="openmoji:flag-china"
+                      className="h-max w-full"
+                    />
+                  </div>
+                }
+                className="py-1">
+                <div className="grid grid-cols-2 gap-2">
+                  {getPopularPlatforms('CN').map((platform) => (
+                    <PlatformCheckbox
+                      key={platform.name}
+                      platformInfo={platform}
+                      isSelected={selectedPlatforms.includes(platform.name)}
+                      onChange={(_: unknown, isSelected: boolean) => handlePlatformChange(platform.name, isSelected)}
+                      isDisabled={false}
+                      onExtraConfigChange={handleExtraConfigChange}
+                    />
+                  ))}
+                </div>
+                {getOtherPlatforms('CN').length > 0 && (
+                  <Accordion
+                    isCompact
+                    variant="light"
+                    className="mt-2">
+                    <AccordionItem
+                      key="CN-Others"
+                      title={t('platforms.others')}
+                      subtitle={`${
+                        selectedPlatforms.filter((platform) => {
+                          const info = getOtherPlatforms('CN').find((p) => p.name === platform);
+                          return info;
+                        }).length
+                      }/${getOtherPlatforms('CN').length}`}
+                      className="py-1">
+                      <div className="grid grid-cols-2 gap-2">
+                        {getOtherPlatforms('CN').map((platform) => (
+                          <PlatformCheckbox
+                            key={platform.name}
+                            platformInfo={platform}
+                            isSelected={selectedPlatforms.includes(platform.name)}
+                            onChange={(_: unknown, isSelected: boolean) =>
+                              handlePlatformChange(platform.name, isSelected)
+                            }
+                            isDisabled={false}
+                            onExtraConfigChange={handleExtraConfigChange}
+                          />
+                        ))}
+                      </div>
+                    </AccordionItem>
+                  </Accordion>
+                )}
+              </AccordionItem>
+              <AccordionItem
+                key="International"
+                title={t('platforms.international')}
+                subtitle={`${t('platforms.popular')}: ${
+                  selectedPlatforms.filter((platform) => {
+                    const info = getPopularPlatforms('International').find((p) => p.name === platform);
+                    return info;
+                  }).length
+                }/${getPopularPlatforms('International').length}`}
+                startContent={
+                  <div className="w-8">
+                    <Icon
+                      icon="openmoji:globe-with-meridians"
+                      className="h-max w-full"
+                    />
+                  </div>
+                }
+                className="py-1">
+                <div className="grid grid-cols-2 gap-2">
+                  {getPopularPlatforms('International').map((platform) => (
+                    <PlatformCheckbox
+                      key={platform.name}
+                      platformInfo={platform}
+                      isSelected={selectedPlatforms.includes(platform.name)}
+                      onChange={(_: unknown, isSelected: boolean) => handlePlatformChange(platform.name, isSelected)}
+                      isDisabled={false}
+                      onExtraConfigChange={handleExtraConfigChange}
+                    />
+                  ))}
+                </div>
+                {getOtherPlatforms('International').length > 0 && (
+                  <Accordion
+                    isCompact
+                    variant="light"
+                    className="mt-2">
+                    <AccordionItem
+                      key="International-Others"
+                      title={t('platforms.others')}
+                      subtitle={`${
+                        selectedPlatforms.filter((platform) => {
+                          const info = getOtherPlatforms('International').find((p) => p.name === platform);
+                          return info;
+                        }).length
+                      }/${getOtherPlatforms('International').length}`}
+                      className="py-1">
+                      <div className="grid grid-cols-2 gap-2">
+                        {getOtherPlatforms('International').map((platform) => (
+                          <PlatformCheckbox
+                            key={platform.name}
+                            platformInfo={platform}
+                            isSelected={selectedPlatforms.includes(platform.name)}
+                            onChange={(_: unknown, isSelected: boolean) =>
+                              handlePlatformChange(platform.name, isSelected)
+                            }
+                            isDisabled={false}
+                            onExtraConfigChange={handleExtraConfigChange}
+                          />
+                        ))}
+                      </div>
+                    </AccordionItem>
+                  </Accordion>
+                )}
+              </AccordionItem>
+            </Accordion>
+          </CardBody>
+        </Card>
+
+        {/* Publish Button */}
+        <div className="flex justify-center">
+          <Button
+            size="lg"
+            color={selectedPlatforms.length === 0 ? 'default' : 'primary'}
+            disabled={selectedPlatforms.length === 0}
+            onPress={handlePublish}
+            className="min-w-40"
+            startContent={<SendHorizontal />}>
+            {t('ui.publish')}
+          </Button>
+        </div>
+
+        {/* Login Required Modal */}
+        <Modal
+          isOpen={isOpen}
+          onOpenChange={onOpenChange}
+          placement="center">
+          <ModalContent>
+            {(onClose) => (
+              <>
+                <ModalHeader className="flex flex-col gap-1">
+                  <div className="flex items-center gap-2">
+                    <LogInIcon className="size-5" />
+                    {t('ui.loginRequired')}
+                  </div>
+                </ModalHeader>
+                <ModalBody>
+                  <p>{t('ui.loginRequiredDesc')}</p>
+                </ModalBody>
+                <ModalFooter>
+                  <Button
+                    color="default"
+                    variant="light"
+                    onPress={onClose}>
+                    {t('ui.cancel')}
+                  </Button>
+                  <Button
+                    color="primary"
+                    onPress={handleGoToLogin}>
+                    {t('ui.goLogin')}
+                  </Button>
+                </ModalFooter>
+              </>
+            )}
+          </ModalContent>
+        </Modal>
       </div>
     </div>
   );

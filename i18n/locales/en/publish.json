@@ -1,19 +1,8 @@
 {
-  "title": "Content Publishing",
-  "action": {
-    "enter": "Enter"
-  },
-  "tabs": {
-    "dynamic": "Dynamic",
-    "video": "Video",
-    "grid": "Grid",
-    "article": "Article",
-    "podcast": "Podcast"
-  },
+  "contactUs": "Contact Us",
   "dynamic": {
     "title": "Enter title",
     "content": "Enter content",
-    "description": "Create and publish dynamic content to multiple social media platforms simultaneously",
     "autoPublish": "Auto Publish",
     "clearAll": "Clear all",
     "tips": {
@@ -31,9 +20,7 @@
   "podcast": {
     "title": "Enter podcast title",
     "description": "Enter podcast description",
-    "autoPublish": "Auto Publish",
-    "clearAll": "Clear all",
-    "uploadAudio": "Upload audio file"
+    "clearAll": "Clear all"
   },
   "video": {
     "title": "Please enter a title",
@@ -41,16 +28,12 @@
     "tags": "Enter tags, separated by commas or enter"
   },
   "grid": {
-    "description": "Create beautiful photo grids for social media posts",
     "uploadImage": "Click or drag to upload image",
     "preview": "Original Preview",
     "result": "Grid Preview",
     "generate": "Generate Grid",
     "trimEdges": "Trim edges (avoid misalignment)",
     "download": "Download Grid"
-  },
-  "article": {
-    "description": "Write and edit professional articles with Markdown support"
   },
   "validation": {
     "contentRequired": "Content is required",
@@ -65,8 +48,7 @@
       "title": "Extension Clients",
       "description": "Manage connected browser extension clients",
       "alert": "Please keep the browser open to ensure the client works properly. The client will stop working after closing the browser.",
-      "empty": "No connected clients",
-      "last_seen": "Last seen {{time}}"
+      "empty": "No connected clients"
     },
     "link_button": {
       "button": "Connect Extension",
@@ -76,7 +58,6 @@
         "notes": {
           "credential": "API Key is the only credential for connecting the extension",
           "delete": "Please do not delete API Keys of connected extensions",
-          "manage": "You can view all API Keys in the {{link}}",
           "manage_link": "API Keys Management Page"
         },
         "buttons": {
@@ -121,5 +102,67 @@
     "duplicateFiles": "Duplicate Files Detected",
     "duplicateFilesDesc": "The following files already exist"
   },
-  "contactUs": "Contact Us"
+  "modal": {
+    "add": "Add",
+    "cancel": "Cancel",
+    "config": "Config",
+    "save": "Save",
+    "test": "Test"
+  },
+  "okjike": {
+    "inputPlaceholder": "Enter content"
+  },
+  "webhook": {
+    "description": "Webhook description",
+    "urlPlaceholder": "Enter Webhook URL",
+    "platforms": {
+      "dingtalk": "DingTalk",
+      "feishu": "Feishu",
+      "wecom": "WeCom"
+    },
+    "testSuccess": {
+      "title": "Test Success",
+      "description": "Webhook test successful"
+    },
+    "testFailed": {
+      "title": "Test Failed",
+      "description": "Webhook test failed"
+    },
+    "invalidUrl": {
+      "title": "Invalid URL",
+      "description": "Please enter a valid Webhook URL"
+    },
+    "unsupportedPlatform": "Unsupported platform"
+  },
+  "wordpress": {
+    "urlPlaceholder": "Enter WordPress URL"
+  },
+  "zsxq": {
+    "button": {
+      "default": "Select ZSXQ"
+    },
+    "modal": {
+      "title": "ZSXQ Configuration",
+      "groupName": {
+        "label": "Group Name",
+        "placeholder": "Enter group name",
+        "error": "Please enter group name"
+      },
+      "groupUrl": {
+        "label": "Group URL",
+        "placeholder": "Enter group URL",
+        "error": "Please enter valid group URL"
+      },
+      "addButton": "Add Group",
+      "addedGroups": "Added Groups",
+      "select": "Select",
+      "selected": "Selected",
+      "noGroups": "No groups"
+    },
+    "toast": {
+      "addSuccess": {
+        "title": "Added successfully"
+      }
+    }
+  }
 }

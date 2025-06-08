@@ -24,7 +24,9 @@
   },
   "platforms": {
     "cn": "Chinese Platforms",
-    "international": "International Platforms"
+    "international": "International Platforms",
+    "popular": "Popular Platforms",
+    "others": "Other Platforms"
   },
   "validation": {
     "contentRequired": "Please enter content",
@@ -35,5 +37,19 @@
     "error": "Failed to publish, please try again"
   },
   "cta": "Get Started",
-  "accessFullVersion": "Access Full Publishing Features"
+  "accessFullVersion": "Access Full Publishing Features",
+  "ui": {
+    "titlePlaceholder": "Title",
+    "contentPlaceholder": "Content",
+    "imageLibrary": "Image Library",
+    "aiGenerate": "AI Generate",
+    "contactUs": "Contact Us",
+    "total": "Total",
+    "clearAll": "Clear All",
+    "publish": "Publish",
+    "loginRequired": "Login Required",
+    "loginRequiredDesc": "This feature requires login to use. You can enjoy more advanced features after logging in.",
+    "cancel": "Cancel",
+    "goLogin": "Go to Login"
+  }
 }

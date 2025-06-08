@@ -24,7 +24,9 @@
   },
   "platforms": {
     "cn": "中国平台",
-    "international": "国际平台"
+    "international": "国际平台",
+    "popular": "热门平台",
+    "others": "其他平台"
   },
   "validation": {
     "contentRequired": "请输入内容",
@@ -35,5 +37,19 @@
     "error": "发布失败，请重试"
   },
   "cta": "开始使用",
-  "accessFullVersion": "访问完整版发布功能"
+  "accessFullVersion": "访问完整版发布功能",
+  "ui": {
+    "titlePlaceholder": "标题",
+    "contentPlaceholder": "内容",
+    "imageLibrary": "图片库",
+    "aiGenerate": "AI 生图",
+    "contactUs": "联系我们",
+    "total": "总计",
+    "clearAll": "清空所有",
+    "publish": "发布",
+    "loginRequired": "需要登录",
+    "loginRequiredDesc": "此功能需要登录后才能使用。登录后您可以享受更多高级功能。",
+    "cancel": "取消",
+    "goLogin": "去登录"
+  }
 }
