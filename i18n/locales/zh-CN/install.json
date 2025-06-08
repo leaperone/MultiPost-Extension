@@ -50,6 +50,7 @@
     "loginRequired": "需要登录",
     "loginRequiredDesc": "此功能需要登录后才能使用。登录后您可以享受更多高级功能。",
     "cancel": "取消",
-    "goLogin": "去登录"
+    "goLogin": "去登录",
+    "loginToFullVersion": "登录使用完整版"
   }
 }

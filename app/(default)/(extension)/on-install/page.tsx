@@ -31,6 +31,9 @@ import {
   ImageIcon,
   SparklesIcon,
   LogInIcon,
+  ArrowRight,
+  VideoIcon,
+  PodcastIcon,
 } from 'lucide-react';
 import { useTranslation } from '@/i18n/client';
 import {
@@ -54,6 +57,7 @@ import {
   ModalBody,
   ModalFooter,
   useDisclosure,
+  ButtonGroup,
 } from '@heroui/react';
 import dynamic from 'next/dynamic';
 import React, { useState, useEffect } from 'react';
@@ -371,8 +375,32 @@ export default function OnInstallPage() {
 
       <div className="container mx-auto max-w-4xl space-y-6 p-6 pt-20">
         {/* Page Title */}
-        <div className="mb-8">
+        <div className="mb-8 flex flex-row items-center justify-between">
           <h1 className="text-3xl font-bold">{t('title')}</h1>
+          <Button
+            as={Link}
+            href="/dashboard/publish/dynamic"
+            variant="flat"
+            color="primary"
+            startContent={<ArrowRight className="size-4" />}>
+            {t('ui.loginToFullVersion')}
+          </Button>
+          <div className="flex items-center gap-2">
+            <ButtonGroup
+              variant="flat"
+              color="primary">
+              <Button
+                as={Link}
+                href="/dashboard/publish/video">
+                <VideoIcon />
+              </Button>
+              <Button
+                as={Link}
+                href="/dashboard/publish/podcast">
+                <PodcastIcon />
+              </Button>
+            </ButtonGroup>
+          </div>
         </div>
 
         {/* Content Editing Section */}

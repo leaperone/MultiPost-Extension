@@ -24,9 +24,7 @@
   },
   "platforms": {
     "cn": "Chinese Platforms",
-    "international": "International Platforms",
-    "popular": "Popular Platforms",
-    "others": "Other Platforms"
+    "international": "International Platforms"
   },
   "validation": {
     "contentRequired": "Please enter content",
@@ -50,6 +48,7 @@
     "loginRequired": "Login Required",
     "loginRequiredDesc": "This feature requires login to use. You can enjoy more advanced features after logging in.",
     "cancel": "Cancel",
-    "goLogin": "Go to Login"
+    "goLogin": "Go Login",
+    "loginToFullVersion": "Login to Full Version"
   }
 }
