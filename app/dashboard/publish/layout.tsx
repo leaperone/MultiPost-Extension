@@ -29,47 +29,52 @@ export default function PublishLayout({ children }: { children: React.ReactNode 
   }, []);
 
   return (
-    <div className="h-screen p-1">
+    <div className="flex h-screen flex-col p-1">
       {process.env.NODE_ENV !== 'development' && <ForceInstallExtension />}
 
-      <div className="flex w-full flex-row items-center justify-between">
-        <Tabs
-          aria-label="Publish Tabs"
-          selectedKey={pathname}
-          variant="underlined"
-          classNames={{
-            tabList: 'gap-4 w-full p-2 bg-background',
-            cursor: 'bg-primary/50',
-            tab: 'w-fit px-4 h-fit hover:text-primary',
-            tabContent: 'group-data-[selected=true]:text-primary',
-          }}>
-          <Tab
-            key="/dashboard/publish/dynamic"
-            href="/dashboard/publish/dynamic"
-            title={<MessageCircleHeartIcon />}
-          />
-          <Tab
-            key="/dashboard/publish/video"
-            href="/dashboard/publish/video"
-            title={<VideoIcon />}
-          />
-          <Tab
-            key="/dashboard/publish/podcast"
-            href="/dashboard/publish/podcast"
-            title={<PodcastIcon />}
-          />
-          <Tab
-            key="https://md.multipost.app"
-            href="https://md.multipost.app"
-            title={<FileTextIcon />}
-          />
-        </Tabs>
+      {/* Fixed header with tabs */}
+      <div className="shrink-0">
+        <div className="flex w-full flex-row items-center justify-between">
+          <Tabs
+            aria-label="Publish Tabs"
+            selectedKey={pathname}
+            variant="underlined"
+            classNames={{
+              tabList: 'gap-4 w-full p-2 bg-background',
+              cursor: 'bg-primary/50',
+              tab: 'w-fit px-4 h-fit hover:text-primary',
+              tabContent: 'group-data-[selected=true]:text-primary',
+            }}>
+            <Tab
+              key="/dashboard/publish/dynamic"
+              href="/dashboard/publish/dynamic"
+              title={<MessageCircleHeartIcon />}
+            />
+            <Tab
+              key="/dashboard/publish/video"
+              href="/dashboard/publish/video"
+              title={<VideoIcon />}
+            />
+            <Tab
+              key="/dashboard/publish/podcast"
+              href="/dashboard/publish/podcast"
+              title={<PodcastIcon />}
+            />
+            <Tab
+              key="https://md.multipost.app"
+              href="https://md.multipost.app"
+              title={<FileTextIcon />}
+            />
+          </Tabs>
+        </div>
+        <Divider className="my-0.5" />
+        <Spacer y={2} />
       </div>
-      <Divider className="my-0.5" />
 
-      <Spacer y={2} />
-
-      <div className="mx-auto w-full max-w-3xl overflow-y-auto">{children}</div>
+      {/* Scrollable content area */}
+      <div className="flex-1 overflow-hidden">
+        <div className="mx-auto size-full max-w-3xl overflow-y-auto px-1 scrollbar-none">{children}</div>
+      </div>
     </div>
   );
 }
