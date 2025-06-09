@@ -26,7 +26,7 @@ export default async function DashboardLayout({
     redirect(`/signin?redirect=${encodeURIComponent(pathname)}`);
   }
   return (
-    <div className="flex h-screen w-full overflow-y-auto">
+    <div className="flex h-screen w-full">
       <SidebarProvider
         defaultOpen={true}
         style={
@@ -35,8 +35,8 @@ export default async function DashboardLayout({
             '--sidebar-width-mobile': '12rem',
           } as CSSProperties
         }>
-        <TimezoneProvider />
         <DashboardSidebar />
+        <TimezoneProvider />
         <div className="flex-1">
           <div className="flex w-full justify-between p-2 sm:hidden md:hidden">
             <SidebarTrigger />

@@ -51,29 +51,7 @@
   },
   "activity": {
     "title": "Activity Notice",
-    "description": "Check out latest balance bonus event, up to $10 free credits!",
-    "alerts": [
-      {
-        "title": "Join Community, Contact Us",
-        "description": "Get the latest news and updates, or feedback issues",
-        "href": "https://docs.multipost.app/docs/user-guide/contact-us"
-      },
-      {
-        "title": "Balance Bonus Event",
-        "description": "Check out latest balance bonus event, up to $10 free credits!",
-        "href": "/activity"
-      },
-      {
-        "title": "New Feature Release",
-        "description": "AI-powered image generation and poster generation is now available! Try it now.",
-        "href": "/dashboard/publish"
-      },
-      {
-        "title": "Automation and social media workflow",
-        "description": "Check out our development documentation",
-        "href": "https://docs.multipost.app"
-      }
-    ]
+    "description": "Check out latest balance bonus event, up to $10 free credits!"
   },
   "common": {
     "close": "Close"

@@ -13,7 +13,6 @@ import {
   MessageSquareIcon,
   PuzzleIcon,
 } from 'lucide-react';
-import { ActivityAlert } from './components/ActivityAlert';
 import { BalanceButton } from './components/BalanceButton';
 
 interface DashboardCardProps {
@@ -117,8 +116,6 @@ export default async function DashboardPage() {
               </Button>
             </div>
           </div>
-
-          <ActivityAlert />
 
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {cards.map((card, index) => (

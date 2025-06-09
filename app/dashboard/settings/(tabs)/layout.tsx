@@ -20,9 +20,9 @@ export default function SettingsLayout({
         variant="underlined"
         selectedKey={pathname}
         classNames={{
-          tabList: 'gap-4 w-full relative rounded-xl p-2 bg-default-100',
-          cursor: 'bg-primary/20 shadow-md',
-          tab: 'max-w-fit px-4 h-10 hover:text-primary',
+          tabList: 'gap-4 w-full relative p-2 bg-background',
+          cursor: 'bg-primary/50',
+          tab: 'max-w-fit px-4 h-fit hover:text-primary',
           tabContent: 'group-data-[selected=true]:text-primary',
         }}>
         <Tab

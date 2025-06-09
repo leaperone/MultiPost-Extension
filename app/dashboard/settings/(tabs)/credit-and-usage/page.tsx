@@ -3,7 +3,6 @@ import { auth } from '@/auth';
 import { getCredit } from '@/actions/credit';
 import RechargeCard from './components/RechargeCard';
 import CreditUsageTable from './components/CreditUsageTable';
-import { ActivityAlert } from '@/app/dashboard/components/ActivityAlert';
 import { ExternalLinkIcon, Wallet, DollarSign, Gift } from 'lucide-react';
 import { createTranslation } from '@/i18n/server';
 
@@ -86,8 +85,6 @@ export default async function RechargePage() {
 
       <RechargeCard />
 
-      <Spacer y={4} />
-      <ActivityAlert />
       <Spacer y={4} />
 
       {/* Usage History */}

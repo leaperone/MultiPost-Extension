@@ -1,4 +1,3 @@
-import { ActivityAlert } from '../components/ActivityAlert';
 import Header from '../components/Header';
 import ScraperTabs from './Tabs';
 
@@ -13,7 +12,6 @@ export default function ScraperLayout({ children }: { children: React.ReactNode 
 
       {/* Main Content */}
       <div className="w-full overflow-auto">{children}</div>
-      <ActivityAlert />
     </div>
   );
 }
