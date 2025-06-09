@@ -38,13 +38,15 @@ export default function PublishLayout({ children }: { children: React.ReactNode 
           <Tabs
             aria-label="Publish Tabs"
             selectedKey={pathname}
-            variant="underlined"
-            classNames={{
-              tabList: 'gap-4 w-full p-2 bg-background',
-              cursor: 'bg-primary/50',
-              tab: 'w-fit px-4 h-fit hover:text-primary',
-              tabContent: 'group-data-[selected=true]:text-primary',
-            }}>
+            variant="light"
+            color="primary"
+            // classNames={{
+            //   tabList: 'gap-4 w-full p-2 bg-background',
+            //   cursor: 'bg-primary/50',
+            //   tab: 'w-fit px-4 h-fit hover:text-primary',
+            //   tabContent: 'group-data-[selected=true]:text-primary',
+            // }}
+          >
             <Tab
               key="/dashboard/publish/dynamic"
               href="/dashboard/publish/dynamic"
@@ -66,6 +68,7 @@ export default function PublishLayout({ children }: { children: React.ReactNode 
               title={<FileTextIcon />}
             />
           </Tabs>
+          {/* TODO: add activity banner, and feature buttons */}
         </div>
         <Divider className="my-0.5" />
         <Spacer y={2} />

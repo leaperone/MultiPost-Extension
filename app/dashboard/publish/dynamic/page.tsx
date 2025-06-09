@@ -380,6 +380,7 @@ export default function DynamicPage() {
             <CardBody>
               <Textarea
                 isClearable
+                isRequired
                 variant="underlined"
                 placeholder={t('dynamic.content')}
                 value={content}
