@@ -1,12 +1,13 @@
 'use client';
 
-import { Tabs, Tab, addToast, Spacer, Divider } from '@heroui/react';
-import { MessageCircleHeartIcon, VideoIcon, FileTextIcon, PodcastIcon } from 'lucide-react';
+import { Tabs, Tab, addToast, Spacer, Divider, Button, Link } from '@heroui/react';
+import { MessageCircleHeartIcon, VideoIcon, FileTextIcon, PodcastIcon, MessageSquareIcon } from 'lucide-react';
 import { usePathname } from 'next/navigation';
 import ForceInstallExtension from '@/components/ForceInstallExtension';
 import { useEffect } from 'react';
 import { checkServiceStatus, funcGetPermission } from '@/lib/extension';
 import { useRouter } from 'next/navigation';
+import BalanceButtonClient from '../components/BalanceButtonClient';
 
 export default function PublishLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
@@ -68,7 +69,19 @@ export default function PublishLayout({ children }: { children: React.ReactNode 
               title={<FileTextIcon />}
             />
           </Tabs>
-          {/* TODO: add activity banner, and feature buttons */}
+          <div className="flex flex-row items-center gap-2">
+            <BalanceButtonClient size="sm" />
+            <Button
+              as={Link}
+              href="https://docs.multipost.app/docs/user-guide/contact-us"
+              target="_blank"
+              variant="flat"
+              color="primary"
+              size="sm"
+              startContent={<MessageSquareIcon className="size-5" />}>
+              Contact Us
+            </Button>
+          </div>
         </div>
         <Divider className="my-0.5" />
         <Spacer y={2} />
