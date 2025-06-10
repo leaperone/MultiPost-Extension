@@ -14,7 +14,7 @@ RUN apk update --no-cache && apk add --no-cache \
     ffmpeg
 COPY . /app
 WORKDIR /app
-RUN wget 'https://git.io/GeoLite2-City.mmdb' -O geo/GeoLite2-City.mmdb
+RUN wget 'https://github.com/P3TERX/GeoLite.mmdb/raw/download/GeoLite2-City.mmdb' -O geo/GeoLite2-City.mmdb
 
 FROM base AS builder
 ENV NODE_OPTIONS="--max-old-space-size=8192"
