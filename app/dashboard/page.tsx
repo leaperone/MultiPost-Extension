@@ -30,7 +30,8 @@ function DashboardCard({ href, title, description, icon, external }: DashboardCa
       href={href}
       target={external ? '_blank' : undefined}
       isPressable
-      className="group border shadow-none transition-all hover:scale-[1.01]">
+      isBlurred
+      className="group border bg-background/60 shadow-inner transition-all dark:border-none dark:bg-default-100/50">
       <CardBody className="flex flex-row items-start gap-4 p-6">
         <div className="rounded-lg bg-primary-50/80 p-2 dark:bg-primary-900/10">{icon}</div>
         <div className="space-y-1">
@@ -83,8 +84,15 @@ export default async function DashboardPage() {
   ];
 
   return (
-    <div className="mx-auto h-full max-w-7xl space-y-6 overflow-y-auto p-4">
-      <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+    <div
+      className="relative mx-auto h-full space-y-6 overflow-y-auto bg-cover bg-center bg-no-repeat p-4"
+      style={{
+        backgroundImage: "url('https://i.ibb.co/xtN61cRf/Comfy-UI-Output-4-1.png')",
+      }}>
+      {/* 添加半透明遮罩层以提高文字可读性 */}
+      <div className="absolute inset-0 bg-white/80 backdrop-blur-sm dark:bg-black/60"></div>
+
+      <div className="relative z-10 mx-auto grid max-w-7xl gap-6 sm:grid-cols-2 lg:grid-cols-3">
         <div className="col-span-full space-y-4 md:col-span-3">
           <div className="flex flex-col items-center justify-between gap-2 md:flex-row">
             <h2 className="text-2xl font-bold">{t('welcome.title', { name: user?.name || 'Dear' })}</h2>
