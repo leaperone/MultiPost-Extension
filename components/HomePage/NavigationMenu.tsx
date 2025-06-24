@@ -12,7 +12,7 @@ import {
   navigationMenuTriggerStyle,
 } from '@/components/ui/navigation-menu';
 import Link from 'next/link';
-import { LayoutDashboard, SendIcon, BookOpenIcon, PaletteIcon } from 'lucide-react';
+import { LayoutDashboard, SendIcon, BookOpenIcon, PaletteIcon, FolderIcon } from 'lucide-react';
 import { useTranslation } from '@/i18n/client';
 
 export function HomePageNavigationMenu() {
@@ -62,6 +62,17 @@ export function HomePageNavigationMenu() {
             <NavigationMenuLink className={cn(navigationMenuTriggerStyle(), 'group')}>
               <BookOpenIcon className="mr-2 size-4 transition-transform" />
               {t('navigation.docs')}
+            </NavigationMenuLink>
+          </Link>
+        </NavigationMenuItem>
+        <NavigationMenuItem>
+          <Link
+            href="https://blog.multipost.app"
+            legacyBehavior
+            passHref>
+            <NavigationMenuLink className={cn(navigationMenuTriggerStyle(), 'group')}>
+              <FolderIcon className="mr-2 size-4 transition-transform" />
+              {t('navigation.blog')}
             </NavigationMenuLink>
           </Link>
         </NavigationMenuItem>
