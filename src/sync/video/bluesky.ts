@@ -35,7 +35,7 @@ export async function VideoBluesky(data: SyncData) {
 
     await new Promise((resolve) => setTimeout(resolve, 3000));
 
-    const newPostButton = document.querySelector('button[aria-label="撰写新帖文"]') as HTMLButtonElement;
+    const newPostButton = document.querySelector('button[data-testid="composeFAB"]') as HTMLButtonElement;
     if (newPostButton) {
       newPostButton.click();
     } else {
