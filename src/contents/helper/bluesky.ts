@@ -14,7 +14,7 @@ export async function handleBlueskyVideoUpload(event: MessageEvent) {
     return;
   }
 
-  const uploadVideoButton = await waitForElement('button[aria-label="选择视频"]');
+  const uploadVideoButton = await waitForElement('button[data-testid="openGifBtn"]');
   if (!uploadVideoButton) {
     console.error('未找到上传视频按钮');
     return;
@@ -57,7 +57,7 @@ export async function handleBlueskyImageUpload(event: MessageEvent) {
     return;
   }
 
-  const uploadButton = (await waitForElement('button[aria-label="相册"]')) as HTMLElement;
+  const uploadButton = (await waitForElement('button[data-testid="openGalleryBtn"]')) as HTMLElement;
   if (!uploadButton) {
     console.error('未找到上传按钮');
     return;
