@@ -587,6 +587,26 @@ export default async function HomePage() {
           </div>
         </div>
       </section>
+
+      {/* MagicBox.tools Badge Section */}
+      <section className="bg-transparent py-12">
+        <div className="container mx-auto flex flex-col items-center justify-center">
+          <a
+            href="https://magicbox.tools"
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label="Featured on MagicBox.tools">
+            <Image
+              src="https://magicbox.tools/badge.svg"
+              alt="Featured on MagicBox.tools"
+              width={200}
+              height={54}
+              className="mb-2"
+            />
+          </a>
+          <p className="text-center text-sm text-foreground/60">This project is featured on MagicBox.tools</p>
+        </div>
+      </section>
     </>
   );
 }
