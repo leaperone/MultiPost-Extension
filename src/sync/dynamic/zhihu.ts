@@ -70,7 +70,7 @@ export async function DynamicZhihu(data: SyncData) {
     await new Promise((resolve) => setTimeout(resolve, 1000));
 
     // 填写标题（如果有）
-    const titleInput = (await waitForElement('textarea[placeholder="请输入标题（选填）"]')) as HTMLTextAreaElement;
+    const titleInput = (await waitForElement('textarea[placeholder="添加标题(选填)"]')) as HTMLTextAreaElement;
     if (titleInput && title) {
       titleInput.value = title;
       titleInput.dispatchEvent(new Event('input', { bubbles: true }));
