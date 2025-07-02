@@ -529,6 +529,10 @@
     "message": "Webhook",
     "description": "Platform name for Webhook"
   },
+  "platformXiaoheihe": {
+    "message": "Xiaoheihe",
+    "description": "Platform name for Xiaoheihe"
+  },
   "optionsFeedbackPrefix": {
     "message": "Missing a platform you need?"
   },

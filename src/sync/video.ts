@@ -10,6 +10,7 @@ import { VideoRednote } from './video/rednote';
 import { VideoTiktok } from './video/tiktok';
 import { VideoWeibo } from './video/weibo';
 import { VideoWeiXinChannel } from './video/weixinchannel';
+import { VideoXiaoheihe } from './video/xiaoheihe';
 import { VideoYoutube } from './video/youtube';
 import { VideoZhihu } from './video/zhihu';
 
@@ -158,5 +159,16 @@ export const VideoInfoMap: Record<string, PlatformInfo> = {
     injectFunction: VideoEastmoney,
     tags: ['CN'],
     accountKey: 'eastmoney',
+  },
+  VIDEO_XIAOHEIHE: {
+    type: 'VIDEO',
+    name: 'VIDEO_XIAOHEIHE',
+    homeUrl: 'https://www.xiaoheihe.cn/',
+    faviconUrl: 'https://www.xiaoheihe.cn/favicon.ico',
+    platformName: chrome.i18n.getMessage('platformXiaoheihe'),
+    injectUrl: 'https://www.xiaoheihe.cn/creator/editor/draft/video',
+    injectFunction: VideoXiaoheihe,
+    tags: ['CN'],
+    accountKey: 'xiaoheihe',
   },
 };

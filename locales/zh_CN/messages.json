@@ -536,6 +536,10 @@
     "message": "Webhook",
     "description": "Webhook 平台名称"
   },
+  "platformXiaoheihe": {
+    "message": "小黑盒",
+    "description": "小黑盒平台名称"
+  },
   "optionsFeedbackPrefix": {
     "message": "没有你需要的平台？"
   },

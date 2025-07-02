@@ -4,9 +4,16 @@ export {};
 import type { PlasmoCSConfig } from 'plasmo';
 import { handleBilibiliImageUpload } from './helper/bilibili';
 import { handleBlueskyVideoUpload, handleBlueskyImageUpload } from './helper/bluesky';
+import { handleXiaoheiheImageUpload, handleXiaoheiheVideoUpload } from './helper/xiaoheihe';
 
 export const config: PlasmoCSConfig = {
-  matches: ['https://t.bilibili.com/*', 'https://bsky.app/*', 'https://www.v2ex.com/write*', 'https://v2ex.com/write*'],
+  matches: [
+    'https://t.bilibili.com/*',
+    'https://bsky.app/*',
+    'https://www.v2ex.com/write*',
+    'https://v2ex.com/write*',
+    'https://www.xiaoheihe.cn/*',
+  ],
   world: 'MAIN',
   run_at: 'document_start',
 };
@@ -22,8 +29,10 @@ export let createdInputs: HTMLInputElement[] = [];
 
 document.createElement = function (tagName, options) {
   let element = originalCreateElement(tagName, options);
+
   if (tagName.toLowerCase() === 'input') {
     createdInputs.push(element);
+    console.log('element', element);
   }
   return element;
 };
@@ -42,6 +51,10 @@ function handleMessage(event: MessageEvent) {
     if (editor) {
       editor.CodeMirror.setValue(data.content);
     }
+  } else if (data.type === 'XIAOHEIHE_IMAGE_UPLOAD') {
+    handleXiaoheiheImageUpload(event);
+  } else if (data.type === 'XIAOHEIHE_VIDEO_UPLOAD') {
+    handleXiaoheiheVideoUpload(event);
   }
 }
 

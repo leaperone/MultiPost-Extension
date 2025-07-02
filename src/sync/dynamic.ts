@@ -23,6 +23,7 @@ import { DynamicX } from './dynamic/x';
 import { DynamicXueqiu } from './dynamic/xueqiu';
 import { DynamicZhihu } from './dynamic/zhihu';
 import { DynamicZSXQ } from './dynamic/zsxq';
+import { DynamicXiaoheihe } from './dynamic/xiaoheihe';
 
 export const DynamicInfoMap: Record<string, PlatformInfo> = {
   DYNAMIC_BILIBILI: {
@@ -294,5 +295,16 @@ export const DynamicInfoMap: Record<string, PlatformInfo> = {
     injectFunction: DynamicZSXQ,
     tags: ['CN'],
     accountKey: 'zsxq',
+  },
+  DYNAMIC_XIAOHEIHE: {
+    type: 'DYNAMIC',
+    name: 'DYNAMIC_XIAOHEIHE',
+    homeUrl: 'https://www.xiaoheihe.cn/',
+    faviconUrl: 'https://www.xiaoheihe.cn/favicon.ico',
+    platformName: chrome.i18n.getMessage('platformXiaoheihe'),
+    injectUrl: 'https://www.xiaoheihe.cn/creator/editor/draft/image_text',
+    injectFunction: DynamicXiaoheihe,
+    tags: ['CN'],
+    accountKey: 'xiaoheihe',
   },
 };
