@@ -54,6 +54,37 @@ export async function DynamicWeibo(data: SyncData) {
     });
   }
 
+  // 辅助函数：等待所有图片上传完成
+  function waitForUploadsToComplete(timeout = 60000): Promise<void> {
+    return new Promise((resolve, reject) => {
+      const startTime = Date.now();
+
+      const checkStatus = () => {
+        // 查找所有表示正在加载的元素
+        const loadingElements = document.querySelectorAll('.Image_loading_1lfUB');
+
+        // 如果没有正在加载的元素，说明上传完成
+        if (loadingElements.length === 0) {
+          console.log('所有图片上传已完成。');
+          resolve();
+          return;
+        }
+
+        // 检查是否超时
+        if (Date.now() - startTime > timeout) {
+          reject(new Error(`图片上传在 ${timeout}ms 内未完成。`));
+          return;
+        }
+
+        // 稍后重试
+        setTimeout(checkStatus, 500);
+      };
+
+      // `waitForElements` 返回后，加载动画可能还未渲染出来，延迟一下首次检查
+      setTimeout(checkStatus, 100);
+    });
+  }
+
   // 辅助函数：上传文件
   async function uploadFiles() {
     const fileInput = (await waitForElement('input[type="file"]')) as HTMLInputElement;
@@ -105,6 +136,7 @@ export async function DynamicWeibo(data: SyncData) {
     if (images && images.length > 0) {
       await uploadFiles();
       await waitForElements('i[title="删除"]', images.length);
+      await waitForUploadsToComplete();
     }
 
     console.log('成功填入微博内容和图片');
@@ -116,6 +148,7 @@ export async function DynamicWeibo(data: SyncData) {
 
       if (sendButton) {
         console.log('点击发送按钮');
+        await new Promise((resolve) => setTimeout(resolve, 10000));
         (sendButton as HTMLElement).click();
         await new Promise((resolve) => setTimeout(resolve, 3000));
         window.location.reload();
