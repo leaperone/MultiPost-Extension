@@ -24,6 +24,7 @@ import { DynamicXueqiu } from './dynamic/xueqiu';
 import { DynamicZhihu } from './dynamic/zhihu';
 import { DynamicZSXQ } from './dynamic/zsxq';
 import { DynamicXiaoheihe } from './dynamic/xiaoheihe';
+import { DynamicToutiaohao } from './dynamic/toutiaohao';
 
 export const DynamicInfoMap: Record<string, PlatformInfo> = {
   DYNAMIC_BILIBILI: {
@@ -306,5 +307,16 @@ export const DynamicInfoMap: Record<string, PlatformInfo> = {
     injectFunction: DynamicXiaoheihe,
     tags: ['CN'],
     accountKey: 'xiaoheihe',
+  },
+  DYNAMIC_TOUTIAOHAO: {
+    type: 'DYNAMIC',
+    name: 'DYNAMIC_TOUTIAOHAO',
+    homeUrl: 'https://www.toutiao.com/',
+    faviconUrl: 'https://sf1-cdn-tos.toutiaostatic.com/obj/ttfe/pgcfe/sz/mp_logo.png',
+    platformName: chrome.i18n.getMessage('platformToutiaohao'),
+    injectUrl: 'https://mp.toutiao.com/profile_v4/weitoutiao/publish',
+    injectFunction: DynamicToutiaohao,
+    tags: ['CN'],
+    accountKey: 'toutiaohao',
   },
 };

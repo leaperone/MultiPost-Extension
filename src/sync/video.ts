@@ -8,6 +8,7 @@ import { VideoKuaishou } from './video/kuaishou';
 import { VideoOkjike } from './video/okjike';
 import { VideoRednote } from './video/rednote';
 import { VideoTiktok } from './video/tiktok';
+import { VideoToutiaohao } from './video/toutiaohao';
 import { VideoWeibo } from './video/weibo';
 import { VideoWeiXinChannel } from './video/weixinchannel';
 import { VideoXiaoheihe } from './video/xiaoheihe';
@@ -170,5 +171,16 @@ export const VideoInfoMap: Record<string, PlatformInfo> = {
     injectFunction: VideoXiaoheihe,
     tags: ['CN'],
     accountKey: 'xiaoheihe',
+  },
+  VIDEO_TOUTIAOHAO: {
+    type: 'VIDEO',
+    name: 'VIDEO_TOUTIAOHAO',
+    homeUrl: 'https://www.toutiao.com/',
+    faviconUrl: 'https://sf1-cdn-tos.toutiaostatic.com/obj/ttfe/pgcfe/sz/mp_logo.png',
+    platformName: chrome.i18n.getMessage('platformToutiaohao'),
+    injectUrl: 'https://mp.toutiao.com/profile_v4/xigua/upload-video',
+    injectFunction: VideoToutiaohao,
+    tags: ['CN'],
+    accountKey: 'toutiaohao',
   },
 };
