@@ -1,7 +1,7 @@
 import type { SyncData, VideoData } from '../common';
 
 export async function VideoRednote(data: SyncData) {
-  const { content, video, title, tags } = data.data as VideoData;
+  const { content, video, title, tags, cover } = data.data as VideoData;
 
   // 辅助函数：等待元素出现
   function waitForElement(selector: string, timeout = 10000): Promise<Element> {
@@ -67,6 +67,68 @@ export async function VideoRednote(data: SyncData) {
     }
   }
 
+  // 辅助函数：上传封面
+  async function uploadCover(coverFile: NonNullable<VideoData['cover']>) {
+    console.debug('tryCover', coverFile);
+    const coverUploadTrigger = document.querySelector('div.noCover.uploadCover') as HTMLElement;
+    console.debug('coverUpload', coverUploadTrigger);
+    if (!coverUploadTrigger) {
+      console.error('未找到封面上传触发器: div.noCover.uploadCover');
+      return;
+    }
+    coverUploadTrigger.click();
+
+    const fileInputSelector = "input[accept='image/png, image/jpeg, image/*']";
+    try {
+      await waitForElement(fileInputSelector);
+    } catch (e) {
+      console.error(`等待元素 ${fileInputSelector} 超时`, e);
+      return;
+    }
+
+    const fileInput = document.querySelector(fileInputSelector) as HTMLInputElement;
+    console.debug('fileInput', fileInput);
+    if (!fileInput) {
+      console.error('未找到封面上传的文件输入元素');
+      return;
+    }
+
+    const dataTransfer = new DataTransfer();
+    console.debug('try upload file', coverFile);
+    if (!coverFile.type.includes('image/')) {
+      console.error('提供的封面文件不是图片');
+      return;
+    }
+
+    try {
+      const response = await fetch(coverFile.url);
+      const arrayBuffer = await response.arrayBuffer();
+      const file = new File([arrayBuffer], coverFile.name, { type: coverFile.type });
+      dataTransfer.items.add(file);
+    } catch (error) {
+      console.error(`上传封面 ${coverFile.url} 失败:`, error);
+      return;
+    }
+
+    if (dataTransfer.files.length === 0) {
+      return;
+    }
+
+    fileInput.files = dataTransfer.files;
+    fileInput.dispatchEvent(new Event('change', { bubbles: true }));
+    fileInput.dispatchEvent(new Event('input', { bubbles: true }));
+    console.debug('文件上传操作触发');
+    await new Promise((resolve) => setTimeout(resolve, 3000));
+
+    const doneButtons = document.querySelectorAll('span');
+    console.debug('doneButtons', doneButtons);
+    const doneButton = Array.from(doneButtons).find((btn) => btn.textContent?.trim() === '确定');
+    console.debug('doneButton', doneButton);
+    if (doneButton) {
+      (doneButton as HTMLElement).click();
+    }
+  }
+
   // 等待页面加载
   await waitForElement('span[class="title"]');
   await new Promise((resolve) => setTimeout(resolve, 1000));
@@ -74,6 +136,7 @@ export async function VideoRednote(data: SyncData) {
   // 上传视频
   await uploadVideo();
 
+  // 填写内容
   // 等待标题输入框出现
   await waitForElement('input[type="text"]');
   await new Promise((resolve) => setTimeout(resolve, 1000));
@@ -130,6 +193,11 @@ export async function VideoRednote(data: SyncData) {
       editor.dispatchEvent(enterEvent);
       await new Promise((resolve) => setTimeout(resolve, 2000));
     }
+  }
+
+  // 上传封面
+  if (cover) {
+    await uploadCover(cover);
   }
 
   // 处理发布按钮

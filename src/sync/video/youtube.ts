@@ -1,8 +1,8 @@
 import type { SyncData, VideoData } from '../common';
 
 export async function VideoYoutube(data: SyncData) {
-  function waitForElement(selector: string, timeout = 10000): Promise<Element> {
-    return new Promise((resolve, reject) => {
+  function waitForElement(selector: string, timeout = 10000): Promise<Element | null> {
+    return new Promise((resolve) => {
       const element = document.querySelector(selector);
       if (element) {
         resolve(element);
@@ -24,26 +24,57 @@ export async function VideoYoutube(data: SyncData) {
 
       setTimeout(() => {
         observer.disconnect();
-        reject(new Error(`Element with selector "${selector}" not found within ${timeout}ms`));
+        console.warn(`Element with selector "${selector}" not found within ${timeout}ms`);
+        resolve(null);
       }, timeout);
     });
   }
 
+  async function uploadCover(cover: { url: string; name: string; type?: string }) {
+    console.debug('Trying to upload cover', cover);
+
+    const coverInput = (await waitForElement('input#file-loader.ytcp-thumbnail-uploader', 5000)) as HTMLInputElement;
+
+    if (!coverInput) {
+      console.error('Could not find the thumbnail uploader input.');
+      return;
+    }
+
+    if (!cover.type || !cover.type.includes('image/')) {
+      console.error('Cover file is not an image or type is missing.');
+      return;
+    }
+
+    const response = await fetch(cover.url);
+    const arrayBuffer = await response.arrayBuffer();
+    const coverFile = new File([arrayBuffer], cover.name, { type: cover.type });
+
+    const dataTransfer = new DataTransfer();
+    dataTransfer.items.add(coverFile);
+
+    if (dataTransfer.files.length === 0) {
+      return;
+    }
+
+    coverInput.files = dataTransfer.files;
+    coverInput.dispatchEvent(new Event('change', { bubbles: true }));
+    coverInput.dispatchEvent(new Event('input', { bubbles: true }));
+    console.debug('Cover file upload events dispatched.');
+  }
   try {
     const videoData = data.data as VideoData;
 
+    if (videoData.tags && videoData.tags.length > 0) {
+      videoData.title = `${videoData.title} ${videoData.tags.map((tag) => `#${tag}`).join(' ')}`;
+    }
+
     // 等待上传按钮出现并点击
-    await waitForElement('ytcp-icon-button#upload-icon');
-    await new Promise((resolve) => setTimeout(resolve, 1000));
-
-    const uploadIcon = document.querySelector('ytcp-icon-button#upload-icon');
-    console.debug('uploadIcon', uploadIcon);
-
+    const uploadIcon = await waitForElement('ytcp-icon-button#upload-icon');
     if (!uploadIcon) {
       console.error('未找到上传按钮');
       return;
     }
-
+    await new Promise((resolve) => setTimeout(resolve, 1000));
     (uploadIcon as HTMLElement).click();
     await new Promise((resolve) => setTimeout(resolve, 1000));
 
@@ -76,17 +107,15 @@ export async function VideoYoutube(data: SyncData) {
     console.debug('文件上传操作完成');
 
     // 等待标题输入框出现
-    await waitForElement('#title-textarea');
+    const titleArea = await waitForElement('#title-textarea');
+    if (!titleArea) {
+      console.error('未找到 title-textarea');
+      return;
+    }
     await new Promise((resolve) => setTimeout(resolve, 3000));
 
     // 处理标题输入
-    const titleArea = document.querySelector('#title-textarea');
     console.debug('titleArea', titleArea);
-
-    if (!titleArea) {
-      console.error('未找到 textbox');
-      return;
-    }
 
     const titleInput = titleArea.querySelector('#textbox') as HTMLElement;
     console.debug('titleInput', titleInput);
@@ -98,8 +127,7 @@ export async function VideoYoutube(data: SyncData) {
 
     // 清空并设置标题
     titleInput.innerHTML = '';
-    await new Promise((resolve) => setTimeout(resolve, 3000));
-    titleInput.innerHTML = '';
+    await new Promise((resolve) => setTimeout(resolve, 1000));
     titleInput.focus();
 
     const titlePasteEvent = new ClipboardEvent('paste', {
@@ -107,7 +135,7 @@ export async function VideoYoutube(data: SyncData) {
       cancelable: true,
       clipboardData: new DataTransfer(),
     });
-    titlePasteEvent.clipboardData!.setData('text/plain', data.data.title || '');
+    titlePasteEvent.clipboardData!.setData('text/plain', videoData.title || '');
     titleInput.dispatchEvent(titlePasteEvent);
     await new Promise((resolve) => setTimeout(resolve, 1000));
     titleInput.blur();
@@ -132,6 +160,10 @@ export async function VideoYoutube(data: SyncData) {
       }
     }
 
+    if (videoData.cover) {
+      await uploadCover(videoData.cover);
+    }
+
     await new Promise((resolve) => setTimeout(resolve, 1000));
 
     // 自动发布逻辑
@@ -144,7 +176,7 @@ export async function VideoYoutube(data: SyncData) {
         (publishButton as HTMLElement).click();
       }
     } else {
-      console.debug("未找到'发送'按钮");
+      console.debug("未找到'发布'按钮");
     }
   } catch (error) {
     console.error('YoutubeVideo 发布过程中出错:', error);

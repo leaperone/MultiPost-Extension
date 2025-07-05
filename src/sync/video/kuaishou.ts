@@ -1,7 +1,7 @@
 import type { SyncData, VideoData } from '../common';
 
 export async function VideoKuaishou(data: SyncData) {
-  const { content, video, title, tags = [] } = data.data as VideoData;
+  const { content, video, title, tags = [], cover } = data.data as VideoData;
 
   // 辅助函数：等待元素出现
   function waitForElement(selector: string, timeout = 10000): Promise<Element> {
@@ -69,6 +69,100 @@ export async function VideoKuaishou(data: SyncData) {
     }
   }
 
+  // 辅助函数：上传封面
+  async function uploadCover() {
+    if (!cover) return;
+
+    const coverSettingsSpan = Array.from(document.querySelectorAll('span')).find(
+      (el) => el.textContent?.includes('封面设置'),
+    );
+
+    if (!coverSettingsSpan) {
+      console.error('未找到 "封面设置" 按钮');
+      return;
+    }
+
+    const coverUploadButton = coverSettingsSpan.parentElement?.nextElementSibling?.firstChild
+      ?.firstChild as HTMLElement;
+    if (!coverUploadButton) {
+      console.error('未找到封面上传区域');
+      return;
+    }
+
+    coverUploadButton.click();
+
+    try {
+      await waitForElement('div.ant-modal-body');
+    } catch (error) {
+      console.error('封面设置弹窗未出现', error);
+      return;
+    }
+    await new Promise((resolve) => setTimeout(resolve, 3000));
+
+    while (true) {
+      const loadingSpan = Array.from(document.querySelectorAll('div.ant-modal-body span')).find(
+        (el) => el.textContent === '加载中',
+      );
+      if (loadingSpan) {
+        await new Promise((resolve) => setTimeout(resolve, 3000));
+      } else {
+        break;
+      }
+    }
+
+    const uploadCoverDiv = Array.from(document.querySelectorAll('div.ant-modal-body div')).find(
+      (el) => el.textContent === '上传封面',
+    );
+
+    if (!uploadCoverDiv) {
+      console.error('未找到 "上传封面" 按钮');
+      return;
+    }
+    (uploadCoverDiv as HTMLElement).click();
+
+    const fileInput = (await waitForElement("div.ant-modal-body input[type='file']")) as HTMLInputElement;
+    if (!fileInput) {
+      console.error('未找到封面上传的 file input');
+      return;
+    }
+
+    const dataTransfer = new DataTransfer();
+    if (cover.url && cover.type.includes('image/')) {
+      try {
+        const response = await fetch(cover.url);
+        if (!response.ok) {
+          throw new Error(`HTTP 错误! 状态: ${response.status}`);
+        }
+        const buffer = await response.arrayBuffer();
+        const file = new File([buffer], cover.name, { type: cover.type });
+        dataTransfer.items.add(file);
+      } catch (error) {
+        console.error(`上传封面 ${cover.url} 失败:`, error);
+      }
+    }
+
+    if (dataTransfer.files.length === 0) {
+      console.error('没有要上传的封面文件');
+      return;
+    }
+
+    fileInput.files = dataTransfer.files;
+    fileInput.dispatchEvent(new Event('change', { bubbles: true }));
+    fileInput.dispatchEvent(new Event('input', { bubbles: true }));
+
+    await new Promise((resolve) => setTimeout(resolve, 3000));
+
+    const confirmButton = Array.from(document.querySelectorAll('button')).find(
+      (el) => el.textContent?.trim() === '确认',
+    ) as HTMLElement;
+
+    if (confirmButton) {
+      confirmButton.click();
+    } else {
+      console.error("未找到'确认'按钮");
+    }
+  }
+
   // 等待页面加载
   await waitForElement('div#rc-tabs-0-tab-2');
   await new Promise((resolve) => setTimeout(resolve, 2000));
@@ -93,6 +187,11 @@ export async function VideoKuaishou(data: SyncData) {
     contentEditor.dispatchEvent(pasteEvent);
     await new Promise((resolve) => setTimeout(resolve, 1000));
     contentEditor.blur();
+  }
+
+  // 上传封面
+  if (cover) {
+    await uploadCover();
   }
 
   // 等待内容更新

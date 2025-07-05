@@ -1,8 +1,8 @@
 import type { SyncData, VideoData } from '../common';
 
 export async function VideoTiktok(data: SyncData) {
-  function waitForElement(selector: string, timeout = 10000): Promise<Element> {
-    return new Promise((resolve, reject) => {
+  function waitForElement(selector: string, timeout = 10000): Promise<Element | null> {
+    return new Promise((resolve) => {
       const element = document.querySelector(selector);
       if (element) {
         resolve(element);
@@ -24,13 +24,17 @@ export async function VideoTiktok(data: SyncData) {
 
       setTimeout(() => {
         observer.disconnect();
-        reject(new Error(`Element with selector "${selector}" not found within ${timeout}ms`));
+        resolve(null);
       }, timeout);
     });
   }
 
   async function uploadVideo(file: File): Promise<void> {
     const fileInput = (await waitForElement('input[type="file"][accept="video/*"]')) as HTMLInputElement;
+    if (!fileInput) {
+      console.error('Video file input not found');
+      throw new Error('Video file input not found');
+    }
     await new Promise((resolve) => setTimeout(resolve, 1000)); // 等待1秒确保元素完全加载
 
     const dataTransfer = new DataTransfer();
@@ -46,8 +50,64 @@ export async function VideoTiktok(data: SyncData) {
     console.log('视频上传事件已触发');
   }
 
+  async function uploadCover(cover: { url: string; name: string; type: string }) {
+    console.log('准备上传封面:', cover);
+
+    const editContainer = (await waitForElement('div.edit-container')) as HTMLElement;
+    if (!editContainer) {
+      console.log('未找到封面编辑容器');
+      return;
+    }
+    editContainer.click();
+    await new Promise((r) => setTimeout(r, 1000));
+
+    const tabs = document.querySelectorAll('div.cover-edit-header div.cover-edit-tab');
+    if (tabs.length < 2) {
+      console.log('未找到封面上传标签页');
+      return;
+    }
+    (tabs[1] as HTMLElement).click();
+    await new Promise((r) => setTimeout(r, 1000));
+
+    const fileInput = (await waitForElement(
+      'input[type="file"][accept="image/png, image/jpeg, image/jpg"]',
+    )) as HTMLInputElement;
+    if (!fileInput) {
+      console.log('未找到封面图片文件输入框');
+      return;
+    }
+
+    const response = await fetch(cover.url);
+    const buffer = await response.arrayBuffer();
+    const imageFile = new File([buffer], cover.name, { type: cover.type });
+
+    const dataTransfer = new DataTransfer();
+    dataTransfer.items.add(imageFile);
+    fileInput.files = dataTransfer.files;
+
+    fileInput.dispatchEvent(new Event('change', { bubbles: true }));
+    fileInput.dispatchEvent(new Event('input', { bubbles: true }));
+
+    console.log('封面图片上传事件已触发');
+    await new Promise((r) => setTimeout(r, 3000));
+
+    const doneButtons = document.querySelectorAll('div.cover-edit-footer button');
+    console.log('完成按钮:', doneButtons);
+    const doneButton = doneButtons[doneButtons.length - 1] as HTMLElement;
+    if (doneButton) {
+      doneButton.click();
+      console.log('已点击完成按钮');
+    }
+  }
+
   try {
-    const { content, video, title, tags = [] } = data.data as VideoData;
+    const {
+      content,
+      video,
+      title,
+      tags = [],
+      cover,
+    } = data.data as VideoData & { cover?: { url: string; name: string; type: string } };
 
     // 处理视频上传
     if (video) {
@@ -82,6 +142,10 @@ ${tags.map((tag) => `#${tag}`).join(' ')}`;
       editor.dispatchEvent(pasteEvent);
 
       await new Promise((resolve) => setTimeout(resolve, 1000));
+    }
+
+    if (cover) {
+      await uploadCover(cover);
     }
 
     // 等待内容填写完成

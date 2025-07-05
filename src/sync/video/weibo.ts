@@ -1,7 +1,7 @@
 import type { VideoData, SyncData } from '../common';
 
 export async function VideoWeibo(data: SyncData) {
-  const { content, video, title, tags } = data.data as VideoData;
+  const { content, video, title, tags, cover } = data.data as VideoData;
 
   function waitForElement(selector: string, timeout = 10000): Promise<Element> {
     return new Promise((resolve, reject) => {
@@ -112,6 +112,68 @@ export async function VideoWeibo(data: SyncData) {
       descriptionInput.value = fullContent;
       descriptionInput.dispatchEvent(new Event('input', { bubbles: true }));
       descriptionInput.dispatchEvent(new Event('change', { bubbles: true }));
+    }
+
+    async function uploadCover(coverData: { url: string; name: string; type?: string }) {
+      console.log('tryCover', coverData);
+      const cropCoverLink = Array.from(document.querySelectorAll('a')).find((e) => e.textContent?.includes('裁剪封面'));
+
+      console.log('a -->', cropCoverLink);
+      if (!cropCoverLink) return;
+
+      (cropCoverLink as HTMLElement).click();
+      await new Promise((e) => setTimeout(e, 1000));
+
+      const fileInput = document.querySelector<HTMLInputElement>(
+        "input[type='file'][accept='.jpg, .jpeg, .bmp, .gif, .png']",
+      );
+      console.log('fileInput -->', fileInput);
+      if (!fileInput) return;
+
+      const dataTransfer = new DataTransfer();
+
+      console.log('try upload file', coverData);
+      if (!coverData.type || !coverData.type.includes('image/')) {
+        return;
+      }
+
+      const response = await fetch(coverData.url);
+      const arrayBuffer = await response.arrayBuffer();
+      const imageFile = new File([arrayBuffer], coverData.name, { type: coverData.type });
+      dataTransfer.items.add(imageFile);
+
+      if (dataTransfer.files.length === 0) return;
+
+      fileInput.files = dataTransfer.files;
+      const changeEvent = new Event('change', { bubbles: true });
+      fileInput.dispatchEvent(changeEvent);
+      const inputEvent = new Event('input', { bubbles: true });
+      fileInput.dispatchEvent(inputEvent);
+
+      console.log('文件上传操作触发');
+      await new Promise((e) => setTimeout(e, 3000));
+
+      const tab1 = document.querySelector('div.wbpro-tab1');
+      console.log('tab1 -->', tab1);
+      if (!tab1) return;
+
+      const doneButtonsContainer = tab1.nextElementSibling;
+      if (!doneButtonsContainer) return;
+
+      const doneButtons = doneButtonsContainer.querySelectorAll(
+        'div.wbpro-layer div.wbpro-layer-btn.woo-box-flex.woo-box-justifyCenter button',
+      );
+      console.log('doneButtons -->', doneButtons);
+
+      const doneButton = Array.from(doneButtons).find((e) => '完成' == e.textContent);
+      console.log('doneButton -->', doneButton);
+      if (doneButton) {
+        (doneButton as HTMLElement).click();
+      }
+    }
+
+    if (cover) {
+      await uploadCover(cover);
     }
 
     // 处理自动发布

@@ -156,8 +156,89 @@ export async function VideoWeiXinChannel(data: SyncData) {
     console.log('视频上传事件已触发');
   }
 
+  /**
+   * 上传视频封面
+   * @param cover 封面图片信息
+   */
+  async function uploadCover(cover: { url: string; name: string; type?: string }): Promise<void> {
+    try {
+      console.debug('tryCover', cover);
+
+      const coverUploadButton = (await waitForElement('div.video-cover div.tag-inner')) as HTMLElement;
+      console.debug('coverUpload', coverUploadButton);
+
+      if (!coverUploadButton) return;
+
+      while (coverUploadButton.parentElement?.classList.contains('disabled')) {
+        console.debug('coverUpload is disabled, wait 3s');
+        await new Promise((resolve) => setTimeout(resolve, 3000));
+      }
+
+      coverUploadButton.click();
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+
+      const wujieApp = document.querySelector('wujie-app');
+      const root = wujieApp?.shadowRoot || document;
+
+      const fileInput = root.querySelector("div.crop-area input[type='file']") as HTMLInputElement;
+
+      if (!fileInput) {
+        console.error('封面上传文件输入框未找到');
+        return;
+      }
+      console.debug('fileInput', fileInput);
+
+      const dataTransfer = new DataTransfer();
+      if (cover.type && cover.type.includes('image/')) {
+        console.debug('try upload file', cover);
+        const response = await fetch(cover.url);
+        const arrayBuffer = await response.arrayBuffer();
+        const imageFile = new File([arrayBuffer], cover.name, {
+          type: cover.type,
+        });
+        dataTransfer.items.add(imageFile);
+      }
+
+      if (dataTransfer.files.length === 0) return;
+
+      fileInput.files = dataTransfer.files;
+      fileInput.dispatchEvent(new Event('change', { bubbles: true }));
+      fileInput.dispatchEvent(new Event('input', { bubbles: true }));
+      console.debug('文件上传操作触发');
+
+      await new Promise((resolve) => setTimeout(resolve, 2000));
+
+      const h3s = root.querySelectorAll('h3');
+      console.debug('h3s', h3s);
+      const cropTitle = Array.from(h3s).find((h) => h.textContent === '裁剪封面图');
+
+      if (cropTitle) {
+        console.debug('h3', cropTitle);
+        const doneButtons = root.querySelectorAll('div.finder-dialog-footer button');
+        console.debug('doneButtons', doneButtons);
+        const doneButton = Array.from(doneButtons).find((b) => b.textContent === '确定') as HTMLButtonElement;
+        if (doneButton) {
+          console.debug('doneButton', doneButton);
+          doneButton.click();
+          await new Promise((resolve) => setTimeout(resolve, 1000));
+        }
+      }
+
+      const finalConfirmButtons = root.querySelectorAll('div.finder-dialog-footer button');
+      console.debug('doneButtons', finalConfirmButtons);
+      const confirmButton = Array.from(finalConfirmButtons).find((b) => b.textContent === '确认') as HTMLButtonElement;
+
+      if (confirmButton) {
+        console.debug('doneButton', confirmButton);
+        confirmButton.click();
+      }
+    } catch (error) {
+      console.error('uploadCover failed:', error);
+    }
+  }
+
   try {
-    const { content, video, title, tags = [] } = data.data as VideoData;
+    const { content, video, title, tags = [], cover } = data.data as VideoData;
 
     // 处理视频上传
     if (video) {
@@ -223,6 +304,10 @@ export async function VideoWeiXinChannel(data: SyncData) {
 
         await new Promise((resolve) => setTimeout(resolve, 1000));
       }
+    }
+
+    if (cover) {
+      await uploadCover(cover);
     }
 
     // 处理原创声明
