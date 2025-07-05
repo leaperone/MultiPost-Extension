@@ -70,8 +70,71 @@ export async function VideoBaijiahao(data: SyncData) {
     });
   }
 
+  async function uploadCover(cover: { url: string; name: string; type?: string }) {
+    console.log('tryCover', cover);
+
+    // 1. Find and click the cover upload button
+    const coverUploadContainer = document.querySelector(
+      'div.cheetah-upload span.cheetah-upload div.cheetah-spin-container',
+    );
+    console.log('coverUpload', coverUploadContainer);
+    if (!coverUploadContainer) return;
+
+    const coverUploadButton = coverUploadContainer.firstChild as HTMLElement;
+    console.log('coverUploadButton', coverUploadButton);
+    if (!coverUploadButton) return;
+
+    coverUploadButton.click();
+    await new Promise((resolve) => setTimeout(resolve, 1000));
+
+    // 2. Find the file input
+    const fileInput = document.querySelector("div.cheetah-tabs-content input[name='media']") as HTMLInputElement;
+    console.log('fileInput', fileInput);
+    if (!fileInput) return;
+
+    // 3. Prepare the file for upload
+    const dataTransfer = new DataTransfer();
+
+    console.log('try upload file', cover);
+    if (!cover.type || !cover.type.includes('image/')) {
+      console.log('Cover is not an image, skipping upload');
+      return;
+    }
+
+    const response = await fetch(cover.url);
+    const arrayBuffer = await response.arrayBuffer();
+    const coverFile = new File([arrayBuffer], cover.name, { type: cover.type });
+
+    dataTransfer.items.add(coverFile);
+
+    if (dataTransfer.files.length === 0) return;
+
+    // 4. Set the file on the input and dispatch events
+    fileInput.files = dataTransfer.files;
+
+    const changeEvent = new Event('change', { bubbles: true });
+    fileInput.dispatchEvent(changeEvent);
+
+    const inputEvent = new Event('input', { bubbles: true });
+    fileInput.dispatchEvent(inputEvent);
+
+    console.log('文件上传操作触发');
+    await new Promise((resolve) => setTimeout(resolve, 3000));
+
+    // 5. Find and click the confirm button
+    const doneButtons = document.querySelectorAll('button');
+    console.log('doneButtons', doneButtons);
+
+    const doneButton = Array.from(doneButtons).find((e) => e.textContent === '确定');
+    console.log('doneButton', doneButton);
+
+    if (doneButton) {
+      (doneButton as HTMLElement).click();
+    }
+  }
+
   try {
-    const { content, video, title, tags } = data.data as VideoData;
+    const { content, video, title, tags, cover } = data.data as VideoData;
 
     if (!video) {
       console.error('没有视频文件');
@@ -130,6 +193,10 @@ export async function VideoBaijiahao(data: SyncData) {
         tagInput.dispatchEvent(enterEvent);
         await new Promise((resolve) => setTimeout(resolve, 1000));
       }
+    }
+
+    if (cover) {
+      await uploadCover(cover);
     }
 
     // 等待页面响应
