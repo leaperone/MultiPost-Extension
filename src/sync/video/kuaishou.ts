@@ -127,14 +127,14 @@ export async function VideoKuaishou(data: SyncData) {
     }
 
     const dataTransfer = new DataTransfer();
-    if (cover.url) {
+    if (cover.url && cover.type.includes('image/')) {
       try {
         const response = await fetch(cover.url);
         if (!response.ok) {
           throw new Error(`HTTP 错误! 状态: ${response.status}`);
         }
-        const blob = await response.blob();
-        const file = new File([blob], cover.name, { type: cover.type });
+        const buffer = await response.arrayBuffer();
+        const file = new File([buffer], cover.name, { type: cover.type });
         dataTransfer.items.add(file);
       } catch (error) {
         console.error(`上传封面 ${cover.url} 失败:`, error);
@@ -152,8 +152,8 @@ export async function VideoKuaishou(data: SyncData) {
 
     await new Promise((resolve) => setTimeout(resolve, 3000));
 
-    const confirmButton = Array.from(document.querySelectorAll('div.ant-modal-footer button')).find(
-      (el) => el.textContent === '确认',
+    const confirmButton = Array.from(document.querySelectorAll('button')).find(
+      (el) => el.textContent?.trim() === '确认',
     ) as HTMLElement;
 
     if (confirmButton) {
