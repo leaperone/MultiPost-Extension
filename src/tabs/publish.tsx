@@ -221,7 +221,7 @@ export default function Publish() {
 
   const processVideo = async (data: SyncData) => {
     setNotice(chrome.i18n.getMessage('processingContent'));
-    const { video } = data.data as VideoData;
+    const { video, cover } = data.data as VideoData;
 
     if (!video) {
       console.warn('视频数据不存在');
@@ -229,11 +229,16 @@ export default function Publish() {
     }
 
     const processedVideo = await processFile(video);
+    let processedCover: FileData | null = null;
+    if (cover) {
+      processedCover = await processFile(cover);
+    }
     return {
       ...data,
       data: {
         ...data.data,
         video: processedVideo,
+        cover: processedCover || cover,
       },
     };
   };
