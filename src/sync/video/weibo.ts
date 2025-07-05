@@ -118,7 +118,7 @@ export async function VideoWeibo(data: SyncData) {
       console.log('tryCover', coverData);
       const cropCoverLink = Array.from(document.querySelectorAll('a')).find((e) => e.textContent?.includes('裁剪封面'));
 
-      console.log('a -->', cropCoverLink);
+      console.log('a', cropCoverLink);
       if (!cropCoverLink) return;
 
       (cropCoverLink as HTMLElement).click();
@@ -127,7 +127,7 @@ export async function VideoWeibo(data: SyncData) {
       const fileInput = document.querySelector<HTMLInputElement>(
         "input[type='file'][accept='.jpg, .jpeg, .bmp, .gif, .png']",
       );
-      console.log('fileInput -->', fileInput);
+      console.log('fileInput', fileInput);
       if (!fileInput) return;
 
       const dataTransfer = new DataTransfer();
@@ -154,7 +154,7 @@ export async function VideoWeibo(data: SyncData) {
       await new Promise((e) => setTimeout(e, 3000));
 
       const tab1 = document.querySelector('div.wbpro-tab1');
-      console.log('tab1 -->', tab1);
+      console.log('tab1', tab1);
       if (!tab1) return;
 
       const doneButtonsContainer = tab1.nextElementSibling;
@@ -163,10 +163,10 @@ export async function VideoWeibo(data: SyncData) {
       const doneButtons = doneButtonsContainer.querySelectorAll(
         'div.wbpro-layer div.wbpro-layer-btn.woo-box-flex.woo-box-justifyCenter button',
       );
-      console.log('doneButtons -->', doneButtons);
+      console.log('doneButtons', doneButtons);
 
       const doneButton = Array.from(doneButtons).find((e) => '完成' == e.textContent);
-      console.log('doneButton -->', doneButton);
+      console.log('doneButton', doneButton);
       if (doneButton) {
         (doneButton as HTMLElement).click();
       }

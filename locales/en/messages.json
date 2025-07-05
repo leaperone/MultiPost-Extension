@@ -533,6 +533,10 @@
     "message": "Xiaoheihe",
     "description": "Platform name for Xiaoheihe"
   },
+  "platformToutiaohao": {
+    "message": "Toutiaohao",
+    "description": "Platform name for Toutiaohao"
+  },
   "optionsFeedbackPrefix": {
     "message": "Missing a platform you need?"
   },
