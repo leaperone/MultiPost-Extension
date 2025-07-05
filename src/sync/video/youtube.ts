@@ -1,67 +1,66 @@
 import type { SyncData, VideoData } from '../common';
 
-function waitForElement(selector: string, timeout = 10000): Promise<Element | null> {
-  return new Promise((resolve) => {
-    const element = document.querySelector(selector);
-    if (element) {
-      resolve(element);
-      return;
-    }
-
-    const observer = new MutationObserver(() => {
+export async function VideoYoutube(data: SyncData) {
+  function waitForElement(selector: string, timeout = 10000): Promise<Element | null> {
+    return new Promise((resolve) => {
       const element = document.querySelector(selector);
       if (element) {
         resolve(element);
-        observer.disconnect();
+        return;
       }
+
+      const observer = new MutationObserver(() => {
+        const element = document.querySelector(selector);
+        if (element) {
+          resolve(element);
+          observer.disconnect();
+        }
+      });
+
+      observer.observe(document.body, {
+        childList: true,
+        subtree: true,
+      });
+
+      setTimeout(() => {
+        observer.disconnect();
+        console.warn(`Element with selector "${selector}" not found within ${timeout}ms`);
+        resolve(null);
+      }, timeout);
     });
-
-    observer.observe(document.body, {
-      childList: true,
-      subtree: true,
-    });
-
-    setTimeout(() => {
-      observer.disconnect();
-      console.warn(`Element with selector "${selector}" not found within ${timeout}ms`);
-      resolve(null);
-    }, timeout);
-  });
-}
-
-async function uploadCover(cover: { url: string; name: string; type?: string }) {
-  console.debug('Trying to upload cover', cover);
-
-  const coverInput = (await waitForElement('input#file-loader.ytcp-thumbnail-uploader', 5000)) as HTMLInputElement;
-
-  if (!coverInput) {
-    console.error('Could not find the thumbnail uploader input.');
-    return;
   }
 
-  if (!cover.type || !cover.type.includes('image/')) {
-    console.error('Cover file is not an image or type is missing.');
-    return;
+  async function uploadCover(cover: { url: string; name: string; type?: string }) {
+    console.debug('Trying to upload cover', cover);
+
+    const coverInput = (await waitForElement('input#file-loader.ytcp-thumbnail-uploader', 5000)) as HTMLInputElement;
+
+    if (!coverInput) {
+      console.error('Could not find the thumbnail uploader input.');
+      return;
+    }
+
+    if (!cover.type || !cover.type.includes('image/')) {
+      console.error('Cover file is not an image or type is missing.');
+      return;
+    }
+
+    const response = await fetch(cover.url);
+    const arrayBuffer = await response.arrayBuffer();
+    const coverFile = new File([arrayBuffer], cover.name, { type: cover.type });
+
+    const dataTransfer = new DataTransfer();
+    dataTransfer.items.add(coverFile);
+
+    if (dataTransfer.files.length === 0) {
+      return;
+    }
+
+    coverInput.files = dataTransfer.files;
+    coverInput.dispatchEvent(new Event('change', { bubbles: true }));
+    coverInput.dispatchEvent(new Event('input', { bubbles: true }));
+    console.debug('Cover file upload events dispatched.');
   }
-
-  const response = await fetch(cover.url);
-  const arrayBuffer = await response.arrayBuffer();
-  const coverFile = new File([arrayBuffer], cover.name, { type: cover.type });
-
-  const dataTransfer = new DataTransfer();
-  dataTransfer.items.add(coverFile);
-
-  if (dataTransfer.files.length === 0) {
-    return;
-  }
-
-  coverInput.files = dataTransfer.files;
-  coverInput.dispatchEvent(new Event('change', { bubbles: true }));
-  coverInput.dispatchEvent(new Event('input', { bubbles: true }));
-  console.debug('Cover file upload events dispatched.');
-}
-
-export async function VideoYoutube(data: SyncData) {
   try {
     const videoData = data.data as VideoData;
 
