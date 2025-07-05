@@ -69,47 +69,45 @@ export async function VideoRednote(data: SyncData) {
 
   // 辅助函数：上传封面
   async function uploadCover(coverFile: NonNullable<VideoData['cover']>) {
-    // 1. 点击编辑封面触发器
-    // 选择器参考了其他平台的实现，可能需要根据小红书的实际 DOM 结构进行调整
-    const editCoverTrigger = document.querySelector('div.fake-upload-trigger') as HTMLElement;
-    if (!editCoverTrigger) {
-      console.error('未找到编辑封面触发器');
+    console.debug('tryCover', coverFile);
+    const coverUploadTrigger = document.querySelector('div.noCover.uploadCover') as HTMLElement;
+    console.debug('coverUpload', coverUploadTrigger);
+    if (!coverUploadTrigger) {
+      console.error('未找到封面上传触发器: div.noCover.uploadCover');
       return;
     }
-    editCoverTrigger.click();
-    await new Promise((resolve) => setTimeout(resolve, 1000));
+    coverUploadTrigger.click();
 
-    // 2. 点击“本地上传”
-    const localUploadLi = Array.from(document.querySelectorAll('li')).find(
-      (li) => li.textContent?.includes('本地上传'),
-    );
-    if (!localUploadLi) {
-      console.error('未找到“本地上传”按钮');
+    const fileInputSelector = "input[accept='image/png, image/jpeg, image/*']";
+    try {
+      await waitForElement(fileInputSelector);
+    } catch (e) {
+      console.error(`等待元素 ${fileInputSelector} 超时`, e);
       return;
     }
-    localUploadLi.click();
-    await new Promise((resolve) => setTimeout(resolve, 1000));
 
-    // 3. 查找文件输入框并上传
-    // 这里的选择器也可能需要适配小红书
-    const fileInput = document.querySelector('div.xigua-upload-poster-trigger > input') as HTMLInputElement;
+    const fileInput = document.querySelector(fileInputSelector) as HTMLInputElement;
+    console.debug('fileInput', fileInput);
     if (!fileInput) {
       console.error('未找到封面上传的文件输入元素');
       return;
     }
 
     const dataTransfer = new DataTransfer();
+    console.debug('try upload file', coverFile);
+    if (!coverFile.type.includes('image/')) {
+      console.error('提供的封面文件不是图片');
+      return;
+    }
+
     try {
-      if (!coverFile.type.includes('image/')) {
-        console.error('提供的封面文件不是图片');
-        return;
-      }
       const response = await fetch(coverFile.url);
-      const blob = await response.blob();
-      const file = new File([blob], coverFile.name, { type: coverFile.type });
+      const arrayBuffer = await response.arrayBuffer();
+      const file = new File([arrayBuffer], coverFile.name, { type: coverFile.type });
       dataTransfer.items.add(file);
     } catch (error) {
       console.error(`上传封面 ${coverFile.url} 失败:`, error);
+      return;
     }
 
     if (dataTransfer.files.length === 0) {
@@ -119,23 +117,15 @@ export async function VideoRednote(data: SyncData) {
     fileInput.files = dataTransfer.files;
     fileInput.dispatchEvent(new Event('change', { bubbles: true }));
     fileInput.dispatchEvent(new Event('input', { bubbles: true }));
+    console.debug('文件上传操作触发');
     await new Promise((resolve) => setTimeout(resolve, 3000));
 
-    // 4. 确认剪裁和选择
-    const clipBtn = document.querySelector('div.clip-btn-content') as HTMLElement;
-    if (clipBtn) {
-      clipBtn.click();
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-    }
-
-    const confirmButton = Array.from(document.querySelectorAll('button')).find((btn) => btn.textContent === '确定');
-    if (confirmButton) {
-      confirmButton.click();
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-      const finalConfirm = document.querySelector('button.m-button.red') as HTMLElement;
-      if (finalConfirm) {
-        finalConfirm.click();
-      }
+    const doneButtons = document.querySelectorAll('span');
+    console.debug('doneButtons', doneButtons);
+    const doneButton = Array.from(doneButtons).find((btn) => btn.textContent?.trim() === '确定');
+    console.debug('doneButton', doneButton);
+    if (doneButton) {
+      (doneButton as HTMLElement).click();
     }
   }
 
@@ -157,11 +147,6 @@ export async function VideoRednote(data: SyncData) {
     const finalTitle = title?.slice(0, 20) || content?.slice(0, 20) || '';
     titleInput.value = finalTitle;
     titleInput.dispatchEvent(new Event('input', { bubbles: true }));
-  }
-
-  // 上传封面
-  if (cover) {
-    await uploadCover(cover);
   }
 
   // 填写内容和标签
@@ -208,6 +193,11 @@ export async function VideoRednote(data: SyncData) {
       editor.dispatchEvent(enterEvent);
       await new Promise((resolve) => setTimeout(resolve, 2000));
     }
+  }
+
+  // 上传封面
+  if (cover) {
+    await uploadCover(cover);
   }
 
   // 处理发布按钮
