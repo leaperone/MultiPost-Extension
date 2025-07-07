@@ -11,6 +11,7 @@ export async function GET(request: Request) {
     const clients = await prisma.extensionClient.findMany({
       where: {
         userId,
+        deletedAt: null,
       },
       select: {
         id: true,

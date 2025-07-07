@@ -1,24 +1,17 @@
 'use client';
 
-import {
-  Modal,
-  ModalContent,
-  ModalHeader,
-  ModalBody,
-  ModalFooter,
-  Button,
-  useDisclosure,
-  Input,
-  addToast,
-} from '@heroui/react';
+import { Modal, ModalContent, ModalHeader, ModalBody, ModalFooter, Button, useDisclosure, Input } from '@heroui/react';
 import { Pencil } from 'lucide-react';
 import { useState } from 'react';
 import { useTranslation } from '@/i18n/client';
+import { useRouter } from 'next/navigation';
+import { toast } from 'sonner';
 
 export default function EditNameButton({ clientId, initialName }: { clientId: string; initialName: string }) {
   const { t } = useTranslation('publish');
   const { isOpen, onOpen, onOpenChange } = useDisclosure();
   const [name, setName] = useState(initialName);
+  const router = useRouter();
 
   const handleEdit = async () => {
     try {
@@ -31,25 +24,14 @@ export default function EditNameButton({ clientId, initialName }: { clientId: st
       });
       const data = await response.json();
       if (data.success) {
-        addToast({
-          title: t('client.edit_button.toast.success'),
-          color: 'success',
-        });
+        toast.success(t('client.edit_button.toast.success'));
         onOpenChange();
-        window.location.reload();
+        router.refresh();
       } else {
-        addToast({
-          title: t('client.edit_button.toast.error.title'),
-          description: t('client.edit_button.toast.error.description'),
-          color: 'danger',
-        });
+        toast.error(`${t('client.edit_button.toast.error.title')}: ${t('client.edit_button.toast.error.description')}`);
       }
     } catch (error) {
-      addToast({
-        title: t('client.edit_button.toast.error.title'),
-        description: t('client.edit_button.toast.error.description'),
-        color: 'danger',
-      });
+      toast.error(`${t('client.edit_button.toast.error.title')}: ${t('client.edit_button.toast.error.description')}`);
     }
   };
 
@@ -58,7 +40,6 @@ export default function EditNameButton({ clientId, initialName }: { clientId: st
       <Button
         onPress={onOpen}
         variant="bordered"
-        size="sm"
         className="border border-default-200 shadow-none">
         <Pencil className="mr-2 size-4" />
         {t('client.edit_button.button')}

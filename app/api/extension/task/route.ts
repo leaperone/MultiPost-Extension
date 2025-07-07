@@ -17,6 +17,7 @@ export async function POST(request: Request) {
       where: {
         id: validatedData.targetClientId,
         userId,
+        deletedAt: null,
       },
     });
     if (!client) {

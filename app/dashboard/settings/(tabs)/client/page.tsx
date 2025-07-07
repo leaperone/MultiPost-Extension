@@ -7,6 +7,7 @@ import { formatDistanceToNow } from 'date-fns';
 import LinkButton from './LinkExtensionButton';
 import EditNameButton from './EditNameButton';
 import { createTranslation } from '@/i18n/server';
+import DeleteClientButton from './DeleteClientButton';
 
 // Server component for fetching and displaying clients
 async function ClientsList() {
@@ -15,7 +16,7 @@ async function ClientsList() {
   if (!session?.user?.id) return null;
 
   const clients = await prisma.extensionClient.findMany({
-    where: { userId: session.user.id },
+    where: { userId: session.user.id, deletedAt: null },
     orderBy: { updatedAt: 'desc' },
   });
 
@@ -29,7 +30,7 @@ async function ClientsList() {
             </div>
             <div>
               <h3 className="text-lg font-medium text-foreground">{t('client.page.empty')}</h3>
-              <p className="mt-1 text-sm text-foreground/60">{t('clients.page.description', { ns: 'settings' })}</p>
+              <p className="mt-1 text-sm text-foreground/60">{t('client.page.description')}</p>
             </div>
           </div>
         </CardBody>
@@ -63,11 +64,12 @@ async function ClientsList() {
               <p className="mb-1 text-sm text-foreground/60">Client ID</p>
               <p className="break-all font-mono text-sm text-foreground">{client.id}</p>
             </div>
-            <div className="flex justify-end">
+            <div className="flex justify-end gap-2">
               <EditNameButton
                 clientId={client.id}
                 initialName={client.name}
               />
+              <DeleteClientButton clientId={client.id} />
             </div>
           </CardBody>
         </Card>
@@ -82,7 +84,7 @@ export default async function ClientsPage() {
   if (!session?.user?.id) return null;
 
   const clientCount = await prisma.extensionClient.count({
-    where: { userId: session.user.id },
+    where: { userId: session.user.id, deletedAt: null },
   });
 
   return (
@@ -105,7 +107,7 @@ export default async function ClientsPage() {
                 <Users className="size-5 text-primary" />
               </div>
               <div>
-                <p className="text-sm text-foreground/60">{t('clients.stats.connected_clients', { ns: 'settings' })}</p>
+                <p className="text-sm text-foreground/60">{t('client.page.connected_clients')}</p>
                 <p className="text-2xl font-bold text-foreground">{clientCount}</p>
               </div>
             </div>
@@ -119,8 +121,12 @@ export default async function ClientsPage() {
                 <Clock className="size-5 text-secondary" />
               </div>
               <div>
-                <p className="text-sm text-foreground/60">{t('clients.stats.active_status', { ns: 'settings' })}</p>
-                <p className="text-2xl font-bold text-foreground">{clientCount > 0 ? t('clients.stats.online', { ns: 'settings' }) : t('clients.stats.offline', { ns: 'settings' })}</p>
+                <p className="text-sm text-foreground/60">{t('client.page.active_status')}</p>
+                <p className="text-2xl font-bold text-foreground">
+                  {clientCount > 0
+                    ? t('client.page.online', { count: clientCount })
+                    : t('client.page.offline')}
+                </p>
               </div>
             </div>
           </CardHeader>

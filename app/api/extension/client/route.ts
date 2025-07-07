@@ -18,6 +18,7 @@ export async function GET(request: Request) {
       where: {
         id: clientId,
         userId,
+        deletedAt: null,
       },
       select: {
         id: true,
@@ -25,6 +26,7 @@ export async function GET(request: Request) {
         createdAt: true,
         updatedAt: true,
         platformInfos: true,
+        deletedAt: true,
       },
     });
     if (!client) {

@@ -49,7 +49,12 @@
       "title": "扩展客户端",
       "description": "管理已连接的浏览器扩展客户端",
       "alert": "请保持浏览器打开以确保客户端正常工作。关闭浏览器后，客户端将无法继续工作。",
-      "empty": "暂无已连接的客户端"
+      "empty": "暂无已连接的客户端",
+      "last_seen": "最后在线：{{time}}",
+      "connected_clients": "已连接客户端",
+      "active_status": "在线状态",
+      "online": "{{count}} 个客户端在线",
+      "offline": "暂无客户端在线"
     },
     "link_button": {
       "button": "连接扩展",
@@ -89,6 +94,23 @@
         "error": {
           "title": "编辑失败",
           "description": "请稍后重试"
+        }
+      }
+    },
+    "delete_button": {
+      "button": "删除",
+      "modal": {
+        "title": "您确定要删除吗？",
+        "description": "此操作无法撤销。这将停用该客户端。",
+        "buttons": {
+          "cancel": "取消",
+          "confirm": "继续"
+        }
+      },
+      "toast": {
+        "success": "客户端删除成功。",
+        "error": {
+          "title": "删除客户端失败"
         }
       }
     }

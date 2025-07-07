@@ -49,7 +49,12 @@
       "title": "Extension Clients",
       "description": "Manage connected browser extension clients",
       "alert": "Please keep the browser open to ensure the client works properly. The client will stop working after closing the browser.",
-      "empty": "No connected clients"
+      "empty": "No connected clients",
+      "last_seen": "Last seen {{time}}",
+      "connected_clients": "Connected Clients",
+      "active_status": "Active Status",
+      "online": "{{count}} clients are online",
+      "offline": "No clients are online"
     },
     "link_button": {
       "button": "Connect Extension",
@@ -89,6 +94,23 @@
         "error": {
           "title": "Update Failed",
           "description": "Please try again later"
+        }
+      }
+    },
+    "delete_button": {
+      "button": "Delete",
+      "modal": {
+        "title": "Are you absolutely sure?",
+        "description": "This action cannot be undone. This will deactivate the client.",
+        "buttons": {
+          "cancel": "Cancel",
+          "confirm": "Continue"
+        }
+      },
+      "toast": {
+        "success": "Client deleted successfully.",
+        "error": {
+          "title": "Failed to delete client"
         }
       }
     }

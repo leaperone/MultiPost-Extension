@@ -76,6 +76,7 @@ export async function POST(request: Request) {
       where: {
         id: extensionClientId,
         userId,
+        deletedAt: null,
       },
     });
     if (!client) {
