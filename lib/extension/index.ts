@@ -41,6 +41,7 @@ export interface VideoData {
   title: string;
   content: string;
   video: FileData;
+  cover?: FileData;
   tags: string[];
 }
 

@@ -31,8 +31,10 @@ import {
   Eraser,
   UploadIcon,
   PlusIcon,
+  ImageIcon,
 } from 'lucide-react';
 import dynamic from 'next/dynamic';
+import Image from 'next/image';
 import type { FileData, SyncData } from '@/lib/extension';
 import PlatformCheckbox from '../components/PlatformCheckbox';
 import { funcPublish, getPlatformInfos } from '@/lib/extension';
@@ -189,7 +191,9 @@ export default function VideoPage() {
   const [title, setTitle] = useState<string>('');
   const [content, setContent] = useState<string>('');
   const [videoFile, setVideoFile] = useState<FileData | null>(null);
+  const [coverFile, setCoverFile] = useState<FileData | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const coverInputRef = useRef<HTMLInputElement>(null);
   const { videoPlatforms, setVideoPlatforms, clearVideoPlatforms } = usePlatformStore();
   const [selectedPlatforms, setSelectedPlatforms] = useState<string[]>(videoPlatforms);
   const [platforms, setPlatforms] = useState<PlatformInfo[]>([]);
@@ -291,6 +295,10 @@ export default function VideoPage() {
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
     }
+    setCoverFile(null);
+    if (coverInputRef.current) {
+      coverInputRef.current.value = '';
+    }
     setTitle('');
     setContent('');
     setSelectedPlatforms([]);
@@ -303,6 +311,25 @@ export default function VideoPage() {
       setVideoPlatforms(newSelected);
       return newSelected;
     });
+  };
+
+  const handleCoverFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const selectedFile = event.target.files?.[0];
+    if (selectedFile && selectedFile.type.startsWith('image/')) {
+      setCoverFile({
+        name: selectedFile.name,
+        url: URL.createObjectURL(selectedFile),
+        type: selectedFile.type,
+        size: selectedFile.size,
+      });
+    }
+  };
+
+  const handleRemoveCover = () => {
+    setCoverFile(null);
+    if (coverInputRef.current) {
+      coverInputRef.current.value = '';
+    }
   };
 
   const handlePublish = async () => {
@@ -339,6 +366,7 @@ export default function VideoPage() {
         title,
         content,
         video: videoFile,
+        cover: coverFile || undefined,
         tags,
       },
       isAutoPublish: false,
@@ -464,6 +492,48 @@ export default function VideoPage() {
                   <p className="text-sm text-gray-600">{videoFile.name}</p>
                 </div>
               </CardBody>
+              <CardFooter>
+                {!coverFile ? (
+                  <>
+                    <input
+                      type="file"
+                      ref={coverInputRef}
+                      accept="image/*"
+                      onChange={handleCoverFileChange}
+                      className="hidden"
+                    />
+                    <Button
+                      variant="light"
+                      onPress={() => coverInputRef.current?.click()}>
+                      <ImageIcon className="mr-2 size-5" />
+                      {t('video.addCover')}
+                    </Button>
+                  </>
+                ) : (
+                  <div className="w-full">
+                    <div
+                      className="group relative mb-2 w-full"
+                      style={{ paddingTop: '56.25%' }}>
+                      <Image
+                        src={coverFile.url}
+                        alt={coverFile.name}
+                        layout="fill"
+                        objectFit="cover"
+                        className="rounded-lg"
+                      />
+                      <Button
+                        isIconOnly
+                        size="sm"
+                        color="danger"
+                        className="absolute right-2 top-2 z-50 opacity-0 transition-opacity group-hover:opacity-100"
+                        onPress={handleRemoveCover}>
+                        <XIcon className="size-4" />
+                      </Button>
+                    </div>
+                    <p className="text-sm text-gray-600">{coverFile.name}</p>
+                  </div>
+                )}
+              </CardFooter>
             </Card>
           )}
 

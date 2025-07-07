@@ -23,9 +23,10 @@
     "clearAll": "Clear all"
   },
   "video": {
-    "title": "Please enter a title",
-    "description": "Please enter a description, then upload video",
-    "tags": "Enter tags, separated by commas or enter"
+    "title": "Video Title",
+    "description": "Video Description...",
+    "tags": "Add tags (press Enter or comma to separate)",
+    "addCover": "Add Cover"
   },
   "grid": {
     "uploadImage": "Click or drag to upload image",
@@ -93,8 +94,8 @@
     }
   },
   "platforms": {
-    "cn": "Chinese Platforms",
-    "international": "International Platforms",
+    "cn": "China",
+    "international": "International",
     "popular": "Popular Platforms",
     "others": "Other Platforms"
   },

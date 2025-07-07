@@ -23,9 +23,10 @@
     "clearAll": "清空"
   },
   "video": {
-    "title": "请输入标题",
-    "description": "请输入描述，然后上传视频",
-    "tags": "请输入标签，用回车或逗号分隔"
+    "title": "视频标题",
+    "description": "视频描述...",
+    "tags": "添加标签 (回车或逗号分隔)",
+    "addCover": "添加封面"
   },
   "grid": {
     "uploadImage": "点击或拖拽上传图片",
