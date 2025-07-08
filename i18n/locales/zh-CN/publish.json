@@ -1,10 +1,18 @@
 {
   "contactUs": "联系我们",
+  "library": {
+    "title": "库",
+    "images": "图片",
+    "posters": "海报",
+    "loading": "加载中..."
+  },
   "dynamic": {
     "title": "请输入标题",
     "content": "请输入内容",
     "autoPublish": "自动发布",
     "clearAll": "清空",
+    "titlePlaceholder": "给你的内容起个标题（可选）",
+    "contentPlaceholder": "在这里输入你的内容...",
     "tips": {
       "dragAndDrop": "拖放文件到此处上传",
       "drop": "松开鼠标上传文件",
@@ -15,18 +23,60 @@
     },
     "aiImageGenerationModal": {
       "title": "AI 配图生成"
-    }
+    },
+    "newTask": "新建发布任务",
+    "steps": {
+      "selectType": {
+        "title": "选择发布类型",
+        "description": "选择您要发布的内容类型"
+      },
+      "editContent": {
+        "title": "内容创作",
+        "description": "撰写内容并添加媒体"
+      },
+      "selectAndPublish": {
+        "title": "选择平台和发布",
+        "description": "选择账号并进行发布"
+      }
+    },
+    "total": "总计",
+    "uploadImage": "上传图片",
+    "library": "素材库",
+    "aiGenerate": "AI 生成",
+    "uploadVideo": "上传视频",
+    "releaseToUpload": "松开即可上传",
+    "videoSupportWarning": "* 仅少量海外平台支持视频发布，例如 X、Instagram、LinkedIn 等"
   },
   "podcast": {
     "title": "请输入播客标题",
     "description": "请输入播客描述",
-    "clearAll": "清空"
+    "clearAll": "清空",
+    "newTask": "新建播客任务",
+    "steps": {
+      "editContent": {
+        "title": "内容创作",
+        "description": "撰写播客信息并上传音频"
+      }
+    },
+    "uploadAudioTitle": "上传你的播客音频",
+    "dragOrClick": "点击上传或拖拽文件"
   },
   "video": {
     "title": "视频标题",
     "description": "视频描述...",
     "tags": "添加标签 (回车或逗号分隔)",
-    "addCover": "添加封面"
+    "addCover": "添加封面",
+    "addTag": "添加标签",
+    "newTask": "新建视频任务",
+    "steps": {
+      "editContent": {
+        "title": "内容创作",
+        "description": "撰写视频信息并上传文件"
+      }
+    },
+    "uploadVideoTitle": "上传你的视频",
+    "selectFromFile": "从文件中选择",
+    "dragOrClick": "点击上传或拖拽文件"
   },
   "grid": {
     "uploadImage": "点击或拖拽上传图片",
@@ -116,10 +166,10 @@
     }
   },
   "platforms": {
-    "cn": "中国平台",
-    "international": "国际平台",
-    "popular": "热门平台",
-    "others": "其他平台"
+    "cn": "中国大陆",
+    "international": "国际/地区",
+    "popular": "热门",
+    "others": "其他"
   },
   "upload": {
     "duplicateFiles": "检测到重复文件",
@@ -165,26 +215,53 @@
       "default": "选择知识星球"
     },
     "modal": {
-      "title": "知识星球配置",
+      "title": "ZSXQ Configuration",
       "groupName": {
-        "label": "星球名称",
-        "placeholder": "请输入星球名称",
-        "error": "请输入星球名称"
+        "label": "Group Name",
+        "placeholder": "Enter group name",
+        "error": "Please enter group name"
       },
       "groupUrl": {
-        "label": "星球链接",
-        "placeholder": "请输入星球链接",
-        "error": "请输入有效的星球链接"
+        "label": "Group URL",
+        "placeholder": "Enter group URL",
+        "error": "Please enter valid group URL"
       },
-      "addButton": "添加星球",
-      "addedGroups": "已添加的星球",
-      "select": "选择",
-      "selected": "已选择",
-      "noGroups": "暂无星球"
+      "addButton": "Add Group",
+      "addedGroups": "Added Groups",
+      "select": "Select",
+      "selected": "Selected",
+      "noGroups": "No groups"
     },
     "toast": {
       "addSuccess": {
-        "title": "添加成功"
+        "title": "Added successfully"
+      }
+    }
+  },
+  "publishPage": {
+    "greeting": {
+      "morning": "早上好",
+      "noon": "中午好",
+      "afternoon": "下午好",
+      "evening": "晚上好"
+    },
+    "whatToWriteToday": "今天想要写点什么？",
+    "publishTypes": {
+      "dynamic": {
+        "title": "发布动态",
+        "description": "分享您的想法、新鲜事。"
+      },
+      "video": {
+        "title": "发布视频",
+        "description": "分享您创作的精彩视频。"
+      },
+      "podcast": {
+        "title": "发布播客",
+        "description": "分享您的播客节目。"
+      },
+      "article": {
+        "title": "发布文章",
+        "description": "使用 Markdown 编辑器发布文章。"
       }
     }
   }

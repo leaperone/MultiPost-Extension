@@ -21,11 +21,13 @@ export interface DynamicData {
 }
 
 export interface FileData {
+  id?: string;
   name: string;
   url: string;
   type: string;
   size: number;
   originUrl?: string;
+  file?: File;
 }
 
 export interface ArticleData {

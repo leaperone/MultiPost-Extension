@@ -35,7 +35,7 @@ export default function PublishLayout({ children }: { children: React.ReactNode 
 
       {/* Fixed header with tabs */}
       <div className="shrink-0">
-        <div className="flex w-full flex-row items-center justify-between">
+        <div className="flex w-full flex-row items-center justify-between px-2">
           <Tabs
             aria-label="Publish Tabs"
             selectedKey={pathname}
@@ -69,7 +69,7 @@ export default function PublishLayout({ children }: { children: React.ReactNode 
               title={<FileTextIcon />}
             />
           </Tabs>
-          <div className="flex flex-row items-center gap-2">
+          <div className="flex w-56 flex-row items-center justify-end gap-2">
             <BalanceButtonClient size="sm" />
             <Button
               as={Link}
@@ -89,7 +89,7 @@ export default function PublishLayout({ children }: { children: React.ReactNode 
 
       {/* Scrollable content area */}
       <div className="flex-1 overflow-hidden">
-        <div className="mx-auto size-full max-w-3xl overflow-y-auto px-1 scrollbar-none">{children}</div>
+        <div className="size-full overflow-y-auto px-1 scrollbar-none">{children}</div>
       </div>
     </div>
   );

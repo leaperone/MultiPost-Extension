@@ -7,28 +7,14 @@ declare global {
   }
 }
 
+import { Card, Button, Input, Textarea, CardHeader, CardBody, addToast, Accordion, AccordionItem } from '@heroui/react';
 import {
-  Card,
-  Button,
-  Input,
-  Textarea,
-  CardHeader,
-  CardBody,
-  CardFooter,
-  addToast,
-  Accordion,
-  AccordionItem,
-} from '@heroui/react';
-import {
-  AudioLinesIcon,
   XIcon,
   TrashIcon,
   ArrowLeftIcon,
   ArrowRightIcon,
   SendHorizontal,
   Eraser,
-  PlayIcon,
-  PauseIcon,
   UploadIcon,
 } from 'lucide-react';
 import React, { useState, useRef, useEffect, useCallback } from 'react';
@@ -43,6 +29,7 @@ import { funcPublish, getPlatformInfos } from '@/lib/extension';
 import PlatformCheckbox from '../components/PlatformCheckbox';
 import { usePlatformStore } from '@/store/publish.store';
 import { getPlatformExtraConfigList } from '../action';
+import { useRouter } from 'next/navigation';
 
 interface AudioPlayerProps {
   url: string;
@@ -51,34 +38,15 @@ interface AudioPlayerProps {
 }
 
 const AudioPlayer: React.FC<AudioPlayerProps> = ({ url, name, onDelete }) => {
-  const [isPlaying, setIsPlaying] = useState(false);
   const audioRef = useRef<HTMLAudioElement>(null);
-
-  const togglePlay = () => {
-    if (audioRef.current) {
-      if (isPlaying) {
-        audioRef.current.pause();
-      } else {
-        audioRef.current.play();
-      }
-      setIsPlaying(!isPlaying);
-    }
-  };
 
   return (
     <div className="group relative flex w-full items-center gap-4 rounded-lg border p-4">
-      <Button
-        isIconOnly
-        variant="light"
-        onPress={togglePlay}>
-        {isPlaying ? <PauseIcon className="size-6" /> : <PlayIcon className="size-6" />}
-      </Button>
       <div className="flex-1">
         <p className="text-sm">{name}</p>
         <audio
           ref={audioRef}
           src={url}
-          onEnded={() => setIsPlaying(false)}
           className="w-full"
           controls
         />
@@ -96,7 +64,7 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({ url, name, onDelete }) => {
 };
 
 // 拖放区域组件
-const DropZone = ({ onFileDrop }: { onFileDrop: (file: File) => void }) => {
+const DropZone = ({ onFileDrop, onClick }: { onFileDrop: (file: File) => void; onClick: () => void }) => {
   const { t } = useTranslation('publish');
   const [isDragging, setIsDragging] = useState(false);
 
@@ -141,12 +109,14 @@ const DropZone = ({ onFileDrop }: { onFileDrop: (file: File) => void }) => {
       onDragEnter={handleDragEnter}
       onDragLeave={handleDragLeave}
       onDragOver={handleDragOver}
-      onDrop={handleDrop}>
+      onDrop={handleDrop}
+      onClick={onClick}>
       <div className="flex flex-col items-center justify-center gap-2 text-center">
         <UploadIcon className={cn('size-8', isDragging ? 'text-primary' : 'text-gray-500')} />
         <div className="flex flex-col gap-1">
-          <p className="text-sm font-medium">{isDragging ? t('dynamic.tips.drop') : t('dynamic.tips.dragAndDrop')}</p>
-          <p className="text-xs text-gray-500">{t('dynamic.tips.supportedFiles')}</p>
+          <p className="text-sm font-medium">
+            {isDragging ? t('dynamic.tips.drop') : t('podcast.dragOrClick', 'Click to upload or drag and drop')}
+          </p>
         </div>
       </div>
     </div>
@@ -155,7 +125,8 @@ const DropZone = ({ onFileDrop }: { onFileDrop: (file: File) => void }) => {
 
 export default function PodcastPage() {
   const { t } = useTranslation('publish');
-  const [currentStep, setCurrentStep] = useState<number>(1);
+  const router = useRouter();
+  const [currentStep, setCurrentStep] = useState<number>(2);
   const [audio, setAudio] = useState<FileData | null>(null);
   const [title, setTitle] = useState<string>('');
   const [description, setDescription] = useState<string>('');
@@ -164,6 +135,63 @@ export default function PodcastPage() {
   const [selectedPlatforms, setSelectedPlatforms] = useState<string[]>(podcastPlatforms);
   const [autoPublish, setAutoPublish] = useState<boolean>(false);
   const [platforms, setPlatforms] = useState<PlatformInfo[]>([]);
+
+  const steps = [
+    {
+      id: 1,
+      name: t('dynamic.steps.selectType.title'),
+      description: t('dynamic.steps.selectType.description'),
+    },
+    {
+      id: 2,
+      name: t('podcast.steps.editContent.title'),
+      description: t('podcast.steps.editContent.description'),
+    },
+    {
+      id: 3,
+      name: t('dynamic.steps.selectAndPublish.title'),
+      description: t('dynamic.steps.selectAndPublish.description'),
+    },
+  ];
+
+  const Stepper = () => (
+    <Card className="sticky top-4 h-fit">
+      <CardHeader>
+        <p className="text-lg font-bold">{t('podcast.newTask')}</p>
+      </CardHeader>
+      <CardBody>
+        <div className="flex flex-col gap-8">
+          {steps.map((step, index) => (
+            <div
+              key={step.id}
+              className={cn('flex items-start gap-4', currentStep > step.id ? 'cursor-pointer' : 'cursor-default')}
+              onClick={() => {
+                if (step.id === 1) {
+                  router.push('/dashboard/publish');
+                } else if (currentStep > step.id) {
+                  setCurrentStep(step.id);
+                }
+              }}>
+              <div
+                className={cn(
+                  'flex h-8 w-8 shrink-0 items-center justify-center rounded-full font-bold transition-colors',
+                  step.id === currentStep
+                    ? 'bg-primary text-primary-foreground'
+                    : 'bg-default-200 text-default-foreground',
+                  currentStep > step.id && 'bg-primary/20 text-primary',
+                )}>
+                {index + 1}
+              </div>
+              <div>
+                <p className="font-semibold">{step.name}</p>
+                <p className="text-sm text-default-500">{step.description}</p>
+              </div>
+            </div>
+          ))}
+        </div>
+      </CardBody>
+    </Card>
+  );
 
   useEffect(() => {
     if (process.env.NODE_ENV === 'development') {
@@ -313,10 +341,6 @@ export default function PodcastPage() {
     }
   };
 
-  const handleIconClick = () => {
-    audioInputRef.current?.click();
-  };
-
   const handleClearAll = () => {
     setAudio(null);
     setTitle('');
@@ -334,11 +358,11 @@ export default function PodcastPage() {
       });
       return;
     }
-    setCurrentStep(2);
+    setCurrentStep(3);
   };
 
   const handlePrevStep = () => {
-    setCurrentStep(1);
+    setCurrentStep(2);
   };
 
   const handleExtraConfigChange = (platformKey: string, extraConfig: unknown) => {
@@ -348,199 +372,202 @@ export default function PodcastPage() {
   };
 
   return (
-    <>
-      {currentStep === 1 ? (
-        <div className="flex flex-col gap-2">
-          <Card className="h-fit border bg-default-50 shadow-none">
-            <CardHeader>
-              <Input
-                isClearable
-                variant="underlined"
-                placeholder={t('podcast.title')}
-                value={title}
-                onChange={(e) => setTitle(e.target.value)}
-                onClear={() => setTitle('')}
-                className="w-full"
-              />
-            </CardHeader>
+    <div className="grid h-full grid-cols-1 justify-center gap-8 p-4 md:grid-cols-[280px_minmax(0,560px)]">
+      <Stepper />
+      <div className="overflow-y-auto">
+        {currentStep === 2 && (
+          <div className="flex flex-col gap-2">
+            {audio && (
+              <Card className="my-2 border bg-default-50 shadow-none">
+                <CardBody>
+                  <AudioPlayer
+                    url={audio.url}
+                    name={audio.name}
+                    onDelete={() => setAudio(null)}
+                  />
+                </CardBody>
+              </Card>
+            )}
+            {!audio ? (
+              <Card className="h-fit border bg-default-50 shadow-none">
+                <CardHeader>
+                  <p className="font-semibold">{t('podcast.uploadAudioTitle', 'Upload your audio')}</p>
+                </CardHeader>
+                <CardBody>
+                  <input
+                    type="file"
+                    ref={audioInputRef}
+                    accept="audio/*"
+                    onChange={handleFileChange}
+                    className="hidden"
+                  />
+                  <DropZone
+                    onFileDrop={handleFileDrop}
+                    onClick={() => audioInputRef.current?.click()}
+                  />
+                </CardBody>
+              </Card>
+            ) : (
+              <>
+                <Card className="h-fit border bg-default-50 shadow-none">
+                  <CardHeader>
+                    <div className="flex w-full items-center justify-between gap-2">
+                      <Input
+                        isClearable
+                        variant="underlined"
+                        placeholder={t('podcast.title')}
+                        value={title}
+                        onChange={(e) => setTitle(e.target.value)}
+                        onClear={() => setTitle('')}
+                        className="w-full"
+                      />
+                      {(title || description || audio) && (
+                        <Button
+                          isIconOnly
+                          variant="light"
+                          color="danger"
+                          onPress={handleClearAll}
+                          title={t('podcast.clearAll')}>
+                          <TrashIcon className="size-6" />
+                        </Button>
+                      )}
+                    </div>
+                  </CardHeader>
 
-            <CardBody className="gap-4">
-              <Textarea
-                isClearable
-                variant="underlined"
-                placeholder={t('podcast.description')}
-                value={description}
-                onChange={(e) => setDescription(e.target.value)}
-                onClear={() => setDescription('')}
-                fullWidth
-                minRows={3}
-              />
-            </CardBody>
-
-            <CardFooter>
-              <div className="mb-4 flex w-full flex-col gap-4">
-                <div className="flex items-center justify-between">
-                  <div className="flex">
-                    <input
-                      type="file"
-                      ref={audioInputRef}
-                      accept="audio/*"
-                      onChange={handleFileChange}
-                      className="hidden"
+                  <CardBody className="gap-4">
+                    <Textarea
+                      isClearable
+                      variant="underlined"
+                      placeholder={t('podcast.description')}
+                      value={description}
+                      onChange={(e) => setDescription(e.target.value)}
+                      onClear={() => setDescription('')}
+                      fullWidth
+                      minRows={3}
                     />
+                  </CardBody>
+                </Card>
+
+                <Button
+                  fullWidth
+                  onPress={handleNextStep}>
+                  <ArrowRightIcon />
+                </Button>
+              </>
+            )}
+          </div>
+        )}
+        {currentStep === 3 && (
+          <div className="flex flex-col gap-4">
+            <Card className="mb-4 border bg-default-50 shadow-none">
+              <CardBody className="gap-2">
+                <div className="flex items-center justify-between">
+                  {selectedPlatforms.length > 0 && (
                     <Button
                       isIconOnly
-                      variant="light"
-                      onPress={handleIconClick}
-                      disabled={!!audio}
-                      className={audio ? 'cursor-not-allowed opacity-50' : ''}>
-                      <AudioLinesIcon className="size-8 text-gray-600" />
-                    </Button>
-                  </div>
-                  {(title || description || audio) && (
-                    <Button
-                      isIconOnly
+                      size="sm"
                       variant="light"
                       color="danger"
-                      onPress={handleClearAll}
-                      title={t('podcast.clearAll')}>
-                      <TrashIcon className="size-6" />
+                      onPress={() => setSelectedPlatforms([])}>
+                      <Eraser className="size-4" />
                     </Button>
                   )}
                 </div>
-                {!audio && <DropZone onFileDrop={handleFileDrop} />}
-              </div>
-            </CardFooter>
-          </Card>
 
-          {audio && (
-            <Card className="my-2 border bg-default-50 shadow-none">
-              <CardBody>
-                <AudioPlayer
-                  url={audio.url}
-                  name={audio.name}
-                  onDelete={() => setAudio(null)}
-                />
+                <Accordion
+                  isCompact
+                  variant="light"
+                  selectionMode="multiple"
+                  defaultExpandedKeys={['CN', 'International']}>
+                  <AccordionItem
+                    key="CN"
+                    title={t('platforms.cn')}
+                    subtitle={`${
+                      selectedPlatforms.filter((platform) => {
+                        const info = platforms.find((p) => p.name === platform);
+                        return info?.tags?.includes('CN');
+                      }).length
+                    }/${platforms.filter((platform) => platform.tags?.includes('CN')).length}`}
+                    startContent={
+                      <div className="w-8">
+                        <Icon
+                          icon="openmoji:flag-china"
+                          className="h-max w-full"
+                        />
+                      </div>
+                    }
+                    className="py-1">
+                    <div className="grid grid-cols-2 gap-2">
+                      {platforms
+                        .filter((platform) => platform.tags?.includes('CN'))
+                        .map((platform) => (
+                          <PlatformCheckbox
+                            key={platform.name}
+                            platformInfo={platform}
+                            isSelected={selectedPlatforms.includes(platform.name)}
+                            onChange={(_, isSelected) => handlePlatformChange(platform.name, isSelected)}
+                            isDisabled={false}
+                            onExtraConfigChange={handleExtraConfigChange}
+                          />
+                        ))}
+                    </div>
+                  </AccordionItem>
+                  <AccordionItem
+                    key="International"
+                    title={t('platforms.international')}
+                    subtitle={`${
+                      selectedPlatforms.filter((platform) => {
+                        const info = platforms.find((p) => p.name === platform);
+                        return info?.tags?.includes('International');
+                      }).length
+                    }/${platforms.filter((platform) => platform.tags?.includes('International')).length}`}
+                    startContent={
+                      <div className="w-8">
+                        <Icon
+                          icon="openmoji:globe-with-meridians"
+                          className="h-max w-full"
+                        />
+                      </div>
+                    }
+                    className="py-1">
+                    <div className="grid grid-cols-2 gap-2">
+                      {platforms
+                        .filter((platform) => platform.tags?.includes('International'))
+                        .map((platform) => (
+                          <PlatformCheckbox
+                            key={platform.name}
+                            platformInfo={platform}
+                            isSelected={selectedPlatforms.includes(platform.name)}
+                            onChange={(_, isSelected) => handlePlatformChange(platform.name, isSelected)}
+                            isDisabled={false}
+                            onExtraConfigChange={handleExtraConfigChange}
+                          />
+                        ))}
+                    </div>
+                  </AccordionItem>
+                </Accordion>
               </CardBody>
             </Card>
-          )}
 
-          <Button
-            fullWidth
-            onPress={handleNextStep}>
-            <ArrowRightIcon />
-          </Button>
-        </div>
-      ) : (
-        <>
-          <Card className="mb-4 border bg-default-50 shadow-none">
-            <CardBody className="gap-2">
-              <div className="flex items-center justify-between">
-                {selectedPlatforms.length > 0 && (
-                  <Button
-                    isIconOnly
-                    size="sm"
-                    variant="light"
-                    color="danger"
-                    onPress={() => setSelectedPlatforms([])}>
-                    <Eraser className="size-4" />
-                  </Button>
-                )}
-              </div>
+            <div className="flex gap-2">
+              <Button
+                aria-label="back_to_edit"
+                onPress={handlePrevStep}>
+                <ArrowLeftIcon />
+              </Button>
 
-              <Accordion
-                isCompact
-                variant="light"
-                selectionMode="multiple"
-                defaultExpandedKeys={['CN', 'International']}>
-                <AccordionItem
-                  key="CN"
-                  title={t('platforms.cn')}
-                  subtitle={`${
-                    selectedPlatforms.filter((platform) => {
-                      const info = platforms.find((p) => p.name === platform);
-                      return info?.tags?.includes('CN');
-                    }).length
-                  }/${platforms.filter((platform) => platform.tags?.includes('CN')).length}`}
-                  startContent={
-                    <div className="w-8">
-                      <Icon
-                        icon="openmoji:flag-china"
-                        className="h-max w-full"
-                      />
-                    </div>
-                  }
-                  className="py-1">
-                  <div className="grid grid-cols-2 gap-2">
-                    {platforms
-                      .filter((platform) => platform.tags?.includes('CN'))
-                      .map((platform) => (
-                        <PlatformCheckbox
-                          key={platform.name}
-                          platformInfo={platform}
-                          isSelected={selectedPlatforms.includes(platform.name)}
-                          onChange={(_, isSelected) => handlePlatformChange(platform.name, isSelected)}
-                          isDisabled={false}
-                          onExtraConfigChange={handleExtraConfigChange}
-                        />
-                      ))}
-                  </div>
-                </AccordionItem>
-                <AccordionItem
-                  key="International"
-                  title={t('platforms.international')}
-                  subtitle={`${
-                    selectedPlatforms.filter((platform) => {
-                      const info = platforms.find((p) => p.name === platform);
-                      return info?.tags?.includes('International');
-                    }).length
-                  }/${platforms.filter((platform) => platform.tags?.includes('International')).length}`}
-                  startContent={
-                    <div className="w-8">
-                      <Icon
-                        icon="openmoji:globe-with-meridians"
-                        className="h-max w-full"
-                      />
-                    </div>
-                  }
-                  className="py-1">
-                  <div className="grid grid-cols-2 gap-2">
-                    {platforms
-                      .filter((platform) => platform.tags?.includes('International'))
-                      .map((platform) => (
-                        <PlatformCheckbox
-                          key={platform.name}
-                          platformInfo={platform}
-                          isSelected={selectedPlatforms.includes(platform.name)}
-                          onChange={(_, isSelected) => handlePlatformChange(platform.name, isSelected)}
-                          isDisabled={false}
-                          onExtraConfigChange={handleExtraConfigChange}
-                        />
-                      ))}
-                  </div>
-                </AccordionItem>
-              </Accordion>
-            </CardBody>
-          </Card>
-
-          <div className="flex gap-2">
-            <Button
-              aria-label="back_to_edit"
-              onPress={handlePrevStep}>
-              <ArrowLeftIcon />
-            </Button>
-
-            <Button
-              aria-label="publish"
-              fullWidth
-              color={selectedPlatforms.length === 0 ? 'default' : 'primary'}
-              disabled={selectedPlatforms.length === 0}
-              onPress={handlePublish}>
-              <SendHorizontal />
-            </Button>
+              <Button
+                aria-label="publish"
+                fullWidth
+                color={selectedPlatforms.length === 0 ? 'default' : 'primary'}
+                disabled={selectedPlatforms.length === 0}
+                onPress={handlePublish}>
+                <SendHorizontal />
+              </Button>
+            </div>
           </div>
-        </>
-      )}
-    </>
+        )}
+      </div>
+    </div>
   );
 }

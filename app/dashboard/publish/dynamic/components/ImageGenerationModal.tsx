@@ -25,8 +25,8 @@ import {
   ImageGenerationStatus,
 } from '@/app/dashboard/draw/image/types';
 import { generateImage, getImageGeneration } from '@/app/dashboard/draw/image/action';
-import type { FileData } from '../page';
-import { ExternalLinkIcon, ImageIcon, PaletteIcon, XIcon } from 'lucide-react';
+import type { FileData } from '@/lib/extension';
+import { ExternalLinkIcon, ImageIcon, XIcon } from 'lucide-react';
 import { BalanceButtonClient } from '@/app/dashboard/components/BalanceButtonClient';
 
 interface ImageGenerationModalProps {
@@ -35,6 +35,8 @@ interface ImageGenerationModalProps {
     title: string;
     content: string;
   };
+  isOpen: boolean;
+  onOpenChange: (isOpen: boolean) => void;
 }
 
 interface TaskResultState {
@@ -44,11 +46,15 @@ interface TaskResultState {
   error?: string;
 }
 
-export function ImageGenerationModal({ onImageGenerated, initialPromptBasis }: ImageGenerationModalProps) {
+export function ImageGenerationModal({
+  onImageGenerated,
+  initialPromptBasis,
+  isOpen,
+  onOpenChange,
+}: ImageGenerationModalProps) {
   const { t } = useTranslation('publish');
   const { t: tImage } = useTranslation('images');
 
-  const [modalVisible, setModalVisible] = useState(false);
   const [loading, setLoading] = useState(false);
   const [taskId, setTaskId] = useState<string | null>(null);
   const [taskResult, setTaskResult] = useState<TaskResultState | null>(null);
@@ -97,9 +103,8 @@ export function ImageGenerationModal({ onImageGenerated, initialPromptBasis }: I
     setTaskId(null);
   };
 
-  const openModal = () => setModalVisible(true);
   const closeModal = () => {
-    setModalVisible(false);
+    onOpenChange(false);
     if (taskId) {
       setTaskId(null);
     }
@@ -107,7 +112,7 @@ export function ImageGenerationModal({ onImageGenerated, initialPromptBasis }: I
   };
 
   useEffect(() => {
-    if (modalVisible) {
+    if (isOpen) {
       setCustomPrompt('');
       setImageStyle(undefined);
       setImageColor(undefined);
@@ -116,7 +121,7 @@ export function ImageGenerationModal({ onImageGenerated, initialPromptBasis }: I
       if (taskId) setTaskId(null);
       setTaskResult(null);
     }
-  }, [modalVisible, initialPromptBasis.title, initialPromptBasis.content, taskId]);
+  }, [isOpen, initialPromptBasis.title, initialPromptBasis.content, taskId]);
 
   useEffect(() => {
     if (!taskId) return;
@@ -363,17 +368,9 @@ export function ImageGenerationModal({ onImageGenerated, initialPromptBasis }: I
 
   return (
     <>
-      <Button
-        color="secondary"
-        variant="flat"
-        startContent={<PaletteIcon className="size-5" />}
-        onPress={openModal}>
-        {t('dynamic.buttons.aiGenerateImage')}
-      </Button>
-
-      {modalVisible && (
+      {isOpen && (
         <Modal
-          isOpen={modalVisible}
+          isOpen={isOpen}
           onClose={closeModal}
           isDismissable={false}
           hideCloseButton

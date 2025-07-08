@@ -1,10 +1,18 @@
 {
   "contactUs": "Contact Us",
+  "library": {
+    "title": "Library",
+    "images": "Images",
+    "posters": "Posters",
+    "loading": "Loading..."
+  },
   "dynamic": {
-    "title": "Enter title",
-    "content": "Enter content",
+    "title": "Title",
+    "content": "Content",
     "autoPublish": "Auto Publish",
     "clearAll": "Clear all",
+    "titlePlaceholder": "Enter a title for your content (optional)",
+    "contentPlaceholder": "Enter your content here...",
     "tips": {
       "dragAndDrop": "Drag and drop files here",
       "drop": "Release to upload files",
@@ -15,18 +23,60 @@
     },
     "aiImageGenerationModal": {
       "title": "AI Image Generation"
-    }
+    },
+    "newTask": "New Publish Task",
+    "steps": {
+      "selectType": {
+        "title": "Select Publish Type",
+        "description": "Choose the type of content you want to publish"
+      },
+      "editContent": {
+        "title": "Create Content",
+        "description": "Write content and add media"
+      },
+      "selectAndPublish": {
+        "title": "Select Platforms and Publish",
+        "description": "Select accounts and publish"
+      }
+    },
+    "total": "Total",
+    "uploadImage": "Upload Image",
+    "library": "Library",
+    "aiGenerate": "AI Generate",
+    "uploadVideo": "Upload Video",
+    "releaseToUpload": "Release to upload",
+    "videoSupportWarning": "* Only a few international platforms support video publishing, e.g., X, Instagram, LinkedIn, etc."
   },
   "podcast": {
     "title": "Enter podcast title",
     "description": "Enter podcast description",
-    "clearAll": "Clear all"
+    "clearAll": "Clear all",
+    "newTask": "New Podcast Publish",
+    "steps": {
+      "editContent": {
+        "title": "Content Creation",
+        "description": "Write podcast details and upload audio"
+      }
+    },
+    "uploadAudioTitle": "Upload Your Podcast Audio",
+    "dragOrClick": "Click to upload or drag and drop"
   },
   "video": {
     "title": "Video Title",
     "description": "Video Description...",
     "tags": "Add tags (press Enter or comma to separate)",
-    "addCover": "Add Cover"
+    "addCover": "Add Cover",
+    "addTag": "Add Tag",
+    "newTask": "New Video Publish",
+    "steps": {
+      "editContent": {
+        "title": "Content Creation",
+        "description": "Write video details and upload files"
+      }
+    },
+    "uploadVideoTitle": "Upload Your Video",
+    "selectFromFile": "Select from file",
+    "dragOrClick": "Click to upload or drag and drop"
   },
   "grid": {
     "uploadImage": "Click or drag to upload image",
@@ -185,6 +235,33 @@
     "toast": {
       "addSuccess": {
         "title": "Added successfully"
+      }
+    }
+  },
+  "publishPage": {
+    "greeting": {
+      "morning": "Good morning",
+      "noon": "Good noon",
+      "afternoon": "Good afternoon",
+      "evening": "Good evening"
+    },
+    "whatToWriteToday": "What would you like to write today?",
+    "publishTypes": {
+      "dynamic": {
+        "title": "Publish Post",
+        "description": "Share your thoughts and what's new."
+      },
+      "video": {
+        "title": "Publish Video",
+        "description": "Share your amazing video creations."
+      },
+      "podcast": {
+        "title": "Publish Podcast",
+        "description": "Share your podcast episodes."
+      },
+      "article": {
+        "title": "Publish Article",
+        "description": "Use Markdown editor to publish articles."
       }
     }
   }

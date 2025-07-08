@@ -1,10 +1,10 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Modal, ModalContent, ModalHeader, ModalBody, Button, Link, Tabs, Tab, Card, addToast } from '@heroui/react';
-import { PlusIcon, SquareLibraryIcon, ImagePlusIcon, VideoIcon, UploadIcon } from 'lucide-react';
+import { Modal, ModalContent, ModalHeader, ModalBody, Tabs, Tab, Card, addToast } from '@heroui/react';
 import Image from 'next/image';
 import { listAllImages, listAllPosters } from '@/actions/draw/list';
 import { useTranslation } from '@/i18n/client';
-import { cn } from '@/lib/utils';
+import { useRouter } from 'next/navigation';
+import { Plus } from 'lucide-react';
 
 interface FileData {
   name: string;
@@ -33,6 +33,8 @@ interface PosterItem {
 interface LibraryModalProps {
   onSelectImage?: (fileData: FileData) => void;
   existingFiles?: FileData[];
+  isOpen: boolean;
+  onOpenChange: (isOpen: boolean) => void;
 }
 
 const getFileHash = async (file: File): Promise<string> => {
@@ -47,9 +49,9 @@ const isDuplicateFile = async (file: File, existingFiles: FileData[]): Promise<b
   return existingFiles.some((existingFile) => existingFile.hash === fileHash);
 };
 
-export default function LibraryModal({ onSelectImage, existingFiles = [] }: LibraryModalProps) {
+export default function LibraryModal({ onSelectImage, existingFiles = [], isOpen, onOpenChange }: LibraryModalProps) {
   const { t } = useTranslation('publish');
-  const [isOpen, setIsOpen] = useState(false);
+  const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [items, setItems] = useState<{ images: ImageGenerationItem[]; posters: PosterItem[] }>({
     images: [],
@@ -116,7 +118,7 @@ export default function LibraryModal({ onSelectImage, existingFiles = [] }: Libr
     items.posters.forEach((item) => {
       if (item.lastImageUrl?.startsWith('blob:')) URL.revokeObjectURL(item.lastImageUrl);
     });
-    setIsOpen(false);
+    onOpenChange(false);
   };
 
   const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>, fileType: 'image' | 'video') => {
@@ -249,195 +251,127 @@ export default function LibraryModal({ onSelectImage, existingFiles = [] }: Libr
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [existingFiles, onSelectImage, t]);
 
+  const onDrop = async (event: React.DragEvent<HTMLDivElement>) => {
+    event.preventDefault();
+    const droppedFiles = Array.from(event.dataTransfer.files);
+    await handleFilesDrop(droppedFiles, 'image');
+  };
+
   const renderGrid = (type: 'images' | 'posters') => {
-    const data = items[type];
-    if (data.length === 0) {
-      return (
-        <div className="flex flex-col items-center justify-center gap-4 py-20">
-          <div className="text-center text-gray-500">{type === 'images' ? '暂无已生成图片' : '暂无已生成海报'}</div>
-          <Button
-            as={Link}
-            href={`/dashboard/draw/${type === 'images' ? 'image' : 'poster'}`}
-            color="primary"
-            size="sm">
-            {type === 'images' ? '去生成图片' : '去生成海报'}
-          </Button>
-        </div>
-      );
-    }
+    const data = type === 'images' ? items.images : items.posters;
 
     return (
-      <div className="grid grid-cols-2 gap-6 md:grid-cols-3 lg:grid-cols-4">
+      <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
         <Card
           isPressable
-          as={Link}
-          href={`/dashboard/draw/${type === 'images' ? 'image' : 'poster'}`}
-          target="_blank"
-          className="flex size-full items-center justify-center">
-          <PlusIcon className="size-8" />
+          className="group relative flex aspect-square items-center justify-center bg-content2"
+          onPress={() => {
+            router.push(type === 'images' ? '/dashboard/draw/image' : '/dashboard/draw/poster');
+            handleCloseModal();
+          }}>
+          <div className="flex flex-col items-center gap-2 text-foreground-500">
+            <Plus size={48} />
+          </div>
         </Card>
-        {type === 'images'
-          ? items.images.map((item) =>
-              (item.result || []).map((i, idx) => (
-                <Card
-                  key={`${item.id}-${idx}`}
-                  isPressable={true}
-                  onPress={() =>
+        {data.map((item) => (
+          <Card
+            isPressable
+            key={item.id}
+            className="group relative aspect-square"
+            onPress={() => {
+              const urlToUse =
+                type === 'images' ? (item as ImageGenerationItem).result[0]?.url : (item as PosterItem).lastImageUrl;
+              if (urlToUse) {
+                fetch(urlToUse)
+                  .then((res) => res.blob())
+                  .then(async (blob) => {
+                    const file = new File([blob], 'image.png', { type: blob.type });
+                    const fileHash = await getFileHash(file);
+                    const isDuplicate = existingFiles.some((ef) => ef.hash === fileHash);
+
+                    if (isDuplicate) {
+                      addToast({
+                        title: t('upload.duplicateFiles'),
+                        description: t('upload.duplicateFilesDesc'),
+                        color: 'warning',
+                      });
+                      return;
+                    }
+
                     onSelectImage?.({
-                      name: `image-${item.id}-${idx}`,
-                      url: i.url,
-                      type: 'image/png',
-                      size: 0,
-                    })
-                  }
-                  className="group flex flex-col items-center overflow-hidden rounded-2xl p-0">
-                  <div className="relative aspect-square w-full">
-                    <Image
-                      src={i.url}
-                      alt={item.prompt}
-                      fill
-                      className="object-cover transition-transform duration-300 group-hover:scale-105"
-                      sizes="(max-width: 768px) 100vw, 25vw"
-                    />
-                    <div className="absolute inset-0 flex items-center justify-center bg-black/50 opacity-0 transition-opacity duration-300 group-hover:opacity-100">
-                      <span className="text-sm text-white">点击选择</span>
-                    </div>
-                  </div>
-                </Card>
-              )),
-            )
-          : items.posters.map((item) => (
-              <Card
-                key={`poster-${item.taskId || item.id}`}
-                isPressable={!!item.lastImageUrl}
-                onPress={() => {
-                  if (item.lastImageUrl) {
-                    onSelectImage?.({
-                      name: `poster-${item.taskId || item.id}`,
-                      url: item.lastImageUrl,
-                      type: 'image/png',
-                      size: 0,
+                      name: file.name,
+                      type: file.type,
+                      size: file.size,
+                      url: urlToUse,
+                      hash: fileHash,
+                      file,
                     });
-                  }
-                }}
-                className="group flex flex-col items-center overflow-hidden rounded-2xl p-0">
-                <div className="relative aspect-square w-full">
-                  {item.lastImageUrl ? (
-                    <>
-                      <Image
-                        src={item.lastImageUrl}
-                        alt={`Poster ${item.taskId || item.id}`}
-                        fill
-                        className="object-cover transition-transform duration-300 group-hover:scale-105"
-                        sizes="(max-width: 768px) 100vw, 25vw"
-                      />
-                      <div className="absolute inset-0 flex items-center justify-center bg-black/50 opacity-0 transition-opacity duration-300 group-hover:opacity-100">
-                        <span className="text-sm text-white">点击选择</span>
-                      </div>
-                    </>
-                  ) : (
-                    <div className="flex size-full items-center justify-center rounded-2xl bg-gray-100 text-gray-400">
-                      无图片
-                    </div>
-                  )}
-                </div>
-              </Card>
-            ))}
+                    handleCloseModal();
+                  });
+              }
+            }}>
+            <Image
+              src={
+                (type === 'images'
+                  ? (item as ImageGenerationItem).result[0]?.url
+                  : (item as PosterItem).lastImageUrl) || '/placeholder.png'
+              }
+              alt={item.prompt}
+              fill
+              sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+              className="object-cover"
+            />
+            <div className="absolute inset-x-0 bottom-0 bg-black/50 p-2 text-white opacity-0 transition-opacity group-hover:opacity-100">
+              <p className="line-clamp-2 text-xs">{item.prompt}</p>
+            </div>
+          </Card>
+        ))}
       </div>
     );
   };
 
   return (
     <>
-      <Button
-        isIconOnly
-        color="primary"
-        variant="flat"
-        onPress={() => setIsOpen(true)}>
-        <SquareLibraryIcon className="size-5" />
-      </Button>
+      <input
+        type="file"
+        ref={imageInputRef}
+        className="hidden"
+        accept="image/*"
+        multiple
+        onChange={(e) => handleFileChange(e, 'image')}
+      />
+      <input
+        type="file"
+        ref={videoInputRef}
+        className="hidden"
+        accept="video/*"
+        multiple
+        onChange={(e) => handleFileChange(e, 'video')}
+      />
 
       <Modal
+        size="5xl"
         isOpen={isOpen}
-        onClose={handleCloseModal}
+        onOpenChange={onOpenChange}
         scrollBehavior="inside"
-        size="4xl"
-        placement="center"
-        backdrop="blur">
-        <ModalContent>
-          <ModalHeader>素材库</ModalHeader>
+        onClose={handleCloseModal}>
+        <ModalContent
+          onDragOver={(e) => e.preventDefault()}
+          onDrop={onDrop}>
+          <ModalHeader className="flex flex-col gap-1">{t('library.title')}</ModalHeader>
           <ModalBody>
-            <div className="flex flex-row items-center gap-2">
-              <div className="flex flex-col items-center gap-2">
-                <input
-                  type="file"
-                  ref={imageInputRef}
-                  accept="image/*"
-                  onChange={(e) => handleFileChange(e, 'image')}
-                  className="hidden"
-                  multiple
-                />
-                <Button
-                  isIconOnly
-                  variant="light"
-                  onPress={() => imageInputRef.current?.click()}>
-                  <ImagePlusIcon className="size-8 text-gray-600" />
-                </Button>
-                <input
-                  type="file"
-                  ref={videoInputRef}
-                  accept="video/*"
-                  onChange={(e) => handleFileChange(e, 'video')}
-                  className="hidden"
-                  multiple
-                />
-                <Button
-                  isIconOnly
-                  variant="light"
-                  onPress={() => videoInputRef.current?.click()}>
-                  <VideoIcon className="size-8 text-gray-600" />
-                </Button>
-              </div>
-              <div
-                className={cn(
-                  'relative flex min-h-[80px] w-full cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed p-4 transition-all',
-                  'border-gray-200 hover:bg-gray-50 dark:border-gray-800 dark:hover:bg-gray-800/50',
-                )}
-                onDragOver={(e) => e.preventDefault()}
-                onDrop={(e) => {
-                  e.preventDefault();
-                  const files = Array.from(e.dataTransfer.files);
-                  const imageFiles = files.filter((file) => file.type.startsWith('image/'));
-                  if (imageFiles.length > 0) handleFilesDrop(imageFiles, 'image');
-                }}>
-                <div className="flex flex-col items-center justify-center gap-2 text-center">
-                  <UploadIcon className="size-8 text-gray-500" />
-                  <div className="flex flex-col gap-1">
-                    <p className="text-sm font-medium">{t('dynamic.tips.dragAndDrop')}</p>
-                    <p className="text-xs text-gray-500">{t('dynamic.tips.supportedFiles')}</p>
-                  </div>
-                </div>
-              </div>
-            </div>
-            {loading ? (
-              <div className="flex h-40 items-center justify-center text-gray-400">加载中...</div>
-            ) : (
-              <Tabs
-                variant="underlined"
-                classNames={{ tabList: 'gap-6', cursor: 'w-full bg-primary' }}>
-                <Tab
-                  key="images"
-                  title="图片库">
-                  {renderGrid('images')}
-                </Tab>
-                <Tab
-                  key="posters"
-                  title="海报库"
-                  isDisabled>
-                  {renderGrid('posters')}
-                </Tab>
-              </Tabs>
-            )}
+            <Tabs aria-label="Library tabs">
+              <Tab
+                key="images"
+                title={t('library.images')}>
+                {loading ? <p>{t('library.loading')}</p> : renderGrid('images')}
+              </Tab>
+              <Tab
+                key="posters"
+                title={t('library.posters')}>
+                {loading ? <p>{t('library.loading')}</p> : renderGrid('posters')}
+              </Tab>
+            </Tabs>
           </ModalBody>
         </ModalContent>
       </Modal>

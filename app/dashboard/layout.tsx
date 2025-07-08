@@ -7,6 +7,7 @@ import { headers } from 'next/headers';
 import { Metadata } from 'next';
 import { ThemeSwitcher } from '@/components/ThemeSwitcher';
 import { TimezoneProvider } from './components/TimezoneProvider';
+import { ToastProvider } from '@heroui/react';
 
 export const metadata: Metadata = {
   title: 'Dashboard | MultiPost',
@@ -35,9 +36,10 @@ export default async function DashboardLayout({
             '--sidebar-width-mobile': '12rem',
           } as CSSProperties
         }>
+        <ToastProvider />
         <DashboardSidebar />
         <TimezoneProvider />
-        <div className="flex-1">
+        <div className="flex-1 overflow-hidden">
           <div className="flex w-full justify-between p-2 sm:hidden md:hidden">
             <SidebarTrigger />
             <ThemeSwitcher isBlur={false} />
