@@ -23,8 +23,8 @@ export const CREDIT_PER_REQUEST_SOCIAL_MEDIA = {
 
 export const PRICING = {
   DEFAULT: new Decimal(0.001 * 10), // per token
-  WEB_READER_API: new Decimal(0.00000002 * 10), // per token
-  WEB_SEARCH_API: new Decimal(0.00000002 * 10), // per token
+  WEB_READER_API: new Decimal(0.00000002 * 10), // per token // Deprecated
+  WEB_SEARCH_API: new Decimal(0.00000002 * 10), // per token // Deprecated
   LLM: {
     DEEPSEEK_CHAT: {
       INPUT: new Decimal(0.027 * 10).div(new Decimal(10 ** 6)), // per token
@@ -39,8 +39,8 @@ export const PRICING = {
 
 // 使用类型
 export const USAGE_TYPE_MAP = {
-  WEB_READER_API: 'web_reader_api',
-  WEB_SEARCH_API: 'web_search_api',
+  WEB_READER_API: 'web_reader_api', // Deprecated
+  WEB_SEARCH_API: 'web_search_api', // Deprecated
   SOCIAL_MEDIA_DEFAULT: 'social_media_default',
   SOCIAL_MEDIA_X: 'social_media_x',
   SOCIAL_MEDIA_REDNOTE: 'social_media_rednote',
