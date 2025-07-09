@@ -177,7 +177,7 @@ export default function APIKeysPage() {
                 <Key className="size-5 text-primary" />
               </div>
               <div>
-                <p className="text-sm text-foreground/60">{t('stats.total_keys', { ns: 'settings' })}</p>
+                <p className="text-sm text-foreground/60">{t('stats.total_keys')}</p>
                 <p className="text-2xl font-bold text-foreground">{apiKeys.length}</p>
               </div>
             </div>
@@ -191,7 +191,7 @@ export default function APIKeysPage() {
                 <Clock className="size-5 text-secondary" />
               </div>
               <div>
-                <p className="text-sm text-foreground/60">{t('stats.manual_created', { ns: 'settings' })}</p>
+                <p className="text-sm text-foreground/60">{t('stats.manual_created')}</p>
                 <p className="text-2xl font-bold text-foreground">
                   {apiKeys.filter((key) => !key.name.startsWith('EXTENSION-')).length}
                 </p>
@@ -207,7 +207,7 @@ export default function APIKeysPage() {
                 <Key className="size-5 text-warning" />
               </div>
               <div>
-                <p className="text-sm text-foreground/60">{t('stats.auto_created', { ns: 'settings' })}</p>
+                <p className="text-sm text-foreground/60">{t('stats.auto_created')}</p>
                 <p className="text-2xl font-bold text-foreground">
                   {apiKeys.filter((key) => key.name.startsWith('EXTENSION-')).length}
                 </p>
