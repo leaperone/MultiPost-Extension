@@ -34,18 +34,71 @@ export async function DynamicDouban(data: SyncData) {
     });
   }
 
+  // 激活全屏模式
+  async function activateFullscreen() {
+    try {
+      await waitForElement('i.DRE-lite-editor-fullscreen');
+      const fullscreenButton = document.querySelector('i.DRE-lite-editor-fullscreen') as HTMLElement;
+      console.debug('fullscreenButton', fullscreenButton);
+      
+      if (fullscreenButton) {
+        fullscreenButton.click();
+        await new Promise((resolve) => setTimeout(resolve, 500));
+      }
+    } catch (e) {
+      console.debug('error', e);
+      console.debug('全屏按钮未找到，继续执行');
+    }
+  }
+
+  // 填写标题
+  async function fillTitle() {
+    if (!dynamicData.title) return;
+    
+    const titleTextarea = document.querySelector('textarea[placeholder="请输入标题"]') as HTMLTextAreaElement;
+    console.debug('titleTextarea', titleTextarea);
+    
+    if (titleTextarea) {
+      titleTextarea.value = dynamicData.title;
+      titleTextarea.dispatchEvent(new Event('input', { bubbles: true }));
+    }
+  }
+
   // 填写内容
   async function fillContent() {
-    await waitForElement('textarea[id="isay-cont"]');
-    await new Promise((resolve) => setTimeout(resolve, 1000));
-
-    const textarea = document.querySelector('#isay-cont') as HTMLTextAreaElement;
-    if (textarea) {
-      // 如果有标题，将标题和内容拼接
-      const fullContent = dynamicData.title ? `${dynamicData.title}\n\n${dynamicData.content}` : dynamicData.content;
-      textarea.value = fullContent;
-      textarea.dispatchEvent(new Event('input', { bubbles: true }));
-      textarea.dispatchEvent(new Event('click', { bubbles: true }));
+    // 查找内容编辑器
+    const titleTextarea = document.querySelector('textarea[placeholder="请输入标题"]');
+    let contentEditor = titleTextarea?.parentElement?.parentElement?.parentElement?.querySelector(
+      'div[aria-placeholder="此刻你想要分享..."]'
+    ) as HTMLElement;
+    
+    if (!contentEditor) {
+      contentEditor = document.querySelector('div[aria-placeholder="此刻你想要分享..."]') as HTMLElement;
+    }
+    
+    console.debug('contentEditor', contentEditor);
+    
+    if (contentEditor) {
+      const content = dynamicData.content || '';
+      
+      // 使用粘贴事件填写内容
+      const pasteEvent = new ClipboardEvent('paste', {
+        bubbles: true,
+        cancelable: true,
+        clipboardData: new DataTransfer(),
+      });
+      
+      pasteEvent.clipboardData!.setData('text/html', content);
+      contentEditor.dispatchEvent(pasteEvent);
+      contentEditor.dispatchEvent(new Event('click', { bubbles: true }));
+      contentEditor.dispatchEvent(new Event('change', { bubbles: true }));
+      
+      // 等待内容更新
+      await new Promise((resolve) => setTimeout(resolve, 500));
+      
+      console.debug('内容填写完成');
+    } else {
+      console.error('未找到内容编辑器');
     }
   }
 
@@ -54,21 +107,22 @@ export async function DynamicDouban(data: SyncData) {
     if (!dynamicData.images?.length) return;
 
     const fileInput = document.querySelector('input[type="file"]') as HTMLInputElement;
+    console.debug('fileInput', fileInput);
+    
     if (!fileInput) {
       console.debug('未找到文件输入元素');
       return;
     }
 
     const dataTransfer = new DataTransfer();
-    const files = dynamicData.images || [];
-
-    for (let i = 0; i < files.length; i++) {
-      if (i >= 8) {
-        console.debug('最多上传8张图片');
+    
+    for (let i = 0; i < dynamicData.images.length; i++) {
+      if (i >= 18) {
+        console.debug('最多上传18张图片');
         break;
       }
 
-      const fileInfo = files[i];
+      const fileInfo = dynamicData.images[i];
       if (!fileInfo.type.startsWith('image/')) {
         console.debug('skip non-image file', fileInfo);
         continue;
@@ -89,26 +143,66 @@ export async function DynamicDouban(data: SyncData) {
       fileInput.files = dataTransfer.files;
       fileInput.dispatchEvent(new Event('change', { bubbles: true }));
       fileInput.dispatchEvent(new Event('input', { bubbles: true }));
+      
       console.debug('文件上传操作完成');
-      await new Promise((resolve) => setTimeout(resolve, 5000));
+      await new Promise((resolve) => setTimeout(resolve, 500));
+
+      // 查找确认上传按钮
+      const buttons = document.querySelectorAll('button[type="button"]');
+      console.debug('buttons', buttons);
+      
+      const confirmButton = Array.from(buttons).find(
+        (btn) => btn.textContent?.trim() === '确定上传'
+      ) as HTMLButtonElement;
+      
+      console.debug('confirmButton', confirmButton);
+      
+      if (confirmButton) {
+        confirmButton.click();
+        await new Promise((resolve) => setTimeout(resolve, 3000));
+        
+        // 等待上传完成
+        let attempts = 0;
+        while (attempts <= 60) {
+          attempts++;
+          const uploadingElement = document.querySelector('.DRE-upload-status-text.uploading');
+          console.debug('uploading', uploadingElement);
+          
+          if (uploadingElement) {
+            await new Promise((resolve) => setTimeout(resolve, 1000));
+          } else {
+            break;
+          }
+        }
+      }
     }
   }
 
   // 发布动态
   async function publishDynamic() {
-    const sendButton = document.querySelector('#isay-submit') as HTMLButtonElement;
+    if (!data.isAutoPublish) return;
+
+    const buttons = document.querySelectorAll('button[type="button"]');
+    console.debug('buttons', buttons);
+    
+    const sendButton = Array.from(buttons).find(
+      (btn) => btn.textContent?.includes('发布')
+    ) as HTMLButtonElement;
+    
+    console.debug('sendButton', sendButton);
+    
     if (sendButton) {
-      if (data.isAutoPublish) {
-        console.debug('sendButton clicked');
-        sendButton.click();
-      }
+      console.debug('sendButton clicked');
+      sendButton.click();
     } else {
-      console.debug('未找到"发送"按钮');
+      console.debug('未找到"发布"按钮');
     }
   }
 
   // 主流程
   try {
+    await activateFullscreen();
+    await fillTitle();
     await fillContent();
     await uploadFiles();
     await publishDynamic();
