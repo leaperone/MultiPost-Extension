@@ -140,9 +140,11 @@ export async function DynamicOkjike(data: SyncData) {
       await uploadFiles();
     }
 
-    await handleTopicSelection(
-      (data.platforms.find((p) => p.name === 'DYNAMIC_OKJIKE')?.extraConfig as OkjikeConfig).selectedTopic || '',
-    );
+    const platform = data.platforms.find((p) => p.name === 'DYNAMIC_OKJIKE');
+    const selectedTopic = (platform?.extraConfig as OkjikeConfig)?.selectedTopic || '';
+    if (selectedTopic) {
+      await handleTopicSelection(selectedTopic);
+    }
 
     if (data.isAutoPublish) {
       await new Promise((resolve) => setTimeout(resolve, 3000));
