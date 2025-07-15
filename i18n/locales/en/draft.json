@@ -1,0 +1,35 @@
+{
+  "editor": {
+    "addImage": "Add Image",
+    "toast": {
+      "saveFailed": "Failed to save draft",
+      "loadFailed": "Failed to load draft",
+      "uploadFailed": "Upload Failed"
+    },
+    "placeholder": {
+      "title": "Select a draft",
+      "line1": "Choose a draft from the list on the left to start editing.",
+      "line2": "Or, create a new draft."
+    },
+    "header": {
+      "title": "Edit Draft",
+      "saving": "Saving...",
+      "unsaved": "Unsaved",
+      "saved": "Saved",
+      "saveButton": "Save"
+    },
+    "form": {
+      "title": {
+        "label": "Title",
+        "placeholder": "Enter your draft title"
+      },
+      "content": {
+        "label": "Content",
+        "placeholder": "Write your content here..."
+      },
+      "images": {
+        "title": "Images"
+      }
+    }
+  }
+}

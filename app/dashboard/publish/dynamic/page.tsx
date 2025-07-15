@@ -334,7 +334,21 @@ export default function DynamicPage() {
   };
 
   useEffect(() => {
-    if (process.env.NODE_ENV === 'development') {
+    // Load draft data from session storage if available
+    const draftData = sessionStorage.getItem('draftData');
+    if (draftData) {
+      try {
+        const parsed = JSON.parse(draftData);
+        setTitle(parsed.title || '');
+        setContent(parsed.content || '');
+        setImages(parsed.images || []);
+        setVideos(parsed.videos || []);
+        // Clear the session storage after loading
+        sessionStorage.removeItem('draftData');
+      } catch (error) {
+        console.error('Failed to parse draft data:', error);
+      }
+    } else if (process.env.NODE_ENV === 'development') {
       setTitle('Development title');
       setContent('Development content');
     }

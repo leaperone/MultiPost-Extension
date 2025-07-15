@@ -34,7 +34,7 @@ export async function POST(req: NextRequest) {
         id: fileId,
         key: fileKey,
         userId,
-        expiredAt: new Date(new Date().getTime() + 30 * 24 * 60 * 60 * 1000),
+        expiredAt: new Date(new Date().getTime() + 10 * 365 * 24 * 60 * 60 * 1000),
         filename,
       },
     });

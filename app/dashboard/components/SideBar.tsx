@@ -10,6 +10,7 @@ import {
   ScanEyeIcon,
   SendIcon,
   Settings,
+  FileTextIcon,
 } from 'lucide-react';
 
 import {
@@ -102,6 +103,11 @@ function getMenuGroups(t: TranslationFunction): MenuGroup[] {
           title: t('sidebar.menu.publish'),
           url: '/dashboard/publish',
           icon: SendIcon,
+        },
+        {
+          title: t('sidebar.menu.drafts'),
+          url: '/dashboard/drafts',
+          icon: FileTextIcon,
         },
         {
           title: t('sidebar.menu.draw'),

@@ -1,0 +1,35 @@
+{
+  "editor": {
+    "addImage": "添加图片",
+    "toast": {
+      "saveFailed": "保存草稿失败",
+      "loadFailed": "加载草稿失败",
+      "uploadFailed": "上传失败"
+    },
+    "placeholder": {
+      "title": "选择一篇草稿",
+      "line1": "从左侧列表中选择一篇草稿开始编辑。",
+      "line2": "或者，创建一篇新草稿。"
+    },
+    "header": {
+      "title": "编辑草稿",
+      "saving": "正在保存...",
+      "unsaved": "未保存",
+      "saved": "已保存",
+      "saveButton": "保存"
+    },
+    "form": {
+      "title": {
+        "label": "标题",
+        "placeholder": "输入草稿标题"
+      },
+      "content": {
+        "label": "内容",
+        "placeholder": "在这里写下你的内容..."
+      },
+      "images": {
+        "title": "图片"
+      }
+    }
+  }
+}

@@ -64,6 +64,12 @@ export default async function DashboardPage() {
       external: true,
     },
     {
+      href: '/dashboard/drafts',
+      title: t('welcome.drafts.title'),
+      description: t('welcome.drafts.description'),
+      icon: <FileTextIcon className="size-20 text-secondary-600 dark:text-secondary-400 sm:size-32" />,
+    },
+    {
       href: '/dashboard/analytics',
       title: t('welcome.analytics.title'),
       description: t('welcome.analytics.description'),

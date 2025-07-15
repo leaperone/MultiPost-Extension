@@ -1,11 +1,11 @@
-import { SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar';
+import { SidebarProvider } from '@/components/ui/sidebar';
 import React, { CSSProperties } from 'react';
 import { DashboardSidebar } from './components/SideBar';
 import { redirect } from 'next/navigation';
 import { auth } from '@/auth';
 import { headers } from 'next/headers';
 import { Metadata } from 'next';
-import { ThemeSwitcher } from '@/components/ThemeSwitcher';
+// import { ThemeSwitcher } from '@/components/ThemeSwitcher';
 import { TimezoneProvider } from './components/TimezoneProvider';
 import { ToastProvider } from '@heroui/react';
 
@@ -27,7 +27,7 @@ export default async function DashboardLayout({
     redirect(`/signin?redirect=${encodeURIComponent(pathname)}`);
   }
   return (
-    <div className="flex h-screen w-full">
+    <div className="flex h-screen">
       <SidebarProvider
         defaultOpen={true}
         style={
@@ -39,13 +39,7 @@ export default async function DashboardLayout({
         <ToastProvider />
         <DashboardSidebar />
         <TimezoneProvider />
-        <div className="flex-1 overflow-hidden">
-          <div className="flex w-full justify-between p-2 sm:hidden md:hidden">
-            <SidebarTrigger />
-            <ThemeSwitcher isBlur={false} />
-          </div>
-          {children}
-        </div>
+        <main className="flex-1 overflow-hidden">{children}</main>
       </SidebarProvider>
     </div>
   );

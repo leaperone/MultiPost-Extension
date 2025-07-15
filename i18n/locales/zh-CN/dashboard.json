@@ -27,6 +27,10 @@
     "draw": {
       "title": "AI 绘图 ",
       "description": "使用 AI 生成图片、海报"
+    },
+    "drafts": {
+      "title": "草稿",
+      "description": "管理您的草稿"
     }
   },
   "sidebar": {
@@ -45,7 +49,8 @@
       "settings": "设置",
       "signout": "退出登录",
       "apiKeys": "API-Keys",
-      "recharge": "充值"
+      "recharge": "充值",
+      "drafts": "草稿 (Beta)"
     },
     "collapse": "收起侧边栏"
   },
