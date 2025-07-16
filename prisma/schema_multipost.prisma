@@ -37,7 +37,7 @@ model User {
   ImageGeneration     ImageGeneration[]
   PosterGeneration    PosterGeneration[]
   FileHosting         FileHosting[]
-  DynamicDraft        DynamicDraft[]
+  Draft               Draft[]
 }
 
 model Account {
@@ -255,13 +255,13 @@ model APIKey {
 }
 
 model ExtensionClient {
-  id               String   @id @unique @default(cuid())
+  id               String    @id @unique @default(cuid())
   userId           String
   name             String
-  extensionVersion String   @default("unknown")
+  extensionVersion String    @default("unknown")
   platformInfos    Json
-  createdAt        DateTime @default(now())
-  updatedAt        DateTime @updatedAt
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
   deletedAt        DateTime?
 
   user          User            @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -434,7 +434,7 @@ model FileHosting {
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
-model DynamicDraft {
+model Draft {
   id        String   @id @unique @default(cuid())
   userId    String
   title     String?

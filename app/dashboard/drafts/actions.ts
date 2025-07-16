@@ -19,7 +19,7 @@ export async function createDynamicDraft() {
       };
     }
 
-    const draft = await multipostDb.dynamicDraft.create({
+    const draft = await multipostDb.draft.create({
       data: {
         userId: session.user.id,
         title: '',
@@ -54,7 +54,7 @@ export async function getDynamicDrafts() {
       };
     }
 
-    const drafts = await multipostDb.dynamicDraft.findMany({
+    const drafts = await multipostDb.draft.findMany({
       where: {
         userId: session.user.id,
       },
@@ -91,7 +91,7 @@ export async function getDynamicDraft(draftId: string) {
       };
     }
 
-    const draft = await multipostDb.dynamicDraft.findFirst({
+    const draft = await multipostDb.draft.findFirst({
       where: {
         id: draftId,
         userId: session.user.id,
@@ -146,7 +146,7 @@ export async function updateDynamicDraft(
       files: data.files?.filter((file) => file.source !== 'local'),
     };
 
-    const draft = await multipostDb.dynamicDraft.update({
+    const draft = await multipostDb.draft.update({
       where: {
         id: draftId,
         userId: session.user.id,
@@ -191,7 +191,7 @@ export async function deleteDynamicDraft(draftId: string) {
       };
     }
 
-    const draft = await multipostDb.dynamicDraft.deleteMany({
+    const draft = await multipostDb.draft.deleteMany({
       where: {
         id: draftId,
         userId: session.user.id,

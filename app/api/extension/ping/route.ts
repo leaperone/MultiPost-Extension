@@ -4,7 +4,7 @@ import { NextResponse } from 'next/server';
 import { z } from 'zod';
 import { authKey } from '@/actions/authKey';
 import { BASE_URL } from '@/lib/constants';
-import { TaskStatus, TaskType, SchedulePublishPostData } from '../types';
+import { TaskStatus, TaskType, SchedulePublishPostData, DraftPostData } from '../types';
 
 const schema = z.object({
   extensionClientId: z.string().optional(),
@@ -34,6 +34,16 @@ async function taskNeedToHandle(targetClientId: string) {
   if (task.taskType === TaskType.SCHEDULE_PUBLISH_POST) {
     const schedulePublishPostData = task.taskData as unknown as SchedulePublishPostData;
     if (schedulePublishPostData.timestamp <= Date.now() + 10 * 60 * 1000) {
+      return task;
+    }
+  }
+
+  if (task.taskType === TaskType.DRAFT_POST) {
+    const draftPostData = task.taskData as unknown as DraftPostData;
+    const draft = await prisma.draft.findUnique({
+      where: { id: draftPostData.draftId },
+    });
+    if (draft && draftPostData.timestamp <= Date.now() + 10 * 60 * 1000) {
       return task;
     }
   }

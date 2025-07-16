@@ -2,12 +2,12 @@
 
 import { useSearchParams } from 'next/navigation';
 import { useEffect, useState } from 'react';
-import { getTaskData, updateTaskStatus } from './action';
+import { getDraftData, getTaskData, updateTaskStatus } from './action';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
-import { funcPublish } from '@/lib/extension';
+import { FileData, funcPublish } from '@/lib/extension';
 import { ExtensionTask } from '@/prisma/client_multipost';
-import { PublishPostData, TaskStatus, SchedulePublishPostData, TaskType } from '@/app/api/extension/types';
+import { PublishPostData, TaskStatus, SchedulePublishPostData, TaskType, DraftPostData } from '@/app/api/extension/types';
 import { Accordion, AccordionItem } from '@heroui/accordion';
 import { useTranslation } from '@/i18n/client';
 
@@ -49,6 +49,23 @@ export default function OnTaskPage() {
         }, data.timestamp - new Date().getTime());
       } else if (data.timestamp <= new Date().getTime()) {
         await funcPublish(data);
+        await updateTaskStatus(taskId, TaskStatus.DONE);
+        setIsTaskProcessing(true);
+      }
+    } else if (task.taskType === TaskType.DRAFT_POST) {
+      const data = task.taskData as DraftPostData;
+      const draft = await getDraftData(data.draftId);
+      if (draft) {
+        const publishData = {
+          platforms: data.platforms,
+          isAutoPublish: true,
+          data: {
+            title: draft.title,
+            content: draft.content,
+            images: draft.files as unknown as FileData[],
+          },
+        };
+        await funcPublish(publishData as PublishPostData);
         await updateTaskStatus(taskId, TaskStatus.DONE);
         setIsTaskProcessing(true);
       }

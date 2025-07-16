@@ -9,6 +9,7 @@ export const TaskStatus = {
 export const TaskType = {
   PUBLISH_POST: 'PUBLISH_POST',
   SCHEDULE_PUBLISH_POST: 'SCHEDULE_PUBLISH_POST',
+  DRAFT_POST: 'DRAFT_POST',
 } as const;
 
 // Zod schemas
@@ -55,6 +56,12 @@ export const podcastDataSchema = z.object({
   audio: fileDataSchema,
 });
 
+export const draftPostSchema = z.object({
+  draftId: z.string(),
+  platforms: z.array(platformSchema),
+  timestamp: z.number().int().positive().default(Date.now()),
+});
+
 export const publishPostSchema = z.object({
   platforms: z.array(platformSchema),
   isAutoPublish: z.boolean().default(false),
@@ -67,10 +74,11 @@ export const schedulePublishPostSchema = publishPostSchema.extend({
 
 export const taskSchema = z.object({
   targetClientId: z.string(),
-  taskType: z.enum([TaskType.PUBLISH_POST, TaskType.SCHEDULE_PUBLISH_POST]),
-  taskData: z.union([publishPostSchema, schedulePublishPostSchema]),
+  taskType: z.enum([TaskType.PUBLISH_POST, TaskType.SCHEDULE_PUBLISH_POST, TaskType.DRAFT_POST]),
+  taskData: z.union([publishPostSchema, schedulePublishPostSchema, draftPostSchema]),
 });
 
 export type TaskData = z.infer<typeof taskSchema>;
 export type PublishPostData = z.infer<typeof publishPostSchema>;
 export type SchedulePublishPostData = z.infer<typeof schedulePublishPostSchema>;
+export type DraftPostData = z.infer<typeof draftPostSchema>;

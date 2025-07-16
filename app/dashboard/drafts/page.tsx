@@ -7,6 +7,7 @@ import { createDynamicDraft, getDynamicDrafts, deleteDynamicDraft } from './acti
 import { DraftFileData, Draft } from './types';
 import { DraftList } from './components/DraftList';
 import { DraftEditor } from './components/DraftEditor';
+import ClientPublishModal from './components/ClientPublishModal';
 
 export default function DraftsPage() {
   const router = useRouter();
@@ -16,6 +17,7 @@ export default function DraftsPage() {
   const [drafts, setDrafts] = useState<Draft[]>([]);
   const [loading, setLoading] = useState(true);
   const [creating, setCreating] = useState(false);
+  const [isPublishModalOpen, setIsPublishModalOpen] = useState(false);
 
   useEffect(() => {
     loadDrafts();
@@ -115,6 +117,22 @@ export default function DraftsPage() {
     }
   };
 
+  // Function to open publish modal - can be used by child components
+  const handleOpenPublishModal = () => {
+    setIsPublishModalOpen(true);
+  };
+
+  const handleClosePublishModal = () => {
+    setIsPublishModalOpen(false);
+  };
+
+  const handlePublishSuccess = () => {
+    addToast({
+      title: 'Publish task created successfully',
+      color: 'success',
+    });
+  };
+
   if (loading) {
     return (
       <div className="flex h-[calc(100vh-4rem)] items-center justify-center">
@@ -142,8 +160,17 @@ export default function DraftsPage() {
         <DraftEditor
           draftId={selectedDraftId}
           onDraftUpdate={handleDraftUpdate}
+          onOpenPublishModal={handleOpenPublishModal}
         />
       </main>
+
+      {/* Publish Modal */}
+      <ClientPublishModal
+        isOpen={isPublishModalOpen}
+        onClose={handleClosePublishModal}
+        draftId={selectedDraftId || undefined}
+        onSuccess={handlePublishSuccess}
+      />
     </div>
   );
 }

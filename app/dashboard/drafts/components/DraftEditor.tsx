@@ -1,7 +1,7 @@
 'use client';
 
 import { Button, addToast, Spinner, Input, Textarea, cn, Progress, Image } from '@heroui/react';
-import { FileTextIcon, SaveIcon, XIcon, GripVerticalIcon, PlayCircleIcon } from 'lucide-react';
+import { FileTextIcon, SaveIcon, XIcon, GripVerticalIcon, PlayCircleIcon, SendIcon } from 'lucide-react';
 import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { getDynamicDraft, updateDynamicDraft } from '../actions';
@@ -125,9 +125,11 @@ const SortableMedia = ({ id, file, index, type, onDelete, onImageClick, onVideoC
 export function DraftEditor({
   draftId,
   onDraftUpdate,
+  onOpenPublishModal,
 }: {
   draftId: string | null;
   onDraftUpdate: (draft: Draft) => void;
+  onOpenPublishModal?: () => void;
 }) {
   const router = useRouter();
   const { t } = useTranslation('draft');
@@ -448,6 +450,14 @@ export function DraftEditor({
             onPress={handleManualSave}
             isLoading={saving}>
             {t('editor.header.saveButton')}
+          </Button>
+          <Button
+            color="success"
+            variant="flat"
+            startContent={<SendIcon className="size-4" />}
+            onPress={onOpenPublishModal}
+            isDisabled={!draftId || !content.trim()}>
+            发布
           </Button>
         </div>
       </header>

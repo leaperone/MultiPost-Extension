@@ -36,3 +36,15 @@ export async function updateTaskStatus(taskId: string, status: string) {
     throw new Error('Failed to update task status');
   }
 }
+
+export async function getDraftData(draftId: string) {
+  try {
+    const draft = await prisma.draft.findUnique({
+      where: { id: draftId },
+    });
+    return draft;
+  } catch (error) {
+    console.error('Error fetching draft data:', error);
+    throw new Error('Failed to fetch draft data');
+  }
+}

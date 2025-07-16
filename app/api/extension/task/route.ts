@@ -1,6 +1,6 @@
 import { prisma } from '@/lib/db';
 import { authKey } from '@/actions/authKey';
-import { taskSchema, TaskStatus } from '../types';
+import { DraftPostData, taskSchema, TaskStatus, TaskType } from '../types';
 import { errorResponse, successResponse, unauthenticatedResponse } from '@/lib/response';
 
 export async function POST(request: Request) {
@@ -22,6 +22,21 @@ export async function POST(request: Request) {
     });
     if (!client) {
       throw new Error('CLIENT_NOT_FOUND');
+    }
+
+    if (validatedData.taskType === TaskType.DRAFT_POST) {
+      if (!('draftId' in validatedData.taskData)) {
+        throw new Error('DRAFT_ID_REQUIRED');
+      }
+      const draft = await prisma.draft.findUnique({
+        where: {
+          id: (validatedData.taskData as DraftPostData).draftId,
+          userId,
+        },
+      });
+      if (!draft) {
+        throw new Error('DRAFT_NOT_FOUND');
+      }
     }
 
     const task = await prisma.extensionTask.create({
