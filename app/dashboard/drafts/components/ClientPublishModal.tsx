@@ -17,6 +17,7 @@ import {
   Checkbox,
 } from '@heroui/react';
 import { toast } from 'sonner';
+import { useTranslation } from 'react-i18next';
 import PlatformCheckbox from '@/app/dashboard/publish/components/PlatformCheckbox';
 import type { PlatformInfo } from '@/lib/extension';
 import { CalendarDateTime, now, getLocalTimeZone } from '@internationalized/date';
@@ -69,6 +70,7 @@ export default function ClientPublishModal({
   draftId: _draftId, // eslint-disable-line @typescript-eslint/no-unused-vars
   onSuccess,
 }: ClientPublishModalProps) {
+  const { t } = useTranslation('draft');
   const [clients, setClients] = useState<Client[]>([]);
   const [clientDetail, setClientDetail] = useState<ClientDetail | null>(null);
   const [platforms, setPlatforms] = useState<Platform[]>([]);
@@ -99,7 +101,7 @@ export default function ClientPublishModal({
       }
     } catch (error) {
       console.error('Error fetching clients:', error);
-      toast.error('获取客户端列表失败');
+      toast.error(t('publish.toast.fetchClientsFailed'));
     } finally {
       setIsLoadingClients(false);
     }
@@ -183,7 +185,7 @@ export default function ClientPublishModal({
       }
     } catch (error) {
       console.error('Error fetching client detail:', error);
-      toast.error('获取客户端详情失败');
+      toast.error(t('publish.toast.fetchClientDetailFailed'));
     } finally {
       setIsLoadingClientDetail(false);
     }
@@ -194,23 +196,23 @@ export default function ClientPublishModal({
    */
   const handlePublish = async () => {
     if (!clientId) {
-      toast.error('请选择一个客户端');
+      toast.error(t('publish.toast.selectClient'));
       return;
     }
 
     const selectedPlatformsData = platforms.filter((p) => p.selected);
     if (selectedPlatformsData.length === 0) {
-      toast.error('请至少选择一个平台');
+      toast.error(t('publish.toast.selectPlatform'));
       return;
     }
 
     if (!_draftId) {
-      toast.error('草稿ID不能为空');
+      toast.error(t('publish.toast.draftIdRequired'));
       return;
     }
 
     if (scheduleEnabled && !scheduledDateTime) {
-      toast.error('请选择发布时间');
+      toast.error(t('publish.toast.selectDateTime'));
       return;
     }
 
@@ -234,7 +236,7 @@ export default function ClientPublishModal({
 
         // Check if scheduled time is in the future
         if (timestamp <= Date.now()) {
-          toast.error('发布时间必须是未来时间');
+          toast.error(t('publish.toast.futureTimeRequired'));
           setIsPublishing(false);
           return;
         }
@@ -272,8 +274,10 @@ export default function ClientPublishModal({
       if (result.success) {
         const timeMessage =
           scheduleEnabled && scheduledDateTime
-            ? `定时发布任务创建成功，将于 ${scheduledDateTime.year}-${String(scheduledDateTime.month).padStart(2, '0')}-${String(scheduledDateTime.day).padStart(2, '0')} ${String(scheduledDateTime.hour).padStart(2, '0')}:${String(scheduledDateTime.minute).padStart(2, '0')}:${String(scheduledDateTime.second).padStart(2, '0')} 发布`
-            : '发布任务创建成功';
+            ? t('publish.toast.publishScheduledSuccess', {
+                time: `${scheduledDateTime.year}-${String(scheduledDateTime.month).padStart(2, '0')}-${String(scheduledDateTime.day).padStart(2, '0')} ${String(scheduledDateTime.hour).padStart(2, '0')}:${String(scheduledDateTime.minute).padStart(2, '0')}:${String(scheduledDateTime.second).padStart(2, '0')}`,
+              })
+            : t('publish.toast.publishSuccess');
         toast.success(timeMessage);
         onSuccess?.();
         onClose();
@@ -285,7 +289,7 @@ export default function ClientPublishModal({
       }
     } catch (error) {
       console.error('Error creating publish task:', error);
-      toast.error('创建发布任务失败');
+      toast.error(t('publish.toast.publishFailed'));
     } finally {
       setIsPublishing(false);
     }
@@ -316,26 +320,26 @@ export default function ClientPublishModal({
       size="2xl"
       scrollBehavior="inside">
       <ModalContent>
-        <ModalHeader className="flex flex-col gap-1">发布草稿到平台</ModalHeader>
+        <ModalHeader className="flex flex-col gap-1">{t('publish.modal.title')}</ModalHeader>
         <ModalBody>
           <div className="space-y-6">
             {/* Client Selection */}
             <div>
               <div className="mb-2 flex items-center justify-between">
-                <label className="text-sm font-medium">选择客户端</label>
+                <label className="text-sm font-medium">{t('publish.client.label')}</label>
                 <span className="text-xs text-default-500">
-                  连接客户端请到{' '}
+                  {t('publish.client.helpText')}{' '}
                   <a
                     href="/dashboard/settings/client"
                     className="text-primary-600 underline hover:text-primary-700"
                     target="_blank"
                     rel="noopener noreferrer">
-                    设置页设置
+                    {t('publish.client.helpLink')}
                   </a>
                 </span>
               </div>
               <Select
-                placeholder="请选择一个客户端"
+                placeholder={t('publish.client.placeholder')}
                 selectedKeys={clientId ? new Set([clientId]) : new Set()}
                 onSelectionChange={(keys) => {
                   const selectedClientId = Array.from(keys)[0] as string;
@@ -357,7 +361,7 @@ export default function ClientPublishModal({
 
             {clientDetail && platforms.length > 0 && (
               <div>
-                <label className="mb-2 block text-sm font-medium">选择发布平台</label>
+                <label className="mb-2 block text-sm font-medium">{t('publish.platform.label')}</label>
                 <Card>
                   <CardBody>
                     <div className="grid grid-cols-1 gap-2 md:grid-cols-2">
@@ -380,18 +384,18 @@ export default function ClientPublishModal({
 
             {/* Schedule Options */}
             <div>
-              <label className="mb-2 block text-sm font-medium">发布时间</label>
+              <label className="mb-2 block text-sm font-medium">{t('publish.schedule.label')}</label>
               <div className="space-y-3">
                 <Checkbox
                   isSelected={scheduleEnabled}
                   onValueChange={setScheduleEnabled}>
-                  定时发布
+                  {t('publish.schedule.enableSchedule')}
                 </Checkbox>
 
                 {scheduleEnabled && (
                   <div className="space-y-3">
                     <DatePicker
-                      label="选择发布时间"
+                      label={t('publish.schedule.selectDateTime')}
                       value={scheduledDateTime}
                       onChange={setScheduledDateTime}
                       granularity="second"
@@ -403,7 +407,8 @@ export default function ClientPublishModal({
                     {scheduledDateTime && (
                       <div className="rounded-lg bg-blue-50 p-3">
                         <p className="text-sm text-blue-700">
-                          预定发布时间: {scheduledDateTime.year}-{String(scheduledDateTime.month).padStart(2, '0')}-
+                          {t('publish.schedule.scheduledTime')}: {scheduledDateTime.year}-
+                          {String(scheduledDateTime.month).padStart(2, '0')}-
                           {String(scheduledDateTime.day).padStart(2, '0')}{' '}
                           {String(scheduledDateTime.hour).padStart(2, '0')}:
                           {String(scheduledDateTime.minute).padStart(2, '0')}:
@@ -420,7 +425,7 @@ export default function ClientPublishModal({
             {_draftId && (
               <div className="rounded-lg bg-default-50 p-3">
                 <p className="text-sm text-default-600">
-                  将发布草稿: <span className="font-mono text-xs">{_draftId}</span>
+                  {t('publish.draft.info')}: <span className="font-mono text-xs">{_draftId}</span>
                 </p>
               </div>
             )}
@@ -430,14 +435,14 @@ export default function ClientPublishModal({
           <Button
             variant="light"
             onPress={onClose}>
-            取消
+            {t('publish.modal.cancel')}
           </Button>
           <Button
             color="primary"
             onPress={handlePublish}
             isLoading={isPublishing}
             isDisabled={!clientId || platforms.filter((p) => p.selected).length === 0 || !_draftId}>
-            发布草稿
+            {t('publish.modal.publish')}
           </Button>
         </ModalFooter>
       </ModalContent>

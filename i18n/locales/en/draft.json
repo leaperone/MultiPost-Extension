@@ -1,6 +1,7 @@
 {
   "editor": {
     "addImage": "Add Image",
+    "publishButton": "Publish",
     "toast": {
       "saveFailed": "Failed to save draft",
       "loadFailed": "Failed to load draft",
@@ -30,6 +31,51 @@
       "images": {
         "title": "Images"
       }
+    }
+  },
+  "list": {
+    "newDraftButton": "New Draft",
+    "emptyState": {
+      "title": "No drafts yet",
+      "description": "Create your first draft."
+    },
+    "untitledDraft": "Untitled Draft"
+  },
+  "publish": {
+    "modal": {
+      "title": "Publish Draft to Platforms",
+      "cancel": "Cancel",
+      "publish": "Publish Draft"
+    },
+    "client": {
+      "label": "Select Client",
+      "placeholder": "Please select a client",
+      "helpText": "To connect clients, go to",
+      "helpLink": "Settings Page"
+    },
+    "platform": {
+      "label": "Select Publishing Platforms"
+    },
+    "schedule": {
+      "label": "Publishing Time",
+      "enableSchedule": "Schedule Publishing",
+      "selectDateTime": "Select Publishing Time",
+      "scheduledTime": "Scheduled Publishing Time"
+    },
+    "draft": {
+      "info": "Will publish draft"
+    },
+    "toast": {
+      "selectClient": "Please select a client",
+      "selectPlatform": "Please select at least one platform",
+      "selectDateTime": "Please select publishing time",
+      "draftIdRequired": "Draft ID cannot be empty",
+      "futureTimeRequired": "Publishing time must be in the future",
+      "publishSuccess": "Publishing task created successfully",
+      "publishScheduledSuccess": "Scheduled publishing task created successfully, will publish at {{time}}",
+      "publishFailed": "Failed to create publishing task",
+      "fetchClientsFailed": "Failed to fetch client list",
+      "fetchClientDetailFailed": "Failed to fetch client details"
     }
   }
 }

@@ -457,7 +457,7 @@ export function DraftEditor({
             startContent={<SendIcon className="size-4" />}
             onPress={onOpenPublishModal}
             isDisabled={!draftId || !content.trim()}>
-            发布
+            {t('editor.publishButton')}
           </Button>
         </div>
       </header>

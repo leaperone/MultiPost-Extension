@@ -1,6 +1,7 @@
 {
   "editor": {
     "addImage": "添加图片",
+    "publishButton": "发布",
     "toast": {
       "saveFailed": "保存草稿失败",
       "loadFailed": "加载草稿失败",
@@ -30,6 +31,51 @@
       "images": {
         "title": "图片"
       }
+    }
+  },
+  "list": {
+    "newDraftButton": "新建草稿",
+    "emptyState": {
+      "title": "暂无草稿",
+      "description": "创建你的第一篇草稿。"
+    },
+    "untitledDraft": "无标题草稿"
+  },
+  "publish": {
+    "modal": {
+      "title": "发布草稿到平台",
+      "cancel": "取消",
+      "publish": "发布草稿"
+    },
+    "client": {
+      "label": "选择客户端",
+      "placeholder": "请选择一个客户端",
+      "helpText": "连接客户端请到",
+      "helpLink": "设置页设置"
+    },
+    "platform": {
+      "label": "选择发布平台"
+    },
+    "schedule": {
+      "label": "发布时间",
+      "enableSchedule": "定时发布",
+      "selectDateTime": "选择发布时间",
+      "scheduledTime": "预定发布时间"
+    },
+    "draft": {
+      "info": "将发布草稿"
+    },
+    "toast": {
+      "selectClient": "请选择一个客户端",
+      "selectPlatform": "请至少选择一个平台",
+      "selectDateTime": "请选择发布时间",
+      "draftIdRequired": "草稿ID不能为空",
+      "futureTimeRequired": "发布时间必须是未来时间",
+      "publishSuccess": "发布任务创建成功",
+      "publishScheduledSuccess": "定时发布任务创建成功，将于 {{time}} 发布",
+      "publishFailed": "创建发布任务失败",
+      "fetchClientsFailed": "获取客户端列表失败",
+      "fetchClientDetailFailed": "获取客户端详情失败"
     }
   }
 }
