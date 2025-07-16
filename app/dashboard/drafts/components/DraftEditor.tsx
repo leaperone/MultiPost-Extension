@@ -347,6 +347,53 @@ export function DraftEditor({
     }
   };
 
+  const handlePaste = useCallback(
+    (event: ClipboardEvent) => {
+      const items = event.clipboardData?.items;
+      if (!items) return;
+
+      const filesToUpload: File[] = [];
+      for (const item of items) {
+        if (item.kind === 'file' && (item.type.startsWith('image/') || item.type.startsWith('video/'))) {
+          const file = item.getAsFile();
+          if (file) {
+            filesToUpload.push(file);
+          }
+        }
+      }
+
+      if (filesToUpload.length > 0) {
+        const newFiles: DraftFileDataClient[] = filesToUpload.map((file) => ({
+          rid: nanoid(),
+          name: file.name,
+          type: file.type,
+          size: file.size,
+          url: URL.createObjectURL(file),
+          source: 'local',
+          uploadProgress: 0,
+          file,
+        }));
+
+        newFiles.forEach((f) => {
+          if (f.file && f.rid) {
+            uploadFile(f.file, f.rid);
+          }
+        });
+
+        setFiles((prev) => [...prev, ...newFiles]);
+        setHasUnsavedChanges(true);
+      }
+    },
+    [uploadFile],
+  );
+
+  useEffect(() => {
+    document.addEventListener('paste', handlePaste);
+    return () => {
+      document.removeEventListener('paste', handlePaste);
+    };
+  }, [handlePaste]);
+
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;
     if (over && active.id !== over.id) {

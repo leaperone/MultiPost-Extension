@@ -41,7 +41,7 @@ import {
   SigmaIcon,
 } from 'lucide-react';
 import dynamic from 'next/dynamic';
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useTranslation } from '@/i18n/client';
 import { Icon } from '@iconify/react';
 import { cn } from '@/lib/utils';
@@ -579,6 +579,54 @@ export default function DynamicPage() {
     event.stopPropagation();
     setIsVideoDraggingOver(false);
   };
+
+  const handlePaste = useCallback((event: ClipboardEvent) => {
+    const items = event.clipboardData?.items;
+    if (!items) return;
+
+    const newImages: FileData[] = [];
+    const newVideos: FileData[] = [];
+
+    for (const item of items) {
+      if (item.type.startsWith('image/')) {
+        const file = item.getAsFile();
+        if (file) {
+          newImages.push({
+            name: file.name,
+            type: file.type,
+            size: file.size,
+            url: URL.createObjectURL(file),
+            file,
+          });
+        }
+      } else if (item.type.startsWith('video/')) {
+        const file = item.getAsFile();
+        if (file) {
+          newVideos.push({
+            name: file.name,
+            type: file.type,
+            size: file.size,
+            url: URL.createObjectURL(file),
+            file,
+          });
+        }
+      }
+    }
+
+    if (newImages.length > 0) {
+      setImages((prevImages) => [...prevImages, ...newImages]);
+    }
+    if (newVideos.length > 0) {
+      setVideos((prevVideos) => [...prevVideos, ...newVideos]);
+    }
+  }, []);
+
+  useEffect(() => {
+    document.addEventListener('paste', handlePaste);
+    return () => {
+      document.removeEventListener('paste', handlePaste);
+    };
+  }, [handlePaste]);
 
   // Define popular platforms for each region
   const popularPlatformNames = {
