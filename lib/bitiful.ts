@@ -1,4 +1,4 @@
-import { S3Client } from '@aws-sdk/client-s3';
+import { DeleteObjectCommand, DeleteObjectCommandOutput, S3Client } from '@aws-sdk/client-s3';
 import { S3RequestPresigner } from '@aws-sdk/s3-request-presigner';
 import { Hash } from '@smithy/hash-node';
 import { HeadObjectCommand, type HeadObjectCommandOutput } from '@aws-sdk/client-s3';
@@ -94,4 +94,9 @@ export async function getPresignedDownloadUrl(
 
 export async function headObject(key: string): Promise<HeadObjectCommandOutput> {
   return s3Client.send(new HeadObjectCommand({ Bucket: bucket, Key: key }));
+}
+
+export async function deleteObject(key: string): Promise<DeleteObjectCommandOutput> {
+  const result = await s3Client.send(new DeleteObjectCommand({ Bucket: bucket, Key: key }));
+  return result;
 }

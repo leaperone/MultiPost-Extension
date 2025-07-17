@@ -1,4 +1,36 @@
 {
+  "title": "草稿",
+  "newDraft": "新建草稿",
+  "save": "保存",
+  "saving": "正在保存...",
+  "autoSaving": "自动保存中...",
+  "clientPublish": "Client 发布",
+  "directPublish": "发布",
+  "loading": "正在加载草稿...",
+  "tabs": {
+    "drafts": "草稿",
+    "mediaLibrary": "素材库"
+  },
+  "mediaLibrary": {
+    "title": "媒体库",
+    "imageCount": "{{count}} 张图片",
+    "uploadImages": "上传图片",
+    "refresh": "刷新",
+    "uploadProgress": "上传进度",
+    "complete": "完成",
+    "failed": "失败",
+    "noImages": "暂无图片文件",
+    "selectImageFiles": "请选择图片文件",
+    "uploadSuccessAll": "成功上传 {{count}} 张图片",
+    "uploadSuccessPartial": "成功上传 {{success}} 张图片，{{failed}} 张失败",
+    "uploadFailedAll": "所有图片上传失败",
+    "deleteSuccess": "图片删除成功",
+    "deleteFailed": "删除图片失败",
+    "loadImagesFailed": "获取图像文件失败",
+    "loadImagesError": "获取图像文件时发生错误",
+    "loadMoreFailed": "加载更多图片失败",
+    "previewFailed": "打开图片预览失败"
+  },
   "editor": {
     "addImage": "添加图片",
     "publishButton": "Client 发布",

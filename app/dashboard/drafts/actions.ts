@@ -215,3 +215,53 @@ export async function deleteDynamicDraft(draftId: string) {
     };
   }
 }
+
+/**
+ * Get user uploaded image files from file hosting
+ * @description Retrieves all image files uploaded by the current user
+ * @returns Promise with success status and image files array
+ */
+export async function getUserImageFiles() {
+  try {
+    const session = await auth();
+    if (!session?.user?.id) {
+      return {
+        success: false,
+        error: 'Authentication failed',
+      };
+    }
+
+    const imageFiles = await multipostDb.fileHosting.findMany({
+      where: {
+        userId: session.user.id,
+        type: {
+          startsWith: 'image',
+        },
+        deletedAt: null,
+        OR: [
+          {
+            expiredAt: null, // 没有过期时间的文件
+          },
+          {
+            expiredAt: {
+              gt: new Date(), // 未过期的文件
+            },
+          },
+        ],
+      },
+      orderBy: {
+        createdAt: 'desc',
+      },
+    });
+
+    return {
+      success: true,
+      data: imageFiles,
+    };
+  } catch (error) {
+    return {
+      success: false,
+      error: 'Failed to get image files',
+    };
+  }
+}

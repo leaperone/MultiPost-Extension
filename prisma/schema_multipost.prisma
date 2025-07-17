@@ -420,16 +420,18 @@ model PosterGeneration {
 }
 
 model FileHosting {
-  id        String    @id @unique @default(cuid())
-  userId    String
-  key       String
-  type      String?
-  size      Int       @default(0)
-  times     Int       @default(0)
-  filename  String?
-  expiredAt DateTime?
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
+  id         String    @id @unique @default(cuid())
+  userId     String
+  key        String
+  type       String?
+  size       Int       @default(0)
+  times      Int       @default(0)
+  filename   String?
+  previewUrl String?
+  expiredAt  DateTime?
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+  deletedAt  DateTime?
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 }

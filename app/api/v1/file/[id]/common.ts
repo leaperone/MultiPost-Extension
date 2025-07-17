@@ -6,6 +6,7 @@ export async function initFile(fileId: string) {
     let file = await prisma.fileHosting.findUnique({
       where: {
         id: fileId,
+        deletedAt: null,
       },
     });
 

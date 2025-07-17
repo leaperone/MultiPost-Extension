@@ -1,14 +1,12 @@
 'use client';
 
 import { Button, addToast, Spinner, Input, Textarea, cn, Progress, Image } from '@heroui/react';
-import { FileTextIcon, SaveIcon, XIcon, GripVerticalIcon, PlayCircleIcon, SendIcon } from 'lucide-react';
+import { FileTextIcon, XIcon, GripVerticalIcon, PlayCircleIcon } from 'lucide-react';
 import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
-import { useRouter } from 'next/navigation';
-import { getDynamicDraft, updateDynamicDraft } from '../actions';
 import { DndContext, DragEndEvent, PointerSensor, closestCenter, useSensor, useSensors } from '@dnd-kit/core';
 import { SortableContext, arrayMove, horizontalListSortingStrategy } from '@dnd-kit/sortable';
 import dynamic from 'next/dynamic';
-import { DraftFileData, DraftFileDataClient, Draft } from '../types';
+import { DraftFileDataClient } from '../types';
 import ReactPlayer from 'react-player';
 import { CSS } from '@dnd-kit/utilities';
 import { useSortable } from '@dnd-kit/sortable';
@@ -125,25 +123,29 @@ const SortableMedia = ({ id, file, index, type, onDelete, onImageClick, onVideoC
 
 export function DraftEditor({
   draftId,
-  onDraftUpdate,
-  onOpenPublishModal,
+  loading = false,
+  title,
+  content,
+  files,
+  onTitleChange,
+  onContentChange,
+  onFilesChange,
 }: {
   draftId: string | null;
-  onDraftUpdate: (draft: Draft) => void;
-  onOpenPublishModal?: () => void;
+  loading?: boolean;
+  title: string;
+  content: string;
+  files: DraftFileDataClient[];
+  onTitleChange: (title: string) => void;
+  onContentChange: (content: string) => void;
+  onFilesChange: (files: DraftFileDataClient[]) => void;
 }) {
-  const router = useRouter();
   const { t } = useTranslation('draft');
   const { t: tPublish } = useTranslation('publish');
 
-  const [loading, setLoading] = useState(false);
-  const [saving, setSaving] = useState(false);
-  const [title, setTitle] = useState<string>('');
-  const [content, setContent] = useState<string>('');
-  const [files, setFiles] = useState<DraftFileDataClient[]>([]);
-  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   const [isDraggingOver, setIsDraggingOver] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const filesRef = useRef<DraftFileDataClient[]>(files);
   const sensors = useSensors(useSensor(PointerSensor));
   const [viewerVisible, setViewerVisible] = useState(false);
   const [currentImage, setCurrentImage] = useState(0);
@@ -151,69 +153,12 @@ export function DraftEditor({
   const [isAiModalOpen, setIsAiModalOpen] = useState(false);
   const [isDirectPublishModalOpen, setIsDirectPublishModalOpen] = useState(false);
 
+  // Keep filesRef in sync with files prop
+  useEffect(() => {
+    filesRef.current = files;
+  }, [files]);
+
   const fileIds = useMemo(() => files.map((f) => f.rid).filter((rid): rid is string => !!rid), [files]);
-
-  const saveToServer = useCallback(
-    async (data: { title?: string; content?: string; files?: DraftFileDataClient[] }) => {
-      if (!draftId) return;
-      try {
-        setSaving(true);
-        // eslint-disable-next-line @typescript-eslint/no-unused-vars
-        const filesToSave: DraftFileData[] = data.files?.map(({ file: _f, uploadProgress: _u, ...rest }) => rest) || [];
-        const result = await updateDynamicDraft(draftId, { ...data, files: filesToSave });
-        if (result.success) {
-          setHasUnsavedChanges(false);
-          onDraftUpdate(result.data?.draft as unknown as Draft);
-        } else {
-          addToast({
-            title: result.error || t('editor.toast.saveFailed'),
-            color: 'danger',
-          });
-        }
-      } catch (error) {
-        addToast({
-          title: t('editor.toast.saveFailed'),
-          color: 'danger',
-        });
-      } finally {
-        setSaving(false);
-      }
-    },
-    [draftId, onDraftUpdate, t],
-  );
-
-  useEffect(() => {
-    if (hasUnsavedChanges) {
-      const timer = setTimeout(() => saveToServer({ title, content, files }), 2000);
-      return () => clearTimeout(timer);
-    }
-  }, [title, content, files, hasUnsavedChanges, saveToServer]);
-
-  useEffect(() => {
-    if (draftId) {
-      setLoading(true);
-      getDynamicDraft(draftId)
-        .then((result) => {
-          if (result.success) {
-            if (result.data) {
-              setTitle(result.data.title || '');
-              setContent(result.data.content || '');
-              setFiles(
-                ((result.data.files as DraftFileDataClient[]) || []).map((f) => ({
-                  ...f,
-                  rid: f.rid || nanoid(),
-                })),
-              );
-              setHasUnsavedChanges(false);
-            }
-          } else {
-            addToast({ title: result.error || t('editor.toast.loadFailed'), color: 'danger' });
-            router.push('/dashboard/draft');
-          }
-        })
-        .finally(() => setLoading(false));
-    }
-  }, [draftId, router, t]);
 
   const handleImageClick = (index: number) => {
     setCurrentImage(index);
@@ -221,21 +166,16 @@ export function DraftEditor({
   };
 
   const handleDeleteFile = (index: number) => {
-    setFiles((prevFiles) => {
-      const newFiles = prevFiles.filter((_, i) => i !== index);
-      setHasUnsavedChanges(true);
-      return newFiles;
-    });
+    const newFiles = files.filter((_, i) => i !== index);
+    console.log('onFilesChange', newFiles);
+    onFilesChange(newFiles);
   };
 
   const uploadFile = useCallback(
     async (file: File, rid: string) => {
       try {
         const { data: presignData } = await axios.post('/api/v1/file/create', {
-          name: file.name,
-          contentType: file.type,
-          size: file.size,
-          type: 'dynamic-draft',
+          filename: file.name,
         });
 
         if (presignData.code !== 0 || !presignData.data?.url) {
@@ -246,29 +186,35 @@ export function DraftEditor({
           headers: { 'Content-Type': file.type },
           onUploadProgress: (progressEvent) => {
             const progress = Math.min(99, Math.round((progressEvent.loaded * 100) / (progressEvent.total ?? 1)));
-            setFiles((prev) => prev.map((f) => (f.rid === rid ? { ...f, uploadProgress: progress } : f)));
+            // Use ref to get latest files state
+            const updatedFiles = filesRef.current.map((f) => (f.rid === rid ? { ...f, uploadProgress: progress } : f));
+            console.log('onFilesChange', updatedFiles);
+            onFilesChange(updatedFiles);
           },
         });
 
         const { data: previewData } = await axios.get(`/api/v1/file/${presignData.data.fileId}/preview`);
 
-        if (previewData.code !== 0 || !previewData.data?.url) {
+        if (previewData.code !== 0 || !previewData.data?.previewUrl) {
           throw new Error('Failed to get preview url');
         }
 
-        setFiles((prev) =>
-          prev.map((f) =>
-            f.rid === rid ? { ...f, url: previewData.data.url, uploadProgress: 100, source: 'mp_oss' } : f,
-          ),
+        // Use ref to get latest files state
+        const updatedFiles = filesRef.current.map((f) =>
+          f.rid === rid ? { ...f, url: previewData.data.previewUrl, uploadProgress: 100, source: 'mp_oss' as const } : f,
         );
-        setHasUnsavedChanges(true);
+        console.log('onFilesChange', updatedFiles);
+        onFilesChange(updatedFiles);
       } catch (error) {
         console.error('Upload failed', error);
         addToast({ title: t('editor.toast.uploadFailed'), color: 'danger' });
-        setFiles((prev) => prev.filter((f) => f.rid !== rid));
+        // Use ref to get latest files state
+        const filteredFiles = filesRef.current.filter((f) => f.rid !== rid);
+        console.log('onFilesChange', filteredFiles);
+        onFilesChange(filteredFiles);
       }
     },
-    [t],
+    [t, onFilesChange],
   );
 
   const handleAiImageGenerated = (newImage: { name: string; type: string; size: number; url: string }) => {
@@ -281,8 +227,8 @@ export function DraftEditor({
       source: 'remote_url',
       uploadProgress: 100,
     };
-    setFiles((prev) => [...prev, newFile]);
-    setHasUnsavedChanges(true);
+    console.log('onFilesChange', [...files, newFile]);
+    onFilesChange([...files, newFile]);
     setIsAiModalOpen(false);
   };
 
@@ -305,11 +251,11 @@ export function DraftEditor({
         uploadProgress: 0,
         file: fileData.file,
       };
-      setFiles((prev) => [...prev, newFile]);
+      console.log('onFilesChange', [...files, newFile]);
+      onFilesChange([...files, newFile]);
       if (newFile.file && newFile.rid) {
         uploadFile(newFile.file, newFile.rid);
       }
-      setHasUnsavedChanges(true);
     } else {
       const newFile: DraftFileDataClient = {
         rid: nanoid(),
@@ -320,8 +266,8 @@ export function DraftEditor({
         source: 'remote_url',
         uploadProgress: 100,
       };
-      setFiles((prev) => [...prev, newFile]);
-      setHasUnsavedChanges(true);
+      console.log('onFilesChange', [...files, newFile]);
+      onFilesChange([...files, newFile]);
     }
     setLibraryModalOpen(false);
   };
@@ -346,8 +292,8 @@ export function DraftEditor({
         }
       });
 
-      setFiles((prev) => [...prev, ...newFiles]);
-      setHasUnsavedChanges(true);
+      console.log('onFilesChange', [...files, ...newFiles]);
+      onFilesChange([...files, ...newFiles]);
     }
   };
 
@@ -384,11 +330,11 @@ export function DraftEditor({
           }
         });
 
-        setFiles((prev) => [...prev, ...newFiles]);
-        setHasUnsavedChanges(true);
+        console.log('onFilesChange', [...files, ...newFiles]);
+        onFilesChange([...files, ...newFiles]);
       }
     },
-    [uploadFile],
+    [uploadFile, files, onFilesChange],
   );
 
   useEffect(() => {
@@ -401,18 +347,12 @@ export function DraftEditor({
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;
     if (over && active.id !== over.id) {
-      setFiles((items) => {
-        const oldIndex = items.findIndex((item) => item.rid === active.id);
-        const newIndex = items.findIndex((item) => item.rid === over.id);
-        const newItems = arrayMove(items, oldIndex, newIndex);
-        setHasUnsavedChanges(true);
-        return newItems;
-      });
+      const oldIndex = files.findIndex((item) => item.rid === active.id);
+      const newIndex = files.findIndex((item) => item.rid === over.id);
+      const newItems = arrayMove(files, oldIndex, newIndex);
+      console.log('onFilesChange', newItems);
+      onFilesChange(newItems);
     }
-  };
-
-  const handleManualSave = () => {
-    saveToServer({ title, content, files });
   };
 
   if (!draftId) {
@@ -436,59 +376,19 @@ export function DraftEditor({
 
   return (
     <div className="flex h-full flex-col">
-      <header className="flex items-center justify-between border-b border-default-200 p-4">
-        <h2 className="text-xl font-semibold">{t('editor.header.title')}</h2>
-        <div className="flex items-center gap-2">
-          <span className="text-sm text-default-500">
-            {saving
-              ? t('editor.header.saving')
-              : hasUnsavedChanges
-                ? t('editor.header.unsaved')
-                : t('editor.header.saved')}
-          </span>
-          <Button
-            color="primary"
-            startContent={<SaveIcon className="size-4" />}
-            onPress={handleManualSave}
-            isLoading={saving}>
-            {t('editor.header.saveButton')}
-          </Button>
-          <Button
-            color="success"
-            variant="flat"
-            startContent={<SendIcon className="size-4" />}
-            onPress={onOpenPublishModal}
-            isDisabled={!draftId || !content.trim()}>
-            {t('editor.publishButton')}
-          </Button>
-          <Button
-            color="primary"
-            startContent={<SendIcon className="size-4" />}
-            onPress={() => setIsDirectPublishModalOpen(true)}
-            isDisabled={!draftId || !content.trim()}>
-            {t('editor.directPublishButton')}
-          </Button>
-        </div>
-      </header>
       <div className="min-h-0 flex-1 overflow-y-auto p-4">
         <div className="mx-auto max-w-3xl space-y-6">
           <Input
             label={t('editor.form.title.label')}
             placeholder={t('editor.form.title.placeholder')}
             value={title}
-            onValueChange={(v) => {
-              setTitle(v);
-              setHasUnsavedChanges(true);
-            }}
+            onValueChange={onTitleChange}
           />
           <Textarea
             label={t('editor.form.content.label')}
             placeholder={t('editor.form.content.placeholder')}
             value={content}
-            onValueChange={(v) => {
-              setContent(v);
-              setHasUnsavedChanges(true);
-            }}
+            onValueChange={onContentChange}
             minRows={10}
           />
           <div>

@@ -31,3 +31,18 @@ export const DraftSchema = z.object({
   files: z.array(DraftFileDataSchema).optional(),
 });
 export type Draft = z.infer<typeof DraftSchema>;
+
+export const FileHostingSchema = z.object({
+  id: z.string(),
+  userId: z.string(),
+  key: z.string(),
+  type: z.string().nullable(),
+  size: z.number(),
+  times: z.number(),
+  filename: z.string().nullable(),
+  previewUrl: z.string().nullable(),
+  expiredAt: z.date().nullable(),
+  createdAt: z.date(),
+  updatedAt: z.date(),
+});
+export type FileHosting = z.infer<typeof FileHostingSchema>;

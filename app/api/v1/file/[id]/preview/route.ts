@@ -31,7 +31,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
 
     await prisma.fileHosting.update({
       where: { id: fileId },
-      data: { times: { increment: 1 } },
+      data: { times: { increment: 1 }, previewUrl: url },
     });
 
     // await deductCredit({
@@ -42,7 +42,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
 
     return successResp({
       fileId,
-      url,
+      previewUrl: url,
       type: file.type,
       size: file.size,
       filename: file.filename,

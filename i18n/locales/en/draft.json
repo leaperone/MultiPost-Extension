@@ -1,4 +1,36 @@
 {
+  "title": "Drafts",
+  "newDraft": "New Draft",
+  "save": "Save",
+  "saving": "Saving...",
+  "autoSaving": "Auto Saving...",
+  "clientPublish": "Client Publish",
+  "directPublish": "Publish",
+  "loading": "Loading drafts...",
+  "tabs": {
+    "drafts": "Drafts",
+    "mediaLibrary": "Library"
+  },
+  "mediaLibrary": {
+    "title": "Media Library",
+    "imageCount": "{{count}} images",
+    "uploadImages": "Upload Images",
+    "refresh": "Refresh",
+    "uploadProgress": "Upload Progress",
+    "complete": "Complete",
+    "failed": "Failed",
+    "noImages": "No image files",
+    "selectImageFiles": "Please select image files",
+    "uploadSuccessAll": "Successfully uploaded {{count}} images",
+    "uploadSuccessPartial": "Successfully uploaded {{success}} images, {{failed}} failed",
+    "uploadFailedAll": "All image uploads failed",
+    "deleteSuccess": "Image deleted successfully",
+    "deleteFailed": "Failed to delete image",
+    "loadImagesFailed": "Failed to get image files",
+    "loadImagesError": "Error occurred while getting image files",
+    "loadMoreFailed": "Failed to load more images",
+    "previewFailed": "Failed to open image preview"
+  },
   "editor": {
     "addImage": "Add Image",
     "publishButton": "Client Publish",
