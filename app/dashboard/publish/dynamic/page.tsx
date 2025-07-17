@@ -39,6 +39,8 @@ import {
   PlayCircleIcon,
   MessageSquareIcon,
   SigmaIcon,
+  FileTextIcon,
+  StarIcon,
 } from 'lucide-react';
 import dynamic from 'next/dynamic';
 import React, { useState, useEffect, useRef, useCallback } from 'react';
@@ -230,6 +232,7 @@ export default function DynamicPage() {
   const [isVideoDraggingOver, setIsVideoDraggingOver] = useState(false);
   const [isLibraryModalOpen, setLibraryModalOpen] = useState(false);
   const [isAiModalOpen, setIsAiModalOpen] = useState(false);
+  const [showDraftAd, setShowDraftAd] = useState(true);
 
   useEffect(() => {
     if (images.some((i) => !i.id)) {
@@ -653,6 +656,47 @@ export default function DynamicPage() {
     <div className="grid h-full grid-cols-1 justify-center gap-8 p-4 md:grid-cols-[280px_minmax(0,560px)]">
       <Stepper />
       <div className="overflow-y-auto">
+        {/* Draft 功能广告横幅 */}
+        {showDraftAd && (
+          <Card className="mb-4 border-primary/20 bg-gradient-to-r from-primary/10 to-secondary/10 shadow-none">
+            <CardBody className="flex flex-row items-center gap-3 p-3">
+              <div className="flex size-10 shrink-0 items-center justify-center rounded-full bg-primary/20">
+                <FileTextIcon className="size-5 text-primary" />
+              </div>
+              <div className="flex-1">
+                <div className="flex items-center gap-2">
+                  <h4 className="text-sm font-semibold text-foreground">
+                    {t('dynamic.draftAd.title', '试试我们的草稿功能！')}
+                  </h4>
+                  <StarIcon className="size-4 fill-warning text-warning" />
+                </div>
+                <p className="text-xs text-default-600">
+                  {t('dynamic.draftAd.description', '保存您的创作进度，随时编辑和发布')}
+                </p>
+              </div>
+              <div className="flex items-center gap-2">
+                <Button
+                  as={Link}
+                  href="/dashboard/drafts"
+                  size="sm"
+                  color="primary"
+                  variant="flat"
+                  className="text-xs">
+                  {t('dynamic.draftAd.tryNow', '立即体验')}
+                </Button>
+                <Button
+                  isIconOnly
+                  size="sm"
+                  variant="light"
+                  onPress={() => setShowDraftAd(false)}
+                  className="text-default-400 hover:text-default-600">
+                  <XIcon className="size-4" />
+                </Button>
+              </div>
+            </CardBody>
+          </Card>
+        )}
+
         {currentStep === 2 && (
           <div className="flex flex-col gap-2">
             {isLibraryModalOpen && (

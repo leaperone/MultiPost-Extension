@@ -45,7 +45,12 @@
     "aiGenerate": "AI Generate",
     "uploadVideo": "Upload Video",
     "releaseToUpload": "Release to upload",
-    "videoSupportWarning": "* Only a few international platforms support video publishing, e.g., X, Instagram, LinkedIn, etc."
+    "videoSupportWarning": "* Only a few international platforms support video publishing, e.g., X, Instagram, LinkedIn, etc.",
+    "draftAd": {
+      "title": "Try our Drafts feature!",
+      "description": "Save your creative progress, edit and publish anytime",
+      "tryNow": "Try Now"
+    }
   },
   "podcast": {
     "title": "Enter podcast title",

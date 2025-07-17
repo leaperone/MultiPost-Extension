@@ -45,7 +45,12 @@
     "aiGenerate": "AI 生成",
     "uploadVideo": "上传视频",
     "releaseToUpload": "松开即可上传",
-    "videoSupportWarning": "* 仅少量海外平台支持视频发布，例如 X、Instagram、LinkedIn 等"
+    "videoSupportWarning": "* 仅少量海外平台支持视频发布，例如 X、Instagram、LinkedIn 等",
+    "draftAd": {
+      "title": "试试我们的草稿功能！",
+      "description": "保存您的创作进度，随时编辑和发布",
+      "tryNow": "立即体验"
+    }
   },
   "podcast": {
     "title": "请输入播客标题",
