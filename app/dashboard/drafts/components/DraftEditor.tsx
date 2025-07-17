@@ -18,6 +18,7 @@ import { nanoid } from 'nanoid';
 import { useTranslation } from '@/i18n/client';
 import { ImageGenerationModal } from '@/app/dashboard/publish/dynamic/components/ImageGenerationModal';
 import LibraryModal from '@/app/dashboard/publish/dynamic/components/LibraryModal';
+import DirectPublishModal from './DriectPublishModal';
 
 const Viewer = dynamic(() => import('react-viewer'), { ssr: false });
 
@@ -148,6 +149,7 @@ export function DraftEditor({
   const [currentImage, setCurrentImage] = useState(0);
   const [isLibraryModalOpen, setLibraryModalOpen] = useState(false);
   const [isAiModalOpen, setIsAiModalOpen] = useState(false);
+  const [isDirectPublishModalOpen, setIsDirectPublishModalOpen] = useState(false);
 
   const fileIds = useMemo(() => files.map((f) => f.rid).filter((rid): rid is string => !!rid), [files]);
 
@@ -459,6 +461,13 @@ export function DraftEditor({
             isDisabled={!draftId || !content.trim()}>
             {t('editor.publishButton')}
           </Button>
+          <Button
+            color="primary"
+            startContent={<SendIcon className="size-4" />}
+            onPress={() => setIsDirectPublishModalOpen(true)}
+            isDisabled={!draftId || !content.trim()}>
+            {t('editor.directPublishButton')}
+          </Button>
         </div>
       </header>
       <div className="min-h-0 flex-1 overflow-y-auto p-4">
@@ -566,6 +575,38 @@ export function DraftEditor({
         onOpenChange={setIsAiModalOpen}
         onImageGenerated={handleAiImageGenerated}
         initialPromptBasis={{ title, content }}
+      />
+      <DirectPublishModal
+        isOpen={isDirectPublishModalOpen}
+        onClose={() => setIsDirectPublishModalOpen(false)}
+        draftId={draftId}
+        draftData={{
+          title,
+          content,
+          images: files
+            .filter((f) => f.type.startsWith('image'))
+            .map((f) => ({
+              id: f.rid,
+              name: f.name,
+              url: f.url,
+              type: f.type,
+              size: f.size,
+              originUrl: f.url,
+            })),
+          videos: files
+            .filter((f) => f.type.startsWith('video'))
+            .map((f) => ({
+              id: f.rid,
+              name: f.name,
+              url: f.url,
+              type: f.type,
+              size: f.size,
+              originUrl: f.url,
+            })),
+        }}
+        onSuccess={() => {
+          // Handle success if needed
+        }}
       />
     </div>
   );

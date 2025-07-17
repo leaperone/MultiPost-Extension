@@ -7,6 +7,9 @@ import { persist } from 'zustand/middleware';
 interface DraftPublishState {
   clientId: string;
   selectedPlatforms: string[];
+  // Direct publish state
+  directSelectedPlatforms: string[];
+  isAutoPublish: boolean;
 }
 
 /**
@@ -15,6 +18,9 @@ interface DraftPublishState {
 const initState: DraftPublishState = {
   clientId: '',
   selectedPlatforms: [],
+  // Direct publish state
+  directSelectedPlatforms: [],
+  isAutoPublish: true,
 };
 
 /**
@@ -28,6 +34,12 @@ interface DraftStore extends DraftPublishState {
   clearClientId: () => void;
   clearSelectedPlatforms: () => void;
   clearAll: () => void;
+  // Direct publish actions
+  setDirectSelectedPlatforms: (platforms: string[]) => void;
+  addDirectSelectedPlatform: (platform: string) => void;
+  removeDirectSelectedPlatform: (platform: string) => void;
+  setIsAutoPublish: (isAutoPublish: boolean) => void;
+  clearDirectSelectedPlatforms: () => void;
 }
 
 /**
@@ -80,6 +92,39 @@ export const useDraftStore = create(
        * Clear all draft publish data
        */
       clearAll: () => set({ ...initState }),
+
+      /**
+       * Set all selected platforms for direct publish
+       */
+      setDirectSelectedPlatforms: (platforms: string[]) => set({ directSelectedPlatforms: platforms }),
+
+      /**
+       * Add a platform to direct selected platforms
+       */
+      addDirectSelectedPlatform: (platform: string) => {
+        const { directSelectedPlatforms } = get();
+        if (!directSelectedPlatforms.includes(platform)) {
+          set({ directSelectedPlatforms: [...directSelectedPlatforms, platform] });
+        }
+      },
+
+      /**
+       * Remove a platform from direct selected platforms
+       */
+      removeDirectSelectedPlatform: (platform: string) => {
+        const { directSelectedPlatforms } = get();
+        set({ directSelectedPlatforms: directSelectedPlatforms.filter((p) => p !== platform) });
+      },
+
+      /**
+       * Set auto publish setting
+       */
+      setIsAutoPublish: (isAutoPublish: boolean) => set({ isAutoPublish }),
+
+      /**
+       * Clear direct selected platforms
+       */
+      clearDirectSelectedPlatforms: () => set({ directSelectedPlatforms: [] }),
     }),
     {
       name: 'draft-publish-selection',

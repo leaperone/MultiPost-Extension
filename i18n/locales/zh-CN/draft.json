@@ -1,7 +1,8 @@
 {
   "editor": {
     "addImage": "添加图片",
-    "publishButton": "发布",
+    "publishButton": "Client 发布",
+    "directPublishButton": "发布",
     "toast": {
       "saveFailed": "保存草稿失败",
       "loadFailed": "加载草稿失败",
@@ -44,8 +45,10 @@
   "publish": {
     "modal": {
       "title": "发布草稿到平台",
+      "directPublishTitle": "直接发布到平台",
       "cancel": "取消",
-      "publish": "发布草稿"
+      "publish": "发布草稿",
+      "directPublish": "立即发布"
     },
     "client": {
       "label": "选择客户端",
@@ -54,7 +57,10 @@
       "helpLink": "设置页设置"
     },
     "platform": {
-      "label": "选择发布平台"
+      "label": "选择发布平台",
+      "loading": "正在加载平台...",
+      "noPlatforms": "暂无可用平台",
+      "noPlatformsDescription": "请先在浏览器扩展中配置平台账户"
     },
     "schedule": {
       "label": "发布时间",
@@ -63,7 +69,19 @@
       "scheduledTime": "预定发布时间"
     },
     "draft": {
-      "info": "将发布草稿"
+      "info": "将发布草稿",
+      "title": "标题"
+    },
+    "extension": {
+      "checkingService": "正在检查扩展服务...",
+      "notAvailable": "扩展不可用",
+      "installRequired": "请先安装并启用 MultiPost 浏览器扩展",
+      "goToInstall": "前往安装"
+    },
+    "autoPublish": {
+      "label": "自动发布设置",
+      "enabled": "启用自动发布",
+      "description": "启用后将自动发布到所选平台，否则需要手动确认"
     },
     "toast": {
       "selectClient": "请选择一个客户端",
@@ -75,7 +93,9 @@
       "publishScheduledSuccess": "定时发布任务创建成功，将于 {{time}} 发布",
       "publishFailed": "创建发布任务失败",
       "fetchClientsFailed": "获取客户端列表失败",
-      "fetchClientDetailFailed": "获取客户端详情失败"
+      "fetchClientDetailFailed": "获取客户端详情失败",
+      "draftDataRequired": "草稿数据不能为空",
+      "fetchPlatformsFailed": "获取平台列表失败"
     }
   }
 }

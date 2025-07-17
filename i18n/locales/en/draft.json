@@ -1,7 +1,8 @@
 {
   "editor": {
     "addImage": "Add Image",
-    "publishButton": "Publish",
+    "publishButton": "Client Publish",
+    "directPublishButton": "Publish",
     "toast": {
       "saveFailed": "Failed to save draft",
       "loadFailed": "Failed to load draft",
@@ -44,8 +45,10 @@
   "publish": {
     "modal": {
       "title": "Publish Draft to Platforms",
+      "directPublishTitle": "Direct Publish to Platforms",
       "cancel": "Cancel",
-      "publish": "Publish Draft"
+      "publish": "Publish Draft",
+      "directPublish": "Publish Now"
     },
     "client": {
       "label": "Select Client",
@@ -54,7 +57,10 @@
       "helpLink": "Settings Page"
     },
     "platform": {
-      "label": "Select Publishing Platforms"
+      "label": "Select Publishing Platforms",
+      "loading": "Loading platforms...",
+      "noPlatforms": "No platforms available",
+      "noPlatformsDescription": "Please configure platform accounts in the browser extension first"
     },
     "schedule": {
       "label": "Publishing Time",
@@ -63,7 +69,19 @@
       "scheduledTime": "Scheduled Publishing Time"
     },
     "draft": {
-      "info": "Will publish draft"
+      "info": "Will publish draft",
+      "title": "Title"
+    },
+    "extension": {
+      "checkingService": "Checking extension service...",
+      "notAvailable": "Extension not available",
+      "installRequired": "Please install and enable the MultiPost browser extension first",
+      "goToInstall": "Go to Install"
+    },
+    "autoPublish": {
+      "label": "Auto Publish Settings",
+      "enabled": "Enable Auto Publish",
+      "description": "When enabled, content will be automatically published to selected platforms, otherwise manual confirmation is required"
     },
     "toast": {
       "selectClient": "Please select a client",
@@ -75,7 +93,9 @@
       "publishScheduledSuccess": "Scheduled publishing task created successfully, will publish at {{time}}",
       "publishFailed": "Failed to create publishing task",
       "fetchClientsFailed": "Failed to fetch client list",
-      "fetchClientDetailFailed": "Failed to fetch client details"
+      "fetchClientDetailFailed": "Failed to fetch client details",
+      "draftDataRequired": "Draft data cannot be empty",
+      "fetchPlatformsFailed": "Failed to fetch platform list"
     }
   }
 }
