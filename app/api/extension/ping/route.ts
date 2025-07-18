@@ -13,7 +13,7 @@ const schema = z.object({
 });
 
 async function taskNeedToHandle(targetClientId: string) {
-  const task = await prisma.extensionTask.findFirst({
+  const tasks = await prisma.extensionTask.findMany({
     where: {
       targetClientId,
       status: TaskStatus.PENDING,
@@ -23,28 +23,26 @@ async function taskNeedToHandle(targetClientId: string) {
     },
   });
 
-  if (!task) {
-    return null;
-  }
-
-  if (task.taskType === TaskType.PUBLISH_POST) {
-    return task;
-  }
-
-  if (task.taskType === TaskType.SCHEDULE_PUBLISH_POST) {
-    const schedulePublishPostData = task.taskData as unknown as SchedulePublishPostData;
-    if (schedulePublishPostData.timestamp <= Date.now() + 10 * 60 * 1000) {
+  for (const task of tasks) {
+    if (task.taskType === TaskType.PUBLISH_POST) {
       return task;
     }
-  }
 
-  if (task.taskType === TaskType.DRAFT_POST) {
-    const draftPostData = task.taskData as unknown as DraftPostData;
-    const draft = await prisma.draft.findUnique({
-      where: { id: draftPostData.draftId },
-    });
-    if (draft && draftPostData.timestamp <= Date.now() + 10 * 60 * 1000) {
-      return task;
+    if (task.taskType === TaskType.SCHEDULE_PUBLISH_POST) {
+      const schedulePublishPostData = task.taskData as unknown as SchedulePublishPostData;
+      if (schedulePublishPostData.timestamp <= Date.now() + 10 * 60 * 1000) {
+        return task;
+      }
+    }
+
+    if (task.taskType === TaskType.DRAFT_POST) {
+      const draftPostData = task.taskData as unknown as DraftPostData;
+      const draft = await prisma.draft.findUnique({
+        where: { id: draftPostData.draftId },
+      });
+      if (draft && draftPostData.timestamp <= Date.now() + 10 * 60 * 1000) {
+        return task;
+      }
     }
   }
 
