@@ -380,43 +380,47 @@ model PlatformExtraConfig {
 }
 
 model ImageGeneration {
-  id          String   @id @unique @default(cuid())
-  userId      String
-  prompt      String
-  extraPrompt String?
-  images      Json?
-  mask        Json?
-  number      Int      @default(1)
-  size        String   @default("auto")
-  quality     String   @default("auto")
-  background  String   @default("auto")
-  status      String   @default("pending")
-  response    Json?
-  result      Json?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id            String   @id @unique @default(cuid())
+  userId        String
+  prompt        String
+  extraPrompt   String?
+  images        Json?
+  mask          Json?
+  number        Int      @default(1)
+  size          String   @default("auto")
+  quality       String   @default("auto")
+  background    String   @default("auto")
+  status        String   @default("pending")
+  response      Json?
+  result        Json?
+  fileHostingId String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
 
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user        User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  fileHosting FileHosting? @relation(fields: [fileHostingId], references: [id], onDelete: Cascade)
 }
 
 model PosterGeneration {
-  id           String   @id @unique @default(cuid())
-  userId       String
-  prompt       String
-  width        Int      @default(1080)
-  height       Int      @default(1480)
-  model        String   @default("deepseek-v3")
-  status       String   @default("pending")
-  systemPrompt String?
-  taskId       String?
-  projectId    String?
-  urls         Json?
-  error        String?
-  lastImageUrl String?
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  id            String   @id @unique @default(cuid())
+  userId        String
+  prompt        String
+  width         Int      @default(1080)
+  height        Int      @default(1480)
+  model         String   @default("deepseek-v3")
+  status        String   @default("pending")
+  systemPrompt  String?
+  taskId        String?
+  projectId     String?
+  urls          Json?
+  error         String?
+  lastImageUrl  String?
+  fileHostingId String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
 
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user        User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  fileHosting FileHosting? @relation(fields: [fileHostingId], references: [id], onDelete: Cascade)
 }
 
 model FileHosting {
@@ -428,10 +432,14 @@ model FileHosting {
   times      Int       @default(0)
   filename   String?
   previewUrl String?
+  source     String?
   expiredAt  DateTime?
   createdAt  DateTime  @default(now())
   updatedAt  DateTime  @updatedAt
   deletedAt  DateTime?
+
+  imageGeneration ImageGeneration[]
+  posterGeneration PosterGeneration[]
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 }

@@ -9,6 +9,12 @@ import { preCheckCredit } from '@/actions/credit';
 
 const FILEHOSTING_BUCKET_FOLDER = 'filehosting';
 
+const SOURCE_MAP = {
+  USER_UPLOAD: 'USER_UPLOAD',
+  IMAGE_GENERATION: 'IMAGE_GENERATION',
+  POSTER_GENERATION: 'POSTER_GENERATION',
+};
+
 const schema = z.object({
   filename: z.string().optional(),
 });
@@ -20,6 +26,8 @@ export async function POST(req: NextRequest) {
     if (!userId) {
       return unauthResp();
     }
+
+    const source = req.headers.get('X-Source');
 
     await preCheckCredit(userId);
 
@@ -36,6 +44,7 @@ export async function POST(req: NextRequest) {
         userId,
         expiredAt: new Date(new Date().getTime() + 10 * 365 * 24 * 60 * 60 * 1000),
         filename,
+        source: SOURCE_MAP[source as keyof typeof SOURCE_MAP] || 'USER_UPLOAD',
       },
     });
 

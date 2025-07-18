@@ -4,6 +4,24 @@ import { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify';
 import { ImageGenerationStatus } from '@/app/dashboard/draw/image/types';
 import { deductCreditWorker } from '@/actions/credit/worker';
 import { PRICING } from '@/actions/credit/types';
+import ky from 'ky';
+
+interface FileCreateResponse {
+  code: number;
+  data: {
+    fileId: string;
+    url: string;
+  };
+  msg: string;
+}
+
+interface FilePreviewResponse {
+  code: number;
+  data: {
+    previewUrl: string;
+  };
+  msg: string;
+}
 
 export interface ImageGenerationBody {
   id: string;
@@ -165,6 +183,63 @@ export async function processImageGenerationByChat(
       },
     ];
 
+    let fileId: string | undefined;
+
+    try {
+      // Create a file record in our system and get a presigned URL for upload
+      const fsCreateUrlResp = await ky.post(`${process.env.APP_URL}/api/v1/file/create`, {
+        headers: {
+          Authorization: `Bearer ${process.env.INTERNAL_SECRET!}`,
+          'X-User-Id': task.userId,
+          'X-Source': 'IMAGE_GENERATION',
+        },
+        body: JSON.stringify({
+          filename: `image-${task.id}.webp`,
+        }),
+      });
+
+      const fsCreateUrlData = (await fsCreateUrlResp.json()) as FileCreateResponse;
+      if (fsCreateUrlData.code !== 0) {
+        throw new Error(`Failed to create file upload URL: ${fsCreateUrlData.msg}`);
+      }
+
+      fileId = fsCreateUrlData.data.fileId;
+      const uploadUrl = fsCreateUrlData.data.url;
+
+      // Download the generated image
+      const imageResponse = await fetch(imageUrl);
+      if (!imageResponse.ok) {
+        throw new Error(`Failed to download image from ${imageUrl}: ${imageResponse.statusText}`);
+      }
+      const imageBlob = await imageResponse.blob();
+
+      // Upload the image to our file hosting via the presigned URL
+      const uploadResponse = await fetch(uploadUrl, {
+        method: 'PUT',
+        body: imageBlob,
+        headers: {
+          'Content-Type': 'image/webp',
+        },
+      });
+
+      if (!uploadResponse.ok) {
+        throw new Error(`Failed to upload image to file hosting: ${uploadResponse.statusText}`);
+      }
+
+      // Get the permanent preview URL for the uploaded file
+      const fsPreviewUrlResp = await ky.get(`${process.env.APP_URL}/api/v1/file/${fileId}/preview`);
+      const fsPreviewUrlData = (await fsPreviewUrlResp.json()) as FilePreviewResponse;
+
+      if (fsPreviewUrlData.code === 0) {
+        formattedResult[0].url = fsPreviewUrlData.data.previewUrl;
+      } else {
+        console.warn(`Failed to get preview URL for ${fileId}, using original url`);
+      }
+    } catch (uploadError) {
+      console.error('Failed to upload poster to file hosting, fallback to original url', uploadError);
+      // Fallback to original image URL if upload fails, do nothing
+    }
+
     // 更新任务状态为完成
     await multipostDb.$transaction(async (tx) => {
       await tx.imageGeneration.update({
@@ -178,6 +253,7 @@ export async function processImageGenerationByChat(
               content: accumulatedContent,
             }),
           ),
+          fileHostingId: fileId,
         },
       });
 
