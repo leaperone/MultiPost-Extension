@@ -3,7 +3,7 @@
 import { addToast, Spinner, Button, Tabs, Tab } from '@heroui/react';
 import React, { useState, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { Save, Send, Plus, Zap, FileText, Image } from 'lucide-react';
+import { Save, Send, Plus, Zap, FileText, Image, Sparkles } from 'lucide-react';
 import {
   createDynamicDraft,
   getDynamicDrafts,
@@ -17,9 +17,11 @@ import { DraftEditor } from './components/DraftEditor';
 import MediaLibrary from './components/MediaLibrary';
 import ClientPublishModal from './components/ClientPublishModal';
 import DirectPublishModal from './components/DriectPublishModal';
+import { ChatCreationPanel } from './components/ChatCreationPanel';
 import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from '@/components/ui/resizable';
 import { useTranslation } from '@/i18n/client';
 import { nanoid } from 'nanoid';
+import { useDraftStore } from '@/store/draft.store';
 
 export default function DraftsPage() {
   const { t } = useTranslation('draft');
@@ -34,7 +36,8 @@ export default function DraftsPage() {
   const [isDirectPublishModalOpen, setIsDirectPublishModalOpen] = useState(false);
   const [saving, setSaving] = useState(false);
   const [autoSaving, setAutoSaving] = useState(false);
-  const [activeTab, setActiveTab] = useState<string>('drafts');
+  const { lastActiveTab, setLastActiveTab, lastSelectedDraftId, setLastSelectedDraftId } = useDraftStore();
+  const [activeTab, setActiveTab] = useState<string>(lastActiveTab);
 
   // 当前选中草稿的详细状态
   const [currentDraftLoading, setCurrentDraftLoading] = useState(false);
@@ -42,6 +45,12 @@ export default function DraftsPage() {
   const [currentDraftContent, setCurrentDraftContent] = useState<string>('');
   const [currentDraftFiles, setCurrentDraftFiles] = useState<DraftFileDataClient[]>([]);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+
+  useEffect(() => {
+    if (!selectedDraftId && lastSelectedDraftId) {
+      router.push(`/dashboard/drafts?draftId=${lastSelectedDraftId}`);
+    }
+  }, [lastSelectedDraftId, selectedDraftId, router]);
 
   // 自动保存功能
   useEffect(() => {
@@ -62,12 +71,14 @@ export default function DraftsPage() {
   useEffect(() => {
     if (selectedDraftId) {
       loadCurrentDraft(selectedDraftId);
+      setLastSelectedDraftId(selectedDraftId);
     } else {
       // 清空当前草稿状态
       setCurrentDraftTitle('');
       setCurrentDraftContent('');
       setCurrentDraftFiles([]);
       setHasUnsavedChanges(false);
+      setLastSelectedDraftId(null);
     }
   }, [selectedDraftId]);
 
@@ -113,11 +124,10 @@ export default function DraftsPage() {
     if (!selectedDraftId) return;
     // Only update local state, do not proceed if there are local files
     if (currentDraftFiles.some((f) => f.source === 'local')) {
-      
       return;
     }
 
-    console.log('saving')
+    console.log('saving');
 
     try {
       setAutoSaving(true);
@@ -377,6 +387,11 @@ export default function DraftsPage() {
     }
   };
 
+  const handleTabChange = (key: string) => {
+    setActiveTab(key);
+    setLastActiveTab(key);
+  };
+
   // Function to open publish modal - can be used by child components
   const handleOpenPublishModal = () => {
     if (!selectedDraftId) {
@@ -387,6 +402,16 @@ export default function DraftsPage() {
       return;
     }
     setIsPublishModalOpen(true);
+  };
+
+  const handleApplyPolish = (data: { title?: string; content?: string }) => {
+    if (data.title) {
+      updateCurrentDraftTitle(data.title);
+    }
+    if (data.content) {
+      updateCurrentDraftContent(data.content);
+    }
+    setHasUnsavedChanges(true);
   };
 
   const handleClosePublishModal = () => {
@@ -524,7 +549,7 @@ export default function DraftsPage() {
               <div className="border-b border-divider px-4 pt-2">
                 <Tabs
                   selectedKey={activeTab}
-                  onSelectionChange={(key) => setActiveTab(key as string)}
+                  onSelectionChange={(key) => handleTabChange(key as string)}
                   variant="underlined"
                   classNames={{
                     base: 'w-full',
@@ -542,6 +567,14 @@ export default function DraftsPage() {
                       </div>
                     }
                   />
+                  <Tab
+                    key="ai-polish"
+                    title={
+                      <div className="flex items-center gap-2">
+                        <Sparkles className="size-4" />
+                        <span>{t('tabs.aiCreation')}</span>
+                      </div>
+                    }></Tab>
                   <Tab
                     key="media"
                     title={
@@ -568,6 +601,14 @@ export default function DraftsPage() {
                   <div className="h-full overflow-y-auto p-4">
                     <MediaLibrary onSelectImage={handleSelectImage} />
                   </div>
+                )}
+                {activeTab === 'ai-polish' && (
+                  <ChatCreationPanel
+                    draftId={selectedDraftId || ''}
+                    draftTitle={currentDraftTitle}
+                    draftContent={currentDraftContent}
+                    onApply={handleApplyPolish}
+                  />
                 )}
               </div>
             </div>

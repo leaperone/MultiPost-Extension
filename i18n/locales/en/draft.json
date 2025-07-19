@@ -9,7 +9,8 @@
   "loading": "Loading drafts...",
   "tabs": {
     "drafts": "Drafts",
-    "mediaLibrary": "Library"
+    "mediaLibrary": "Library",
+    "aiCreation": "AI Creation"
   },
   "mediaLibrary": {
     "title": "Media Library",
@@ -129,5 +130,32 @@
       "draftDataRequired": "Draft data cannot be empty",
       "fetchPlatformsFailed": "Failed to fetch platform list"
     }
+  },
+  "aiCreation": {
+    "initialMessage": "Hello! I'm your AI creation assistant. I have loaded the current draft. You can ask me to create for you directly, or make more specific requests.",
+    "toast": {
+      "autoApplied": "Changes automatically applied",
+      "contentRequired": "Content cannot be empty",
+      "titleUpdated": "Title updated",
+      "contentUpdated": "Content updated",
+      "reapplied": "Changes reapplied",
+      "copied": "Copied to clipboard"
+    },
+    "placeholder": "Please select a draft to start creating.",
+    "newChat": "New Chat",
+    "autoApply": "Auto Apply",
+    "regenerate": "Regenerate",
+    "suggestion": {
+      "title": "AI Suggested Changes",
+      "applied": "Applied",
+      "newTitle": "New Title",
+      "newContent": "New Content",
+      "apply": "Apply Changes",
+      "reapply": "Reapply"
+    },
+    "copy": "Copy Text",
+    "copied": "Copied",
+    "stop": "Stop",
+    "inputPlaceholder": "Enter your requirements... (Shift + Enter for new line)"
   }
 }

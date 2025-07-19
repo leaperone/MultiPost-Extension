@@ -10,6 +10,9 @@ interface DraftPublishState {
   // Direct publish state
   directSelectedPlatforms: string[];
   isAutoPublish: boolean;
+  isAutoApplyChanges: boolean;
+  lastSelectedDraftId: string | null;
+  lastActiveTab: string;
 }
 
 /**
@@ -21,6 +24,9 @@ const initState: DraftPublishState = {
   // Direct publish state
   directSelectedPlatforms: [],
   isAutoPublish: true,
+  isAutoApplyChanges: true,
+  lastSelectedDraftId: null,
+  lastActiveTab: 'drafts',
 };
 
 /**
@@ -40,6 +46,9 @@ interface DraftStore extends DraftPublishState {
   removeDirectSelectedPlatform: (platform: string) => void;
   setIsAutoPublish: (isAutoPublish: boolean) => void;
   clearDirectSelectedPlatforms: () => void;
+  setIsAutoApplyChanges: (isAutoApply: boolean) => void;
+  setLastSelectedDraftId: (id: string | null) => void;
+  setLastActiveTab: (tab: string) => void;
 }
 
 /**
@@ -125,6 +134,21 @@ export const useDraftStore = create(
        * Clear direct selected platforms
        */
       clearDirectSelectedPlatforms: () => set({ directSelectedPlatforms: [] }),
+
+      /**
+       * Set auto apply changes setting
+       */
+      setIsAutoApplyChanges: (isAutoApply: boolean) => set({ isAutoApplyChanges: isAutoApply }),
+
+      /**
+       * Set last selected draft ID
+       */
+      setLastSelectedDraftId: (id: string | null) => set({ lastSelectedDraftId: id }),
+
+      /**
+       * Set last active tab
+       */
+      setLastActiveTab: (tab: string) => set({ lastActiveTab: tab }),
     }),
     {
       name: 'draft-publish-selection',

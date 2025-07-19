@@ -9,7 +9,8 @@
   "loading": "正在加载草稿...",
   "tabs": {
     "drafts": "草稿",
-    "mediaLibrary": "素材库"
+    "mediaLibrary": "素材库",
+    "aiCreation": "AI 创作"
   },
   "mediaLibrary": {
     "title": "媒体库",
@@ -129,5 +130,32 @@
       "draftDataRequired": "草稿数据不能为空",
       "fetchPlatformsFailed": "获取平台列表失败"
     }
+  },
+  "aiCreation": {
+    "initialMessage": "你好！我是你的 AI 创作助手。我已经加载了当前的草稿，你可以直接让我帮你创作，或者提出更具体的要求。",
+    "toast": {
+      "autoApplied": "已自动应用修改",
+      "contentRequired": "内容不能为空",
+      "titleUpdated": "标题已更新",
+      "contentUpdated": "内容已更新",
+      "reapplied": "修改已重新应用",
+      "copied": "已复制到剪贴板"
+    },
+    "placeholder": "请先选择一篇草稿以开始创作。",
+    "newChat": "开启新对话",
+    "autoApply": "自动应用",
+    "regenerate": "重新生成",
+    "suggestion": {
+      "title": "AI 建议的修改",
+      "applied": "已应用",
+      "newTitle": "新标题",
+      "newContent": "新内容",
+      "apply": "应用修改",
+      "reapply": "再次应用"
+    },
+    "copy": "复制文本",
+    "copied": "已复制",
+    "stop": "停止",
+    "inputPlaceholder": "输入你的要求... (Shift + Enter 换行)"
   }
 }
