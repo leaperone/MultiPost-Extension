@@ -448,6 +448,10 @@ export default function DraftsPage() {
     setIsDirectPublishModalOpen(false);
   };
 
+  const handleShowMediaLibrary = () => {
+    handleTabChange('media');
+  };
+
   const selectedDraft = drafts.find((draft) => draft.id === selectedDraftId);
 
   if (loading) {
@@ -628,6 +632,7 @@ export default function DraftsPage() {
                 onTitleChange={updateCurrentDraftTitle}
                 onContentChange={updateCurrentDraftContent}
                 onFilesChange={updateCurrentDraftFiles}
+                onShowMediaLibrary={handleShowMediaLibrary}
               />
             </div>
           </ResizablePanel>

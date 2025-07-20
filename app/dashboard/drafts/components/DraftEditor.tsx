@@ -15,7 +15,6 @@ import axios from 'axios';
 import { nanoid } from 'nanoid';
 import { useTranslation } from '@/i18n/client';
 import { ImageGenerationModal } from '@/app/dashboard/publish/dynamic/components/ImageGenerationModal';
-import LibraryModal from '@/app/dashboard/publish/dynamic/components/LibraryModal';
 import DirectPublishModal from './DriectPublishModal';
 
 const Viewer = dynamic(() => import('react-viewer'), { ssr: false });
@@ -130,6 +129,7 @@ export function DraftEditor({
   onTitleChange,
   onContentChange,
   onFilesChange,
+  onShowMediaLibrary,
 }: {
   draftId: string | null;
   loading?: boolean;
@@ -139,6 +139,7 @@ export function DraftEditor({
   onTitleChange: (title: string) => void;
   onContentChange: (content: string) => void;
   onFilesChange: (files: DraftFileDataClient[]) => void;
+  onShowMediaLibrary?: () => void;
 }) {
   const { t } = useTranslation('draft');
   const { t: tPublish } = useTranslation('publish');
@@ -149,7 +150,6 @@ export function DraftEditor({
   const sensors = useSensors(useSensor(PointerSensor));
   const [viewerVisible, setViewerVisible] = useState(false);
   const [currentImage, setCurrentImage] = useState(0);
-  const [isLibraryModalOpen, setLibraryModalOpen] = useState(false);
   const [isAiModalOpen, setIsAiModalOpen] = useState(false);
   const [isDirectPublishModalOpen, setIsDirectPublishModalOpen] = useState(false);
 
@@ -201,7 +201,9 @@ export function DraftEditor({
 
         // Use ref to get latest files state
         const updatedFiles = filesRef.current.map((f) =>
-          f.rid === rid ? { ...f, url: previewData.data.previewUrl, uploadProgress: 100, source: 'mp_oss' as const } : f,
+          f.rid === rid
+            ? { ...f, url: previewData.data.previewUrl, uploadProgress: 100, source: 'mp_oss' as const }
+            : f,
         );
         console.log('onFilesChange', updatedFiles);
         onFilesChange(updatedFiles);
@@ -230,46 +232,6 @@ export function DraftEditor({
     console.log('onFilesChange', [...files, newFile]);
     onFilesChange([...files, newFile]);
     setIsAiModalOpen(false);
-  };
-
-  const handleSelectImageFromLibrary = (fileData: {
-    name: string;
-    type: string;
-    size: number;
-    url: string;
-    file?: File;
-  }) => {
-    if (fileData.file) {
-      const rid = nanoid();
-      const newFile: DraftFileDataClient = {
-        rid,
-        name: fileData.name,
-        type: fileData.type,
-        size: fileData.size,
-        url: URL.createObjectURL(fileData.file),
-        source: 'local',
-        uploadProgress: 0,
-        file: fileData.file,
-      };
-      console.log('onFilesChange', [...files, newFile]);
-      onFilesChange([...files, newFile]);
-      if (newFile.file && newFile.rid) {
-        uploadFile(newFile.file, newFile.rid);
-      }
-    } else {
-      const newFile: DraftFileDataClient = {
-        rid: nanoid(),
-        name: fileData.name,
-        type: fileData.type,
-        size: fileData.size,
-        url: fileData.url,
-        source: 'remote_url',
-        uploadProgress: 100,
-      };
-      console.log('onFilesChange', [...files, newFile]);
-      onFilesChange([...files, newFile]);
-    }
-    setLibraryModalOpen(false);
   };
 
   const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -434,7 +396,7 @@ export function DraftEditor({
                       onClick={() => fileInputRef.current?.click()}
                     />
                     <ActionPlaceholder
-                      onClick={() => setLibraryModalOpen(true)}
+                      onClick={onShowMediaLibrary}
                       icon="lucide:library"
                       text={tPublish('dynamic.library')}
                     />
@@ -463,12 +425,6 @@ export function DraftEditor({
         onClose={() => setViewerVisible(false)}
         images={files.filter((f) => f.type.startsWith('image')).map((f) => ({ src: f.url, alt: f.name }))}
         activeIndex={currentImage}
-      />
-      <LibraryModal
-        isOpen={isLibraryModalOpen}
-        onOpenChange={setLibraryModalOpen}
-        onSelectImage={handleSelectImageFromLibrary}
-        existingFiles={files}
       />
       <ImageGenerationModal
         isOpen={isAiModalOpen}
