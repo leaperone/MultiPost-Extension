@@ -35,9 +35,9 @@ export function ChatCreationPanel({ draftId, draftTitle, draftContent, onApply }
     },
   ];
   const { isAutoApplyChanges, setIsAutoApplyChanges } = useDraftStore();
-  const { getChatHistory, setChatHistory } = useChatHistoryStore();
+  const { getChatHistory, setChatHistory, getSuggestions, setSuggestions } = useChatHistoryStore();
 
-  const [suggestions, setSuggestions] = useState<
+  const [suggestions, setSuggestionsState] = useState<
     Array<{
       messageId: string;
       title?: string;
@@ -78,18 +78,34 @@ export function ChatCreationPanel({ draftId, draftTitle, draftContent, onApply }
           addToast({ title: t('aiCreation.toast.autoApplied'), color: 'success' });
         }
 
-        setSuggestions((prev) => {
-          if (prev.some((s) => s.messageId === message.id)) {
-            return prev;
-          }
-          return [
-            ...prev,
-            { messageId: message.id, title, content: newContent, status: autoApply ? 'applied' : 'pending' },
-          ];
+        setSuggestionsState((prev) => {
+          const newSuggestions = prev.some((s) => s.messageId === message.id)
+            ? prev
+            : [
+                ...prev,
+                {
+                  messageId: message.id,
+                  title,
+                  content: newContent,
+                  status: autoApply ? ('applied' as const) : ('pending' as const),
+                },
+              ];
+
+          // 同步到store
+          setSuggestions(draftId, newSuggestions);
+          return newSuggestions;
         });
       }
     },
   });
+
+  // 初始化时从store恢复suggestions
+  useEffect(() => {
+    if (draftId) {
+      const storedSuggestions = getSuggestions(draftId);
+      setSuggestionsState(storedSuggestions);
+    }
+  }, [draftId, getSuggestions]);
 
   useEffect(() => {
     if (draftId) {
@@ -186,7 +202,12 @@ export function ChatCreationPanel({ draftId, draftTitle, draftContent, onApply }
       addToast({ title: t('aiCreation.toast.reapplied'), color: 'success' });
     }
 
-    setSuggestions((prev) => prev.map((s) => (s.messageId === messageId ? { ...s, status: 'applied' } : s)));
+    setSuggestionsState((prev) => {
+      const newSuggestions = prev.map((s) => (s.messageId === messageId ? { ...s, status: 'applied' as const } : s));
+      // 同步到store
+      setSuggestions(draftId, newSuggestions);
+      return newSuggestions;
+    });
   };
 
   const handleCopy = (message: Message) => {
@@ -212,7 +233,8 @@ export function ChatCreationPanel({ draftId, draftTitle, draftContent, onApply }
 
   const handleNewChat = () => {
     setMessages(initialMessages);
-    setSuggestions([]);
+    setSuggestionsState([]);
+    setSuggestions(draftId, []);
     setInput('');
   };
 
