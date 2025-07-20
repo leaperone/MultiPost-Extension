@@ -33,6 +33,7 @@
     "previewFailed": "Failed to open image preview"
   },
   "editor": {
+    "contentPlaceholder": "Write your content here...",
     "addImage": "Add Image",
     "publishButton": "Client Publish",
     "directPublishButton": "Publish",

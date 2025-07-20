@@ -1,6 +1,6 @@
 'use client';
 
-import { Button, addToast, Spinner, Input, Textarea, cn, Progress, Image } from '@heroui/react';
+import { Button, addToast, Spinner, Input, cn, Progress, Image } from '@heroui/react';
 import { FileTextIcon, XIcon, GripVerticalIcon, PlayCircleIcon } from 'lucide-react';
 import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { DndContext, DragEndEvent, PointerSensor, closestCenter, useSensor, useSensors } from '@dnd-kit/core';
@@ -130,6 +130,7 @@ export function DraftEditor({
   onContentChange,
   onFilesChange,
   onShowMediaLibrary,
+  className,
 }: {
   draftId: string | null;
   loading?: boolean;
@@ -140,6 +141,7 @@ export function DraftEditor({
   onContentChange: (content: string) => void;
   onFilesChange: (files: DraftFileDataClient[]) => void;
   onShowMediaLibrary?: () => void;
+  className?: string;
 }) {
   const { t } = useTranslation('draft');
   const { t: tPublish } = useTranslation('publish');
@@ -163,6 +165,37 @@ export function DraftEditor({
   const handleImageClick = (index: number) => {
     setCurrentImage(index);
     setViewerVisible(true);
+  };
+
+  const handleDragEnter = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDraggingOver(true);
+  };
+
+  const handleDragLeave = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDraggingOver(false);
+  };
+
+  const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+  };
+
+  const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDraggingOver(false);
+    const droppedFiles = e.dataTransfer.files;
+    if (droppedFiles.length > 0) {
+      handleFileSelect({
+        target: {
+          files: droppedFiles,
+        },
+      } as React.ChangeEvent<HTMLInputElement>);
+    }
   };
 
   const handleDeleteFile = (index: number) => {
@@ -337,86 +370,90 @@ export function DraftEditor({
   }
 
   return (
-    <div className="flex h-full flex-col">
-      <div className="min-h-0 flex-1 overflow-y-auto p-4">
-        <div className="mx-auto max-w-3xl space-y-6">
-          <Input
-            label={t('editor.form.title.label')}
-            placeholder={t('editor.form.title.placeholder')}
-            value={title}
-            onValueChange={onTitleChange}
-          />
-          <Textarea
-            label={t('editor.form.content.label')}
-            placeholder={t('editor.form.content.placeholder')}
-            value={content}
-            onValueChange={onContentChange}
-            minRows={10}
-          />
-          <div>
-            <h3 className="mb-2 text-sm font-medium text-default-700">{t('editor.form.images.title')}</h3>
-            <div
-              className={cn(
-                'rounded-lg border-2 border-dashed border-default-200 p-4 transition-colors',
-                isDraggingOver && 'border-primary bg-primary/10',
-              )}
-              onDragEnter={() => setIsDraggingOver(true)}
-              onDragLeave={() => setIsDraggingOver(false)}
-              onDragOver={(e) => e.preventDefault()}
-              onDrop={(e) => {
-                e.preventDefault();
-                setIsDraggingOver(false);
-                // handleDrop
-              }}>
-              <DndContext
-                sensors={sensors}
-                collisionDetection={closestCenter}
-                onDragEnd={handleDragEnd}>
-                <SortableContext
-                  items={fileIds}
-                  strategy={horizontalListSortingStrategy}>
-                  <div className="flex flex-wrap gap-4">
-                    {files.map(
-                      (file, index) =>
-                        file.rid && (
-                          <SortableMedia
-                            key={file.rid}
-                            id={file.rid}
-                            file={file}
-                            index={index}
-                            type={file.type}
-                            onDelete={() => handleDeleteFile(index)}
-                            onImageClick={handleImageClick}
-                          />
-                        ),
-                    )}
-                    <ActionPlaceholder
-                      icon="solar:gallery-add-bold"
-                      text={t('editor.addImage')}
-                      onClick={() => fileInputRef.current?.click()}
-                    />
-                    <ActionPlaceholder
-                      onClick={onShowMediaLibrary}
-                      icon="lucide:library"
-                      text={tPublish('dynamic.library')}
-                    />
-                    <ActionPlaceholder
-                      onClick={() => setIsAiModalOpen(true)}
-                      icon="lucide:bot"
-                      text={tPublish('dynamic.aiGenerate')}
-                    />
-                  </div>
-                </SortableContext>
-              </DndContext>
-              <input
-                type="file"
-                ref={fileInputRef}
-                onChange={handleFileSelect}
-                multiple
-                accept="image/*"
-                className="hidden"
-              />
+    <>
+      <div
+        className={cn('h-full p-4', className, isDraggingOver && 'bg-primary/10')}
+        onDragEnter={handleDragEnter}
+        onDragLeave={handleDragLeave}
+        onDragOver={handleDragOver}
+        onDrop={handleDrop}>
+        <div className="flex h-full flex-col items-center gap-4">
+          {/* Title Input */}
+          <div className="w-full max-w-2xl">
+            <Input
+              value={title}
+              onChange={(e) => onTitleChange(e.target.value)}
+              placeholder={t('editor.titlePlaceholder')}
+              endContent={<div className="text-xs text-default-400">{title.length}</div>}
+              classNames={{
+                input: 'text-lg font-semibold',
+              }}
+            />
+          </div>
+
+          {/* Content Textarea */}
+          <div className="min-h-0 w-full max-w-2xl flex-1 relative">
+            <textarea
+              value={content}
+              onChange={(e) => onContentChange(e.target.value)}
+              placeholder={t('editor.contentPlaceholder')}
+              className="size-full resize-none rounded-lg bg-zinc-100 p-3 pb-8 text-foreground focus:border-primary focus:outline-none dark:bg-zinc-800"
+            />
+            <div className="absolute bottom-2 right-3 text-xs text-default-400 pointer-events-none">
+              {content.length}
             </div>
+          </div>
+
+          {/* Files Display */}
+          <div className="shrink-0">
+            <DndContext
+              sensors={sensors}
+              collisionDetection={closestCenter}
+              onDragEnd={handleDragEnd}>
+              <SortableContext
+                items={fileIds}
+                strategy={horizontalListSortingStrategy}>
+                <div className="flex flex-wrap gap-4">
+                  {files.map(
+                    (file, index) =>
+                      file.rid && (
+                        <SortableMedia
+                          key={file.rid}
+                          id={file.rid}
+                          file={file}
+                          index={index}
+                          type={file.type}
+                          onDelete={() => handleDeleteFile(index)}
+                          onImageClick={handleImageClick}
+                        />
+                      ),
+                  )}
+                  <ActionPlaceholder
+                    icon="solar:gallery-add-bold"
+                    text={t('editor.addImage')}
+                    onClick={() => fileInputRef.current?.click()}
+                  />
+                  <ActionPlaceholder
+                    onClick={onShowMediaLibrary}
+                    icon="lucide:library"
+                    text={tPublish('dynamic.library')}
+                  />
+                  <ActionPlaceholder
+                    onClick={() => setIsAiModalOpen(true)}
+                    icon="lucide:bot"
+                    text={tPublish('dynamic.aiGenerate')}
+                  />
+                </div>
+              </SortableContext>
+            </DndContext>
+            <input
+              type="file"
+              ref={fileInputRef}
+              onChange={handleFileSelect}
+              multiple
+              accept="image/*"
+              className="hidden"
+            />
           </div>
         </div>
       </div>
@@ -464,6 +501,6 @@ export function DraftEditor({
           // Handle success if needed
         }}
       />
-    </div>
+    </>
   );
 }

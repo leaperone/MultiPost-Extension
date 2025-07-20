@@ -33,6 +33,7 @@
     "previewFailed": "打开图片预览失败"
   },
   "editor": {
+    "contentPlaceholder": "在这里写下你的内容...",
     "addImage": "添加图片",
     "publishButton": "Client 发布",
     "directPublishButton": "发布",
