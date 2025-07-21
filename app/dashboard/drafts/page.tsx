@@ -54,11 +54,6 @@ export default function DraftsPage() {
 
   // 自动保存功能
   useEffect(() => {
-    console.log('hasUnsavedChanges', hasUnsavedChanges);
-    console.log('currentDraftTitle', currentDraftTitle);
-    console.log('currentDraftContent', currentDraftContent);
-    console.log('currentDraftFiles', currentDraftFiles);
-    console.log('selectedDraftId', selectedDraftId);
     if (hasUnsavedChanges && selectedDraftId) {
       const timer = setTimeout(() => {
         saveCurrentDraft();
@@ -104,6 +99,7 @@ export default function DraftsPage() {
           title: result.error || t('editor.toast.loadFailed'),
           color: 'danger',
         });
+        setLastSelectedDraftId(null);
         router.push('/dashboard/drafts');
       }
     } catch (error) {
@@ -111,6 +107,7 @@ export default function DraftsPage() {
         title: t('editor.toast.loadFailed'),
         color: 'danger',
       });
+      setLastSelectedDraftId(null);
       router.push('/dashboard/drafts');
     } finally {
       setCurrentDraftLoading(false);
@@ -126,8 +123,6 @@ export default function DraftsPage() {
     if (currentDraftFiles.some((f) => f.source === 'local')) {
       return;
     }
-
-    console.log('saving');
 
     try {
       setAutoSaving(true);
@@ -185,7 +180,6 @@ export default function DraftsPage() {
    * 更新当前草稿文件
    */
   const updateCurrentDraftFiles = (files: DraftFileDataClient[]) => {
-    console.log('updateCurrentDraftFiles', files);
     setCurrentDraftFiles(files);
     // Only set unsaved changes if there is no file with type 'local'
     const hasLocal = files.some((f) => f.source === 'local');
@@ -404,15 +398,18 @@ export default function DraftsPage() {
     setIsPublishModalOpen(true);
   };
 
-  const handleApplyPolish = (data: { title?: string; content?: string }) => {
-    if (data.title) {
-      updateCurrentDraftTitle(data.title);
-    }
-    if (data.content) {
-      updateCurrentDraftContent(data.content);
-    }
-    setHasUnsavedChanges(true);
-  };
+  const handleApplyPolish = React.useCallback(
+    (data: { title?: string; content?: string }) => {
+      if (data.title) {
+        updateCurrentDraftTitle(data.title);
+      }
+      if (data.content) {
+        updateCurrentDraftContent(data.content);
+      }
+      setHasUnsavedChanges(true);
+    },
+    [], // 依赖项为空，因为函数不依赖于任何会变化的 props 或 state
+  );
 
   const handleClosePublishModal = () => {
     setIsPublishModalOpen(false);

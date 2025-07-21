@@ -57,17 +57,29 @@ export function ChatCreationPanel({ draftId, draftTitle, draftContent, onApply }
       const content = message.content;
       let title: string | undefined;
       let newContent: string | undefined;
+      let thoughts: string | undefined;
 
-      const titleRegex = /# Updated Title\n`([^`]+)`/;
-      const titleMatch = content.match(titleRegex);
-      if (titleMatch) {
-        title = titleMatch[1].trim();
-      }
+      // 从Markdown代码块中提取JSON字符串
+      const jsonRegex = /```json\n([\s\S]+?)\n```/;
+      const jsonMatch = content.match(jsonRegex);
 
-      const contentRegex = /# Updated Content\n```(?:markdown)?\n([\s\S]+?)\n```/;
-      const contentMatch = content.match(contentRegex);
-      if (contentMatch) {
-        newContent = contentMatch[1].trim();
+      if (jsonMatch) {
+        try {
+          const parsed = JSON.parse(jsonMatch[1]);
+          thoughts = parsed.thoughts;
+          title = parsed.title;
+          newContent = parsed.content;
+
+          // 将AI的思考过程作为消息更新
+          if (thoughts) {
+            setMessages((prevMessages) =>
+              prevMessages.map((m) => (m.id === message.id ? { ...m, content: thoughts! } : m)),
+            );
+          }
+        } catch (error) {
+          console.error('Failed to parse AI response JSON:', error);
+          return;
+        }
       }
 
       if (title || newContent) {
@@ -141,16 +153,23 @@ export function ChatCreationPanel({ draftId, draftTitle, draftContent, onApply }
   const [editingContent, setEditingContent] = useState<Record<string, string>>({});
 
   useEffect(() => {
-    const newEntries: Record<string, string> = {};
-    messages.forEach((m) => {
-      if (m.role === 'user' && editingContent[m.id] === undefined) {
-        newEntries[m.id] = m.content;
+    setEditingContent((prev) => {
+      const newEntries: Record<string, string> = {};
+      let hasChanges = false;
+      messages.forEach((m) => {
+        if (m.role === 'user' && prev[m.id] === undefined) {
+          newEntries[m.id] = m.content;
+          hasChanges = true;
+        }
+      });
+
+      if (hasChanges) {
+        return { ...prev, ...newEntries };
       }
+
+      return prev;
     });
-    if (Object.keys(newEntries).length > 0) {
-      setEditingContent((prev) => ({ ...prev, ...newEntries }));
-    }
-  }, [messages, editingContent]);
+  }, [messages]);
 
   const handleContentChange = (messageId: string, newContent: string) => {
     setEditingContent((prev) => ({
@@ -311,11 +330,34 @@ export function ChatCreationPanel({ draftId, draftTitle, draftContent, onApply }
               </div>
             ) : (
               <div className="flex flex-col gap-2">
-                <div className="text-sm">
-                  <ReactMarkdown>
-                    {m.content
-                      .replace(/# Updated Title\n`[^`]+`/g, '')
-                      .replace(/# Updated Content\n```(?:markdown)?\n[\s\S]+?\n```/g, '')}
+                <div className="whitespace-pre-line break-words text-sm">
+                  <ReactMarkdown
+                    components={{
+                      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+                      code({ node, className, children, ...props }) {
+                        return (
+                          <code
+                            className={`whitespace-pre-wrap break-words ${className || ''}`}
+                            {...props}
+                          >
+                            {children}
+                          </code>
+                        );
+                      },
+                      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+                      pre({ node, className, children, ...props }) {
+                        return (
+                          <pre
+                            className={`whitespace-pre-wrap break-words ${className || ''}`}
+                            {...props}
+                          >
+                            {children}
+                          </pre>
+                        );
+                      },
+                    }}
+                  >
+                    {m.content}
                   </ReactMarkdown>
                 </div>
                 {(() => {
@@ -348,8 +390,8 @@ export function ChatCreationPanel({ draftId, draftTitle, draftContent, onApply }
                           <p className="text-xs font-medium text-default-500">
                             {t('aiCreation.suggestion.newContent')}
                           </p>
-                          <div className="mt-1 whitespace-pre-wrap rounded-md bg-white p-2 text-sm dark:bg-default-100">
-                            {suggestion.content}
+                          <div className="prose prose-sm mt-1 max-w-none rounded-md bg-white p-2 text-sm dark:prose-invert dark:bg-default-100">
+                            <ReactMarkdown>{suggestion.content}</ReactMarkdown>
                           </div>
                         </div>
                       )}
