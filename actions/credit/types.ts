@@ -31,7 +31,7 @@ export const PRICING = {
       OUTPUT: new Decimal(0.11 * 10).div(new Decimal(10 ** 6)), // per token
     },
   },
-  IMAGE_GENERATION: new Decimal(0.004), // per image
+  IMAGE_GENERATION: new Decimal(0.004 * 10), // per image
   POSTER_GENERATION: new Decimal(0.004 * 10), // per image
   FILE_HOSTING: new Decimal(0.04), // 1GB Transfer
   AUDIO_TRANSCRIPTION: new Decimal(0.000017 * 2), // per second
