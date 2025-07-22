@@ -51,7 +51,7 @@ export async function POST(req: Request) {
 
     // 使用 getPrompt 拼接 composition、color、style 的提示词
 
-    let extraPrompt = task.prompt;
+    let extraPrompt = '';
     if (task.size) {
       extraPrompt = `size: ${task.size}\n${extraPrompt}`;
     }
