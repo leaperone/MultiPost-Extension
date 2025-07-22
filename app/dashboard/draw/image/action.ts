@@ -1,171 +1,85 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 'use server';
 
-import { multipostDb } from '@/lib/db';
-import { ImageGenerationSchema, ImageGenerationStatus, getPrompt } from './types';
 import { auth } from '@/auth';
-import { preCheckCredit } from '@/actions/credit';
-import { PRICING } from '@/actions/credit/types';
-import { Prisma } from '@/prisma/client_multipost';
+import { prisma } from '@/lib/db';
+import { revalidatePath } from 'next/cache';
+import { ImageGenerationStatus } from '@/app/api/draw/image/types';
 
-export async function generateImage(data: ImageGenerationSchema) {
-  try {
-    const session = await auth();
-    if (!session?.user || !session.user.id) {
-      throw new Error('Unauthorized');
-    }
-
-    if (!(await preCheckCredit(session.user.id, PRICING.IMAGE_GENERATION.mul(data.number).toNumber()))) {
-      throw new Error('Insufficient credits');
-    }
-
-    let extraPrompt = '';
-
-    if (data.composition) {
-      extraPrompt = `${getPrompt('composition', data.composition)} ${extraPrompt}`;
-    }
-
-    if (data.color) {
-      extraPrompt = `${getPrompt('color', data.color)} ${extraPrompt}`;
-    }
-
-    if (data.style) {
-      extraPrompt = `${getPrompt('style', data.style)} ${extraPrompt}`;
-    }
-
-    const result = await multipostDb.imageGeneration.create({
-      data: {
-        userId: session.user.id,
-        prompt: data.prompt,
-        extraPrompt,
-        images: data.images,
-        number: data.number,
-        size: data.size.toString(),
-        status: ImageGenerationStatus.PENDING,
-      },
-    });
-
-    await new Promise((resolve) => setTimeout(resolve, 1000));
-
-    await fetch(`${process.env.WORKER_BASE_URL}/api/image-generation-chat`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        id: result.id,
-      }),
-    });
-
-    return {
-      success: true,
-      data: result,
-    };
-  } catch (error) {
-    console.error(error);
-    return {
-      success: false,
-      error: error instanceof Error ? error.message : 'Unknown error',
-    };
+function extractImageUrl(data: any): string | null {
+  if (
+    Array.isArray(data) &&
+    data.length > 0 &&
+    typeof data[0] === 'object' &&
+    data[0] !== null &&
+    typeof data[0].url === 'string'
+  ) {
+    return data[0].url;
   }
-}
 
-export async function getImageGeneration(id: string) {
-  try {
-    const session = await auth();
-    if (!session?.user || !session.user.id) {
-      throw new Error('Unauthorized');
-    }
-    const result = await multipostDb.imageGeneration.findUnique({
-      where: { id, userId: session.user.id },
-      select: {
-        id: true,
-        prompt: true,
-        images: true,
-        number: true,
-        size: true,
-        status: true,
-        response: true,
-        result: true,
-        createdAt: true,
-        updatedAt: true,
-      },
-    });
-
-    if (!result) {
-      throw new Error('Image generation not found');
-    }
-    if (result.response && (result.response as { content: string }).content) {
-      (result.response as { content: string }).content = (result.response as { content: string }).content
-        .replace(/```[\s\S]*?```/g, '')
-        .trim();
-    }
-
-    return {
-      success: true,
-      data: result,
-    };
-  } catch (error) {
-    console.error(error);
-    return {
-      success: false,
-      error: error instanceof Error ? error.message : 'Unknown error',
-    };
-  }
+  return null;
 }
 
 export async function getImageGenerations(status: string) {
-  try {
-    const session = await auth();
-    if (!session?.user || !session.user.id) {
-      throw new Error('Unauthorized');
-    }
+  const session = await auth();
+  if (!session?.user?.id) {
+    return { success: false, error: 'Unauthorized' };
+  }
 
-    const where: Prisma.ImageGenerationWhereInput = {
+  try {
+    const whereCondition: { userId: string; status?: string } = {
       userId: session.user.id,
     };
 
-    if (status !== 'all') {
-      where.status = status;
+    if (status !== 'all' && Object.values(ImageGenerationStatus).includes(status as any)) {
+      whereCondition.status = status as string;
     }
 
-    const result = await multipostDb.imageGeneration.findMany({
-      where,
+    const generations = await prisma.imageGeneration.findMany({
+      where: whereCondition,
+      include: {
+        fileHosting: {
+          select: {
+            previewUrl: true,
+          },
+        },
+      },
       orderBy: {
         createdAt: 'desc',
       },
-      select: {
-        id: true,
-        prompt: true,
-        images: true,
-        number: true,
-        size: true,
-        status: true,
-        response: true,
-        result: true,
-        createdAt: true,
-        updatedAt: true,
-      },
+      take: 50,
     });
 
-    if (result.length > 0) {
-      for (const item of result) {
-        if (item.response && (item.response as { content: string }).content) {
-          (item.response as { content: string }).content = (item.response as { content: string }).content
-            .replace(/```[\s\S]*?```/g, '')
-            .trim();
-        }
-      }
-    }
+    const processedGenerations = generations.map(
+      (gen: {
+        id: string;
+        prompt: string;
+        status: string;
+        response: any;
+        result: any;
+        images: any;
+        createdAt: Date;
+        fileHosting: { previewUrl: string | null } | null;
+      }) => {
+        const imageUrlFromResult = extractImageUrl(gen.result);
 
-    return {
-      success: true,
-      data: result,
-    };
+        const imageUrl = gen.fileHosting?.previewUrl || imageUrlFromResult;
+
+        return {
+          id: gen.id,
+          prompt: gen.prompt,
+          status: gen.status,
+          error: gen.status === 'failed' ? ((gen.response as any)?.error as string) || '生成失败' : null,
+          imageUrl: imageUrl,
+          createdAt: gen.createdAt.toISOString(),
+        };
+      },
+    );
+
+    revalidatePath('/dashboard/draw/image');
+    return { success: true, data: processedGenerations };
   } catch (error) {
-    console.error(error);
-    return {
-      success: false,
-      error: error instanceof Error ? error.message : 'Unknown error',
-    };
+    console.error('Failed to get image generations:', error);
+    return { success: false, error: error instanceof Error ? error.message : '获取图片生成历史失败' };
   }
 }

@@ -72,7 +72,6 @@ import PlatformCheckbox from '../components/PlatformCheckbox';
 import { usePlatformStore } from '@/store/publish.store';
 import { getPlatformExtraConfigList } from '../action';
 import LibraryModal from './components/LibraryModal';
-import { ImageGenerationModal } from './components/ImageGenerationModal';
 import { FileData } from '@/lib/extension';
 
 const ReactPlayer = dynamic(() => import('react-player'), {
@@ -231,7 +230,6 @@ export default function DynamicPage() {
   const [isDraggingOver, setIsDraggingOver] = useState(false);
   const [isVideoDraggingOver, setIsVideoDraggingOver] = useState(false);
   const [isLibraryModalOpen, setLibraryModalOpen] = useState(false);
-  const [isAiModalOpen, setIsAiModalOpen] = useState(false);
   const [showDraftAd, setShowDraftAd] = useState(true);
 
   useEffect(() => {
@@ -494,10 +492,6 @@ export default function DynamicPage() {
     setVideoViewer({ visible: true, url });
   };
 
-  const handleAiImageGenerated = (newImage: FileData) => {
-    setImages((prevImages) => [...prevImages, newImage]);
-  };
-
   const handleMediaFiles = (files: FileList | null, type: 'image' | 'video') => {
     if (!files) return;
 
@@ -711,16 +705,6 @@ export default function DynamicPage() {
               />
             )}
 
-            <ImageGenerationModal
-              isOpen={isAiModalOpen}
-              onOpenChange={setIsAiModalOpen}
-              onImageGenerated={(newImage) => {
-                handleAiImageGenerated(newImage);
-                setIsAiModalOpen(false); // close on generate
-              }}
-              initialPromptBasis={{ title, content }}
-            />
-
             <input
               type="file"
               ref={fileInputRef}
@@ -853,11 +837,11 @@ export default function DynamicPage() {
                         icon="lucide:library"
                         text={t('dynamic.library', '素材库')}
                       />
-                      <ActionPlaceholder
+                      {/* <ActionPlaceholder
                         onClick={() => setIsAiModalOpen(true)}
                         icon="lucide:bot"
                         text={t('dynamic.aiGenerate', 'AI 生成')}
-                      />
+                      /> */}
                     </div>
                   </SortableContext>
                 </DndContext>

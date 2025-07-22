@@ -1,7 +1,7 @@
 'use server';
 
 import { multipostDb } from '@/lib/db';
-import { ImageGenerationStatus } from '@/app/dashboard/draw/image/types';
+import { ImageGenerationStatus } from '@/app/api/draw/image/types';
 import { auth } from '@/auth';
 
 export async function listAllImages() {

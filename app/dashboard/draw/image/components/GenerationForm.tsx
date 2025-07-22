@@ -5,7 +5,7 @@ import { ImageIcon } from 'lucide-react';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
-import { ImageGenerationSchema, ImageSize, Style, Color, Composition } from '../types';
+import { ImageGenerationSchema, ImageSize, Style, Color, Composition } from '@/app/api/draw/image/types';
 import { useTranslation } from '@/i18n/client';
 
 interface GenerationFormProps {

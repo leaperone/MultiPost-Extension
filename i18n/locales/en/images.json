@@ -46,6 +46,24 @@
       "editing": "Editing..."
     }
   },
+  "generation_flow": {
+    "stepper": {
+      "form": "Fill in image information",
+      "generating": "Generating image",
+      "result": "View result"
+    },
+    "generating_text": "Generating image, please do not leave the page...",
+    "generate_again": "Generate another one",
+    "toasts": {
+      "generate_failed_title": "Generation failed",
+      "generate_failed_request_desc": "Server request failed, please try again later",
+      "generate_success_title": "Generation successful",
+      "generate_success_desc": "Image has been successfully generated",
+      "generate_failed_parse_desc": "Could not parse the generated image",
+      "generate_failed_unknown_desc": "An unknown error occurred",
+      "submit_failed_title": "Submission failed"
+    }
+  },
   "result_waiter": {
     "loading": "Fetching generation results...",
     "pending": "Waiting for generation...",
@@ -69,6 +87,14 @@
       "pending": "Queued",
       "processing": "Processing",
       "failed": "Failed"
+    },
+    "status": {
+      "failed": "Generation failed: {error}",
+      "loading": "Loading..."
+    },
+    "download": {
+      "loading": "Downloading...",
+      "failed": "Download failed"
     },
     "empty": {
       "title": "No images generated yet",

@@ -1,143 +1,223 @@
 'use client';
 
-import { Card, CardBody, Tabs, Tab, Button, Skeleton, Divider } from '@heroui/react';
-import { useEffect, useState, useMemo } from 'react';
-import { toast } from 'sonner';
+import { useState, Fragment, useEffect, useMemo } from 'react';
 import { z } from 'zod';
-import { cn } from '@/lib/utils';
-import { ImageGenerationSchema, ImageGenerationStatus } from './types';
-import { generateImage, getImageGeneration, getImageGenerations } from './action';
+import { addToast } from '@heroui/react';
+import { Button, Tabs, Tab, Skeleton, Divider } from '@heroui/react';
 import { GenerationForm } from './components/GenerationForm';
-import { EditsForm } from './components/EditsForm';
-import { ResultWaiter } from './components/ResultWaiter';
-import { useSearchParams } from 'next/navigation';
-import { useTranslation } from '@/i18n/client';
+import { ImageGenerationSchema, ImageGenerationStatus } from '@/app/api/draw/image/types';
+import { useChat } from 'ai/react';
+import { getImageGenerations } from './action';
 import { ImageIcon, Download, Calendar, Maximize2 } from 'lucide-react';
 import dynamic from 'next/dynamic';
+import { useTranslation } from '@/i18n/client';
+import { toast } from 'sonner';
 
 const Viewer = dynamic(() => import('react-viewer'), { ssr: false });
 
-// 生成图片部分
 function ImageGenerationSection() {
   const { t } = useTranslation('images');
-  const searchParams = useSearchParams();
-  const editId = searchParams.get('editId');
-  const [loading, setLoading] = useState(false);
-  const [taskId, setTaskId] = useState<string | null>(null);
-  const [selected, setSelected] = useState('generation');
-  const [editImages, setEditImages] = useState<string[]>([]);
-  const isVertical = true;
+  const stepsConfig = [
+    { id: 'form', title: t('generation_flow.stepper.form') },
+    { id: 'generating', title: t('generation_flow.stepper.generating') },
+    { id: 'result', title: t('generation_flow.stepper.result') },
+  ];
+  type Step = 'form' | 'generating' | 'result';
 
-  const handleGenerate = async (data: z.infer<typeof ImageGenerationSchema>) => {
-    try {
-      setLoading(true);
-      const response = await generateImage(data);
-      if (!response.success || !response.data) {
-        throw new Error(response.error);
+  const Stepper = ({ currentStepId }: { currentStepId: Step }) => {
+    const currentStepIndex = stepsConfig.findIndex((s) => s.id === currentStepId);
+
+    return (
+      <div className="mb-8 flex w-full items-start">
+        {stepsConfig.map((step, index) => (
+          <Fragment key={step.id}>
+            <div className="flex flex-col items-center text-center">
+              <div
+                className={`flex size-10 items-center justify-center rounded-full text-lg font-bold ${
+                  index <= currentStepIndex ? 'bg-primary text-white' : 'bg-gray-200 text-gray-600'
+                }`}>
+                {index + 1}
+              </div>
+              <p
+                className={`mt-2 w-24 text-sm ${
+                  index <= currentStepIndex ? 'font-semibold text-primary' : 'text-gray-500'
+                }`}>
+                {step.title}
+              </p>
+            </div>
+
+            {index < stepsConfig.length - 1 && (
+              <div
+                className={`mx-4 mt-5 h-1 flex-1 rounded-full ${
+                  index < currentStepIndex ? 'bg-primary' : 'bg-gray-200'
+                }`}
+              />
+            )}
+          </Fragment>
+        ))}
+      </div>
+    );
+  };
+
+  const [generatedImage, setGeneratedImage] = useState<string | null>(null);
+  const [step, setStep] = useState<Step>('form');
+
+  const { isLoading, append, messages } = useChat({
+    api: '/api/draw/image',
+    onResponse: (response) => {
+      if (response.status !== 200) {
+        addToast({
+          title: t('generation_flow.toasts.generate_failed_title'),
+          description: t('generation_flow.toasts.generate_failed_request_desc'),
+        });
+        setStep('form');
       }
-      setTaskId(response.data.id);
-      toast.success(t('result_waiter.task_submitted'));
-    } catch (error) {
-      toast.error(error instanceof Error ? error.message : t('result_waiter.submit_failed'));
-    } finally {
-      setLoading(false);
-    }
-  };
+    },
+    onFinish: (message) => {
+      let imageUrl: string | undefined | null = null;
 
-  const handleError = (error: string) => {
-    toast.error(error);
-  };
-
-  const handleContinueEdit = (images: string[]) => {
-    setEditImages(images);
-    setSelected('edits');
-    setTaskId(null);
-  };
-
-  useEffect(() => {
-    if (editId) {
-      (async () => {
-        const result = await getImageGeneration(editId);
-        if (result.success && result.data) {
-          if (result.data.status === ImageGenerationStatus.DONE) {
-            const resultData = result.data.result as { url: string }[];
-            const imageUrls = resultData.map((item) => item.url);
-            handleContinueEdit(imageUrls);
+      try {
+        const jsonMatch = message.content.match(/(\[.*\])\s*$/);
+        if (jsonMatch) {
+          const result = JSON.parse(jsonMatch[1]);
+          if (Array.isArray(result) && result.length > 0 && result[0] && typeof result[0].url === 'string') {
+            imageUrl = result[0].url;
           }
         }
-      })();
+      } catch (e) {
+        console.log('Could not parse JSON from stream, falling back to regex.');
+      }
+
+      if (!imageUrl) {
+        // Fallback for old markdown format
+        const urlMatch = message.content.match(/\[100\]\((.*?)\)/);
+        const imageUrlMatch = message.content.match(/!\[.*?\]\((.*?)\)/);
+        imageUrl = imageUrlMatch ? imageUrlMatch[1] : urlMatch?.[1];
+      }
+
+      if (imageUrl) {
+        setGeneratedImage(imageUrl);
+        setStep('result');
+        addToast({
+          title: t('generation_flow.toasts.generate_success_title'),
+          description: t('generation_flow.toasts.generate_success_desc'),
+        });
+      } else {
+        setStep('form');
+        addToast({
+          title: t('generation_flow.toasts.generate_failed_title'),
+          description: t('generation_flow.toasts.generate_failed_parse_desc'),
+        });
+      }
+    },
+    onError: (error) => {
+      setStep('form');
+      addToast({
+        title: t('generation_flow.toasts.generate_failed_title'),
+        description: error.message || t('generation_flow.toasts.generate_failed_unknown_desc'),
+      });
+    },
+  });
+
+  const handleSubmit = async (data: z.infer<typeof ImageGenerationSchema>) => {
+    setGeneratedImage(null);
+    setStep('generating');
+
+    try {
+      await append(
+        {
+          role: 'user',
+          content: data.prompt,
+        },
+        {
+          body: {
+            task: data,
+          },
+        },
+      );
+    } catch (error) {
+      setStep('form');
+      addToast({
+        title: t('generation_flow.toasts.submit_failed_title'),
+        description: error instanceof Error ? error.message : t('generation_flow.toasts.generate_failed_unknown_desc'),
+      });
     }
-  }, [editId]);
+  };
+
+  const handleStartOver = () => {
+    setGeneratedImage(null);
+    setStep('form');
+  };
 
   return (
-    <div
-      className={cn(
-        'flex w-full flex-col transition-all duration-500',
-        !taskId && !loading ? 'justify-center' : 'justify-start',
-      )}
-      id="image-generation-section">
-      <Card className="mx-auto mb-8 w-full max-w-3xl">
-        <CardBody className="space-y-6">
-          <div className="flex gap-4">
-            <Tabs
-              selectedKey={selected}
-              onSelectionChange={(key) => setSelected(key as string)}
-              color="primary"
-              isVertical={isVertical}
-              className="min-w-fit"
-              classNames={{
-                tabList: 'gap-2',
-                cursor: 'w-full',
-                tab: 'flex h-12 w-full items-center justify-start px-4',
-              }}>
-              <Tab
-                key="generation"
-                title={t('generate')}
-              />
-              <Tab
-                key="edits"
-                title={t('edit')}
-              />
-            </Tabs>
-            <div className="flex-1">
-              {selected === 'generation' && (
-                <GenerationForm
-                  onSubmit={handleGenerate}
-                  loading={loading}
-                />
-              )}
-              {selected === 'edits' && (
-                <EditsForm
-                  onSubmit={handleGenerate}
-                  loading={loading}
-                  images={editImages}
-                />
-              )}
+    <div className="container mx-auto px-4 py-6">
+      <div className="mx-auto max-w-3xl">
+        <Stepper currentStepId={step} />
+
+        <div className="mt-8 rounded-lg border bg-white p-6 shadow-sm dark:border-gray-700 dark:bg-gray-900">
+          {step === 'form' && (
+            <GenerationForm
+              onSubmit={handleSubmit}
+              loading={isLoading}
+            />
+          )}
+
+          {step === 'generating' && (
+            <div className="flex min-h-64 flex-col items-center justify-center">
+              <div className="size-16 animate-spin rounded-full border-y-2 border-primary"></div>
+              <p className="mt-4 text-lg">{t('generation_flow.generating_text')}</p>
+              {messages.length > 0 &&
+                messages[messages.length - 1].role === 'assistant' &&
+                (() => {
+                  const content = messages[messages.length - 1].content;
+                  const cleanedContent = content
+                    .replace(/```json[\s\S]*?```/g, '')
+                    .replace(/!\[.*?\]\(.*?\)/g, '')
+                    .replace(/\[100\]\(.*?\)/g, '')
+                    .trim();
+
+                  if (cleanedContent) {
+                    return (
+                      <p className="mt-2 w-full max-w-md break-words text-center text-sm text-gray-500">
+                        {cleanedContent}
+                      </p>
+                    );
+                  }
+                  return null;
+                })()}
             </div>
-          </div>
-        </CardBody>
-      </Card>
-      {/* 生成结果展示 */}
-      {taskId && (
-        <div className="mx-auto w-full max-w-7xl space-y-4 px-6 py-8 animate-in fade-in slide-in-from-bottom-4">
-          <ResultWaiter
-            taskId={taskId}
-            onError={handleError}
-            onContinueEdit={handleContinueEdit}
-          />
+          )}
+
+          {step === 'result' && (
+            <div className="flex flex-col items-center gap-4">
+              {generatedImage && (
+                <div className="w-full">
+                  <img
+                    src={generatedImage}
+                    alt="生成的图片"
+                    className="h-auto w-full rounded-lg shadow-lg"
+                  />
+                </div>
+              )}
+              <Button
+                onClick={handleStartOver}
+                className="mt-4">
+                {t('generation_flow.generate_again')}
+              </Button>
+            </div>
+          )}
         </div>
-      )}
+      </div>
     </div>
   );
 }
 
-// gallery 部分
 interface ImageGeneration {
   id: string;
   prompt: string;
   status: string;
-  content?: string;
-  result?: { url: string }[];
+  error?: string | null;
+  imageUrl?: string | null;
   createdAt: string;
 }
 
@@ -169,18 +249,18 @@ function GallerySection() {
   const [activeIndex, setActiveIndex] = useState(0);
   const [selectedStatus, setSelectedStatus] = useState<StatusType>(ImageGenerationStatus.DONE);
 
-  // 计算所有可以查看的图片
   const viewerImages = useMemo(() => {
     return images
-      .filter((img) => img.status === ImageGenerationStatus.DONE && img.result)
-      .flatMap((img) =>
-        img.result!.map((r) => ({
-          src: r.url,
-          alt: img.prompt,
-          downloadUrl: r.url,
-          description: `${dateFormatter.format(new Date(img.createdAt))}\n${img.prompt}`,
-        })),
-      );
+      .filter(
+        (image): image is ImageGeneration & { imageUrl: string } =>
+          image.status === ImageGenerationStatus.DONE && !!image.imageUrl,
+      )
+      .map((image) => ({
+        src: image.imageUrl,
+        alt: image.prompt,
+        downloadUrl: image.imageUrl,
+        description: `${dateFormatter.format(new Date(image.createdAt))}\n${image.prompt}`,
+      }));
   }, [images, dateFormatter]);
 
   const fetchImages = async (status: string) => {
@@ -191,30 +271,8 @@ function GallerySection() {
         throw new Error(response.error);
       }
       if (response.data) {
-        const results = response.data.map((item) => {
-          // 处理 result 字段
-          let result: { url: string }[] | undefined;
-          if (Array.isArray(item.result)) {
-            result = item.result as { url: string }[];
-          }
-
-          // 处理 content 字段
-          let content: string | undefined;
-          if (item.response && typeof item.response === 'object' && 'content' in item.response) {
-            content = (item.response as { content: string }).content;
-          }
-
-          return {
-            id: item.id,
-            prompt: item.prompt,
-            status: item.status,
-            content,
-            result,
-            createdAt:
-              item.createdAt instanceof Date ? item.createdAt.toISOString() : new Date(item.createdAt).toISOString(),
-          };
-        });
-        setImages(results);
+        setImages(response.data);
+        console.log(response.data);
       }
     } catch (error) {
       toast.error(error instanceof Error ? error.message : t('gallery_page.get_image_failed'));
@@ -228,32 +286,24 @@ function GallerySection() {
   }, [selectedStatus]);
 
   const handleImageClick = (index: number) => {
-    // 计算在所有图片中的实际索引
-    let actualIndex = 0;
-    let count = 0;
-    for (const img of images) {
-      if (img.status === ImageGenerationStatus.DONE && img.result) {
-        if (count === index) {
-          actualIndex = count;
-          break;
-        }
-        count += img.result.length;
-      }
-    }
+    const doneImages = images.filter(
+      (img): img is ImageGeneration & { imageUrl: string } =>
+        img.status === ImageGenerationStatus.DONE && !!img.imageUrl,
+    );
+    const actualIndex = images.indexOf(doneImages[index]);
     setActiveIndex(actualIndex);
     setVisible(true);
   };
 
   const handleDownload = async (url: string) => {
     try {
-      toast.loading('Downloading...');
+      toast.loading(t('gallery_page.download.loading'));
       const response = await fetch(url);
       const blob = await response.blob();
       const downloadUrl = window.URL.createObjectURL(blob);
       const link = document.createElement('a');
       link.href = downloadUrl;
-      // 从URL中提取原始文件名
-      const fileName = `poster-${new Date().getTime()}.webp`;
+      const fileName = `image-${new Date().getTime()}.webp`;
       link.download = fileName;
       document.body.appendChild(link);
       link.click();
@@ -262,28 +312,21 @@ function GallerySection() {
       toast.dismiss();
     } catch (error) {
       console.error('下载失败:', error);
-      toast.error('Download failed');
+      toast.error(t('gallery_page.download.failed'));
     }
   };
 
   const getStatusDisplay = (image: ImageGeneration) => {
     switch (image.status) {
       case ImageGenerationStatus.PENDING:
-        return t('result_waiter.pending');
+        return t('gallery_page.tabs.pending');
       case ImageGenerationStatus.PROCESSING:
-        return t('result_waiter.processing');
+        return t('gallery_page.tabs.processing');
       case ImageGenerationStatus.FAILED:
-        return `${t('result_waiter.failed')}: ${image.content || t('result_waiter.unknown_error')}`;
+        return t('gallery_page.status.failed', { error: image.error || t('result_waiter.unknown_error') });
       default:
-        return t('result_waiter.loading');
+        return t('gallery_page.status.loading');
     }
-  };
-
-  // 滚动到顶部生成区
-  const scrollToGeneration = () => {
-    const el = document.getElementById('image-generation-section');
-
-    if (el) el.scrollIntoView({ behavior: 'smooth' });
   };
 
   return (
@@ -310,8 +353,8 @@ function GallerySection() {
         </Tabs>
       </div>
       {loading ? (
-        <div className="grid gap-4 p-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
-          {[...Array(8)].map((_, i) => (
+        <div className="grid gap-4 p-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
+          {[...Array(10)].map((_, i) => (
             <div
               key={i}
               className="overflow-hidden rounded-lg bg-default-50">
@@ -320,30 +363,23 @@ function GallerySection() {
           ))}
         </div>
       ) : images.length === 0 ? (
-        <div className="flex min-h-[50vh] flex-col items-center justify-center gap-4">
+        <div className="flex min-h-[40vh] flex-col items-center justify-center gap-4">
           <ImageIcon className="size-12 text-default-300" />
           <p className="text-default-600">{t('gallery_page.empty.title')}</p>
-          <Button
-            color="primary"
-            variant="flat"
-            onPress={scrollToGeneration}>
-            {t('gallery_page.empty.action')}
-          </Button>
         </div>
       ) : (
-        <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
+        <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
           {images.map((image, index) => (
             <div
               key={image.id}
               className="relative overflow-hidden rounded-lg bg-default-50">
-              {image.status === ImageGenerationStatus.DONE && image.result ? (
+              {image.status === ImageGenerationStatus.DONE && image.imageUrl ? (
                 <div className="group relative aspect-square overflow-hidden">
                   <img
-                    src={image.result[0].url}
+                    src={image.imageUrl}
                     alt={image.prompt}
-                    className="size-full cursor-pointer object-cover transition-transform duration-300 group-hover:scale-105"
+                    className="size-full cursor-pointer object-cover"
                   />
-                  {/* 遮罩和操作按钮 */}
                   <div className="absolute inset-0 z-10 opacity-0 transition-opacity duration-200 group-hover:opacity-100">
                     <div className="absolute inset-0 bg-black/60" />
                     <div className="relative z-20 flex h-full flex-col justify-between p-4">
@@ -370,7 +406,7 @@ function GallerySection() {
                           size="sm"
                           variant="flat"
                           className="bg-white/10 backdrop-blur-sm"
-                          onPress={() => handleDownload(image.result![0].url)}>
+                          onPress={() => handleDownload(image.imageUrl || '')}>
                           <Download className="size-4 text-white" />
                         </Button>
                       </div>
@@ -378,16 +414,15 @@ function GallerySection() {
                   </div>
                 </div>
               ) : (
-                <div className="flex aspect-square w-full items-center justify-center">
+                <div className="flex aspect-square w-full items-center justify-center p-4 text-center">
                   <div className="flex flex-col items-center gap-2">
                     {image.status !== ImageGenerationStatus.FAILED && (
-                      <div className="loading loading-spinner loading-md" />
+                      <div className="size-8 animate-spin rounded-full border-y-2 border-primary"></div>
                     )}
                     <p
-                      className={cn(
-                        'text-sm text-center px-4',
-                        image.status === ImageGenerationStatus.FAILED ? 'text-danger' : 'text-default-600',
-                      )}>
+                      className={`text-sm ${
+                        image.status === ImageGenerationStatus.FAILED ? 'text-danger' : 'text-default-600'
+                      }`}>
                       {getStatusDisplay(image)}
                     </p>
                   </div>
@@ -416,11 +451,11 @@ function GallerySection() {
   );
 }
 
-export default function ImagesPage() {
+export default function ImagePage() {
   return (
-    <div className="space-y-4 p-8">
+    <div className="space-y-8 p-4 md:p-8">
       <ImageGenerationSection />
-      <Divider className="my-4" />
+      <Divider className="my-6" />
       <GallerySection />
     </div>
   );

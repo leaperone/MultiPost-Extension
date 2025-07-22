@@ -46,6 +46,24 @@
       "editing": "修改中..."
     }
   },
+  "generation_flow": {
+    "stepper": {
+      "form": "填写图片信息",
+      "generating": "正在生成图片",
+      "result": "查看生成结果"
+    },
+    "generating_text": "正在生成图片，请不要离开页面...",
+    "generate_again": "再生成一张",
+    "toasts": {
+      "generate_failed_title": "生成失败",
+      "generate_failed_request_desc": "请求服务器失败，请稍后重试",
+      "generate_success_title": "生成成功",
+      "generate_success_desc": "图片已成功生成",
+      "generate_failed_parse_desc": "无法解析生成的图片",
+      "generate_failed_unknown_desc": "发生未知错误",
+      "submit_failed_title": "提交失败"
+    }
+  },
   "result_waiter": {
     "loading": "正在获取生成结果...",
     "pending": "等待生成...",
@@ -69,6 +87,14 @@
       "pending": "排队中",
       "processing": "生成中",
       "failed": "失败"
+    },
+    "status": {
+      "failed": "生成失败: {error}",
+      "loading": "加载中..."
+    },
+    "download": {
+      "loading": "下载中...",
+      "failed": "下载失败"
     },
     "empty": {
       "title": "还没有生成过图片",

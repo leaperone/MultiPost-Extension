@@ -1,7 +1,7 @@
 import { PrismaClient as PrismaMultipostClient } from '../prisma/client_multipost';
 import { OpenAI } from 'openai';
 import { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify';
-import { ImageGenerationStatus } from '@/app/dashboard/draw/image/types';
+import { ImageGenerationStatus } from '@/app/api/draw/image/types';
 import { deductCreditWorker } from '@/actions/credit/worker';
 import { PRICING } from '@/actions/credit/types';
 import ky from 'ky';

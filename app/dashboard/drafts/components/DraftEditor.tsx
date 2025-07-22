@@ -14,7 +14,7 @@ import { Icon } from '@iconify/react';
 import axios from 'axios';
 import { nanoid } from 'nanoid';
 import { useTranslation } from '@/i18n/client';
-import { ImageGenerationModal } from '@/app/dashboard/publish/dynamic/components/ImageGenerationModal';
+// import { ImageGenerationModal } from '@/app/dashboard/publish/dynamic/components/ImageGenerationModal';
 import DirectPublishModal from './DriectPublishModal';
 
 const Viewer = dynamic(() => import('react-viewer'), { ssr: false });
@@ -152,7 +152,7 @@ export function DraftEditor({
   const sensors = useSensors(useSensor(PointerSensor));
   const [viewerVisible, setViewerVisible] = useState(false);
   const [currentImage, setCurrentImage] = useState(0);
-  const [isAiModalOpen, setIsAiModalOpen] = useState(false);
+  // const [isAiModalOpen, setIsAiModalOpen] = useState(false);
   const [isDirectPublishModalOpen, setIsDirectPublishModalOpen] = useState(false);
 
   // Keep filesRef in sync with files prop
@@ -252,20 +252,20 @@ export function DraftEditor({
     [t, onFilesChange],
   );
 
-  const handleAiImageGenerated = (newImage: { name: string; type: string; size: number; url: string }) => {
-    const newFile: DraftFileDataClient = {
-      rid: nanoid(),
-      name: newImage.name,
-      type: newImage.type,
-      size: newImage.size,
-      url: newImage.url,
-      source: 'remote_url',
-      uploadProgress: 100,
-    };
-    console.log('onFilesChange', [...files, newFile]);
-    onFilesChange([...files, newFile]);
-    setIsAiModalOpen(false);
-  };
+  // const handleAiImageGenerated = (newImage: { name: string; type: string; size: number; url: string }) => {
+  //   const newFile: DraftFileDataClient = {
+  //     rid: nanoid(),
+  //     name: newImage.name,
+  //     type: newImage.type,
+  //     size: newImage.size,
+  //     url: newImage.url,
+  //     source: 'remote_url',
+  //     uploadProgress: 100,
+  //   };
+  //   console.log('onFilesChange', [...files, newFile]);
+  //   onFilesChange([...files, newFile]);
+  //   setIsAiModalOpen(false);
+  // };
 
   const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFiles = event.target.files;
@@ -438,11 +438,11 @@ export function DraftEditor({
                     icon="lucide:library"
                     text={tPublish('dynamic.library')}
                   />
-                  <ActionPlaceholder
+                  {/* <ActionPlaceholder
                     onClick={() => setIsAiModalOpen(true)}
                     icon="lucide:bot"
                     text={tPublish('dynamic.aiGenerate')}
-                  />
+                  /> */}
                 </div>
               </SortableContext>
             </DndContext>
@@ -463,12 +463,12 @@ export function DraftEditor({
         images={files.filter((f) => f.type.startsWith('image')).map((f) => ({ src: f.url, alt: f.name }))}
         activeIndex={currentImage}
       />
-      <ImageGenerationModal
+      {/* <ImageGenerationModal
         isOpen={isAiModalOpen}
         onOpenChange={setIsAiModalOpen}
         onImageGenerated={handleAiImageGenerated}
         initialPromptBasis={{ title, content }}
-      />
+      /> */}
       <DirectPublishModal
         isOpen={isDirectPublishModalOpen}
         onClose={() => setIsDirectPublishModalOpen(false)}
