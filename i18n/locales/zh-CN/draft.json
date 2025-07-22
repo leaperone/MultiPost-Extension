@@ -10,7 +10,8 @@
   "tabs": {
     "drafts": "草稿",
     "mediaLibrary": "素材库",
-    "aiCreation": "AI 创作"
+    "aiCreation": "AI 创作",
+    "aiImage": "AI 生图"
   },
   "mediaLibrary": {
     "title": "媒体库",
@@ -159,5 +160,25 @@
     "copied": "已复制",
     "stop": "停止",
     "inputPlaceholder": "输入你的要求... (Shift + Enter 换行)"
+  },
+  "aiImage": {
+    "attachPrompt": "根据当前草稿内容附加到提示词：",
+    "titleLabel": "标题:",
+    "contentLabel": "内容:",
+    "generating": "正在生成图片，请不要离开...",
+    "generatedAlt": "生成的图片",
+    "generateAgain": "再来一张",
+    "insertDraft": "插入草稿",
+    "toast": {
+      "requestFailed": "图片生成请求失败",
+      "generationFailed": "图片生成失败",
+      "noId": "没有获取到有效的任务 ID。",
+      "success": "图片生成成功！",
+      "unknownError": "未知错误",
+      "timeout": "获取图片结果超时",
+      "timeoutDesc": "请稍后在历史记录中查看。",
+      "submitFailed": "提交失败",
+      "createTaskFailed": "创建图片生成任务失败"
+    }
   }
 }

@@ -3,7 +3,7 @@
 import { addToast, Spinner, Button, Tabs, Tab } from '@heroui/react';
 import React, { useState, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { Save, Send, Plus, Zap, FileText, Image, Sparkles } from 'lucide-react';
+import { Save, Send, Plus, Zap, FileText, Image, Sparkles, BotIcon } from 'lucide-react';
 import {
   createDynamicDraft,
   getDynamicDrafts,
@@ -18,6 +18,7 @@ import MediaLibrary from './components/MediaLibrary';
 import ClientPublishModal from './components/ClientPublishModal';
 import DirectPublishModal from './components/DriectPublishModal';
 import { ChatCreationPanel } from './components/ChatCreationPanel';
+import { ImageGeneratePanel } from './components/ImageGeneratePanel';
 import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from '@/components/ui/resizable';
 import { useTranslation } from '@/i18n/client';
 import { nanoid } from 'nanoid';
@@ -261,6 +262,40 @@ export default function DraftsPage() {
     }
   };
 
+  /**
+   * Handle AI generated image insertion
+   */
+  const handleInsertGeneratedImage = async (imageUrl: string) => {
+    if (!selectedDraftId) {
+      addToast({ title: '请先选择一个草稿', color: 'warning' });
+      return;
+    }
+
+    try {
+      addToast({ title: '正在插入图片...', color: 'default' });
+
+      // Fetch the image to get blob for size and type
+      const response = await fetch(imageUrl);
+      const blob = await response.blob();
+
+      const newImageFile: DraftFileDataClient = {
+        rid: nanoid(),
+        source: 'generated',
+        name: `generated-image-${nanoid(8)}.${blob.type.split('/')[1] || 'png'}`,
+        url: imageUrl,
+        type: blob.type,
+        size: blob.size,
+        uploadProgress: 100,
+      };
+
+      addFileToCurrentDraft(newImageFile);
+      addToast({ title: '图片已成功插入草稿', color: 'success' });
+    } catch (error) {
+      console.error('Failed to insert generated image:', error);
+      addToast({ title: '插入图片失败', color: 'danger' });
+    }
+  };
+
   useEffect(() => {
     loadDrafts();
   }, []);
@@ -449,6 +484,10 @@ export default function DraftsPage() {
     handleTabChange('media');
   };
 
+  const handleShowAiImage = () => {
+    handleTabChange('ai-image');
+  };
+
   const selectedDraft = drafts.find((draft) => draft.id === selectedDraftId);
 
   if (loading) {
@@ -554,7 +593,7 @@ export default function DraftsPage() {
                   variant="underlined"
                   classNames={{
                     base: 'w-full',
-                    tabList: 'gap-6 w-full relative rounded-none p-0',
+                    tabList: 'gap-6 relative rounded-none p-0 pb-2 overflow-x-auto',
                     cursor: 'w-full bg-primary',
                     tab: 'max-w-fit px-0 h-8',
                     tabContent: 'group-data-[selected=true]:text-primary text-default-600 font-medium',
@@ -575,7 +614,17 @@ export default function DraftsPage() {
                         <Sparkles className="size-4" />
                         <span>{t('tabs.aiCreation')}</span>
                       </div>
-                    }></Tab>
+                    }
+                  />
+                  <Tab
+                    key="ai-image"
+                    title={
+                      <div className="flex items-center gap-2">
+                        <BotIcon className="size-4" />
+                        <span>{t('tabs.aiImage')}</span>
+                      </div>
+                    }
+                  />
                   <Tab
                     key="media"
                     title={
@@ -611,6 +660,15 @@ export default function DraftsPage() {
                     onApply={handleApplyPolish}
                   />
                 )}
+                {activeTab === 'ai-image' && (
+                  <div className="h-full overflow-y-auto p-4">
+                    <ImageGeneratePanel
+                      draftTitle={currentDraftTitle}
+                      draftContent={currentDraftContent}
+                      onInsertImage={handleInsertGeneratedImage}
+                    />
+                  </div>
+                )}
               </div>
             </div>
           </ResizablePanel>
@@ -630,6 +688,7 @@ export default function DraftsPage() {
                 onContentChange={updateCurrentDraftContent}
                 onFilesChange={updateCurrentDraftFiles}
                 onShowMediaLibrary={handleShowMediaLibrary}
+                onShowAiImage={handleShowAiImage}
               />
             </div>
           </ResizablePanel>

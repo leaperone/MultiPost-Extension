@@ -73,6 +73,7 @@ import { usePlatformStore } from '@/store/publish.store';
 import { getPlatformExtraConfigList } from '../action';
 import LibraryModal from './components/LibraryModal';
 import { FileData } from '@/lib/extension';
+import { ImageGenerateModal } from './components/ImageGenerateModal';
 
 const ReactPlayer = dynamic(() => import('react-player'), {
   ssr: false,
@@ -231,6 +232,7 @@ export default function DynamicPage() {
   const [isVideoDraggingOver, setIsVideoDraggingOver] = useState(false);
   const [isLibraryModalOpen, setLibraryModalOpen] = useState(false);
   const [showDraftAd, setShowDraftAd] = useState(true);
+  const [isAiModalOpen, setIsAiModalOpen] = useState(false);
 
   useEffect(() => {
     if (images.some((i) => !i.id)) {
@@ -704,6 +706,15 @@ export default function DynamicPage() {
                 existingFiles={images}
               />
             )}
+            <ImageGenerateModal
+              isOpen={isAiModalOpen}
+              onOpenChange={setIsAiModalOpen}
+              onImageGenerated={async (fileData) => {
+                setImages((prev) => [...prev, { ...fileData, id: nanoid(), type: 'image/png', size: 0 }]);
+              }}
+              title={title}
+              content={content}
+            />
 
             <input
               type="file"
@@ -837,11 +848,11 @@ export default function DynamicPage() {
                         icon="lucide:library"
                         text={t('dynamic.library', '素材库')}
                       />
-                      {/* <ActionPlaceholder
+                      <ActionPlaceholder
                         onClick={() => setIsAiModalOpen(true)}
                         icon="lucide:bot"
                         text={t('dynamic.aiGenerate', 'AI 生成')}
-                      /> */}
+                      />
                     </div>
                   </SortableContext>
                 </DndContext>

@@ -10,7 +10,8 @@
   "tabs": {
     "drafts": "Drafts",
     "mediaLibrary": "Library",
-    "aiCreation": "AI Creation"
+    "aiCreation": "AI Creation",
+    "aiImage": "AI Image"
   },
   "mediaLibrary": {
     "title": "Media Library",
@@ -159,5 +160,25 @@
     "copied": "Copied",
     "stop": "Stop",
     "inputPlaceholder": "Enter your requirements... (Shift + Enter for new line)"
+  },
+  "aiImage": {
+    "attachPrompt": "Attach to prompt based on current draft content:",
+    "titleLabel": "Title:",
+    "contentLabel": "Content:",
+    "generating": "Generating image, please don't leave...",
+    "generatedAlt": "Generated image",
+    "generateAgain": "Generate Again",
+    "insertDraft": "Insert to Draft",
+    "toast": {
+      "requestFailed": "Image generation request failed",
+      "generationFailed": "Image generation failed",
+      "noId": "Could not get a valid task ID.",
+      "success": "Image generated successfully!",
+      "unknownError": "Unknown error",
+      "timeout": "Timeout getting image result",
+      "timeoutDesc": "Please check the history later.",
+      "submitFailed": "Submission failed",
+      "createTaskFailed": "Failed to create image generation task"
+    }
   }
 }

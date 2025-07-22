@@ -1,6 +1,6 @@
 import { createOpenAI } from '@ai-sdk/openai';
 import { streamText, CoreUserMessage } from 'ai';
-import { ImageGenerationSchema, ImageGenerationStatus, getPrompt } from './types';
+import { ImageGenerationStatus } from './types';
 import { auth } from '@/auth';
 import { deductCredit, preCheckCredit } from '@/actions/credit';
 import { PRICING } from '@/actions/credit/types';
@@ -35,52 +35,30 @@ export async function POST(req: Request) {
     const userId = session.user.id;
 
     const body = await req.json();
-    // 用 zod 校验 task
-    const parseResult = ImageGenerationSchema.safeParse(body.task);
-    if (!parseResult.success) {
-      return new Response(JSON.stringify({ error: '参数校验失败', issues: parseResult.error.issues }), {
+    const { id } = body;
+    if (!id) {
+      return new Response(JSON.stringify({ error: 'id is required' }), {
         status: 400,
         headers: { 'Content-Type': 'application/json' },
       });
     }
-    const task = parseResult.data;
+
+    const task = await multipostDb.imageGeneration.findUnique({
+      where: { id, userId },
+    });
+
+    if (!task) {
+      return new Response(JSON.stringify({ error: 'Task not found' }), {
+        status: 404,
+        headers: { 'Content-Type': 'application/json' },
+      });
+    }
 
     if (!(await preCheckCredit(session.user.id, PRICING.IMAGE_GENERATION.mul(task.number).toNumber()))) {
       throw new Error('Insufficient credits');
     }
 
-    // 使用 getPrompt 拼接 composition、color、style 的提示词
-
-    let extraPrompt = '';
-    if (task.size) {
-      extraPrompt = `size: ${task.size}\n${extraPrompt}`;
-    }
-    if (task.composition) {
-      const compositionPrompt = getPrompt('composition', task.composition);
-      if (compositionPrompt) extraPrompt = `${compositionPrompt}\n${extraPrompt}`;
-    }
-    if (task.color) {
-      const colorPrompt = getPrompt('color', task.color);
-      if (colorPrompt) extraPrompt = `${colorPrompt}\n${extraPrompt}`;
-    }
-    if (task.style) {
-      const stylePrompt = getPrompt('style', task.style);
-      if (stylePrompt) extraPrompt = `${stylePrompt}\n${extraPrompt}`;
-    }
-
-    const newTask = await multipostDb.imageGeneration.create({
-      data: {
-        userId: session.user.id,
-        prompt: task.prompt,
-        extraPrompt,
-        images: task.images,
-        number: task.number,
-        size: task.size.toString(),
-        status: ImageGenerationStatus.PENDING,
-      },
-    });
-
-    const prompt = `${extraPrompt}\n\n${task.prompt}`;
+    const prompt = `${task.extraPrompt}\n\n${task.prompt}`;
 
     // 构造消息
     const messages: CoreUserMessage[] = [];
@@ -127,7 +105,7 @@ export async function POST(req: Request) {
                 'X-Source': 'IMAGE_GENERATION',
               },
               body: JSON.stringify({
-                filename: `image-${newTask.id}.png`,
+                filename: `image-${task.id}.png`,
               }),
             });
 
@@ -161,7 +139,7 @@ export async function POST(req: Request) {
             // Fallback to original image URL if upload fails, do nothing
           }
           await multipostDb.imageGeneration.update({
-            where: { id: newTask.id },
+            where: { id: task.id },
             data: {
               status: ImageGenerationStatus.DONE,
               result: [{ url: imageUrl, revised_prompt: prompt }],
@@ -176,7 +154,7 @@ export async function POST(req: Request) {
           });
         } else {
           await multipostDb.imageGeneration.update({
-            where: { id: newTask.id },
+            where: { id: task.id },
             data: {
               status: ImageGenerationStatus.FAILED,
               response: JSON.parse(
@@ -193,7 +171,7 @@ export async function POST(req: Request) {
       // 流式出错时自动处理
       onError: async (error) => {
         await multipostDb.imageGeneration.update({
-          where: { id: newTask.id },
+          where: { id: task.id },
           data: {
             status: ImageGenerationStatus.FAILED,
             response: JSON.parse(

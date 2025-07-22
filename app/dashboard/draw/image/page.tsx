@@ -1,13 +1,12 @@
 'use client';
 
-import { useState, Fragment, useEffect, useMemo } from 'react';
+import { useState, Fragment, useEffect, useMemo, useRef } from 'react';
 import { z } from 'zod';
-import { addToast } from '@heroui/react';
 import { Button, Tabs, Tab, Skeleton, Divider } from '@heroui/react';
 import { GenerationForm } from './components/GenerationForm';
 import { ImageGenerationSchema, ImageGenerationStatus } from '@/app/api/draw/image/types';
 import { useChat } from 'ai/react';
-import { getImageGenerations } from './action';
+import { getImageGenerations, createImageGeneration, getImageGeneration } from './action';
 import { ImageIcon, Download, Calendar, Maximize2 } from 'lucide-react';
 import dynamic from 'next/dynamic';
 import { useTranslation } from '@/i18n/client';
@@ -61,59 +60,67 @@ function ImageGenerationSection() {
 
   const [generatedImage, setGeneratedImage] = useState<string | null>(null);
   const [step, setStep] = useState<Step>('form');
+  const [generationId, _setGenerationId] = useState<string | null>(null);
+  const generationIdRef = useRef(generationId);
+  const setGenerationId = (id: string | null) => {
+    generationIdRef.current = id;
+    _setGenerationId(id);
+  };
 
   const { isLoading, append, messages } = useChat({
     api: '/api/draw/image',
     onResponse: (response) => {
       if (response.status !== 200) {
-        addToast({
-          title: t('generation_flow.toasts.generate_failed_title'),
+        toast.error(t('generation_flow.toasts.generate_failed_title'), {
           description: t('generation_flow.toasts.generate_failed_request_desc'),
         });
         setStep('form');
       }
     },
-    onFinish: (message) => {
-      let imageUrl: string | undefined | null = null;
+    onFinish: async () => {
+      if (!generationIdRef.current) {
+        setStep('form');
+        toast.error(t('generation_flow.toasts.generate_failed_title'), {
+          description: t('generation_flow.toasts.generate_failed_no_id_desc', '没有获取到有效的任务 ID。'),
+        });
+        return;
+      }
 
-      try {
-        const jsonMatch = message.content.match(/(\[.*\])\s*$/);
-        if (jsonMatch) {
-          const result = JSON.parse(jsonMatch[1]);
-          if (Array.isArray(result) && result.length > 0 && result[0] && typeof result[0].url === 'string') {
-            imageUrl = result[0].url;
+      // To handle race conditions, we'll poll for the result a few times.
+      const maxRetries = 10;
+      const retryDelay = 2000;
+      const currentGenerationId = generationIdRef.current;
+
+      for (let i = 0; i < maxRetries; i++) {
+        const result = await getImageGeneration(currentGenerationId);
+        if (result.success && result.data) {
+          if (result.data.status === 'DONE' && result.data.imageUrl) {
+            setGeneratedImage(result.data.imageUrl);
+            setStep('result');
+            toast.success(t('generation_flow.toasts.generate_success_title'), {
+              description: t('generation_flow.toasts.generate_success_desc'),
+            });
+            return;
+          }
+          if (result.data.status === 'FAILED') {
+            setStep('form');
+            toast.error(t('generation_flow.toasts.generate_failed_title'), {
+              description: result.data.error || t('result_waiter.unknown_error', '未知错误'),
+            });
+            return;
           }
         }
-      } catch (e) {
-        console.log('Could not parse JSON from stream, falling back to regex.');
+        await new Promise((resolve) => setTimeout(resolve, retryDelay));
       }
 
-      if (!imageUrl) {
-        // Fallback for old markdown format
-        const urlMatch = message.content.match(/\[100\]\((.*?)\)/);
-        const imageUrlMatch = message.content.match(/!\[.*?\]\((.*?)\)/);
-        imageUrl = imageUrlMatch ? imageUrlMatch[1] : urlMatch?.[1];
-      }
-
-      if (imageUrl) {
-        setGeneratedImage(imageUrl);
-        setStep('result');
-        addToast({
-          title: t('generation_flow.toasts.generate_success_title'),
-          description: t('generation_flow.toasts.generate_success_desc'),
-        });
-      } else {
-        setStep('form');
-        addToast({
-          title: t('generation_flow.toasts.generate_failed_title'),
-          description: t('generation_flow.toasts.generate_failed_parse_desc'),
-        });
-      }
+      setStep('form');
+      toast.error(t('generation_flow.toasts.timeout_error_title', '获取图片结果超时'), {
+        description: t('generation_flow.toasts.timeout_error_desc', '请稍后在历史记录中查看。'),
+      });
     },
     onError: (error) => {
       setStep('form');
-      addToast({
-        title: t('generation_flow.toasts.generate_failed_title'),
+      toast.error(t('generation_flow.toasts.generate_failed_title'), {
         description: error.message || t('generation_flow.toasts.generate_failed_unknown_desc'),
       });
     },
@@ -121,9 +128,19 @@ function ImageGenerationSection() {
 
   const handleSubmit = async (data: z.infer<typeof ImageGenerationSchema>) => {
     setGeneratedImage(null);
+    setGenerationId(null);
     setStep('generating');
 
     try {
+      const createResponse = await createImageGeneration(data);
+      if (!createResponse.success || !createResponse.data?.id) {
+        throw new Error(
+          createResponse.error || t('generation_flow.toasts.create_task_failed_desc', '创建图片生成任务失败'),
+        );
+      }
+      const newGenerationId = createResponse.data.id;
+      setGenerationId(newGenerationId);
+
       await append(
         {
           role: 'user',
@@ -131,14 +148,13 @@ function ImageGenerationSection() {
         },
         {
           body: {
-            task: data,
+            id: newGenerationId,
           },
         },
       );
     } catch (error) {
       setStep('form');
-      addToast({
-        title: t('generation_flow.toasts.submit_failed_title'),
+      toast.error(t('generation_flow.toasts.submit_failed_title'), {
         description: error instanceof Error ? error.message : t('generation_flow.toasts.generate_failed_unknown_desc'),
       });
     }
@@ -146,6 +162,7 @@ function ImageGenerationSection() {
 
   const handleStartOver = () => {
     setGeneratedImage(null);
+    setGenerationId(null);
     setStep('form');
   };
 

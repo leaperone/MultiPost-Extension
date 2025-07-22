@@ -50,7 +50,27 @@
       "title": "试试我们的草稿功能！",
       "description": "保存您的创作进度，随时编辑和发布",
       "tryNow": "立即体验"
-    }
+    },
+    "insertImage": "插入图片"
+  },
+  "aiImage": {
+    "toast": {
+      "requestFailed": "请求失败",
+      "generationFailed": "生成失败",
+      "noId": "无法获取生成ID",
+      "success": "图片生成成功",
+      "unknownError": "发生未知错误",
+      "timeout": "生成超时",
+      "timeoutDesc": "图片生成响应时间过长。",
+      "createTaskFailed": "创建生成任务失败",
+      "submitFailed": "提交生成请求失败"
+    },
+    "titleLabel": "标题：",
+    "contentLabel": "内容：",
+    "attachPrompt": "使用当前内容优化提示词",
+    "generating": "正在生成图片，请不要离开...",
+    "generatedAlt": "生成的图片",
+    "generateAgain": "重新生成"
   },
   "podcast": {
     "title": "请输入播客标题",
@@ -269,5 +289,8 @@
         "description": "使用 Markdown 编辑器发布文章。"
       }
     }
+  },
+  "actions": {
+    "cancel": "取消"
   }
 }

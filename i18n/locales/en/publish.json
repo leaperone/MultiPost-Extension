@@ -50,7 +50,27 @@
       "title": "Try our Drafts feature!",
       "description": "Save your creative progress, edit and publish anytime",
       "tryNow": "Try Now"
-    }
+    },
+    "insertImage": "Insert Image"
+  },
+  "aiImage": {
+    "toast": {
+      "requestFailed": "Request failed",
+      "generationFailed": "Generation failed",
+      "noId": "Could not get generation ID",
+      "success": "Image generated successfully",
+      "unknownError": "An unknown error occurred",
+      "timeout": "Generation timed out",
+      "timeoutDesc": "The image generation took too long to respond.",
+      "createTaskFailed": "Failed to create generation task",
+      "submitFailed": "Failed to submit generation request"
+    },
+    "titleLabel": "Title:",
+    "contentLabel": "Content:",
+    "attachPrompt": "Use current content to improve prompt",
+    "generating": "Generating image, do not close...",
+    "generatedAlt": "Generated image",
+    "generateAgain": "Generate Again"
   },
   "podcast": {
     "title": "Enter podcast title",
@@ -269,5 +289,8 @@
         "description": "Use Markdown editor to publish articles."
       }
     }
+  },
+  "actions": {
+    "cancel": "Cancel"
   }
 }

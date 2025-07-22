@@ -130,6 +130,7 @@ export function DraftEditor({
   onContentChange,
   onFilesChange,
   onShowMediaLibrary,
+  onShowAiImage,
   className,
 }: {
   draftId: string | null;
@@ -141,6 +142,7 @@ export function DraftEditor({
   onContentChange: (content: string) => void;
   onFilesChange: (files: DraftFileDataClient[]) => void;
   onShowMediaLibrary?: () => void;
+  onShowAiImage: () => void;
   className?: string;
 }) {
   const { t } = useTranslation('draft');
@@ -392,14 +394,14 @@ export function DraftEditor({
           </div>
 
           {/* Content Textarea */}
-          <div className="min-h-0 w-full max-w-2xl flex-1 relative">
+          <div className="relative min-h-0 w-full max-w-2xl flex-1">
             <textarea
               value={content}
               onChange={(e) => onContentChange(e.target.value)}
               placeholder={t('editor.contentPlaceholder')}
               className="size-full resize-none rounded-lg bg-zinc-100 p-3 pb-8 text-foreground focus:border-primary focus:outline-none dark:bg-zinc-800"
             />
-            <div className="absolute bottom-2 right-3 text-xs text-default-400 pointer-events-none">
+            <div className="pointer-events-none absolute bottom-2 right-3 text-xs text-default-400">
               {content.length}
             </div>
           </div>
@@ -438,11 +440,11 @@ export function DraftEditor({
                     icon="lucide:library"
                     text={tPublish('dynamic.library')}
                   />
-                  {/* <ActionPlaceholder
-                    onClick={() => setIsAiModalOpen(true)}
+                  <ActionPlaceholder
+                    onClick={onShowAiImage}
                     icon="lucide:bot"
                     text={tPublish('dynamic.aiGenerate')}
-                  /> */}
+                  />
                 </div>
               </SortableContext>
             </DndContext>

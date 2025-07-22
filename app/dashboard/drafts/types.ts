@@ -1,6 +1,6 @@
 import { z } from 'zod';
 
-export const DraftFileSourceSchema = z.enum(['local', 'mp_oss', 'remote_url']);
+export const DraftFileSourceSchema = z.enum(['local', 'mp_oss', 'remote_url', 'generated']);
 export type DraftFileSource = z.infer<typeof DraftFileSourceSchema>;
 
 export const DraftFileDataSchema = z.object({
