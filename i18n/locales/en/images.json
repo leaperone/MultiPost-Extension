@@ -44,7 +44,9 @@
       "generating": "Generating...",
       "edit": "Start Editing",
       "editing": "Editing..."
-    }
+    },
+    "ai_optimize_prompt": "AI Prompt",
+    "fill_to_input": "Apply"
   },
   "generation_flow": {
     "stepper": {

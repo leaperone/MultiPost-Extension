@@ -44,7 +44,9 @@
       "generating": "生成中...",
       "edit": "开始修改",
       "editing": "修改中..."
-    }
+    },
+    "ai_optimize_prompt": "AI 提示词",
+    "fill_to_input": "应用"
   },
   "generation_flow": {
     "stepper": {

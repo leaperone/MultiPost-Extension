@@ -113,7 +113,7 @@ export function GenerationForm({ onSubmit, loading, extraPrompt }: GenerationFor
             isLoading={aiOptimizing}
             disabled={aiOptimizing || loading}
             onPress={handleOptimizePrompt}>
-            AI优化提示词
+            {t('generation_page.ai_optimize_prompt')}
           </Button>
           {optimizedPrompt && (
             <Button
@@ -121,7 +121,7 @@ export function GenerationForm({ onSubmit, loading, extraPrompt }: GenerationFor
               size="sm"
               variant="flat"
               onPress={handleFillOptimized}>
-              填充到输入框
+              {t('generation_page.fill_to_input')}
             </Button>
           )}
         </div>
