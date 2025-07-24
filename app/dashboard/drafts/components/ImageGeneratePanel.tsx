@@ -185,6 +185,9 @@ export function ImageGeneratePanel({ draftTitle, draftContent, onInsertImage }: 
             <GenerationForm
               onSubmit={handleSubmit}
               loading={isLoading}
+              extraPrompt={`${draftTitle ? `${t('aiImage.titleLabel')} ${draftTitle}` : ''}${
+                draftContent ? `${t('aiImage.contentLabel')} ${draftContent}` : ''
+              }`}
             />
           </div>
         )}
