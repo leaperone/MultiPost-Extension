@@ -135,6 +135,9 @@
     }
   },
   "aiCreation": {
+    "todoQueue": "Todo Queue",
+    "queuePlaceholder": "Write your todo items here...",
+    "addToQueue": "Submit",
     "initialMessage": "Hello! I'm your AI creation assistant. I have loaded the current draft. You can ask me to create for you directly, or make more specific requests.",
     "toast": {
       "autoApplied": "Changes automatically applied",

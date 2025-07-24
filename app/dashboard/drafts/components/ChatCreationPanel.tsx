@@ -11,8 +11,8 @@ import {
   Textarea,
 } from '@heroui/react';
 import { Message, useChat } from 'ai/react';
-import { Check, CheckCircle, Clipboard, CornerDownLeft, Plus, RefreshCw, Settings } from 'lucide-react';
-import React, { useEffect, useRef, useState } from 'react';
+import { Check, CheckCircle, Clipboard, CornerDownLeft, Plus, RefreshCw, Settings, X, Clock } from 'lucide-react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import ReactMarkdown from 'react-markdown';
 import { useChatHistoryStore } from '@/store/chat.history.store';
 import { useDraftStore } from '@/store/draft.store';
@@ -59,7 +59,6 @@ export function ChatCreationPanel({ draftId, draftTitle, draftContent, onApply }
       let newContent: string | undefined;
       let thoughts: string | undefined;
 
-      // 从Markdown代码块中提取JSON字符串
       const jsonRegex = /```json\n([\s\S]+?)\n```/;
       const jsonMatch = content.match(jsonRegex);
 
@@ -70,7 +69,6 @@ export function ChatCreationPanel({ draftId, draftTitle, draftContent, onApply }
           title = parsed.title;
           newContent = parsed.content;
 
-          // 将AI的思考过程作为消息更新
           if (thoughts) {
             setMessages((prevMessages) =>
               prevMessages.map((m) => (m.id === message.id ? { ...m, content: thoughts! } : m)),
@@ -102,30 +100,29 @@ export function ChatCreationPanel({ draftId, draftTitle, draftContent, onApply }
                   status: autoApply ? ('applied' as const) : ('pending' as const),
                 },
               ];
-
-          // 同步到store
           // setSuggestions(draftId, newSuggestions);
           return newSuggestions;
         });
 
-        setSuggestions(draftId, [
-          ...suggestions,
-          ...(suggestions.some((s) => s.messageId === message.id)
-            ? []
+        setSuggestions(
+          draftId,
+          suggestions.some((s) => s.messageId === message.id)
+            ? suggestions
             : [
+                ...suggestions,
                 {
                   messageId: message.id,
                   title,
                   content: newContent,
-                  status: autoApply ? ('applied' as const) : ('pending' as const),
+                  status: autoApply ? 'applied' : 'pending',
                 },
-              ]),
-        ]);
+              ],
+        );
       }
     },
   });
 
-  // 初始化时从store恢复suggestions
+  // Initialize suggestions from store
   useEffect(() => {
     if (draftId) {
       const storedSuggestions = getSuggestions(draftId);
@@ -216,7 +213,7 @@ export function ChatCreationPanel({ draftId, draftTitle, draftContent, onApply }
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && !e.shiftKey && !(e.nativeEvent as KeyboardEvent).isComposing) {
       e.preventDefault();
-      if (input.trim()) {
+      if (input.trim() || todoQueue.length > 0) {
         formRef.current?.requestSubmit();
       }
     }
@@ -237,11 +234,13 @@ export function ChatCreationPanel({ draftId, draftTitle, draftContent, onApply }
 
     setSuggestionsState((prev) => {
       const newSuggestions = prev.map((s) => (s.messageId === messageId ? { ...s, status: 'applied' as const } : s));
-      // 同步到store
-      // setSuggestions(draftId, newSuggestions);
+
       return newSuggestions;
     });
-    setSuggestions(draftId, suggestions.map((s) => (s.messageId === messageId ? { ...s, status: 'applied' as const } : s)));
+    setSuggestions(
+      draftId,
+      suggestions.map((s) => (s.messageId === messageId ? { ...s, status: 'applied' as const } : s)),
+    );
   };
 
   const handleCopy = (message: Message) => {
@@ -264,12 +263,86 @@ export function ChatCreationPanel({ draftId, draftTitle, draftContent, onApply }
   };
 
   const [copiedStates, setCopiedStates] = useState<Record<string, boolean>>({});
+  const [todoQueue, setTodoQueue] = useState<
+    Array<{
+      id: string;
+      content: string;
+      timestamp: number;
+    }>
+  >([]);
+  const [queueInput, setQueueInput] = useState('');
 
   const handleNewChat = () => {
     setMessages(initialMessages);
     setSuggestionsState([]);
     setSuggestions(draftId, []);
     setInput('');
+    setTodoQueue([]);
+    setQueueInput('');
+  };
+
+  // Todo queue management functions
+  const addToTodoQueue = (content: string) => {
+    if (!content.trim()) return;
+    const newItem = {
+      id: Date.now().toString(),
+      content: content.trim(),
+      timestamp: Date.now(),
+    };
+    setTodoQueue((prev) => [...prev, newItem]);
+    setQueueInput('');
+  };
+
+  const removeFromTodoQueue = (id: string) => {
+    setTodoQueue((prev) => prev.filter((item) => item.id !== id));
+  };
+
+  const processNextTodoItem = useCallback(() => {
+    if (todoQueue.length === 0 || isLoading) return;
+
+    const nextItem = todoQueue[0];
+    setTodoQueue((prev) => prev.slice(1)); // Remove the item before sending
+    append({
+      role: 'user',
+      content: nextItem.content,
+    });
+  }, [todoQueue, isLoading, append]);
+
+  // Only auto-process next item when user manually submits, not after stop
+  const [shouldAutoProcess, setShouldAutoProcess] = useState(true);
+
+  // Automatically process the next item when generation completes and queue is not empty
+  useEffect(() => {
+    if (!isLoading && todoQueue.length > 0 && shouldAutoProcess) {
+      const timer = setTimeout(() => {
+        processNextTodoItem();
+      }, 100);
+      return () => clearTimeout(timer);
+    }
+  }, [isLoading, todoQueue.length, processNextTodoItem, shouldAutoProcess]);
+
+  const handleQueueSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (queueInput.trim()) {
+      if (isLoading) {
+        addToTodoQueue(queueInput);
+      } else {
+        append({
+          role: 'user',
+          content: queueInput.trim(),
+        });
+        setQueueInput('');
+      }
+    }
+  };
+
+  const handleQueueKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter' && !e.shiftKey && !(e.nativeEvent as KeyboardEvent).isComposing) {
+      e.preventDefault();
+      if (queueInput.trim()) {
+        handleQueueSubmit(e);
+      }
+    }
   };
 
   if (!draftId) {
@@ -348,30 +421,25 @@ export function ChatCreationPanel({ draftId, draftTitle, draftContent, onApply }
                 <div className="whitespace-pre-line break-words text-sm">
                   <ReactMarkdown
                     components={{
-                      // eslint-disable-next-line @typescript-eslint/no-unused-vars
-                      code({ node, className, children, ...props }) {
+                      code({ className, children, ...props }) {
                         return (
                           <code
                             className={`whitespace-pre-wrap break-words ${className || ''}`}
-                            {...props}
-                          >
+                            {...props}>
                             {children}
                           </code>
                         );
                       },
-                      // eslint-disable-next-line @typescript-eslint/no-unused-vars
-                      pre({ node, className, children, ...props }) {
+                      pre({ className, children, ...props }) {
                         return (
                           <pre
                             className={`whitespace-pre-wrap break-words ${className || ''}`}
-                            {...props}
-                          >
+                            {...props}>
                             {children}
                           </pre>
                         );
                       },
-                    }}
-                  >
+                    }}>
                     {m.content}
                   </ReactMarkdown>
                 </div>
@@ -438,42 +506,101 @@ export function ChatCreationPanel({ draftId, draftTitle, draftContent, onApply }
         ))}
       </div>
 
+      {todoQueue.length > 0 && (
+        <div className="mb-4 rounded-lg border border-warning-200 bg-warning-50 p-3 dark:bg-warning-900/20">
+          <div className="mb-2 flex items-center gap-2 text-sm font-medium text-warning-700 dark:text-warning-300">
+            <Clock className="size-4" />
+            {t('aiCreation.todoQueue')} ({todoQueue.length})
+          </div>
+          <div className="space-y-2">
+            {todoQueue.map((item, index) => (
+              <div
+                key={item.id}
+                className="flex items-center justify-between rounded-md bg-white p-2 text-sm dark:bg-default-100">
+                <div className="flex items-center gap-2">
+                  <span className="text-xs text-default-500">#{index + 1}</span>
+                  <span className="line-clamp-1">{item.content}</span>
+                </div>
+                <Button
+                  size="sm"
+                  variant="light"
+                  isIconOnly
+                  onPress={() => removeFromTodoQueue(item.id)}>
+                  <X className="size-3" />
+                </Button>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
       <div className="mt-4 rounded-xl bg-default-100 p-2">
-        <form
-          ref={formRef}
-          onSubmit={handleSubmit}>
-          <div className="relative">
-            <Textarea
-              value={input}
-              onChange={handleInputChange}
-              onKeyDown={handleKeyDown}
-              placeholder={t('aiCreation.inputPlaceholder')}
-              minRows={1}
-              maxRows={10}
-              className="pr-20"
-              disabled={isLoading}
-            />
-            <div className="absolute bottom-2 right-2">
-              {isLoading ? (
+        {isLoading ? (
+          <form onSubmit={handleQueueSubmit}>
+            <div className="relative">
+              <Textarea
+                value={queueInput}
+                onChange={(e) => setQueueInput(e.target.value)}
+                onKeyDown={handleQueueKeyDown}
+                placeholder={t('aiCreation.queuePlaceholder')}
+                minRows={1}
+                maxRows={10}
+                className="pr-20"
+              />
+              <div className="absolute bottom-2 right-2 flex gap-2">
                 <Button
                   size="sm"
                   variant="flat"
                   color="danger"
-                  onPress={stop}>
+                  onPress={() => {
+                    stop();
+                    setShouldAutoProcess(false); // Disable auto-processing after stop
+                  }}>
                   {t('aiCreation.stop')}
                 </Button>
-              ) : (
                 <Button
                   type="submit"
                   size="sm"
-                  isIconOnly
-                  disabled={!input.trim()}>
+                  variant="flat"
+                  disabled={!queueInput.trim()}>
+                  {t('aiCreation.addToQueue')}
+                </Button>
+              </div>
+            </div>
+          </form>
+        ) : (
+          <form
+            ref={formRef}
+            onSubmit={(e) => {
+              e.preventDefault();
+              setShouldAutoProcess(true); // Enable auto-processing when user manually submits
+              if (input.trim()) {
+                handleSubmit(e);
+              } else if (todoQueue.length > 0) {
+                processNextTodoItem();
+              }
+            }}>
+            <div className="relative">
+              <Textarea
+                value={input}
+                onChange={handleInputChange}
+                onKeyDown={handleKeyDown}
+                placeholder={todoQueue.length > 0 ? t('aiCreation.continueQueuePlaceholder') || '继续处理队列任务 (回车) 或输入新指令...' : t('aiCreation.inputPlaceholder')}
+                minRows={1}
+                maxRows={10}
+                className="pr-20"
+              />
+              <div className="absolute bottom-2 right-2">
+                <Button
+                  type="submit"
+                  size="sm"
+                  isIconOnly>
                   <CornerDownLeft className="size-4" />
                 </Button>
-              )}
+              </div>
             </div>
-          </div>
-        </form>
+          </form>
+        )}
       </div>
     </div>
   );

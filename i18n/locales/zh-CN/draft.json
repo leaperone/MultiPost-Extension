@@ -135,6 +135,9 @@
     }
   },
   "aiCreation": {
+    "todoQueue": "待办队列",
+    "queuePlaceholder": "在这里写下你的待办事项...",
+    "addToQueue": "提交",
     "initialMessage": "你好！我是你的 AI 创作助手。我已经加载了当前的草稿，你可以直接让我帮你创作，或者提出更具体的要求。",
     "toast": {
       "autoApplied": "已自动应用修改",
