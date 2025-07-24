@@ -119,6 +119,13 @@ export function ChatCreationPanel({ draftId, draftTitle, draftContent, onApply }
               ],
         );
       }
+      
+      // Auto-focus input after generation completes
+      setTimeout(() => {
+        if (inputRef.current) {
+          inputRef.current.focus();
+        }
+      }, 100);
     },
   });
 
@@ -136,9 +143,22 @@ export function ChatCreationPanel({ draftId, draftTitle, draftContent, onApply }
     }
   }, [messages, draftId, setChatHistory]);
 
+  // Auto-focus input when component mounts with a draftId
+  useEffect(() => {
+    if (draftId) {
+      setTimeout(() => {
+        if (inputRef.current) {
+          inputRef.current.focus();
+        }
+      }, 100);
+    }
+  }, [draftId]);
+
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const formRef = useRef<HTMLFormElement>(null);
   const isAtBottomRef = useRef(true);
+  const inputRef = useRef<HTMLTextAreaElement>(null);
+  const queueInputRef = useRef<HTMLTextAreaElement>(null);
 
   useEffect(() => {
     const element = scrollContainerRef.current;
@@ -279,6 +299,12 @@ export function ChatCreationPanel({ draftId, draftTitle, draftContent, onApply }
     setInput('');
     setTodoQueue([]);
     setQueueInput('');
+    // Auto-focus input after new chat
+    setTimeout(() => {
+      if (inputRef.current) {
+        inputRef.current.focus();
+      }
+    }, 100);
   };
 
   // Todo queue management functions
@@ -539,6 +565,7 @@ export function ChatCreationPanel({ draftId, draftTitle, draftContent, onApply }
           <form onSubmit={handleQueueSubmit}>
             <div className="relative">
               <Textarea
+                ref={queueInputRef}
                 value={queueInput}
                 onChange={(e) => setQueueInput(e.target.value)}
                 onKeyDown={handleQueueKeyDown}
@@ -582,6 +609,7 @@ export function ChatCreationPanel({ draftId, draftTitle, draftContent, onApply }
             }}>
             <div className="relative">
               <Textarea
+                ref={inputRef}
                 value={input}
                 onChange={handleInputChange}
                 onKeyDown={handleKeyDown}
