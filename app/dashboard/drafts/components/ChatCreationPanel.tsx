@@ -104,9 +104,23 @@ export function ChatCreationPanel({ draftId, draftTitle, draftContent, onApply }
               ];
 
           // 同步到store
-          setSuggestions(draftId, newSuggestions);
+          // setSuggestions(draftId, newSuggestions);
           return newSuggestions;
         });
+
+        setSuggestions(draftId, [
+          ...suggestions,
+          ...(suggestions.some((s) => s.messageId === message.id)
+            ? []
+            : [
+                {
+                  messageId: message.id,
+                  title,
+                  content: newContent,
+                  status: autoApply ? ('applied' as const) : ('pending' as const),
+                },
+              ]),
+        ]);
       }
     },
   });
@@ -224,9 +238,10 @@ export function ChatCreationPanel({ draftId, draftTitle, draftContent, onApply }
     setSuggestionsState((prev) => {
       const newSuggestions = prev.map((s) => (s.messageId === messageId ? { ...s, status: 'applied' as const } : s));
       // 同步到store
-      setSuggestions(draftId, newSuggestions);
+      // setSuggestions(draftId, newSuggestions);
       return newSuggestions;
     });
+    setSuggestions(draftId, suggestions.map((s) => (s.messageId === messageId ? { ...s, status: 'applied' as const } : s)));
   };
 
   const handleCopy = (message: Message) => {

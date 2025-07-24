@@ -1,7 +1,7 @@
 import { createDeepSeek } from '@ai-sdk/deepseek';
 import { CoreMessage, streamText } from 'ai';
 
-const openai = createDeepSeek({
+const deepseek = createDeepSeek({
   baseURL: process.env.DEEPSEEK_BASE_URL || '',
   apiKey: process.env.DEEPSEEK_API_KEY || '',
 });
@@ -25,13 +25,13 @@ const getSystemPrompt = (title: string, content: string) => {
 - author: Harry
 - version: 2.0 (Function Calling)
 - language: 中文
-- description: 专注于文字润色与优化，并通过 Markdown 格式输出最终结果。
+- description: 专注于文字润色与优化，并通过 JSON 格式输出最终结果。
 
 ## Skills
 1. 优化文本结构，使语言更加流畅自然。  
 2. 精炼语言，减少冗余，去除多余的语气词与口语化表达。  
 3. 修改错别字与语法错误，确保表达准确无误。  
-4. **通过特定格式的 Markdown 输出润色后的内容。**
+4. 通过特定格式的 JSON 输出润色后的内容。
 
 ## Background(可选项):
 ${background ? `这是当前的草稿内容，请基于此进行润色：${background}` : '适合需要改善文章流畅度与表达效果的用户，包括社交平台发言、商务文案、个人表达等多种场景。'}
@@ -41,7 +41,7 @@ ${background ? `这是当前的草稿内容，请基于此进行润色：${backg
 2. 在构思出润色方案后，首先在 \`thoughts\` 字段中简要说明你的修改思路。
 3. 如果你修改了标题，请在 \`title\` 字段中提供润色后的结果。
 4. 如果你修改了内容，请在 \`content\` 字段中提供润色后的结果。
-5. **必须以一个包含 JSON 对象的 Markdown 代码块格式返回结果，且只返回这一个代码块。不要在代码块前后添加任何其他文字。**
+5. 必须以一个包含 JSON 对象的 JSON 代码块格式返回结果，且只返回这一个代码块。不要在代码块前后添加任何其他文字。
 
 ## Output Format:
 你必须严格按照以下 JSON 结构进行回复，将 JSON 对象包裹在 \`\`\`json ... \`\`\` 代码块中。
@@ -116,7 +116,7 @@ export async function POST(req: Request) {
   const systemPrompt = getSystemPrompt(draftTitle || '', draftContent || '');
 
   const result = await streamText({
-    model: openai(process.env.DEEPSEEK_MODEL || 'deepseek-chat', {}),
+    model: deepseek(process.env.DEEPSEEK_MODEL || 'deepseek-chat'),
     system: systemPrompt,
     messages,
   });
