@@ -3,17 +3,20 @@
 import { Button, Textarea, Select, SelectItem } from '@heroui/react';
 import { ImageIcon } from 'lucide-react';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useForm } from 'react-hook-form';
+import { Controller, useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { ImageGenerationSchema, ImageSize, Style, Color, Composition } from '@/app/api/draw/image/types';
 import { useTranslation } from '@/i18n/client';
+import React, { useState } from 'react';
+import { useChat } from 'ai/react';
 
 interface GenerationFormProps {
   onSubmit: (data: z.infer<typeof ImageGenerationSchema>) => Promise<void>;
   loading?: boolean;
+  extraPrompt?: string;
 }
 
-export function GenerationForm({ onSubmit, loading }: GenerationFormProps) {
+export function GenerationForm({ onSubmit, loading, extraPrompt }: GenerationFormProps) {
   const { t } = useTranslation('images');
   const form = useForm<z.infer<typeof ImageGenerationSchema>>({
     resolver: zodResolver(ImageGenerationSchema),
@@ -28,20 +31,111 @@ export function GenerationForm({ onSubmit, loading }: GenerationFormProps) {
     },
   });
 
+  // useChat for AI prompt optimization
+  const {
+    messages: aiMessages,
+    isLoading: aiOptimizing,
+    append: appendAiMessage,
+  } = useChat({
+    api: '/api/draw/image/prompt',
+    initialMessages: [],
+    body: {},
+    onFinish: (message) => {
+      // Try to extract optimized prompt from AI response
+      const content = message.content;
+      const match = content.match(/```json\n([\s\S]+?)\n```/);
+      if (match) {
+        try {
+          const parsed = JSON.parse(match[1]);
+          if (parsed.prompt) {
+            setOptimizedPrompt(parsed.prompt);
+          }
+        } catch {}
+      }
+    },
+  });
+  const [optimizedPrompt, setOptimizedPrompt] = useState<string | null>(null);
+
+  /**
+   * Handle form submit, append extraPrompt if provided
+   * @param {z.infer<typeof ImageGenerationSchema>} data - form data
+   */
+  const handleSubmit = async (data: z.infer<typeof ImageGenerationSchema>) => {
+    const prompt = extraPrompt ? `${data.prompt} ${extraPrompt}` : data.prompt;
+    await onSubmit({ ...data, prompt });
+  };
+
+  /**
+   * Trigger AI prompt optimization
+   */
+  const handleOptimizePrompt = () => {
+    setOptimizedPrompt(null);
+    const currentPrompt = extraPrompt ? `${form.getValues('prompt')} ${extraPrompt}` : form.getValues('prompt');
+    appendAiMessage({ role: 'user', content: currentPrompt });
+  };
+
+  /**
+   * Fill optimized prompt into input
+   */
+  const handleFillOptimized = () => {
+    if (optimizedPrompt) {
+      form.setValue('prompt', optimizedPrompt);
+    }
+  };
+
   return (
     <div className="space-y-4">
       {/* 提示词输入 */}
-      <Textarea
-        isRequired
-        isClearable
-        label={'Prompt'}
-        minRows={5}
-        placeholder={t('generation_page.prompt_placeholder')}
-        {...form.register('prompt')}
-        disabled={loading}
-        isInvalid={!!form.formState.errors.prompt}
-        errorMessage={form.formState.errors.prompt?.message}
+      <Controller
+        name="prompt"
+        control={form.control}
+        render={({ field, fieldState }) => (
+          <Textarea
+            isRequired
+            label={'Prompt'}
+            minRows={5}
+            placeholder={t('generation_page.prompt_placeholder')}
+            // Spread the field props here. This includes value, onChange, onBlur, etc.
+            {...field}
+            disabled={loading}
+            isInvalid={!!fieldState.error}
+            errorMessage={fieldState.error?.message}
+          />
+        )}
       />
+
+      {/* AI 优化按钮和结果展示（流式） */}
+      <div className="flex flex-col gap-2">
+        <div className="flex items-center gap-2">
+          <Button
+            color="secondary"
+            size="sm"
+            isLoading={aiOptimizing}
+            disabled={aiOptimizing || loading}
+            onPress={handleOptimizePrompt}>
+            AI优化提示词
+          </Button>
+          {optimizedPrompt && (
+            <Button
+              color="success"
+              size="sm"
+              variant="flat"
+              onPress={handleFillOptimized}>
+              填充到输入框
+            </Button>
+          )}
+        </div>
+        {/* AI 优化流式消息展示 */}
+        <div className="space-y-1 text-xs text-gray-700 dark:text-gray-200">
+          {(() => {
+            // 只保留最近 6 条消息
+            const lastSix = aiMessages.slice(-6);
+            // 找到最后一条 AI 生成（assistant）的消息
+            const lastAssistantMsg = [...lastSix].reverse().find((m) => m.role === 'assistant');
+            return lastAssistantMsg ? <div className="text-blue-600">{lastAssistantMsg.content}</div> : null;
+          })()}
+        </div>
+      </div>
 
       {/* 生成参数设置 */}
       <div className="flex flex-wrap justify-between gap-2">
@@ -119,7 +213,7 @@ export function GenerationForm({ onSubmit, loading }: GenerationFormProps) {
         size="lg"
         isLoading={loading}
         fullWidth
-        onPress={() => form.handleSubmit(onSubmit)()}
+        onPress={() => form.handleSubmit(handleSubmit)()}
         startContent={!loading && <ImageIcon />}>
         {loading ? t('generation_page.button.generating') : t('generation_page.button.generate')}
       </Button>
