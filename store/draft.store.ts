@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
+import { PosterGenerationSchema } from '@/app/dashboard/draw/poster/types';
 
 /**
  * Draft publish state interface
@@ -15,6 +16,7 @@ interface DraftPublishState {
   lastActiveTab: string;
   // Image generation
   lastImagePrompt: string;
+  lastPosterForm: PosterGenerationSchema;
 }
 
 /**
@@ -31,6 +33,13 @@ const initState: DraftPublishState = {
   lastActiveTab: 'drafts',
   // Image generation
   lastImagePrompt: '',
+  lastPosterForm: {
+    prompt: '',
+    model: 'deepseek-v3',
+    width: 1080,
+    height: 1440,
+    category: 'category.social_media_generator',
+  },
 };
 
 /**
@@ -55,6 +64,7 @@ interface DraftStore extends DraftPublishState {
   setLastActiveTab: (tab: string) => void;
   // Image generation actions
   setLastImagePrompt: (prompt: string) => void;
+  setLastPosterForm: (form: PosterGenerationSchema) => void;
 }
 
 /**
@@ -160,6 +170,11 @@ export const useDraftStore = create(
        * Set last image generation prompt
        */
       setLastImagePrompt: (prompt: string) => set({ lastImagePrompt: prompt }),
+
+      /**
+       * Set last poster form
+       */
+      setLastPosterForm: (form: PosterGenerationSchema) => set({ lastPosterForm: form }),
     }),
     {
       name: 'draft-publish-selection',

@@ -20,41 +20,59 @@ import { PosterGenerationSchema, ImageSize } from '../types';
 import { useTranslation } from '@/i18n/client';
 import { useEffect, useState } from 'react';
 import { getAvailableModels } from '../action';
+import { useChat } from 'ai/react';
 
 interface GenerationFormProps {
   onSubmit: (data: z.infer<typeof PosterGenerationSchema>) => Promise<void>;
   loading?: boolean;
   initialValues?: z.infer<typeof PosterGenerationSchema> | null;
+  extraPrompt?: string;
 }
 
 // 为 ImageSize 元素定义类型
 type ImageSizeItem = (typeof ImageSize)[number];
 
-export function GenerationForm({ onSubmit, loading, initialValues }: GenerationFormProps) {
+export function GenerationForm({ onSubmit, loading, initialValues, extraPrompt }: GenerationFormProps) {
   const { t } = useTranslation('poster');
   const [models, setModels] = useState<string[]>([]);
   const [loadingModels, setLoadingModels] = useState(false);
   const [isPopoverOpen, setIsPopoverOpen] = useState(false);
 
+  // useChat for AI prompt optimization
+  const {
+    messages: aiMessages,
+    isLoading: aiOptimizing,
+    append: appendAiMessage,
+  } = useChat({
+    api: '/api/draw/poster/prompt',
+    initialMessages: [],
+    body: {},
+    onFinish: (message) => {
+      // Try to extract optimized prompt from AI response
+      const content = message.content;
+      const match = content.match(/```json\n([\s\S]+?)\n```/);
+      if (match) {
+        try {
+          const parsed = JSON.parse(match[1]);
+          if (parsed.prompt) {
+            setOptimizedPrompt(parsed.prompt);
+          }
+        } catch {}
+      }
+    },
+  });
+  const [optimizedPrompt, setOptimizedPrompt] = useState<string | null>(null);
+
   const form = useForm<z.infer<typeof PosterGenerationSchema>>({
     resolver: zodResolver(PosterGenerationSchema),
     defaultValues: {
-      prompt:
-        process.env.NODE_ENV === 'development'
-          ? '内容 标题：Andrej Karpathy 的极简笔记法 可选副标题：如何用一个文件管理所有非项目笔记'
-          : '',
-      model: 'deepseek-v3',
-      width: 1080,
-      height: 1440,
+      prompt: initialValues?.prompt || '',
+      model: initialValues?.model ||  'deepseek-v3',
+      width: initialValues?.width || 1080,
+      height: initialValues?.height || 1440,
+      category: initialValues?.category || 'category.social_media_generator',
     },
   });
-
-  // 当initialValues变化时更新表单
-  useEffect(() => {
-    if (initialValues) {
-      form.reset(initialValues);
-    }
-  }, [initialValues, form]);
 
   useEffect(() => {
     async function fetchModels() {
@@ -81,6 +99,24 @@ export function GenerationForm({ onSubmit, loading, initialValues }: GenerationF
     setIsPopoverOpen(false);
   };
 
+  /**
+   * Trigger AI prompt optimization
+   */
+  const handleOptimizePrompt = () => {
+    setOptimizedPrompt(null);
+    const currentPrompt = extraPrompt ? `${form.getValues('prompt')} ${extraPrompt}` : form.getValues('prompt');
+    appendAiMessage({ role: 'user', content: currentPrompt });
+  };
+
+  /**
+   * Fill optimized prompt into input
+   */
+  const handleFillOptimized = () => {
+    if (optimizedPrompt) {
+      form.setValue('prompt', optimizedPrompt);
+    }
+  };
+
   return (
     <div className="space-y-4">
       {/* 提示词输入 */}
@@ -101,6 +137,39 @@ export function GenerationForm({ onSubmit, loading, initialValues }: GenerationF
           />
         )}
       />
+
+      {/* AI 优化按钮和结果展示（流式） */}
+      <div className="flex flex-col gap-2">
+        <div className="flex items-center gap-2">
+          <Button
+            color="secondary"
+            size="sm"
+            isLoading={aiOptimizing}
+            disabled={aiOptimizing || loading}
+            onPress={handleOptimizePrompt}>
+            {t('generation_page.ai_optimize_prompt')}
+          </Button>
+          {optimizedPrompt && (
+            <Button
+              color="success"
+              size="sm"
+              variant="flat"
+              onPress={handleFillOptimized}>
+              {t('generation_page.fill_to_input')}
+            </Button>
+          )}
+        </div>
+        {/* AI 优化流式消息展示 */}
+        <div className="space-y-1 text-xs text-gray-700 dark:text-gray-200">
+          {(() => {
+            // 只保留最近 6 条消息
+            const lastSix = aiMessages.slice(-6);
+            // 找到最后一条 AI 生成（assistant）的消息
+            const lastAssistantMsg = [...lastSix].reverse().find((m) => m.role === 'assistant');
+            return lastAssistantMsg ? <div className="text-blue-600">{lastAssistantMsg.content}</div> : null;
+          })()}
+        </div>
+      </div>
 
       {/* 生成参数设置 */}
       <div className="flex flex-wrap justify-between gap-2">

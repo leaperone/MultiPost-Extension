@@ -23,7 +23,13 @@ function PosterGenerationSection() {
   const editId = searchParams.get('editId');
   const [loading, setLoading] = useState(false);
   const [taskId, setTaskId] = useState<string | null>(null);
-  const [formValues] = useState<z.infer<typeof PosterGenerationSchema> | null>(null);
+  const [formValues] = useState<z.infer<typeof PosterGenerationSchema> | null>({
+    prompt: '',
+    model: 'deepseek-v3',
+    width: 1080,
+    height: 1440,
+    category: 'category.social_media_generator',
+  });
   const [category, setCategory] = useState<string>('category.social_media_generator');
 
   const handleGenerate = async (data: z.infer<typeof PosterGenerationSchema>) => {

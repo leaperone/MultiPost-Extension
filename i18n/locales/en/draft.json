@@ -11,7 +11,8 @@
     "drafts": "Drafts",
     "mediaLibrary": "Library",
     "aiCreation": "AI Creation",
-    "aiImage": "AI Image"
+    "aiImage": "AI Image",
+    "aiPoster": "AI Poster"
   },
   "mediaLibrary": {
     "title": "Media Library",
@@ -183,5 +184,12 @@
       "submitFailed": "Submission failed",
       "createTaskFailed": "Failed to create image generation task"
     }
+  },
+  "aiPoster": {
+    "attachPrompt": "Attach draft content to prompt",
+    "titleLabel": "Title:",
+    "contentLabel": "Content:",
+    "startOver": "Start Over",
+    "insertToDraft": "Insert to Draft"
   }
 }

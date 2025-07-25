@@ -23,6 +23,7 @@ import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from '@/componen
 import { useTranslation } from '@/i18n/client';
 import { nanoid } from 'nanoid';
 import { useDraftStore } from '@/store/draft.store';
+import { PosterGeneratePanel } from './components/PosterGeneratePanel';
 
 export default function DraftsPage() {
   const { t } = useTranslation('draft');
@@ -626,6 +627,15 @@ export default function DraftsPage() {
                     }
                   />
                   <Tab
+                    key="ai-poster"
+                    title={
+                      <div className="flex items-center gap-2">
+                        <BotIcon className="size-4" />
+                        <span>{t('tabs.aiPoster')}</span>
+                      </div>
+                    }
+                  />
+                  <Tab
                     key="media"
                     title={
                       <div className="flex items-center gap-2">
@@ -663,6 +673,15 @@ export default function DraftsPage() {
                 {activeTab === 'ai-image' && (
                   <div className="h-full overflow-y-auto p-4">
                     <ImageGeneratePanel
+                      draftTitle={currentDraftTitle}
+                      draftContent={currentDraftContent}
+                      onInsertImage={handleInsertGeneratedImage}
+                    />
+                  </div>
+                )}
+                {activeTab === 'ai-poster' && (
+                  <div className="h-full overflow-y-auto p-4">
+                    <PosterGeneratePanel
                       draftTitle={currentDraftTitle}
                       draftContent={currentDraftContent}
                       onInsertImage={handleInsertGeneratedImage}

@@ -11,7 +11,8 @@
     "drafts": "草稿",
     "mediaLibrary": "素材库",
     "aiCreation": "AI 创作",
-    "aiImage": "AI 生图"
+    "aiImage": "AI 生图",
+    "aiPoster": "AI 海报"
   },
   "mediaLibrary": {
     "title": "媒体库",
@@ -183,5 +184,12 @@
       "submitFailed": "提交失败",
       "createTaskFailed": "创建图片生成任务失败"
     }
+  },
+  "aiPoster": {
+    "attachPrompt": "附加草稿内容到提示词",
+    "titleLabel": "标题:",
+    "contentLabel": "内容:",
+    "startOver": "重新生成",
+    "insertToDraft": "插入到草稿"
   }
 }

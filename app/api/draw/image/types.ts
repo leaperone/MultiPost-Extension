@@ -88,6 +88,7 @@ export const ImageGenerationSchema = z.object({
   color: z.string().optional(),
   style: z.string().optional(),
   images: z.array(z.string().url()).optional(),
+  extraPrompt: z.string().optional(),
 });
 
 export type ImageGenerationSchema = z.infer<typeof ImageGenerationSchema>;

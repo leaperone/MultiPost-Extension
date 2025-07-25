@@ -37,6 +37,8 @@
     }
   },
   "generation_page": {
+    "ai_optimize_prompt": "AI 提示词",
+    "fill_to_input": "应用",
     "category": "选择模板类型",
     "prompt_placeholder": "描述您想要生成的海报内容...",
     "size": {

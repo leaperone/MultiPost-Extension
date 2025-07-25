@@ -37,6 +37,8 @@
     }
   },
   "generation_page": {
+    "ai_optimize_prompt": "AI Prompt",
+    "fill_to_input": "Apply",
     "prompt_placeholder": "Describe the poster content you want to generate...",
     "size": {
       "label": "Size",
