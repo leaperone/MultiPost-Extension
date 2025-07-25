@@ -29,6 +29,7 @@ export function GenerationForm({ onSubmit, loading, extraPrompt, initPrompt }: G
       style: undefined,
       color: undefined,
       composition: undefined,
+      extraPrompt: extraPrompt || '',
     },
   });
 
@@ -56,15 +57,6 @@ export function GenerationForm({ onSubmit, loading, extraPrompt, initPrompt }: G
     },
   });
   const [optimizedPrompt, setOptimizedPrompt] = useState<string | null>(null);
-
-  /**
-   * Handle form submit, append extraPrompt if provided
-   * @param {z.infer<typeof ImageGenerationSchema>} data - form data
-   */
-  const handleSubmit = async (data: z.infer<typeof ImageGenerationSchema>) => {
-    const prompt = extraPrompt ? `${data.prompt} ${extraPrompt}` : data.prompt;
-    await onSubmit({ ...data, prompt });
-  };
 
   /**
    * Trigger AI prompt optimization
@@ -214,7 +206,7 @@ export function GenerationForm({ onSubmit, loading, extraPrompt, initPrompt }: G
         size="lg"
         isLoading={loading}
         fullWidth
-        onPress={() => form.handleSubmit(handleSubmit)()}
+        onPress={() => form.handleSubmit(onSubmit)()}
         startContent={!loading && <ImageIcon />}>
         {loading ? t('generation_page.button.generating') : t('generation_page.button.generate')}
       </Button>

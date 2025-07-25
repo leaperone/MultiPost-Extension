@@ -93,7 +93,7 @@ export function ImageGeneratePanel({ draftTitle, draftContent, onInsertImage }: 
   const handleSubmit = async (data: z.infer<typeof ImageGenerationSchema>) => {
     // Save the prompt to store
     setLastImagePrompt(data.prompt);
-    
+
     const prefixParts: string[] = [];
     if (includeTitle && draftTitle) {
       prefixParts.push(`${t('aiImage.titleLabel')} ${draftTitle}`);
@@ -123,7 +123,7 @@ export function ImageGeneratePanel({ draftTitle, draftContent, onInsertImage }: 
       await append(
         {
           role: 'user',
-          content: data.prompt,
+          content: `${data.prompt}`,
         },
         {
           body: {
