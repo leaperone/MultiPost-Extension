@@ -13,6 +13,8 @@ interface DraftPublishState {
   isAutoApplyChanges: boolean;
   lastSelectedDraftId: string | null;
   lastActiveTab: string;
+  // Image generation
+  lastImagePrompt: string;
 }
 
 /**
@@ -27,6 +29,8 @@ const initState: DraftPublishState = {
   isAutoApplyChanges: true,
   lastSelectedDraftId: null,
   lastActiveTab: 'drafts',
+  // Image generation
+  lastImagePrompt: '',
 };
 
 /**
@@ -49,6 +53,8 @@ interface DraftStore extends DraftPublishState {
   setIsAutoApplyChanges: (isAutoApply: boolean) => void;
   setLastSelectedDraftId: (id: string | null) => void;
   setLastActiveTab: (tab: string) => void;
+  // Image generation actions
+  setLastImagePrompt: (prompt: string) => void;
 }
 
 /**
@@ -149,6 +155,11 @@ export const useDraftStore = create(
        * Set last active tab
        */
       setLastActiveTab: (tab: string) => set({ lastActiveTab: tab }),
+
+      /**
+       * Set last image generation prompt
+       */
+      setLastImagePrompt: (prompt: string) => set({ lastImagePrompt: prompt }),
     }),
     {
       name: 'draft-publish-selection',

@@ -14,14 +14,15 @@ interface GenerationFormProps {
   onSubmit: (data: z.infer<typeof ImageGenerationSchema>) => Promise<void>;
   loading?: boolean;
   extraPrompt?: string;
+  initPrompt?: string;
 }
 
-export function GenerationForm({ onSubmit, loading, extraPrompt }: GenerationFormProps) {
+export function GenerationForm({ onSubmit, loading, extraPrompt, initPrompt }: GenerationFormProps) {
   const { t } = useTranslation('images');
   const form = useForm<z.infer<typeof ImageGenerationSchema>>({
     resolver: zodResolver(ImageGenerationSchema),
     defaultValues: {
-      prompt: process.env.NODE_ENV === 'development' ? '海边白发红瞳美少女' : '',
+      prompt: initPrompt || '',
       number: 1,
       size: ImageSize.AUTO,
       quality: 'auto',

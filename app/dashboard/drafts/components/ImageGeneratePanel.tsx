@@ -10,6 +10,7 @@ import { toast } from 'sonner';
 import { createImageGeneration, getImageGeneration } from '../../draw/image/action';
 import { FileImage } from 'lucide-react';
 import { useTranslation } from '@/i18n/client';
+import { useDraftStore } from '@/store/draft.store';
 
 interface ImageGeneratePanelProps {
   draftTitle?: string;
@@ -19,6 +20,7 @@ interface ImageGeneratePanelProps {
 
 export function ImageGeneratePanel({ draftTitle, draftContent, onInsertImage }: ImageGeneratePanelProps) {
   const { t } = useTranslation('draft');
+  const { lastImagePrompt, setLastImagePrompt } = useDraftStore();
   type Step = 'form' | 'generating' | 'result';
 
   const [generatedImage, setGeneratedImage] = useState<string | null>(null);
@@ -89,6 +91,9 @@ export function ImageGeneratePanel({ draftTitle, draftContent, onInsertImage }: 
   });
 
   const handleSubmit = async (data: z.infer<typeof ImageGenerationSchema>) => {
+    // Save the prompt to store
+    setLastImagePrompt(data.prompt);
+    
     const prefixParts: string[] = [];
     if (includeTitle && draftTitle) {
       prefixParts.push(`${t('aiImage.titleLabel')} ${draftTitle}`);
@@ -185,6 +190,7 @@ export function ImageGeneratePanel({ draftTitle, draftContent, onInsertImage }: 
             <GenerationForm
               onSubmit={handleSubmit}
               loading={isLoading}
+              initPrompt={lastImagePrompt}
               extraPrompt={`${draftTitle ? `${t('aiImage.titleLabel')} ${draftTitle}` : ''}${
                 draftContent ? `${t('aiImage.contentLabel')} ${draftContent}` : ''
               }`}
