@@ -190,6 +190,8 @@
     "titleLabel": "标题:",
     "contentLabel": "内容:",
     "startOver": "重新生成",
-    "insertToDraft": "插入到草稿"
+    "insertToDraft": "插入到草稿",
+    "taskSubmitted": "海报生成任务已提交",
+    "submitFailed": "提交失败"
   }
 }

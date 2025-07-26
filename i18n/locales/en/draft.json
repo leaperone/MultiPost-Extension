@@ -190,6 +190,8 @@
     "titleLabel": "Title:",
     "contentLabel": "Content:",
     "startOver": "Start Over",
-    "insertToDraft": "Insert to Draft"
+    "insertToDraft": "Insert to Draft",
+    "taskSubmitted": "Poster generation task submitted",
+    "submitFailed": "Submission failed"
   }
 }

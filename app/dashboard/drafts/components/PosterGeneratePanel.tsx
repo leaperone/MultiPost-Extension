@@ -81,11 +81,11 @@ export function PosterGeneratePanel({ draftTitle, draftContent, onInsertImage }:
         throw new Error(response.error);
       }
       setTaskId(response.data.id);
-      toast.success(t('result_waiter.task_submitted'));
+      toast.success(t('aiPoster.taskSubmitted'));
     } catch (error) {
       setStep('form');
       setLoading(false);
-      toast.error(error instanceof Error ? error.message : t('result_waiter.submit_failed'));
+      toast.error(error instanceof Error ? error.message : t('aiPoster.submitFailed'));
     } finally {
       setLoading(false);
     }
