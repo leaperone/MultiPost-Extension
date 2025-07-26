@@ -5,7 +5,7 @@ import { useEffect, useState, useMemo } from 'react';
 import { toast } from 'sonner';
 import { z } from 'zod';
 import { cn } from '@/lib/utils';
-import { Category, PosterGenerationSchema, PosterGenerationStatus } from './types';
+import { PosterGenerationSchema, PosterGenerationStatus } from './types';
 import { generatePoster, getPosterGeneration, getPosterGenerations, updatePosterGeneration } from './action';
 import { GenerationForm } from './components/GenerationForm';
 import { ResultWaiter } from './components/ResultWaiter';
@@ -30,12 +30,10 @@ function PosterGenerationSection() {
     height: 1440,
     category: 'category.social_media_generator',
   });
-  const [category, setCategory] = useState<string>('category.social_media_generator');
 
   const handleGenerate = async (data: z.infer<typeof PosterGenerationSchema>) => {
     try {
       setLoading(true);
-      data.category = category || 'category.social_media_generator';
       const response = await generatePoster(data);
       if (!response.success || !response.data) {
         throw new Error(response.error);
@@ -72,18 +70,6 @@ function PosterGenerationSection() {
           className="mx-auto mb-8 w-full max-w-3xl">
           <CardBody className="space-y-6">
             <div className="flex flex-col gap-4">
-              <div className="flex flex-wrap gap-2">
-                {Category.map((item) => (
-                  <Button
-                    key={item.name}
-                    variant={category === item.name ? 'solid' : 'flat'}
-                    color={category === item.name ? 'primary' : 'default'}
-                    className={category === item.name ? 'font-medium' : ''}
-                    onPress={() => setCategory(item.name)}>
-                    {t(item.name)}
-                  </Button>
-                ))}
-              </div>
               <GenerationForm
                 onSubmit={handleGenerate}
                 loading={loading}

@@ -16,7 +16,7 @@ import { ImageIcon } from 'lucide-react';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm, Controller } from 'react-hook-form';
 import { z } from 'zod';
-import { PosterGenerationSchema, ImageSize } from '../types';
+import { PosterGenerationSchema, ImageSize, Category } from '../types';
 import { useTranslation } from '@/i18n/client';
 import { useEffect, useState } from 'react';
 import { getAvailableModels } from '../action';
@@ -37,7 +37,6 @@ export function GenerationForm({ onSubmit, loading, initialValues, extraPrompt }
   const [models, setModels] = useState<string[]>([]);
   const [loadingModels, setLoadingModels] = useState(false);
   const [isPopoverOpen, setIsPopoverOpen] = useState(false);
-
   // useChat for AI prompt optimization
   const {
     messages: aiMessages,
@@ -67,7 +66,7 @@ export function GenerationForm({ onSubmit, loading, initialValues, extraPrompt }
     resolver: zodResolver(PosterGenerationSchema),
     defaultValues: {
       prompt: initialValues?.prompt || '',
-      model: initialValues?.model ||  'deepseek-v3',
+      model: initialValues?.model || 'deepseek-v3',
       width: initialValues?.width || 1080,
       height: initialValues?.height || 1440,
       category: initialValues?.category || 'category.social_media_generator',
@@ -117,8 +116,26 @@ export function GenerationForm({ onSubmit, loading, initialValues, extraPrompt }
     }
   };
 
+  const handleCategoryChange = (category: string) => {
+    form.setValue('category', category);
+  };
+
   return (
     <div className="space-y-4">
+      <div className="mb-4">
+        <div className="flex flex-wrap gap-2">
+          {Category.map((item) => (
+            <Button
+              key={item.name}
+              variant={form.getValues('category') === item.name ? 'solid' : 'flat'}
+              color={form.getValues('category') === item.name ? 'primary' : 'default'}
+              className={form.getValues('category') === item.name ? 'font-medium' : ''}
+              onPress={() => handleCategoryChange(item.name)}>
+              {t(item.name)}
+            </Button>
+          ))}
+        </div>
+      </div>
       {/* 提示词输入 */}
       <Controller
         name="prompt"

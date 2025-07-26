@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { z } from 'zod';
 import { Button } from '@heroui/react';
 import { GenerationForm } from '@/app/dashboard/draw/poster/components/GenerationForm';
-import { PosterGenerationSchema, Category } from '@/app/dashboard/draw/poster/types';
+import { PosterGenerationSchema } from '@/app/dashboard/draw/poster/types';
 import { generatePoster, getPosterGeneration } from '@/app/dashboard/draw/poster/action';
 import { ResultWaiter } from '@/app/dashboard/draw/poster/components/ResultWaiter';
 import { FileImage } from 'lucide-react';
@@ -19,14 +19,13 @@ interface PosterGeneratePanelProps {
 }
 
 export function PosterGeneratePanel({ draftTitle, draftContent, onInsertImage }: PosterGeneratePanelProps) {
-  const { t } = useTranslation('poster');
+  const { t } = useTranslation('draft');
   const { lastPosterForm, setLastPosterForm } = useDraftStore();
   type Step = 'form' | 'generating' | 'result';
 
   const [generatedImage, setGeneratedImage] = useState<string | null>(null);
   const [step, setStep] = useState<Step>('form');
   const [taskId, setTaskId] = useState<string | null>(null);
-  const [category, setCategory] = useState<string>('category.social_media_generator');
   const [loading, setLoading] = useState(false);
   const [includeTitle, setIncludeTitle] = useState(true);
   const [includeContent, setIncludeContent] = useState(true);
@@ -71,7 +70,6 @@ export function PosterGeneratePanel({ draftTitle, draftContent, onInsertImage }:
       data.prompt = `${promptPrefix}\n\n---\n\n${data.prompt}`;
     }
 
-    data.category = category;
     setGeneratedImage(null);
     setTaskId(null);
     setStep('generating');
@@ -147,20 +145,6 @@ export function PosterGeneratePanel({ draftTitle, draftContent, onInsertImage }:
                 )}
               </div>
             )}
-            <div className="mb-4">
-              <div className="flex flex-wrap gap-2">
-                {Category.map((item) => (
-                  <Button
-                    key={item.name}
-                    variant={category === item.name ? 'solid' : 'flat'}
-                    color={category === item.name ? 'primary' : 'default'}
-                    className={category === item.name ? 'font-medium' : ''}
-                    onPress={() => setCategory(item.name)}>
-                    {t(item.name)}
-                  </Button>
-                ))}
-              </div>
-            </div>
             <GenerationForm
               onSubmit={handleSubmit}
               loading={loading}
