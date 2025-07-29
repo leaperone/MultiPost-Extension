@@ -14,6 +14,13 @@ const storage = new Storage({
 
 const ACTIONS_NOT_NEED_TRUST_DOMAIN = ['MULTIPOST_EXTENSION_REQUEST_TRUST_DOMAIN'];
 
+function getRightAction(action: string) {
+  if (action.startsWith('MUTLIPOST')) {
+    return action.replace(/^MUTLIPOST/, 'MULTIPOST');
+  }
+  return action;
+}
+
 async function isOriginTrusted(origin: string, action: string): Promise<boolean> {
   if (ACTIONS_NOT_NEED_TRUST_DOMAIN.includes(action)) {
     return true;
@@ -36,14 +43,9 @@ window.addEventListener('message', async (event) => {
   if (request.type !== 'request') {
     return;
   }
-
-  // 修正action中的拼写错误
-  if (request.action.startsWith('MUTLIPOST')) {
-    request.action = request.action.replace(/^MUTLIPOST/, 'MULTIPOST');
-  }
-
+  
   // 验证来源是否可信
-  const isTrusted = await isOriginTrusted(new URL(event.origin).hostname, request.action);
+  const isTrusted = await isOriginTrusted(new URL(event.origin).hostname, getRightAction(request.action));
   if (!isTrusted) {
     event.source.postMessage({
       type: 'response',
@@ -60,7 +62,12 @@ window.addEventListener('message', async (event) => {
 });
 
 function defaultHandler<T>(request: ExtensionExternalRequest<T>, event: MessageEvent) {
-  chrome.runtime.sendMessage(request).then((response) => {
+  const newRequest = {
+    ...request,
+    action: getRightAction(request.action),
+  };
+
+  chrome.runtime.sendMessage(newRequest).then((response) => {
     event.source.postMessage(successResponse(request, response));
   });
 }
