@@ -53,10 +53,10 @@ export const ping = async (withPlatforms: boolean = false) => {
 };
 
 export const linkExtensionMessageHandler = async (request, sender, sendResponse) => {
-  if (request.action === 'MUTLIPOST_EXTENSION_LINK_EXTENSION') {
+  if (request.action === 'MULTIPOST_EXTENSION_LINK_EXTENSION') {
     console.log('request', request);
     const params = {
-      action: 'MUTLIPOST_EXTENSION_LINK_EXTENSION',
+      action: 'MULTIPOST_EXTENSION_LINK_EXTENSION',
       apiKey: request.data.apiKey,
     };
 
@@ -71,7 +71,7 @@ export const linkExtensionMessageHandler = async (request, sender, sendResponse)
     });
 
     const linkExtensionListener = (message, authSender, authSendResponse) => {
-      if (message.type === 'MUTLIPOST_EXTENSION_LINK_EXTENSION_CONFIRM') {
+      if (message.type === 'MULTIPOST_EXTENSION_LINK_EXTENSION_CONFIRM') {
         const { confirm } = message;
         sendResponse({ confirm });
         authSendResponse('success');

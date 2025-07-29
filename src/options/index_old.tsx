@@ -100,7 +100,7 @@ const Options = () => {
 
           // Notify tabs manager about new tabs
           chrome.runtime.sendMessage({
-            type: 'MUTLIPOST_EXTENSION_TABS_MANAGER_REQUEST_ADD_TABS',
+            type: 'MULTIPOST_EXTENSION_TABS_MANAGER_REQUEST_ADD_TABS',
             data: data,
             tabs: tabs,
           });
@@ -149,7 +149,7 @@ const Options = () => {
           if (tabId === newTab.id && info.status === 'complete') {
             chrome.tabs.onUpdated.removeListener(listener);
             chrome.tabs
-              .sendMessage(newTab.id!, { type: 'MUTLIPOST_EXTENSION_REQUEST_SCRAPER_START' })
+              .sendMessage(newTab.id!, { type: 'MULTIPOST_EXTENSION_REQUEST_SCRAPER_START' })
               .then(async (scraperResult) => {
                 if (currentTab?.id) {
                   await chrome.tabs.update(currentTab.id, { active: true });

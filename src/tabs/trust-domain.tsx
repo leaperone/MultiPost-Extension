@@ -84,7 +84,7 @@ const TrustDomain = () => {
         });
       }
       chrome.runtime.sendMessage({
-        type: 'MUTLIPOST_EXTENSION_TRUST_DOMAIN_CONFIRM',
+        type: 'MULTIPOST_EXTENSION_TRUST_DOMAIN_CONFIRM',
         origin: params.origin,
         trusted: trust,
         status: trust ? 'confirm' : 'cancel',

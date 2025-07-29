@@ -8,7 +8,7 @@ function TabsManager() {
 
   useEffect(() => {
     const interval = setInterval(() => {
-      chrome.runtime.sendMessage({ type: 'MUTLIPOST_EXTENSION_TABS_MANAGER_REQUEST_TABS' }).then((data) => {
+      chrome.runtime.sendMessage({ type: 'MULTIPOST_EXTENSION_TABS_MANAGER_REQUEST_TABS' }).then((data) => {
         setTabGroup(data);
       });
     }, 1000);
@@ -46,7 +46,7 @@ function TabsManager() {
   };
 
   const handleReloadTab = (tabGroup: TabManagerMessage, tabId: number) => {
-    chrome.runtime.sendMessage({ type: 'MUTLIPOST_EXTENSION_REQUEST_PUBLISH_RELOAD', data: { tabId, tabGroup } });
+    chrome.runtime.sendMessage({ type: 'MULTIPOST_EXTENSION_REQUEST_PUBLISH_RELOAD', data: { tabId, tabGroup } });
   };
 
   // 过滤掉没有标签的组

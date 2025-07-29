@@ -64,10 +64,10 @@ chrome.tabs.onRemoved.addListener((tabId) => {
 let currentSyncData: SyncData | null = null;
 let currentPublishPopup: chrome.windows.Window | null = null;
 const defaultMessageHandler = (request, sender, sendResponse) => {
-  if (request.action === 'MUTLIPOST_EXTENSION_CHECK_SERVICE_STATUS') {
+  if (request.action === 'MULTIPOST_EXTENSION_CHECK_SERVICE_STATUS') {
     sendResponse({ extensionId: chrome.runtime.id });
   }
-  if (request.action === 'MUTLIPOST_EXTENSION_PUBLISH') {
+  if (request.action === 'MULTIPOST_EXTENSION_PUBLISH') {
     const data = request.data as SyncData;
     currentSyncData = data;
     (async () => {
@@ -79,21 +79,21 @@ const defaultMessageHandler = (request, sender, sendResponse) => {
       });
     })();
   }
-  if (request.action === 'MUTLIPOST_EXTENSION_PLATFORMS') {
+  if (request.action === 'MULTIPOST_EXTENSION_PLATFORMS') {
     getPlatformInfos().then((platforms) => {
       sendResponse({ platforms });
     });
   }
-  if (request.action === 'MUTLIPOST_EXTENSION_GET_ACCOUNT_INFOS') {
+  if (request.action === 'MULTIPOST_EXTENSION_GET_ACCOUNT_INFOS') {
     getAllAccountInfo().then((accountInfo) => {
       sendResponse({ accountInfo });
     });
   }
-  if (request.action === 'MUTLIPOST_EXTENSION_OPEN_OPTIONS') {
+  if (request.action === 'MULTIPOST_EXTENSION_OPEN_OPTIONS') {
     chrome.runtime.openOptionsPage();
     sendResponse({ extensionId: chrome.runtime.id });
   }
-  if (request.action === 'MUTLIPOST_EXTENSION_REFRESH_ACCOUNT_INFOS') {
+  if (request.action === 'MULTIPOST_EXTENSION_REFRESH_ACCOUNT_INFOS') {
     chrome.windows.create({
       url: chrome.runtime.getURL(`tabs/refresh-accounts.html`),
       type: 'popup',
@@ -102,10 +102,10 @@ const defaultMessageHandler = (request, sender, sendResponse) => {
       focused: request.data.isFocused || false,
     });
   }
-  if (request.action === 'MUTLIPOST_EXTENSION_PUBLISH_REQUEST_SYNC_DATA') {
+  if (request.action === 'MULTIPOST_EXTENSION_PUBLISH_REQUEST_SYNC_DATA') {
     sendResponse({ syncData: currentSyncData });
   }
-  if (request.action === 'MUTLIPOST_EXTENSION_PUBLISH_NOW') {
+  if (request.action === 'MULTIPOST_EXTENSION_PUBLISH_NOW') {
     const data = request.data as SyncData;
     if (Array.isArray(data.platforms) && data.platforms.length > 0) {
       (async () => {

@@ -8,7 +8,7 @@ export const config: PlasmoCSConfig = {
 };
 
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
-  if (message.type === 'MUTLIPOST_EXTENSION_REQUEST_SCRAPER_START') {
+  if (message.type === 'MULTIPOST_EXTENSION_REQUEST_SCRAPER_START') {
     const scrapeFunc = async () => {
       const articleData = await scrapeContent();
       await new Promise((resolve) => setTimeout(resolve, 1000));

@@ -4,13 +4,13 @@ const storage = new Storage({ area: 'local' });
 
 export const trustDomainMessageHandler = async (request, sender, sendResponse) => {
   // 获取信任域名列表
-  if (request.action === 'MUTLIPOST_EXTENSION_GET_TRUSTED_DOMAINS') {
+  if (request.action === 'MULTIPOST_EXTENSION_GET_TRUSTED_DOMAINS') {
     const trustedDomains = (await storage.get<Array<{ id: string; domain: string }>>('trustedDomains')) || [];
     return sendResponse({ trustedDomains });
   }
 
   // 删除特定信任域名
-  if (request.action === 'MUTLIPOST_EXTENSION_DELETE_TRUSTED_DOMAIN') {
+  if (request.action === 'MULTIPOST_EXTENSION_DELETE_TRUSTED_DOMAIN') {
     const { domainId } = request.data;
 
     console.log('request', request);
@@ -27,7 +27,7 @@ export const trustDomainMessageHandler = async (request, sender, sendResponse) =
     return sendResponse({ success: true, trustedDomains: updatedDomains });
   }
 
-  if (request.action === 'MUTLIPOST_EXTENSION_REQUEST_TRUST_DOMAIN') {
+  if (request.action === 'MULTIPOST_EXTENSION_REQUEST_TRUST_DOMAIN') {
     // 检查域名是否已经被信任
     const trustedDomains = (await storage.get<Array<{ domain: string }>>('trustedDomains')) || [];
     const hostname = new URL(sender.origin).hostname;
@@ -45,7 +45,7 @@ export const trustDomainMessageHandler = async (request, sender, sendResponse) =
     }
 
     const params = {
-      action: 'MUTLIPOST_EXTENSION_REQUEST_TRUST_DOMAIN',
+      action: 'MULTIPOST_EXTENSION_REQUEST_TRUST_DOMAIN',
       origin: hostname,
     };
 
@@ -60,7 +60,7 @@ export const trustDomainMessageHandler = async (request, sender, sendResponse) =
     });
 
     const trustDomainListener = (message, authSender, authSendResponse) => {
-      if (message.type === 'MUTLIPOST_EXTENSION_TRUST_DOMAIN_CONFIRM') {
+      if (message.type === 'MULTIPOST_EXTENSION_TRUST_DOMAIN_CONFIRM') {
         const { trusted, status } = message;
         sendResponse({ trusted, status });
         authSendResponse('success');

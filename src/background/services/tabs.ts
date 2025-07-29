@@ -37,7 +37,7 @@ export const tabsManagerHandleTabUpdated = handleTabUpdated;
 export const tabsManagerHandleTabRemoved = handleTabRemoved;
 
 export const tabsManagerMessageHandler = (request, sender, sendResponse) => {
-  if (request.type === 'MUTLIPOST_EXTENSION_REQUEST_PUBLISH_RELOAD') {
+  if (request.type === 'MULTIPOST_EXTENSION_REQUEST_PUBLISH_RELOAD') {
     const { tabId } = request.data;
     const info = tabsManagerMessages.find((group) => group.tabs.some((t) => t.tab.id === tabId));
     const tabInfo = info?.tabs.find((t) => t.tab.id === tabId);
@@ -54,10 +54,10 @@ export const tabsManagerMessageHandler = (request, sender, sendResponse) => {
 
     sendResponse('success');
   }
-  if (request.type === 'MUTLIPOST_EXTENSION_TABS_MANAGER_REQUEST_TABS') {
+  if (request.type === 'MULTIPOST_EXTENSION_TABS_MANAGER_REQUEST_TABS') {
     sendResponse(getTabsManagerMessages());
   }
-  if (request.type === 'MUTLIPOST_EXTENSION_TABS_MANAGER_REQUEST_ADD_TABS') {
+  if (request.type === 'MULTIPOST_EXTENSION_TABS_MANAGER_REQUEST_ADD_TABS') {
     const { data, tabs } = request;
     addTabsManagerMessages({
       syncData: data,

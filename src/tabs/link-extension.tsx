@@ -83,7 +83,7 @@ const LinkExtension = () => {
       }
 
       chrome.runtime.sendMessage({
-        type: 'MUTLIPOST_EXTENSION_LINK_EXTENSION_CONFIRM',
+        type: 'MULTIPOST_EXTENSION_LINK_EXTENSION_CONFIRM',
         confirm: confirm,
       });
 

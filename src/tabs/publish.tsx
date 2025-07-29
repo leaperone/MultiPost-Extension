@@ -71,10 +71,12 @@ export default function Publish() {
   const autoCloseTimerRef = useRef<number>();
   const countdownTimerRef = useRef<number>();
   const sysnCloseTabsRef = useRef<boolean>(false);
-  const publishedTabsRef = useRef<Array<{
-    tab: chrome.tabs.Tab;
-    platformInfo: SyncDataPlatform;
-  }>>([]);
+  const publishedTabsRef = useRef<
+    Array<{
+      tab: chrome.tabs.Tab;
+      platformInfo: SyncDataPlatform;
+    }>
+  >([]);
 
   async function processArticle(data: SyncData): Promise<SyncData> {
     setNotice(chrome.i18n.getMessage('processingContent'));
@@ -274,7 +276,9 @@ export default function Publish() {
 
       // 更新本地状态
       setPublishedTabs((prev) => prev.map((item) => (item.tab.id === tabId ? { ...item, tab: updatedTab } : item)));
-      publishedTabsRef.current = publishedTabsRef.current.map((t) => (t.tab.id === tabId ? { ...t, tab: updatedTab } : t));
+      publishedTabsRef.current = publishedTabsRef.current.map((t) =>
+        t.tab.id === tabId ? { ...t, tab: updatedTab } : t,
+      );
     } catch (error) {
       console.error('重新加载标签页失败:', error);
       setErrors((prev) => [...prev, chrome.i18n.getMessage('errorReloadTab', [error.message || '未知错误'])]);
@@ -505,7 +509,7 @@ export default function Publish() {
   useEffect(() => {
     chrome.tabs.onUpdated.addListener(handleTabUpdated);
     chrome.tabs.onRemoved.addListener(handleTabRemoved);
-    chrome.runtime.sendMessage({ action: 'MUTLIPOST_EXTENSION_PUBLISH_REQUEST_SYNC_DATA' }, async (response) => {
+    chrome.runtime.sendMessage({ action: 'MULTIPOST_EXTENSION_PUBLISH_REQUEST_SYNC_DATA' }, async (response) => {
       console.log(response);
       const data = response.syncData as SyncData;
       if (!data) return setNotice(chrome.i18n.getMessage('errorGetSyncData'));
@@ -539,7 +543,7 @@ export default function Publish() {
         setTimeout(async () => {
           await focusMainWindow();
           chrome.runtime.sendMessage(
-            { action: 'MUTLIPOST_EXTENSION_PUBLISH_NOW', data: processedData },
+            { action: 'MULTIPOST_EXTENSION_PUBLISH_NOW', data: processedData },
             handlePublishComplete,
           );
         }, 1000 * 1);

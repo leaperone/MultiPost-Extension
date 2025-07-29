@@ -12,7 +12,7 @@ const storage = new Storage({
   area: 'local',
 });
 
-const ACTIONS_NOT_NEED_TRUST_DOMAIN = ['MUTLIPOST_EXTENSION_REQUEST_TRUST_DOMAIN'];
+const ACTIONS_NOT_NEED_TRUST_DOMAIN = ['MULTIPOST_EXTENSION_REQUEST_TRUST_DOMAIN'];
 
 async function isOriginTrusted(origin: string, action: string): Promise<boolean> {
   if (ACTIONS_NOT_NEED_TRUST_DOMAIN.includes(action)) {
@@ -35,6 +35,11 @@ window.addEventListener('message', async (event) => {
 
   if (request.type !== 'request') {
     return;
+  }
+
+  // 修正action中的拼写错误
+  if (request.action.startsWith('MUTLIPOST')) {
+    request.action = request.action.replace(/^MUTLIPOST/, 'MULTIPOST');
   }
 
   // 验证来源是否可信
