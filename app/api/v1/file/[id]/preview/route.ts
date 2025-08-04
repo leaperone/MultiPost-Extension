@@ -1,5 +1,5 @@
 import { NextRequest } from 'next/server';
-import { getEndPoint } from '@/lib/bitiful';
+import { cdnUrl, getEndPoint } from '@/lib/bitiful';
 import { successResp, errorResp } from '@/lib/request';
 import { prisma } from '@/lib/db';
 import { initFile } from '../common';
@@ -28,6 +28,8 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
     } else {
       throw new Error('Unsupported Preview');
     }
+
+    url = cdnUrl(url);
 
     await prisma.fileHosting.update({
       where: { id: fileId },

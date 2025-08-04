@@ -56,7 +56,7 @@ export function getEndPoint(): string {
   return `https://${bucket}.${endpoint}`;
 }
 
-function cdnUrl(url: string): string {
+export function cdnUrl(url: string): string {
   if (process.env.BITIFUL_OSS_CDN_URL) {
     return url.replace(getEndPoint(), process.env.BITIFUL_OSS_CDN_URL);
   }
