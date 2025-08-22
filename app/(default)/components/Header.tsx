@@ -40,7 +40,7 @@ export default function Header() {
             href="/"
             className="flex items-center gap-2">
             <Image
-              src="/MultiPost-Latest.png"
+              src="/icon.png"
               alt="MultiPost Latest Logo"
               width={32}
               height={32}

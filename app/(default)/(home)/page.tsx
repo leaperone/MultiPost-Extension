@@ -1,4 +1,4 @@
-import { Card, CardBody, Button, Link } from '@heroui/react';
+import { Card, CardBody, Button, Link, Image } from '@heroui/react';
 import { Sparkles, Box, Settings, Send, SendIcon, FileTypeIcon } from 'lucide-react';
 import { Icon } from '@iconify/react';
 import { cn } from '@/lib/utils';
@@ -8,7 +8,6 @@ import ScrollScreenChevronDown from '@/components/HomePage/ScrollScreenChevronDo
 import { createTranslation } from '@/i18n/server';
 import { auth } from '@/auth';
 import SocialShareNotifications from '@/components/HomePage/SocialShareNotifications';
-import Image from 'next/image';
 import { GlowingEffect } from '@/components/ui/glowing-effect';
 
 export const metadata = {
@@ -320,7 +319,6 @@ export default async function HomePage() {
                 <Image
                   src="https://2someone-web-static.s3.bitiful.net/2025/05/ea3bb50afe710d57a968c1ac5f4d055f.png"
                   alt="Multi Platform Publishing"
-                  fill
                 />
               </div>
               <div className="absolute -bottom-6 -right-6 -z-0 size-32 rounded-2xl bg-blue-100 dark:bg-blue-900/30"></div>
