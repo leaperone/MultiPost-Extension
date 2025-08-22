@@ -1,5 +1,5 @@
 import { multipostDb } from '@/lib/db';
-import { updatePosterGeneration } from '@/app/dashboard/draw/poster/action';
+import { updatePosterGeneration } from '@/actions/draw/poster';
 import { z } from 'zod';
 import { errorResponse, successResponse } from '@/lib/response';
 

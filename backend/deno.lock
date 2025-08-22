@@ -1,0 +1,136 @@
+{
+  "version": "5",
+  "specifiers": {
+    "jsr:@std/assert@1": "1.0.13",
+    "jsr:@std/internal@^1.0.6": "1.0.10",
+    "npm:@prisma/client@^6.13.0": "6.13.0",
+    "npm:dotenv-cli@8": "8.0.0",
+    "npm:dotenv-cli@8.0.0": "8.0.0",
+    "npm:zod@^3.25.76": "3.25.76"
+  },
+  "jsr": {
+    "@std/assert@1.0.13": {
+      "integrity": "ae0d31e41919b12c656c742b22522c32fb26ed0cba32975cb0de2a273cb68b29",
+      "dependencies": [
+        "jsr:@std/internal"
+      ]
+    },
+    "@std/internal@1.0.10": {
+      "integrity": "e3be62ce42cab0e177c27698e5d9800122f67b766a0bea6ca4867886cbde8cf7"
+    }
+  },
+  "npm": {
+    "@prisma/client@6.13.0": {
+      "integrity": "sha512-8m2+I3dQovkV8CkDMluiwEV1TxV9EXdT6xaCz39O6jYw7mkf5gwfmi+cL4LJsEPwz5tG7sreBwkRpEMJedGYUQ==",
+      "scripts": true,
+      "tarball": "https://registry.npmmirror.com/@prisma/client/-/client-6.13.0.tgz"
+    },
+    "cross-spawn@7.0.6": {
+      "integrity": "sha512-uV2QOWP2nWzsy2aMp8aRibhi9dlzF5Hgh5SHaB9OiTGEyDTiJJyx0uy51QXdyWbtAHNua4XJzUKca3OzKUd3vA==",
+      "dependencies": [
+        "path-key",
+        "shebang-command",
+        "which"
+      ],
+      "tarball": "https://registry.npmmirror.com/cross-spawn/-/cross-spawn-7.0.6.tgz"
+    },
+    "dotenv-cli@8.0.0": {
+      "integrity": "sha512-aLqYbK7xKOiTMIRf1lDPbI+Y+Ip/wo5k3eyp6ePysVaSqbyxjyK3dK35BTxG+rmd7djf5q2UPs4noPNH+cj0Qw==",
+      "dependencies": [
+        "cross-spawn",
+        "dotenv",
+        "dotenv-expand",
+        "minimist"
+      ],
+      "bin": true,
+      "tarball": "https://registry.npmmirror.com/dotenv-cli/-/dotenv-cli-8.0.0.tgz"
+    },
+    "dotenv-expand@10.0.0": {
+      "integrity": "sha512-GopVGCpVS1UKH75VKHGuQFqS1Gusej0z4FyQkPdwjil2gNIv+LNsqBlboOzpJFZKVT95GkCyWJbBSdFEFUWI2A==",
+      "tarball": "https://registry.npmmirror.com/dotenv-expand/-/dotenv-expand-10.0.0.tgz"
+    },
+    "dotenv@16.6.1": {
+      "integrity": "sha512-uBq4egWHTcTt33a72vpSG0z3HnPuIl6NqYcTrKEg2azoEyl2hpW0zqlxysq2pK9HlDIHyHyakeYaYnSAwd8bow==",
+      "tarball": "https://registry.npmmirror.com/dotenv/-/dotenv-16.6.1.tgz"
+    },
+    "isexe@2.0.0": {
+      "integrity": "sha512-RHxMLp9lnKHGHRng9QFhRCMbYAcVpn69smSGcq3f36xjgVVWThj4qqLbTLlq7Ssj8B+fIQ1EuCEGI2lKsyQeIw==",
+      "tarball": "https://registry.npmmirror.com/isexe/-/isexe-2.0.0.tgz"
+    },
+    "minimist@1.2.8": {
+      "integrity": "sha512-2yyAR8qBkN3YuheJanUpWC5U3bb5osDywNB8RzDVlDwDHbocAJveqqj1u8+SVD7jkWT4yvsHCpWqqWqAxb0zCA==",
+      "tarball": "https://registry.npmmirror.com/minimist/-/minimist-1.2.8.tgz"
+    },
+    "path-key@3.1.1": {
+      "integrity": "sha512-ojmeN0qd+y0jszEtoY48r0Peq5dwMEkIlCOu6Q5f41lfkswXuKtYrhgoTpLnyIcHm24Uhqx+5Tqm2InSwLhE6Q==",
+      "tarball": "https://registry.npmmirror.com/path-key/-/path-key-3.1.1.tgz"
+    },
+    "shebang-command@2.0.0": {
+      "integrity": "sha512-kHxr2zZpYtdmrN1qDjrrX/Z1rR1kG8Dx+gkpK1G4eXmvXswmcE1hTWBWYUzlraYw1/yZp6YuDY77YtvbN0dmDA==",
+      "dependencies": [
+        "shebang-regex"
+      ],
+      "tarball": "https://registry.npmmirror.com/shebang-command/-/shebang-command-2.0.0.tgz"
+    },
+    "shebang-regex@3.0.0": {
+      "integrity": "sha512-7++dFhtcx3353uBaq8DDR4NuxBetBzC7ZQOhmTQInHEd6bSrXdiEyzCvG07Z44UYdLShWUyXt5M/yhz8ekcb1A==",
+      "tarball": "https://registry.npmmirror.com/shebang-regex/-/shebang-regex-3.0.0.tgz"
+    },
+    "which@2.0.2": {
+      "integrity": "sha512-BLI3Tl1TW3Pvl70l3yq3Y64i+awpwXqsGBYWkkqMtnbXgrMD+yj7rhW0kuEDxzJaYXGjEW5ogapKNMEKNMjibA==",
+      "dependencies": [
+        "isexe"
+      ],
+      "bin": true,
+      "tarball": "https://registry.npmmirror.com/which/-/which-2.0.2.tgz"
+    },
+    "zod@3.25.76": {
+      "integrity": "sha512-gzUt/qt81nXsFGKIFcC3YnfEAx5NkunCfnDlvuBSSFS02bcXu4Lmea0AFIUwbLWxWPx3d9p8S5QoaujKcNQxcQ==",
+      "tarball": "https://registry.npmmirror.com/zod/-/zod-3.25.76.tgz"
+    }
+  },
+  "remote": {
+    "https://deno.land/x/deno_cron@v1.0.0/cron.ts": "7f984d0c4c7ac4fb1ad3cd241d457e7808a9362735d910abb02dc689883ee3ef",
+    "https://deno.land/x/hono@v4.3.7/client/client.ts": "dcda3887257fa3164db7b32c56665c6e757f0ef047a14f3f9599ef41725c1525",
+    "https://deno.land/x/hono@v4.3.7/client/index.ts": "30def535310a37bede261f1b23d11a9758983b8e9d60a6c56309cee5f6746ab2",
+    "https://deno.land/x/hono@v4.3.7/client/utils.ts": "8be84b49c5c7952666875a8e901fde3044c85c853ea6ba3a7e2c0468478459c0",
+    "https://deno.land/x/hono@v4.3.7/compose.ts": "37d6e33b7db80e4c43a0629b12fd3a1e3406e7d9e62a4bfad4b30426ea7ae4f1",
+    "https://deno.land/x/hono@v4.3.7/context.ts": "c7b59d259bcfe5187c27c537f889def0baab56f98e8e5a4456546023e70717a5",
+    "https://deno.land/x/hono@v4.3.7/helper/cookie/index.ts": "689c84eae410f0444a4598f136a4f859b9122ec6f790dff74412d34405883db8",
+    "https://deno.land/x/hono@v4.3.7/hono-base.ts": "fd7e9c1bba1e13119e95158270011784da3a7c3014c149ba0700e700f840ae0d",
+    "https://deno.land/x/hono@v4.3.7/hono.ts": "23edd0140bf0bd5a68c14ae96e5856a5cec6b844277e853b91025e91ea74f416",
+    "https://deno.land/x/hono@v4.3.7/http-exception.ts": "cd387c6f7357db375ac3375f0346c6da80b46193b661881f660d6b15293fc086",
+    "https://deno.land/x/hono@v4.3.7/mod.ts": "35fd2a2e14b52365e0ad66f168b067363fd0a60d75cbcb1b01685b04de97d60e",
+    "https://deno.land/x/hono@v4.3.7/request.ts": "7b08602858e642d1626c3106c0bedc2aa8d97e30691a079351d9acef7c5955e6",
+    "https://deno.land/x/hono@v4.3.7/router.ts": "880316f561918fc197481755aac2165fdbe2f530b925c5357a9f98d6e2cc85c7",
+    "https://deno.land/x/hono@v4.3.7/router/linear-router/index.ts": "8a2a7144c50b1f4a92d9ee99c2c396716af144c868e10608255f969695efccd0",
+    "https://deno.land/x/hono@v4.3.7/router/linear-router/router.ts": "928d29894e4b45b047a4f453c7f1745c8b1869cd68447e1cb710c7bbf99a4e29",
+    "https://deno.land/x/hono@v4.3.7/router/pattern-router/index.ts": "304a66c50e243872037ed41c7dd79ed0c89d815e17e172e7ad7cdc4bc07d3383",
+    "https://deno.land/x/hono@v4.3.7/router/pattern-router/router.ts": "1b5f68e6af942579d3a40ee834294fea3d1f05fd5f70514e46ae301dd0107e46",
+    "https://deno.land/x/hono@v4.3.7/router/reg-exp-router/index.ts": "52755829213941756159b7a963097bafde5cc4fc22b13b1c7c9184dc0512d1db",
+    "https://deno.land/x/hono@v4.3.7/router/reg-exp-router/node.ts": "7efaa6f4301efc2aad0519c84973061be8555da02e5868409293a1fd98536aaf",
+    "https://deno.land/x/hono@v4.3.7/router/reg-exp-router/router.ts": "632f2fa426b3e45a66aeed03f7205dad6d13e8081bed6f8d1d987b6cad8fb455",
+    "https://deno.land/x/hono@v4.3.7/router/reg-exp-router/trie.ts": "852ce7207e6701e47fa30889a0d2b8bfcd56d8862c97e7bc9831e0a64bd8835f",
+    "https://deno.land/x/hono@v4.3.7/router/smart-router/index.ts": "74f9b4fe15ea535900f2b9b048581915f12fe94e531dd2b0032f5610e61c3bef",
+    "https://deno.land/x/hono@v4.3.7/router/smart-router/router.ts": "dc22a8505a0f345476f07dca3054c0c50a64d7b81c9af5a904476490dfd5cbb4",
+    "https://deno.land/x/hono@v4.3.7/router/trie-router/index.ts": "3eb75e7f71ba81801631b30de6b1f5cefb2c7239c03797e2b2cbab5085911b41",
+    "https://deno.land/x/hono@v4.3.7/router/trie-router/node.ts": "d3e00e8f1ba7fb26896459d5bba882356891a07793387c4655d1864c519a91de",
+    "https://deno.land/x/hono@v4.3.7/router/trie-router/router.ts": "54ced78d35676302c8fcdda4204f7bdf5a7cc907fbf9967c75674b1e394f830d",
+    "https://deno.land/x/hono@v4.3.7/utils/body.ts": "774cb319dfbe886a9d39f12c43dea15a39f9d01e45de0323167cdd5d0aad14d4",
+    "https://deno.land/x/hono@v4.3.7/utils/buffer.ts": "2fae689954b427b51fb84ad02bed11a72eae96692c2973802b3b4c1e39cd5b9c",
+    "https://deno.land/x/hono@v4.3.7/utils/cookie.ts": "662529d55703d2c0bad8736cb1274eb97524c0ef7882d99254fc7c8fa925b46c",
+    "https://deno.land/x/hono@v4.3.7/utils/crypto.ts": "bda0e141bbe46d3a4a20f8fbcb6380d473b617123d9fdfa93e4499410b537acc",
+    "https://deno.land/x/hono@v4.3.7/utils/html.ts": "6ea4f6bf41587a51607dff7a6d2865ef4d5001e4203b07e5c8a45b63a098e871",
+    "https://deno.land/x/hono@v4.3.7/utils/url.ts": "855169632c61d03703bd08cafb27664ba3fdb352892f01687d5cce8fd49e3cb1",
+    "https://deno.land/x/hono@v4.3.7/validator/index.ts": "6c986e8b91dcf857ecc8164a506ae8eea8665792a4ff7215471df669c632ae7c",
+    "https://deno.land/x/hono@v4.3.7/validator/validator.ts": "53f3d2ad442e22f0bc2d85b7d8d90320d4e5ecf5fdd58882f906055d33a18e13"
+  },
+  "workspace": {
+    "dependencies": [
+      "jsr:@std/assert@1",
+      "npm:@prisma/client@^6.13.0",
+      "npm:dotenv-cli@8",
+      "npm:zod@^3.25.76"
+    ]
+  }
+}

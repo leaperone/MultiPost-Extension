@@ -9,7 +9,7 @@
 @layer base {
   :root {
     --background: 0 0% 100%;
-    --foreground: 222.2 84% 4.9%;
+    --foreground: 0 0% 3.9%;
     --card: 0 0% 100%;
     --card-foreground: 0 0% 3.9%;
     --popover: 0 0% 100%;
@@ -133,5 +133,143 @@
 .dark .custom-resize-handle::after {
   border-right-color: hsl(var(--muted-foreground));
   border-bottom-color: hsl(var(--muted-foreground));
+}
+
+/* full-calendar-shadcn.css */
+.fc.fc-theme-standard {
+  --fc-small-font-size: .85em;
+  --fc-page-bg-color: hsla(var(--background));
+  --fc-neutral-bg-color: hsla(var(--muted) / 70%);
+  --fc-neutral-text-color: hsla(var(--muted-foreground));
+  --fc-border-color: hsla(var(--border));
+  --fc-button-text-color: hsla(var(--primary-foreground));
+  --fc-button-bg-color: hsla(var(--primary));
+  --fc-button-border-color: hsla(var(--border));
+  --fc-button-hover-bg-color: hsla(var(--primary) / 90%);
+  --fc-button-hover-border-color: hsla(var(--border));
+  --fc-button-active-bg-color: hsla(var(--primary) / 80%);
+  --fc-button-active-border-color: hsla(var(--border));
+  --fc-event-bg-color: hsla(var(--primary-foreground));
+  --fc-event-border-color: hsla(var(--border));
+  --fc-event-text-color: hsla(var(--primary));
+  --fc-event-selected-overlay-color: hsla(var(--primary) / 40%);
+  --fc-more-link-bg-color: hsla(var(--primary));
+  --fc-more-link-text-color: hsla(var(--primary-foreground));
+  --fc-event-resizer-thickness: 8px;
+  --fc-event-resizer-dot-total-width: 8px;
+  --fc-event-resizer-dot-border-width: 1px;
+  --fc-non-business-color: hsla(var(--muted) / 20%);
+  --fc-bg-event-color: #8fdf82;
+  --fc-bg-event-opacity: 0.3;
+  --fc-highlight-color: hsla(var(--primary) / 10%);
+  --fc-today-bg-color: hsla(var(--accent));
+  --fc-now-indicator-color: red;
+}
+
+/* FullCalendar event status styles for light mode */
+.fc-event.event-status-pending {
+  background-color: #f59e0b !important;
+  border-color: #d97706 !important;
+  color: white !important;
+}
+
+.fc-event.event-status-processing {
+  background-color: #3b82f6 !important;
+  border-color: #2563eb !important;
+  color: white !important;
+}
+
+.fc-event.event-status-completed {
+  background-color: #10b981 !important;
+  border-color: #059669 !important;
+  color: white !important;
+}
+
+.fc-event.event-status-failed {
+  background-color: #ef4444 !important;
+  border-color: #dc2626 !important;
+  color: white !important;
+}
+
+.fc-event.event-status-cancelled {
+  background-color: #6b7280 !important;
+  border-color: #4b5563 !important;
+  color: white !important;
+}
+
+/* Dark mode specific styles for FullCalendar */
+.dark .fc.fc-theme-standard {
+  --fc-page-bg-color: hsla(var(--background));
+  --fc-neutral-bg-color: hsla(var(--muted) / 50%);
+  --fc-neutral-text-color: hsla(var(--muted-foreground));
+  --fc-border-color: hsla(var(--border));
+  --fc-button-text-color: hsla(var(--primary-foreground));
+  --fc-button-bg-color: hsla(var(--primary));
+  --fc-button-border-color: hsla(var(--border));
+  --fc-button-hover-bg-color: hsla(var(--primary) / 80%);
+  --fc-button-hover-border-color: hsla(var(--border));
+  --fc-button-active-bg-color: hsla(var(--primary) / 70%);
+  --fc-button-active-border-color: hsla(var(--border));
+  --fc-event-bg-color: hsla(var(--card));
+  --fc-event-border-color: hsla(var(--border));
+  --fc-event-text-color: hsla(var(--card-foreground));
+  --fc-event-selected-overlay-color: hsla(var(--primary) / 30%);
+  --fc-more-link-bg-color: hsla(var(--primary));
+  --fc-more-link-text-color: hsla(var(--primary-foreground));
+  --fc-non-business-color: hsla(var(--muted) / 10%);
+  --fc-bg-event-color: hsla(var(--accent));
+  --fc-bg-event-opacity: 0.2;
+  --fc-highlight-color: hsla(var(--ring) / 30%);
+  --fc-today-bg-color: hsla(var(--accent) / 50%);
+  --fc-now-indicator-color: hsla(var(--destructive));
+}
+
+/* Dark mode event status styles */
+.dark .fc-event.event-status-pending {
+  background-color: #f59e0b !important;
+  border-color: #fbbf24 !important;
+  color: #1f2937 !important;
+}
+
+.dark .fc-event.event-status-processing {
+  background-color: #3b82f6 !important;
+  border-color: #60a5fa !important;
+  color: white !important;
+}
+
+.dark .fc-event.event-status-completed {
+  background-color: #10b981 !important;
+  border-color: #34d399 !important;
+  color: white !important;
+}
+
+.dark .fc-event.event-status-failed {
+  background-color: #ef4444 !important;
+  border-color: #f87171 !important;
+  color: white !important;
+}
+
+.dark .fc-event.event-status-cancelled {
+  background-color: #6b7280 !important;
+  border-color: #9ca3af !important;
+  color: white !important;
+}
+
+/* Additional dark mode enhancements */
+.dark .fc-toolbar-title {
+  color: hsla(var(--foreground)) !important;
+}
+
+.dark .fc-col-header-cell {
+  background-color: hsla(var(--muted) / 30%) !important;
+}
+
+.dark .fc-daygrid-day-number {
+  color: hsla(var(--foreground)) !important;
+}
+
+.dark .fc-day-today .fc-daygrid-day-number {
+  color: hsla(var(--primary)) !important;
+  font-weight: 600;
 }
 

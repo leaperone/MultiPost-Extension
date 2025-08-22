@@ -16,10 +16,10 @@ import { ImageIcon } from 'lucide-react';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm, Controller } from 'react-hook-form';
 import { z } from 'zod';
-import { PosterGenerationSchema, ImageSize, Category } from '../types';
+import { PosterGenerationSchema, ImageSize, Category } from '@/actions/draw/poster/types';
 import { useTranslation } from '@/i18n/client';
 import { useEffect, useState } from 'react';
-import { getAvailableModels } from '../action';
+import { getAvailableModels } from '@/actions/draw/poster';
 import { useChat } from 'ai/react';
 
 interface GenerationFormProps {

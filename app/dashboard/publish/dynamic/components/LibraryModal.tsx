@@ -1,10 +1,12 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Modal, ModalContent, ModalHeader, ModalBody, Tabs, Tab, Card, addToast } from '@heroui/react';
+import { Modal, ModalContent, ModalHeader, ModalBody, Tabs, Tab, Card, addToast, Spinner } from '@heroui/react';
 import Image from 'next/image';
-import { listAllImages, listAllPosters } from '@/actions/draw/list';
+import { listAllImages } from '@/actions/draw/image';
+import { listAllPosters } from '@/actions/draw/poster';
 import { useTranslation } from '@/i18n/client';
 import { useRouter } from 'next/navigation';
-import { Plus } from 'lucide-react';
+import { Plus, ImageIcon } from 'lucide-react';
+import { ImageGeneration, ImageGenerationLog } from '@/actions/draw/image/types';
 
 interface FileData {
   name: string;
@@ -17,9 +19,9 @@ interface FileData {
 
 interface ImageGenerationItem {
   id: string;
-  result: { url: string; revised_prompt: string }[];
   prompt: string;
   createdAt: string;
+  images: string[];
 }
 
 interface PosterItem {
@@ -67,30 +69,53 @@ export default function LibraryModal({ onSelectImage, existingFiles = [], isOpen
       setLoading(true);
       try {
         const [imagesRes, postersRes] = await Promise.all([listAllImages(), listAllPosters()]);
+
+        // 处理图片数据
+        const processedImages: ImageGenerationItem[] = [];
+        if (imagesRes.success && imagesRes.data) {
+          processedImages.push(
+            ...imagesRes.data.map((item: ImageGeneration) => {
+              const images =
+                item.ImageGenerationLog?.filter((log: ImageGenerationLog) => log.fileHosting?.previewUrl).map(
+                  (log: ImageGenerationLog) => log.fileHosting!.previewUrl!,
+                ) || [];
+
+              return {
+                id: item.id,
+                prompt: item.prompt,
+                createdAt: new Date(item.createdAt).toISOString(),
+                images,
+              };
+            }),
+          );
+        }
+
+        // 处理海报数据
+        const processedPosters: PosterItem[] = [];
+        if (postersRes.success && postersRes.data) {
+          processedPosters.push(
+            ...postersRes.data.map(
+              (item: {
+                id: string;
+                prompt: string;
+                lastImageUrl: string | null;
+                createdAt: Date;
+                taskId: string | null;
+                projectId: string | null;
+              }) => ({
+                id: item.id,
+                prompt: item.prompt,
+                lastImageUrl: item.lastImageUrl ?? null,
+                createdAt: new Date(item.createdAt).toISOString(),
+                taskId: item.taskId ?? '',
+              }),
+            ),
+          );
+        }
+
         setItems({
-          images: (imagesRes?.data || []).map((item) => ({
-            id: item.id,
-            result: Array.isArray(item.result)
-              ? item.result
-                  .filter(
-                    (r): r is { url: string; revised_prompt: string } =>
-                      r !== null && typeof r === 'object' && 'url' in r && 'revised_prompt' in r,
-                  )
-                  .map((r) => ({
-                    url: r.url,
-                    revised_prompt: r.revised_prompt,
-                  }))
-              : [],
-            prompt: item.prompt,
-            createdAt: new Date(item.createdAt).toISOString(),
-          })),
-          posters: (postersRes?.data || []).map((item) => ({
-            id: item.id,
-            prompt: item.prompt,
-            lastImageUrl: item.lastImageUrl ?? null,
-            createdAt: new Date(item.createdAt).toISOString(),
-            taskId: item.taskId ?? '',
-          })),
+          images: processedImages,
+          posters: processedPosters,
         });
       } catch (error) {
         console.error('Failed to fetch library items:', error);
@@ -110,14 +135,6 @@ export default function LibraryModal({ onSelectImage, existingFiles = [], isOpen
   const handleCloseModal = () => {
     setLoading(false);
     setItems({ images: [], posters: [] });
-    items.images.forEach((item) =>
-      item.result.forEach((r) => {
-        if (r.url.startsWith('blob:')) URL.revokeObjectURL(r.url);
-      }),
-    );
-    items.posters.forEach((item) => {
-      if (item.lastImageUrl?.startsWith('blob:')) URL.revokeObjectURL(item.lastImageUrl);
-    });
     onOpenChange(false);
   };
 
@@ -257,8 +274,28 @@ export default function LibraryModal({ onSelectImage, existingFiles = [], isOpen
     await handleFilesDrop(droppedFiles, 'image');
   };
 
+  const renderEmptyState = (type: 'images' | 'posters') => (
+    <div className="flex flex-col items-center justify-center py-12 text-center">
+      <ImageIcon className="mb-4 size-12 text-gray-400" />
+      <p className="text-gray-500">{type === 'images' ? '还没有生成过图片' : '还没有生成过海报'}</p>
+      <p className="mt-2 text-sm text-gray-400">点击左上角的 + 按钮开始生成</p>
+    </div>
+  );
+
   const renderGrid = (type: 'images' | 'posters') => {
     const data = type === 'images' ? items.images : items.posters;
+
+    if (loading) {
+      return (
+        <div className="flex items-center justify-center py-12">
+          <Spinner size="lg" />
+        </div>
+      );
+    }
+
+    if (data.length === 0) {
+      return renderEmptyState(type);
+    }
 
     return (
       <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
@@ -271,61 +308,73 @@ export default function LibraryModal({ onSelectImage, existingFiles = [], isOpen
           }}>
           <div className="flex flex-col items-center gap-2 text-foreground-500">
             <Plus size={48} />
+            <span className="text-sm">生成新的{type === 'images' ? '图片' : '海报'}</span>
           </div>
         </Card>
-        {data.map((item) => (
-          <Card
-            isPressable
-            key={item.id}
-            className="group relative aspect-square"
-            onPress={() => {
-              const urlToUse =
-                type === 'images' ? (item as ImageGenerationItem).result[0]?.url : (item as PosterItem).lastImageUrl;
-              if (urlToUse) {
-                fetch(urlToUse)
-                  .then((res) => res.blob())
-                  .then(async (blob) => {
-                    const file = new File([blob], 'image.png', { type: blob.type });
-                    const fileHash = await getFileHash(file);
-                    const isDuplicate = existingFiles.some((ef) => ef.hash === fileHash);
+        {data.map((item) => {
+          const imageUrl =
+            type === 'images' ? (item as ImageGenerationItem).images[0] : (item as PosterItem).lastImageUrl;
 
-                    if (isDuplicate) {
-                      addToast({
-                        title: t('upload.duplicateFiles'),
-                        description: t('upload.duplicateFilesDesc'),
-                        color: 'warning',
+          return (
+            <Card
+              isPressable
+              key={item.id}
+              className="group relative aspect-square overflow-hidden"
+              onPress={() => {
+                if (imageUrl) {
+                  fetch(imageUrl)
+                    .then((res) => res.blob())
+                    .then(async (blob) => {
+                      const file = new File([blob], 'image.png', { type: blob.type });
+                      const fileHash = await getFileHash(file);
+                      const isDuplicate = existingFiles.some((ef) => ef.hash === fileHash);
+
+                      if (isDuplicate) {
+                        addToast({
+                          title: t('upload.duplicateFiles'),
+                          description: t('upload.duplicateFilesDesc'),
+                          color: 'warning',
+                        });
+                        return;
+                      }
+
+                      onSelectImage?.({
+                        name: file.name,
+                        type: file.type,
+                        size: file.size,
+                        url: imageUrl,
+                        hash: fileHash,
+                        file,
                       });
-                      return;
-                    }
-
-                    onSelectImage?.({
-                      name: file.name,
-                      type: file.type,
-                      size: file.size,
-                      url: urlToUse,
-                      hash: fileHash,
-                      file,
+                      handleCloseModal();
+                    })
+                    .catch((error) => {
+                      console.error('Failed to fetch image:', error);
+                      addToast({
+                        title: '下载失败',
+                        description: '无法下载选中的图片',
+                        color: 'danger',
+                      });
                     });
-                    handleCloseModal();
-                  });
-              }
-            }}>
-            <Image
-              src={
-                (type === 'images'
-                  ? (item as ImageGenerationItem).result[0]?.url
-                  : (item as PosterItem).lastImageUrl) || '/placeholder.png'
-              }
-              alt={item.prompt}
-              fill
-              sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-              className="object-cover"
-            />
-            <div className="absolute inset-x-0 bottom-0 bg-black/50 p-2 text-white opacity-0 transition-opacity group-hover:opacity-100">
-              <p className="line-clamp-2 text-xs">{item.prompt}</p>
-            </div>
-          </Card>
-        ))}
+                }
+              }}>
+              <Image
+                src={imageUrl || '/placeholder.png'}
+                alt={item.prompt}
+                fill
+                sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                className="object-cover transition-transform group-hover:scale-105"
+                onError={(e) => {
+                  const target = e.target as HTMLImageElement;
+                  target.src = '/placeholder.png';
+                }}
+              />
+              <div className="absolute inset-x-0 bottom-0 bg-black/50 p-2 text-white opacity-0 transition-opacity group-hover:opacity-100">
+                <p className="line-clamp-2 text-xs">{item.prompt}</p>
+              </div>
+            </Card>
+          );
+        })}
       </div>
     );
   };
@@ -358,18 +407,21 @@ export default function LibraryModal({ onSelectImage, existingFiles = [], isOpen
         <ModalContent
           onDragOver={(e) => e.preventDefault()}
           onDrop={onDrop}>
-          <ModalHeader className="flex flex-col gap-1">{t('library.title')}</ModalHeader>
+          <ModalHeader className="flex flex-col gap-1">
+            <h2 className="text-lg font-semibold">{t('library.title')}</h2>
+            <p className="text-sm text-gray-500">支持拖拽上传图片，或从素材库中选择</p>
+          </ModalHeader>
           <ModalBody>
             <Tabs aria-label="Library tabs">
               <Tab
                 key="images"
                 title={t('library.images')}>
-                {loading ? <p>{t('library.loading')}</p> : renderGrid('images')}
+                {renderGrid('images')}
               </Tab>
               <Tab
                 key="posters"
                 title={t('library.posters')}>
-                {loading ? <p>{t('library.loading')}</p> : renderGrid('posters')}
+                {renderGrid('posters')}
               </Tab>
             </Tabs>
           </ModalBody>

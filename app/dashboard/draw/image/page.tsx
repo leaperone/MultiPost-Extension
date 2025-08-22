@@ -1,12 +1,17 @@
 'use client';
 
-import { useState, Fragment, useEffect, useMemo, useRef } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { z } from 'zod';
-import { Button, Tabs, Tab, Skeleton, Divider } from '@heroui/react';
+import { Button, Tabs, Tab, Skeleton, Divider, Card, CardBody, Image } from '@heroui/react';
 import { GenerationForm } from './components/GenerationForm';
-import { ImageGenerationSchema, ImageGenerationStatus } from '@/app/api/draw/image/types';
-import { useChat } from 'ai/react';
-import { getImageGenerations, createImageGeneration, getImageGeneration } from './action';
+import { ResultWaiter } from './components/ResultWaiter';
+import {
+  ImageGenerationSchema,
+  ImageGenerationStatus,
+  ImageGeneration,
+  ImageGenerationLog,
+} from '@/actions/draw/image/types';
+import { listAllImages, newImageGeneration } from '@/actions/draw/image';
 import { ImageIcon, Download, Calendar, Maximize2 } from 'lucide-react';
 import dynamic from 'next/dynamic';
 import { useTranslation } from '@/i18n/client';
@@ -14,228 +19,170 @@ import { toast } from 'sonner';
 
 const Viewer = dynamic(() => import('react-viewer'), { ssr: false });
 
+interface TaskStatus {
+  status: string;
+  images?: string[];
+  error?: string;
+}
+
 function ImageGenerationSection() {
   const { t } = useTranslation('images');
-  const stepsConfig = [
-    { id: 'form', title: t('generation_flow.stepper.form') },
-    { id: 'generating', title: t('generation_flow.stepper.generating') },
-    { id: 'result', title: t('generation_flow.stepper.result') },
-  ];
-  type Step = 'form' | 'generating' | 'result';
+  const [loading, setLoading] = useState(false);
+  const [taskId, setTaskId] = useState<string | null>(null);
+  const [taskStatus, setTaskStatus] = useState<TaskStatus | null>(null);
+  const [viewerVisible, setViewerVisible] = useState(false);
+  const [activeIndex, setActiveIndex] = useState(0);
 
-  const Stepper = ({ currentStepId }: { currentStepId: Step }) => {
-    const currentStepIndex = stepsConfig.findIndex((s) => s.id === currentStepId);
-
-    return (
-      <div className="mb-8 flex w-full items-start">
-        {stepsConfig.map((step, index) => (
-          <Fragment key={step.id}>
-            <div className="flex flex-col items-center text-center">
-              <div
-                className={`flex size-10 items-center justify-center rounded-full text-lg font-bold ${
-                  index <= currentStepIndex ? 'bg-primary text-white' : 'bg-gray-200 text-gray-600'
-                }`}>
-                {index + 1}
-              </div>
-              <p
-                className={`mt-2 w-24 text-sm ${
-                  index <= currentStepIndex ? 'font-semibold text-primary' : 'text-gray-500'
-                }`}>
-                {step.title}
-              </p>
-            </div>
-
-            {index < stepsConfig.length - 1 && (
-              <div
-                className={`mx-4 mt-5 h-1 flex-1 rounded-full ${
-                  index < currentStepIndex ? 'bg-primary' : 'bg-gray-200'
-                }`}
-              />
-            )}
-          </Fragment>
-        ))}
-      </div>
-    );
-  };
-
-  const [generatedImage, setGeneratedImage] = useState<string | null>(null);
-  const [step, setStep] = useState<Step>('form');
-  const [generationId, _setGenerationId] = useState<string | null>(null);
-  const generationIdRef = useRef(generationId);
-  const setGenerationId = (id: string | null) => {
-    generationIdRef.current = id;
-    _setGenerationId(id);
-  };
-
-  const { isLoading, append, messages } = useChat({
-    api: '/api/draw/image',
-    onResponse: (response) => {
-      if (response.status !== 200) {
-        toast.error(t('generation_flow.toasts.generate_failed_title'), {
-          description: t('generation_flow.toasts.generate_failed_request_desc'),
-        });
-        setStep('form');
-      }
-    },
-    onFinish: async () => {
-      if (!generationIdRef.current) {
-        setStep('form');
-        toast.error(t('generation_flow.toasts.generate_failed_title'), {
-          description: t('generation_flow.toasts.generate_failed_no_id_desc', '没有获取到有效的任务 ID。'),
-        });
-        return;
-      }
-
-      // To handle race conditions, we'll poll for the result a few times.
-      const maxRetries = 10;
-      const retryDelay = 2000;
-      const currentGenerationId = generationIdRef.current;
-
-      for (let i = 0; i < maxRetries; i++) {
-        const result = await getImageGeneration(currentGenerationId);
-        if (result.success && result.data) {
-          if (result.data.status === 'DONE' && result.data.imageUrl) {
-            setGeneratedImage(result.data.imageUrl);
-            setStep('result');
-            toast.success(t('generation_flow.toasts.generate_success_title'), {
-              description: t('generation_flow.toasts.generate_success_desc'),
-            });
-            return;
-          }
-          if (result.data.status === 'FAILED') {
-            setStep('form');
-            toast.error(t('generation_flow.toasts.generate_failed_title'), {
-              description: result.data.error || t('result_waiter.unknown_error', '未知错误'),
-            });
-            return;
-          }
-        }
-        await new Promise((resolve) => setTimeout(resolve, retryDelay));
-      }
-
-      setStep('form');
-      toast.error(t('generation_flow.toasts.timeout_error_title', '获取图片结果超时'), {
-        description: t('generation_flow.toasts.timeout_error_desc', '请稍后在历史记录中查看。'),
-      });
-    },
-    onError: (error) => {
-      setStep('form');
-      toast.error(t('generation_flow.toasts.generate_failed_title'), {
-        description: error.message || t('generation_flow.toasts.generate_failed_unknown_desc'),
-      });
-    },
-  });
-
-  const handleSubmit = async (data: z.infer<typeof ImageGenerationSchema>) => {
-    setGeneratedImage(null);
-    setGenerationId(null);
-    setStep('generating');
-
+  const handleGenerate = async (data: z.infer<typeof ImageGenerationSchema>) => {
     try {
-      const createResponse = await createImageGeneration(data);
-      if (!createResponse.success || !createResponse.data?.id) {
-        throw new Error(
-          createResponse.error || t('generation_flow.toasts.create_task_failed_desc', '创建图片生成任务失败'),
-        );
+      setLoading(true);
+      const response = await newImageGeneration(data);
+      if (!response.success || !response.data) {
+        throw new Error(response.error || t('generation_flow.toasts.submit_failed'));
       }
-      const newGenerationId = createResponse.data.id;
-      setGenerationId(newGenerationId);
-
-      await append(
-        {
-          role: 'user',
-          content: data.prompt,
-        },
-        {
-          body: {
-            id: newGenerationId,
-          },
-        },
-      );
+      setTaskId(response.data.id);
+      setTaskStatus(null); // 重置状态
+      if (response.message) {
+        toast.success(response.message);
+      } else {
+        toast.success(t('generation_flow.toasts.task_submitted'));
+      }
     } catch (error) {
-      setStep('form');
-      toast.error(t('generation_flow.toasts.submit_failed_title'), {
-        description: error instanceof Error ? error.message : t('generation_flow.toasts.generate_failed_unknown_desc'),
-      });
+      const errorMessage = error instanceof Error ? error.message : t('generation_flow.toasts.submit_failed');
+      toast.error(errorMessage);
+      console.error('handleGenerate error:', error);
+    } finally {
+      setLoading(false);
     }
   };
 
-  const handleStartOver = () => {
-    setGeneratedImage(null);
-    setGenerationId(null);
-    setStep('form');
+  const handleError = (error: string) => {
+    toast.error(error);
   };
+
+  const handleStatusChange = (status: TaskStatus) => {
+    setTaskStatus(status);
+  };
+
+  const handleDownload = async (url: string, index: number) => {
+    try {
+      toast.loading('Downloading...');
+      const response = await fetch(url);
+      const blob = await response.blob();
+      const downloadUrl = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = downloadUrl;
+      const fileName = `image-${index + 1}-${new Date().getTime()}.webp`;
+      link.download = fileName;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(downloadUrl);
+      toast.dismiss();
+    } catch (error) {
+      console.error('Download failed:', error);
+      toast.error('Download failed');
+    }
+  };
+
+  const viewerImages = useMemo(() => {
+    return (
+      taskStatus?.images?.map((url, index) => ({
+        src: url,
+        alt: `Generated image ${index + 1}`,
+      })) || []
+    );
+  }, [taskStatus?.images]);
 
   return (
     <div className="container mx-auto px-4 py-6">
       <div className="mx-auto max-w-3xl">
-        <Stepper currentStepId={step} />
-
-        <div className="mt-8 rounded-lg border bg-white p-6 shadow-sm dark:border-gray-700 dark:bg-gray-900">
-          {step === 'form' && (
+        {!taskId && (
+          <div className="mt-8 rounded-lg border bg-white p-6 shadow-sm dark:border-gray-700 dark:bg-gray-900">
             <GenerationForm
-              onSubmit={handleSubmit}
-              loading={isLoading}
+              onSubmit={handleGenerate}
+              loading={loading}
             />
-          )}
-
-          {step === 'generating' && (
-            <div className="flex min-h-64 flex-col items-center justify-center">
-              <div className="size-16 animate-spin rounded-full border-y-2 border-primary"></div>
-              <p className="mt-4 text-lg">{t('generation_flow.generating_text')}</p>
-              {messages.length > 0 &&
-                messages[messages.length - 1].role === 'assistant' &&
-                (() => {
-                  const content = messages[messages.length - 1].content;
-                  const cleanedContent = content
-                    .replace(/```json[\s\S]*?```/g, '')
-                    .replace(/!\[.*?\]\(.*?\)/g, '')
-                    .replace(/\[100\]\(.*?\)/g, '')
-                    .trim();
-
-                  if (cleanedContent) {
-                    return (
-                      <p className="mt-2 w-full max-w-md break-words text-center text-sm text-gray-500">
-                        {cleanedContent}
-                      </p>
-                    );
-                  }
-                  return null;
-                })()}
-            </div>
-          )}
-
-          {step === 'result' && (
-            <div className="flex flex-col items-center gap-4">
-              {generatedImage && (
-                <div className="w-full">
-                  <img
-                    src={generatedImage}
-                    alt="生成的图片"
-                    className="h-auto w-full rounded-lg shadow-lg"
-                  />
+          </div>
+        )}
+        {taskId && (
+          <div className="mx-auto w-full max-w-7xl space-y-4 px-6 py-8">
+            {!taskStatus ||
+            taskStatus.status === ImageGenerationStatus.PENDING ||
+            taskStatus.status === ImageGenerationStatus.PROCESSING ? (
+              <ResultWaiter
+                taskId={taskId}
+                onError={handleError}
+                onStatusChange={handleStatusChange}
+              />
+            ) : taskStatus.status === ImageGenerationStatus.FAILED ? (
+              <Card className="mx-auto w-full max-w-3xl">
+                <CardBody className="flex items-center justify-center py-8">
+                  <div className="flex flex-col items-center gap-2">
+                    <p className="text-danger">
+                      {t('result_waiter.failed')}: {taskStatus.error || t('result_waiter.unknown_error')}
+                    </p>
+                  </div>
+                </CardBody>
+              </Card>
+            ) : taskStatus.status === ImageGenerationStatus.COMPLETED && taskStatus.images ? (
+              <div className="space-y-4">
+                <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
+                  {taskStatus.images.map((imageUrl, index) => (
+                    <Card
+                      key={index}
+                      className="cursor-pointer transition-transform hover:scale-[1.02]"
+                      isPressable
+                      onPress={() => {
+                        setActiveIndex(index);
+                        setViewerVisible(true);
+                      }}>
+                      <CardBody className="p-0">
+                        <Image
+                          alt={`Generated image ${index + 1}`}
+                          className="aspect-square w-full object-cover"
+                          src={imageUrl}
+                        />
+                      </CardBody>
+                    </Card>
+                  ))}
                 </div>
-              )}
-              <Button
-                onClick={handleStartOver}
-                className="mt-4">
-                {t('generation_flow.generate_again')}
-              </Button>
-            </div>
-          )}
-        </div>
+
+                {/* 操作按钮 */}
+                <div className="flex justify-center gap-4">
+                  {taskStatus.images.map((imageUrl, index) => (
+                    <Button
+                      key={index}
+                      color="primary"
+                      variant="flat"
+                      size="sm"
+                      startContent={<Download className="size-4" />}
+                      onPress={() => handleDownload(imageUrl, index)}>
+                      Download {index + 1}
+                    </Button>
+                  ))}
+                </div>
+
+                <Viewer
+                  visible={viewerVisible}
+                  onClose={() => setViewerVisible(false)}
+                  onMaskClick={() => setViewerVisible(false)}
+                  images={viewerImages}
+                  activeIndex={activeIndex}
+                  zIndex={9999}
+                  noNavbar={false}
+                  scalable
+                  downloadable
+                  rotatable={false}
+                  showTotal
+                />
+              </div>
+            ) : null}
+          </div>
+        )}
       </div>
     </div>
   );
-}
-
-interface ImageGeneration {
-  id: string;
-  prompt: string;
-  status: string;
-  error?: string | null;
-  imageUrl?: string | null;
-  createdAt: string;
 }
 
 function GallerySection() {
@@ -254,7 +201,7 @@ function GallerySection() {
   );
   const STATUS_TABS = [
     { key: 'all', label: t('gallery_page.tabs.all') },
-    { key: ImageGenerationStatus.DONE, label: t('gallery_page.tabs.done') },
+    { key: ImageGenerationStatus.COMPLETED, label: t('gallery_page.tabs.done') },
     { key: ImageGenerationStatus.PENDING, label: t('gallery_page.tabs.pending') },
     { key: ImageGenerationStatus.PROCESSING, label: t('gallery_page.tabs.processing') },
     { key: ImageGenerationStatus.FAILED, label: t('gallery_page.tabs.failed') },
@@ -264,50 +211,63 @@ function GallerySection() {
   const [loading, setLoading] = useState(true);
   const [visible, setVisible] = useState(false);
   const [activeIndex, setActiveIndex] = useState(0);
-  const [selectedStatus, setSelectedStatus] = useState<StatusType>(ImageGenerationStatus.DONE);
+  const [selectedStatus, setSelectedStatus] = useState<StatusType>(ImageGenerationStatus.COMPLETED);
 
   const viewerImages = useMemo(() => {
     return images
-      .filter(
-        (image): image is ImageGeneration & { imageUrl: string } =>
-          image.status === ImageGenerationStatus.DONE && !!image.imageUrl,
-      )
-      .map((image) => ({
-        src: image.imageUrl,
-        alt: image.prompt,
-        downloadUrl: image.imageUrl,
-        description: `${dateFormatter.format(new Date(image.createdAt))}\n${image.prompt}`,
-      }));
+      .filter((image) => image.status === ImageGenerationStatus.COMPLETED && !!image.ImageGenerationLog?.length)
+      .flatMap((image) =>
+        image.ImageGenerationLog.filter((log: ImageGenerationLog) => log.fileHosting?.previewUrl).map(
+          (log: ImageGenerationLog, index: number) => ({
+            src: log.fileHosting!.previewUrl!,
+            alt: `${image.prompt} - ${index + 1}`,
+            downloadUrl: log.fileHosting!.previewUrl!,
+            description: `${dateFormatter.format(new Date(image.createdAt))}\n${image.prompt}`,
+          }),
+        ),
+      );
   }, [images, dateFormatter]);
 
-  const fetchImages = async (status: string) => {
+  const fetchImages = async () => {
     try {
       setLoading(true);
-      const response = await getImageGenerations(status);
+      const response = await listAllImages();
       if (!response.success) {
-        throw new Error(response.error);
+        throw new Error(response.error || t('gallery_page.get_image_failed'));
       }
       if (response.data) {
-        setImages(response.data);
-        console.log(response.data);
+        const mappedData = response.data.map((item) => ({
+          ...item,
+          createdAt: item.createdAt.toISOString(),
+        })) as ImageGeneration[];
+        setImages(mappedData);
       }
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : t('gallery_page.get_image_failed'));
+      const errorMessage = error instanceof Error ? error.message : t('gallery_page.get_image_failed');
+      toast.error(errorMessage);
+      console.error('fetchImages error:', error);
     } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => {
-    fetchImages(selectedStatus);
+    fetchImages();
   }, [selectedStatus]);
 
-  const handleImageClick = (index: number) => {
+  const handleImageClick = (imageIndex: number, logIndex: number = 0) => {
     const doneImages = images.filter(
-      (img): img is ImageGeneration & { imageUrl: string } =>
-        img.status === ImageGenerationStatus.DONE && !!img.imageUrl,
+      (img) => img.status === ImageGenerationStatus.COMPLETED && !!img.ImageGenerationLog?.length,
     );
-    const actualIndex = images.indexOf(doneImages[index]);
+    let actualIndex = 0;
+    for (let i = 0; i < imageIndex; i++) {
+      if (doneImages[i]?.ImageGenerationLog) {
+        actualIndex += doneImages[i].ImageGenerationLog.filter(
+          (log: ImageGenerationLog) => log.fileHosting?.previewUrl,
+        ).length;
+      }
+    }
+    actualIndex += logIndex;
     setActiveIndex(actualIndex);
     setVisible(true);
   };
@@ -340,7 +300,7 @@ function GallerySection() {
       case ImageGenerationStatus.PROCESSING:
         return t('gallery_page.tabs.processing');
       case ImageGenerationStatus.FAILED:
-        return t('gallery_page.status.failed', { error: image.error || t('result_waiter.unknown_error') });
+        return `${t('gallery_page.status.failed')}: ${image.error || image.message || t('result_waiter.unknown_error')}`;
       default:
         return t('gallery_page.status.loading');
     }
@@ -390,45 +350,59 @@ function GallerySection() {
             <div
               key={image.id}
               className="relative overflow-hidden rounded-lg bg-default-50">
-              {image.status === ImageGenerationStatus.DONE && image.imageUrl ? (
-                <div className="group relative aspect-square overflow-hidden">
-                  <img
-                    src={image.imageUrl}
-                    alt={image.prompt}
-                    className="size-full cursor-pointer object-cover"
-                  />
-                  <div className="absolute inset-0 z-10 opacity-0 transition-opacity duration-200 group-hover:opacity-100">
-                    <div className="absolute inset-0 bg-black/60" />
-                    <div className="relative z-20 flex h-full flex-col justify-between p-4">
-                      <div className="space-y-2">
-                        <div className="flex items-center gap-1 text-xs text-white/80">
-                          <Calendar className="size-3" />
-                          <span>{dateFormatter.format(new Date(image.createdAt))}</span>
+              {image.status === ImageGenerationStatus.COMPLETED && image.ImageGenerationLog?.length ? (
+                <div className="space-y-2">
+                  {image.ImageGenerationLog.filter((log: ImageGenerationLog) => log.fileHosting?.previewUrl)
+                    .slice(0, 1)
+                    .map((log: ImageGenerationLog, logIndex: number) => (
+                      <div
+                        key={logIndex}
+                        className="group relative aspect-square overflow-hidden">
+                        <img
+                          src={log.fileHosting!.previewUrl!}
+                          alt={image.prompt}
+                          className="size-full cursor-pointer object-cover"
+                        />
+                        <div className="absolute inset-0 z-10 opacity-0 transition-opacity duration-200 group-hover:opacity-100">
+                          <div className="absolute inset-0 bg-black/60" />
+                          <div className="relative z-20 flex h-full flex-col justify-between p-4">
+                            <div className="space-y-2">
+                              <div className="flex items-center gap-1 text-xs text-white/80">
+                                <Calendar className="size-3" />
+                                <span>{dateFormatter.format(new Date(image.createdAt))}</span>
+                              </div>
+                              <p className="line-clamp-4 text-sm text-white">{image.prompt}</p>
+                            </div>
+                            <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2">
+                              <Button
+                                isIconOnly
+                                size="lg"
+                                variant="flat"
+                                className="bg-white/20 backdrop-blur-sm hover:bg-white/40"
+                                onPress={() => handleImageClick(index, logIndex)}>
+                                <Maximize2 className="size-6 text-white" />
+                              </Button>
+                            </div>
+                            <div className="flex items-center justify-between">
+                              <span className="text-xs text-white/80">
+                                {image.ImageGenerationLog?.filter(
+                                  (log: ImageGenerationLog) => log.fileHosting?.previewUrl,
+                                ).length || 0}{' '}
+                                images
+                              </span>
+                              <Button
+                                isIconOnly
+                                size="sm"
+                                variant="flat"
+                                className="bg-white/10 backdrop-blur-sm"
+                                onPress={() => handleDownload(log.fileHosting!.previewUrl!)}>
+                                <Download className="size-4 text-white" />
+                              </Button>
+                            </div>
+                          </div>
                         </div>
-                        <p className="line-clamp-4 text-sm text-white">{image.prompt}</p>
                       </div>
-                      <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2">
-                        <Button
-                          isIconOnly
-                          size="lg"
-                          variant="flat"
-                          className="bg-white/20 backdrop-blur-sm hover:bg-white/40"
-                          onPress={() => handleImageClick(index)}>
-                          <Maximize2 className="size-6 text-white" />
-                        </Button>
-                      </div>
-                      <div className="flex justify-end gap-2">
-                        <Button
-                          isIconOnly
-                          size="sm"
-                          variant="flat"
-                          className="bg-white/10 backdrop-blur-sm"
-                          onPress={() => handleDownload(image.imageUrl || '')}>
-                          <Download className="size-4 text-white" />
-                        </Button>
-                      </div>
-                    </div>
-                  </div>
+                    ))}
                 </div>
               ) : (
                 <div className="flex aspect-square w-full items-center justify-center p-4 text-center">

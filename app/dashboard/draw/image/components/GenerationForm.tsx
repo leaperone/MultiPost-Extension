@@ -1,11 +1,11 @@
 'use client';
 
-import { Button, Textarea, Select, SelectItem } from '@heroui/react';
+import { Button, Textarea, Select, SelectItem, Input } from '@heroui/react';
 import { ImageIcon } from 'lucide-react';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Controller, useForm } from 'react-hook-form';
 import { z } from 'zod';
-import { ImageGenerationSchema, ImageSize, Style, Color, Composition } from '@/app/api/draw/image/types';
+import { ImageGenerationSchema, ImageSize, Style, Color, Composition } from '@/actions/draw/image/types';
 import { useTranslation } from '@/i18n/client';
 import React, { useState } from 'react';
 import { useChat } from 'ai/react';
@@ -132,6 +132,24 @@ export function GenerationForm({ onSubmit, loading, extraPrompt, initPrompt }: G
 
       {/* 生成参数设置 */}
       <div className="flex flex-wrap justify-between gap-2">
+        <Controller
+          name="number"
+          control={form.control}
+          render={({ field }) => (
+            <Input
+              type="number"
+              label={t('generation_page.number.label')}
+              size="sm"
+              className="w-[140px]"
+              min="1"
+              max="9"
+              value={field.value.toString()}
+              onChange={(e) => field.onChange(parseInt(e.target.value) || 1)}
+              disabled={loading}
+            />
+          )}
+        />
+
         <Select
           label={t('generation_page.size.label')}
           size="sm"

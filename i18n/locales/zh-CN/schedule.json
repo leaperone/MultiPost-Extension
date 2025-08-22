@@ -1,0 +1,64 @@
+{
+  "title": "发布日历",
+  "description": "查看和管理您的内容发布计划",
+  "status": "状态",
+  "loading": {
+    "schedule": "加载计划中...",
+    "taskDetails": "加载任务详情中..."
+  },
+  "calendar": {
+    "today": "今天",
+    "month": "月",
+    "week": "周",
+    "publishTask": "发布任务"
+  },
+  "statusLabels": {
+    "pending": "待发布",
+    "processing": "发布中",
+    "completed": "已完成",
+    "failed": "发布失败",
+    "cancelled": "已取消"
+  },
+  "taskDetail": {
+    "taskInfo": "任务信息",
+    "taskId": "任务ID",
+    "scheduledTime": "计划发布时间",
+    "createdAt": "创建时间",
+    "updatedAt": "更新时间",
+    "contentPreview": "内容预览",
+    "publishLogs": "发布日志",
+    "records": "条记录",
+    "publishTime": "发布时间",
+    "message": "消息",
+    "error": "错误",
+    "platformId": "平台ID"
+  },
+  "actions": {
+    "cancelTask": "取消任务",
+    "restartTask": "重新启动",
+    "close": "关闭",
+    "viewDraft": "查看草稿"
+  },
+  "platforms": {
+    "twitter": "Twitter/X",
+    "facebook": "Facebook",
+    "instagram": "Instagram",
+    "linkedin": "LinkedIn",
+    "tiktok": "TikTok",
+    "youtube": "YouTube",
+    "weibo": "微博"
+  },
+  "errors": {
+    "unauthorized": "未授权",
+    "taskNotFound": "任务未找到",
+    "onlyPendingCanCancel": "只有待发布的任务可以取消",
+    "onlyCancelledOrFailedCanRestart": "只有已取消或失败的任务可以重新启动",
+    "failedToCancel": "取消任务失败",
+    "failedToRestart": "重新启动任务失败",
+    "unexpectedError": "发生意外错误"
+  },
+  "messages": {
+    "taskCancelled": "任务已成功取消",
+    "taskRestarted": "任务已成功重新启动"
+  }
+}

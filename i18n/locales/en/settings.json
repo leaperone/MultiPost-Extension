@@ -137,5 +137,73 @@
       "online": "Online",
       "offline": "Offline"
     }
+  },
+  "socialAccounts": {
+    "title": "Social Media Accounts",
+    "subtitle": "Connect your social media accounts to enable content publishing.",
+    "toast": {
+      "connectedSuccess": "Account linked successfully!",
+      "connectError": "An error occurred while linking your account.",
+      "oauthFailed": "Failed to link account. Please try again.",
+      "missingCode": "Authorization code missing. Please try again.",
+      "accessDenied": "Access denied. Please authorize the application.",
+      "insufficientPermissions": "Missing required permissions: {{missing}}. Please grant all requested permissions.",
+      "loadFailed": "Failed to load accounts",
+      "connectFailed": "Failed to link account. Please try again.",
+      "disconnectSuccess": "Account unlinked successfully",
+      "disconnectFailed": "Failed to unlink account",
+      "refreshTokenSuccess": "Token refreshed successfully",
+      "refreshTokenFailed": "Failed to refresh token",
+      "refreshSuccess": "Token refreshed successfully",
+      "refreshFailed": "Failed to refresh token"
+    },
+    "common": {
+      "user": "User",
+      "unknown": "Unknown",
+      "comingSoon": "Coming Soon",
+      "tokenExpired": "Token Expired",
+      "expiresSoon": "Expires Soon",
+      "refreshToken": "Refresh Token",
+      "disconnect": "Unlink"
+    },
+    "tiktok": {
+      "title": "TikTok",
+      "verified": "Verified",
+      "connectedAt": "Linked",
+      "stats": {
+        "followers": "followers",
+        "videos": "videos",
+        "likes": "likes"
+      },
+      "empty": "No TikTok accounts linked",
+      "connecting": "Linking...",
+      "connect": "Link TikTok"
+    },
+    "instagram": {
+      "title": "Instagram",
+      "comingSoon": "Coming Soon"
+    },
+    "facebook": {
+      "title": "Facebook",
+      "comingSoon": "Coming Soon"
+    },
+    "linkedin": {
+      "title": "LinkedIn",
+      "comingSoon": "Coming Soon"
+    },
+    "youtube": {
+      "title": "YouTube",
+      "comingSoon": "Coming Soon"
+    },
+    "x": {
+      "title": "X",
+      "empty": "No X accounts linked",
+      "connecting": "Linking...",
+      "connect": "Link X"
+    }
+  },
+  "morePlatforms": {
+    "title": "More Platforms",
+    "subtitle": "Connect with more social media platforms"
   }
-} 
+}

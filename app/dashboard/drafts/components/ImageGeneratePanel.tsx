@@ -1,16 +1,25 @@
 'use client';
 
-import { useState, useRef } from 'react';
+import { useState, useMemo } from 'react';
 import { z } from 'zod';
-import { Button } from '@heroui/react';
+import { Button, Image } from '@heroui/react';
 import { GenerationForm } from '@/app/dashboard/draw/image/components/GenerationForm';
-import { ImageGenerationSchema } from '@/app/api/draw/image/types';
-import { useChat } from 'ai/react';
+import { ResultWaiter } from '@/app/dashboard/draw/image/components/ResultWaiter';
+import { ImageGenerationSchema, ImageGenerationStatus } from '@/actions/draw/image/types';
 import { toast } from 'sonner';
-import { createImageGeneration, getImageGeneration } from '../../draw/image/action';
-import { FileImage } from 'lucide-react';
+import { Eye, Plus } from 'lucide-react';
 import { useTranslation } from '@/i18n/client';
 import { useDraftStore } from '@/store/draft.store';
+import { newImageGeneration } from '@/actions/draw/image';
+import dynamic from 'next/dynamic';
+
+const Viewer = dynamic(() => import('react-viewer'), { ssr: false });
+
+interface TaskStatus {
+  status: string;
+  images?: string[];
+  error?: string;
+}
 
 interface ImageGeneratePanelProps {
   draftTitle?: string;
@@ -23,72 +32,13 @@ export function ImageGeneratePanel({ draftTitle, draftContent, onInsertImage }: 
   const { lastImagePrompt, setLastImagePrompt } = useDraftStore();
   type Step = 'form' | 'generating' | 'result';
 
-  const [generatedImage, setGeneratedImage] = useState<string | null>(null);
   const [step, setStep] = useState<Step>('form');
-  const [generationId, _setGenerationId] = useState<string | null>(null);
+  const [generationId, setGenerationId] = useState<string | null>(null);
+  const [taskStatus, setTaskStatus] = useState<TaskStatus | null>(null);
+  const [viewerVisible, setViewerVisible] = useState(false);
+  const [activeIndex, setActiveIndex] = useState(0);
   const [includeTitle, setIncludeTitle] = useState(true);
   const [includeContent, setIncludeContent] = useState(true);
-
-  const generationIdRef = useRef(generationId);
-  const setGenerationId = (id: string | null) => {
-    generationIdRef.current = id;
-    _setGenerationId(id);
-  };
-
-  const { messages, append, isLoading } = useChat({
-    api: '/api/draw/image',
-    onResponse: (response) => {
-      if (response.status !== 200) {
-        toast.error(t('aiImage.toast.requestFailed'));
-        setStep('form');
-      }
-    },
-    onFinish: async () => {
-      if (!generationIdRef.current) {
-        setStep('form');
-        toast.error(t('aiImage.toast.generationFailed'), {
-          description: t('aiImage.toast.noId'),
-        });
-        return;
-      }
-
-      // To handle race conditions, we'll poll for the result a few times.
-      const maxRetries = 10;
-      const retryDelay = 2000;
-      const currentGenerationId = generationIdRef.current;
-
-      for (let i = 0; i < maxRetries; i++) {
-        const result = await getImageGeneration(currentGenerationId);
-        if (result.success && result.data) {
-          if (result.data.status === 'DONE' && result.data.imageUrl) {
-            setGeneratedImage(result.data.imageUrl);
-            setStep('result');
-            toast.success(t('aiImage.toast.success'));
-            return;
-          }
-          if (result.data.status === 'FAILED') {
-            setStep('form');
-            toast.error(t('aiImage.toast.generationFailed'), {
-              description: result.data.error || t('aiImage.toast.unknownError'),
-            });
-            return;
-          }
-        }
-        await new Promise((resolve) => setTimeout(resolve, retryDelay));
-      }
-
-      setStep('form');
-      toast.error(t('aiImage.toast.timeout'), {
-        description: t('aiImage.toast.timeoutDesc'),
-      });
-    },
-    onError: (error) => {
-      setStep('form');
-      toast.error(t('aiImage.toast.generationFailed'), {
-        description: error.message || t('aiImage.toast.unknownError'),
-      });
-    },
-  });
 
   const handleSubmit = async (data: z.infer<typeof ImageGenerationSchema>) => {
     // Save the prompt to store
@@ -108,29 +58,17 @@ export function ImageGeneratePanel({ draftTitle, draftContent, onInsertImage }: 
       data.prompt = `${promptPrefix}\n\n---\n\n${data.prompt}`;
     }
 
-    setGeneratedImage(null);
+    setTaskStatus(null);
     setGenerationId(null);
     setStep('generating');
 
     try {
-      const createResponse = await createImageGeneration(data);
+      const createResponse = await newImageGeneration(data);
       if (!createResponse.success || !createResponse.data?.id) {
         throw new Error(createResponse.error || t('aiImage.toast.createTaskFailed'));
       }
       const newGenerationId = createResponse.data.id;
       setGenerationId(newGenerationId);
-
-      await append(
-        {
-          role: 'user',
-          content: `${data.prompt}`,
-        },
-        {
-          body: {
-            id: newGenerationId,
-          },
-        },
-      );
     } catch (error) {
       setStep('form');
       toast.error(t('aiImage.toast.submitFailed'), {
@@ -139,17 +77,42 @@ export function ImageGeneratePanel({ draftTitle, draftContent, onInsertImage }: 
     }
   };
 
+  const handleError = (error: string) => {
+    toast.error(error);
+    setStep('form');
+  };
+
+  const handleStatusChange = (status: TaskStatus) => {
+    setTaskStatus(status);
+    if (status.status === ImageGenerationStatus.COMPLETED) {
+      setStep('result');
+    } else if (status.status === ImageGenerationStatus.FAILED) {
+      setStep('form');
+    }
+  };
+
   const handleStartOver = () => {
-    setGeneratedImage(null);
+    setTaskStatus(null);
     setGenerationId(null);
     setStep('form');
   };
 
-  const handleInsert = () => {
-    if (generatedImage && onInsertImage) {
-      onInsertImage(generatedImage);
+  const handleInsertSpecific = (url: string) => {
+    if (onInsertImage) {
+      onInsertImage(url);
     }
   };
+
+  // Removed download handler per requirement: no download button
+
+  const viewerImages = useMemo(() => {
+    return (
+      taskStatus?.images?.map((url, index) => ({
+        src: url,
+        alt: `Generated image ${index + 1}`,
+      })) || []
+    );
+  }, [taskStatus?.images]);
 
   return (
     <div className="mx-auto w-full max-w-3xl">
@@ -189,7 +152,7 @@ export function ImageGeneratePanel({ draftTitle, draftContent, onInsertImage }: 
             )}
             <GenerationForm
               onSubmit={handleSubmit}
-              loading={isLoading}
+              loading={false}
               initPrompt={lastImagePrompt}
               extraPrompt={`${draftTitle ? `${t('aiImage.titleLabel')} ${draftTitle}` : ''}${
                 draftContent ? `${t('aiImage.contentLabel')} ${draftContent}` : ''
@@ -198,59 +161,81 @@ export function ImageGeneratePanel({ draftTitle, draftContent, onInsertImage }: 
           </div>
         )}
 
-        {step === 'generating' && (
-          <div className="flex min-h-64 flex-col items-center justify-center">
-            <div className="size-16 animate-spin rounded-full border-y-2 border-primary"></div>
-            <p className="mt-4 text-lg">{t('aiImage.generating')}</p>
-            {messages.length > 0 &&
-              messages[messages.length - 1].role === 'assistant' &&
-              (() => {
-                const content = messages[messages.length - 1].content;
-                const cleanedContent = content
-                  .replace(/```json[\s\S]*?```/g, '')
-                  .replace(/!\[.*?\]\(.*?\)/g, '')
-                  .replace(/\[100\]\(.*?\)/g, '')
-                  .trim();
-
-                if (cleanedContent) {
-                  return (
-                    <p className="mt-2 w-full max-w-md break-words text-center text-sm text-gray-500">
-                      {cleanedContent}
-                    </p>
-                  );
-                }
-                return null;
-              })()}
-          </div>
+        {step === 'generating' && generationId && (
+          <ResultWaiter
+            taskId={generationId}
+            onError={handleError}
+            onStatusChange={handleStatusChange}
+          />
         )}
 
-        {step === 'result' && (
-          <div className="flex flex-col items-center gap-4">
-            {generatedImage && (
-              <div className="w-full">
-                <img
-                  src={generatedImage}
-                  alt={t('aiImage.generatedAlt')}
-                  className="h-auto w-full rounded-lg shadow-lg"
-                />
-              </div>
-            )}
-            <div className="mt-4 flex items-center gap-2">
+        {step === 'result' && taskStatus?.status === ImageGenerationStatus.COMPLETED && taskStatus.images && (
+          <div className="space-y-4">
+            <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
+              {taskStatus.images.map((imageUrl, index) => (
+                <div
+                  key={index}
+                  className="group relative aspect-square cursor-pointer overflow-hidden rounded-lg bg-gray-100">
+                  {/* Image */}
+                  <Image
+                    src={imageUrl}
+                    alt={`Generated image ${index + 1}`}
+                    className="size-full object-cover transition-transform group-hover:scale-105"
+                    radius="none"
+                  />
+
+                  {/* Hover Overlay Actions */}
+                  <div className="absolute inset-0 z-10 flex items-end justify-center gap-2 bg-black/0 pb-3 opacity-0 transition-all duration-200 group-hover:bg-black/40 group-hover:opacity-100">
+                    <Button
+                      isIconOnly
+                      size="lg"
+                      variant="flat"
+                      className="border border-white/30 bg-white/20 text-white backdrop-blur-sm hover:bg-white/30"
+                      onPress={() => {
+                        setActiveIndex(index);
+                        setViewerVisible(true);
+                      }}>
+                      <Eye className="size-5" />
+                    </Button>
+
+                    {onInsertImage && (
+                      <Button
+                        isIconOnly
+                        size="lg"
+                        variant="flat"
+                        className="border border-white/30 bg-white/20 text-white backdrop-blur-sm hover:bg-white/30"
+                        onPress={() => handleInsertSpecific(imageUrl)}>
+                        <Plus className="size-5" />
+                      </Button>
+                    )}
+
+                    {/* Download button removed */}
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* 操作按钮 */}
+            <div className="flex justify-center gap-4">
               <Button
                 onClick={handleStartOver}
                 variant="flat">
                 {t('aiImage.generateAgain')}
               </Button>
-              {onInsertImage && (
-                <Button
-                  color="primary"
-                  onClick={handleInsert}
-                  startContent={<FileImage className="size-4" />}
-                  isDisabled={!generatedImage}>
-                  {t('aiImage.insertDraft')}
-                </Button>
-              )}
             </div>
+
+            <Viewer
+              visible={viewerVisible}
+              onClose={() => setViewerVisible(false)}
+              onMaskClick={() => setViewerVisible(false)}
+              images={viewerImages}
+              activeIndex={activeIndex}
+              zIndex={9999}
+              noNavbar={false}
+              scalable
+              rotatable={false}
+              showTotal
+            />
           </div>
         )}
       </div>

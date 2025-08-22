@@ -11,6 +11,7 @@ import {
   SendIcon,
   Settings,
   FileTextIcon,
+  CalendarIcon,
 } from 'lucide-react';
 
 import {
@@ -108,6 +109,11 @@ function getMenuGroups(t: TranslationFunction): MenuGroup[] {
           title: t('sidebar.menu.drafts'),
           url: '/dashboard/drafts',
           icon: FileTextIcon,
+        },
+        {
+          title: t('sidebar.menu.schedule'),
+          url: '/dashboard/schedule',
+          icon: CalendarIcon,
         },
         {
           title: t('sidebar.menu.draw'),

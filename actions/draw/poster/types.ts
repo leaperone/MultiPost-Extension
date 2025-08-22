@@ -3,8 +3,9 @@ import { z } from 'zod';
 export const PosterGenerationStatus = {
   PENDING: 'pending',
   PROCESSING: 'processing',
-  DONE: 'done',
+  COMPLETED: 'completed',
   FAILED: 'failed',
+  CANCELLED: 'cancelled',
 } as const;
 
 export const ImageSize = [

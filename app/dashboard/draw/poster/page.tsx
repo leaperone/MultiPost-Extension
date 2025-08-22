@@ -1,12 +1,17 @@
 'use client';
 
-import { Card, CardBody, Tabs, Tab, Button, Skeleton, Divider } from '@heroui/react';
+import { Button, Card, CardBody, Tabs, Tab, Image, Skeleton, Divider } from '@heroui/react';
 import { useEffect, useState, useMemo } from 'react';
 import { toast } from 'sonner';
 import { z } from 'zod';
 import { cn } from '@/lib/utils';
-import { PosterGenerationSchema, PosterGenerationStatus } from './types';
-import { generatePoster, getPosterGeneration, getPosterGenerations, updatePosterGeneration } from './action';
+import { Category, PosterGenerationSchema, PosterGenerationStatus } from '@/actions/draw/poster/types';
+import {
+  generatePoster,
+  getPosterGeneration,
+  getPosterGenerations,
+  updatePosterGeneration,
+} from '@/actions/draw/poster';
 import { GenerationForm } from './components/GenerationForm';
 import { ResultWaiter } from './components/ResultWaiter';
 import { useSearchParams } from 'next/navigation';
@@ -23,17 +28,13 @@ function PosterGenerationSection() {
   const editId = searchParams.get('editId');
   const [loading, setLoading] = useState(false);
   const [taskId, setTaskId] = useState<string | null>(null);
-  const [formValues] = useState<z.infer<typeof PosterGenerationSchema> | null>({
-    prompt: '',
-    model: 'deepseek-v3',
-    width: 1080,
-    height: 1440,
-    category: 'category.social_media_generator',
-  });
+  const [formValues] = useState<z.infer<typeof PosterGenerationSchema> | null>(null);
+  const [category, setCategory] = useState<string>('category.social_media_generator');
 
   const handleGenerate = async (data: z.infer<typeof PosterGenerationSchema>) => {
     try {
       setLoading(true);
+      data.category = category || 'category.social_media_generator';
       const response = await generatePoster(data);
       if (!response.success || !response.data) {
         throw new Error(response.error);
@@ -70,6 +71,18 @@ function PosterGenerationSection() {
           className="mx-auto mb-8 w-full max-w-3xl">
           <CardBody className="space-y-6">
             <div className="flex flex-col gap-4">
+              <div className="flex flex-wrap gap-2">
+                {Category.map((item) => (
+                  <Button
+                    key={item.name}
+                    variant={category === item.name ? 'solid' : 'flat'}
+                    color={category === item.name ? 'primary' : 'default'}
+                    className={category === item.name ? 'font-medium' : ''}
+                    onPress={() => setCategory(item.name)}>
+                    {t(item.name)}
+                  </Button>
+                ))}
+              </div>
               <GenerationForm
                 onSubmit={handleGenerate}
                 loading={loading}
@@ -117,7 +130,7 @@ function GallerySection() {
   );
   const STATUS_TABS = [
     { key: 'all', label: t('gallery_page.tabs.all') },
-    { key: PosterGenerationStatus.DONE, label: t('gallery_page.tabs.done') },
+    { key: PosterGenerationStatus.COMPLETED, label: t('gallery_page.tabs.done') },
     { key: PosterGenerationStatus.PENDING, label: t('gallery_page.tabs.pending') },
     { key: PosterGenerationStatus.PROCESSING, label: t('gallery_page.tabs.processing') },
     { key: PosterGenerationStatus.FAILED, label: t('gallery_page.tabs.failed') },
@@ -127,7 +140,7 @@ function GallerySection() {
   const [loading, setLoading] = useState(true);
   const [visible, setVisible] = useState(false);
   const [activeIndex, setActiveIndex] = useState(0);
-  const [selectedStatus, setSelectedStatus] = useState<StatusType>(PosterGenerationStatus.DONE);
+  const [selectedStatus, setSelectedStatus] = useState<StatusType>(PosterGenerationStatus.COMPLETED);
 
   const getImageUrls = (poster: PosterGeneration) => {
     if (!poster.lastImageUrl) return [];
@@ -142,7 +155,7 @@ function GallerySection() {
 
   const viewerImages = useMemo(() => {
     return posters
-      .filter((poster) => poster.status === PosterGenerationStatus.DONE && poster.lastImageUrl)
+      .filter((poster) => poster.status === PosterGenerationStatus.COMPLETED && poster.lastImageUrl)
       .flatMap((poster) => {
         const imageUrls = getImageUrls(poster);
         return imageUrls.map((url) => ({
@@ -192,7 +205,7 @@ function GallerySection() {
     let actualIndex = 0;
     let count = 0;
     for (const poster of posters) {
-      if (poster.status === PosterGenerationStatus.DONE && poster.lastImageUrl) {
+      if (poster.status === PosterGenerationStatus.COMPLETED && poster.lastImageUrl) {
         const imageUrls = getImageUrls(poster);
         if (count === index) {
           actualIndex = count;
@@ -284,12 +297,13 @@ function GallerySection() {
             <div
               key={poster.id}
               className="relative overflow-hidden rounded-lg bg-default-50">
-              {poster.status === PosterGenerationStatus.DONE && poster.lastImageUrl ? (
+              {poster.status === PosterGenerationStatus.COMPLETED && poster.lastImageUrl ? (
                 <div className="group relative aspect-square overflow-hidden">
-                  <img
+                  <Image
                     src={poster.lastImageUrl}
                     alt={poster.prompt}
                     className="size-full cursor-pointer object-cover"
+                    radius="none"
                   />
                   {/* 遮罩和操作按钮 */}
                   <div className="absolute inset-0 z-10 opacity-0 transition-opacity duration-200 group-hover:opacity-100">

@@ -2,10 +2,10 @@
 
 import { useState, useEffect } from 'react';
 import { z } from 'zod';
-import { Button } from '@heroui/react';
+import { Button, Image } from '@heroui/react';
 import { GenerationForm } from '@/app/dashboard/draw/poster/components/GenerationForm';
-import { PosterGenerationSchema } from '@/app/dashboard/draw/poster/types';
-import { generatePoster, getPosterGeneration } from '@/app/dashboard/draw/poster/action';
+import { PosterGenerationSchema } from '@/actions/draw/poster/types';
+import { generatePoster, getPosterGeneration } from '@/actions/draw/poster';
 import { ResultWaiter } from '@/app/dashboard/draw/poster/components/ResultWaiter';
 import { FileImage } from 'lucide-react';
 import { useTranslation } from '@/i18n/client';
@@ -54,8 +54,7 @@ export function PosterGeneratePanel({ draftTitle, draftContent, onInsertImage }:
   const handleSubmit = async (data: z.infer<typeof PosterGenerationSchema>) => {
     // Save the prompt to store
     setLastPosterForm(data);
-    console.log(data)
-    
+
     const prefixParts: string[] = [];
     if (includeTitle && draftTitle) {
       prefixParts.push(`${t('aiPoster.titleLabel')} ${draftTitle}`);
@@ -167,10 +166,12 @@ export function PosterGeneratePanel({ draftTitle, draftContent, onInsertImage }:
           <div className="flex flex-col items-center gap-4">
             {generatedImage && (
               <div className="w-full">
-                <img
+                <Image
                   src={generatedImage}
-                  alt="生成的海报"
+                  alt="Generated poster"
                   className="h-auto w-full rounded-lg shadow-lg"
+                  radius="lg"
+                  shadow="md"
                 />
               </div>
             )}

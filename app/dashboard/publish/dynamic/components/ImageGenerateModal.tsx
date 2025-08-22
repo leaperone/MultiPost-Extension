@@ -1,15 +1,24 @@
 'use client';
 
-import { useState, useRef, useEffect } from 'react';
+import { useState, useMemo } from 'react';
 import { z } from 'zod';
-import { Button, Modal, ModalContent, ModalHeader, ModalBody, ModalFooter } from '@heroui/react';
+import { Button, Modal, ModalContent, ModalHeader, ModalBody, ModalFooter, Image, Card, CardBody } from '@heroui/react';
 import { GenerationForm } from '@/app/dashboard/draw/image/components/GenerationForm';
-import { ImageGenerationSchema } from '@/app/api/draw/image/types';
-import { useChat } from 'ai/react';
+import { ResultWaiter } from '@/app/dashboard/draw/image/components/ResultWaiter';
+import { ImageGenerationSchema, ImageGenerationStatus } from '@/actions/draw/image/types';
 import { toast } from 'sonner';
-import { createImageGeneration, getImageGeneration } from '../../../draw/image/action';
-import { FileImage } from 'lucide-react';
+import { FileImage, Download } from 'lucide-react';
 import { useTranslation } from '@/i18n/client';
+import { newImageGeneration } from '@/actions/draw/image';
+import dynamic from 'next/dynamic';
+
+const Viewer = dynamic(() => import('react-viewer'), { ssr: false });
+
+interface TaskStatus {
+  status: string;
+  images?: string[];
+  error?: string;
+}
 
 interface ImageGenerateModalProps {
   isOpen: boolean;
@@ -29,72 +38,13 @@ export function ImageGenerateModal({
   const { t } = useTranslation('publish');
   type Step = 'form' | 'generating' | 'result';
 
-  const [generatedImage, setGeneratedImage] = useState<string | null>(null);
-  const [currentPrompt, setCurrentPrompt] = useState('');
   const [step, setStep] = useState<Step>('form');
-  const [generationId, _setGenerationId] = useState<string | null>(null);
+  const [generationId, setGenerationId] = useState<string | null>(null);
+  const [taskStatus, setTaskStatus] = useState<TaskStatus | null>(null);
+  const [viewerVisible, setViewerVisible] = useState(false);
+  const [activeIndex, setActiveIndex] = useState(0);
   const [includeTitle, setIncludeTitle] = useState(true);
   const [includeContent, setIncludeContent] = useState(true);
-
-  const generationIdRef = useRef(generationId);
-  const setGenerationId = (id: string | null) => {
-    generationIdRef.current = id;
-    _setGenerationId(id);
-  };
-
-  const { messages, append, isLoading, setMessages } = useChat({
-    api: '/api/draw/image',
-    onResponse: (response) => {
-      if (response.status !== 200) {
-        toast.error(t('aiImage.toast.requestFailed'));
-        setStep('form');
-      }
-    },
-    onFinish: async () => {
-      if (!generationIdRef.current) {
-        setStep('form');
-        toast.error(t('aiImage.toast.generationFailed'), {
-          description: t('aiImage.toast.noId'),
-        });
-        return;
-      }
-
-      const maxRetries = 10;
-      const retryDelay = 2000;
-      const currentGenerationId = generationIdRef.current;
-
-      for (let i = 0; i < maxRetries; i++) {
-        const result = await getImageGeneration(currentGenerationId);
-        if (result.success && result.data) {
-          if (result.data.status === 'DONE' && result.data.imageUrl) {
-            setGeneratedImage(result.data.imageUrl);
-            setStep('result');
-            toast.success(t('aiImage.toast.success'));
-            return;
-          }
-          if (result.data.status === 'FAILED') {
-            setStep('form');
-            toast.error(t('aiImage.toast.generationFailed'), {
-              description: result.data.error || t('aiImage.toast.unknownError'),
-            });
-            return;
-          }
-        }
-        await new Promise((resolve) => setTimeout(resolve, retryDelay));
-      }
-
-      setStep('form');
-      toast.error(t('aiImage.toast.timeout'), {
-        description: t('aiImage.toast.timeoutDesc'),
-      });
-    },
-    onError: (error) => {
-      setStep('form');
-      toast.error(t('aiImage.toast.generationFailed'), {
-        description: error.message || t('aiImage.toast.unknownError'),
-      });
-    },
-  });
 
   const handleSubmit = async (data: z.infer<typeof ImageGenerationSchema>) => {
     const prefixParts: string[] = [];
@@ -107,32 +57,21 @@ export function ImageGenerateModal({
     }
 
     const promptPrefix = prefixParts.join('\n\n');
-    let fullPrompt = data.prompt;
     if (promptPrefix) {
-      fullPrompt = `${promptPrefix}\n\n---\n\n${data.prompt}`;
+      data.prompt = `${promptPrefix}\n\n---\n\n${data.prompt}`;
     }
-    setCurrentPrompt(data.prompt);
 
-    setGeneratedImage(null);
+    setTaskStatus(null);
     setGenerationId(null);
     setStep('generating');
 
     try {
-      const createResponse = await createImageGeneration({ ...data, prompt: fullPrompt });
+      const createResponse = await newImageGeneration(data);
       if (!createResponse.success || !createResponse.data?.id) {
         throw new Error(createResponse.error || t('aiImage.toast.createTaskFailed'));
       }
       const newGenerationId = createResponse.data.id;
       setGenerationId(newGenerationId);
-
-      await append(
-        { role: 'user', content: fullPrompt },
-        {
-          body: {
-            id: newGenerationId,
-          },
-        },
-      );
     } catch (error) {
       setStep('form');
       toast.error(t('aiImage.toast.submitFailed'), {
@@ -141,31 +80,62 @@ export function ImageGenerateModal({
     }
   };
 
+  const handleError = (error: string) => {
+    toast.error(error);
+    setStep('form');
+  };
+
+  const handleStatusChange = (status: TaskStatus) => {
+    setTaskStatus(status);
+    if (status.status === ImageGenerationStatus.COMPLETED) {
+      setStep('result');
+    } else if (status.status === ImageGenerationStatus.FAILED) {
+      setStep('form');
+    }
+  };
+
   const handleStartOver = () => {
-    setGeneratedImage(null);
+    setTaskStatus(null);
     setGenerationId(null);
     setStep('form');
-    setMessages([]);
   };
 
   const handleInsert = () => {
-    if (generatedImage) {
-      onImageGenerated({ url: generatedImage, name: currentPrompt });
+    if (taskStatus?.images && taskStatus.images.length > 0 && onImageGenerated) {
+      onImageGenerated({ url: taskStatus.images[0], name: 'Generated Image' });
       onOpenChange(false);
     }
   };
 
-  const handleClose = () => {
-    onOpenChange(false);
+  const handleDownload = async (url: string, index: number) => {
+    try {
+      toast.loading('Downloading...');
+      const response = await fetch(url);
+      const blob = await response.blob();
+      const downloadUrl = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = downloadUrl;
+      const fileName = `image-${index + 1}-${new Date().getTime()}.webp`;
+      link.download = fileName;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(downloadUrl);
+      toast.dismiss();
+    } catch (error) {
+      console.error('Download failed:', error);
+      toast.error('Download failed');
+    }
   };
 
-  useEffect(() => {
-    if (!isOpen) {
-      setTimeout(() => {
-        handleStartOver();
-      }, 300);
-    }
-  }, [isOpen]);
+  const viewerImages = useMemo(() => {
+    return (
+      taskStatus?.images?.map((url, index) => ({
+        src: url,
+        alt: `Generated image ${index + 1}`,
+      })) || []
+    );
+  }, [taskStatus?.images]);
 
   return (
     <Modal
@@ -210,46 +180,55 @@ export function ImageGenerateModal({
               )}
               <GenerationForm
                 onSubmit={handleSubmit}
-                loading={isLoading}
+                loading={false}
               />
             </div>
           )}
 
-          {step === 'generating' && (
-            <div className="flex min-h-64 flex-col items-center justify-center">
-              <div className="size-16 animate-spin rounded-full border-y-2 border-primary"></div>
-              <p className="mt-4 text-lg">{t('aiImage.generating')}</p>
-              {messages.length > 0 &&
-                messages[messages.length - 1].role === 'assistant' &&
-                (() => {
-                  const content = messages[messages.length - 1].content;
-                  const cleanedContent = content
-                    .replace(/```json[\s\S]*?```/g, '')
-                    .replace(/!\[.*?\]\(.*?\)/g, '')
-                    .replace(/\[100\]\(.*?\)/g, '')
-                    .trim();
-
-                  if (cleanedContent) {
-                    return (
-                      <p className="mt-2 w-full max-w-md break-words text-center text-sm text-gray-500">
-                        {cleanedContent}
-                      </p>
-                    );
-                  }
-                  return null;
-                })()}
-            </div>
+          {step === 'generating' && generationId && (
+            <ResultWaiter
+              taskId={generationId}
+              onError={handleError}
+              onStatusChange={handleStatusChange}
+            />
           )}
 
-          {step === 'result' && generatedImage && (
-            <div className="flex flex-col items-center gap-4">
-              <div className="w-full">
-                <img
-                  src={generatedImage}
-                  alt={t('aiImage.generatedAlt')}
-                  className="h-auto w-full rounded-lg shadow-lg"
-                />
+          {step === 'result' && taskStatus?.status === ImageGenerationStatus.COMPLETED && taskStatus.images && (
+            <div className="space-y-4">
+              <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
+                {taskStatus.images.map((imageUrl, index) => (
+                  <Card
+                    key={index}
+                    className="cursor-pointer transition-transform hover:scale-[1.02]"
+                    isPressable
+                    onPress={() => {
+                      setActiveIndex(index);
+                      setViewerVisible(true);
+                    }}>
+                    <CardBody className="p-0">
+                      <Image
+                        alt={`Generated image ${index + 1}`}
+                        className="aspect-square w-full object-cover"
+                        src={imageUrl}
+                      />
+                    </CardBody>
+                  </Card>
+                ))}
               </div>
+
+              <Viewer
+                visible={viewerVisible}
+                onClose={() => setViewerVisible(false)}
+                onMaskClick={() => setViewerVisible(false)}
+                images={viewerImages}
+                activeIndex={activeIndex}
+                zIndex={9999}
+                noNavbar={false}
+                scalable
+                downloadable
+                rotatable={false}
+                showTotal
+              />
             </div>
           )}
         </ModalBody>
@@ -257,7 +236,7 @@ export function ImageGenerateModal({
           {step === 'form' && (
             <Button
               variant="light"
-              onPress={handleClose}>
+              onPress={() => onOpenChange(false)}>
               {t('actions.cancel', '取消')}
             </Button>
           )}
@@ -268,13 +247,26 @@ export function ImageGenerateModal({
                 variant="flat">
                 {t('aiImage.generateAgain')}
               </Button>
-              <Button
-                color="primary"
-                onClick={handleInsert}
-                startContent={<FileImage className="size-4" />}
-                isDisabled={!generatedImage}>
-                {t('dynamic.insertImage', '插入图片')}
-              </Button>
+              <div className="flex gap-2">
+                <Button
+                  color="primary"
+                  onClick={handleInsert}
+                  startContent={<FileImage className="size-4" />}
+                  isDisabled={!taskStatus?.images || taskStatus.images.length === 0}>
+                  {t('dynamic.insertImage', '插入图片')}
+                </Button>
+                {taskStatus?.images?.map((imageUrl, index) => (
+                  <Button
+                    key={index}
+                    color="primary"
+                    variant="flat"
+                    size="sm"
+                    startContent={<Download className="size-4" />}
+                    onPress={() => handleDownload(imageUrl, index)}>
+                    Download {index + 1}
+                  </Button>
+                ))}
+              </div>
             </div>
           )}
         </ModalFooter>

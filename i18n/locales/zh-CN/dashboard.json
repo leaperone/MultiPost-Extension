@@ -50,7 +50,8 @@
       "signout": "退出登录",
       "apiKeys": "API-Keys",
       "recharge": "充值",
-      "drafts": "草稿 (Beta)"
+      "drafts": "草稿 (Beta)",
+      "schedule": "计划 (Beta)"
     },
     "collapse": "收起侧边栏"
   },

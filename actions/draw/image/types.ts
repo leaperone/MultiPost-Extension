@@ -1,10 +1,11 @@
 import { z } from 'zod';
 
 export const ImageGenerationStatus = {
-  PENDING: 'PENDING',
-  PROCESSING: 'PROCESSING',
-  DONE: 'DONE',
-  FAILED: 'FAILED',
+  PENDING: 'pending',
+  PROCESSING: 'processing',
+  COMPLETED: 'completed',
+  FAILED: 'failed',
+  CANCELLED: 'cancelled',
 } as const;
 
 export const ImageSize = {
@@ -92,3 +93,55 @@ export const ImageGenerationSchema = z.object({
 });
 
 export type ImageGenerationSchema = z.infer<typeof ImageGenerationSchema>;
+
+// FileHosting interface based on Prisma schema
+export interface FileHosting {
+  id: string;
+  userId: string;
+  key: string;
+  type: string | null;
+  size: number;
+  times: number;
+  filename: string | null;
+  previewUrl: string | null;
+  source: string | null;
+  expiredAt: Date | null;
+  createdAt: Date;
+  updatedAt: Date;
+  deletedAt: Date | null;
+}
+
+// ImageGenerationLog interface based on Prisma schema
+export interface ImageGenerationLog {
+  id: string;
+  userId: string;
+  imageGenerationId: string;
+  error: string | null;
+  response: unknown;
+  url: string | null;
+  fileHostingId: string | null;
+  createdAt: Date;
+  updatedAt: Date;
+  fileHosting: FileHosting | null;
+}
+
+// Complete ImageGeneration interface based on Prisma schema
+export interface ImageGeneration {
+  id: string;
+  userId: string;
+  prompt: string;
+  extraPrompt: string | null;
+  images: unknown;
+  mask: unknown;
+  number: number;
+  size: string;
+  quality: string;
+  background: string;
+  status: string;
+  message: string | null;
+  error?: string | null;
+  workflowId: string | null;
+  createdAt: Date | string;
+  updatedAt: Date;
+  ImageGenerationLog: ImageGenerationLog[];
+}

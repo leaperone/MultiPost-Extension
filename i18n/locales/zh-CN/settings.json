@@ -137,5 +137,73 @@
       "online": "在线",
       "offline": "离线"
     }
+  },
+  "socialAccounts": {
+    "title": "社交账号",
+    "subtitle": "连接社交账号以启用内容发布。",
+    "toast": {
+      "connectedSuccess": "账号链接成功！",
+      "connectError": "链接账号时发生错误。",
+      "connectFailed": "链接账号失败，请重试。",
+      "oauthFailed": "链接账号失败，请重试。",
+      "missingCode": "缺少授权码，请重试。",
+      "accessDenied": "已拒绝访问，请授权应用。",
+      "insufficientPermissions": "缺少必要权限：{{missing}}。请授予所有请求的权限。",
+      "loadFailed": "加载账号失败",
+      "disconnectSuccess": "账号已取消链接",
+      "disconnectFailed": "取消账号链接失败",
+      "refreshTokenSuccess": "Token 刷新成功",
+      "refreshTokenFailed": "Token 刷新失败",
+      "refreshSuccess": "Token 刷新成功",
+      "refreshFailed": "Token 刷新失败"
+    },
+    "common": {
+      "user": "用户",
+      "unknown": "未知",
+      "comingSoon": "即将推出",
+      "tokenExpired": "Token 已过期",
+      "expiresSoon": "即将过期",
+      "refreshToken": "刷新 Token",
+      "disconnect": "取消链接"
+    },
+    "tiktok": {
+      "title": "TikTok",
+      "verified": "已认证",
+      "connectedAt": "链接时间",
+      "stats": {
+        "followers": "粉丝",
+        "videos": "视频",
+        "likes": "点赞"
+      },
+      "empty": "暂无已链接的 TikTok 账号",
+      "connecting": "链接中...",
+      "connect": "链接 TikTok"
+    },
+    "instagram": {
+      "title": "Instagram",
+      "comingSoon": "即将推出"
+    },
+    "facebook": {
+      "title": "Facebook",
+      "comingSoon": "即将推出"
+    },
+    "linkedin": {
+      "title": "LinkedIn",
+      "comingSoon": "即将推出"
+    },
+    "youtube": {
+      "title": "YouTube",
+      "comingSoon": "即将推出"
+    },
+    "x": {
+      "title": "X",
+      "empty": "暂无已链接的 X 账号",
+      "connecting": "链接中...",
+      "connect": "链接 X"
+    }
+  },
+  "morePlatforms": {
+    "title": "更多平台",
+    "subtitle": "连接更多社交媒体平台"
   }
-} 
+}

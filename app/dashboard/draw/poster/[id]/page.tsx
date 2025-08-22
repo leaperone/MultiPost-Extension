@@ -1,6 +1,6 @@
 import React from 'react';
 import { notFound } from 'next/navigation';
-import { getIframeUrl } from '../action';
+import { getIframeUrl } from '../../../../../actions/draw/poster';
 import { ExportImageButton } from './ExportImageButton';
 import { Spacer } from '@heroui/react';
 

@@ -1,14 +1,14 @@
 'use client';
 
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { Spinner, Button, Progress } from '@heroui/react';
+import { Button, Progress, Spinner, Image } from '@heroui/react';
 import { Image as ImageIcon, Eye, Plus, X, Upload, RefreshCcw } from 'lucide-react';
 import dynamic from 'next/dynamic';
 import { getUserImageFiles } from '../actions';
-import { FileHosting } from '../types';
 import { toast } from 'sonner';
 import ky from 'ky';
 import { useTranslation } from '@/i18n/client';
+import { FileHosting } from '@/prisma/client_multipost';
 
 const Viewer = dynamic(() => import('react-viewer'), { ssr: false });
 
@@ -30,10 +30,6 @@ interface UploadProgress {
   error?: string;
 }
 
-/**
- * Image Preview Component
- * @description Displays a single image with hover overlay and action buttons
- */
 function ImagePreview({ imageFile, onPreview, onAddToDraft, onDelete }: ImagePreviewProps) {
   const [imageUrl, setImageUrl] = useState<string>('');
   const [loading, setLoading] = useState(true);
@@ -63,56 +59,48 @@ function ImagePreview({ imageFile, onPreview, onAddToDraft, onDelete }: ImagePre
   };
 
   return (
-    <div className="group relative aspect-square cursor-pointer overflow-hidden rounded-lg bg-gray-100">
-      {/* Image */}
+    <div className="group relative aspect-square cursor-pointer overflow-hidden rounded-lg bg-background">
       {loading ? (
         <div className="flex size-full items-center justify-center">
           <Spinner size="sm" />
         </div>
       ) : (
-        <img
+        <Image
           src={imageUrl}
           alt={imageFile.filename || 'Uploaded image'}
           className="size-full object-cover transition-transform group-hover:scale-105"
-          onError={(e) => {
-            const target = e.target as HTMLImageElement;
-            target.src =
-              'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgdmlld0JveD0iMCAwIDIwMCAyMDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIyMDAiIGhlaWdodD0iMjAwIiBmaWxsPSIjRjNGNEY2Ii8+CjxwYXRoIGQ9Ik02MCA2MEgxNDBWMTQwSDYwVjYwWiIgZmlsbD0iI0Q1RDdEQSIvPgo8cGF0aCBkPSJNODAgODBIOTBMOTUgOTBIMTAwTDEwNSA4MEgxMjBWMTIwSDgwVjgwWiIgZmlsbD0iI0EzQTNBMyIvPgo8Y2lyY2xlIGN4PSI5MCIgY3k9IjkwIiByPSI1IiBmaWxsPSIjQTNBM0EzIi8+Cjwvc3ZnPgo=';
-          }}
+          radius="none"
+          fallbackSrc="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgdmlld0JveD0iMCAwIDIwMCAyMDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIyMDAiIGhlaWdodD0iMjAwIiBmaWxsPSIjRjNGNEY2Ii8+CjxwYXRoIGQ9Ik02MCA2MEgxNDBWMTQwSDYwVjYwWiIgZmlsbD0iI0Q1RDdEQSIvPgo8cGF0aCBkPSJNODAgODBIOTBMOTUgOTBIMTAwTDEwNSA4MEgxMjBWMTIwSDgwVjgwWiIgZmlsbD0iI0EzQTNBMyIvPgo8Y2lyY2xlIGN4PSI5MCIgY3k9IjkwIiByPSI1IiBmaWxsPSIjQTNBM0EzIi8+Cjwvc3ZnPgo="
         />
       )}
 
-      {/* Delete Button - Top Right Corner */}
       <div className="absolute right-1 top-1 z-20 opacity-0 transition-opacity duration-200 group-hover:opacity-100">
         <Button
           isIconOnly
           size="sm"
           variant="flat"
           isLoading={deleting}
-          className="border border-red-300 bg-red-500/20 text-red-600 backdrop-blur-sm hover:bg-red-500/30"
+          className="border border-danger-300 bg-danger-500/20 text-danger-600 backdrop-blur-sm hover:bg-danger-500/30"
           onPress={handleDelete}>
           <X className="size-4" />
         </Button>
       </div>
 
-      {/* Hover Overlay */}
-      <div className="absolute inset-0 z-10 flex items-end justify-center gap-1 bg-black/50 pb-3 opacity-0 transition-opacity duration-200 group-hover:opacity-100">
-        {/* Preview Button */}
+      <div className="absolute inset-0 z-10 flex items-end justify-center gap-1 bg-foreground/50 pb-3 opacity-0 transition-opacity duration-200 group-hover:opacity-100">
         <Button
           isIconOnly
           size="lg"
           variant="flat"
-          className="border border-white/30 bg-white/20 text-white backdrop-blur-sm hover:bg-white/30"
+          className="border border-background/30 bg-background/20 text-background backdrop-blur-sm hover:bg-background/30"
           onPress={onPreview}>
           <Eye className="size-5" />
         </Button>
 
-        {/* Add to Draft Button */}
         <Button
           isIconOnly
           size="lg"
           variant="flat"
-          className="border border-white/30 bg-white/20 text-white backdrop-blur-sm hover:bg-white/30"
+          className="border border-background/30 bg-background/20 text-background backdrop-blur-sm hover:bg-background/30"
           onPress={onAddToDraft}>
           <Plus className="size-5" />
         </Button>
@@ -121,18 +109,14 @@ function ImagePreview({ imageFile, onPreview, onAddToDraft, onDelete }: ImagePre
   );
 }
 
-/**
- * Upload Progress Component
- * @description Displays upload progress for individual files
- */
 function UploadProgressItem({ uploadItem }: { uploadItem: UploadProgress }) {
   const { t } = useTranslation('draft');
 
   return (
-    <div className="rounded-lg border border-gray-200 bg-white p-3">
+    <div className="rounded-lg border border-border bg-background p-3">
       <div className="mb-2 flex items-center justify-between">
-        <span className="truncate text-sm font-medium">{uploadItem.file.name}</span>
-        <span className="text-xs text-gray-500">
+        <span className="truncate text-sm font-medium text-foreground">{uploadItem.file.name}</span>
+        <span className="text-xs text-muted-foreground">
           {uploadItem.status === 'uploading' && `${Math.round(uploadItem.progress)}%`}
           {uploadItem.status === 'success' && t('mediaLibrary.complete')}
           {uploadItem.status === 'error' && t('mediaLibrary.failed')}
@@ -144,17 +128,13 @@ function UploadProgressItem({ uploadItem }: { uploadItem: UploadProgress }) {
         size="sm"
       />
       {uploadItem.status === 'error' && uploadItem.error && (
-        <p className="mt-1 text-xs text-red-500">{uploadItem.error}</p>
+        <p className="mt-1 text-xs text-danger">{uploadItem.error}</p>
       )}
     </div>
   );
 }
 
-/**
- * Get image URL from file hosting service
- */
 async function getImageUrl(imageFile: FileHosting): Promise<string> {
-  // Check if preview URL is already available
   if (imageFile.previewUrl) {
     return imageFile.previewUrl;
   }
@@ -177,12 +157,8 @@ async function getImageUrl(imageFile: FileHosting): Promise<string> {
   return '';
 }
 
-/**
- * Upload single file to server
- */
 async function uploadSingleFile(file: File, onProgress: (progress: number) => void): Promise<void> {
   try {
-    // Step 1: Create file record and get upload URL
     const createResponse = await ky
       .post('/api/v1/file/create', {
         json: {
@@ -203,13 +179,12 @@ async function uploadSingleFile(file: File, onProgress: (progress: number) => vo
 
     const { fileId, url: uploadUrl } = createResponse.data;
 
-    // Step 2: Upload file to presigned URL
     const xhr = new XMLHttpRequest();
 
     await new Promise<void>((resolve, reject) => {
       xhr.upload.addEventListener('progress', (event) => {
         if (event.lengthComputable) {
-          const progress = (event.loaded / event.total) * 80; // 80% for upload
+          const progress = (event.loaded / event.total) * 80;
           onProgress(progress);
         }
       });
@@ -232,7 +207,6 @@ async function uploadSingleFile(file: File, onProgress: (progress: number) => vo
       xhr.send(file);
     });
 
-    // Step 3: Get preview URL for image files
     if (file.type.startsWith('image/')) {
       onProgress(90);
       try {
@@ -257,10 +231,6 @@ async function uploadSingleFile(file: File, onProgress: (progress: number) => vo
   }
 }
 
-/**
- * Media Library Component
- * @description Displays user uploaded image files with infinite scroll
- */
 export default function MediaLibrary({ onSelectImage }: MediaLibraryProps) {
   const { t } = useTranslation('draft');
   const [imageFiles, setImageFiles] = useState<FileHosting[]>([]);
@@ -275,12 +245,10 @@ export default function MediaLibrary({ onSelectImage }: MediaLibraryProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // Fetch image files on component mount
   useEffect(() => {
     fetchImageFiles();
   }, []);
 
-  // Setup intersection observer for infinite scroll
   useEffect(() => {
     if (!containerRef.current || !hasMore || loadingMore) return;
 
@@ -301,9 +269,6 @@ export default function MediaLibrary({ onSelectImage }: MediaLibraryProps) {
     return () => observer.disconnect();
   }, [hasMore, loadingMore]);
 
-  /**
-   * Fetch user's image files from server
-   */
   const fetchImageFiles = async () => {
     try {
       setLoading(true);
@@ -311,8 +276,6 @@ export default function MediaLibrary({ onSelectImage }: MediaLibraryProps) {
 
       if (response.success && response.data) {
         setImageFiles(response.data);
-        // For now, we'll assume all files are loaded at once
-        // In a real implementation with pagination, you'd set hasMore based on response
         setHasMore(false);
       } else {
         toast.error(response.error || t('mediaLibrary.loadImagesFailed'));
@@ -324,16 +287,11 @@ export default function MediaLibrary({ onSelectImage }: MediaLibraryProps) {
     }
   };
 
-  /**
-   * Load more images (for future pagination implementation)
-   */
   const loadMore = useCallback(async () => {
     if (loadingMore || !hasMore) return;
 
     setLoadingMore(true);
     try {
-      // Here you would implement actual pagination
-      // For now, we just simulate it
       await new Promise((resolve) => setTimeout(resolve, 1000));
       setHasMore(false);
     } catch (error) {
@@ -343,12 +301,8 @@ export default function MediaLibrary({ onSelectImage }: MediaLibraryProps) {
     }
   }, [loadingMore, hasMore]);
 
-  /**
-   * Handle image preview with react-viewer
-   */
   const handlePreviewImage = async (imageFile: FileHosting, index: number) => {
     try {
-      // Prepare all images for viewer
       const images = await Promise.all(
         imageFiles.map(async (file) => {
           const url = await getImageUrl(file);
@@ -368,18 +322,12 @@ export default function MediaLibrary({ onSelectImage }: MediaLibraryProps) {
     }
   };
 
-  /**
-   * Handle add image to draft
-   */
   const handleAddToDraft = (imageFile: FileHosting) => {
     if (onSelectImage) {
       onSelectImage(imageFile);
     }
   };
 
-  /**
-   * Handle delete image
-   */
   const handleDeleteImage = async (imageFile: FileHosting) => {
     try {
       const response = await ky.post(`/api/v1/file/${imageFile.id}/delete`).json<{
@@ -388,7 +336,6 @@ export default function MediaLibrary({ onSelectImage }: MediaLibraryProps) {
       }>();
 
       if (response.code === 0) {
-        // Remove image from local state
         setImageFiles((prev) => prev.filter((file) => file.id !== imageFile.id));
         toast.success(t('mediaLibrary.deleteSuccess'));
       } else {
@@ -400,9 +347,6 @@ export default function MediaLibrary({ onSelectImage }: MediaLibraryProps) {
     }
   };
 
-  /**
-   * Handle file selection for upload
-   */
   const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
     const files = event.target.files;
     if (!files || files.length === 0) return;
@@ -414,19 +358,14 @@ export default function MediaLibrary({ onSelectImage }: MediaLibraryProps) {
     }
 
     handleUpload(imageFiles);
-    // Reset input value
     event.target.value = '';
   };
 
-  /**
-   * Handle batch upload
-   */
   const handleUpload = async (files: File[]) => {
     if (uploading) return;
 
     setUploading(true);
 
-    // Initialize upload progress for all files
     const initialProgress: UploadProgress[] = files.map((file) => ({
       file,
       progress: 0,
@@ -441,21 +380,19 @@ export default function MediaLibrary({ onSelectImage }: MediaLibraryProps) {
           setUploadProgress((prev) => prev.map((item, i) => (i === index ? { ...item, progress } : item)));
         });
 
-        // Mark as success
         setUploadProgress((prev) =>
           prev.map((item, i) => (i === index ? { ...item, status: 'success', progress: 100 } : item)),
         );
         successCount++;
       } catch (error) {
         console.error(`Failed to upload ${file.name}:`, error);
-        // Mark as error
         setUploadProgress((prev) =>
           prev.map((item, i) =>
             i === index
               ? {
                   ...item,
                   status: 'error',
-                  error: error instanceof Error ? error.message : '上传失败',
+                  error: error instanceof Error ? error.message : 'Upload failed',
                 }
               : item,
           ),
@@ -465,7 +402,6 @@ export default function MediaLibrary({ onSelectImage }: MediaLibraryProps) {
 
     await Promise.all(uploadPromises);
 
-    // Show result notification
     if (successCount === files.length) {
       toast.success(t('mediaLibrary.uploadSuccessAll', { count: successCount }));
     } else if (successCount > 0) {
@@ -479,15 +415,12 @@ export default function MediaLibrary({ onSelectImage }: MediaLibraryProps) {
       toast.error(t('mediaLibrary.uploadFailedAll'));
     }
 
-    // Clear upload progress after 3 seconds
     setTimeout(() => {
       setUploadProgress([]);
     }, 3000);
 
     setUploading(false);
 
-    // Always refresh image list after all files are processed (success or failed)
-    // This ensures we show any successfully uploaded images
     if (successCount > 0) {
       await fetchImageFiles();
     }
@@ -497,37 +430,27 @@ export default function MediaLibrary({ onSelectImage }: MediaLibraryProps) {
     <div
       className="space-y-4"
       ref={containerRef}>
-      {/* Header */}
       <div className="flex items-center justify-center">
-        {/* <div className="flex items-center gap-2">
-          <ImageIcon className="size-5" />
-          <h3 className="text-lg font-semibold">{t('mediaLibrary.title')}</h3>
-          <span className="text-sm text-gray-500">({t('mediaLibrary.imageCount', { count: imageFiles.length })})</span>
-        </div> */}
-        <div className="flex items-center gap-2">
+        <div className="flex w-full items-center gap-2">
           <Button
-            size="sm"
-            variant="ghost"
-            startContent={<Upload className="size-4" />}
+            fullWidth
             isLoading={uploading}
             onPress={() => fileInputRef.current?.click()}>
-            {/* {t('mediaLibrary.uploadImages')} */}
+            <Upload />
           </Button>
           <Button
-            size="sm"
-            variant="ghost"
+            fullWidth
+            isIconOnly
             onPress={() => fetchImageFiles()}
-            startContent={<RefreshCcw className="size-4" />}
             isLoading={loading}>
-            {/* {t('mediaLibrary.refresh')} */}
+            <RefreshCcw />
           </Button>
         </div>
       </div>
 
-      {/* Upload Progress */}
       {uploadProgress.length > 0 && (
         <div className="space-y-2">
-          <h4 className="text-sm font-medium">{t('mediaLibrary.uploadProgress')}</h4>
+          <h4 className="text-sm font-medium text-foreground">{t('mediaLibrary.uploadProgress')}</h4>
           <div className="max-h-32 space-y-2 overflow-y-auto">
             {uploadProgress.map((item, index) => (
               <UploadProgressItem
@@ -539,13 +462,12 @@ export default function MediaLibrary({ onSelectImage }: MediaLibraryProps) {
         </div>
       )}
 
-      {/* Image Grid */}
       {loading ? (
         <div className="flex items-center justify-center py-8">
           <Spinner size="lg" />
         </div>
       ) : imageFiles.length === 0 ? (
-        <div className="py-8 text-center text-gray-500">
+        <div className="py-8 text-center text-muted-foreground">
           <ImageIcon className="mx-auto mb-4 size-12 opacity-50" />
           <p>{t('mediaLibrary.noImages')}</p>
         </div>
@@ -563,14 +485,12 @@ export default function MediaLibrary({ onSelectImage }: MediaLibraryProps) {
             ))}
           </div>
 
-          {/* Loading more indicator */}
           {hasMore && !loading && (
             <div className="scroll-sentinel flex justify-center py-4">{loadingMore && <Spinner size="sm" />}</div>
           )}
         </>
       )}
 
-      {/* Hidden file input */}
       <input
         ref={fileInputRef}
         type="file"
@@ -580,7 +500,6 @@ export default function MediaLibrary({ onSelectImage }: MediaLibraryProps) {
         className="hidden"
       />
 
-      {/* React Viewer */}
       {viewerVisible && (
         <Viewer
           visible={viewerVisible}

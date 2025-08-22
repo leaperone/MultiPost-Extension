@@ -20,7 +20,6 @@ FROM base AS builder
 ENV NODE_OPTIONS="--max-old-space-size=8192"
 RUN --mount=type=cache,id=pnpm-multipost,target=/pnpm/store pnpm install --frozen-lockfile
 RUN sh prisma/generate.sh && sh scripts/tracker/build.sh
-RUN pnpm run build:worker
 RUN pnpm run build
 
 FROM node:20.18.1-alpine3.20 AS final
@@ -46,7 +45,16 @@ COPY --from=builder /app/public ./public
 COPY --from=builder /app/.next/standalone ./
 COPY --from=builder /app/.next/static ./.next/static
 COPY --from=builder /app/geo ./geo
-COPY --from=builder /app/worker/dist ./worker/dist
-COPY --from=builder /app/docker/start.sh ./start.sh
 EXPOSE 3000
-CMD [ "sh", "start.sh" ]
+CMD [ "node", "server.js" ]
+
+FROM denoland/deno:latest as backend-cache
+WORKDIR /app
+COPY --from=builder /app/backend/ .
+RUN deno cache main.ts
+
+FROM denoland/deno:latest as backend
+RUN apt-get update && apt-get install -y openssl
+WORKDIR /app
+COPY --from=backend-cache /app .
+CMD ["deno", "run", "-A", "main.ts"]

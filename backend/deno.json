@@ -1,0 +1,12 @@
+{
+  "tasks": {
+    "dev": "npx dotenv -e .env -- deno run -A --watch main.ts",
+    "start": "npx dotenv -e .env -- deno run -A main.ts"
+  },
+  "imports": {
+    "@prisma/client": "npm:@prisma/client@^6.13.0",
+    "@std/assert": "jsr:@std/assert@1",
+    "dotenv-cli": "npm:dotenv-cli@^8.0.0",
+    "zod": "npm:zod@^3.25.76"
+  }
+}

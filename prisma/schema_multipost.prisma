@@ -4,6 +4,13 @@ generator client {
   binaryTargets = ["native", "darwin-arm64"]
 }
 
+generator denoclient {
+  provider      = "prisma-client"
+  output        = "../backend/prisma/client_multipost_deno"
+  binaryTargets = ["native", "darwin-arm64", "debian-openssl-1.1.x", "debian-openssl-3.0.x"]
+  runtime       = "deno"
+}
+
 datasource db {
   provider = "postgresql"
   url      = env("MULTIPOST_DATABASE_URL")
@@ -38,6 +45,9 @@ model User {
   PosterGeneration    PosterGeneration[]
   FileHosting         FileHosting[]
   Draft               Draft[]
+  PublishTask         PublishTask[]
+  PublishTaskLog      PublishTaskLog[]
+  ImageGenerationLog  ImageGenerationLog[]
 }
 
 model Account {
@@ -224,25 +234,6 @@ model SessionData {
   @@index([websiteId, createdAt, dataKey])
 }
 
-model SocialMediaAccount {
-  id          String  @id @unique @default(cuid())
-  userId      String
-  provider    String
-  accountId   String
-  username    String?
-  profileUrl  String?
-  avatarUrl   String?
-  description String?
-  extraData   Json?
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@unique([userId, provider, accountId])
-}
-
 model APIKey {
   id        String   @id @unique @default(cuid())
   userId    String
@@ -380,25 +371,40 @@ model PlatformExtraConfig {
 }
 
 model ImageGeneration {
-  id            String   @id @unique @default(cuid())
-  userId        String
-  prompt        String
-  extraPrompt   String?
-  images        Json?
-  mask          Json?
-  number        Int      @default(1)
-  size          String   @default("auto")
-  quality       String   @default("auto")
-  background    String   @default("auto")
-  status        String   @default("pending")
-  response      Json?
-  result        Json?
-  fileHostingId String?
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  id          String   @id @unique @default(cuid())
+  userId      String
+  prompt      String
+  extraPrompt String?
+  images      Json?
+  mask        Json?
+  number      Int      @default(1)
+  size        String   @default("auto")
+  quality     String   @default("auto")
+  background  String   @default("auto")
+  status      String   @default("pending")
+  message     String?
+  workflowId  String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 
-  user        User         @relation(fields: [userId], references: [id], onDelete: Cascade)
-  fileHosting FileHosting? @relation(fields: [fileHostingId], references: [id], onDelete: Cascade)
+  user               User                 @relation(fields: [userId], references: [id], onDelete: Cascade)
+  ImageGenerationLog ImageGenerationLog[]
+}
+
+model ImageGenerationLog {
+  id                String   @id @unique @default(cuid())
+  userId            String
+  imageGenerationId String
+  error             String?
+  response          Json?
+  url               String?
+  fileHostingId     String?
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  user            User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  imageGeneration ImageGeneration? @relation(fields: [imageGenerationId], references: [id], onDelete: Cascade)
+  fileHosting     FileHosting?     @relation(fields: [fileHostingId], references: [id], onDelete: Cascade)
 }
 
 model PosterGeneration {
@@ -438,8 +444,8 @@ model FileHosting {
   updatedAt  DateTime  @updatedAt
   deletedAt  DateTime?
 
-  imageGeneration ImageGeneration[]
-  posterGeneration PosterGeneration[]
+  posterGeneration   PosterGeneration[]
+  ImageGenerationLog ImageGenerationLog[]
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
@@ -453,8 +459,69 @@ model Draft {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user        User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  PublishTask PublishTask[]
 
   @@index([userId])
   @@index([createdAt])
+}
+
+model SocialMediaAccount {
+  id           String    @id @unique @default(cuid())
+  userId       String
+  platform     String // twitter, facebook, instagram, linkedin, tiktok, etc.
+  platformId   String // Platform-specific user ID
+  avatarUrl    String?
+  description  String?
+  username     String? // Platform username/handle
+  displayName  String? // Display name on the platform
+  accessToken  String // OAuth access token
+  refreshToken String? // OAuth refresh token (if available)
+  tokenType    String    @default("Bearer") // Token type (usually Bearer)
+  scope        String? // Granted permissions scope
+  expiresAt    DateTime? // Token expiration time
+  isActive     Boolean   @default(true) // Whether the account is active
+  metadata     Json? // Additional platform-specific data
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, platform, platformId])
+  @@index([userId])
+  @@index([platform])
+  @@index([expiresAt])
+}
+
+model PublishTask {
+  id          String   @id @unique @default(cuid())
+  userId      String
+  draftId     String
+  publishedAt DateTime // 规划发布时间
+  status      String   @default("pending")
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  draft          Draft            @relation(fields: [draftId], references: [id], onDelete: Cascade)
+  PublishTaskLog PublishTaskLog[]
+  User           User             @relation(fields: [userId], references: [id])
+}
+
+model PublishTaskLog {
+  id            String    @id @unique @default(cuid())
+  publishTaskId String
+  userId        String
+  platform      String
+  platformId    String
+  publishedAt   DateTime? // 实际发布时间
+  status        String    @default("pending")
+  publishData   Json?
+  result        Json?
+  error         String?
+  message       String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  publishTask PublishTask @relation(fields: [publishTaskId], references: [id], onDelete: Cascade)
+  User        User        @relation(fields: [userId], references: [id])
 }

@@ -3,7 +3,7 @@
 import { Button, Form, Modal, ModalBody, ModalContent, ModalHeader, useDisclosure, Avatar } from '@heroui/react';
 import { PlusIcon } from 'lucide-react';
 import { useEffect, useState } from 'react';
-import { linkSocialMedia } from '../actions';
+// import { linkSocialMedia } from '../actions';
 import { AccountInfo, getAccountInfos } from '@/lib/extension';
 
 interface AccountInfoWithId extends AccountInfo {
@@ -31,7 +31,7 @@ export default function LinkSocialMediaButton() {
         Array.from(selectedAccounts).map((id) => {
           // eslint-disable-next-line @typescript-eslint/no-unused-vars
           const { id: _id, ...info } = accountInfos[id];
-          return linkSocialMedia(info);
+          // return linkSocialMedia(info);
         }),
       );
 

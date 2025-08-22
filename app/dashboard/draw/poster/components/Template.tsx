@@ -1,10 +1,10 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { Button, Spinner } from '@heroui/react';
+import { Button, Spinner, Image } from '@heroui/react';
 import { useTranslation } from '@/i18n/client';
 import { toast } from 'sonner';
-import { PosterTemplate, Category } from '../types';
+import { PosterTemplate, Category } from '@/actions/draw/poster/types';
 import { Maximize2 } from 'lucide-react';
 import dynamic from 'next/dynamic';
 
@@ -74,10 +74,11 @@ export function Template({ onSelect, category }: TemplateProps) {
             className="overflow-hidden rounded-lg shadow transition-shadow hover:shadow-lg">
             <div className="relative aspect-[3/4] w-full">
               <div className="group relative size-full overflow-hidden">
-                <img
+                <Image
                   src={template.thumbnail_path}
                   alt={template.name}
                   className="size-full object-cover transition-transform duration-300 group-hover:scale-105"
+                  radius="none"
                 />
                 {/* 遮罩层 */}
                 <div className="absolute inset-0 z-10 opacity-0 transition-opacity duration-200 group-hover:opacity-100">

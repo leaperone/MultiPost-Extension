@@ -3,27 +3,9 @@
 import { multipostDb } from '@/lib/db';
 import { PosterGenerationSchema, PosterGenerationStatus, Category } from './types';
 import { auth } from '@/auth';
-import { deductCredit, preCheckCredit } from '@/actions/credit';
+import { deductCredit } from '@/actions/credit';
 import { PRICING } from '@/actions/credit/types';
 import { Prisma } from '@/prisma/client_multipost';
-import ky from 'ky';
-
-interface FileCreateResponse {
-  code: number;
-  data: {
-    fileId: string;
-    url: string;
-  };
-  msg: string;
-}
-
-interface FilePreviewResponse {
-  code: number;
-  data: {
-    previewUrl: string;
-  };
-  msg: string;
-}
 
 export async function getAvailableModels() {
   const response = await fetch('https://api.seede.ai/api/task/models', {
@@ -53,9 +35,9 @@ export async function generatePoster(data: PosterGenerationSchema) {
       throw new Error('Unauthorized');
     }
 
-    if (!(await preCheckCredit(session.user.id, PRICING.POSTER_GENERATION.toNumber()))) {
-      throw new Error('Insufficient credits');
-    }
+    // if (!(await preCheckCredit(session.user.id, PRICING.POSTER_GENERATION.toNumber()))) {
+    //   throw new Error('Insufficient credits');
+    // }
 
     const result = await multipostDb.$transaction(async (tx) => {
       const created = await tx.posterGeneration.create({
@@ -239,7 +221,7 @@ export async function updatePosterGeneration(id: string) {
       throw new Error('Poster generation not found');
     }
 
-    if (result.status === PosterGenerationStatus.DONE) {
+    if (result.status === PosterGenerationStatus.COMPLETED) {
       return {
         success: true,
         data: result,
@@ -277,7 +259,6 @@ export async function updatePosterGeneration(id: string) {
       error?: string;
       projectId: string;
       taskId: string;
-      fileHostingId?: string;
     } = {
       status: responseData.task.status,
       urls: responseData.task.metadata.urls,
@@ -287,74 +268,14 @@ export async function updatePosterGeneration(id: string) {
 
     // 如果是完成状态，添加最后的图片URL
     if (responseData.task.status === 'completed') {
-      let fileId: string | undefined;
-      try {
-        // Create a file record in our system and get a presigned URL for upload
-        const fsCreateUrlResp = await ky.post(`${process.env.APP_URL}/api/v1/file/create`, {
-          headers: {
-            Authorization: `Bearer ${process.env.INTERNAL_SECRET!}`,
-            'X-User-Id': result.userId,
-            'X-Source': 'POSTER_GENERATION',
-          },
-          body: JSON.stringify({
-            filename: `poster-${result.id}.webp`,
-          }),
-        });
-
-        const fsCreateUrlData = (await fsCreateUrlResp.json()) as FileCreateResponse;
-        if (fsCreateUrlData.code !== 0) {
-          throw new Error(`Failed to create file upload URL: ${fsCreateUrlData.msg}`);
-        }
-
-        fileId = fsCreateUrlData.data.fileId;
-        const uploadUrl = fsCreateUrlData.data.url;
-
-        // Download the generated image
-        const imageUrl = responseData.task.metadata.urls.image;
-        const imageResponse = await fetch(imageUrl);
-        if (!imageResponse.ok) {
-          throw new Error(`Failed to download image from ${imageUrl}: ${imageResponse.statusText}`);
-        }
-        const imageBlob = await imageResponse.blob();
-
-        // Upload the image to our file hosting via the presigned URL
-        const uploadResponse = await fetch(uploadUrl, {
-          method: 'PUT',
-          body: imageBlob,
-          headers: {
-            'Content-Type': 'image/webp',
-          },
-        });
-        if (!uploadResponse.ok) {
-          throw new Error(`Failed to upload image to file hosting: ${uploadResponse.statusText}`);
-        }
-
-        // FIXME: SHOULD NOT CALL API ROUTE IN SERVER ACTION
-        // Get the permanent preview URL for the uploaded file
-        const fsPreviewUrlResp = await ky.get(`${process.env.APP_URL}/api/v1/file/${fileId}/preview`);
-        const fsPreviewUrlData = (await fsPreviewUrlResp.json()) as FilePreviewResponse;
-
-        if (fsPreviewUrlData.code === 0) {
-          updateData.lastImageUrl = fsPreviewUrlData.data.previewUrl;
-        } else {
-          throw new Error(`Failed to get preview URL: ${fsPreviewUrlData.msg}`);
-        }
-      } catch (uploadError) {
-        console.error('Failed to upload poster to file hosting, fallback to original url', uploadError);
-        // Fallback to original image URL if upload fails
-        updateData.lastImageUrl = responseData.task.metadata.urls.image;
-      }
-
-      updateData.status = PosterGenerationStatus.DONE;
-      if (fileId) {
-        updateData.fileHostingId = fileId;
-      }
+      updateData.lastImageUrl = responseData.task.metadata.urls.image;
+      updateData.status = PosterGenerationStatus.COMPLETED;
 
       // 扣除用户积分
       try {
         await deductCredit({
           userId: result.userId,
-          type: 'POSTER_GENERATION', // 使用现有的图像生成类型
+          type: 'IMAGE_GENERATION', // 使用现有的图像生成类型
           amount: PRICING.POSTER_GENERATION,
         });
       } catch (error) {
@@ -378,6 +299,42 @@ export async function updatePosterGeneration(id: string) {
     return {
       success: true,
       data: updated,
+    };
+  } catch (error) {
+    console.error(error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Unknown error',
+    };
+  }
+}
+
+export async function listAllPosters() {
+  try {
+    const session = await auth();
+    if (!session?.user || !session.user.id) {
+      throw new Error('Unauthorized');
+    }
+    const result = await multipostDb.posterGeneration.findMany({
+      where: {
+        userId: session.user.id,
+        status: PosterGenerationStatus.COMPLETED,
+      },
+      orderBy: {
+        createdAt: 'desc',
+      },
+      select: {
+        id: true,
+        prompt: true,
+        taskId: true,
+        projectId: true,
+        createdAt: true,
+        lastImageUrl: true,
+      },
+    });
+    return {
+      success: true,
+      data: result,
     };
   } catch (error) {
     console.error(error);

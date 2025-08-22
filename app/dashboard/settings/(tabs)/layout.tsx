@@ -1,7 +1,7 @@
 'use client';
 
 import { Tabs, Tab } from '@heroui/react';
-import { ToggleRightIcon, KeyIcon, WalletIcon, ShieldCheckIcon, RouterIcon } from 'lucide-react';
+import { ToggleRightIcon, KeyIcon, WalletIcon, ShieldCheckIcon, RouterIcon, UsersIcon } from 'lucide-react';
 import { usePathname } from 'next/navigation';
 
 export default function SettingsLayout({
@@ -74,6 +74,16 @@ export default function SettingsLayout({
             </div>
           }
           href={`/dashboard/settings/client`}
+        />
+        <Tab
+          key={`/dashboard/settings/social-media-accounts`}
+          title={
+            <div className="flex items-center space-x-2">
+              <UsersIcon className="size-4" />
+              <span>Social Media Accounts</span>
+            </div>
+          }
+          href={`/dashboard/settings/social-media-accounts`}
         />
       </Tabs>
 

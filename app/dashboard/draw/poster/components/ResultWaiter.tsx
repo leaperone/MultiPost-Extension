@@ -2,8 +2,8 @@
 
 import { Card, CardBody, Image, Button } from '@heroui/react';
 import { useEffect, useState } from 'react';
-import { getPosterGeneration, updatePosterGeneration } from '../action';
-import { PosterGenerationStatus } from '../types';
+import { getPosterGeneration, updatePosterGeneration } from '@/actions/draw/poster';
+import { PosterGenerationStatus } from '@/actions/draw/poster/types';
 import dynamic from 'next/dynamic';
 import { Download } from 'lucide-react';
 import { useTranslation } from '@/i18n/client';
@@ -57,9 +57,9 @@ export function ResultWaiter({ taskId, onError }: ResultWaiterProps) {
           });
         }
 
-        if (response.data.status === PosterGenerationStatus.DONE && response.data.lastImageUrl) {
+        if (response.data.status === PosterGenerationStatus.COMPLETED && response.data.lastImageUrl) {
           setResult({
-            status: PosterGenerationStatus.DONE,
+            status: PosterGenerationStatus.COMPLETED,
             image: response.data.lastImageUrl,
           });
         }
@@ -70,7 +70,7 @@ export function ResultWaiter({ taskId, onError }: ResultWaiterProps) {
         }
 
         // 如果状态是完成，就不再继续查询
-        if (response.data.status === PosterGenerationStatus.DONE) {
+        if (response.data.status === PosterGenerationStatus.COMPLETED) {
           return;
         }
 

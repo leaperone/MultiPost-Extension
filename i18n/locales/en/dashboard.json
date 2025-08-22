@@ -50,7 +50,8 @@
       "signout": "Sign Out",
       "apiKeys": "API-Keys",
       "recharge": "Recharge",
-      "drafts": "Drafts (Beta)"
+      "drafts": "Drafts (Beta)",
+      "schedule": "Schedule (Beta)"
     },
     "collapse": "Collapse Sidebar"
   },

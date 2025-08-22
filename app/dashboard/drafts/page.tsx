@@ -24,6 +24,7 @@ import { useTranslation } from '@/i18n/client';
 import { nanoid } from 'nanoid';
 import { useDraftStore } from '@/store/draft.store';
 import { PosterGeneratePanel } from './components/PosterGeneratePanel';
+import PublishTaskModal from './components/PublishTaskModal';
 
 export default function DraftsPage() {
   const { t } = useTranslation('draft');
@@ -36,6 +37,7 @@ export default function DraftsPage() {
   const [creating, setCreating] = useState(false);
   const [isPublishModalOpen, setIsPublishModalOpen] = useState(false);
   const [isDirectPublishModalOpen, setIsDirectPublishModalOpen] = useState(false);
+  const [isPublishTaskModalOpen, setIsPublishTaskModalOpen] = useState(false);
   const [saving, setSaving] = useState(false);
   const [autoSaving, setAutoSaving] = useState(false);
   const { lastActiveTab, setLastActiveTab, lastSelectedDraftId, setLastSelectedDraftId } = useDraftStore();
@@ -434,6 +436,17 @@ export default function DraftsPage() {
     setIsPublishModalOpen(true);
   };
 
+  const handleOpenPublishTaskModal = () => {
+    if (!selectedDraftId) {
+      addToast({
+        title: 'Please select a draft to publish',
+        color: 'warning',
+      });
+      return;
+    }
+    setIsPublishTaskModalOpen(true);
+  };
+
   const handleApplyPolish = React.useCallback(
     (data: { title?: string; content?: string }) => {
       if (data.title) {
@@ -451,11 +464,23 @@ export default function DraftsPage() {
     setIsPublishModalOpen(false);
   };
 
+  const handleClosePublishTaskModal = () => {
+    setIsPublishTaskModalOpen(false);
+  };
+
   const handlePublishSuccess = () => {
     addToast({
       title: 'Publish task created successfully',
       color: 'success',
     });
+  };
+
+  const handlePublishTaskSuccess = () => {
+    addToast({
+      title: 'Publish task created successfully',
+      color: 'success',
+    });
+    setIsPublishTaskModalOpen(false);
   };
 
   const handleDirectPublish = () => {
@@ -562,6 +587,16 @@ export default function DraftsPage() {
             onPress={handleOpenPublishModal}
             isDisabled={!selectedDraftId}>
             {t('clientPublish')}
+          </Button>
+
+          <Button
+            size="sm"
+            color="secondary"
+            variant="flat"
+            startContent={<Send className="size-4" />}
+            onPress={handleOpenPublishTaskModal}
+            isDisabled={!selectedDraftId}>
+            Schedule Publish
           </Button>
 
           <Button
@@ -715,6 +750,13 @@ export default function DraftsPage() {
       </div>
 
       {/* Publish Modal */}
+      <PublishTaskModal
+        isOpen={isPublishTaskModalOpen}
+        onClose={handleClosePublishTaskModal}
+        draftId={selectedDraftId || undefined}
+        onSuccess={handlePublishTaskSuccess}
+      />
+
       <ClientPublishModal
         isOpen={isPublishModalOpen}
         onClose={handleClosePublishModal}

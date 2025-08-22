@@ -16,6 +16,13 @@ const nextConfig = {
     if (isServer) {
       config.plugins = [...config.plugins, new PrismaPlugin()];
     }
+    
+    // Exclude backend directory from webpack processing
+    config.module.rules.push({
+      test: /\.(ts|tsx|js|jsx)$/,
+      exclude: [/node_modules/, /backend/],
+    });
+
     return config;
   },
   headers: async () => [

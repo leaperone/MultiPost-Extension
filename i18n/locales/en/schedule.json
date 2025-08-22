@@ -1,0 +1,64 @@
+{
+  "title": "Publish Calendar",
+  "description": "View and manage your content publishing schedule",
+  "status": "Status",
+  "loading": {
+    "schedule": "Loading schedule...",
+    "taskDetails": "Loading task details..."
+  },
+  "calendar": {
+    "today": "Today",
+    "month": "Month",
+    "week": "Week",
+    "publishTask": "Publish Task"
+  },
+  "statusLabels": {
+    "pending": "Pending",
+    "processing": "Processing",
+    "completed": "Completed",
+    "failed": "Failed",
+    "cancelled": "Cancelled"
+  },
+  "taskDetail": {
+    "taskInfo": "Task Information",
+    "taskId": "Task ID",
+    "scheduledTime": "Scheduled Time",
+    "createdAt": "Created At",
+    "updatedAt": "Updated At",
+    "contentPreview": "Content Preview",
+    "publishLogs": "Publish Logs",
+    "records": "records",
+    "publishTime": "Publish Time",
+    "message": "Message",
+    "error": "Error",
+    "platformId": "Platform ID"
+  },
+  "actions": {
+    "cancelTask": "Cancel Task",
+    "restartTask": "Restart Task",
+    "close": "Close",
+    "viewDraft": "View Draft"
+  },
+  "platforms": {
+    "twitter": "Twitter/X",
+    "facebook": "Facebook",
+    "instagram": "Instagram",
+    "linkedin": "LinkedIn",
+    "tiktok": "TikTok",
+    "youtube": "YouTube",
+    "weibo": "Weibo"
+  },
+  "errors": {
+    "unauthorized": "Unauthorized",
+    "taskNotFound": "Task not found",
+    "onlyPendingCanCancel": "Only pending tasks can be cancelled",
+    "onlyCancelledOrFailedCanRestart": "Only cancelled or failed tasks can be restarted",
+    "failedToCancel": "Failed to cancel task",
+    "failedToRestart": "Failed to restart task",
+    "unexpectedError": "An unexpected error occurred"
+  },
+  "messages": {
+    "taskCancelled": "Task cancelled successfully",
+    "taskRestarted": "Task restarted successfully"
+  }
+}
