@@ -14,12 +14,3 @@ services:
       context: ..
       dockerfile: ./docker/Dockerfile
       target: backend
-
-
-  multipost-backend:
-    image: registry-vpc.cn-hongkong.aliyuncs.com/leaperone/multipost:backend-latest
-    restart: always
-    env_file:
-      - multipost.env
-    networks:
-      - multipost
