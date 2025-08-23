@@ -1,9 +1,9 @@
-import { createDeepSeek } from '@ai-sdk/deepseek';
+import { createOpenAI } from '@ai-sdk/openai';
 import { CoreMessage, streamText } from 'ai';
 
-const deepseek = createDeepSeek({
-  baseURL: process.env.DEEPSEEK_BASE_URL || '',
-  apiKey: process.env.DEEPSEEK_API_KEY || '',
+const openai = createOpenAI({
+  baseURL: process.env.OPENAI_BASE_URL || '',
+  apiKey: process.env.OPENAI_API_KEY || '',
 });
 
 // 允许流式响应最多持续30秒
@@ -101,7 +101,7 @@ export async function POST(req: Request) {
   const systemPrompt = getSystemPrompt(currentPrompt || '');
 
   const result = await streamText({
-    model: deepseek(process.env.DEEPSEEK_MODEL || 'deepseek-chat'),
+    model: openai('gpt-5-nano'),
     system: systemPrompt,
     messages,
   });
