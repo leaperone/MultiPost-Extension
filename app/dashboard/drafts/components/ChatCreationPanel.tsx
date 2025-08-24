@@ -119,7 +119,9 @@ export function ChatCreationPanel({ draftId, draftTitle, draftContent, onApply }
               ],
         );
       }
-      
+
+      setChatHistory(draftId, messages);
+
       // Auto-focus input after generation completes
       setTimeout(() => {
         if (inputRef.current) {
@@ -136,12 +138,6 @@ export function ChatCreationPanel({ draftId, draftTitle, draftContent, onApply }
       setSuggestionsState(storedSuggestions);
     }
   }, [draftId, getSuggestions]);
-
-  useEffect(() => {
-    if (draftId) {
-      setChatHistory(draftId, messages);
-    }
-  }, [messages, draftId, setChatHistory]);
 
   // Auto-focus input when component mounts with a draftId
   useEffect(() => {
@@ -613,7 +609,11 @@ export function ChatCreationPanel({ draftId, draftTitle, draftContent, onApply }
                 value={input}
                 onChange={handleInputChange}
                 onKeyDown={handleKeyDown}
-                placeholder={todoQueue.length > 0 ? t('aiCreation.continueQueuePlaceholder') || '继续处理队列任务 (回车) 或输入新指令...' : t('aiCreation.inputPlaceholder')}
+                placeholder={
+                  todoQueue.length > 0
+                    ? t('aiCreation.continueQueuePlaceholder') || '继续处理队列任务 (回车) 或输入新指令...'
+                    : t('aiCreation.inputPlaceholder')
+                }
                 minRows={1}
                 maxRows={10}
                 className="pr-20"
