@@ -21,6 +21,7 @@ import { useTranslation } from '@/i18n/client';
 import { useEffect, useState } from 'react';
 import { getAvailableModels } from '@/actions/draw/poster';
 import { useChat } from 'ai/react';
+import { parsePromptResponse } from '@/lib/ai-response-parser';
 
 interface GenerationFormProps {
   onSubmit: (data: z.infer<typeof PosterGenerationSchema>) => Promise<void>;
@@ -47,16 +48,10 @@ export function GenerationForm({ onSubmit, loading, initialValues, extraPrompt }
     initialMessages: [],
     body: {},
     onFinish: (message) => {
-      // Try to extract optimized prompt from AI response
-      const content = message.content;
-      const match = content.match(/```json\n([\s\S]+?)\n```/);
-      if (match) {
-        try {
-          const parsed = JSON.parse(match[1]);
-          if (parsed.prompt) {
-            setOptimizedPrompt(parsed.prompt);
-          }
-        } catch {}
+      // Use ai-response-parser to extract optimized prompt from AI response
+      const result = parsePromptResponse<{ prompt: string }>(message.content);
+      if (result.success && result.data?.prompt) {
+        setOptimizedPrompt(result.data.prompt);
       }
     },
   });

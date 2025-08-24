@@ -17,6 +17,7 @@ import ReactMarkdown from 'react-markdown';
 import { useChatHistoryStore } from '@/store/chat.history.store';
 import { useDraftStore } from '@/store/draft.store';
 import { useTranslation } from '@/i18n/client';
+import { parseTitleContentResponse } from '@/lib/ai-response-parser';
 
 interface ChatCreationPanelProps {
   draftId: string;
@@ -59,24 +60,18 @@ export function ChatCreationPanel({ draftId, draftTitle, draftContent, onApply }
       let newContent: string | undefined;
       let thoughts: string | undefined;
 
-      const jsonRegex = /```json\n([\s\S]+?)\n```/;
-      const jsonMatch = content.match(jsonRegex);
+      // Use ai-response-parser to extract structured data from AI response
+      const result = parseTitleContentResponse<{ thoughts?: string; title?: string; content?: string }>(content);
 
-      if (jsonMatch) {
-        try {
-          const parsed = JSON.parse(jsonMatch[1]);
-          thoughts = parsed.thoughts;
-          title = parsed.title;
-          newContent = parsed.content;
+      if (result.success && result.data) {
+        thoughts = result.data.thoughts;
+        title = result.data.title;
+        newContent = result.data.content;
 
-          if (thoughts) {
-            setMessages((prevMessages) =>
-              prevMessages.map((m) => (m.id === message.id ? { ...m, content: thoughts! } : m)),
-            );
-          }
-        } catch (error) {
-          console.error('Failed to parse AI response JSON:', error);
-          return;
+        if (thoughts) {
+          setMessages((prevMessages) =>
+            prevMessages.map((m) => (m.id === message.id ? { ...m, content: thoughts! } : m)),
+          );
         }
       }
 
