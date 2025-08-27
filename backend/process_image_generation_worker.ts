@@ -74,6 +74,52 @@ export class ImageGenerationWorker {
     this.maxRetries = maxRetries;
   }
 
+  /**
+   * Recover image generations left in processing state
+   * - Reset status to pending
+   * - Clear workflowId
+   * - Delete related imageGenerationLog records
+   * - Re-dispatch processImageGeneration
+   */
+  async recoverProcessingImageGenerations(): Promise<void> {
+    try {
+      console.log('🧭 Recovering image generations left in processing state...');
+      const stuckItems = await this.db.imageGeneration.findMany({
+        where: { status: 'processing' },
+        select: { id: true },
+      });
+
+      if (stuckItems.length === 0) {
+        console.log('✅ No image generations to recover.');
+        return;
+      }
+
+      console.log(`⚠️  Found ${stuckItems.length} image generation(s) to recover`);
+
+      for (const { id } of stuckItems) {
+        try {
+          await this.db.$transaction([
+            this.db.imageGenerationLog.deleteMany({ where: { imageGenerationId: id } }),
+            this.db.imageGeneration.update({
+              where: { id },
+              data: { status: 'pending', workflowId: null },
+            }),
+          ]);
+
+          console.log(`♻️  ImageGeneration ${id} reset to pending and logs cleaned. Re-queueing...`);
+
+          this.processImageGeneration(id).catch((err) => {
+            console.error(`Failed to reprocess image generation ${id}:`, err);
+          });
+        } catch (tErr) {
+          console.error(`❌ Failed to recover image generation ${id}:`, tErr);
+        }
+      }
+    } catch (err) {
+      console.error('❌ Failed to scan for processing image generations:', err);
+    }
+  }
+
   async processImageGeneration(imageGenerationId: string): Promise<void> {
     try {
       console.log(`🔄 Processing image generation: ${imageGenerationId}`);
