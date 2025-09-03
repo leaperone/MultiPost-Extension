@@ -1,8 +1,8 @@
 import { Suspense } from 'react';
 import { auth } from '@/auth';
 import { prisma } from '@/lib/db';
-import { Alert, Card, CardHeader, CardBody } from '@heroui/react';
-import { Loader2, Router, Clock, Users } from 'lucide-react';
+import { Alert, Card, CardHeader, CardBody, Button } from '@heroui/react';
+import { Loader2, Router, Clock, Users, ArrowRight } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import LinkButton from './LinkExtensionButton';
 import EditNameButton from './EditNameButton';
@@ -64,12 +64,22 @@ async function ClientsList() {
               <p className="mb-1 text-sm text-foreground/60">Client ID</p>
               <p className="break-all font-mono text-sm text-foreground">{client.id}</p>
             </div>
-            <div className="flex justify-end gap-2">
-              <EditNameButton
-                clientId={client.id}
-                initialName={client.name}
-              />
-              <DeleteClientButton clientId={client.id} />
+            <div className="flex justify-between gap-2">
+              <Button
+                as="a"
+                href={`/dashboard/settings/client/${client.id}`}
+                size="sm"
+                variant="flat"
+                endContent={<ArrowRight className="size-3" />}>
+                View Details
+              </Button>
+              <div className="flex gap-2">
+                <EditNameButton
+                  clientId={client.id}
+                  initialName={client.name}
+                />
+                <DeleteClientButton clientId={client.id} />
+              </div>
             </div>
           </CardBody>
         </Card>
