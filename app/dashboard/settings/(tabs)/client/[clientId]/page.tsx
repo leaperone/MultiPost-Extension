@@ -9,9 +9,9 @@ import { notFound, redirect } from 'next/navigation';
 import TasksTable from './TasksTable';
 
 interface ClientDetailsPageProps {
-  params: {
+  params: Promise<{
     clientId: string;
-  };
+  }>;
 }
 
 async function ClientInfo({ clientId }: { clientId: string }) {
