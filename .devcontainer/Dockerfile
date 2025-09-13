@@ -15,7 +15,7 @@ ENV PNPM_HOME /root/.local/share/pnpm \
     && PATH $PNPM_HOME:$PATH
 # 安装 pnpm
 RUN npm config set registry=https://registry.npmmirror.com \
-    && npm i -g pnpm @anthropic-ai/claude-code deno \
+    && npm i -g pnpm @anthropic-ai/claude-code deno @leaperone/envx \
     && pnpm setup \
     && pnpm config set store-dir $PNPM_HOME \
     && pnpm config set registry https://registry.npmmirror.com

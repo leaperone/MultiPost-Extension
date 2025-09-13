@@ -6,3 +6,5 @@ sh prisma/generate.sh
 # 初始化数据库
 cp .devcontainer/dev-db/docker-compose.yml.example .devcontainer/dev-db/docker-compose.yml
 docker compose -f .devcontainer/dev-db/docker-compose.yml up -d
+
+envx pull dev
