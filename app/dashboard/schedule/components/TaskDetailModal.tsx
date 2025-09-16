@@ -24,6 +24,7 @@ import {
   ExternalLinkIcon,
   XIcon,
   RefreshCwIcon,
+  InfoIcon,
 } from 'lucide-react';
 import { useState, useEffect, useMemo } from 'react';
 import { cancelPublishTask, restartPublishTask, getSocialMediaAccountByPlatformId } from '../actions';
@@ -151,6 +152,8 @@ export default function TaskDetailModal({ isOpen, onClose, task }: TaskDetailMod
   if (!task) return null;
 
   const statusInfo = statusConfig[task.status as keyof typeof statusConfig] || statusConfig.pending;
+  const showPostPublishNotice =
+    task.status === 'completed' || task.PublishTaskLog?.some((log) => log.status === 'completed');
 
   const handleCancelTask = async () => {
     if (!task || task.status !== 'pending') return;
@@ -229,6 +232,15 @@ export default function TaskDetailModal({ isOpen, onClose, task }: TaskDetailMod
             </ModalHeader>
             <ModalBody>
               <div className="space-y-6">
+                {showPostPublishNotice && (
+                  <div className="flex items-start gap-3 rounded-md border border-primary/30 bg-primary/5 p-3 text-sm">
+                    <InfoIcon className="mt-0.5 size-4 text-primary" />
+                    <p className="leading-relaxed text-default-700">
+                      After publishing, it may take a few minutes for your content to be processed and appear on your
+                      profile.
+                    </p>
+                  </div>
+                )}
                 {/* 基本信息 */}
                 <Card>
                   <CardHeader>
@@ -408,7 +420,7 @@ export default function TaskDetailModal({ isOpen, onClose, task }: TaskDetailMod
                   color="primary"
                   startContent={<ExternalLinkIcon className="size-4" />}
                   onPress={() => {
-                    window.open(`/dashboard/drafts?draftId=${task.draft.id}`, '_blank');
+                    window.open(`/dashboard/draft/${task.draft.id}`, '_blank');
                   }}>
                   {t('actions.viewDraft')}
                 </Button>
