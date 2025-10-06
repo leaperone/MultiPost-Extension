@@ -5,8 +5,8 @@ import { generateText } from 'ai';
 import { PromotionTaskTypeLabelMap } from '../types';
 
 const openai = createOpenAI({
-  apiKey: process.env.DEEPSEEK_API_KEY || '',
-  baseURL: process.env.DEEPSEEK_BASE_URL || '',
+  apiKey: '',
+  baseURL: 'https://api.2some.one/v1',
 });
 
 // 允许流式响应最多持续30秒

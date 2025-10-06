@@ -2,10 +2,9 @@ import { createOpenAI } from '@ai-sdk/openai';
 import { CoreMessage, streamText } from 'ai';
 
 const openai = createOpenAI({
-  baseURL: process.env.OPENAI_BASE_URL || '',
-  apiKey: process.env.OPENAI_API_KEY || '',
+  apiKey: '',
+  baseURL: 'https://api.2some.one/v1',
 });
-
 // 允许流式响应最多持续30秒
 export const maxDuration = 60;
 
