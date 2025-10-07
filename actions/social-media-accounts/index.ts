@@ -21,6 +21,10 @@ export async function getSocialMediaAccounts() {
     const accounts = await multipostDb.socialMediaAccount.findMany({
       where: {
         userId: session.user.id,
+        platform: {
+          not: "facebook"
+        },
+        isActive: true,
       },
       orderBy: [{ platform: 'asc' }, { createdAt: 'desc' }],
     });

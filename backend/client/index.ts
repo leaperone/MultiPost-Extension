@@ -11,6 +11,7 @@ export * from './base.ts';
 // Platform-specific clients
 export * from './tiktok.ts';
 export * from './x.ts';
+export * from './facebook_pages.ts';
 
 // Factory
 export * from './factory.ts';

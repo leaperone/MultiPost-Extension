@@ -15,6 +15,11 @@ import {
   refreshXAccountToken,
   initiateXAuth,
 } from '@/actions/social-media-accounts/x';
+import {
+  getFacebookPageAccounts,
+  disconnectFacebookPageAccount,
+  initiateFacebookPagesAuth,
+} from '@/actions/social-media-accounts/facebook-pages';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { toast } from 'sonner';
 import { useTranslation } from '@/i18n/client';
@@ -47,18 +52,33 @@ interface XAccount {
   updatedAt: Date;
 }
 
+interface FacebookAccount {
+  id: string;
+  platformId: string;
+  username: string | null;
+  displayName: string | null;
+  avatarUrl: string | null;
+  description: string | null;
+  expiresAt: Date | null;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  metadata: any;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
 interface PlatformCard {
   id: string;
   title: string;
   description: string;
   icon: string;
   isFunctional: boolean;
-  accounts?: TikTokAccount[] | XAccount[];
+  accounts?: TikTokAccount[] | XAccount[] | FacebookAccount[];
 }
 
 export default function SocialMediaAccountsPage() {
   const [tiktokAccounts, setTikTokAccounts] = useState<TikTokAccount[]>([]);
   const [xAccounts, setXAccounts] = useState<XAccount[]>([]);
+  const [facebookAccounts, setFacebookAccounts] = useState<FacebookAccount[]>([]);
   const [loading, setLoading] = useState(true);
   const [connecting, setConnecting] = useState<string | null>(null);
   const router = useRouter();
@@ -85,9 +105,19 @@ export default function SocialMediaAccountsPage() {
     }
   };
 
+  const loadFacebookAccounts = async () => {
+    try {
+      const accounts = await getFacebookPageAccounts();
+      setFacebookAccounts(accounts);
+    } catch (error) {
+      console.error('Failed to load Facebook page accounts:', error);
+      toast.error(t('socialAccounts.toast.loadFailed'));
+    }
+  };
+
   useEffect(() => {
     const loadAccounts = async () => {
-      await Promise.all([loadTikTokAccounts(), loadXAccounts()]);
+      await Promise.all([loadTikTokAccounts(), loadXAccounts(), loadFacebookAccounts()]);
       setLoading(false);
     };
     loadAccounts();
@@ -103,6 +133,9 @@ export default function SocialMediaAccountsPage() {
     } else if (success === 'x_connected') {
       toast.success(t('socialAccounts.toast.connectedSuccess'));
       router.replace('/dashboard/settings/social-media-accounts');
+    } else if (success === 'facebook_connected') {
+      toast.success(t('socialAccounts.toast.connectedSuccess'));
+      router.replace('/dashboard/settings/social-media-accounts');
     } else if (error) {
       const joinedMissing = missing ? missing.split(',').join(', ') : '';
       const errorMessages: Record<string, string> = {
@@ -110,6 +143,8 @@ export default function SocialMediaAccountsPage() {
         missing_code: t('socialAccounts.toast.missingCode'),
         access_denied: t('socialAccounts.toast.accessDenied'),
         insufficient_permissions: t('socialAccounts.toast.insufficientPermissions', { missing: joinedMissing }),
+        facebook_session_expired: t('socialAccounts.facebook.sessionExpired'),
+        oauth_state_mismatch: t('socialAccounts.toast.oauthFailed'),
       };
       toast.error(errorMessages[error] || t('socialAccounts.toast.connectError'));
       router.replace('/dashboard/settings/social-media-accounts');
@@ -153,6 +188,24 @@ export default function SocialMediaAccountsPage() {
     }
   };
 
+  const handleConnectFacebook = async () => {
+    try {
+      setConnecting('facebook-pages');
+      const { authUrl } = await initiateFacebookPagesAuth();
+
+      if (authUrl) {
+        window.location.href = authUrl;
+      } else {
+        throw new Error('Failed to get authorization URL');
+      }
+    } catch (error) {
+      console.error('Failed to initiate Facebook OAuth:', error);
+      toast.error(t('socialAccounts.toast.connectFailed'));
+    } finally {
+      setConnecting(null);
+    }
+  };
+
   const handleDisconnectTikTok = async (accountId: string) => {
     try {
       await disconnectTikTokAccount(accountId);
@@ -171,6 +224,17 @@ export default function SocialMediaAccountsPage() {
       toast.success(t('socialAccounts.toast.disconnectSuccess'));
     } catch (error) {
       console.error('Failed to disconnect X account:', error);
+      toast.error(t('socialAccounts.toast.disconnectFailed'));
+    }
+  };
+
+  const handleDisconnectFacebook = async (accountId: string) => {
+    try {
+      await disconnectFacebookPageAccount(accountId);
+      await loadFacebookAccounts();
+      toast.success(t('socialAccounts.toast.disconnectSuccess'));
+    } catch (error) {
+      console.error('Failed to disconnect Facebook page:', error);
       toast.error(t('socialAccounts.toast.disconnectFailed'));
     }
   };
@@ -226,6 +290,14 @@ export default function SocialMediaAccountsPage() {
       accounts: tiktokAccounts,
     },
     {
+      id: 'facebook-pages',
+      title: t('socialAccounts.facebook.title'),
+      description: 'Publish content to your Facebook page',
+      icon: 'logos:facebook',
+      isFunctional: true,
+      accounts: facebookAccounts,
+    },
+    {
       id: 'linkedin',
       title: t('socialAccounts.linkedin.title'),
       description: 'Share professional content and build your network',
@@ -237,13 +309,6 @@ export default function SocialMediaAccountsPage() {
       title: t('socialAccounts.instagram.title'),
       description: 'Share photos and videos with your audience',
       icon: 'logos:instagram-icon',
-      isFunctional: false,
-    },
-    {
-      id: 'facebook',
-      title: t('socialAccounts.facebook.title'),
-      description: 'Publish content to your Facebook page',
-      icon: 'logos:facebook',
       isFunctional: false,
     },
     {
@@ -259,10 +324,28 @@ export default function SocialMediaAccountsPage() {
     if (!platform.accounts) return null;
 
     const isX = platform.id === 'x';
-    const accounts = platform.accounts as (TikTokAccount | XAccount)[];
-    const handleConnect = isX ? handleConnectX : handleConnectTikTok;
-    const handleDisconnect = isX ? handleDisconnectX : handleDisconnectTikTok;
+    const isTikTok = platform.id === 'tiktok';
+    const isFacebook = platform.id === 'facebook-pages';
+    const accounts = platform.accounts as (TikTokAccount | XAccount | FacebookAccount)[];
+    const handleConnect = isX ? handleConnectX : isFacebook ? handleConnectFacebook : handleConnectTikTok;
+    const handleDisconnect = isX ? handleDisconnectX : isFacebook ? handleDisconnectFacebook : handleDisconnectTikTok;
     const isLoading = connecting === platform.id;
+    const showRefreshButton = isX || isTikTok;
+    const emptyCopy = isX
+      ? t('socialAccounts.x.empty')
+      : isFacebook
+        ? t('socialAccounts.facebook.empty')
+        : t('socialAccounts.tiktok.empty');
+    const connectLabel = isX
+      ? t('socialAccounts.x.connect')
+      : isFacebook
+        ? t('socialAccounts.facebook.connect')
+        : t('socialAccounts.tiktok.connect');
+    const connectingLabel = isX
+      ? t('socialAccounts.x.connecting')
+      : isFacebook
+        ? t('socialAccounts.facebook.connecting')
+        : t('socialAccounts.tiktok.connecting');
 
     return (
       <div className="space-y-3">
@@ -274,82 +357,109 @@ export default function SocialMediaAccountsPage() {
             />
           </div>
         ) : accounts.length > 0 ? (
-          accounts.map((account) => (
-            <div
-              key={account.id}
-              className="rounded-lg border border-border bg-background p-4 hover:shadow-md">
-              <div className="flex items-center gap-4">
-                <Avatar
-                  src={account.avatarUrl || undefined}
-                  name={account.displayName || account.username || t('socialAccounts.common.user')}
-                  size="md"
-                  className="shrink-0 ring-2 ring-border"
-                />
-                <div className="flex min-w-0 flex-1 items-center gap-4">
-                  <div className="flex items-center gap-2">
-                    <h4 className="truncate text-base font-semibold">
-                      {account.displayName || account.username || t('socialAccounts.common.unknown')}
-                    </h4>
-                    {account.metadata?.is_verified && (
-                      <Icon
-                        icon="mingcute:check-fill"
-                        className="shrink-0 text-sm text-primary"
-                      />
-                    )}
+          accounts.map((account) => {
+            const isVerified =
+              (isTikTok || isX) && Boolean((account as TikTokAccount | XAccount).metadata?.is_verified);
+            const pageCategory = isFacebook ? (account as FacebookAccount).metadata?.category : undefined;
+            const pageLink = isFacebook ? (account as FacebookAccount).metadata?.link : undefined;
+            return (
+              <div
+                key={account.id}
+                className="rounded-lg border border-border bg-background p-4 hover:shadow-md">
+                <div className="flex items-center gap-4">
+                  <div className="flex items-center gap-3">
+                    <Icon
+                      icon={platform.icon}
+                      className="shrink-0 text-xl text-muted-foreground"
+                    />
+                    <Avatar
+                      src={account.avatarUrl || undefined}
+                      name={account.displayName || account.username || t('socialAccounts.common.user')}
+                      size="md"
+                      className="shrink-0 ring-2 ring-border"
+                    />
                   </div>
-                  {account.description && (
-                    <span className="truncate text-sm text-muted-foreground">{account.description}</span>
-                  )}
-                  <span className="text-sm text-muted-foreground">
-                    {new Date(account.createdAt).toLocaleDateString()}
-                  </span>
-                </div>
-                <div className="flex shrink-0 items-center gap-2">
-                  {isTokenExpired(account.expiresAt) && (
-                    <Chip
+                  <div className="flex min-w-0 flex-1 items-center gap-4">
+                    <div className="flex flex-col gap-1">
+                      <div className="flex items-center gap-2">
+                        {isFacebook && pageLink ? (
+                          <a
+                            href={pageLink}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="truncate text-base font-semibold text-primary underline-offset-2 hover:underline">
+                            {account.displayName || account.username || t('socialAccounts.common.unknown')}
+                          </a>
+                        ) : (
+                          <h4 className="truncate text-base font-semibold">
+                            {account.displayName || account.username || t('socialAccounts.common.unknown')}
+                          </h4>
+                        )}
+                        {isVerified && (
+                          <Icon
+                            icon="mingcute:check-fill"
+                            className="shrink-0 text-sm text-primary"
+                          />
+                        )}
+                      </div>
+                    </div>
+                    {(account.description || (isFacebook && pageCategory)) && (
+                      <span className="truncate text-sm text-muted-foreground">
+                        {isFacebook && pageCategory ? pageCategory : account.description}
+                      </span>
+                    )}
+                    <span className="text-sm text-muted-foreground">
+                      {new Date(account.createdAt).toLocaleDateString()}
+                    </span>
+                  </div>
+                  <div className="flex shrink-0 items-center gap-2">
+                    {showRefreshButton && isTokenExpired(account.expiresAt) && (
+                      <Chip
+                        size="sm"
+                        color="danger"
+                        variant="flat"
+                        className="px-2 text-xs">
+                        {t('socialAccounts.common.tokenExpired')}
+                      </Chip>
+                    )}
+                    {showRefreshButton &&
+                      isTokenExpiringSoon(account.expiresAt) &&
+                      !isTokenExpired(account.expiresAt) && (
+                        <Chip
+                          size="sm"
+                          color="warning"
+                          variant="flat"
+                          className="px-2 text-xs">
+                          {t('socialAccounts.common.expiresSoon')}
+                        </Chip>
+                      )}
+                    {showRefreshButton &&
+                      (isTokenExpired(account.expiresAt) || isTokenExpiringSoon(account.expiresAt)) && (
+                        <Button
+                          size="sm"
+                          color="primary"
+                          variant="flat"
+                          className="px-3 text-sm"
+                          onPress={() => handleRefreshToken(account.id, platform.id)}>
+                          {t('socialAccounts.common.refreshToken')}
+                        </Button>
+                      )}
+                    <Button
                       size="sm"
                       color="danger"
                       variant="flat"
-                      className="px-2 text-xs">
-                      {t('socialAccounts.common.tokenExpired')}
-                    </Chip>
-                  )}
-                  {isTokenExpiringSoon(account.expiresAt) && !isTokenExpired(account.expiresAt) && (
-                    <Chip
-                      size="sm"
-                      color="warning"
-                      variant="flat"
-                      className="px-2 text-xs">
-                      {t('socialAccounts.common.expiresSoon')}
-                    </Chip>
-                  )}
-                  {(isTokenExpired(account.expiresAt) || isTokenExpiringSoon(account.expiresAt)) && (
-                    <Button
-                      size="sm"
-                      color="primary"
-                      variant="flat"
                       className="px-3 text-sm"
-                      onPress={() => handleRefreshToken(account.id, platform.id)}>
-                      {t('socialAccounts.common.refreshToken')}
+                      onPress={() => handleDisconnect(account.id)}>
+                      {t('socialAccounts.common.disconnect')}
                     </Button>
-                  )}
-                  <Button
-                    size="sm"
-                    color="danger"
-                    variant="flat"
-                    className="px-3 text-sm"
-                    onPress={() => handleDisconnect(account.id)}>
-                    {t('socialAccounts.common.disconnect')}
-                  </Button>
+                  </div>
                 </div>
               </div>
-            </div>
-          ))
+            );
+          })
         ) : (
           <div className="rounded-lg border border-border bg-background p-6 text-center">
-            <p className="mb-4 text-sm font-medium text-foreground">
-              {isX ? t('socialAccounts.x.empty') : t('socialAccounts.tiktok.empty')}
-            </p>
+            <p className="mb-4 text-sm font-medium text-foreground">{emptyCopy}</p>
             <Button
               color="primary"
               variant="flat"
@@ -364,13 +474,7 @@ export default function SocialMediaAccountsPage() {
                   />
                 )
               }>
-              {isLoading
-                ? isX
-                  ? t('socialAccounts.x.connecting')
-                  : t('socialAccounts.tiktok.connecting')
-                : isX
-                  ? t('socialAccounts.x.connect')
-                  : t('socialAccounts.tiktok.connect')}
+              {isLoading ? connectingLabel : connectLabel}
             </Button>
           </div>
         )}

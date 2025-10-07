@@ -185,6 +185,19 @@
     },
     "facebook": {
       "title": "Facebook",
+      "empty": "尚未绑定任何 Facebook 专页",
+      "connecting": "正在绑定...",
+      "connect": "绑定 Facebook 专页",
+      "selectTitle": "选择 Facebook 专页",
+      "selectDescription": "请选择要连接到 SaraClick 的 Facebook 专页。",
+      "selectedLabel": "当前选择：{{page}}",
+      "selectPrompt": "请选择一个专页后继续。",
+      "noPages": "该 Facebook 账号下没有可用的专页。",
+      "goBack": "返回设置",
+      "tasksLabel": "授权权限",
+      "cancel": "取消",
+      "confirm": "确认选择",
+      "sessionExpired": "Facebook 授权会话已过期，请重新尝试。",
       "comingSoon": "即将推出"
     },
     "linkedin": {

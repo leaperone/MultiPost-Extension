@@ -185,6 +185,19 @@
     },
     "facebook": {
       "title": "Facebook",
+      "empty": "No Facebook pages linked",
+      "connecting": "Linking...",
+      "connect": "Link Facebook Page",
+      "selectTitle": "Choose a Facebook Page",
+      "selectDescription": "Select the Facebook Page you want to connect to SaraClick.",
+      "selectedLabel": "Selected page: {{page}}",
+      "selectPrompt": "Select a page to continue.",
+      "noPages": "No Facebook pages are available for this Facebook account.",
+      "goBack": "Back to settings",
+      "tasksLabel": "Permissions",
+      "cancel": "Cancel",
+      "confirm": "Confirm selection",
+      "sessionExpired": "Your Facebook authorization session expired. Please try again.",
       "comingSoon": "Coming Soon"
     },
     "linkedin": {

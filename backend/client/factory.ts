@@ -9,6 +9,7 @@ import { PrismaClient } from '../prisma/client_multipost_deno/client.ts';
 import { BaseSocialMediaClient, PublishTask } from './base.ts';
 import { TikTokClient } from './tiktok.ts';
 import { XClient } from './x.ts';
+import { FacebookPagesClient } from './facebook_pages.ts';
 
 /**
  * Factory for creating social media platform clients
@@ -42,6 +43,11 @@ export class SocialMediaClientFactory {
 
     // Register X client
     this.registerClient('x', new XClient(this.db));
+
+    // Register Facebook Pages client with common aliases
+    const facebookPagesClient = new FacebookPagesClient(this.db);
+    this.registerClient('facebook-pages', facebookPagesClient);
+    this.registerClient('facebook_pages', facebookPagesClient);
 
     // TODO: Register other platform clients here
     // this.registerClient('youtube', new YouTubeClient(this.db));
