@@ -101,7 +101,16 @@ export async function DynamicRednote(data: SyncData) {
     // 填写内容
     const contentEditor = (await waitForElement('div[contenteditable="true"]')) as HTMLDivElement;
     if (contentEditor) {
-      contentEditor.innerText = content;
+      contentEditor.focus();
+      const contentPasteEvent = new ClipboardEvent('paste', {
+        bubbles: true,
+        cancelable: true,
+        clipboardData: new DataTransfer(),
+      });
+      contentPasteEvent.clipboardData.setData('text/plain', content || '');
+      contentEditor.dispatchEvent(contentPasteEvent);
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+      contentEditor.blur();
       console.log('设置内容:', content);
     }
 
