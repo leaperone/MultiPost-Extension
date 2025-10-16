@@ -57,7 +57,7 @@ export const VideoInfoMap: Record<string, PlatformInfo> = {
     faviconUrl: 'https://creator.xiaohongshu.com/favicon.ico',
     iconifyIcon: 'simple-icons:xiaohongshu',
     platformName: chrome.i18n.getMessage('platformRednote'),
-    injectUrl: 'https://creator.xiaohongshu.com/publish/publish',
+    injectUrl: 'https://creator.xiaohongshu.com/publish/publish?target=video',
     injectFunction: VideoRednote,
     tags: ['CN'],
     accountKey: 'rednote',

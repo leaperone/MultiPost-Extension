@@ -69,7 +69,7 @@ export const DynamicInfoMap: Record<string, PlatformInfo> = {
     faviconUrl: 'https://fe-video-qc.xhscdn.com/fe-platform/ed8fe781ce9e16c1bfac2cd962f0721edabe2e49.ico',
     iconifyIcon: 'simple-icons:xiaohongshu',
     platformName: chrome.i18n.getMessage('platformRednote'),
-    injectUrl: 'https://creator.xiaohongshu.com/publish/publish',
+    injectUrl: 'https://creator.xiaohongshu.com/publish/publish?target=image',
     injectFunction: DynamicRednote,
     tags: ['CN'],
     accountKey: 'rednote',
