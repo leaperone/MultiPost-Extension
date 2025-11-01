@@ -40,10 +40,10 @@ async function isOriginTrusted(origin: string, action: string): Promise<boolean>
 window.addEventListener('message', async (event) => {
   const request: ExtensionExternalRequest<unknown> = event.data;
 
-  if (request.type !== 'request') {
+  if (request.type !== 'request' || !getRightAction(request.action).startsWith('MULTIPOST')) {
     return;
   }
-  
+
   // 验证来源是否可信
   const isTrusted = await isOriginTrusted(new URL(event.origin).hostname, getRightAction(request.action));
   if (!isTrusted) {
