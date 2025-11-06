@@ -1,9 +1,18 @@
-name: Trigger Deploy
+name: Trigger Deploy And Pr Check
 
 on:
   push:
     branches:
       - main
+  pull_request:
+    branches:
+      - main
+      - master
+      - release-candidate
+    types:
+      - opened
+      - synchronize
+      - reopened
   workflow_dispatch:
     inputs:
       ref:
