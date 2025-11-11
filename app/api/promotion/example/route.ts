@@ -6,7 +6,7 @@ import { PromotionTaskTypeLabelMap } from '../types';
 
 const openai = createOpenAI({
   apiKey: '',
-  baseURL: 'https://api.2some.one/v1',
+  baseURL: process.env.LEAPERONE_API_BASE_URL,
 });
 
 // 允许流式响应最多持续30秒
