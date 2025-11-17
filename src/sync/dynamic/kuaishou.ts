@@ -1,8 +1,19 @@
 import type { DynamicData, SyncData } from '../common';
 
-// 优先发布图文
+/**
+ * 快手图文动态发布函数
+ * @description 优先发布图文内容到快手平台
+ * @param {SyncData} data - 同步数据，包含标题、内容、图片等信息
+ */
 export async function DynamicKuaishou(data: SyncData) {
   const { title, content, images } = data.data as DynamicData;
+
+  // 检查图片数量
+  if (!images || images.length === 0) {
+    alert('发布图文，请至少提供一张图片');
+    return;
+  }
+
   // 辅助函数：等待元素出现
   function waitForElement(selector: string, timeout = 10000): Promise<Element> {
     return new Promise((resolve, reject) => {
@@ -32,71 +43,8 @@ export async function DynamicKuaishou(data: SyncData) {
     });
   }
 
-  // 辅助函数：通过文本内容查找元素
-  async function findElementByText(
-    selector: string,
-    text: string,
-    maxRetries = 5,
-    retryInterval = 1000,
-  ): Promise<Element | null> {
-    for (let i = 0; i < maxRetries; i++) {
-      const elements = document.querySelectorAll(selector);
-      const element = Array.from(elements).find((element) => element.textContent?.includes(text));
-
-      if (element) {
-        return element;
-      }
-
-      console.log(`未找到包含文本 "${text}" 的元素，尝试次数：${i + 1}`);
-      await new Promise((resolve) => setTimeout(resolve, retryInterval));
-    }
-
-    console.error(`在 ${maxRetries} 次尝试后未找到包含文本 "${text}" 的元素`);
-    return null;
-  }
-
-  // 辅助函数：上传文件
-  async function uploadImages() {
-    const fileInput = (await waitForElement(
-      'input[type="file"][accept="image/png, image/jpg, image/jpeg, image/webp"]',
-    )) as HTMLInputElement;
-    if (!fileInput) {
-      console.error('未找到文件输入元素');
-      return;
-    }
-
-    const dataTransfer = new DataTransfer();
-
-    console.log('开始上传图片');
-    for (const fileInfo of images) {
-      console.log(`准备上传图片: ${fileInfo.url}`);
-      try {
-        const response = await fetch(fileInfo.url);
-        if (!response.ok) {
-          throw new Error(`HTTP 错误! 状态: ${response.status}`);
-        }
-        const blob = await response.blob();
-        const file = new File([blob], fileInfo.name, { type: fileInfo.type });
-        dataTransfer.items.add(file);
-      } catch (error) {
-        console.error(`上传图片 ${fileInfo.url} 失败:`, error);
-      }
-    }
-
-    if (dataTransfer.files.length > 0) {
-      const uploadButton = (await findElementByText('button', '上传图片')) as HTMLElement;
-
-      // 使用 simulateDragAndDrop 函数模拟拖拽事件
-      simulateDragAndDrop(uploadButton.parentElement.parentElement, dataTransfer);
-      console.log('文件上传操作完成');
-    } else {
-      console.error('没有成功添加任何文件');
-    }
-  }
-
   // 模拟拖拽事件的函数
   function simulateDragAndDrop(element: HTMLElement, dataTransfer: DataTransfer) {
-    console.log('simulateDragAndDrop', dataTransfer);
     const events = [
       new DragEvent('dragenter', { bubbles: true }),
       new DragEvent('dragover', { bubbles: true }),
@@ -106,50 +54,82 @@ export async function DynamicKuaishou(data: SyncData) {
       Object.defineProperty(event, 'preventDefault', { value: () => {} });
     });
     events.forEach((event) => {
-      console.log('event', event);
       element.dispatchEvent(event);
     });
   }
 
-  if (images && images.length > 0) {
-    console.log('检测到图片，开始上传');
+  // 等待文件输入元素
+  await waitForElement('input[type="file"]');
+  await new Promise((resolve) => setTimeout(resolve, 1000));
 
-    const imageTab = (await waitForElement('div#rc-tabs-0-tab-2')) as HTMLElement;
-    imageTab.click();
-    await new Promise((resolve) => setTimeout(resolve, 2000));
-    await uploadImages();
+  // 查找并点击上传图片的tab
+  const uploadTab = document.querySelector('div#rc-tabs-0-tab-2') as HTMLElement;
+  if (!uploadTab) {
+    console.error('未找到 uploadTab');
+    return;
+  }
+  uploadTab.click();
+  await new Promise((resolve) => setTimeout(resolve, 2000));
 
-    await new Promise((resolve) => setTimeout(resolve, 5000));
-
-    // 处理作品描述
-    const contentEditor = (await waitForElement('div#work-description-edit[contenteditable="true"]')) as HTMLDivElement;
-    if (contentEditor) {
-      contentEditor.innerText = `${title || ''}\n\n${content}`;
-      contentEditor.dispatchEvent(new Event('input', { bubbles: true }));
-    }
-
-    // 等待内容更新
-    await new Promise((resolve) => setTimeout(resolve, 3000));
-
-    if (data.isAutoPublish) {
-      console.log('开始自动发布');
-      const maxAttempts = 3;
-      for (let attempt = 0; attempt < maxAttempts; attempt++) {
-        try {
-          const publishButton = (await findElementByText('div', '发布')) as HTMLElement;
-          publishButton.click();
-          console.log('发布按钮已点击');
-          await new Promise((resolve) => setTimeout(resolve, 3000));
-          window.location.href = 'https://cp.kuaishou.com/article/manage/video';
-          break; // 成功点击后退出循环
-        } catch (error) {
-          console.warn(`第 ${attempt + 1} 次尝试查找发布按钮失败:`, error);
-          if (attempt === maxAttempts - 1) {
-            console.error('达到最大尝试次数，无法找到发布按钮');
-          }
-          await new Promise((resolve) => setTimeout(resolve, 2000)); // 等待2秒后重试
-        }
+  // 创建 DataTransfer 对象并添加文件
+  const dataTransfer = new DataTransfer();
+  for (const fileInfo of images) {
+    console.log('try upload file', fileInfo);
+    try {
+      const response = await fetch(fileInfo.url);
+      if (!response.ok) {
+        throw new Error(`HTTP 错误! 状态: ${response.status}`);
       }
+      const arrayBuffer = await response.arrayBuffer();
+      const file = new File([arrayBuffer], fileInfo.name, { type: fileInfo.type });
+      dataTransfer.items.add(file);
+    } catch (error) {
+      console.error(`上传图片 ${fileInfo.url} 失败:`, error);
     }
+  }
+
+  // 查找上传图片按钮
+  const buttons = document.querySelectorAll('button');
+  const uploadButton = Array.from(buttons).find((button) => button.textContent === '上传图片') as HTMLElement;
+
+  if (!uploadButton) {
+    console.error("未找到'上传图片'按钮");
+    return;
+  }
+
+  // 执行拖拽上传
+  const dropTarget = uploadButton.parentElement?.parentElement as HTMLElement;
+  simulateDragAndDrop(dropTarget, dataTransfer);
+  console.log('文件上传操作完成');
+
+  // 等待描述输入框出现
+  await waitForElement('div[placeholder="添加合适的话题和描述，作品能获得更多推荐～"][contenteditable="true"]');
+
+  // 查找描述输入框并粘贴内容
+  const descriptionInput = document.querySelector(
+    'div[placeholder="添加合适的话题和描述，作品能获得更多推荐～"][contenteditable="true"]',
+  ) as HTMLDivElement;
+
+  if (descriptionInput) {
+    descriptionInput.focus();
+
+    // 拼接标题和内容，如果有标题则用 \n 分隔
+    const textContent = title ? `${title}\n${content}` : content;
+
+    // 使用 ClipboardEvent 粘贴内容
+    const pasteEvent = new ClipboardEvent('paste', {
+      bubbles: true,
+      cancelable: true,
+      clipboardData: new DataTransfer(),
+    });
+    pasteEvent.clipboardData?.setData('text/plain', textContent);
+    descriptionInput.dispatchEvent(pasteEvent);
+  }
+
+  await new Promise((resolve) => setTimeout(resolve, 3000));
+
+  // 如果是自动发布，提示需要手动确认
+  if (data.isAutoPublish) {
+    alert('为确保内容符合预期，请手动确认发布');
   }
 }

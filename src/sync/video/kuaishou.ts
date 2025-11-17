@@ -3,6 +3,16 @@ import type { SyncData, VideoData } from '../common';
 export async function VideoKuaishou(data: SyncData) {
   const { content, video, title, tags = [], cover } = data.data as VideoData;
 
+  // function formatDate(date: Date): string {
+  //   const year = date.getFullYear();
+  //   const month = String(date.getMonth() + 1).padStart(2, '0');
+  //   const day = String(date.getDate()).padStart(2, '0');
+  //   const hours = String(date.getHours()).padStart(2, '0');
+  //   const minutes = String(date.getMinutes()).padStart(2, '0');
+  //   const seconds = String(date.getSeconds()).padStart(2, '0');
+  //   return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
+  // }
+
   // 辅助函数：等待元素出现
   function waitForElement(selector: string, timeout = 10000): Promise<Element> {
     return new Promise((resolve, reject) => {
@@ -34,38 +44,39 @@ export async function VideoKuaishou(data: SyncData) {
 
   // 辅助函数：上传视频
   async function uploadVideo() {
-    const fileInput = (await waitForElement(
-      'input[type=file][accept="video/*,.mp4,.mov,.flv,.f4v,.webm,.mkv,.rm,.rmvb,.m4v,.3gp,.3g2,.wmv,.avi,.asf,.mpg,.mpeg,.ts"]',
-    )) as HTMLInputElement;
+    await waitForElement('input[type="file"]');
+    await new Promise((resolve) => setTimeout(resolve, 1000));
+
+    if (!video) {
+      console.error('没有视频文件');
+      return;
+    }
+
+    const fileInput = document.querySelector('input[type="file"]') as HTMLInputElement;
     if (!fileInput) {
       console.error('未找到文件输入元素');
       return;
     }
 
-    const dataTransfer = new DataTransfer();
-
-    if (video) {
-      try {
-        const response = await fetch(video.url);
-        if (!response.ok) {
-          throw new Error(`HTTP 错误! 状态: ${response.status}`);
-        }
-        const blob = await response.blob();
-        const file = new File([blob], video.name, { type: video.type });
-        dataTransfer.items.add(file);
-      } catch (error) {
-        console.error(`上传视频 ${video.url} 失败:`, error);
+    try {
+      // Support both url and blobUrl
+      const videoUrl = video.url;
+      const response = await fetch(videoUrl);
+      if (!response.ok) {
+        throw new Error(`HTTP 错误! 状态: ${response.status}`);
       }
-    }
+      const buffer = await response.arrayBuffer();
+      const file = new File([buffer], video.name, { type: video.type });
 
-    if (dataTransfer.files.length > 0) {
+      const dataTransfer = new DataTransfer();
+      dataTransfer.items.add(file);
       fileInput.files = dataTransfer.files;
+
       fileInput.dispatchEvent(new Event('change', { bubbles: true }));
       fileInput.dispatchEvent(new Event('input', { bubbles: true }));
-      await new Promise((resolve) => setTimeout(resolve, 2000)); // 等待文件处理
       console.log('文件上传操作完成');
-    } else {
-      console.error('没有成功添加任何文件');
+    } catch (error) {
+      console.error(`上传视频失败:`, error);
     }
   }
 
@@ -127,9 +138,11 @@ export async function VideoKuaishou(data: SyncData) {
     }
 
     const dataTransfer = new DataTransfer();
-    if (cover.url && cover.type.includes('image/')) {
+    if (cover.type?.includes('image/')) {
       try {
-        const response = await fetch(cover.url);
+        // Support both url and blobUrl
+        const coverUrl = cover.url;
+        const response = await fetch(coverUrl);
         if (!response.ok) {
           throw new Error(`HTTP 错误! 状态: ${response.status}`);
         }
@@ -137,7 +150,7 @@ export async function VideoKuaishou(data: SyncData) {
         const file = new File([buffer], cover.name, { type: cover.type });
         dataTransfer.items.add(file);
       } catch (error) {
-        console.error(`上传封面 ${cover.url} 失败:`, error);
+        console.error(`上传封面失败:`, error);
       }
     }
 
@@ -163,21 +176,22 @@ export async function VideoKuaishou(data: SyncData) {
     }
   }
 
-  // 等待页面加载
-  await waitForElement('div#rc-tabs-0-tab-2');
-  await new Promise((resolve) => setTimeout(resolve, 2000));
-
   // 上传视频
   await uploadVideo();
 
   // 填写内容
-  const contentEditor = (await waitForElement('div#work-description-edit[contenteditable="true"]')) as HTMLDivElement;
+  const contentEditor = (await waitForElement('div[contenteditable="true"]')) as HTMLDivElement;
   if (contentEditor) {
-    // 组合标题、内容和标签
-    const formattedContent = `${title || ''}\n${content}\n${tags.map((tag) => `#${tag}`).join(' ')}`;
+    // 组合标题、内容和标签（限制标签为4个）
+    const limitedTags = tags.slice(0, 4);
+    const formattedContent = `${title || ''}\n${content}\n${limitedTags.map((tag) => `#${tag}`).join(' ')}`;
+
+    // 先点击再focus
+    contentEditor.click();
+    await new Promise((resolve) => setTimeout(resolve, 500));
+    contentEditor.focus();
 
     // 使用 ClipboardEvent 来粘贴内容
-    contentEditor.focus();
     const pasteEvent = new ClipboardEvent('paste', {
       bubbles: true,
       cancelable: true,
@@ -194,21 +208,49 @@ export async function VideoKuaishou(data: SyncData) {
     await uploadCover();
   }
 
+  // 定时发布功能
+  // if (videoData.publishTime) {
+  //   const labels = document.querySelectorAll('label');
+  //   const scheduledPublishLabel = Array.from(labels).find((el) => el.textContent?.includes('定时发布'));
+
+  //   if (scheduledPublishLabel) {
+  //     scheduledPublishLabel.click();
+  //     await new Promise((resolve) => setTimeout(resolve, 500));
+
+  //     const publishTimeInput = document.querySelector('input[placeholder="选择日期时间"]') as HTMLInputElement;
+  //     if (publishTimeInput) {
+  //       const publishDate =
+  //         typeof videoData.publishTime === 'string' ? new Date(videoData.publishTime) : videoData.publishTime;
+  //       publishTimeInput.value = formatDate(publishDate);
+  //       publishTimeInput.dispatchEvent(new Event('input', { bubbles: true }));
+  //       publishTimeInput.dispatchEvent(new Event('change', { bubbles: true }));
+  //       await new Promise((resolve) => setTimeout(resolve, 2000));
+
+  //       const confirmLis = document.querySelectorAll('li.ant-picker-ok');
+  //       const confirmLi = Array.from(confirmLis).find((el) => el.textContent === '确定');
+  //       if (confirmLi) {
+  //         const confirmButton = confirmLi.querySelector('button');
+  //         if (confirmButton) {
+  //           confirmButton.click();
+  //         }
+  //       }
+  //     }
+  //   }
+  // }
+
   // 等待内容更新
   await new Promise((resolve) => setTimeout(resolve, 5000));
 
   // 发布按钮逻辑
-  if (data.isAutoPublish) {
-    const divElements = document.querySelectorAll('div');
-    const publishButton = Array.from(divElements).find((el) => el.textContent === '发布') as HTMLElement;
+  const divElements = document.querySelectorAll('div');
+  const publishButton = Array.from(divElements).find((el) => el.textContent === '发布') as HTMLElement;
 
-    if (publishButton) {
+  if (publishButton) {
+    if (data.isAutoPublish) {
       console.log('找到发布按钮，准备点击');
       publishButton.click();
-      await new Promise((resolve) => setTimeout(resolve, 3000));
-      window.location.href = 'https://cp.kuaishou.com/article/manage/video';
-    } else {
-      console.error('未找到"发布"按钮');
     }
+  } else {
+    console.error('未找到"发布"按钮');
   }
 }
