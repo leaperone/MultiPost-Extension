@@ -45,6 +45,7 @@ export interface VideoData {
   video: FileData;
   cover?: FileData;
   tags: string[];
+  scheduledPublishTime?: number;
 }
 
 export interface PodcastData {

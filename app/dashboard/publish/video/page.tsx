@@ -20,6 +20,8 @@ import {
   Accordion,
   AccordionItem,
   Chip,
+  DatePicker,
+  Checkbox,
 } from '@heroui/react';
 import {
   XIcon,
@@ -44,6 +46,7 @@ import { getPlatformExtraConfigList } from '../action';
 import { Icon } from '@iconify/react';
 import { cn } from '@/lib/utils';
 import { useRouter } from 'next/navigation';
+import { CalendarDateTime, now, getLocalTimeZone } from '@internationalized/date';
 
 const ReactPlayer = dynamic(() => import('react-player'), {
   ssr: false,
@@ -203,6 +206,16 @@ export default function VideoPage() {
   const [selectedPlatforms, setSelectedPlatforms] = useState<string[]>(videoPlatforms);
   const [platforms, setPlatforms] = useState<PlatformInfo[]>([]);
   const [tags, setTags] = useState<string[]>([]);
+  const [scheduleEnabled, setScheduleEnabled] = useState<boolean>(false);
+  const [scheduledDateTime, setScheduledDateTime] = useState<CalendarDateTime | null>(null);
+
+  // Platforms that support scheduled publishing
+  const scheduleSupportedPlatforms = ['VIDEO_DOUYIN', 'VIDEO_REDNOTE', 'VIDEO_WEIXINCHANNEL', 'VIDEO_KUAISHOU'];
+
+  // Check if any selected platform supports scheduled publishing
+  const hasScheduleSupportedPlatform = selectedPlatforms.some((platform) =>
+    scheduleSupportedPlatforms.includes(platform),
+  );
 
   const steps = [
     {
@@ -371,6 +384,14 @@ export default function VideoPage() {
     setSelectedPlatforms((prev) => {
       const newSelected = isSelected ? [...prev, platform] : prev.filter((p) => p !== platform);
       setVideoPlatforms(newSelected);
+
+      // Clear schedule settings if no schedule-supported platforms are selected
+      const hasScheduleSupport = newSelected.some((p) => scheduleSupportedPlatforms.includes(p));
+      if (!hasScheduleSupport) {
+        setScheduleEnabled(false);
+        setScheduledDateTime(null);
+      }
+
       return newSelected;
     });
   };
@@ -422,6 +443,20 @@ export default function VideoPage() {
       });
     }
 
+    // Convert CalendarDateTime to timestamp if scheduled
+    let scheduledPublishTime: number | undefined = undefined;
+    if (scheduleEnabled && scheduledDateTime) {
+      const scheduledDate = new Date(
+        scheduledDateTime.year,
+        scheduledDateTime.month - 1,
+        scheduledDateTime.day,
+        scheduledDateTime.hour,
+        scheduledDateTime.minute,
+        scheduledDateTime.second || 0,
+      );
+      scheduledPublishTime = scheduledDate.getTime();
+    }
+
     const data: SyncData = {
       platforms: platforms.filter((platform) => selectedPlatforms.includes(platform.name)),
       data: {
@@ -430,6 +465,7 @@ export default function VideoPage() {
         video: videoFile,
         cover: coverFile || undefined,
         tags,
+        scheduledPublishTime,
       },
       isAutoPublish: false,
     };
@@ -698,6 +734,45 @@ export default function VideoPage() {
                 </Accordion>
               </CardBody>
             </Card>
+
+            {/* Schedule Publish Options - Only show for supported platforms */}
+            {hasScheduleSupportedPlatform && (
+              <Card className="border bg-default-50 shadow-none">
+                <CardBody className="gap-3">
+                  <Checkbox
+                    isSelected={scheduleEnabled}
+                    onValueChange={setScheduleEnabled}>
+                    {t('video.schedulePublish', '定时发布')}
+                  </Checkbox>
+
+                  {scheduleEnabled && (
+                    <div className="space-y-3">
+                      <DatePicker
+                        label={t('video.selectPublishTime', '选择发布时间')}
+                        value={scheduledDateTime}
+                        onChange={setScheduledDateTime}
+                        granularity="minute"
+                        minValue={now(getLocalTimeZone())}
+                        showMonthAndYearPickers
+                        hourCycle={24}
+                      />
+
+                      {scheduledDateTime && (
+                        <div className="rounded-lg bg-blue-50 p-3 dark:bg-blue-950">
+                          <p className="text-sm text-blue-700 dark:text-blue-300">
+                            {t('video.scheduledTime', '计划发布时间')}: {scheduledDateTime.year}-
+                            {String(scheduledDateTime.month).padStart(2, '0')}-
+                            {String(scheduledDateTime.day).padStart(2, '0')}{' '}
+                            {String(scheduledDateTime.hour).padStart(2, '0')}:
+                            {String(scheduledDateTime.minute).padStart(2, '0')}
+                          </p>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </CardBody>
+              </Card>
+            )}
 
             <div className="flex gap-2">
               <Button

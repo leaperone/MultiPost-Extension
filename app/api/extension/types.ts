@@ -48,6 +48,7 @@ export const videoDataSchema = z.object({
   content: z.string(),
   video: fileDataSchema,
   tags: z.array(z.string()).optional(),
+  scheduledPublishTime: z.number().int().positive().optional(),
 });
 
 export const podcastDataSchema = z.object({
