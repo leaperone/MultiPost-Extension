@@ -1,7 +1,7 @@
 import type { SyncData, VideoData } from '../common';
 
 export async function VideoRednote(data: SyncData) {
-  const { content, video, title, tags, cover } = data.data as VideoData;
+  const { content, video, title, tags, cover, scheduledPublishTime } = data.data as VideoData;
 
   // 辅助函数：等待元素出现
   function waitForElement(selector: string, timeout = 10000): Promise<Element> {
@@ -64,6 +64,42 @@ export async function VideoRednote(data: SyncData) {
       console.log('文件上传操作完成');
     } else {
       console.error('没有成功添加任何文件');
+    }
+  }
+
+  /**
+   * 设置定时发布时间
+   * @param scheduledPublishTime - 定时发布时间戳（毫秒）
+   */
+  async function setScheduledPublishTime(scheduledPublishTime: number): Promise<void> {
+    const labels = document.querySelectorAll('label');
+    console.debug('labels -->', labels);
+
+    const scheduledLabel = Array.from(labels).find((label) => label.textContent?.includes('定时发布'));
+    console.debug('label -->', scheduledLabel);
+
+    if (scheduledLabel) {
+      (scheduledLabel as HTMLElement).click();
+      await new Promise((resolve) => setTimeout(resolve, 500));
+    }
+
+    const publishTimeInput = document.querySelector('input[placeholder="选择日期和时间"]') as HTMLInputElement;
+    console.debug('publishTimeInput -->', publishTimeInput);
+
+    if (publishTimeInput) {
+      // 计算时间：添加 8 小时（28800000 毫秒）以调整时区
+      const adjustedTime = new Date(scheduledPublishTime + 28800000);
+      const formattedTime = adjustedTime.toISOString().slice(0, 16).replace('T', ' ');
+
+      publishTimeInput.focus();
+      await new Promise((resolve) => setTimeout(resolve, 100));
+
+      publishTimeInput.value = formattedTime;
+      publishTimeInput.dispatchEvent(new Event('input', { bubbles: true }));
+      publishTimeInput.dispatchEvent(new Event('change', { bubbles: true }));
+      publishTimeInput.blur();
+
+      console.debug('定时发布时间已设置:', formattedTime);
     }
   }
 
@@ -200,23 +236,25 @@ export async function VideoRednote(data: SyncData) {
     await uploadCover(cover);
   }
 
-  // 处理发布按钮
-  const buttons = document.querySelectorAll('button');
-  const publishButton = Array.from(buttons).find((button) => button.textContent?.includes('发布'));
+  // 处理定时发布
+  if (scheduledPublishTime) {
+    await new Promise((resolve) => setTimeout(resolve, 2000));
+    await setScheduledPublishTime(scheduledPublishTime);
+    // 处理发布按钮
+    const buttons = document.querySelectorAll('button');
+    const publishButton = Array.from(buttons).find((button) => button.textContent?.includes('发布'));
 
-  if (publishButton) {
-    // 等待按钮可用
-    while (publishButton.getAttribute('aria-disabled') === 'true') {
-      await new Promise((resolve) => setTimeout(resolve, 1000));
+    if (publishButton) {
+      // 等待按钮可用
+      while (publishButton.getAttribute('aria-disabled') === 'true') {
+        await new Promise((resolve) => setTimeout(resolve, 1000));
+      }
+      
+      if (publishButton) {
+        publishButton.dispatchEvent(new Event('click', { bubbles: true }));
+        await new Promise((resolve) => setTimeout(resolve, 10000));
+        window.location.href = 'https://creator.xiaohongshu.com/new/note-manager';
+      }
     }
-
-    // 如果需要自动发布
-    if (data.isAutoPublish) {
-      publishButton.dispatchEvent(new Event('click', { bubbles: true }));
-      await new Promise((resolve) => setTimeout(resolve, 10000));
-      window.location.href = 'https://creator.xiaohongshu.com/new/note-manager';
-    }
-  } else {
-    console.error('未找到"发布"按钮');
   }
 }

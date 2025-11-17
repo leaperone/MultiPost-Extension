@@ -1,17 +1,17 @@
 import type { SyncData, VideoData } from '../common';
 
 export async function VideoKuaishou(data: SyncData) {
-  const { content, video, title, tags = [], cover } = data.data as VideoData;
+  const { content, video, title, tags = [], cover, scheduledPublishTime } = data.data as VideoData;
 
-  // function formatDate(date: Date): string {
-  //   const year = date.getFullYear();
-  //   const month = String(date.getMonth() + 1).padStart(2, '0');
-  //   const day = String(date.getDate()).padStart(2, '0');
-  //   const hours = String(date.getHours()).padStart(2, '0');
-  //   const minutes = String(date.getMinutes()).padStart(2, '0');
-  //   const seconds = String(date.getSeconds()).padStart(2, '0');
-  //   return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
-  // }
+  function formatDate(date: Date): string {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    const hours = String(date.getHours()).padStart(2, '0');
+    const minutes = String(date.getMinutes()).padStart(2, '0');
+    const seconds = String(date.getSeconds()).padStart(2, '0');
+    return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
+  }
 
   // 辅助函数：等待元素出现
   function waitForElement(selector: string, timeout = 10000): Promise<Element> {
@@ -209,48 +209,44 @@ export async function VideoKuaishou(data: SyncData) {
   }
 
   // 定时发布功能
-  // if (videoData.publishTime) {
-  //   const labels = document.querySelectorAll('label');
-  //   const scheduledPublishLabel = Array.from(labels).find((el) => el.textContent?.includes('定时发布'));
+  if (scheduledPublishTime && scheduledPublishTime > 0) {
+    const labels = document.querySelectorAll('label');
+    const scheduledPublishLabel = Array.from(labels).find((el) => el.textContent?.includes('定时发布'));
 
-  //   if (scheduledPublishLabel) {
-  //     scheduledPublishLabel.click();
-  //     await new Promise((resolve) => setTimeout(resolve, 500));
+    if (scheduledPublishLabel) {
+      scheduledPublishLabel.click();
+      await new Promise((resolve) => setTimeout(resolve, 500));
 
-  //     const publishTimeInput = document.querySelector('input[placeholder="选择日期时间"]') as HTMLInputElement;
-  //     if (publishTimeInput) {
-  //       const publishDate =
-  //         typeof videoData.publishTime === 'string' ? new Date(videoData.publishTime) : videoData.publishTime;
-  //       publishTimeInput.value = formatDate(publishDate);
-  //       publishTimeInput.dispatchEvent(new Event('input', { bubbles: true }));
-  //       publishTimeInput.dispatchEvent(new Event('change', { bubbles: true }));
-  //       await new Promise((resolve) => setTimeout(resolve, 2000));
+      const publishTimeInput = document.querySelector('input[placeholder="选择日期时间"]') as HTMLInputElement;
+      if (publishTimeInput) {
+        const publishDate = new Date(scheduledPublishTime);
+        publishTimeInput.value = formatDate(publishDate);
+        publishTimeInput.dispatchEvent(new Event('input', { bubbles: true }));
+        publishTimeInput.dispatchEvent(new Event('change', { bubbles: true }));
+        await new Promise((resolve) => setTimeout(resolve, 2000));
 
-  //       const confirmLis = document.querySelectorAll('li.ant-picker-ok');
-  //       const confirmLi = Array.from(confirmLis).find((el) => el.textContent === '确定');
-  //       if (confirmLi) {
-  //         const confirmButton = confirmLi.querySelector('button');
-  //         if (confirmButton) {
-  //           confirmButton.click();
-  //         }
-  //       }
-  //     }
-  //   }
-  // }
+        const confirmLis = document.querySelectorAll('li.ant-picker-ok');
+        const confirmLi = Array.from(confirmLis).find((el) => el.textContent === '确定');
+        if (confirmLi) {
+          const confirmButton = confirmLi.querySelector('button');
+          if (confirmButton) {
+            confirmButton.click();
+          }
+        }
+      }
+    }
+    // 等待内容更新
+    await new Promise((resolve) => setTimeout(resolve, 5000));
 
-  // 等待内容更新
-  await new Promise((resolve) => setTimeout(resolve, 5000));
+    // 发布按钮逻辑
+    const divElements = document.querySelectorAll('div');
+    const publishButton = Array.from(divElements).find((el) => el.textContent === '发布') as HTMLElement;
 
-  // 发布按钮逻辑
-  const divElements = document.querySelectorAll('div');
-  const publishButton = Array.from(divElements).find((el) => el.textContent === '发布') as HTMLElement;
-
-  if (publishButton) {
-    if (data.isAutoPublish) {
+    if (publishButton) {
       console.log('找到发布按钮，准备点击');
       publishButton.click();
+    } else {
+      console.error('未找到"发布"按钮');
     }
-  } else {
-    console.error('未找到"发布"按钮');
   }
 }

@@ -1,6 +1,20 @@
 import type { FileData, SyncData, VideoData } from '../common';
 
 export async function VideoDouyin(data: SyncData) {
+  /**
+   * Format date to yyyy-MM-dd HH:mm format
+   * @param date - Date object to format
+   * @returns Formatted date string
+   */
+  function formatDate(date: Date): string {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    const hours = String(date.getHours()).padStart(2, '0');
+    const minutes = String(date.getMinutes()).padStart(2, '0');
+    return `${year}-${month}-${day} ${hours}:${minutes}`;
+  }
+
   function waitForElement(selector: string, timeout = 10000): Promise<Element> {
     return new Promise((resolve, reject) => {
       const element = document.querySelector(selector);
@@ -97,7 +111,7 @@ export async function VideoDouyin(data: SyncData) {
   }
 
   try {
-    const { content, video, title, tags, cover } = data.data as VideoData;
+    const { content, video, title, tags, cover, scheduledPublishTime } = data.data as VideoData;
     // 处理视频上传
     if (video) {
       const response = await fetch(video.url);
@@ -174,19 +188,37 @@ export async function VideoDouyin(data: SyncData) {
       await uploadCover(cover);
     }
 
-    await new Promise((resolve) => setTimeout(resolve, 5000));
+    // 处理定时发布
+    if (scheduledPublishTime) {
+      await new Promise((resolve) => setTimeout(resolve, 2000));
+      const labels = document.querySelectorAll('label');
+      console.log('labels -->', labels);
+      const scheduledLabel = Array.from(labels).find((label) => label.textContent?.includes('定时发布'));
+      console.log('scheduledLabel -->', scheduledLabel);
+      if (scheduledLabel) {
+        (scheduledLabel as HTMLElement).click();
+        await new Promise((resolve) => setTimeout(resolve, 500));
 
-    // 处理自动发布
-    const buttons = document.querySelectorAll('button');
-    const publishButton = Array.from(buttons).find((button) => button.textContent === '发布');
+        const publishTimeInput = document.querySelector('input[format="yyyy-MM-dd HH:mm"]') as HTMLInputElement;
+        console.log('publishTimeInput -->', publishTimeInput);
+        if (publishTimeInput) {
+          publishTimeInput.value = formatDate(new Date(scheduledPublishTime));
+          publishTimeInput.dispatchEvent(new Event('input', { bubbles: true }));
+          publishTimeInput.dispatchEvent(new Event('change', { bubbles: true }));
+          console.log('定时发布时间已设置:', publishTimeInput.value);
+        }
+      }
+      await new Promise((resolve) => setTimeout(resolve, 3000));
+      // 处理自动发布
+      const buttons = document.querySelectorAll('button');
+      const publishButton = Array.from(buttons).find((button) => button.textContent === '发布');
 
-    if (publishButton) {
-      if (data.isAutoPublish) {
+      if (publishButton) {
         console.log('点击发布按钮');
         publishButton.click();
+      } else {
+        console.log('未找到"发布"按钮');
       }
-    } else {
-      console.log('未找到"发布"按钮');
     }
   } catch (error) {
     console.error('DouyinVideo 发布过程中出错:', error);

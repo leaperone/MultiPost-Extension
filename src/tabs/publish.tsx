@@ -223,7 +223,7 @@ export default function Publish() {
 
   const processVideo = async (data: SyncData) => {
     setNotice(chrome.i18n.getMessage('processingContent'));
-    const { video, cover } = data.data as VideoData;
+    const { video, cover, verticalCover, scheduledPublishTime } = data.data as VideoData;
 
     if (!video) {
       console.warn('视频数据不存在');
@@ -235,12 +235,19 @@ export default function Publish() {
     if (cover) {
       processedCover = await processFile(cover);
     }
+    let processedVerticalCover: FileData | null = null;
+    if (verticalCover) {
+      processedVerticalCover = await processFile(verticalCover);
+    }
+
     return {
       ...data,
       data: {
         ...data.data,
         video: processedVideo,
         cover: processedCover || cover,
+        verticalCover: processedVerticalCover || verticalCover,
+        scheduledPublishTime: scheduledPublishTime || 0,
       },
     };
   };

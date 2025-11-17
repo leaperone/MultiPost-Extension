@@ -15,6 +15,20 @@ import type { SyncData, VideoData } from '../common';
  */
 export async function VideoWeiXinChannel(data: SyncData) {
   /**
+   * Format date to yyyy-MM-dd HH:mm format
+   * @param date - Date object to format
+   * @returns Formatted date string
+   */
+  function formatDate(date: Date): string {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    const hours = String(date.getHours()).padStart(2, '0');
+    const minutes = String(date.getMinutes()).padStart(2, '0');
+    return `${year}-${month}-${day} ${hours}:${minutes}`;
+  }
+
+  /**
    * 等待元素出现，支持Shadow DOM查询
    * @param selector - CSS选择器
    * @param timeout - 超时时间（毫秒）
@@ -157,6 +171,84 @@ export async function VideoWeiXinChannel(data: SyncData) {
   }
 
   /**
+   * 设置定时发布时间
+   * @param scheduledPublishTime - 定时发布时间戳（毫秒）
+   * @param root - 根节点（Document 或 ShadowRoot），用于查询元素
+   */
+  async function setScheduledPublishTime(
+    scheduledPublishTime: number,
+    root: Document | ShadowRoot = document,
+  ): Promise<void> {
+    try {
+      const labels = root.querySelectorAll('label');
+      console.debug('labels -->', labels);
+
+      const scheduledLabel = Array.from(labels).find((label) => {
+        console.debug('label -->', label.textContent);
+        return label.textContent?.trim() === '定时';
+      });
+
+      console.debug('scheduledLabel -->', scheduledLabel);
+
+      if (scheduledLabel) {
+        (scheduledLabel as HTMLElement).click();
+        await new Promise((resolve) => setTimeout(resolve, 500));
+      }
+
+      const publishTimeInput = root.querySelector('input[placeholder="请选择发表时间"]') as HTMLInputElement;
+
+      console.debug('publishTimeInput -->', publishTimeInput);
+
+      if (publishTimeInput) {
+        // 阻止事件冒泡的处理函数
+        const stopEvent = (e: Event) => {
+          e.stopPropagation();
+          e.stopImmediatePropagation();
+        };
+
+        // 需要阻止的事件类型
+        const eventTypes = ['input', 'change', 'blur', 'focus', 'keydown', 'keyup'];
+
+        // 添加事件监听器以阻止事件
+        eventTypes.forEach((eventType) => {
+          publishTimeInput.addEventListener(eventType, stopEvent, { capture: true });
+        });
+
+        try {
+          // 移除 readonly 属性
+          publishTimeInput.removeAttribute('readonly');
+
+          // 格式化时间
+          const formattedTime = formatDate(new Date(scheduledPublishTime));
+
+          // 设置时间值（多种方式确保生效）
+          publishTimeInput.value = formattedTime;
+          publishTimeInput.setAttribute('value', formattedTime);
+          publishTimeInput.defaultValue = formattedTime;
+          publishTimeInput.setAttribute('data-value', formattedTime);
+
+          console.debug('设置时间值:', formattedTime, '当前值:', publishTimeInput.value);
+        } finally {
+          // 延迟移除事件监听器
+          setTimeout(() => {
+            eventTypes.forEach((eventType) => {
+              publishTimeInput.removeEventListener(eventType, stopEvent, { capture: true });
+            });
+          }, 200);
+
+          await new Promise((resolve) => setTimeout(resolve, 1000));
+
+          // 触发 change 和 input 事件
+          publishTimeInput.dispatchEvent(new Event('change', { bubbles: true }));
+          publishTimeInput.dispatchEvent(new Event('input', { bubbles: true }));
+        }
+      }
+    } catch (error) {
+      console.error('setScheduledPublishTime failed:', error);
+    }
+  }
+
+  /**
    * 上传视频封面
    * @param cover 封面图片信息
    */
@@ -238,7 +330,7 @@ export async function VideoWeiXinChannel(data: SyncData) {
   }
 
   try {
-    const { content, video, title, tags = [], cover } = data.data as VideoData;
+    const { content, video, title, tags = [], cover, scheduledPublishTime } = data.data as VideoData;
 
     // 处理视频上传
     if (video) {
@@ -349,32 +441,29 @@ export async function VideoWeiXinChannel(data: SyncData) {
       }
     }
 
-    // 等待内容填写完成
-    await new Promise((resolve) => setTimeout(resolve, 5000));
+    // 处理定时发布
+    if (scheduledPublishTime) {
+      await new Promise((resolve) => setTimeout(resolve, 2000));
 
-    // 处理发布按钮 - 支持shadow DOM查询
-    const wujieApp = document.querySelector('wujie-app');
-    let publishButton: HTMLButtonElement | null = null;
+      const wujieApp = document.querySelector('wujie-app');
+      const root = wujieApp?.shadowRoot || document;
 
-    // 优先在shadow-root中查找发布按钮
-    if (wujieApp && wujieApp.shadowRoot) {
-      const buttons = wujieApp.shadowRoot.querySelectorAll('button');
-      publishButton = Array.from(buttons).find((b) => b.textContent?.trim() === '发表') as HTMLButtonElement;
-    }
+      await setScheduledPublishTime(scheduledPublishTime, root);
+      // 等待内容填写完成
+      await new Promise((resolve) => setTimeout(resolve, 5000));
 
-    // 如果shadow-root中没找到，再在主文档中查找
-    if (!publishButton) {
-      const buttons = document.querySelectorAll('button');
-      publishButton = Array.from(buttons).find((b) => b.textContent?.trim() === '发表') as HTMLButtonElement;
-    }
+      // 处理发布按钮 - 支持shadow DOM查询
+      const buttons = root.querySelectorAll('button');
+      const publishButton = Array.from(buttons).find((b) => b.textContent?.trim() === '发表') as HTMLButtonElement;
 
-    if (publishButton) {
-      if (data.isAutoPublish) {
-        console.log('点击发布按钮');
+      console.debug('sendButton', publishButton);
+
+      if (publishButton) {
+        console.debug('sendButton clicked');
         publishButton.click();
+      } else {
+        console.error('未找到"发表"按钮');
       }
-    } else {
-      console.error('未找到"发表"按钮');
     }
   } catch (error) {
     console.error('WeiXinVideo 发布过程中出错:', error);

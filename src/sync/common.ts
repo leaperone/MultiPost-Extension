@@ -57,6 +57,8 @@ export interface VideoData {
   video: FileData;
   tags?: string[];
   cover?: FileData;
+  verticalCover?: FileData;
+  scheduledPublishTime?: number;
 }
 
 export interface PlatformInfo {
