@@ -62,7 +62,7 @@ export const refreshAccountInfoMap: Record<
     getAccountInfo: getBilibiliAccountInfo,
   },
   qie: {
-    platformName: '企鹅号',
+    platformName: chrome.i18n.getMessage('platformQiE'),
     accountKey: 'qie',
     homeUrl: 'https://om.qq.com',
     faviconUrl: 'https://om.qq.com/favicon.ico',

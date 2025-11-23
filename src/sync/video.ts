@@ -189,7 +189,7 @@ export const VideoInfoMap: Record<string, PlatformInfo> = {
     name: 'VIDEO_QIE',
     homeUrl: 'https://om.qq.com/',
     faviconUrl: 'https://om.qq.com/favicon.ico',
-    platformName: '企鹅号',
+    platformName: chrome.i18n.getMessage('platformQiE'),
     injectUrl: 'https://om.qq.com/main/creation/video',
     injectFunction: VideoQiE,
     tags: ['CN'],

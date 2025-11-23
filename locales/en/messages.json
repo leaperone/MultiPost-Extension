@@ -661,6 +661,10 @@
     "message": "Baijiahao",
     "description": "Platform name for Baijiahao"
   },
+  "platformQiE": {
+    "message": "QiE",
+    "description": "Platform name for QiE"
+  },
   "platformToutiao": {
     "message": "Toutiao",
     "description": "Platform name for Toutiao"
