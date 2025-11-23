@@ -14,6 +14,7 @@ import { VideoWeiXinChannel } from './video/weixinchannel';
 import { VideoXiaoheihe } from './video/xiaoheihe';
 import { VideoYoutube } from './video/youtube';
 import { VideoZhihu } from './video/zhihu';
+import { VideoQiE } from './video/qie';
 
 export const VideoInfoMap: Record<string, PlatformInfo> = {
   VIDEO_BILIBILI: {
@@ -182,5 +183,16 @@ export const VideoInfoMap: Record<string, PlatformInfo> = {
     injectFunction: VideoToutiaohao,
     tags: ['CN'],
     accountKey: 'toutiaohao',
+  },
+  VIDEO_QIE: {
+    type: 'VIDEO',
+    name: 'VIDEO_QIE',
+    homeUrl: 'https://om.qq.com/',
+    faviconUrl: 'https://om.qq.com/favicon.ico',
+    platformName: '企鹅号',
+    injectUrl: 'https://om.qq.com/main/creation/video',
+    injectFunction: VideoQiE,
+    tags: ['CN'],
+    accountKey: 'qie',
   },
 };

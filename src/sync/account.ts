@@ -4,6 +4,7 @@ import { getTiktokAccountInfo } from './account/tiktok';
 import { getDouyinAccountInfo } from './account/douyin';
 import { getRednoteAccountInfo } from './account/rednote';
 import { getBilibiliAccountInfo } from './account/bilibili';
+import { getQiEAccountInfo } from './account/qie';
 import { Storage } from '@plasmohq/storage';
 import { ping } from '~background/services/api';
 
@@ -59,6 +60,13 @@ export const refreshAccountInfoMap: Record<
     homeUrl: 'https://t.bilibili.com',
     faviconUrl: 'https://static.hdslb.com/images/favicon.ico',
     getAccountInfo: getBilibiliAccountInfo,
+  },
+  qie: {
+    platformName: '企鹅号',
+    accountKey: 'qie',
+    homeUrl: 'https://om.qq.com',
+    faviconUrl: 'https://om.qq.com/favicon.ico',
+    getAccountInfo: getQiEAccountInfo,
   },
 };
 
