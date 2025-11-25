@@ -643,9 +643,45 @@
     "message": "企鹅号",
     "description": "企鹅号平台名称"
   },
+  "platformChejiahao": {
+    "message": "车家号",
+    "description": "车家号平台名称"
+  },
   "platformDewu": {
     "message": "得物",
     "description": "得物平台名称"
+  },
+  "platformYiche": {
+    "message": "易车",
+    "description": "易车平台名称"
+  },
+  "platformSohu": {
+    "message": "搜狐号",
+    "description": "搜狐号平台名称"
+  },
+  "platformNetease": {
+    "message": "网易号",
+    "description": "网易号平台名称"
+  },
+  "platformDayu": {
+    "message": "大鱼号",
+    "description": "大鱼号平台名称"
+  },
+  "platformAlipay": {
+    "message": "支付宝",
+    "description": "支付宝平台名称"
+  },
+  "platformYidian": {
+    "message": "一点号",
+    "description": "一点号平台名称"
+  },
+  "platformPinduoduo": {
+    "message": "拼多多",
+    "description": "拼多多平台名称"
+  },
+  "platformVivoVideo": {
+    "message": "vivo视频",
+    "description": "vivo视频平台名称"
   },
   "platformToutiao": {
     "message": "今日头条",

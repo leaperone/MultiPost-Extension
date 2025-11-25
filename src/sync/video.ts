@@ -15,7 +15,16 @@ import { VideoXiaoheihe } from './video/xiaoheihe';
 import { VideoYoutube } from './video/youtube';
 import { VideoZhihu } from './video/zhihu';
 import { VideoQiE } from './video/qie';
+import { VideoChejiahao } from './video/chejiahao';
 import { VideoDewu } from './video/dewu';
+import { VideoYiche } from './video/yiche';
+import { VideoSohu } from './video/sohu';
+import { VideoNetease } from './video/netease';
+import { VideoDayu } from './video/dayu';
+import { VideoAlipay } from './video/alipay';
+import { VideoYidian } from './video/yidian';
+import { VideoPinduoduo } from './video/pinduoduo';
+import { VideoVivoVideo } from './video/vivovideo';
 
 export const VideoInfoMap: Record<string, PlatformInfo> = {
   VIDEO_BILIBILI: {
@@ -196,15 +205,114 @@ export const VideoInfoMap: Record<string, PlatformInfo> = {
     tags: ['CN'],
     accountKey: 'qie',
   },
+  VIDEO_CHEJIAHAO: {
+    type: 'VIDEO',
+    name: 'VIDEO_CHEJIAHAO',
+    homeUrl: 'https://creator.autohome.com.cn/',
+    faviconUrl: 'https://z.autoimg.cn/www/pc/chejiahao/favicon.ico?v=1.3',
+    platformName: chrome.i18n.getMessage('platformChejiahao'),
+    injectUrl: 'https://creator.autohome.com.cn/web/publish/video',
+    injectFunction: VideoChejiahao,
+    tags: ['CN'],
+    accountKey: 'chejiahao',
+  },
   VIDEO_DEWU: {
     type: 'VIDEO',
     name: 'VIDEO_DEWU',
     homeUrl: 'https://creator.dewu.com/',
-    faviconUrl: 'https://h5static.dewu.com/favicon.ico',
+    faviconUrl: 'https://creator.dewu.com/favicon.ico',
     platformName: chrome.i18n.getMessage('platformDewu'),
-    injectUrl: 'https://creator.dewu.com/sociality-creator/video/upload',
+    injectUrl: 'https://creator.dewu.com/release',
     injectFunction: VideoDewu,
     tags: ['CN'],
     accountKey: 'dewu',
+  },
+  VIDEO_YICHE: {
+    type: 'VIDEO',
+    name: 'VIDEO_YICHE',
+    homeUrl: 'https://mp.yiche.com/',
+    faviconUrl: 'https://www.yiche.com/favicon.ico',
+    platformName: chrome.i18n.getMessage('platformYiche'),
+    injectUrl: 'https://mp.yiche.com/videos/video',
+    injectFunction: VideoYiche,
+    tags: ['CN'],
+    accountKey: 'yiche',
+  },
+  VIDEO_SOHU: {
+    type: 'VIDEO',
+    name: 'VIDEO_SOHU',
+    homeUrl: 'https://mp.sohu.com',
+    faviconUrl: 'https://statics.itc.cn/mp-new/icon/1.1/favicon.ico',
+    platformName: chrome.i18n.getMessage('platformSohu'),
+    injectUrl: 'https://mp.sohu.com/mpfe/v4/',
+    injectFunction: VideoSohu,
+    tags: ['CN'],
+    accountKey: 'sohu',
+  },
+  VIDEO_NETEASE: {
+    type: 'VIDEO',
+    name: 'VIDEO_NETEASE',
+    homeUrl: 'http://mp.163.com/',
+    faviconUrl: 'https://static.ws.126.net/163/f2e/news/mp_pc_login/resource/static/share-icon.png',
+    platformName: chrome.i18n.getMessage('platformNetease'),
+    injectUrl: 'http://mp.163.com/subscribe_v4/index.html#/home',
+    injectFunction: VideoNetease,
+    tags: ['CN'],
+    accountKey: 'netease',
+  },
+  VIDEO_DAYU: {
+    type: 'VIDEO',
+    name: 'VIDEO_DAYU',
+    homeUrl: 'https://mp.dayu.com/',
+    faviconUrl: 'https://image.uc.cn/s/uae/g/1v/images/index/favicon.ico',
+    platformName: chrome.i18n.getMessage('platformDayu'),
+    injectUrl: 'https://mp.dayu.com/dashboard/index',
+    injectFunction: VideoDayu,
+    tags: ['CN'],
+    accountKey: 'dayu',
+  },
+  VIDEO_ALIPAY: {
+    type: 'VIDEO',
+    name: 'VIDEO_ALIPAY',
+    homeUrl: 'https://sweb.alipay.com',
+    faviconUrl: 'https://www.alipay.com/favicon.ico',
+    platformName: chrome.i18n.getMessage('platformAlipay'),
+    injectUrl: 'https://c.alipay.com/page/content-creation/publish/short-video',
+    injectFunction: VideoAlipay,
+    tags: ['CN'],
+    accountKey: 'alipay',
+  },
+  VIDEO_YIDIAN: {
+    type: 'VIDEO',
+    name: 'VIDEO_YIDIAN',
+    homeUrl: 'https://mp.yidianzixun.com/',
+    faviconUrl: 'https://static.yidianzixun.com/img/faviconred.ico',
+    platformName: chrome.i18n.getMessage('platformYidian'),
+    injectUrl: 'https://mp.yidianzixun.com/',
+    injectFunction: VideoYidian,
+    tags: ['CN'],
+    accountKey: 'yidian',
+  },
+  VIDEO_PINDUODUO: {
+    type: 'VIDEO',
+    name: 'VIDEO_PINDUODUO',
+    homeUrl: 'https://live.pinduoduo.com/',
+    faviconUrl: 'https://mms-static.pinduoduo.com/express/favicon.ico',
+    platformName: chrome.i18n.getMessage('platformPinduoduo'),
+    injectUrl: 'https://live.pinduoduo.com/creator/live-record',
+    injectFunction: VideoPinduoduo,
+    tags: ['CN'],
+    accountKey: 'pinduoduo',
+  },
+  VIDEO_VIVOVIDEO: {
+    type: 'VIDEO',
+    name: 'VIDEO_VIVOVIDEO',
+    homeUrl: 'https://kaixinkan.vivo.com.cn/',
+    faviconUrl: 'https://www.vivo.com.cn/favicon.ico',
+    platformName: chrome.i18n.getMessage('platformVivoVideo'),
+    injectUrl: 'https://kaixinkan.vivo.com.cn/#/home',
+    injectFunction: VideoVivoVideo,
+    tags: ['CN'],
+    accountKey: 'vivovideo',
   },
 };
