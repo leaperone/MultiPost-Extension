@@ -143,23 +143,28 @@ export async function DynamicWeiXinChannel(data: SyncData) {
   async function uploadImages(images: FileData[]): Promise<void> {
     const fileInput = (await waitForElement('input[type="file"][accept="image/*"]')) as HTMLInputElement;
 
-    const dataTransfer = new DataTransfer();
-
-    // 使用Promise.all等待所有图片加载完成
-    await Promise.all(
+    // 1. 并行下载所有图片，保持数组顺序
+    const files = await Promise.all(
       images.map(async (image) => {
         const response = await fetch(image.url);
         const blob = await response.blob();
         const file = new File([blob], image.name, { type: image.type });
-        console.log(`图片文件: ${file.name} ${file.type} ${file.size}`);
-        dataTransfer.items.add(file);
+        console.log(`图片文件准备就绪: ${file.name} ${file.type} ${file.size}`);
+        return file;
       }),
     );
+
+    // 2. 将所有文件添加到同一个DataTransfer对象中
+    const dataTransfer = new DataTransfer();
+    for (const file of files) {
+      dataTransfer.items.add(file);
+    }
 
     // 先聚焦到文件输入框
     fileInput.focus();
     await new Promise((resolve) => setTimeout(resolve, 200));
 
+    // 一次性赋值所有文件
     fileInput.files = dataTransfer.files;
 
     // 触发更完整的事件序列来模拟真实用户行为
@@ -175,7 +180,7 @@ export async function DynamicWeiXinChannel(data: SyncData) {
       await new Promise((resolve) => setTimeout(resolve, 100));
     }
 
-    console.log('图片上传事件已触发');
+    console.log('所有图片上传事件已触发');
   }
 
   try {
