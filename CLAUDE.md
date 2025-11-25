@@ -229,3 +229,11 @@ if (user.role === 'admin') {
 - **ESLint Requirements**: Use `/* eslint-disable */` for complex DOM manipulation
 - **File Upload Timing**: Some platforms require specific initialization sequences
 - **Platform-specific Uploaders**: Each platform may have unique uploader integration (AHVP, browser_0_, etc.)
+
+## Git Commit Guidelines
+- **DO NOT include Claude Code attribution** in commit messages
+- **DO NOT include** the following content in commit messages:
+  - `🤖 Generated with [Claude Code](https://claude.com/claude-code)`
+  - `Co-Authored-By: Claude <noreply@anthropic.com>`
+- Keep commit messages focused on actual changes
+- Use conventional commit format when appropriate (feat:, fix:, docs:, etc.)

@@ -30,6 +30,7 @@ export async function VideoDewu(data: SyncData) {
     };
   }
 
+  
   async function uploadVideo(file: File): Promise<void> {
     console.log('🎬 开始视频上传流程');
 
@@ -80,11 +81,10 @@ export async function VideoDewu(data: SyncData) {
     // 等待页面完全加载
     await sleep(3000);
 
-    // 使用正确的选择器找到标题输入框
-    const titleInput = document.querySelector('input#title.pd-input[placeholder*="填写标题"]') as HTMLInputElement;
+    // 直接使用 id="title" 填充
+    const titleInput = document.getElementById('title') as HTMLInputElement;
 
-    if (titleInput && titleInput.offsetParent !== null) {
-      console.log('✅ 找到标题输入框');
+    if (titleInput) {
       titleInput.value = title;
       titleInput.dispatchEvent(new Event('input', { bubbles: true }));
       titleInput.dispatchEvent(new Event('change', { bubbles: true }));
@@ -99,7 +99,7 @@ export async function VideoDewu(data: SyncData) {
     console.log('🔍 开始填写描述:', content);
 
     // 等待页面完全加载
-    await sleep(3000);
+    await sleep(5000);
 
     // 创建临时元素来处理HTML标签
     const tempDiv = document.createElement('div');
@@ -154,44 +154,387 @@ export async function VideoDewu(data: SyncData) {
     console.log('🖼️ 开始上传封面:', cover);
 
     try {
-      await sleep(3000);
+      await sleep(5000);
 
-      const editCoverButton = document.querySelector('.cover-edit-btn') as HTMLElement;
-      if (editCoverButton) {
-        editCoverButton.click();
-        console.log('✅ 点击编辑封面按钮');
-        await sleep(3000);
+      // 步骤1: 点击"编辑封面"按钮
+      console.log('🔍 查找编辑封面按钮...');
+
+      // 通过文本内容查找按钮，避免使用动态CSS类
+      const buttons = document.querySelectorAll('button');
+      let editCoverButton: HTMLElement | null = null;
+
+      for (const button of buttons) {
+        const text = button.textContent?.trim();
+        if (text && text.includes('编辑封面')) {
+          editCoverButton = button as HTMLElement;
+          console.log('✅ 通过文本找到编辑封面按钮');
+          break;
+        }
       }
 
-      // 根据视频比例自动选择裁剪比例
-      if (videoAspectRatio >= 1.6) {
-        console.log('🎯 横屏视频，选择 4:3 裁剪比例');
-        // 这里可以添加选择4:3比例的逻辑
+      if (!editCoverButton) {
+        console.log('❌ 未找到编辑封面按钮，尝试查找包含"封面"的按钮...');
+        for (const button of buttons) {
+          const text = button.textContent?.trim();
+          if (text && text.includes('封面')) {
+            editCoverButton = button as HTMLElement;
+            console.log('✅ 通过部分文本找到编辑封面按钮');
+            break;
+          }
+        }
       }
 
-      const fileInput = document.querySelector('input[name="media"]') as HTMLInputElement;
-      if (!fileInput) {
-        console.log('⚠️ 未找到封面上传输入框');
+      if (!editCoverButton) {
+        console.log('❌ 未找到编辑封面按钮');
         return;
       }
 
+      console.log('✅ 点击编辑封面按钮');
+      editCoverButton.click();
+      await sleep(3000);
+
+      // 步骤2: 点击"上传封面"标签页
+      console.log('🔍 查找上传封面标签页...');
+      const uploadCoverTabSelectors = [
+        '#rc-tabs-1-tab-2', // 具体的ID
+        'div[role="tab"]:contains("上传封面")', // 通过文本查找
+        '.pd-tabs-tab:contains("上传封面")' // 通过类和文本查找
+      ];
+
+      let uploadCoverTab: HTMLElement | null = null;
+      for (const selector of uploadCoverTabSelectors) {
+        if (selector.includes(':contains')) {
+          const tabs = document.querySelectorAll('[role="tab"]');
+          for (const tab of tabs) {
+            if (tab.textContent?.includes('上传封面')) {
+              uploadCoverTab = tab as HTMLElement;
+              console.log(`✅ 通过文本找到上传封面标签页`);
+              break;
+            }
+          }
+        } else {
+          uploadCoverTab = document.querySelector(selector) as HTMLElement;
+        }
+
+        if (uploadCoverTab) {
+          console.log(`✅ 找到上传封面标签页: ${selector}`);
+          break;
+        }
+      }
+
+      if (uploadCoverTab) {
+        console.log('✅ 点击上传封面标签页');
+        uploadCoverTab.click();
+        await sleep(2000);
+      }
+
+      // 步骤3: 查找上传区域并触发文件上传
+      console.log('🔍 查找上传区域...');
+
+      // 查找包含上传文本的元素
+      const uploadTextElements = Array.from(document.querySelectorAll('*')).filter(el => {
+        const text = el.textContent?.trim();
+        return text && text.includes('将文件拖拽到这里') && text.includes('支持jpg');
+      });
+
+      let uploadArea: HTMLElement | null = null;
+
+      if (uploadTextElements.length > 0) {
+        // 找到包含上传文本的元素，然后向上查找其父级容器
+        uploadArea = uploadTextElements[0].closest('div') as HTMLElement;
+        console.log('✅ 通过文本找到上传区域');
+      } else {
+        // 备用方案：查找包含上传图标的区域
+        const uploadImages = Array.from(document.querySelectorAll('img')).filter(img => {
+          const src = img.src.toLowerCase();
+          return src.includes('upload') || src.includes('add') || src.includes('plus');
+        });
+
+        if (uploadImages.length > 0) {
+          uploadArea = uploadImages[0].closest('div') as HTMLElement;
+          console.log('✅ 通过图标找到上传区域');
+        }
+      }
+
+      if (!uploadArea) {
+        console.log('❌ 未找到上传区域，尝试所有可能的div容器...');
+        // 最后的备用方案：查找模态框内的大div
+        const modalDivs = Array.from(document.querySelectorAll('.modal *, .dialog *, [role="dialog"] *'));
+        for (const div of modalDivs) {
+          if (div.tagName === 'DIV' && div.children.length > 0) {
+            uploadArea = div as HTMLElement;
+            console.log('✅ 使用模态框内的div作为上传区域');
+            break;
+          }
+        }
+      }
+
+      if (!uploadArea) {
+        console.log('❌ 未找到上传区域');
+        return;
+      }
+
+      // 步骤4: 准备封面文件
+      console.log('📁 准备封面文件...');
       const response = await fetch(cover.url);
       const arrayBuffer = await response.arrayBuffer();
       const coverFile = new File([arrayBuffer], cover.name, {
         type: cover.type || 'image/jpeg'
       });
 
+      console.log('📁 封面文件信息:', coverFile.name, coverFile.size, coverFile.type);
+
+      // 方法1: 查找现有的文件输入框
+      console.log('🔍 查找现有的文件输入框...');
+      const fileInputs = uploadArea.querySelectorAll('input[type="file"]');
+      let targetFileInput: HTMLInputElement | null = null;
+
+      if (fileInputs.length > 0) {
+        targetFileInput = fileInputs[0] as HTMLInputElement;
+        console.log('✅ 找到现有文件输入框');
+      } else {
+        // 方法2: 创建文件输入框
+        console.log('📝 创建新的文件输入框...');
+        targetFileInput = document.createElement('input');
+        targetFileInput.type = 'file';
+        targetFileInput.accept = 'image/*,.jpg,.jpeg,.png,.webp';
+        targetFileInput.style.display = 'none';
+        targetFileInput.id = `dewu_cover_upload_${Date.now()}`;
+        document.body.appendChild(targetFileInput);
+      }
+
+      // 设置文件
       const dataTransfer = new DataTransfer();
       dataTransfer.items.add(coverFile);
-      fileInput.files = dataTransfer.files;
+      targetFileInput.files = dataTransfer.files;
 
-      fileInput.dispatchEvent(new Event('change', { bubbles: true }));
+      // 触发文件选择事件
+      console.log('📤 触发文件选择事件...');
+      targetFileInput.dispatchEvent(new Event('change', { bubbles: true, composed: true }));
+      await sleep(1000);
 
-      console.log('✅ 封面文件已设置');
+      // 方法3: 直接点击上传区域触发文件选择
+      console.log('🖱️ 尝试直接点击上传区域...');
+      uploadArea.click();
+      await sleep(1000);
+
+      // 清理临时创建的文件输入框
+      if (targetFileInput.id.startsWith('dewu_cover_upload_')) {
+        targetFileInput.remove();
+      }
+
+      console.log('✅ 封面文件设置完成');
+
+      // 步骤5: 等待上传完成并选择封面比例
+      console.log('⏳ 等待封面上传完成...');
       await sleep(5000);
+
+      // 根据视频比例选择合适的封面裁剪比例
+      console.log('🎯 根据视频比例选择封面裁剪比例:', videoAspectRatio.toFixed(2));
+      await selectCoverAspectRatio(videoAspectRatio);
+
+      // 步骤6: 查找并点击确定按钮
+      console.log('🔍 查找模态框确定按钮...');
+      const confirmButtonSelectors = [
+        'button:contains("确定")', // 通过文本查找
+        '.pd-modal-footer .pd-btn-primary', // 模态框 footer 中的主要按钮
+        '.ant-modal-footer .ant-btn-primary', // Ant Design 模态框
+        '[class*="modal"] [class*="confirm"]', // 包含确认类名的按钮
+        '.pd-btn-primary:contains("确定")' // 主要按钮且包含确定文本
+      ];
+
+      let confirmButton: HTMLElement | null = null;
+      for (const selector of confirmButtonSelectors) {
+        if (selector.includes(':contains')) {
+          const buttons = document.querySelectorAll('button');
+          for (const button of buttons) {
+            if (button.textContent?.includes('确定') && button.textContent?.length <= 10) {
+              // 确保按钮文本相对简短，避免匹配到其他包含"确定"的长文本
+              confirmButton = button as HTMLElement;
+              console.log(`✅ 通过文本找到确定按钮`);
+              break;
+            }
+          }
+        } else {
+          confirmButton = document.querySelector(selector) as HTMLElement;
+        }
+
+        if (confirmButton && confirmButton.offsetParent !== null) {
+          console.log(`✅ 找到确定按钮: ${selector}`);
+          break;
+        }
+      }
+
+      if (confirmButton) {
+        console.log('✅ 点击确定按钮完成封面上传');
+        confirmButton.click();
+        await sleep(3000);
+        console.log('🎉 封面上传完成');
+      } else {
+        console.log('⚠️ 未找到确定按钮，可能需要手动确认');
+      }
 
     } catch (error) {
       console.error('❌ 封面上传失败:', error);
+    }
+  }
+
+  async function selectCoverAspectRatio(videoAspectRatio: number): Promise<void> {
+    console.log('🎯 开始选择封面裁剪比例，视频比例:', videoAspectRatio.toFixed(2));
+
+    try {
+      // 根据视频比例确定推荐的封面裁剪比例
+      let recommendedRatio = '';
+      if (videoAspectRatio >= 1.5) { // 横版视频 (3:2 或更宽)
+        recommendedRatio = '4:3'; // 横版视频优先选择 4:3
+      } else if (videoAspectRatio >= 0.8) { // 接近正方形的视频
+        recommendedRatio = '1:1';
+      } else { // 竖版视频
+        recommendedRatio = '3:4'; // 竖版视频选择 3:4
+      }
+
+      console.log('📏 推荐封面裁剪比例:', recommendedRatio);
+
+      // 查找封面裁剪比例选择选项
+      console.log('🔍 查找封面裁剪比例选择选项...');
+
+      // 首先查找"裁剪比例"标题所在的区域
+      const cutRatioTitleElements = Array.from(document.querySelectorAll('*')).filter(el => {
+        const text = el.textContent?.trim();
+        return text && text.includes('裁剪比例');
+      });
+
+      let selectedOption: HTMLElement | null = null;
+
+      if (cutRatioTitleElements.length > 0) {
+        console.log('✅ 找到"裁剪比例"区域');
+
+        // 在裁剪比例区域内查找比例选项
+        const cutRatioContainer = cutRatioTitleElements[0].parentElement || cutRatioTitleElements[0].closest('div');
+        if (cutRatioContainer) {
+          // 查找所有包含比例文本的元素
+          const ratioElements = Array.from(cutRatioContainer.querySelectorAll('*')).filter(el => {
+            const text = el.textContent?.trim();
+            const ratios = ['16:9', '4:3', '1:1', '9:16', '3:4'];
+            return text && ratios.some(ratio => text === ratio || text.includes(ratio));
+          });
+
+          console.log(`🔍 在裁剪比例区域找到 ${ratioElements.length} 个比例选项`);
+
+          // 对于横版视频，优先选择4:3比例
+          if (recommendedRatio === '4:3') {
+            // 先尝试查找4:3比例
+            for (const element of ratioElements) {
+              if (element.textContent?.trim() === '4:3') {
+                selectedOption = element as HTMLElement;
+                console.log('✅ 找到4:3比例选项');
+                break;
+              }
+            }
+
+            // 如果没找到4:3，尝试16:9（也是横版比例）
+            if (!selectedOption) {
+              for (const element of ratioElements) {
+                if (element.textContent?.trim() === '16:9') {
+                  selectedOption = element as HTMLElement;
+                  console.log('✅ 找到16:9比例选项');
+                  break;
+                }
+              }
+            }
+          } else {
+            // 对于其他视频比例，先尝试查找推荐的比例
+            for (const element of ratioElements) {
+              if (element.textContent?.trim() === recommendedRatio ||
+                  element.textContent?.trim().includes(recommendedRatio)) {
+                selectedOption = element as HTMLElement;
+                console.log(`✅ 找到推荐比例选项: ${recommendedRatio}`);
+                break;
+              }
+            }
+          }
+
+          // 如果没找到推荐比例，选择第一个可用的选项
+          if (!selectedOption && ratioElements.length > 0) {
+            console.log(`⚠️ 未找到推荐比例 ${recommendedRatio}，选择第一个可用选项`);
+            selectedOption = ratioElements[0] as HTMLElement;
+            console.log(`✅ 选择了比例选项: ${selectedOption.textContent?.trim()}`);
+          }
+        }
+      } else {
+        console.log('⚠️ 未找到"裁剪比例"区域，尝试全局搜索比例选项');
+        // 备用方案：全局搜索比例选项
+        const allElements = document.querySelectorAll('*');
+
+        // 对于横版视频，优先搜索4:3和16:9
+        if (recommendedRatio === '4:3') {
+          for (const element of allElements) {
+            const text = element.textContent?.trim();
+            if (text === '4:3') {
+              selectedOption = element as HTMLElement;
+              console.log('✅ 通过全局搜索找到4:3比例选项');
+              break;
+            }
+          }
+
+          if (!selectedOption) {
+            for (const element of allElements) {
+              const text = element.textContent?.trim();
+              if (text === '16:9') {
+                selectedOption = element as HTMLElement;
+                console.log('✅ 通过全局搜索找到16:9比例选项');
+                break;
+              }
+            }
+          }
+        }
+
+        // 如果还没找到，按推荐比例搜索
+        if (!selectedOption) {
+          for (const element of allElements) {
+            const text = element.textContent?.trim();
+            const ratios = ['16:9', '4:3', '1:1', '9:16', '3:4'];
+            if (text && ratios.some(ratio => text === ratio)) {
+              if (text === recommendedRatio || text.includes(recommendedRatio)) {
+                selectedOption = element as HTMLElement;
+                console.log(`✅ 通过全局搜索找到推荐比例选项: ${recommendedRatio}`);
+                break;
+              }
+            }
+          }
+        }
+
+        // 最后，选择第一个找到的比例选项
+        if (!selectedOption) {
+          for (const element of allElements) {
+            const text = element.textContent?.trim();
+            const ratios = ['16:9', '4:3', '1:1', '9:16', '3:4'];
+            if (text && ratios.some(ratio => text === ratio)) {
+              selectedOption = element as HTMLElement;
+              console.log(`✅ 选择第一个找到的比例选项: ${text}`);
+              break;
+            }
+          }
+        }
+      }
+
+      // 点击选择的选项
+      if (selectedOption) {
+        console.log('✅ 点击封面裁剪比例选项');
+        if (selectedOption.tagName === 'INPUT') {
+          (selectedOption as HTMLInputElement).checked = true;
+          selectedOption.dispatchEvent(new Event('change', { bubbles: true }));
+        } else {
+          selectedOption.click();
+        }
+        await sleep(1000);
+        console.log('✅ 封面裁剪比例选择完成');
+      } else {
+        console.log('⚠️ 未找到封面裁剪比例选择选项，跳过此步骤');
+      }
+
+    } catch (error) {
+      console.error('❌ 封面裁剪比例选择失败:', error);
     }
   }
 
@@ -252,8 +595,8 @@ export async function VideoDewu(data: SyncData) {
 
     // 然后开始填写表单
     console.log('📝 开始填写表单...');
-    await fillTitle(title || '');
     await fillDescription(finalContent);
+    await fillTitle(title || '');
     console.log('✅ 表单填写完成');
 
     // 等待视频上传完成
