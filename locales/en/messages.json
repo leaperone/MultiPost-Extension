@@ -665,6 +665,10 @@
     "message": "QiE",
     "description": "Platform name for QiE"
   },
+  "platformDewu": {
+    "message": "Dewu",
+    "description": "Platform name for Dewu"
+  },
   "platformToutiao": {
     "message": "Toutiao",
     "description": "Platform name for Toutiao"

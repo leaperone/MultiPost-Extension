@@ -15,6 +15,7 @@ import { VideoXiaoheihe } from './video/xiaoheihe';
 import { VideoYoutube } from './video/youtube';
 import { VideoZhihu } from './video/zhihu';
 import { VideoQiE } from './video/qie';
+import { VideoDewu } from './video/dewu';
 
 export const VideoInfoMap: Record<string, PlatformInfo> = {
   VIDEO_BILIBILI: {
@@ -194,5 +195,16 @@ export const VideoInfoMap: Record<string, PlatformInfo> = {
     injectFunction: VideoQiE,
     tags: ['CN'],
     accountKey: 'qie',
+  },
+  VIDEO_DEWU: {
+    type: 'VIDEO',
+    name: 'VIDEO_DEWU',
+    homeUrl: 'https://creator.dewu.com/',
+    faviconUrl: 'https://h5static.dewu.com/favicon.ico',
+    platformName: chrome.i18n.getMessage('platformDewu'),
+    injectUrl: 'https://creator.dewu.com/sociality-creator/video/upload',
+    injectFunction: VideoDewu,
+    tags: ['CN'],
+    accountKey: 'dewu',
   },
 };

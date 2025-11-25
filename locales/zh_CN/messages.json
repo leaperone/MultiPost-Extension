@@ -643,6 +643,10 @@
     "message": "企鹅号",
     "description": "企鹅号平台名称"
   },
+  "platformDewu": {
+    "message": "得物",
+    "description": "得物平台名称"
+  },
   "platformToutiao": {
     "message": "今日头条",
     "description": "今日头条平台名称"
