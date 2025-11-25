@@ -5,7 +5,7 @@ import { generateText } from 'ai';
 import { PromotionTaskTypeLabelMap } from '../types';
 
 const openai = createOpenAI({
-  apiKey: '',
+  apiKey: process.env.LEAPERONE_API_KEY,
   baseURL: process.env.LEAPERONE_API_BASE_URL,
 });
 

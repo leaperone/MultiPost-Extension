@@ -2,7 +2,7 @@ import { createOpenAI } from '@ai-sdk/openai';
 import { CoreMessage, streamText } from 'ai';
 
 const openai = createOpenAI({
-  apiKey: '',
+  apiKey: process.env.LEAPERONE_API_KEY,
   baseURL: process.env.LEAPERONE_API_BASE_URL,
 });
 // 允许流式响应最多持续30秒
