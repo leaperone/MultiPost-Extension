@@ -31,53 +31,38 @@ export async function DynamicZhihu(data: SyncData) {
     });
   }
 
-  async function uploadFiles(files: File[]) {
-    const fileInput = (await waitForElement('input[type="file"][accept="image/*"]')) as HTMLInputElement;
-    if (!fileInput) {
-      console.error('未找到文件输入元素');
-      return;
-    }
-
-    const dataTransfer = new DataTransfer();
-    for (const file of files) {
-      if (file.type.startsWith('image/')) {
-        dataTransfer.items.add(file);
-      } else {
-        console.warn(`跳过非图片文件: ${file.name}`);
-      }
-    }
-
-    fileInput.files = dataTransfer.files;
-    fileInput.dispatchEvent(new Event('change', { bubbles: true }));
-    fileInput.dispatchEvent(new Event('input', { bubbles: true }));
-
-    console.debug('文件上传操作完成');
-  }
-
   try {
-    // 等待并点击"写想法"元素
-    await waitForElement('div.GlobalWriteV2-topTitle');
-    const writeThoughtButton = Array.from(document.querySelectorAll('div.GlobalWriteV2-topTitle')).find(
-      (el) => el.textContent?.includes('写想法'),
+    await waitForElement('input');
+    await new Promise((resolve) => setTimeout(resolve, 1000));
+
+    // 查找并点击"写想法"或"发想法"按钮
+    const buttons = document.querySelectorAll('button');
+    const postButton = Array.from(buttons).find(
+      (el) => el.textContent?.includes('写想法') || el.textContent?.includes('发想法'),
     );
 
-    if (!writeThoughtButton) {
+    if (!postButton) {
       console.debug('未找到"写想法"元素');
       return;
     }
 
-    (writeThoughtButton as HTMLElement).click();
+    console.debug('postButton', postButton);
+    postButton.click();
     await new Promise((resolve) => setTimeout(resolve, 1000));
 
-    // 填写标题（如果有）
-    const titleInput = (await waitForElement('textarea[placeholder="添加标题(选填)"]')) as HTMLTextAreaElement;
+    // 等待并填写标题
+    await waitForElement('textarea[placeholder="添加标题(选填)"]');
+    const titleInput = document.querySelector('textarea[placeholder="添加标题(选填)"]') as HTMLTextAreaElement;
+    console.debug('titleInput', titleInput);
     if (titleInput && title) {
       titleInput.value = title;
       titleInput.dispatchEvent(new Event('input', { bubbles: true }));
+      titleInput.dispatchEvent(new Event('change', { bubbles: true }));
     }
 
-    // 填写内容
-    const editorElement = (await waitForElement('div[data-contents="true"]')) as HTMLDivElement;
+    // 查找编辑器并填写内容
+    const editorElement = document.querySelector('div[data-contents="true"]') as HTMLDivElement;
+    console.debug('qlEditor', editorElement);
     if (!editorElement) {
       console.debug('未找到编辑器元素');
       return;
@@ -89,98 +74,66 @@ export async function DynamicZhihu(data: SyncData) {
       cancelable: true,
       clipboardData: new DataTransfer(),
     });
-    pasteEvent.clipboardData.setData('text/plain', content || '');
+    pasteEvent.clipboardData?.setData('text/plain', content || '');
     editorElement.dispatchEvent(pasteEvent);
-    editorElement.dispatchEvent(new Event('input', { bubbles: true }));
-    editorElement.dispatchEvent(new Event('change', { bubbles: true }));
-
     await new Promise((resolve) => setTimeout(resolve, 1000));
 
     // 处理图片上传
     if (images && images.length > 0) {
-      const sendButton = Array.from(document.querySelectorAll('button')).find((el) => el.textContent?.includes('发布'));
-
-      if (sendButton) {
-        const uploadButton = sendButton.parentElement?.previousElementSibling?.children[1] as HTMLElement;
-        if (uploadButton) {
-          uploadButton.click();
-          await new Promise((resolve) => setTimeout(resolve, 1000));
-
-          await waitForElement('input[type="file"][accept="image/*"]');
-          const fileInput = document.querySelector('input[type="file"][accept="image/*"]') as HTMLInputElement;
-          if (fileInput) {
-            const imageFiles = await Promise.all(
-              images.map(async (file) => {
-                const response = await fetch(file.url);
-                const blob = await response.blob();
-                return new File([blob], file.name, { type: file.type });
-              }),
-            );
-            await uploadFiles(imageFiles);
-
-            // 等待图片上传完成
-            for (let i = 0; i < 30; i++) {
-              const uploadedCountElement = document.evaluate(
-                "//*[contains(text(), '已上传')]",
-                document,
-                null,
-                XPathResult.FIRST_ORDERED_NODE_TYPE,
-                null,
-              ).singleNodeValue as HTMLElement;
-
-              if (uploadedCountElement) {
-                const match = uploadedCountElement.textContent?.match(/已上传 (\d+) 张图片/);
-                if (match && parseInt(match[1]) >= images.length) {
-                  console.debug(`图片上传完成：${match[1]}张`);
-                  break;
-                }
-              }
-              await new Promise((resolve) => setTimeout(resolve, 1000));
-            }
-
-            const insertButton = Array.from(document.querySelectorAll('button')).find(
-              (el) => el.textContent?.includes('插入图片'),
-            );
-            if (insertButton) {
-              insertButton.click();
-            }
-          }
+      for (let i = 0; i < images.length; i++) {
+        const image = images[i];
+        if (i >= 9) {
+          console.debug('Zhihu 最多支持 9 张，跳过');
+          break;
         }
+        console.debug('try upload file', image);
+        const response = await fetch(image.url);
+        const arrayBuffer = await response.arrayBuffer();
+        const file = new File([arrayBuffer], image.name, { type: image.type });
+
+        const imagePasteEvent = new ClipboardEvent('paste', {
+          bubbles: true,
+          cancelable: true,
+          clipboardData: new DataTransfer(),
+        });
+        imagePasteEvent.clipboardData?.items.add(file);
+        editorElement.dispatchEvent(imagePasteEvent);
       }
     }
 
+    editorElement.dispatchEvent(new Event('input', { bubbles: true }));
+    editorElement.dispatchEvent(new Event('change', { bubbles: true }));
+    await new Promise((resolve) => setTimeout(resolve, 3000));
+
+    // 等待图片上传完成（检查是否有 blob 图片正在加载）
+    let loadingCount = 0;
+    while (loadingCount < 30) {
+      const uploadingImages = document.querySelectorAll('div.DraggableTags-tag-drag img');
+      if (uploadingImages.length === 0) break;
+
+      const loadingImg = Array.from(uploadingImages).find((img) => (img as HTMLImageElement).src.startsWith('blob'));
+      console.debug('loadingImg', loadingImg);
+      if (!loadingImg) break;
+
+      await new Promise((resolve) => setTimeout(resolve, 2000));
+      loadingCount++;
+    }
+
     // 发布内容
-    if (data.isAutoPublish) {
-      const maxRetries = 3;
-      const retryInterval = 2000; // 2秒
+    const allButtons = document.querySelectorAll('button');
+    const sendButton = Array.from(allButtons).find((el) => el.textContent?.includes('发布'));
+    console.debug('sendButton', sendButton);
 
-      const attemptPublish = async (): Promise<boolean> => {
-        const publishButton = Array.from(document.querySelectorAll('button')).find(
-          (el) => el.textContent?.includes('发布'),
-        );
-        if (publishButton) {
-          console.debug('发布按钮被点击');
-          publishButton.click();
-          return true;
-        }
-        return false;
-      };
-
-      let isPublished = false;
-      for (let i = 0; i < maxRetries; i++) {
-        isPublished = await attemptPublish();
-        if (isPublished) {
-          await new Promise((resolve) => setTimeout(resolve, 3000));
-          window.location.reload();
-          break;
-        }
-        console.debug(`未找到"发布"按钮，重试第 ${i + 1} 次`);
-        await new Promise((resolve) => setTimeout(resolve, retryInterval));
+    if (sendButton) {
+      if (data.isAutoPublish) {
+        console.debug('sendButton clicked');
+        const clickEvent = new Event('click', { bubbles: true });
+        sendButton.dispatchEvent(clickEvent);
+        await new Promise((resolve) => setTimeout(resolve, 3000));
+        window.location.href = 'https://www.zhihu.com/follow';
       }
-
-      if (!isPublished) {
-        console.error(`在 ${maxRetries} 次尝试后仍未能发布内容`);
-      }
+    } else {
+      console.debug('未找到"发送"按钮');
     }
 
     console.debug('成功填入知乎内容和图片');
