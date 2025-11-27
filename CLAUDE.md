@@ -2,6 +2,11 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+## Communication Guidelines
+- **Language**: 请始终使用简体中文与我对话
+- **Style**: 保持专业、简洁的回答方式
+- **Code Comments**: 使用中文注释解释复杂逻辑和业务需求
+
 ## Project Overview
 MultiPost is a Chrome extension for cross-platform content publishing, supporting multiple Chinese social media platforms including video and article publishing.
 
@@ -14,11 +19,15 @@ MultiPost is a Chrome extension for cross-platform content publishing, supportin
 - **Package Manager**: pnpm (required - do not use npm)
 
 ## Architecture
-- Content scripts for platform integration
-- Background service worker for core logic
-- Popup UI for user interaction
-- Storage management with @plasmohq/storage
-- Platform-specific implementations in `src/sync/`
+- **Content Scripts**: Platform integration and DOM manipulation (`src/contents/`)
+- **Background Service Worker**: Core logic, tab management, and API handling (`src/background/`)
+- **Extension UI**: Popup, options, and sidepanel that redirect to web app (`src/popup/`, `src/options/`, `src/sidepanel/`)
+- **Tabs**: Extension pages for account management, publishing, and configuration (`src/tabs/`)
+- **Storage**: Persistent data management with @plasmohq/storage
+- **Platform Integration**: Modular platform implementations in `src/sync/`
+- **Components**: Shared React components using HeroUI (`src/components/`)
+- **Types**: TypeScript type definitions (`src/types/`)
+- **Utils**: Helper functions and utilities (`src/utils/`)
 
 ## Platform Integration Structure
 The codebase follows a modular architecture for platform integration:
@@ -104,9 +113,22 @@ fileInput.files = dataTransfer.files;
 ## File Structure
 ```
 src/
-├── components/          # Reusable React components
-├── hooks/              # Custom React hooks
-├── pages/              # Extension pages (popup, options, etc.)
+├── background/          # Background service worker and core logic
+│   ├── index.ts        # Main background script
+│   └── services/       # Background services (API, tabs, trust domain)
+├── components/         # Reusable React components
+├── contents/           # Content scripts for platform integration
+│   ├── extension.ts    # Main content script
+│   ├── helper.ts       # DOM manipulation helpers
+│   └── scraper/        # Content scraping implementations
+├── popup/              # Extension popup (redirects to web app)
+├── options/            # Extension options page (redirects to web app)
+├── sidepanel/          # Extension sidepanel
+├── tabs/               # Extension pages
+│   ├── publish.tsx     # Publishing interface
+│   ├── refresh-accounts.tsx # Account management
+│   ├── link-extension.tsx  # API linking
+│   └── trust-domain.tsx    # Domain trust management
 ├── sync/               # Platform integration logic
 │   ├── account/        # Platform account info retrievers
 │   ├── article/        # Article publishing implementations
@@ -119,8 +141,9 @@ src/
 │   ├── video.ts        # Video platform registry
 │   ├── dynamic.ts      # Dynamic platform registry
 │   └── podcast.ts      # Podcast platform registry
-├── store/              # State management
-└── styles/             # Global styles
+├── types/              # TypeScript type definitions
+├── utils/              # Helper functions and utilities
+└── style.css           # Global styles
 locales/                # i18n message files
 ├── en/messages.json    # English translations
 └── zh_CN/messages.json # Chinese translations
@@ -128,14 +151,25 @@ locales/                # i18n message files
 
 ## Build Commands
 ```bash
-pnpm run dev       # Development mode (watch mode)
-pnpm run build     # Build and package extension
-pnpm run package   # Package extension only
-pnpm run lint      # Run ESLint
-pnpm run lint:fix  # Fix ESLint auto-fixable issues
-pnpm run lint:staged # Run lint-staged for git hooks
-pnpm run prepare   # Setup husky git hooks
+pnpm run dev          # Development mode (watch mode)
+pnpm run build        # Build and package extension
+pnpm run package      # Package extension only
+pnpm run lint         # Run ESLint
+pnpm run lint:fix     # Fix ESLint auto-fixable issues
+pnpm run lint:staged  # Run lint-staged for git hooks
+pnpm run prepare      # Setup husky git hooks
+pnpm run test         # Run Jest tests
+pnpm run test:watch   # Run tests in watch mode
+pnpm run test:coverage # Run tests with coverage report
 ```
+
+## Testing
+- **Framework**: Jest with TypeScript support
+- **Environment**: jsdom for DOM testing
+- **Configuration**: `jest.config.js` with coverage reporting
+- **Test files**: `**/__tests__/**/*.+(ts|tsx|js)` or `**/*.(test|spec).+(ts|tsx|js)`
+- **Coverage**: Collected from `src/**/*.{ts,tsx}` (excludes `.d.ts` and `index.ts` files)
+- **Test timeout**: 10 seconds (extended for async operations)
 
 ## UI and Styling Standards
 - Use **HeroUI and Tailwind CSS** for components and styling
@@ -237,3 +271,18 @@ if (user.role === 'admin') {
   - `Co-Authored-By: Claude <noreply@anthropic.com>`
 - Keep commit messages focused on actual changes
 - Use conventional commit format when appropriate (feat:, fix:, docs:, etc.)
+
+## Development Environment Setup
+- **Node.js**: Use version specified in package.json engines (if present)
+- **Package Manager**: Must use pnpm (required by project configuration)
+- **TypeScript**: Configured with Plasmo base configuration and path aliases (`~/*` maps to `./src/*`)
+- **Browser**: Chrome/Edge with developer mode enabled for extension testing
+- **Environment Variables**: Development uses `localhost:3000`, production uses `https://multipost.app`
+
+## Extension Architecture Patterns
+- **UI Integration**: Extension popup and options redirect to web app (`multipost.app`)
+- **Content Script Injection**: Uses `@plasmohq/storage` for cross-context communication
+- **Tab Management**: Background service handles tab lifecycle for multi-platform publishing
+- **Platform Detection**: Dynamic injection based on URL patterns and platform-specific selectors
+- **Error Handling**: Graceful degradation when platform elements are not found
+- **Performance**: Lazy loading of platform implementations and tab cleanup
