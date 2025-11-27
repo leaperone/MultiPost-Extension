@@ -266,7 +266,7 @@ export const VideoInfoMap: Record<string, PlatformInfo> = {
     homeUrl: 'https://mp.dayu.com/',
     faviconUrl: 'https://image.uc.cn/s/uae/g/1v/images/index/favicon.ico',
     platformName: chrome.i18n.getMessage('platformDayu'),
-    injectUrl: 'https://mp.dayu.com/dashboard/index',
+    injectUrl: 'https://mp.dayu.com/dashboard/video/write',
     injectFunction: VideoDayu,
     tags: ['CN'],
     accountKey: 'dayu',
