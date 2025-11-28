@@ -244,7 +244,7 @@ export const VideoInfoMap: Record<string, PlatformInfo> = {
     homeUrl: 'https://mp.sohu.com',
     faviconUrl: 'https://statics.itc.cn/mp-new/icon/1.1/favicon.ico',
     platformName: chrome.i18n.getMessage('platformSohu'),
-    injectUrl: 'https://mp.sohu.com/mpfe/v4/',
+    injectUrl: 'https://mp.sohu.com/mpfe/v4/contentManagement/news/addvideo',
     injectFunction: VideoSohu,
     tags: ['CN'],
     accountKey: 'sohu',

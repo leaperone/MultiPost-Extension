@@ -138,6 +138,17 @@ export async function VideoDouyin(data: SyncData) {
       'div.zone-container.editor-kit-container.editor.editor-comp-publish[contenteditable="true"]',
     )) as HTMLDivElement;
     if (contentEditor) {
+      // 填写描述内容
+      contentEditor.focus();
+      const contentPasteEvent = new ClipboardEvent('paste', {
+        bubbles: true,
+        cancelable: true,
+        clipboardData: new DataTransfer(),
+      });
+
+      contentPasteEvent.clipboardData.setData('text/plain', content + ' ');
+      contentEditor.dispatchEvent(contentPasteEvent);
+
       // 处理标签
       if (tags && tags.length > 0) {
         const tagsToSync = tags.slice(0, 5);
@@ -155,31 +166,8 @@ export async function VideoDouyin(data: SyncData) {
           contentEditor.dispatchEvent(pasteEvent);
 
           await new Promise((resolve) => setTimeout(resolve, 1000));
-
-          const enterEvent = new KeyboardEvent('keydown', {
-            bubbles: true,
-            cancelable: true,
-            key: 'Enter',
-            code: 'Enter',
-            keyCode: 13,
-            which: 13,
-          });
-
-          contentEditor.dispatchEvent(enterEvent);
-          await new Promise((resolve) => setTimeout(resolve, 1000));
         }
       }
-
-      // 填写描述内容
-      contentEditor.focus();
-      const contentPasteEvent = new ClipboardEvent('paste', {
-        bubbles: true,
-        cancelable: true,
-        clipboardData: new DataTransfer(),
-      });
-
-      contentPasteEvent.clipboardData.setData('text/plain', content + '\n');
-      contentEditor.dispatchEvent(contentPasteEvent);
     }
 
     // 处理封面上传
