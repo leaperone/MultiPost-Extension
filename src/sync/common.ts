@@ -58,6 +58,7 @@ export interface VideoData {
   tags?: string[];
   cover?: FileData;
   verticalCover?: FileData;
+  videoFile?: File; // 原始 File 对象，用于避免 blob URL 问题
   scheduledPublishTime?: number;
 }
 
@@ -69,7 +70,7 @@ export interface PlatformInfo {
   iconifyIcon?: string;
   platformName: string;
   injectUrl: string;
-  injectFunction: (data: SyncData) => Promise<void>;
+  injectFunction: (data: SyncData, file?: File) => Promise<boolean>;
   tags?: string[];
   accountKey: string;
   accountInfo?: AccountInfo;

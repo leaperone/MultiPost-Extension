@@ -4,6 +4,17 @@ import { getTiktokAccountInfo } from './account/tiktok';
 import { getDouyinAccountInfo } from './account/douyin';
 import { getRednoteAccountInfo } from './account/rednote';
 import { getBilibiliAccountInfo } from './account/bilibili';
+import { getQiEAccountInfo } from './account/qie';
+import { getChejiahaoAccountInfo } from './account/chejiahao';
+import { getDewuAccountInfo } from './account/dewu';
+import { getYicheAccountInfo } from './account/yiche';
+import { getSohuAccountInfo } from './account/sohu';
+import { getNeteaseAccountInfo } from './account/netease';
+import { getDayuAccountInfo } from './account/dayu';
+import { getAlipayAccountInfo } from './account/alipay';
+import { getYidianAccountInfo } from './account/yidian';
+import { getPinduoduoAccountInfo } from './account/pinduoduo';
+import { getVivoVideoAccountInfo } from './account/vivovideo';
 import { Storage } from '@plasmohq/storage';
 import { ping } from '~background/services/api';
 
@@ -59,6 +70,83 @@ export const refreshAccountInfoMap: Record<
     homeUrl: 'https://t.bilibili.com',
     faviconUrl: 'https://static.hdslb.com/images/favicon.ico',
     getAccountInfo: getBilibiliAccountInfo,
+  },
+  qie: {
+    platformName: chrome.i18n.getMessage('platformQiE'),
+    accountKey: 'qie',
+    homeUrl: 'https://om.qq.com',
+    faviconUrl: 'https://om.qq.com/favicon.ico',
+    getAccountInfo: getQiEAccountInfo,
+  },
+  chejiahao: {
+    platformName: chrome.i18n.getMessage('platformChejiahao'),
+    accountKey: 'chejiahao',
+    homeUrl: 'https://creator.autohome.com.cn',
+    faviconUrl: 'https://autohome.com.cn/favicon.ico',
+    getAccountInfo: getChejiahaoAccountInfo,
+  },
+  dewu: {
+    platformName: chrome.i18n.getMessage('platformDewu'),
+    accountKey: 'dewu',
+    homeUrl: 'https://creator.dewu.com',
+    faviconUrl: 'https://img.dewu.com/favicon.ico',
+    getAccountInfo: getDewuAccountInfo,
+  },
+  yiche: {
+    platformName: chrome.i18n.getMessage('platformYiche'),
+    accountKey: 'yiche',
+    homeUrl: 'https://mp.yiche.com/',
+    faviconUrl: 'https://www.yiche.com/favicon.ico',
+    getAccountInfo: getYicheAccountInfo,
+  },
+  sohu: {
+    platformName: chrome.i18n.getMessage('platformSohu'),
+    accountKey: 'sohu',
+    homeUrl: 'https://mp.sohu.com',
+    faviconUrl: 'https://www.sohu.com/favicon.ico',
+    getAccountInfo: getSohuAccountInfo,
+  },
+  netease: {
+    platformName: chrome.i18n.getMessage('platformNetease'),
+    accountKey: 'netease',
+    homeUrl: 'https://dy.163.com',
+    faviconUrl: 'https://www.163.com/favicon.ico',
+    getAccountInfo: getNeteaseAccountInfo,
+  },
+  dayu: {
+    platformName: chrome.i18n.getMessage('platformDayu'),
+    accountKey: 'dayu',
+    homeUrl: 'https://mp.dayu.com',
+    faviconUrl: 'https://www.dayu.com/favicon.ico',
+    getAccountInfo: getDayuAccountInfo,
+  },
+  alipay: {
+    platformName: chrome.i18n.getMessage('platformAlipay'),
+    accountKey: 'alipay',
+    homeUrl: 'https://b.alipay.com',
+    faviconUrl: 'https://www.alipay.com/favicon.ico',
+    getAccountInfo: getAlipayAccountInfo,
+  },
+  yidian: {
+    platformName: chrome.i18n.getMessage('platformYidian'),
+    accountKey: 'yidian',
+    homeUrl: 'https://yidian.com',
+    faviconUrl: 'https://www.yidian.com/favicon.ico',
+    getAccountInfo: getYidianAccountInfo,
+  },
+  pinduoduo: {
+    platformName: chrome.i18n.getMessage('platformPinduoduo'),
+    accountKey: 'pinduoduo',
+    homeUrl: 'https://pinduoduo.com',
+    faviconUrl: 'https://www.pinduoduo.com/favicon.ico',
+    getAccountInfo: getPinduoduoAccountInfo,
+  },
+  vivovideo: {
+    platformName: chrome.i18n.getMessage('platformVivoVideo'),
+    accountKey: 'vivovideo',
+    homeUrl: 'https://video.vivo.com.cn',
+    faviconUrl: 'https://www.vivo.com.cn/favicon.ico',
+    getAccountInfo: getVivoVideoAccountInfo,
   },
 };
 
