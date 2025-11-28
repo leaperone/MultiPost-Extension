@@ -16,7 +16,7 @@
   "dependencies": {
     "@heroui/react": "2.7.8",
     "@heroui/theme": "2.4.6",
-    "@mozilla/readability": "^0.5.0",
+    "@mozilla/readability": "^0.6.0",
     "@plasmohq/storage": "^1.11.0",
     "lucide-react": "^0.447.0",
     "plasmo": "0.90.5",
@@ -48,6 +48,28 @@
     "stylelint": "^16.9.0",
     "stylelint-config-standard": "^36.0.1",
     "typescript": "5.2.2"
+  },
+  "pnpm": {
+    "overrides": {
+      "msgpackr": ">=1.10.1",
+      "rollup": ">=3.29.5",
+      "base-x": ">=3.0.11",
+      "cross-spawn": ">=7.0.5",
+      "content-security-policy-parser": ">=0.5.3",
+      "brace-expansion": ">=2.0.2",
+      "tmp": ">=0.2.4",
+      "ws": ">=8.17.1",
+      "micromatch": ">=4.0.8",
+      "webpack": ">=5.94.0",
+      "path-to-regexp": ">=8.0.0",
+      "glob": ">=11.0.0",
+      "svelte": ">=4.2.19",
+      "nanoid": ">=3.3.8",
+      "js-yaml": ">=4.1.1",
+      "esbuild": ">=0.25.0",
+      "@babel/runtime": ">=7.26.10",
+      "@babel/helpers": ">=7.26.10"
+    }
   },
   "manifest": {
     "default_locale": "zh_CN",
