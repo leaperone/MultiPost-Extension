@@ -1,0 +1,110 @@
+{
+  "title": "Admin Dashboard",
+  "not_admin": "You are not an administrator",
+  "sidebar": {
+    "user_management": "User Management",
+    "recharge_management": "Recharge Management",
+    "credit_usage": "Credit Usage Records",
+    "activity_management": "Activity Management"
+  },
+  "users": {
+    "title": "User Management",
+    "search_placeholder": "Enter email or user ID",
+    "table_label": "User list",
+    "columns": {
+      "user": "User",
+      "email": "Email",
+      "created_at": "Created Time"
+    },
+    "no_users": "No users",
+    "user_info": "User Information",
+    "user_info_desc": "View and manage detailed user information",
+    "unnamed_user": "Unnamed User",
+    "active_user": "Active User",
+    "user_id": "User ID:",
+    "query_failed": "Query failed",
+    "enter_query": "Please enter query conditions",
+    "provide_params": "Please provide user ID or email parameter in URL",
+    "user_not_found": "User not found",
+    "no_matching_user": "No matching user information found"
+  },
+  "recharge": {
+    "title": "Recharge Management",
+    "add_recharge": "Add Recharge",
+    "user_recharge": "User Recharge",
+    "back": "Back",
+    "columns": {
+      "time": "Time",
+      "order_id": "Order ID",
+      "amount": "Amount",
+      "status": "Status",
+      "type": "Recharge Type",
+      "username": "Username",
+      "email": "Email"
+    },
+    "status": {
+      "completed": "Completed",
+      "processing": "Processing"
+    },
+    "form": {
+      "user_email": "User Email",
+      "email_placeholder": "Please enter user email",
+      "amount": "Recharge Amount",
+      "amount_placeholder": "Please enter recharge amount",
+      "cancel": "Cancel",
+      "confirm": "Confirm Recharge"
+    },
+    "validation": {
+      "invalid_email": "Please enter a valid email address",
+      "positive_amount": "Amount must be a positive number"
+    },
+    "success": {
+      "title": "Recharge successful",
+      "balance_updated": "User balance updated"
+    },
+    "error": {
+      "title": "Recharge failed",
+      "retry": "Please try again later",
+      "unknown": "Unknown error occurred, please try again later"
+    },
+    "instructions": {
+      "title": "Recharge Instructions",
+      "step1": "Enter user email for recharge",
+      "step2": "System will automatically find corresponding user",
+      "step3": "Enter recharge amount (in USD)",
+      "step4": "Confirm recharge to complete operation",
+      "note": "Note: This operation will directly add to user's paid balance"
+    },
+    "table_label": "Recharge Records Table"
+  },
+  "usage": {
+    "title": "Credit Usage Records",
+    "table_label": "Credit usage records list",
+    "columns": {
+      "user": "User",
+      "type": "Type",
+      "amount": "Amount",
+      "free": "Free",
+      "created_at": "Created Time"
+    },
+    "no_records": "No credit usage records",
+    "balance": {
+      "free": "Free",
+      "paid": "Paid"
+    }
+  },
+  "activity": {
+    "title": "Activity Management",
+    "reward": "Reward:",
+    "free_balance": "Free balance",
+    "form": {
+      "activity_type": "Activity Type",
+      "reward": "Reward",
+      "reward_placeholder": "Enter reward Credit",
+      "cancel": "Cancel"
+    },
+    "error": {
+      "operation_failed": "Operation failed"
+    }
+  }
+}

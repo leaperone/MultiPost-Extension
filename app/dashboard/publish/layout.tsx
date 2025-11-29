@@ -7,7 +7,8 @@ import ForceInstallExtension from '@/components/ForceInstallExtension';
 import { useEffect } from 'react';
 import { checkServiceStatus, funcGetPermission } from '@/lib/extension';
 import { useRouter } from 'next/navigation';
-import BalanceButtonClient from '../components/BalanceButtonClient';
+// TODO: 暂时隐藏余额功能
+// import BalanceButtonClient from '../components/BalanceButtonClient';
 
 export default function PublishLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
@@ -70,7 +71,8 @@ export default function PublishLayout({ children }: { children: React.ReactNode 
             />
           </Tabs>
           <div className="flex w-56 flex-row items-center justify-end gap-2">
-            <BalanceButtonClient size="sm" />
+            {/* TODO: 暂时隐藏余额功能 */}
+            {/* <BalanceButtonClient size="sm" /> */}
             <Button
               as={Link}
               href="https://docs.multipost.app/docs/user-guide/contact-us"

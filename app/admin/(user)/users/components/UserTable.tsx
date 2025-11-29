@@ -21,8 +21,10 @@ import { CopyButton } from '@/components/CopyButton';
 import type { AsyncListLoadOptions } from '@react-stately/data';
 import { getUsers } from '../actions';
 import { EyeIcon } from 'lucide-react';
+import { useTranslation } from '@/i18n/client';
 
 export default function UserTable() {
+  const { t } = useTranslation('admin');
   const [isLoading, setIsLoading] = React.useState<boolean>(true);
   const [hasMore, setHasMore] = React.useState<boolean>(false);
 
@@ -48,7 +50,7 @@ export default function UserTable() {
       <Table
         isHeaderSticky
         isStriped
-        aria-label="用户列表"
+        aria-label={t('users.table_label')}
         baseRef={scrollerRef}
         bottomContent={
           hasMore ? (
@@ -65,16 +67,16 @@ export default function UserTable() {
           table: 'min-h-full',
         }}>
         <TableHeader>
-          <TableColumn key="name">用户</TableColumn>
-          <TableColumn key="email">邮箱</TableColumn>
-          <TableColumn key="createdAt">创建时间</TableColumn>
-          <TableColumn key="actions">操作</TableColumn>
+          <TableColumn key="name">{t('users.columns.user')}</TableColumn>
+          <TableColumn key="email">{t('users.columns.email')}</TableColumn>
+          <TableColumn key="createdAt">{t('users.columns.created_at')}</TableColumn>
+          <TableColumn key="actions">-</TableColumn>
         </TableHeader>
         <TableBody
           isLoading={isLoading}
           items={list.items}
           loadingContent={<Spinner color="white" />}
-          emptyContent={'没有用户'}>
+          emptyContent={t('users.no_users')}>
           {(user: User) => (
             <TableRow key={user.id}>
               <TableCell className="flex items-center gap-2">

@@ -33,13 +33,20 @@ import { z } from 'zod';
 import { useToast } from '@/components/ui/use-toast';
 import { format } from 'date-fns';
 import { Link } from '@heroui/react';
+import { useTranslation } from '@/i18n/client';
 
-const rechargeSchema = z.object({
-  email: z.string().email('请输入有效的邮箱地址'),
-  amount: z.string().refine((val) => !isNaN(parseFloat(val)) && parseFloat(val) > 0, '金额必须为正数'),
-});
+const createRechargeSchema = (t: (key: string) => string) =>
+  z.object({
+    email: z.string().email(t('recharge.validation.invalid_email')),
+    amount: z
+      .string()
+      .refine((val) => !isNaN(parseFloat(val)) && parseFloat(val) > 0, t('recharge.validation.positive_amount')),
+  });
 
-type RechargeFormData = z.infer<typeof rechargeSchema>;
+interface RechargeFormData {
+  email: string;
+  amount: string;
+}
 
 interface RechargeRecord {
   id: string;
@@ -54,19 +61,26 @@ interface RechargeRecord {
   };
 }
 
-const tableColumns = [
-  { key: 'createdAt', label: '时间' },
-  { key: 'orderId', label: '订单号' },
-  { key: 'amount', label: '金额 ($)', align: 'end' as const },
-  { key: 'status', label: '状态' },
-  { key: 'type', label: '充值类型' },
-  { key: 'user', label: '用户名' },
-  { key: 'email', label: '邮箱' },
-];
-
 export default function AdminRechargePage() {
+  const { t } = useTranslation('admin');
   const { isOpen, onOpen, onClose } = useDisclosure();
   const { toast } = useToast();
+
+  const rechargeSchema = React.useMemo(() => createRechargeSchema(t), [t]);
+
+  const tableColumns = React.useMemo(
+    () => [
+      { key: 'createdAt', label: t('recharge.columns.time') },
+      { key: 'orderId', label: t('recharge.columns.order_id') },
+      { key: 'amount', label: `${t('recharge.columns.amount')} ($)`, align: 'end' as const },
+      { key: 'status', label: t('recharge.columns.status') },
+      { key: 'type', label: t('recharge.columns.type') },
+      { key: 'user', label: t('recharge.columns.username') },
+      { key: 'email', label: t('recharge.columns.email') },
+    ],
+    [t],
+  );
+
   const {
     control,
     handleSubmit,
@@ -97,25 +111,24 @@ export default function AdminRechargePage() {
       });
       if (result.success) {
         toast({
-          title: '充值成功',
-          description: '用户余额已更新',
+          title: t('recharge.success.title'),
+          description: t('recharge.success.balance_updated'),
         });
         reset();
         onClose();
-        // 刷新充值记录
         const { data: newRecharges = [] } = await getRechargeHistory();
         setRecharges(newRecharges);
       } else {
         toast({
-          title: '充值失败',
-          description: result.message || '请稍后重试',
+          title: t('recharge.error.title'),
+          description: result.message || t('recharge.error.retry'),
           variant: 'destructive',
         });
       }
-    } catch (error) {
+    } catch {
       toast({
-        title: '充值失败',
-        description: '发生未知错误，请稍后重试',
+        title: t('recharge.error.title'),
+        description: t('recharge.error.unknown'),
         variant: 'destructive',
       });
     }
@@ -128,14 +141,14 @@ export default function AdminRechargePage() {
           as={Link}
           href="/admin"
           startContent={<ChevronLeft className="size-4" />}>
-          返回
+          {t('recharge.back')}
         </Button>
-        <h1 className="text-3xl font-bold">充值管理</h1>
+        <h1 className="text-3xl font-bold">{t('recharge.title')}</h1>
         <Button
           onPress={onOpen}
           color="primary"
           startContent={<Plus className="size-4" />}>
-          新增充值
+          {t('recharge.add_recharge')}
         </Button>
       </div>
 
@@ -147,7 +160,7 @@ export default function AdminRechargePage() {
         <ModalContent>
           {(onClose) => (
             <>
-              <ModalHeader className="flex flex-col gap-1">用户充值</ModalHeader>
+              <ModalHeader className="flex flex-col gap-1">{t('recharge.user_recharge')}</ModalHeader>
               <ModalBody>
                 <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
                   <div>
@@ -163,8 +176,8 @@ export default function AdminRechargePage() {
                             <Input
                               {...field}
                               type="email"
-                              label="用户邮箱"
-                              placeholder="请输入用户邮箱"
+                              label={t('recharge.form.user_email')}
+                              placeholder={t('recharge.form.email_placeholder')}
                               errorMessage={errors.email?.message}
                               isInvalid={!!errors.email}
                             />
@@ -180,8 +193,8 @@ export default function AdminRechargePage() {
                             <Input
                               {...field}
                               type="number"
-                              label="充值金额"
-                              placeholder="请输入充值金额"
+                              label={t('recharge.form.amount')}
+                              placeholder={t('recharge.form.amount_placeholder')}
                               min="0"
                               step="0.01"
                               errorMessage={errors.amount?.message}
@@ -194,19 +207,21 @@ export default function AdminRechargePage() {
                   </div>
 
                   <div>
-                    <h2 className="mb-4 text-xl font-semibold text-gray-700">充值操作说明</h2>
+                    <h2 className="mb-4 text-xl font-semibold text-gray-700">
+                      {t('recharge.instructions.title')}
+                    </h2>
                     <div className="space-y-3 text-gray-600">
                       <p className="flex items-center">
-                        <CheckCircle className="mr-2 size-5 text-green-500" /> 输入用户邮箱进行充值
+                        <CheckCircle className="mr-2 size-5 text-green-500" /> {t('recharge.instructions.step1')}
                       </p>
                       <p className="flex items-center">
-                        <CheckCircle className="mr-2 size-5 text-green-500" /> 选择充值类型和金额
+                        <CheckCircle className="mr-2 size-5 text-green-500" /> {t('recharge.instructions.step2')}
                       </p>
                       <p className="flex items-center">
-                        <CheckCircle className="mr-2 size-5 text-green-500" /> 充值后系统会自动记录并增加用户余额
+                        <CheckCircle className="mr-2 size-5 text-green-500" /> {t('recharge.instructions.step3')}
                       </p>
                       <p className="flex items-center">
-                        <CheckCircle className="mr-2 size-5 text-green-500" /> 充值成功后可在下方查看充值记录
+                        <CheckCircle className="mr-2 size-5 text-green-500" /> {t('recharge.instructions.step4')}
                       </p>
                     </div>
                   </div>
@@ -217,14 +232,14 @@ export default function AdminRechargePage() {
                   color="danger"
                   variant="light"
                   onPress={onClose}>
-                  取消
+                  {t('recharge.form.cancel')}
                 </Button>
                 <Button
                   type="submit"
                   form="rechargeForm"
                   color="primary"
                   isLoading={isSubmitting}>
-                  确认充值
+                  {t('recharge.form.confirm')}
                 </Button>
               </ModalFooter>
             </>
@@ -232,7 +247,7 @@ export default function AdminRechargePage() {
         </ModalContent>
       </Modal>
 
-      <Table aria-label="充值记录表格">
+      <Table aria-label={t('recharge.table_label')}>
         <TableHeader columns={tableColumns}>
           {(column) => <TableColumn key={column.key}>{column.label}</TableColumn>}
         </TableHeader>
@@ -247,7 +262,7 @@ export default function AdminRechargePage() {
                   size="sm"
                   color={recharge.status === 'completed' ? 'success' : 'warning'}
                   variant="flat">
-                  {recharge.status === 'completed' ? '已完成' : '处理中'}
+                  {recharge.status === 'completed' ? t('recharge.status.completed') : t('recharge.status.processing')}
                 </Chip>
               </TableCell>
               <TableCell>

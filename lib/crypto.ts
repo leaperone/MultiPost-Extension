@@ -1,6 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import crypto from 'crypto';
-import prand from 'pure-rand';
 import { v4, v5 } from 'uuid';
 
 const ALGORITHM = 'aes-256-gcm';
@@ -13,11 +12,8 @@ const ENC_POSITION = TAG_POSITION + TAG_LENGTH;
 const HASH_ALGO = 'sha512';
 const HASH_ENCODING = 'hex';
 
-const seed = Date.now() ^ (Math.random() * 0x100000000);
-const rng = prand.xoroshiro128plus(seed);
-
 export function random(min: number, max: number) {
-  return prand.unsafeUniformIntDistribution(min, max, rng);
+  return crypto.randomInt(min, max + 1);
 }
 
 export function getRandomChars(

@@ -32,46 +32,6 @@
     "docs": "文档",
     "blog": "博客"
   },
-  "analytics": {
-    "title": "强大的分析功能",
-    "subtitle": "全方位的数据分析，助您做出明智决策",
-    "webTrace": {
-      "title": "Web Trace",
-      "description": "Web Trace 是一个强大的网站访问追踪工具，帮助您了解和分析网站的访问情况。",
-      "features": [
-        {
-          "title": "实时访问统计",
-          "description": "追踪网站的实时访问数据"
-        },
-        {
-          "title": "访客分析",
-          "description": "了解访客来源、地理位置和行为特征"
-        },
-        {
-          "title": "性能监控",
-          "description": "监控网站加载速度和性能指标"
-        }
-      ]
-    },
-    "socialMedia": {
-      "title": "社交媒体分析",
-      "description": "全面的社交媒体数据分析，帮助您优化内容策略",
-      "features": [
-        {
-          "title": "互动数据",
-          "description": "追踪点赞、评论、分享等互动指标"
-        },
-        {
-          "title": "受众分析",
-          "description": "了解您的粉丝画像和行为特征"
-        },
-        {
-          "title": "内容表现",
-          "description": "分析不同类型内容的表现效果"
-        }
-      ]
-    }
-  },
   "multiPost": {
     "title": "多平台内容发布",
     "subtitle": "一次编辑，多平台发布，提高您的社交媒体存在感",
@@ -168,7 +128,6 @@
     "features": {
       "draft": "撰稿",
       "post": "多平台发布",
-      "analytics": "数据分析",
       "conjunction": {
         "and": "和",
         "comma": "、"
@@ -177,7 +136,6 @@
   },
   "sectionLabels": {
     "powerfulTools": "强大工具",
-    "analytics": "分析",
     "openSource": "开源",
     "powerfulSimple": "强大而简单",
     "faq": "问答"

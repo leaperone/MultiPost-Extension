@@ -3,8 +3,10 @@
 import React, { useState } from 'react';
 import { Input, Button, Link } from '@heroui/react';
 import { HashIcon, MailIcon, SearchIcon } from 'lucide-react';
+import { useTranslation } from '@/i18n/client';
 
 export function UserSearchModal() {
+  const { t } = useTranslation('admin');
   const [query, setQuery] = useState('');
 
   const isQueryEmail = /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(query);
@@ -12,7 +14,7 @@ export function UserSearchModal() {
   return (
     <div className="flex gap-2">
       <Input
-        placeholder="输入邮箱或用户ID"
+        placeholder={t('users.search_placeholder')}
         startContent={isQueryEmail ? <MailIcon /> : <HashIcon />}
         value={query}
         onChange={(e) => setQuery(e.target.value)}

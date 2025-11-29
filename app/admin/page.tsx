@@ -9,12 +9,15 @@ import React from 'react';
 import { Button } from '@heroui/react';
 import { CreditCardIcon, UserIcon } from 'lucide-react';
 import { Link } from '@heroui/react';
+import { createTranslation } from '@/i18n/server';
 
-export default function AdminPage() {
+export default async function AdminPage() {
+  const { t } = await createTranslation('admin');
+
   return (
     <div className="flex w-full max-w-7xl flex-col gap-8">
       <div className="flex items-center justify-between">
-        <h1 className="text-3xl font-bold">管理后台</h1>
+        <h1 className="text-3xl font-bold">{t('title')}</h1>
         <div className="flex-1" />
       </div>
 
@@ -25,7 +28,7 @@ export default function AdminPage() {
           <Button
             className="h-24 w-full text-lg"
             startContent={<UserIcon className="size-6" />}>
-            用户管理
+            {t('sidebar.user_management')}
           </Button>
         </Link>
         <Link
@@ -34,7 +37,7 @@ export default function AdminPage() {
           <Button
             className="h-24 w-full text-lg"
             startContent={<CreditCardIcon className="size-6" />}>
-            充值管理
+            {t('sidebar.recharge_management')}
           </Button>
         </Link>
         <Link
@@ -43,13 +46,13 @@ export default function AdminPage() {
           <Button
             className="h-24 w-full text-lg"
             startContent={<CreditCardIcon className="size-6" />}>
-            Credit 使用记录
+            {t('sidebar.credit_usage')}
           </Button>
         </Link>
         <Link
           href="/admin/activity"
           className="w-full">
-          <Button className="h-24 w-full text-lg">活动管理</Button>
+          <Button className="h-24 w-full text-lg">{t('sidebar.activity_management')}</Button>
         </Link>
       </div>
     </div>

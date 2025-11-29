@@ -1,7 +1,8 @@
 'use server';
 
 import { Button, Link } from '@heroui/react';
-import BalanceButton from './BalanceButton';
+// TODO: 暂时隐藏余额功能
+// import BalanceButton from './BalanceButton';
 import { BookOpenIcon, SettingsIcon } from 'lucide-react';
 
 interface HeaderProps {
@@ -10,6 +11,8 @@ interface HeaderProps {
   isShowBalance?: boolean;
 }
 
+// TODO: 暂时隐藏余额功能，isShowBalance 参数暂时不使用
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 export default async function Header({ title, description, isShowBalance = true }: HeaderProps) {
   return (
     <div className="flex items-center justify-between p-2">
@@ -18,7 +21,8 @@ export default async function Header({ title, description, isShowBalance = true 
         {description && <p className="text-sm text-gray-500">{description}</p>}
       </div>
       <div className="flex items-center gap-2">
-        {isShowBalance && <BalanceButton alert={1} />}
+        {/* TODO: 暂时隐藏余额功能 */}
+        {/* {isShowBalance && <BalanceButton alert={1} />} */}
         <Button
           as={Link}
           href="/dashboard/settings"

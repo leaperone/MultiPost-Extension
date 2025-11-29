@@ -13,16 +13,8 @@
       "title": "Markdown Editor",
       "description": "Edit Markdown documents online"
     },
-    "analytics": {
-      "title": "Analytics",
-      "description": "View your publishing data and statistics"
-    },
     "card": {
       "hover_tip": "Click for details"
-    },
-    "scraper": {
-      "title": "Content Scraper",
-      "description": "Import content from other platforms"
     },
     "draw": {
       "title": "AI Draw",
@@ -41,8 +33,6 @@
       "dashboard": "Dashboard",
       "publish": "Publish",
       "grid": "Grid",
-      "analytics": "Analytics",
-      "browse": "Browse",
       "draw": "Draw",
       "extension": "Browser Extension",
       "docs": "Documentation",

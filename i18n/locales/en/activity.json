@@ -1,0 +1,46 @@
+{
+  "reward": "Reward",
+  "reward_label": "Reward:",
+  "steps": {
+    "post_comment": "Post comment",
+    "publish_post": "Publish promotion post",
+    "get_code": "Get promotion code",
+    "complete_task": "Complete task"
+  },
+  "detail": {
+    "please_login": "Please log in first",
+    "code_success": "Successfully obtained redemption code",
+    "code_success_desc": "You can now use the promotion code to post",
+    "code_failed": "Failed to obtain redemption code",
+    "enter_link": "Please enter link",
+    "verify_failed": "Verification failed",
+    "submit_success": "Submission successful",
+    "submit_success_desc": "Congratulations! You've completed the activity! Rewards have been credited to your account",
+    "submit_failed": "Submission failed",
+    "copy_failed": "Failed to get promotion copy",
+    "generate_failed": "Generation failed",
+    "copied": "Copied to clipboard",
+    "copy_manual": "Please manually copy text",
+    "reference_copy": "Reference copy:",
+    "activity_ended": "Activity has ended",
+    "task_completed": "Task completed",
+    "reward_credited": "Rewards have been credited to your free balance",
+    "your_code": "Your promotion code",
+    "participate_reward": "Participate in this activity to get ${reward} credit",
+    "get_promo_code": "Get promotion code",
+    "post_comment_label": "Post comment:",
+    "go_post_comment": "Go post comment",
+    "enter_post_link": "Please enter your X post link",
+    "enter_comment_link": "Please enter your comment link",
+    "submit_verify": "Submit verification",
+    "generating_copy": "Generating copy, please wait...",
+    "generating_comment": "Generating comment, please wait...",
+    "processing": "Processing, please wait..."
+  },
+  "instructions": {
+    "complete_for_reward": "Just complete according to the task requirements to get rewards",
+    "submit_post_link": "Submit post link to complete verification",
+    "submit_comment_link": "Submit comment link to complete verification",
+    "get_reward_after_verify": "Get rewards after verification"
+  }
+}

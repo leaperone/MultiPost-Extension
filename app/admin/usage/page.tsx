@@ -4,8 +4,10 @@ import { Chip } from '@heroui/react';
 import { getCreditUsages, getCreditUsageStats } from './actions';
 import { CreditUsageStats } from './components/CreditUsageStats';
 import CreditUsageTable from './components/CreditUsageTable';
+import { createTranslation } from '@/i18n/server';
 
 async function AdminUsagePage() {
+  const { t } = await createTranslation('admin');
   const [usageResp, statsResp] = await Promise.all([getCreditUsages(), getCreditUsageStats()]);
 
   if (usageResp.code !== 0) {
@@ -23,7 +25,7 @@ async function AdminUsagePage() {
     <div className="flex size-full flex-col gap-4 p-4">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <h1 className="text-2xl font-bold">信用使用记录</h1>
+          <h1 className="text-2xl font-bold">{t('usage.title')}</h1>
           <Chip color="primary">{count}</Chip>
         </div>
       </div>

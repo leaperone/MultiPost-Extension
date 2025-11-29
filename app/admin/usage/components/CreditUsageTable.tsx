@@ -21,8 +21,10 @@ import type { AsyncListLoadOptions } from '@react-stately/data';
 import { getCreditUsages } from '../actions';
 import { DollarSignIcon } from 'lucide-react';
 import { Decimal } from '@prisma/client/runtime/library';
+import { useTranslation } from '@/i18n/client';
 
 export default function CreditUsageTable() {
+  const { t } = useTranslation('admin');
   const [isLoading, setIsLoading] = React.useState<boolean>(true);
   const [hasMore, setHasMore] = React.useState<boolean>(false);
 
@@ -63,7 +65,7 @@ export default function CreditUsageTable() {
       <Table
         isHeaderSticky
         isStriped
-        aria-label="信用使用记录列表"
+        aria-label={t('usage.table_label')}
         baseRef={scrollerRef}
         bottomContent={
           hasMore ? (
@@ -80,17 +82,17 @@ export default function CreditUsageTable() {
           table: 'min-h-full',
         }}>
         <TableHeader>
-          <TableColumn key="user">用户</TableColumn>
-          <TableColumn key="type">类型</TableColumn>
-          <TableColumn key="amount">金额</TableColumn>
-          <TableColumn key="isFree">免费</TableColumn>
-          <TableColumn key="createdAt">创建时间</TableColumn>
+          <TableColumn key="user">{t('usage.columns.user')}</TableColumn>
+          <TableColumn key="type">{t('usage.columns.type')}</TableColumn>
+          <TableColumn key="amount">{t('usage.columns.amount')}</TableColumn>
+          <TableColumn key="isFree">{t('usage.columns.free')}</TableColumn>
+          <TableColumn key="createdAt">{t('usage.columns.created_at')}</TableColumn>
         </TableHeader>
         <TableBody
           isLoading={isLoading}
           items={list.items}
           loadingContent={<Spinner color="white" />}
-          emptyContent={'没有信用使用记录'}>
+          emptyContent={t('usage.no_records')}>
           {(creditUsage: CreditUsage) => (
             <TableRow key={creditUsage.id}>
               <TableCell className="flex items-center gap-2">
@@ -129,7 +131,7 @@ export default function CreditUsageTable() {
                   color={creditUsage.isFree ? 'success' : 'default'}
                   variant="flat"
                   size="sm">
-                  {creditUsage.isFree ? '免费' : '付费'}
+                  {creditUsage.isFree ? t('usage.balance.free') : t('usage.balance.paid')}
                 </Chip>
               </TableCell>
               <TableCell>

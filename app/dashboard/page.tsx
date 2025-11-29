@@ -6,14 +6,13 @@ import { createTranslation } from '@/i18n/server';
 import {
   SendIcon,
   FileTextIcon,
-  ChartSplineIcon,
-  ScanEyeIcon,
   SettingsIcon,
   PaletteIcon,
   MessageSquareIcon,
   PuzzleIcon,
 } from 'lucide-react';
-import { BalanceButton } from './components/BalanceButton';
+// TODO: 暂时隐藏余额功能
+// import { BalanceButton } from './components/BalanceButton';
 
 interface DashboardCardProps {
   href: string;
@@ -70,18 +69,6 @@ export default async function DashboardPage() {
       icon: <FileTextIcon className="size-20 text-secondary-600 dark:text-secondary-400 sm:size-32" />,
     },
     {
-      href: '/dashboard/analytics',
-      title: t('welcome.analytics.title'),
-      description: t('welcome.analytics.description'),
-      icon: <ChartSplineIcon className="size-20 text-success-600 dark:text-success-400 sm:size-32" />,
-    },
-    {
-      href: '/dashboard/scraper',
-      title: t('welcome.scraper.title'),
-      description: t('welcome.scraper.description'),
-      icon: <ScanEyeIcon className="size-20 text-warning-600 dark:text-warning-400 sm:size-32" />,
-    },
-    {
       href: '/dashboard/draw',
       title: t('welcome.draw.title'),
       description: t('welcome.draw.description'),
@@ -103,7 +90,8 @@ export default async function DashboardPage() {
           <div className="flex flex-col items-center justify-between gap-2 md:flex-row">
             <h2 className="text-2xl font-bold">{t('welcome.title', { name: user?.name || 'Dear' })}</h2>
             <div className="flex max-w-sm flex-wrap items-center justify-center gap-4 sm:max-w-full sm:flex-row sm:flex-nowrap">
-              <BalanceButton alert={1} />
+              {/* TODO: 暂时隐藏余额功能 */}
+              {/* <BalanceButton alert={1} /> */}
               <Button
                 as={Link}
                 href="https://docs.multipost.app/docs/user-guide/contact-us"

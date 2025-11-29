@@ -1,0 +1,110 @@
+{
+  "title": "管理后台",
+  "not_admin": "您不是管理员",
+  "sidebar": {
+    "user_management": "用户管理",
+    "recharge_management": "充值管理",
+    "credit_usage": "Credit 使用记录",
+    "activity_management": "活动管理"
+  },
+  "users": {
+    "title": "用户管理",
+    "search_placeholder": "输入邮箱或用户ID",
+    "table_label": "用户列表",
+    "columns": {
+      "user": "用户",
+      "email": "邮箱",
+      "created_at": "创建时间"
+    },
+    "no_users": "没有用户",
+    "user_info": "用户信息",
+    "user_info_desc": "查看和管理用户详细信息",
+    "unnamed_user": "未命名用户",
+    "active_user": "活跃用户",
+    "user_id": "User ID:",
+    "query_failed": "查询失败",
+    "enter_query": "请输入查询条件",
+    "provide_params": "请在URL中提供用户ID或邮箱参数",
+    "user_not_found": "查无此人",
+    "no_matching_user": "未找到匹配的用户信息"
+  },
+  "recharge": {
+    "title": "充值管理",
+    "add_recharge": "新增充值",
+    "user_recharge": "用户充值",
+    "back": "返回",
+    "columns": {
+      "time": "时间",
+      "order_id": "订单号",
+      "amount": "金额",
+      "status": "状态",
+      "type": "充值类型",
+      "username": "用户名",
+      "email": "邮箱"
+    },
+    "status": {
+      "completed": "已完成",
+      "processing": "处理中"
+    },
+    "form": {
+      "user_email": "用户邮箱",
+      "email_placeholder": "请输入用户邮箱",
+      "amount": "充值金额",
+      "amount_placeholder": "请输入充值金额",
+      "cancel": "取消",
+      "confirm": "确认充值"
+    },
+    "validation": {
+      "invalid_email": "请输入有效的邮箱地址",
+      "positive_amount": "金额必须为正数"
+    },
+    "success": {
+      "title": "充值成功",
+      "balance_updated": "用户余额已更新"
+    },
+    "error": {
+      "title": "充值失败",
+      "retry": "请稍后重试",
+      "unknown": "发生未知错误，请稍后重试"
+    },
+    "instructions": {
+      "title": "充值操作说明",
+      "step1": "输入用户邮箱进行充值",
+      "step2": "系统将自动查找对应用户",
+      "step3": "输入充值金额（单位：美元）",
+      "step4": "确认充值完成操作",
+      "note": "注意：此操作将直接增加用户的付费余额"
+    },
+    "table_label": "充值记录表格"
+  },
+  "usage": {
+    "title": "信用使用记录",
+    "table_label": "信用使用记录列表",
+    "columns": {
+      "user": "用户",
+      "type": "类型",
+      "amount": "金额",
+      "free": "免费",
+      "created_at": "创建时间"
+    },
+    "no_records": "没有信用使用记录",
+    "balance": {
+      "free": "免费",
+      "paid": "付费"
+    }
+  },
+  "activity": {
+    "title": "活动管理",
+    "reward": "奖励:",
+    "free_balance": "免费余额",
+    "form": {
+      "activity_type": "活动类型",
+      "reward": "奖励",
+      "reward_placeholder": "输入奖励 Credit",
+      "cancel": "取消"
+    },
+    "error": {
+      "operation_failed": "操作失败"
+    }
+  }
+}

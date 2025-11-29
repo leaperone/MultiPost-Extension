@@ -1,0 +1,46 @@
+{
+  "reward": "奖励",
+  "reward_label": "奖励:",
+  "steps": {
+    "post_comment": "发表评论",
+    "publish_post": "发布推广帖子",
+    "get_code": "获取推广码",
+    "complete_task": "完成任务"
+  },
+  "detail": {
+    "please_login": "请先登录",
+    "code_success": "获取兑换码成功",
+    "code_success_desc": "现在您可以使用推广码发布帖子了",
+    "code_failed": "获取兑换码失败",
+    "enter_link": "请输入链接",
+    "verify_failed": "验证失败",
+    "submit_success": "提交成功",
+    "submit_success_desc": "恭喜您完成了活动！奖励已发放到您的账户",
+    "submit_failed": "提交失败",
+    "copy_failed": "获取推广文案失败",
+    "generate_failed": "生成失败",
+    "copied": "已复制到剪贴板",
+    "copy_manual": "请手动复制文本",
+    "reference_copy": "参考文案:",
+    "activity_ended": "活动已结束",
+    "task_completed": "任务已完成",
+    "reward_credited": "奖励已发放到您的免费余额中",
+    "your_code": "您使用的推广码",
+    "participate_reward": "参与此活动，获取 ${reward} 额度",
+    "get_promo_code": "获取推广码",
+    "post_comment_label": "发表评论:",
+    "go_post_comment": "去发表评论",
+    "enter_post_link": "请输入你发布的X帖子链接",
+    "enter_comment_link": "请输入你发表的评论链接",
+    "submit_verify": "提交验证",
+    "generating_copy": "正在生成文案，请稍候...",
+    "generating_comment": "正在生成评论，请稍候...",
+    "processing": "正在处理中，请稍候..."
+  },
+  "instructions": {
+    "complete_for_reward": "只需按照任务要求完成即可获得奖励",
+    "submit_post_link": "提交帖子链接完成验证",
+    "submit_comment_link": "提交评论链接完成验证",
+    "get_reward_after_verify": "验证通过后获得奖励"
+  }
+}

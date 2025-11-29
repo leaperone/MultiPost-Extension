@@ -32,46 +32,6 @@
     "docs": "Docs",
     "blog": "Blog"
   },
-  "analytics": {
-    "title": "Powerful Analytics",
-    "subtitle": "Comprehensive data analysis to help you make informed decisions",
-    "webTrace": {
-      "title": "Web Trace",
-      "description": "Web Trace is a powerful website visitor tracking tool that helps you understand and analyze your website traffic.",
-      "features": [
-        {
-          "title": "Real-time Visitor Statistics",
-          "description": "Track real-time visitor data for your website"
-        },
-        {
-          "title": "Visitor Analysis",
-          "description": "Understand visitor sources, geographic locations, and behavioral patterns"
-        },
-        {
-          "title": "Performance Monitoring",
-          "description": "Monitor website loading speed and performance metrics"
-        }
-      ]
-    },
-    "socialMedia": {
-      "title": "Social Media Analytics",
-      "description": "Comprehensive social media data analysis to help you optimize your content strategy",
-      "features": [
-        {
-          "title": "Engagement Data",
-          "description": "Track likes, comments, shares, and other engagement metrics"
-        },
-        {
-          "title": "Audience Analysis",
-          "description": "Understand your follower demographics and behavioral patterns"
-        },
-        {
-          "title": "Content Performance",
-          "description": "Analyze the performance of different types of content"
-        }
-      ]
-    }
-  },
   "multiPost": {
     "title": "Multi-Platform Publishing",
     "subtitle": "Create once, publish everywhere to boost your social media presence",
@@ -177,7 +137,6 @@
     "features": {
       "draft": "Draft",
       "post": "Post",
-      "analytics": "Analytics",
       "conjunction": {
         "and": "and",
         "comma": ", "
@@ -186,7 +145,6 @@
   },
   "sectionLabels": {
     "powerfulTools": "Powerful Tools",
-    "analytics": "Analytics",
     "openSource": "Open Source",
     "powerfulSimple": "Powerful & Simple",
     "faq": "FAQ"

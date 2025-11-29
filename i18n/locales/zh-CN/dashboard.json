@@ -13,16 +13,8 @@
       "title": "Markdown 编辑器",
       "description": "在线编辑 Markdown 文档"
     },
-    "analytics": {
-      "title": "数据分析",
-      "description": "查看您的发布数据和统计"
-    },
     "card": {
       "hover_tip": "点击查看详情"
-    },
-    "scraper": {
-      "title": "内容抓取",
-      "description": "从其他平台导入内容"
     },
     "draw": {
       "title": "AI 绘图 ",
@@ -41,8 +33,6 @@
       "dashboard": "仪表板",
       "publish": "发布",
       "grid": "图片九宫格",
-      "analytics": "数据分析",
-      "browse": "内容探索",
       "draw": "绘图",
       "extension": "浏览器扩展",
       "docs": "文档",

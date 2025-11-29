@@ -1,9 +1,10 @@
-import { Button, Card, CardBody, CardHeader, Spacer } from '@heroui/react';
+import { Card, CardBody, CardHeader } from '@heroui/react';
 import { auth } from '@/auth';
-import { getCredit } from '@/actions/credit';
-import RechargeCard from './components/RechargeCard';
+// TODO: 暂时隐藏余额功能
+// import { getCredit } from '@/actions/credit';
+// import RechargeCard from './components/RechargeCard';
 import CreditUsageTable from './components/CreditUsageTable';
-import { ExternalLinkIcon, Wallet, DollarSign, Gift } from 'lucide-react';
+// import { ExternalLinkIcon, Wallet, DollarSign, Gift } from 'lucide-react';
 import { createTranslation } from '@/i18n/server';
 
 export default async function RechargePage() {
@@ -12,7 +13,8 @@ export default async function RechargePage() {
     return null;
   }
 
-  const balance = await getCredit(session.user.id);
+  // TODO: 暂时隐藏余额功能
+  // const balance = await getCredit(session.user.id);
   const { t } = await createTranslation('settings');
 
   return (
@@ -23,7 +25,8 @@ export default async function RechargePage() {
           <h1 className="text-3xl font-bold text-foreground">{t('credit_usage.page.title')}</h1>
           <p className="mt-2 text-foreground/60">{t('credit_usage.page.description')}</p>
         </div>
-        <Button
+        {/* TODO: 暂时隐藏余额功能 */}
+        {/* <Button
           variant="flat"
           as="a"
           href="https://docs.multipost.app/docs/user-guide/pricing"
@@ -32,12 +35,12 @@ export default async function RechargePage() {
           startContent={<ExternalLinkIcon className="size-4" />}
           className="border border-default-200 shadow-none">
           {t('recharge.details')}
-        </Button>
+        </Button> */}
       </div>
 
+      {/* TODO: 暂时隐藏余额功能 */}
       {/* Balance Overview Cards */}
-      <div className="mb-8 grid grid-cols-1 gap-6 lg:grid-cols-3">
-        {/* Total Balance */}
+      {/* <div className="mb-8 grid grid-cols-1 gap-6 lg:grid-cols-3">
         <Card className="border border-default-200 shadow-none transition-colors hover:border-default-300 lg:col-span-1">
           <CardHeader className="pb-3">
             <div className="flex items-center gap-3">
@@ -52,7 +55,6 @@ export default async function RechargePage() {
           </CardHeader>
         </Card>
 
-        {/* Paid Balance */}
         <Card className="border border-default-200 shadow-none transition-colors hover:border-default-300">
           <CardHeader className="pb-3">
             <div className="flex items-center gap-3">
@@ -67,7 +69,6 @@ export default async function RechargePage() {
           </CardHeader>
         </Card>
 
-        {/* Free Balance */}
         <Card className="border border-default-200 shadow-none transition-colors hover:border-default-300">
           <CardHeader className="pb-3">
             <div className="flex items-center gap-3">
@@ -85,7 +86,7 @@ export default async function RechargePage() {
 
       <RechargeCard />
 
-      <Spacer y={4} />
+      <Spacer y={4} /> */}
 
       {/* Usage History */}
       <Card className="border border-default-200 shadow-none">

@@ -14,12 +14,11 @@ RUN apk update --no-cache && apk add --no-cache \
     ffmpeg
 COPY . /app
 WORKDIR /app
-RUN wget 'https://github.com/P3TERX/GeoLite.mmdb/raw/download/GeoLite2-City.mmdb' -O geo/GeoLite2-City.mmdb
 
 FROM base AS builder
 ENV NODE_OPTIONS="--max-old-space-size=8192"
 RUN --mount=type=cache,id=pnpm-multipost,target=/pnpm/store pnpm install --frozen-lockfile
-RUN sh prisma/generate.sh && sh scripts/tracker/build.sh
+RUN sh prisma/generate.sh
 RUN pnpm run build
 
 FROM node:20.18.1-alpine3.20 AS final
@@ -44,7 +43,6 @@ COPY --from=builder /usr/share/zoneinfo/Asia/Shanghai /usr/share/zoneinfo/Asia/S
 COPY --from=builder /app/public ./public
 COPY --from=builder /app/.next/standalone ./
 COPY --from=builder /app/.next/static ./.next/static
-COPY --from=builder /app/geo ./geo
 EXPOSE 3000
 CMD [ "node", "server.js" ]
 

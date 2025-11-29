@@ -65,25 +65,6 @@ function HeroSection({ t, className }: { t: TranslationFunction; className?: str
         },
       ],
     },
-    {
-      text: t('hero.features.analytics'),
-      hoverColor: 'text-blue-400',
-      emojis: [
-        {
-          emoji: '📊',
-          position: '-left-20 -top-6 group-hover:rotate-[15deg] group-hover:-translate-y-12 group-hover:-translate-x-8',
-        },
-        {
-          emoji: '📈',
-          position: 'left-32 -top-8 group-hover:rotate-[25deg] group-hover:-translate-y-16 group-hover:translate-x-6',
-        },
-        {
-          emoji: '🔍',
-          position:
-            '-left-12 -top-2 group-hover:-rotate-[20deg] group-hover:-translate-y-10 group-hover:-translate-x-4',
-        },
-      ],
-    },
   ];
 
   return (
@@ -171,8 +152,6 @@ export default async function HomePage() {
   const { t } = await createTranslation('home');
 
   // 统一数据获取
-  const webTraceFeatures = t('analytics.webTrace.features', { returnObjects: true }) as FeatureItem[];
-  const socialMediaFeatures = t('analytics.socialMedia.features', { returnObjects: true }) as FeatureItem[];
   const multiPostFeatures = t('multiPost.features', { returnObjects: true }) as FeatureItem[];
   const webreaderFeatures = t('draftTools.webreader.features', { returnObjects: true }) as string[];
   const searchFeatures = t('draftTools.search.features', { returnObjects: true }) as string[];
@@ -194,11 +173,6 @@ export default async function HomePage() {
       icon: <Sparkles className="size-5 text-primary" />,
       title: multiPostFeatures[1]?.title,
       description: multiPostFeatures[1]?.description,
-    },
-    {
-      icon: <Sparkles className="size-5 text-primary" />,
-      title: t('analytics.webTrace.title'),
-      description: t('analytics.webTrace.description'),
     },
   ];
 
@@ -441,80 +415,6 @@ export default async function HomePage() {
                     </li>
                   ))}
                 </ul>
-              </CardBody>
-            </Card>
-          </div>
-        </div>
-      </section>
-
-      <section className="relative overflow-hidden bg-default-50 py-24">
-        {/* 背景装饰 */}
-        <div className="absolute -right-24 -top-24 size-80 rounded-full bg-primary/5 blur-3xl"></div>
-        <div className="absolute -bottom-32 -left-32 size-96 rounded-full bg-secondary/5 blur-3xl"></div>
-
-        <div className="container relative z-10 mx-auto px-4">
-          <div className="mx-auto mb-16 max-w-3xl text-center">
-            <span className="mb-2 inline-block rounded-full bg-primary/10 px-4 py-1.5 text-sm font-medium text-primary">
-              {t('sectionLabels.analytics')}
-            </span>
-            <h2 className="mb-6 bg-gradient-to-r from-primary to-secondary bg-clip-text text-4xl font-bold text-transparent md:text-5xl">
-              {t('analytics.title')}
-            </h2>
-            <p className="mx-auto max-w-2xl text-xl text-foreground/80">{t('analytics.subtitle')}</p>
-          </div>
-
-          <div className="grid gap-10 md:grid-cols-2">
-            {/* Web Trace */}
-            <Card className="overflow-hidden border-none shadow-lg">
-              <div className="h-2 bg-gradient-to-r from-primary to-blue-400"></div>
-              <CardBody className="p-8">
-                <h3 className="mb-6 text-2xl font-semibold text-primary">{t('analytics.webTrace.title')}</h3>
-                <p className="mb-8 text-lg text-foreground/80">{t('analytics.webTrace.description')}</p>
-                <div className="space-y-5">
-                  {webTraceFeatures.map((feature, i) => (
-                    <div
-                      key={i}
-                      className="flex items-start gap-4">
-                      <div className="mt-1 rounded-xl bg-primary/10 p-3">
-                        <Icon
-                          icon={i === 0 ? 'lucide:activity' : i === 1 ? 'lucide:users' : 'lucide:gauge'}
-                          className="size-5 text-primary"
-                        />
-                      </div>
-                      <div>
-                        <h4 className="text-lg font-semibold text-foreground">{feature.title}</h4>
-                        <p className="text-foreground/70">{feature.description}</p>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </CardBody>
-            </Card>
-
-            {/* Social Media Analytics */}
-            <Card className="overflow-hidden border-none shadow-lg">
-              <div className="h-2 bg-gradient-to-r from-secondary to-purple-400"></div>
-              <CardBody className="p-8">
-                <h3 className="mb-6 text-2xl font-semibold text-secondary">{t('analytics.socialMedia.title')}</h3>
-                <p className="mb-8 text-lg text-foreground/80">{t('analytics.socialMedia.description')}</p>
-                <div className="space-y-5">
-                  {socialMediaFeatures.map((feature, i) => (
-                    <div
-                      key={i}
-                      className="flex items-start gap-4">
-                      <div className="mt-1 rounded-xl bg-secondary/10 p-3">
-                        <Icon
-                          icon={i === 0 ? 'lucide:bar-chart' : i === 1 ? 'lucide:users-2' : 'lucide:trending-up'}
-                          className="size-5 text-secondary"
-                        />
-                      </div>
-                      <div>
-                        <h4 className="text-lg font-semibold text-foreground">{feature.title}</h4>
-                        <p className="text-foreground/70">{feature.description}</p>
-                      </div>
-                    </div>
-                  ))}
-                </div>
               </CardBody>
             </Card>
           </div>

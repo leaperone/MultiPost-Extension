@@ -1,13 +1,11 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import {
   BookIcon,
-  ChartSplineIcon,
   GridIcon,
   Home,
   LayoutDashboardIcon,
   ListIcon,
   PaletteIcon,
-  ScanEyeIcon,
   SendIcon,
   Settings,
   FileTextIcon,
@@ -119,16 +117,6 @@ function getMenuGroups(t: TranslationFunction): MenuGroup[] {
           title: t('sidebar.menu.draw'),
           url: '/dashboard/draw',
           icon: PaletteIcon,
-        },
-        {
-          title: t('sidebar.menu.analytics'),
-          url: '/dashboard/analytics',
-          icon: ChartSplineIcon,
-        },
-        {
-          title: t('sidebar.menu.browse'),
-          url: '/dashboard/scraper',
-          icon: ScanEyeIcon,
         },
         {
           title: t('sidebar.menu.grid'),
