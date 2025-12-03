@@ -1,6 +1,7 @@
 import { Inter } from 'next/font/google';
 import './globals.css';
 import { Providers } from './providers';
+import { PostHogAnalyticsProvider } from './posthog-provider';
 import { Toaster } from '@/components/ui/toaster';
 import { Toaster as Sonner } from '@/components/ui/sonner';
 import { GoogleAnalytics } from '@next/third-parties/google';
@@ -26,11 +27,13 @@ export default async function RootLayout({
       className="dark"
       style={{ colorScheme: 'dark' }}>
       <body className={inter.className}>
-        <Providers>
-          {children}
-          <Toaster />
-          <Sonner />
-        </Providers>
+        <PostHogAnalyticsProvider>
+          <Providers>
+            {children}
+            <Toaster />
+            <Sonner />
+          </Providers>
+        </PostHogAnalyticsProvider>
       </body>
       {process.env.NODE_ENV === 'production' && <GoogleAnalytics gaId={'G-6JJ7JNT2GY'} />}
     </html>

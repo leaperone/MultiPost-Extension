@@ -121,6 +121,8 @@
     "next-themes": "^0.3.0",
     "node-cron": "^3.0.3",
     "openai": "^4.96.0",
+    "posthog-js": "^1.299.0",
+    "posthog-node": "^5.15.0",
     "qrcode.react": "^3.2.0",
     "react": "19.0.0",
     "react-basics": "^0.126.0",
