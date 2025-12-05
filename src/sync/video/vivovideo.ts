@@ -6,7 +6,7 @@ import type { SyncData, VideoData } from "../common";
 /**
  * vivo视频发布器
  */
-export async function VideoVivoVideo(data: SyncData): Promise<boolean> {
+export async function VideoVivoVideo(data: SyncData): Promise<void> {
   console.log("🚀 开始vivo视频发布流程...");
   console.log("🔍 当前页面:", window.location.href);
 
@@ -14,13 +14,13 @@ export async function VideoVivoVideo(data: SyncData): Promise<boolean> {
     // 检查是否在vivo视频页面
     if (!window.location.href.includes("video.vivo.com.cn")) {
       console.error("❌ 不在vivo视频页面，当前页面:", window.location.href);
-      return false;
+      return;
     }
 
     // 解析视频数据
     if (!data || !data.data) {
       console.error("❌ 缺少视频数据");
-      return false;
+      return;
     }
 
     const { content, video, title } = data.data as VideoData;
@@ -69,7 +69,7 @@ export async function VideoVivoVideo(data: SyncData): Promise<boolean> {
       /**
        * 填写标题
        */
-      public async fillTitle(title: string): Promise<boolean> {
+      public async fillTitle(title: string): Promise<void> {
         try {
           console.log("📝 填写标题:", title);
 
@@ -122,7 +122,7 @@ export async function VideoVivoVideo(data: SyncData): Promise<boolean> {
                 console.log(`✅ 标题设置后验证: value="${titleElement.value}"`);
                 if (titleElement.value === title) {
                   console.log("✅ 标题填写成功");
-                  return true;
+                  return;
                 }
               } catch (e) {
                 console.error("设置标题值时出错:", e);
@@ -131,17 +131,17 @@ export async function VideoVivoVideo(data: SyncData): Promise<boolean> {
           }
 
           console.log("❌ 未找到可用的标题输入框");
-          return false;
+          return;
         } catch (error) {
           console.error("填写标题失败:", error);
-          return false;
+          return;
         }
       }
 
       /**
        * 填写描述
        */
-      public async fillDescription(description: string): Promise<boolean> {
+      public async fillDescription(description: string): Promise<void> {
         try {
           console.log("📝 填写描述:", `${description.substring(0, 100)}...`);
 
@@ -175,7 +175,7 @@ export async function VideoVivoVideo(data: SyncData): Promise<boolean> {
                 descElement.dispatchEvent(new Event("change", { bubbles: true, composed: true }));
 
                 console.log("✅ 描述填写成功");
-                return true;
+                return;
               } catch (e) {
                 console.error("设置描述值时出错:", e);
               }
@@ -183,17 +183,17 @@ export async function VideoVivoVideo(data: SyncData): Promise<boolean> {
           }
 
           console.log("❌ 未找到可用的描述输入框");
-          return false;
+          return;
         } catch (error) {
           console.error("填写描述失败:", error);
-          return false;
+          return;
         }
       }
 
       /**
        * 上传视频文件
        */
-      public async uploadVideo(videoData: any): Promise<boolean> {
+      public async uploadVideo(videoData: any): Promise<void> {
         try {
           console.log("📹 开始上传视频...");
 
@@ -209,7 +209,7 @@ export async function VideoVivoVideo(data: SyncData): Promise<boolean> {
             file = new File([arrayBuffer], fileName, { type: "video/mp4" });
           } else {
             console.error("❌ 无效的视频数据");
-            return false;
+            return;
           }
 
           console.log("📁 视频文件:", file.name, file.size, file.type);
@@ -274,10 +274,10 @@ export async function VideoVivoVideo(data: SyncData): Promise<boolean> {
               // 触发change事件
               targetInput.dispatchEvent(new Event("change", { bubbles: true, composed: true }));
               console.log("✅ 文件已设置到输入框");
-              return true;
+              return;
             }
             console.log("❌ 未找到合适的文件输入框");
-            return false;
+            return;
           }
 
           // 如果找到了上传区域，尝试点击或操作
@@ -327,7 +327,7 @@ export async function VideoVivoVideo(data: SyncData): Promise<boolean> {
             // 等待上传开始
             await this.waitForUploadStart();
 
-            return true;
+            return;
           }
           console.log("⚠️ 上传区域内未找到文件输入框，尝试点击上传区域...");
 
@@ -346,15 +346,15 @@ export async function VideoVivoVideo(data: SyncData): Promise<boolean> {
               newFileInput.files = dataTransfer.files;
               newFileInput.dispatchEvent(new Event("change", { bubbles: true, composed: true }));
               console.log("✅ 文件已设置到新找到的输入框");
-              return true;
+              return;
             }
           }
 
           console.log("⚠️ 无法直接上传文件，但页面可能已经准备好了");
-          return true;
+          return;
         } catch (error) {
           console.error("❌ 视频上传失败:", error);
-          return false;
+          return;
         }
       }
 
@@ -432,18 +432,18 @@ export async function VideoVivoVideo(data: SyncData): Promise<boolean> {
       const uploadSuccess = await uploader.uploadVideo(video);
       if (!uploadSuccess) {
         console.error("❌ 视频上传失败");
-        return false;
+        return;
       }
     } else {
       console.error("❌ 缺少视频文件");
-      return false;
+      return;
     }
 
     console.log("🎉 vivo视频发布流程完成");
-    return true;
+    return;
   } catch (error) {
     console.error("💥 vivo视频发布失败:", error);
     console.error("错误详情:", error.stack);
-    return false;
+    return;
   }
 }

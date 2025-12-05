@@ -92,7 +92,7 @@ export const ChejiahaoVideoUploader = class ChejiahaoVideoUploader {
   /**
    * 初始化AHVP上传器
    */
-  private async initAHVPUploader(): Promise<boolean> {
+  private async initAHVPUploader(): Promise<void> {
     try {
       console.log("🚀 初始化AHVP上传器...");
 
@@ -109,7 +109,7 @@ export const ChejiahaoVideoUploader = class ChejiahaoVideoUploader {
       const AHVP = (window as any).AHVP;
       if (!AHVP) {
         console.error("❌ AHVP系统未加载");
-        return false;
+        return;
       }
 
       console.log("✅ AHVP系统已加载");
@@ -143,21 +143,21 @@ export const ChejiahaoVideoUploader = class ChejiahaoVideoUploader {
         // 存储到全局变量
         (window as any).browser_0_ = this.uploader;
         console.log("✅ AHVP上传器创建成功");
-        return true;
+        return;
       }
 
       console.error("❌ AHVP上传器创建失败");
-      return false;
+      return;
     } catch (error) {
       console.error("❌ 初始化AHVP上传器失败:", error);
-      return false;
+      return;
     }
   }
 
   /**
    * 模拟点击上传区域触发文件选择
    */
-  private async triggerFileSelect(): Promise<boolean> {
+  private async triggerFileSelect(): Promise<void> {
     try {
       console.log("🖱️ 触发文件选择...");
 
@@ -170,22 +170,22 @@ export const ChejiahaoVideoUploader = class ChejiahaoVideoUploader {
           console.log(`✅ 找到上传区域: ${selector}`);
           element.click();
           await this.sleep(500);
-          return true;
+          return;
         }
       }
 
       console.log("❌ 未找到上传区域");
-      return false;
+      return;
     } catch (error) {
       console.error("❌ 触发文件选择失败:", error);
-      return false;
+      return;
     }
   }
 
   /**
    * 填写标题
    */
-  public async fillTitle(title: string): Promise<boolean> {
+  public async fillTitle(title: string): Promise<void> {
     try {
       console.log("📝 填写标题:", title);
 
@@ -210,22 +210,22 @@ export const ChejiahaoVideoUploader = class ChejiahaoVideoUploader {
           titleElement.dispatchEvent(new Event("change", { bubbles: true, composed: true }));
 
           console.log("✅ 标题填写成功");
-          return true;
+          return;
         }
       }
 
       console.log("❌ 未找到标题输入框");
-      return false;
+      return;
     } catch (error) {
       console.error("填写标题失败:", error);
-      return false;
+      return;
     }
   }
 
   /**
    * 填写描述
    */
-  public async fillDescription(description: string): Promise<boolean> {
+  public async fillDescription(description: string): Promise<void> {
     try {
       console.log("📝 填写描述:", description);
 
@@ -250,22 +250,22 @@ export const ChejiahaoVideoUploader = class ChejiahaoVideoUploader {
           descElement.dispatchEvent(new Event("change", { bubbles: true, composed: true }));
 
           console.log("✅ 描述填写成功");
-          return true;
+          return;
         }
       }
 
       console.log("❌ 未找到描述输入框");
-      return false;
+      return;
     } catch (error) {
       console.error("填写描述失败:", error);
-      return false;
+      return;
     }
   }
 
   /**
    * 上传视频文件 - 基于AHVP系统
    */
-  public async uploadVideo(videoData: any): Promise<boolean> {
+  public async uploadVideo(videoData: any): Promise<void> {
     try {
       console.log("📹 开始上传视频...");
 
@@ -281,7 +281,7 @@ export const ChejiahaoVideoUploader = class ChejiahaoVideoUploader {
         file = new File([arrayBuffer], fileName, { type: "video/mp4" });
       } else {
         console.error("❌ 无效的视频数据");
-        return false;
+        return;
       }
 
       console.log("📁 视频文件:", file.name, file.size, file.type);
@@ -290,7 +290,7 @@ export const ChejiahaoVideoUploader = class ChejiahaoVideoUploader {
       const initSuccess = await this.initAHVPUploader();
       if (!initSuccess) {
         console.error("❌ AHVP上传器初始化失败");
-        return false;
+        return;
       }
 
       // 查找文件输入框并设置文件
@@ -369,17 +369,17 @@ export const ChejiahaoVideoUploader = class ChejiahaoVideoUploader {
       }
 
       console.log("🎉 视频文件上传流程完成");
-      return true;
+      return;
     } catch (error) {
       console.error("❌ 视频上传失败:", error);
-      return false;
+      return;
     }
   }
 
   /**
    * 自动发布
    */
-  public async autoPublish(): Promise<boolean> {
+  public async autoPublish(): Promise<void> {
     try {
       console.log("🚀 开始自动发布...");
 
@@ -401,7 +401,7 @@ export const ChejiahaoVideoUploader = class ChejiahaoVideoUploader {
           button.click();
           await this.sleep(2000);
           console.log("✅ 发布按钮点击成功");
-          return true;
+          return;
         }
       }
 
@@ -413,16 +413,16 @@ export const ChejiahaoVideoUploader = class ChejiahaoVideoUploader {
             publishButton.click();
             await this.sleep(2000);
             console.log("✅ 发布按钮点击成功");
-            return true;
+            return;
           }
         }
       }
 
       console.log("❌ 未找到发布按钮");
-      return false;
+      return;
     } catch (error) {
       console.error("自动发布失败:", error);
-      return false;
+      return;
     }
   }
 };
@@ -435,7 +435,7 @@ if (typeof window !== "undefined") {
 /**
  * 车家号视频发布器 - 基于AHVP系统
  */
-export async function VideoChejiahao(data: SyncData): Promise<boolean> {
+export async function VideoChejiahao(data: SyncData): Promise<void> {
   console.log("🚀 开始车家号视频发布流程...");
   console.log("🔍 当前页面:", window.location.href);
 
@@ -443,13 +443,13 @@ export async function VideoChejiahao(data: SyncData): Promise<boolean> {
     // 检查是否在车家号页面
     if (!window.location.href.includes("creator.autohome.com.cn")) {
       console.error("❌ 不在车家号页面，当前页面:", window.location.href);
-      return false;
+      return;
     }
 
     // 解析视频数据
     if (!data || !data.data) {
       console.error("❌ 缺少视频数据");
-      return false;
+      return;
     }
 
     const { content, video, title } = data.data as VideoData;
@@ -510,7 +510,7 @@ export async function VideoChejiahao(data: SyncData): Promise<boolean> {
       /**
        * 初始化AHVP上传器
        */
-      private async initAHVPUploader(): Promise<boolean> {
+      private async initAHVPUploader(): Promise<void> {
         try {
           console.log("🚀 初始化AHVP上传器...");
 
@@ -527,7 +527,7 @@ export async function VideoChejiahao(data: SyncData): Promise<boolean> {
           const AHVP = (window as any).AHVP;
           if (!AHVP) {
             console.error("❌ AHVP系统未加载");
-            return false;
+            return;
           }
 
           console.log("✅ AHVP系统已加载");
@@ -561,21 +561,21 @@ export async function VideoChejiahao(data: SyncData): Promise<boolean> {
             // 存储到全局变量
             (window as any).browser_0_ = this.uploader;
             console.log("✅ AHVP上传器创建成功");
-            return true;
+            return;
           }
 
           console.error("❌ AHVP上传器创建失败");
-          return false;
+          return;
         } catch (error) {
           console.error("❌ 初始化AHVP上传器失败:", error);
-          return false;
+          return;
         }
       }
 
       /**
        * 填写标题
        */
-      public async fillTitle(title: string): Promise<boolean> {
+      public async fillTitle(title: string): Promise<void> {
         try {
           console.log("📝 填写标题:", title);
 
@@ -625,7 +625,7 @@ export async function VideoChejiahao(data: SyncData): Promise<boolean> {
               console.log(`✅ 标题设置后验证: value="${titleElement.value}"`);
               if (titleElement.value === title) {
                 console.log("✅ 标题填写成功");
-                return true;
+                return;
               }
               console.log("⚠️ 标题值不匹配，继续...");
             } catch (e) {
@@ -636,17 +636,17 @@ export async function VideoChejiahao(data: SyncData): Promise<boolean> {
           }
 
           console.log("❌ 标题填写失败，但继续流程");
-          return false;
+          return;
         } catch (error) {
           console.error("填写标题失败:", error);
-          return false;
+          return;
         }
       }
 
       /**
        * 自动勾选原创和首发
        */
-      public async checkOriginalAndFirst(): Promise<boolean> {
+      public async checkOriginalAndFirst(): Promise<void> {
         try {
           console.log("✅ 开始勾选原创和首发...");
 
@@ -679,17 +679,17 @@ export async function VideoChejiahao(data: SyncData): Promise<boolean> {
             console.log("❌ 未找到首发复选框");
           }
 
-          return true;
+          return;
         } catch (error) {
           console.error("❌ 勾选原创和首发失败:", error);
-          return false;
+          return;
         }
       }
 
       /**
        * 填写描述
        */
-      public async fillDescription(description: string): Promise<boolean> {
+      public async fillDescription(description: string): Promise<void> {
         try {
           console.log("📝 填写描述:", description);
 
@@ -714,15 +714,15 @@ export async function VideoChejiahao(data: SyncData): Promise<boolean> {
               descElement.dispatchEvent(new Event("change", { bubbles: true, composed: true }));
 
               console.log("✅ 描述填写成功");
-              return true;
+              return;
             }
           }
 
           console.log("❌ 未找到描述输入框");
-          return false;
+          return;
         } catch (error) {
           console.error("填写描述失败:", error);
-          return false;
+          return;
         }
       }
 
@@ -811,7 +811,7 @@ export async function VideoChejiahao(data: SyncData): Promise<boolean> {
       /**
        * 上传视频文件 - 基于车家号muploader系统（使用成功的控制台代码）
        */
-      public async uploadVideo(videoData: any): Promise<boolean> {
+      public async uploadVideo(videoData: any): Promise<void> {
         try {
           console.log("📹 开始上传视频...");
 
@@ -827,7 +827,7 @@ export async function VideoChejiahao(data: SyncData): Promise<boolean> {
             file = new File([arrayBuffer], fileName, { type: "video/mp4" });
           } else {
             console.error("❌ 无效的视频数据");
-            return false;
+            return;
           }
 
           console.log("📁 视频文件:", file.name, file.size, file.type);
@@ -860,17 +860,17 @@ export async function VideoChejiahao(data: SyncData): Promise<boolean> {
                 linkText.includes("剩余时间")
               ) {
                 console.log("✅ 检测到a标签显示上传状态，上传正在进行中");
-                return true;
+                return;
               }
 
               if (linkText.includes("上传失败")) {
                 console.log("❌ 检测到上传失败状态");
-                return false;
+                return;
               }
 
               if (linkText.includes("上传完成") || linkText.includes("100%")) {
                 console.log("🎉 检测到上传完成状态");
-                return true;
+                return;
               }
             } else {
               console.log("❌ 未找到browser_0内的a标签");
@@ -888,7 +888,7 @@ export async function VideoChejiahao(data: SyncData): Promise<boolean> {
               );
               if (progressElements.length > 0) {
                 console.log("✅ 检测到上传进度条，上传可能已经开始");
-                return true;
+                return;
               }
             }
           } else {
@@ -990,7 +990,7 @@ export async function VideoChejiahao(data: SyncData): Promise<boolean> {
                 linkText.includes("上传速度")
               ) {
                 console.log("✅ 触发成功！检测到实际上传状态");
-                return true;
+                return;
               }
             }
 
@@ -1080,7 +1080,7 @@ export async function VideoChejiahao(data: SyncData): Promise<boolean> {
                 finalText.includes("上传速度")
               ) {
                 console.log("✅ 文件上传触发成功！检测到实际上传状态");
-                return true;
+                return;
               }
             }
 
@@ -1147,17 +1147,17 @@ export async function VideoChejiahao(data: SyncData): Promise<boolean> {
                   linkText.includes("0.00%")
                 ) {
                   console.log("✅ a标签显示上传状态，上传正在进行中");
-                  return true;
+                  return;
                 }
 
                 if (linkText.includes("上传失败")) {
                   console.log("❌ a标签显示上传失败");
-                  return false;
+                  return;
                 }
 
                 if (linkText.includes("100%") || linkText.includes("上传完成")) {
                   console.log("🎉 a标签显示上传完成");
-                  return true;
+                  return;
                 }
               } else {
                 console.log("❌ 未找到browser_0内的a标签");
@@ -1166,7 +1166,7 @@ export async function VideoChejiahao(data: SyncData): Promise<boolean> {
                 const browserText = browserElement.textContent || "";
                 if (browserText.includes("上传中") || browserText.includes("已上传")) {
                   console.log("✅ browser_0显示上传状态（a标签可能已被替换）");
-                  return true;
+                  return;
                 }
               }
             } else {
@@ -1185,7 +1185,7 @@ export async function VideoChejiahao(data: SyncData): Promise<boolean> {
 
             if (filesFound) {
               console.log("✅ 检测到文件已设置到输入框，上传可能已开始");
-              return true;
+              return;
             }
 
             // 4. 检查是否有XHR上传活动
@@ -1213,7 +1213,7 @@ export async function VideoChejiahao(data: SyncData): Promise<boolean> {
 
             if (uploadActive) {
               console.log("✅ 检测到上传活动");
-              return true;
+              return;
             }
 
             // 5. 检查页面文本内容中的上传状态
@@ -1245,14 +1245,14 @@ export async function VideoChejiahao(data: SyncData): Promise<boolean> {
                 console.log("📊 状态: 上传进行中");
               } else if (bodyText.includes("上传失败")) {
                 console.log("❌ 状态: 上传失败");
-                return false;
+                return;
               } else if (bodyText.includes("100%") || bodyText.includes("上传完成")) {
                 console.log("🎉 状态: 上传完成");
-                return true;
+                return;
               }
 
               // 对于正在上传的状态，返回true表示成功触发上传
-              return true;
+              return;
             }
 
             // 6. 最后检查：查找上传/发布按钮
@@ -1266,22 +1266,22 @@ export async function VideoChejiahao(data: SyncData): Promise<boolean> {
                 // 分析按钮文本判断状态
                 if (text.includes("上传中") || text.includes("已上传")) {
                   console.log("✅ 检测到上传进行中状态");
-                  return true;
+                  return;
                 }
                 if (text.includes("上传失败")) {
                   console.log("❌ 检测到上传失败状态");
-                  return false;
+                  return;
                 }
                 if (text.includes("上传完成") || text.includes("100%")) {
                   console.log("🎉 检测到上传完成状态");
-                  return true;
+                  return;
                 }
               }
             }
 
             console.log("❌ 无法检测到明确的上传活动");
             console.log("🔧 建议: AHVP系统可能需要手动触发或页面刷新后重试");
-            return false;
+            return;
           }
 
           console.log("✅ AHVP系统已加载");
@@ -1328,7 +1328,7 @@ export async function VideoChejiahao(data: SyncData): Promise<boolean> {
           const browser = manager.createBrowser(config);
           if (!browser) {
             console.error("❌ 创建browser失败");
-            return false;
+            return;
           }
 
           console.log("✅ 创建browser成功");
@@ -1395,7 +1395,7 @@ export async function VideoChejiahao(data: SyncData): Promise<boolean> {
         } catch (error) {
           console.error("❌ 视频上传失败:", error);
           console.error("错误详情:", error.stack);
-          return false;
+          return;
         }
       }
     };
@@ -1433,18 +1433,18 @@ export async function VideoChejiahao(data: SyncData): Promise<boolean> {
       const uploadSuccess = await uploader.uploadVideo(video);
       if (!uploadSuccess) {
         console.error("❌ 视频上传失败");
-        return false;
+        return;
       }
     } else {
       console.error("❌ 缺少视频文件");
-      return false;
+      return;
     }
 
     console.log("🎉 车家号视频发布流程完成");
-    return true;
+    return;
   } catch (error) {
     console.error("💥 车家号视频发布失败:", error);
     console.error("错误详情:", error.stack);
-    return false;
+    return;
   }
 }
