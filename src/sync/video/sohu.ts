@@ -24,7 +24,11 @@ export async function VideoSohu(data: SyncData): Promise<void> {
     }
 
     const { content, video, title } = data.data as VideoData;
-    console.log("📝 视频数据:", { title: title?.substring(0, 50), contentLength: content?.length, hasVideo: !!video });
+    console.log("📝 视频数据:", {
+      title: title?.substring(0, 50),
+      contentLength: content?.length,
+      hasVideo: !!video,
+    });
 
     // 内联定义搜狐号视频上传器类
     const SohuVideoUploader = class SohuVideoUploader {
@@ -232,9 +236,9 @@ export async function VideoSohu(data: SyncData): Promise<void> {
             ".el-upload-dragger",
           ];
 
-          let uploadArea: Element | null = null;
+          let uploadArea: HTMLElement | null = null;
           for (const selector of uploadSelectors) {
-            const element = document.querySelector(selector);
+            const element = document.querySelector(selector) as HTMLElement | null;
             if (element && element.offsetParent !== null) {
               console.log(`✅ 找到上传区域: ${selector}`);
               uploadArea = element;
@@ -316,7 +320,7 @@ export async function VideoSohu(data: SyncData): Promise<void> {
             // 尝试点击上传区域（如果需要）
             if (uploadArea.tagName === "BUTTON" || uploadArea.closest("button")) {
               console.log("🖱️ 点击上传按钮...");
-              (uploadArea.closest("button") || uploadArea).click();
+              ((uploadArea.closest("button") as HTMLElement) || uploadArea).click();
               await this.sleep(1000);
             }
 
@@ -406,29 +410,19 @@ export async function VideoSohu(data: SyncData): Promise<void> {
     // 步骤1: 填写标题
     if (title) {
       console.log("📝 填写标题:", title);
-      const titleFilled = await uploader.fillTitle(title);
-      if (!titleFilled) {
-        console.log("⚠️ 标题填写可能失败，继续...");
-      }
+      await uploader.fillTitle(title);
     }
 
     // 步骤2: 填写描述
     if (content) {
       console.log("📝 填写描述:", `${content.substring(0, 100)}...`);
-      const contentFilled = await uploader.fillDescription(content);
-      if (!contentFilled) {
-        console.log("⚠️ 描述填写可能失败，继续...");
-      }
+      await uploader.fillDescription(content);
     }
 
     // 步骤3: 上传视频
     if (video) {
       console.log("🎥 开始上传视频...");
-      const uploadSuccess = await uploader.uploadVideo(video);
-      if (!uploadSuccess) {
-        console.error("❌ 视频上传失败");
-        return;
-      }
+      await uploader.uploadVideo(video);
     } else {
       console.error("❌ 缺少视频文件");
       return;

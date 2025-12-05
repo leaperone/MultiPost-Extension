@@ -438,13 +438,8 @@ export async function VideoDayu(data: SyncData): Promise<void> {
 
           // 执行封面上传
           console.log("🚀 开始执行横版封面上传...");
-          const success = await this.performCoverUpload(uploadArea as HTMLElement, file, "horizontal");
-
-          if (success) {
-            console.log("✅ 横版封面上传成功");
-            return;
-          }
-          console.log("❌ 横版封面上传失败");
+          await this.performCoverUpload(uploadArea as HTMLElement, file, "horizontal");
+          console.log("✅ 横版封面上传完成");
           return;
         } catch (error) {
           console.error("横版封面上传失败:", error);
@@ -566,13 +561,8 @@ export async function VideoDayu(data: SyncData): Promise<void> {
 
           // 执行封面上传
           console.log("🚀 开始执行竖版封面上传...");
-          const success = await this.performCoverUpload(uploadArea as HTMLElement, file, "vertical");
-
-          if (success) {
-            console.log("✅ 竖版封面上传成功");
-            return;
-          }
-          console.log("❌ 竖版封面上传失败");
+          await this.performCoverUpload(uploadArea as HTMLElement, file, "vertical");
+          console.log("✅ 竖版封面上传完成");
           return;
         } catch (error) {
           console.error("竖版封面上传失败:", error);
@@ -643,7 +633,7 @@ export async function VideoDayu(data: SyncData): Promise<void> {
                 for (const inputDiv of allInputDivs) {
                   const input = inputDiv as HTMLInputElement;
                   console.log("🔍 输入框信息:", {
-                    maxlength: input.maxlength,
+                    maxlength: input.maxLength,
                     value: input.value,
                     placeholder: input.placeholder,
                   });
@@ -951,7 +941,9 @@ export async function VideoDayu(data: SyncData): Promise<void> {
 
                 try {
                   // 1. 查找当前可见的输入框
-                  const currentInputs = tagContainer.querySelectorAll('div > input[type="text"]');
+                  const currentInputs = tagContainer.querySelectorAll(
+                    'div > input[type="text"]',
+                  ) as NodeListOf<HTMLInputElement>;
                   const currentInput = currentInputs[i]; // 第i个输入框
 
                   if (!currentInput) {
@@ -1263,11 +1255,8 @@ export async function VideoDayu(data: SyncData): Promise<void> {
 
           if (foundDialog) {
             console.log("✅ 发现弹框，开始处理保存操作");
-            const saveResult = await this.executeConfirmStrategy();
-            if (saveResult) {
-              console.log("✅ 图片裁剪弹窗保存成功");
-              return;
-            }
+            await this.executeConfirmStrategy();
+            console.log("✅ 图片裁剪弹窗保存完成");
           } else {
             console.log("⚠️ 未发现裁剪弹窗，可能不需要裁剪或已直接应用");
           }
@@ -1447,29 +1436,19 @@ export async function VideoDayu(data: SyncData): Promise<void> {
     // 步骤1: 填写标题
     if (title) {
       console.log("📝 填写标题:", title);
-      const titleFilled = await uploader.fillTitle(title);
-      if (!titleFilled) {
-        console.log("⚠️ 标题填写可能失败，继续...");
-      }
+      await uploader.fillTitle(title);
     }
 
     // 步骤2: 填写描述
     if (content) {
       console.log("📝 填写描述:", `${content.substring(0, 100)}...`);
-      const contentFilled = await uploader.fillDescription(content);
-      if (!contentFilled) {
-        console.log("⚠️ 描述填写可能失败，继续...");
-      }
+      await uploader.fillDescription(content);
     }
 
     // 步骤3: 上传视频
     if (video) {
       console.log("🎥 开始上传视频...");
-      const uploadSuccess = await uploader.uploadVideo(video);
-      if (!uploadSuccess) {
-        console.error("❌ 视频上传失败");
-        return;
-      }
+      await uploader.uploadVideo(video);
     } else {
       console.error("❌ 缺少视频文件");
       return;
@@ -1478,10 +1457,7 @@ export async function VideoDayu(data: SyncData): Promise<void> {
     // 步骤4: 上传横版封面
     if (cover) {
       console.log("🖼️ 开始上传横版封面...");
-      const horizontalCoverSuccess = await uploader.uploadHorizontalCover(cover);
-      if (!horizontalCoverSuccess) {
-        console.log("⚠️ 横版封面上传失败，继续...");
-      }
+      await uploader.uploadHorizontalCover(cover);
     } else {
       console.log("⚠️ 未提供横版封面图片，跳过横版封面上传");
     }
@@ -1492,10 +1468,7 @@ export async function VideoDayu(data: SyncData): Promise<void> {
       verticalCover || (cover ? { ...cover, name: `vertical_${cover.name || "cover.jpg"}` } : null);
     if (verticalCoverData) {
       console.log("📱 开始上传竖版封面...");
-      const verticalCoverSuccess = await uploader.uploadVerticalCover(verticalCoverData);
-      if (!verticalCoverSuccess) {
-        console.log("⚠️ 竖版封面上传失败，继续...");
-      }
+      await uploader.uploadVerticalCover(verticalCoverData);
     } else {
       console.log("⚠️ 未提供竖版封面图片，跳过竖版封面上传");
     }
@@ -1503,22 +1476,14 @@ export async function VideoDayu(data: SyncData): Promise<void> {
     // 步骤6: 处理视频标签
     if (tags && tags.length > 0) {
       console.log("🏷️ 开始处理视频标签...");
-      const tagSuccess = await uploader.uploadVideoTags(tags);
-      if (!tagSuccess) {
-        console.log("⚠️ 视频标签处理失败，继续...");
-      }
+      await uploader.uploadVideoTags(tags);
     } else {
       console.log("⚠️ 未提供视频标签，跳过标签处理");
     }
 
     // 步骤7: 选择信息来源（默认：无需标注）
     console.log("📋 开始设置信息来源...");
-    const sourceSuccess = await uploader.selectVideoSource();
-    if (!sourceSuccess) {
-      console.log("⚠️ 信息来源设置失败，继续...");
-    } else {
-      console.log("✅ 信息来源设置成功");
-    }
+    await uploader.selectVideoSource();
 
     console.log("🎉 大鱼号视频发布流程完成");
     return;

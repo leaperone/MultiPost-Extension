@@ -92,7 +92,7 @@ export const ChejiahaoVideoUploader = class ChejiahaoVideoUploader {
   /**
    * 初始化AHVP上传器
    */
-  private async initAHVPUploader(): Promise<void> {
+  private async initAHVPUploader(): Promise<boolean> {
     try {
       console.log("🚀 初始化AHVP上传器...");
 
@@ -109,7 +109,7 @@ export const ChejiahaoVideoUploader = class ChejiahaoVideoUploader {
       const AHVP = (window as any).AHVP;
       if (!AHVP) {
         console.error("❌ AHVP系统未加载");
-        return;
+        return false;
       }
 
       console.log("✅ AHVP系统已加载");
@@ -143,14 +143,14 @@ export const ChejiahaoVideoUploader = class ChejiahaoVideoUploader {
         // 存储到全局变量
         (window as any).browser_0_ = this.uploader;
         console.log("✅ AHVP上传器创建成功");
-        return;
+        return true;
       }
 
       console.error("❌ AHVP上传器创建失败");
-      return;
+      return false;
     } catch (error) {
       console.error("❌ 初始化AHVP上传器失败:", error);
-      return;
+      return false;
     }
   }
 
@@ -165,7 +165,7 @@ export const ChejiahaoVideoUploader = class ChejiahaoVideoUploader {
       const uploadSelectors = ["#browser_0", ".upload-area", ".ant-upload", '[class*="upload"]', ".video-upload-area"];
 
       for (const selector of uploadSelectors) {
-        const element = document.querySelector(selector);
+        const element = document.querySelector(selector) as HTMLElement | null;
         if (element) {
           console.log(`✅ 找到上传区域: ${selector}`);
           element.click();
@@ -453,7 +453,11 @@ export async function VideoChejiahao(data: SyncData): Promise<void> {
     }
 
     const { content, video, title } = data.data as VideoData;
-    console.log("📝 视频数据:", { title: title?.substring(0, 50), contentLength: content?.length, hasVideo: !!video });
+    console.log("📝 视频数据:", {
+      title: title?.substring(0, 50),
+      contentLength: content?.length,
+      hasVideo: !!video,
+    });
 
     // 内联定义车家号视频上传器类，避免模块导入问题
     const ChejiahaoVideoUploaderInline = class ChejiahaoVideoUploader {
@@ -510,7 +514,7 @@ export async function VideoChejiahao(data: SyncData): Promise<void> {
       /**
        * 初始化AHVP上传器
        */
-      private async initAHVPUploader(): Promise<void> {
+      private async initAHVPUploader(): Promise<boolean> {
         try {
           console.log("🚀 初始化AHVP上传器...");
 
@@ -527,7 +531,7 @@ export async function VideoChejiahao(data: SyncData): Promise<void> {
           const AHVP = (window as any).AHVP;
           if (!AHVP) {
             console.error("❌ AHVP系统未加载");
-            return;
+            return false;
           }
 
           console.log("✅ AHVP系统已加载");
@@ -561,14 +565,14 @@ export async function VideoChejiahao(data: SyncData): Promise<void> {
             // 存储到全局变量
             (window as any).browser_0_ = this.uploader;
             console.log("✅ AHVP上传器创建成功");
-            return;
+            return true;
           }
 
           console.error("❌ AHVP上传器创建失败");
-          return;
+          return false;
         } catch (error) {
           console.error("❌ 初始化AHVP上传器失败:", error);
-          return;
+          return false;
         }
       }
 
@@ -924,7 +928,7 @@ export async function VideoChejiahao(data: SyncData): Promise<void> {
           // 先主动尝试触发上传，然后再等待AHVP
           console.log("🔄 先尝试主动触发上传...");
 
-          const browserElementForUpload = document.querySelector("#browser_0");
+          const browserElementForUpload = document.querySelector("#browser_0") as HTMLElement | null;
           if (browserElementForUpload) {
             console.log("✅ 找到browser_0，尝试直接文件操作");
 
@@ -997,7 +1001,9 @@ export async function VideoChejiahao(data: SyncData): Promise<void> {
             // 尝试直接在已存在的文件输入框中设置文件
             console.log("🔧 尝试找到现有的文件输入框并设置文件...");
 
-            const existingFileInputs = browserElementForUpload.querySelectorAll('input[type="file"]');
+            const existingFileInputs = browserElementForUpload.querySelectorAll(
+              'input[type="file"]',
+            ) as NodeListOf<HTMLInputElement>;
             let fileSetSuccess = false;
 
             existingFileInputs.forEach((existingInput, index) => {
@@ -1109,7 +1115,7 @@ export async function VideoChejiahao(data: SyncData): Promise<void> {
               console.log(`  - 尝试 ${attempts}/30: ${typeof AHVP}`);
 
               // 每5秒尝试触发上传区域
-              const uploadArea = document.querySelector('#browser_0, [class*="upload"]');
+              const uploadArea = document.querySelector('#browser_0, [class*="upload"]') as HTMLElement | null;
               if (uploadArea && attempts === 5) {
                 console.log("🖱️ 尝试点击上传区域触发AHVP加载...");
                 uploadArea.click();
@@ -1174,7 +1180,7 @@ export async function VideoChejiahao(data: SyncData): Promise<void> {
             }
 
             // 3. 检查是否有文件已被添加到其他上传系统
-            const fileInputs = document.querySelectorAll('input[type="file"]');
+            const fileInputs = document.querySelectorAll('input[type="file"]') as NodeListOf<HTMLInputElement>;
             let filesFound = false;
             fileInputs.forEach((input, index) => {
               if (input.files && input.files.length > 0) {
@@ -1192,7 +1198,7 @@ export async function VideoChejiahao(data: SyncData): Promise<void> {
             const originalXHR = window.XMLHttpRequest;
             let uploadActive = false;
 
-            window.XMLHttpRequest = () => {
+            (window as any).XMLHttpRequest = () => {
               const xhr = new originalXHR();
               const originalOpen = xhr.open;
               xhr.open = function (method: string, url: string | URL, ...args: any[]) {
@@ -1375,20 +1381,20 @@ export async function VideoChejiahao(data: SyncData): Promise<void> {
             browser.on(AHVP.UPLOADER_EVENT.COMPLETED, (_item: any, response: any) => {
               console.log("🎉 上传完成:", response);
               uploadCompleted = true;
-              resolve(true);
+              resolve();
             });
 
             browser.on(AHVP.UPLOADER_EVENT.ERROR, (_item: any, error: any) => {
               console.error("❌ 上传失败:", error);
               uploadCompleted = true;
-              resolve(false);
+              resolve();
             });
 
             // 超时处理
             setTimeout(() => {
               if (!uploadCompleted) {
                 console.log("⏰ 上传超时，假设成功");
-                resolve(true);
+                resolve();
               }
             }, 120000); // 2分钟超时
           });
@@ -1408,10 +1414,7 @@ export async function VideoChejiahao(data: SyncData): Promise<void> {
     // 步骤1: 填写标题
     if (title) {
       console.log("📝 填写标题:", title);
-      const titleFilled = await uploader.fillTitle(title);
-      if (!titleFilled) {
-        console.log("⚠️ 标题填写可能失败，继续...");
-      }
+      await uploader.fillTitle(title);
     }
 
     // 步骤2: 自动勾选原创和首发
@@ -1421,20 +1424,13 @@ export async function VideoChejiahao(data: SyncData): Promise<void> {
     // 步骤3: 填写描述
     if (content) {
       console.log("📝 填写描述:", `${content.substring(0, 100)}...`);
-      const contentFilled = await uploader.fillDescription(content);
-      if (!contentFilled) {
-        console.log("⚠️ 描述填写可能失败，继续...");
-      }
+      await uploader.fillDescription(content);
     }
 
     // 步骤4: 上传视频
     if (video) {
       console.log("🎥 开始上传视频...");
-      const uploadSuccess = await uploader.uploadVideo(video);
-      if (!uploadSuccess) {
-        console.error("❌ 视频上传失败");
-        return;
-      }
+      await uploader.uploadVideo(video);
     } else {
       console.error("❌ 缺少视频文件");
       return;
