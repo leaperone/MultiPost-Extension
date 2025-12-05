@@ -1,4 +1,4 @@
-import { type SyncData, type VideoData } from '../common';
+import type { SyncData, VideoData } from "../common";
 
 export async function VideoEastmoney(data: SyncData) {
   function waitForElement(selector: string, timeout = 10000): Promise<Element> {
@@ -60,10 +60,10 @@ export async function VideoEastmoney(data: SyncData) {
     fileInput.files = dataTransfer.files;
 
     // 触发 change 事件
-    const changeEvent = new Event('change', { bubbles: true });
+    const changeEvent = new Event("change", { bubbles: true });
     fileInput.dispatchEvent(changeEvent);
 
-    console.log('视频上传事件已触发');
+    console.log("视频上传事件已触发");
   }
 
   try {
@@ -76,9 +76,9 @@ export async function VideoEastmoney(data: SyncData) {
       console.log(`视频文件: ${videoFile.name} ${videoFile.type} ${videoFile.size}`);
 
       await uploadVideo(videoFile);
-      console.log('视频上传已初始化');
+      console.log("视频上传已初始化");
     } else {
-      console.error('没有视频文件');
+      console.error("没有视频文件");
       return;
     }
 
@@ -94,12 +94,12 @@ export async function VideoEastmoney(data: SyncData) {
     editor.textContent = contentToInsert;
 
     // 触发 input 事件
-    const pasteEvent = new ClipboardEvent('paste', {
+    const pasteEvent = new ClipboardEvent("paste", {
       bubbles: true,
       cancelable: true,
       clipboardData: new DataTransfer(),
     });
-    pasteEvent.clipboardData.setData('text/plain', contentToInsert);
+    pasteEvent.clipboardData.setData("text/plain", contentToInsert);
     editor.dispatchEvent(pasteEvent);
 
     // 处理标签
@@ -107,15 +107,15 @@ export async function VideoEastmoney(data: SyncData) {
 
     // 如果需要自动发布
     if (data.isAutoPublish) {
-      const submitButtonSpan = await findElementByText('span', '发布');
+      const submitButtonSpan = await findElementByText("span", "发布");
       if (submitButtonSpan) {
-        console.log('点击发布按钮');
+        console.log("点击发布按钮");
         submitButtonSpan.parentElement?.click();
       } else {
         console.log('未找到"发布"按钮');
       }
     }
   } catch (error) {
-    console.error('EastmoneyVideo 发布过程中出错:', error);
+    console.error("EastmoneyVideo 发布过程中出错:", error);
   }
 }

@@ -1,8 +1,8 @@
-import React, { useEffect, useState } from 'react';
-import { Button, Modal, ModalContent, ModalHeader, ModalBody, ModalFooter } from '@heroui/react';
-import { Input } from '@heroui/react';
-import { Plus, Trash2, CheckCircle2, Settings } from 'lucide-react';
-import { saveExtraConfig, getExtraConfig } from '~sync/extraconfig';
+import { Button, Modal, ModalBody, ModalContent, ModalFooter, ModalHeader } from "@heroui/react";
+import { Input } from "@heroui/react";
+import { CheckCircle2, Plus, Settings, Trash2 } from "lucide-react";
+import { useEffect, useState } from "react";
+import { getExtraConfig, saveExtraConfig } from "~sync/extraconfig";
 
 interface WebhookConfig {
   urls: string[];
@@ -14,19 +14,19 @@ interface WebhookProps {
 
 const SUPPORTED_WEBHOOKS = {
   feishu: {
-    hostname: 'open.feishu.cn',
-    docs: 'https://open.feishu.cn/document/client-docs/bot-v3/add-custom-bot',
-    name: chrome.i18n.getMessage('extraConfigWebhookFeishu'),
+    hostname: "open.feishu.cn",
+    docs: "https://open.feishu.cn/document/client-docs/bot-v3/add-custom-bot",
+    name: chrome.i18n.getMessage("extraConfigWebhookFeishu"),
   },
   wecom: {
-    hostname: 'qyapi.weixin.qq.com',
-    docs: 'https://developer.work.weixin.qq.com/document/path/99110',
-    name: chrome.i18n.getMessage('extraConfigWebhookWecom'),
+    hostname: "qyapi.weixin.qq.com",
+    docs: "https://developer.work.weixin.qq.com/document/path/99110",
+    name: chrome.i18n.getMessage("extraConfigWebhookWecom"),
   },
   dingtalk: {
-    hostname: 'oapi.dingtalk.com',
-    docs: 'https://open.dingtalk.com/document/orgapp/custom-robot-access',
-    name: chrome.i18n.getMessage('extraConfigWebhookDingtalk'),
+    hostname: "oapi.dingtalk.com",
+    docs: "https://open.dingtalk.com/document/orgapp/custom-robot-access",
+    name: chrome.i18n.getMessage("extraConfigWebhookDingtalk"),
   },
 };
 
@@ -45,20 +45,20 @@ const getMessageBody = (url: string) => {
   const urlObj = new URL(url);
   const hostname = urlObj.hostname;
 
-  if (hostname === 'qyapi.weixin.qq.com' || hostname === 'oapi.dingtalk.com') {
+  if (hostname === "qyapi.weixin.qq.com" || hostname === "oapi.dingtalk.com") {
     return {
-      msgtype: 'text',
+      msgtype: "text",
       text: {
-        content: 'Hello, World!',
+        content: "Hello, World!",
       },
     };
   }
 
-  if (hostname === 'open.feishu.cn') {
+  if (hostname === "open.feishu.cn") {
     return {
-      msg_type: 'text',
+      msg_type: "text",
       content: {
-        text: 'Hello, World!',
+        text: "Hello, World!",
       },
     };
   }
@@ -70,13 +70,13 @@ const sendMessageCheck = async (url: string): Promise<boolean> => {
   try {
     const messageBody = getMessageBody(url);
     if (!messageBody) {
-      throw new Error(chrome.i18n.getMessage('extraConfigWebhookUnsupportedPlatform'));
+      throw new Error(chrome.i18n.getMessage("extraConfigWebhookUnsupportedPlatform"));
     }
 
     const response = await fetch(url, {
-      method: 'POST',
+      method: "POST",
       headers: {
-        'Content-Type': 'application/json',
+        "Content-Type": "application/json",
       },
       body: JSON.stringify(messageBody),
     });
@@ -87,11 +87,11 @@ const sendMessageCheck = async (url: string): Promise<boolean> => {
 
     return true;
   } catch (error) {
-    console.error('Webhook test failed:', error);
+    console.error("Webhook test failed:", error);
     if (error instanceof Error) {
-      alert(chrome.i18n.getMessage('extraConfigWebhookTestFailed', [error.message]));
+      alert(chrome.i18n.getMessage("extraConfigWebhookTestFailed", [error.message]));
     } else {
-      alert(chrome.i18n.getMessage('extraConfigWebhookNetworkError'));
+      alert(chrome.i18n.getMessage("extraConfigWebhookNetworkError"));
     }
     return false;
   }
@@ -99,7 +99,7 @@ const sendMessageCheck = async (url: string): Promise<boolean> => {
 
 export default function DynamicWebhook({ platformKey }: WebhookProps) {
   const [isOpen, setIsOpen] = useState(false);
-  const [urls, setUrls] = useState<string[]>(['']);
+  const [urls, setUrls] = useState<string[]>([""]);
   const [checkingStates, setCheckingStates] = useState<Record<number, boolean>>({});
   const [urlStates, setUrlStates] = useState<Record<number, boolean>>({});
 
@@ -129,12 +129,12 @@ export default function DynamicWebhook({ platformKey }: WebhookProps) {
   };
 
   const addUrl = () => {
-    setUrls([...urls, '']);
+    setUrls([...urls, ""]);
   };
 
   const removeUrl = (index: number) => {
     const newUrls = urls.filter((_, i) => i !== index);
-    setUrls(newUrls.length > 0 ? newUrls : ['']);
+    setUrls(newUrls.length > 0 ? newUrls : [""]);
     // 清除该URL的状态
     setUrlStates((prev) => {
       const newStates = { ...prev };
@@ -146,7 +146,7 @@ export default function DynamicWebhook({ platformKey }: WebhookProps) {
   const checkUrl = async (index: number) => {
     const url = urls[index];
     if (!isValidUrl(url)) {
-      alert(chrome.i18n.getMessage('extraConfigWebhookInvalidUrl'));
+      alert(chrome.i18n.getMessage("extraConfigWebhookInvalidUrl"));
       return;
     }
 
@@ -154,7 +154,7 @@ export default function DynamicWebhook({ platformKey }: WebhookProps) {
     try {
       const isValid = await sendMessageCheck(url);
       if (isValid) {
-        alert(chrome.i18n.getMessage('extraConfigWebhookTestSuccess'));
+        alert(chrome.i18n.getMessage("extraConfigWebhookTestSuccess"));
       }
       setUrlStates((prev) => ({ ...prev, [index]: isValid }));
     } finally {
@@ -168,12 +168,12 @@ export default function DynamicWebhook({ platformKey }: WebhookProps) {
 
   const handleSave = async () => {
     // 过滤掉空的URL
-    const validUrls = urls.filter((url) => url.trim() !== '');
+    const validUrls = urls.filter((url) => url.trim() !== "");
 
     // 验证所有URL
     const invalidUrls = validUrls.filter((url) => !isValidUrl(url));
     if (invalidUrls.length > 0) {
-      alert(chrome.i18n.getMessage('extraConfigWebhookInvalidUrl'));
+      alert(chrome.i18n.getMessage("extraConfigWebhookInvalidUrl"));
       return;
     }
 
@@ -183,50 +183,39 @@ export default function DynamicWebhook({ platformKey }: WebhookProps) {
 
   return (
     <>
-      <Button
-        variant="light"
-        size="sm"
-        onPress={() => setIsOpen(true)}
-        className="flex items-center gap-1">
+      <Button variant="light" size="sm" onPress={() => setIsOpen(true)} className="flex items-center gap-1">
         <Settings className="w-4 h-4" />
-        {chrome.i18n.getMessage('extraConfigWebhookConfigure')}
+        {chrome.i18n.getMessage("extraConfigWebhookConfigure")}
       </Button>
-      <Modal
-        isOpen={isOpen}
-        onOpenChange={setIsOpen}
-        size="md"
-        placement="center"
-        backdrop="blur">
+      <Modal isOpen={isOpen} onOpenChange={setIsOpen} size="md" placement="center" backdrop="blur">
         <ModalContent>
-          <ModalHeader>{chrome.i18n.getMessage('extraConfigWebhookConfigure')}</ModalHeader>
+          <ModalHeader>{chrome.i18n.getMessage("extraConfigWebhookConfigure")}</ModalHeader>
           <ModalBody>
             <div className="mb-4 text-sm text-gray-500">
-              <p>{chrome.i18n.getMessage('extraConfigWebhookSupportedPlatforms')}</p>
+              <p>{chrome.i18n.getMessage("extraConfigWebhookSupportedPlatforms")}</p>
               <div className="flex flex-wrap gap-2">
-              {Object.values(SUPPORTED_WEBHOOKS).map((webhook) => (
-                <p key={webhook.hostname}>
-                  <a href={webhook.docs} target="_blank" rel="noopener noreferrer" className="text-blue-500">
-                    {webhook.name}
-                  </a>
+                {Object.values(SUPPORTED_WEBHOOKS).map((webhook) => (
+                  <p key={webhook.hostname}>
+                    <a href={webhook.docs} target="_blank" rel="noopener noreferrer" className="text-blue-500">
+                      {webhook.name}
+                    </a>
                   </p>
                 ))}
               </div>
             </div>
             <div className="space-y-2">
               {urls.map((url, index) => (
-                <div
-                  key={index}
-                  className="flex items-center gap-2">
+                <div key={index} className="flex items-center gap-2">
                   <Input
-                    placeholder={chrome.i18n.getMessage('extraConfigWebhookEnterUrl')}
+                    placeholder={chrome.i18n.getMessage("extraConfigWebhookEnterUrl")}
                     value={url}
                     onChange={(e) => handleUrlChange(index, e.target.value)}
                     className={`flex-1 ${
                       urlStates[index] === false
-                        ? 'border-red-500'
+                        ? "border-red-500"
                         : urlStates[index] === true
-                        ? 'border-green-500'
-                        : ''
+                          ? "border-green-500"
+                          : ""
                     }`}
                   />
                   <Button
@@ -238,38 +227,27 @@ export default function DynamicWebhook({ platformKey }: WebhookProps) {
                     {!checkingStates[index] && (
                       <>
                         <CheckCircle2 className="w-4 h-4 mr-1" />
-                        {chrome.i18n.getMessage('extraConfigWebhookTest')}
+                        {chrome.i18n.getMessage("extraConfigWebhookTest")}
                       </>
                     )}
                   </Button>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onPress={() => removeUrl(index)}
-                    disabled={urls.length === 1}>
+                  <Button variant="ghost" size="sm" onPress={() => removeUrl(index)} disabled={urls.length === 1}>
                     <Trash2 className="w-4 h-4" />
                   </Button>
                 </div>
               ))}
             </div>
-            <Button
-              variant="light"
-              onPress={addUrl}
-              className="flex items-center gap-2 mt-4">
+            <Button variant="light" onPress={addUrl} className="flex items-center gap-2 mt-4">
               <Plus className="w-4 h-4" />
-              {chrome.i18n.getMessage('extraConfigWebhookAdd')}
+              {chrome.i18n.getMessage("extraConfigWebhookAdd")}
             </Button>
           </ModalBody>
           <ModalFooter>
-            <Button
-              variant="light"
-              onPress={() => setIsOpen(false)}>
-              {chrome.i18n.getMessage('extraConfigWebhookCancel')}
+            <Button variant="light" onPress={() => setIsOpen(false)}>
+              {chrome.i18n.getMessage("extraConfigWebhookCancel")}
             </Button>
-            <Button
-              variant="solid"
-              onPress={handleSave}>
-              {chrome.i18n.getMessage('extraConfigWebhookSaveConfig')}
+            <Button variant="solid" onPress={handleSave}>
+              {chrome.i18n.getMessage("extraConfigWebhookSaveConfig")}
             </Button>
           </ModalFooter>
         </ModalContent>

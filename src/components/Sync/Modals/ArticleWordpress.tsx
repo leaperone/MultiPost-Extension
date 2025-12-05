@@ -1,8 +1,8 @@
-import React, { useEffect, useState } from 'react';
-import { Button, Modal, ModalContent, ModalHeader, ModalBody, ModalFooter } from '@heroui/react';
-import { Input } from '@heroui/react';
-import { Plus, Trash2, Settings } from 'lucide-react';
-import { saveExtraConfig, getExtraConfig } from '~sync/extraconfig';
+import { Button, Modal, ModalBody, ModalContent, ModalFooter, ModalHeader } from "@heroui/react";
+import { Input } from "@heroui/react";
+import { Plus, Settings, Trash2 } from "lucide-react";
+import { useEffect, useState } from "react";
+import { getExtraConfig, saveExtraConfig } from "~sync/extraconfig";
 
 interface WordpressConfig {
   customInjectUrls: string[];
@@ -24,7 +24,7 @@ const isValidUrl = (url: string): boolean => {
 
 export default function ArticleWordpress({ platformKey }: WordpressProps) {
   const [isOpen, setIsOpen] = useState(false);
-  const [customInjectUrls, setCustomInjectUrls] = useState<string[]>(['']);
+  const [customInjectUrls, setCustomInjectUrls] = useState<string[]>([""]);
   const [urlStates, setUrlStates] = useState<Record<number, boolean>>({});
 
   useEffect(() => {
@@ -53,12 +53,12 @@ export default function ArticleWordpress({ platformKey }: WordpressProps) {
   };
 
   const addUrl = () => {
-    setCustomInjectUrls([...customInjectUrls, '']);
+    setCustomInjectUrls([...customInjectUrls, ""]);
   };
 
   const removeUrl = (index: number) => {
     const newUrls = customInjectUrls.filter((_, i) => i !== index);
-    setCustomInjectUrls(newUrls.length > 0 ? newUrls : ['']);
+    setCustomInjectUrls(newUrls.length > 0 ? newUrls : [""]);
     // 清除该URL的状态
     setUrlStates((prev) => {
       const newStates = { ...prev };
@@ -69,12 +69,12 @@ export default function ArticleWordpress({ platformKey }: WordpressProps) {
 
   const handleSave = async () => {
     // 过滤掉空的URL
-    const validUrls = customInjectUrls.filter((url) => url.trim() !== '');
+    const validUrls = customInjectUrls.filter((url) => url.trim() !== "");
 
     // 验证所有URL
     const invalidUrls = validUrls.filter((url) => !isValidUrl(url));
     if (invalidUrls.length > 0) {
-      alert(chrome.i18n.getMessage('extraConfigWordpressInvalidUrl'));
+      alert(chrome.i18n.getMessage("extraConfigWordpressInvalidUrl"));
       return;
     }
 
@@ -84,38 +84,27 @@ export default function ArticleWordpress({ platformKey }: WordpressProps) {
 
   return (
     <>
-      <Button
-        variant="light"
-        size="sm"
-        onPress={() => setIsOpen(true)}
-        className="flex items-center gap-1">
+      <Button variant="light" size="sm" onPress={() => setIsOpen(true)} className="flex items-center gap-1">
         <Settings className="w-4 h-4" />
-        {chrome.i18n.getMessage('extraConfigWordpressConfigure')}
+        {chrome.i18n.getMessage("extraConfigWordpressConfigure")}
       </Button>
-      <Modal
-        isOpen={isOpen}
-        onOpenChange={setIsOpen}
-        size="md"
-        placement="center"
-        backdrop="blur">
+      <Modal isOpen={isOpen} onOpenChange={setIsOpen} size="md" placement="center" backdrop="blur">
         <ModalContent>
-          <ModalHeader>{chrome.i18n.getMessage('extraConfigWordpressConfigure')}</ModalHeader>
+          <ModalHeader>{chrome.i18n.getMessage("extraConfigWordpressConfigure")}</ModalHeader>
           <ModalBody>
             <div className="space-y-2">
               {customInjectUrls.map((url, index) => (
-                <div
-                  key={index}
-                  className="flex items-center gap-2">
+                <div key={index} className="flex items-center gap-2">
                   <Input
-                    placeholder={chrome.i18n.getMessage('extraConfigWordpressEnterUrl')}
+                    placeholder={chrome.i18n.getMessage("extraConfigWordpressEnterUrl")}
                     value={url}
                     onChange={(e) => handleUrlChange(index, e.target.value)}
                     className={`flex-1 ${
                       urlStates[index] === false
-                        ? 'border-red-500'
+                        ? "border-red-500"
                         : urlStates[index] === true
-                        ? 'border-green-500'
-                        : ''
+                          ? "border-green-500"
+                          : ""
                     }`}
                   />
                   <Button
@@ -128,24 +117,17 @@ export default function ArticleWordpress({ platformKey }: WordpressProps) {
                 </div>
               ))}
             </div>
-            <Button
-              variant="light"
-              onPress={addUrl}
-              className="flex items-center gap-2 mt-4">
+            <Button variant="light" onPress={addUrl} className="flex items-center gap-2 mt-4">
               <Plus className="w-4 h-4" />
-              {chrome.i18n.getMessage('extraConfigWordpressAdd')}
+              {chrome.i18n.getMessage("extraConfigWordpressAdd")}
             </Button>
           </ModalBody>
           <ModalFooter>
-            <Button
-              variant="light"
-              onPress={() => setIsOpen(false)}>
-              {chrome.i18n.getMessage('extraConfigWordpressCancel')}
+            <Button variant="light" onPress={() => setIsOpen(false)}>
+              {chrome.i18n.getMessage("extraConfigWordpressCancel")}
             </Button>
-            <Button
-              variant="solid"
-              onPress={handleSave}>
-              {chrome.i18n.getMessage('extraConfigWordpressSaveConfig')}
+            <Button variant="solid" onPress={handleSave}>
+              {chrome.i18n.getMessage("extraConfigWordpressSaveConfig")}
             </Button>
           </ModalFooter>
         </ModalContent>

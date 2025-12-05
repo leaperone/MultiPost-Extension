@@ -1,4 +1,4 @@
-import type { DynamicData, SyncData } from '../common';
+import type { DynamicData, SyncData } from "../common";
 
 interface OkjikeConfig {
   selectedTopic: string;
@@ -41,7 +41,7 @@ export async function DynamicOkjike(data: SyncData) {
   async function handleTopicSelection(topic: string) {
     const topicInput = (await waitForElement('input[placeholder="未选择圈子"]')) as HTMLInputElement;
     if (!topicInput) {
-      console.error('未找到话题输入框');
+      console.error("未找到话题输入框");
       return;
     }
 
@@ -49,8 +49,8 @@ export async function DynamicOkjike(data: SyncData) {
     topicInput.click();
 
     topicInput.value = topic;
-    topicInput.dispatchEvent(new Event('change', { bubbles: true }));
-    topicInput.dispatchEvent(new Event('input', { bubbles: true }));
+    topicInput.dispatchEvent(new Event("change", { bubbles: true }));
+    topicInput.dispatchEvent(new Event("input", { bubbles: true }));
 
     // 等待下拉列表出现
     await new Promise((resolve) => setTimeout(resolve, 2000));
@@ -58,7 +58,7 @@ export async function DynamicOkjike(data: SyncData) {
     // 在指定的父元素内查找话题
     const topicContainer = document.querySelector('div[name="topic"]');
     if (!topicContainer) {
-      console.error('未找到话题容器');
+      console.error("未找到话题容器");
       return;
     }
 
@@ -70,16 +70,16 @@ export async function DynamicOkjike(data: SyncData) {
 
     // 如果没找到指定话题，选择第一个可用的话题
     if (!topicItem && topicElements.length > 0) {
-      console.log('未找到指定话题，选择第一个可用话题');
+      console.log("未找到指定话题，选择第一个可用话题");
       topicItem = topicElements[0];
     }
 
-    console.log('选择的话题元素:', topicItem);
+    console.log("选择的话题元素:", topicItem);
 
     if (topicItem) {
       (topicItem as HTMLElement).click();
     } else {
-      console.error('没有找到任何可用的话题');
+      console.error("没有找到任何可用的话题");
     }
   }
 
@@ -87,12 +87,12 @@ export async function DynamicOkjike(data: SyncData) {
   async function fillContent() {
     const inputElement = (await waitForElement('div[contenteditable="true"][role="textbox"]')) as HTMLDivElement;
     const fullContent = `${title}\n${content}`;
-    const pasteEvent = new ClipboardEvent('paste', {
+    const pasteEvent = new ClipboardEvent("paste", {
       bubbles: true,
       cancelable: true,
       clipboardData: new DataTransfer(),
     });
-    pasteEvent.clipboardData.setData('text/plain', fullContent);
+    pasteEvent.clipboardData.setData("text/plain", fullContent);
     inputElement.focus();
     inputElement.dispatchEvent(pasteEvent);
   }
@@ -104,7 +104,7 @@ export async function DynamicOkjike(data: SyncData) {
     fileInput = document.querySelector('input[type="file"]');
 
     if (!fileInput) {
-      console.error('未找到文件输入元素');
+      console.error("未找到文件输入元素");
       return;
     }
 
@@ -120,14 +120,14 @@ export async function DynamicOkjike(data: SyncData) {
         const file = new File([blob], fileInfo.name, { type: fileInfo.type });
         dataTransfer.items.add(file);
       } catch (error) {
-        console.error(`上传文件失败:`, error);
+        console.error("上传文件失败:", error);
       }
     }
 
     if (dataTransfer.files.length > 0) {
       fileInput.files = dataTransfer.files;
-      fileInput.dispatchEvent(new Event('change', { bubbles: true }));
-      fileInput.dispatchEvent(new Event('input', { bubbles: true }));
+      fileInput.dispatchEvent(new Event("change", { bubbles: true }));
+      fileInput.dispatchEvent(new Event("input", { bubbles: true }));
       await new Promise((resolve) => setTimeout(resolve, 2000));
     }
   }
@@ -140,17 +140,17 @@ export async function DynamicOkjike(data: SyncData) {
       await uploadFiles();
     }
 
-    const platform = data.platforms.find((p) => p.name === 'DYNAMIC_OKJIKE');
-    const selectedTopic = (platform?.extraConfig as OkjikeConfig)?.selectedTopic || '';
+    const platform = data.platforms.find((p) => p.name === "DYNAMIC_OKJIKE");
+    const selectedTopic = (platform?.extraConfig as OkjikeConfig)?.selectedTopic || "";
     if (selectedTopic) {
       await handleTopicSelection(selectedTopic);
     }
 
     if (data.isAutoPublish) {
       await new Promise((resolve) => setTimeout(resolve, 3000));
-      const buttons = document.querySelectorAll('button');
-      const publishButton = Array.from(buttons).find(
-        (button) => button.textContent?.includes('发送'),
+      const buttons = document.querySelectorAll("button");
+      const publishButton = Array.from(buttons).find((button) =>
+        button.textContent?.includes("发送"),
       ) as HTMLButtonElement;
 
       if (publishButton) {
@@ -162,15 +162,15 @@ export async function DynamicOkjike(data: SyncData) {
         }
 
         if (publishButton.disabled) {
-          console.error('发布按钮在10次尝试后仍被禁用');
+          console.error("发布按钮在10次尝试后仍被禁用");
           return;
         }
 
-        console.log('点击发布按钮');
+        console.log("点击发布按钮");
         publishButton.click();
       }
     }
   } catch (error) {
-    console.error('发布过程中出错:', error);
+    console.error("发布过程中出错:", error);
   }
 }

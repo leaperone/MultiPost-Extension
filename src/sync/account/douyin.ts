@@ -1,14 +1,14 @@
-import type { AccountInfo } from '~sync/common';
+import type { AccountInfo } from "~sync/common";
 
 export async function getDouyinAccountInfo(): Promise<AccountInfo> {
   // 访问TikTok API获取用户信息
-  const response = await fetch('https://creator.douyin.com/web/api/media/user/info/', {
-    method: 'GET',
+  const response = await fetch("https://creator.douyin.com/web/api/media/user/info/", {
+    method: "GET",
     headers: {
-      Accept: 'application/json',
-      'Content-Type': 'application/json',
+      Accept: "application/json",
+      "Content-Type": "application/json",
     },
-    credentials: 'include', // 包含cookie以确保认证
+    credentials: "include", // 包含cookie以确保认证
   });
 
   if (!response.ok) {
@@ -22,7 +22,7 @@ export async function getDouyinAccountInfo(): Promise<AccountInfo> {
   }
 
   const result: AccountInfo = {
-    provider: 'douyin',
+    provider: "douyin",
     accountId: responseData.user.sec_uid,
     username: responseData.user.nickname,
     description: responseData.user.signature,

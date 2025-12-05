@@ -1,36 +1,37 @@
-import '~style.css';
-import React, { useEffect, useState, useRef } from 'react';
-import { HeroUIProvider, Progress, Button, Switch, Tooltip, NumberInput } from '@heroui/react';
-import { RefreshCw, X } from 'lucide-react';
-import cssText from 'data-text:~style.css';
+import "~style.css";
+import cssText from "data-text:~style.css";
+import { Button, HeroUIProvider, NumberInput, Progress, Switch, Tooltip } from "@heroui/react";
+import { Storage } from "@plasmohq/storage";
+import { RefreshCw, X } from "lucide-react";
+import type React from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   type ArticleData,
   type DynamicData,
   type FileData,
   type PodcastData,
   type SyncData,
-  type VideoData,
   type SyncDataPlatform,
+  type VideoData,
   injectScriptsToTabs,
-} from '~sync/common';
-import { Storage } from '@plasmohq/storage';
+} from "~sync/common";
 
 const storage = new Storage({
-  area: 'local',
+  area: "local",
 });
-const AUTO_CLOSE_KEY = 'publish-auto-close';
-const AUTO_CLOSE_DELAY_KEY = 'publish-auto-close-delay';
-const SYNC_CLOSE_TABS_KEY = 'publish-sync-close-tabs';
+const AUTO_CLOSE_KEY = "publish-auto-close";
+const AUTO_CLOSE_DELAY_KEY = "publish-auto-close-delay";
+const SYNC_CLOSE_TABS_KEY = "publish-sync-close-tabs";
 const DEFAULT_AUTO_CLOSE_DELAY = 3 * 60; // 3 minutes in seconds
 
 export function getShadowContainer() {
-  return document.querySelector('#test-shadow').shadowRoot.querySelector('#plasmo-shadow-container');
+  return document.querySelector("#test-shadow").shadowRoot.querySelector("#plasmo-shadow-container");
 }
 
-export const getShadowHostId = () => 'test-shadow';
+export const getShadowHostId = () => "test-shadow";
 
 export const getStyle = () => {
-  const style = document.createElement('style');
+  const style = document.createElement("style");
   style.textContent = cssText;
   return style;
 };
@@ -38,7 +39,7 @@ export const getStyle = () => {
 // 聚焦到主窗口的函数
 const focusMainWindow = async () => {
   const windows = await chrome.windows.getAll();
-  const mainWindow = windows.find((window) => window.type === 'normal');
+  const mainWindow = windows.find((window) => window.type === "normal");
   if (mainWindow?.id) {
     await chrome.windows.update(mainWindow.id, { focused: true });
   }
@@ -46,7 +47,7 @@ const focusMainWindow = async () => {
 
 const getTitleFromData = (data: SyncData) => {
   const { data: contentData } = data;
-  if ('content' in contentData) {
+  if ("content" in contentData) {
     return contentData.title || contentData.content;
   }
   return contentData.title;
@@ -79,11 +80,11 @@ export default function Publish() {
   >([]);
 
   async function processArticle(data: SyncData): Promise<SyncData> {
-    setNotice(chrome.i18n.getMessage('processingContent'));
+    setNotice(chrome.i18n.getMessage("processingContent"));
     const parser = new DOMParser();
     const { htmlContent, markdownContent, images, cover } = data.data as ArticleData;
-    const doc = parser.parseFromString(htmlContent, 'text/html');
-    const imgElements = Array.from(doc.getElementsByTagName('img')) as HTMLImageElement[];
+    const doc = parser.parseFromString(htmlContent, "text/html");
+    const imgElements = Array.from(doc.getElementsByTagName("img")) as HTMLImageElement[];
     const blobUrls: string[] = [];
 
     const processedImages: FileData[] = [];
@@ -97,7 +98,7 @@ export default function Publish() {
         try {
           const originalUrl = img.src;
           // 跳过已经是 blob URL 的图片
-          if (originalUrl.startsWith('blob:')) continue;
+          if (originalUrl.startsWith("blob:")) continue;
 
           // 下载图片并创建 blob URL
           const response = await fetch(originalUrl);
@@ -109,7 +110,7 @@ export default function Publish() {
           blobUrls.push(blobUrl);
 
           processedImages.push({
-            name: images?.find((image) => image.url === originalUrl)?.name || originalUrl.split('/').pop() || blobUrl,
+            name: images?.find((image) => image.url === originalUrl)?.name || originalUrl.split("/").pop() || blobUrl,
             url: blobUrl,
             type: blob.type,
             size: blob.size,
@@ -117,16 +118,16 @@ export default function Publish() {
 
           // 替换 markdown 中的图片 URL
           // 使用正则表达式匹配 markdown 中的图片语法
-          const escapedUrl = originalUrl.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-          const imgRegex = new RegExp(`!\\[.*?\\]\\(${escapedUrl}\\)`, 'g');
+          const escapedUrl = originalUrl.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+          const imgRegex = new RegExp(`!\\[.*?\\]\\(${escapedUrl}\\)`, "g");
           processedMarkdownContent = processedMarkdownContent.replace(imgRegex, (match) => {
             return match.replace(originalUrl, blobUrl);
           });
         } catch (error) {
-          console.error('处理图片时出错:', error);
+          console.error("处理图片时出错:", error);
           // 继续处理下一张图片
-          setNotice(chrome.i18n.getMessage('errorProcessImage', [img.src]));
-          setErrors((prev) => [...prev, chrome.i18n.getMessage('errorProcessImage', [img.src])]);
+          setNotice(chrome.i18n.getMessage("errorProcessImage", [img.src]));
+          setErrors((prev) => [...prev, chrome.i18n.getMessage("errorProcessImage", [img.src])]);
         }
       }
     }
@@ -159,14 +160,14 @@ export default function Publish() {
         url: blobUrl,
       };
     } catch (error) {
-      console.error('处理文件时出错:', error);
-      setErrors((prev) => [...prev, chrome.i18n.getMessage('errorProcessFile', [file.name])]);
+      console.error("处理文件时出错:", error);
+      setErrors((prev) => [...prev, chrome.i18n.getMessage("errorProcessFile", [file.name])]);
       return file;
     }
   };
 
   const processDynamic = async (data: SyncData) => {
-    setNotice(chrome.i18n.getMessage('processingContent'));
+    setNotice(chrome.i18n.getMessage("processingContent"));
     const { images = [], videos = [] } = data.data as DynamicData;
 
     const processedImages: FileData[] = [];
@@ -175,21 +176,21 @@ export default function Publish() {
     // 确保 images 是可迭代的数组
     if (Array.isArray(images) && images.length > 0) {
       for (const image of images) {
-        setNotice(chrome.i18n.getMessage('errorProcessImage', [image.name]));
+        setNotice(chrome.i18n.getMessage("errorProcessImage", [image.name]));
         processedImages.push(await processFile(image));
       }
     } else {
-      console.warn('images 不是一个数组或可迭代对象', images);
+      console.warn("images 不是一个数组或可迭代对象", images);
     }
 
     // 确保 videos 是可迭代的数组
     if (Array.isArray(videos) && videos.length > 0) {
       for (const video of videos) {
-        setNotice(chrome.i18n.getMessage('errorProcessFile', [video.name]));
+        setNotice(chrome.i18n.getMessage("errorProcessFile", [video.name]));
         processedVideos.push(await processFile(video));
       }
     } else {
-      console.warn('videos 不是一个数组或可迭代对象', videos);
+      console.warn("videos 不是一个数组或可迭代对象", videos);
     }
 
     return {
@@ -203,11 +204,11 @@ export default function Publish() {
   };
 
   const processPodcast = async (data: SyncData) => {
-    setNotice(chrome.i18n.getMessage('processingContent'));
+    setNotice(chrome.i18n.getMessage("processingContent"));
     const { audio } = data.data as PodcastData;
 
     if (!audio) {
-      console.warn('音频数据不存在');
+      console.warn("音频数据不存在");
       return data;
     }
 
@@ -222,11 +223,11 @@ export default function Publish() {
   };
 
   const processVideo = async (data: SyncData) => {
-    setNotice(chrome.i18n.getMessage('processingContent'));
+    setNotice(chrome.i18n.getMessage("processingContent"));
     const { video, cover, verticalCover, scheduledPublishTime } = data.data as VideoData;
 
     if (!video) {
-      console.warn('视频数据不存在');
+      console.warn("视频数据不存在");
       return data;
     }
 
@@ -256,7 +257,7 @@ export default function Publish() {
     try {
       const tabInfo = publishedTabs.find((t) => t.tab.id === tabId);
       if (!tabInfo) {
-        console.error('找不到要重新加载的标签页信息');
+        console.error("找不到要重新加载的标签页信息");
         return;
       }
 
@@ -287,8 +288,8 @@ export default function Publish() {
         t.tab.id === tabId ? { ...t, tab: updatedTab } : t,
       );
     } catch (error) {
-      console.error('重新加载标签页失败:', error);
-      setErrors((prev) => [...prev, chrome.i18n.getMessage('errorReloadTab', [error.message || '未知错误'])]);
+      console.error("重新加载标签页失败:", error);
+      setErrors((prev) => [...prev, chrome.i18n.getMessage("errorReloadTab", [error.message || "未知错误"])]);
     }
   };
 
@@ -312,8 +313,8 @@ export default function Publish() {
       setPublishedTabs((prev) => prev.filter((t) => t.tab.id !== tabId));
       publishedTabsRef.current = publishedTabsRef.current.filter((t) => t.tab.id !== tabId);
     } catch (error) {
-      console.error('关闭标签页失败:', error);
-      setErrors((prev) => [...prev, chrome.i18n.getMessage('errorCloseTab', [error.message || '未知错误'])]);
+      console.error("关闭标签页失败:", error);
+      setErrors((prev) => [...prev, chrome.i18n.getMessage("errorCloseTab", [error.message || "未知错误"])]);
     }
   };
 
@@ -326,8 +327,8 @@ export default function Publish() {
       setPublishedTabs([]);
       publishedTabsRef.current = [];
     } catch (error) {
-      console.error('关闭所有标签页失败:', error);
-      setErrors((prev) => [...prev, chrome.i18n.getMessage('errorCloseAllTabs', [error.message || '未知错误'])]);
+      console.error("关闭所有标签页失败:", error);
+      setErrors((prev) => [...prev, chrome.i18n.getMessage("errorCloseAllTabs", [error.message || "未知错误"])]);
     }
   };
 
@@ -349,18 +350,18 @@ export default function Publish() {
 
     if (checked) {
       // 如果开启了自动关闭，立即启动新的定时器
-      console.log('用户开启自动关闭，启动定时器');
+      console.log("用户开启自动关闭，启动定时器");
       startAutoCloseTimer();
     } else {
       // 如果关闭了自动关闭，清除倒计时
-      console.log('用户关闭自动关闭，清除倒计时');
+      console.log("用户关闭自动关闭，清除倒计时");
       setCountdown(0);
     }
   };
 
   const handleDelayChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    const minutes = parseInt(event.target.value);
-    if (isNaN(minutes) || minutes < 1) return;
+    const minutes = Number.parseInt(event.target.value);
+    if (Number.isNaN(minutes) || minutes < 1) return;
 
     const seconds = minutes * 60;
     setAutoCloseDelay(seconds);
@@ -368,7 +369,7 @@ export default function Publish() {
 
     // 如果当前正在倒计时，重新启动定时器
     if (autoClose && countdown > 0) {
-      console.log('用户修改延迟时间，重新启动定时器:', seconds, '秒');
+      console.log("用户修改延迟时间，重新启动定时器:", seconds, "秒");
       if (autoCloseTimerRef.current) {
         clearTimeout(autoCloseTimerRef.current);
       }
@@ -381,7 +382,7 @@ export default function Publish() {
 
   const startAutoCloseTimer = (delaySeconds?: number) => {
     const delay = delaySeconds || autoCloseDelay;
-    console.log('startAutoCloseTimer 被调用，延迟时间:', delay, '秒');
+    console.log("startAutoCloseTimer 被调用，延迟时间:", delay, "秒");
     // 清除之前的定时器
     if (autoCloseTimerRef.current) {
       clearTimeout(autoCloseTimerRef.current);
@@ -391,7 +392,7 @@ export default function Publish() {
     }
 
     // 设置倒计时
-    console.log('设置倒计时:', delay, '秒');
+    console.log("设置倒计时:", delay, "秒");
     setCountdown(delay);
 
     // 倒计时更新
@@ -416,7 +417,7 @@ export default function Publish() {
     }, delay * 1000);
   };
 
-  const handleTabUpdated = (tabId: number, changeInfo: chrome.tabs.TabChangeInfo, tab: chrome.tabs.Tab) => {
+  const handleTabUpdated = (tabId: number, _changeInfo: chrome.tabs.TabChangeInfo, tab: chrome.tabs.Tab) => {
     setPublishedTabs((prev) => prev.map((item) => (item.tab.id === tabId ? { ...item, tab } : item)));
     publishedTabsRef.current = publishedTabsRef.current.map((t) => (t.tab.id === tabId ? { ...t, tab } : t));
   };
@@ -452,17 +453,17 @@ export default function Publish() {
       storage.get(AUTO_CLOSE_DELAY_KEY),
       storage.get(SYNC_CLOSE_TABS_KEY),
     ]).then(([autoCloseValue, delayValue, syncCloseTabsValue]) => {
-      const shouldAutoClose = autoCloseValue === undefined ? true : autoCloseValue === 'true';
-      const delaySeconds = delayValue === undefined ? DEFAULT_AUTO_CLOSE_DELAY : parseInt(delayValue);
-      const shouldSyncCloseTabs = syncCloseTabsValue === undefined ? false : syncCloseTabsValue === 'true';
+      const shouldAutoClose = autoCloseValue === undefined ? true : autoCloseValue === "true";
+      const delaySeconds = delayValue === undefined ? DEFAULT_AUTO_CLOSE_DELAY : Number.parseInt(delayValue);
+      const shouldSyncCloseTabs = syncCloseTabsValue === undefined ? false : syncCloseTabsValue === "true";
 
       console.log(
-        '初始化 autoClose:',
+        "初始化 autoClose:",
         shouldAutoClose,
-        '延迟时间:',
+        "延迟时间:",
         delaySeconds,
-        '秒',
-        'syncCloseTabs:',
+        "秒",
+        "syncCloseTabs:",
         shouldSyncCloseTabs,
       );
       setAutoClose(shouldAutoClose);
@@ -472,7 +473,7 @@ export default function Publish() {
 
       // 如果启用自动关闭，立即启动倒计时，传入从存储读取的延迟时间
       if (shouldAutoClose) {
-        console.log('页面加载时启动自动关闭定时器，使用延迟时间:', delaySeconds, '秒');
+        console.log("页面加载时启动自动关闭定时器，使用延迟时间:", delaySeconds, "秒");
         startAutoCloseTimer(delaySeconds);
       }
     });
@@ -483,7 +484,7 @@ export default function Publish() {
     tabs?: Array<{ tab: chrome.tabs.Tab; platformInfo: SyncDataPlatform }>;
   }) => {
     setIsProcessing(false);
-    setNotice(chrome.i18n.getMessage('publishComplete'));
+    setNotice(chrome.i18n.getMessage("publishComplete"));
 
     // 存储返回的 tabs 数据
     if (response?.tabs) {
@@ -500,7 +501,7 @@ export default function Publish() {
             }
             return tabInfo;
           } catch (error) {
-            console.error('获取标签页信息失败:', error);
+            console.error("获取标签页信息失败:", error);
             return tabInfo;
           }
         }),
@@ -510,53 +511,53 @@ export default function Publish() {
     }
 
     // 发布完成，倒计时已经在页面加载时启动
-    console.log('发布完成');
+    console.log("发布完成");
   };
 
   useEffect(() => {
     chrome.tabs.onUpdated.addListener(handleTabUpdated);
     chrome.tabs.onRemoved.addListener(handleTabRemoved);
-    chrome.runtime.sendMessage({ action: 'MULTIPOST_EXTENSION_PUBLISH_REQUEST_SYNC_DATA' }, async (response) => {
+    chrome.runtime.sendMessage({ action: "MULTIPOST_EXTENSION_PUBLISH_REQUEST_SYNC_DATA" }, async (response) => {
       console.log(response);
       const data = response.syncData as SyncData;
-      if (!data) return setNotice(chrome.i18n.getMessage('errorGetSyncData'));
+      if (!data) return setNotice(chrome.i18n.getMessage("errorGetSyncData"));
       setTitle(getTitleFromData(data));
 
       let processedData = data;
       processedData.origin = data.data;
 
       try {
-        if (data?.platforms.some((platform) => platform.name.includes('ARTICLE'))) {
+        if (data?.platforms.some((platform) => platform.name.includes("ARTICLE"))) {
           processedData = await processArticle(data);
         }
 
-        if (data?.platforms.some((platform) => platform.name.includes('DYNAMIC'))) {
+        if (data?.platforms.some((platform) => platform.name.includes("DYNAMIC"))) {
           processedData = await processDynamic(data);
         }
 
-        if (data?.platforms.some((platform) => platform.name.includes('VIDEO'))) {
+        if (data?.platforms.some((platform) => platform.name.includes("VIDEO"))) {
           processedData = await processVideo(data);
         }
 
-        if (data?.platforms.some((platform) => platform.name.includes('PODCAST'))) {
+        if (data?.platforms.some((platform) => platform.name.includes("PODCAST"))) {
           processedData = await processPodcast(data);
         }
 
         setData(processedData);
-        setNotice(chrome.i18n.getMessage('processingComplete'));
+        setNotice(chrome.i18n.getMessage("processingComplete"));
 
         console.log(processedData);
 
         setTimeout(async () => {
           await focusMainWindow();
           chrome.runtime.sendMessage(
-            { action: 'MULTIPOST_EXTENSION_PUBLISH_NOW', data: processedData },
+            { action: "MULTIPOST_EXTENSION_PUBLISH_NOW", data: processedData },
             handlePublishComplete,
           );
         }, 1000 * 1);
       } catch (error) {
-        console.error('处理内容时出错:', error);
-        setNotice(chrome.i18n.getMessage('errorProcessContent'));
+        console.error("处理内容时出错:", error);
+        setNotice(chrome.i18n.getMessage("errorProcessContent"));
         setIsProcessing(false);
       }
     });
@@ -571,13 +572,13 @@ export default function Publish() {
     <HeroUIProvider>
       <div className="flex flex-col items-center justify-center min-h-screen p-4 bg-background">
         <div className="w-full max-w-md space-y-4">
-          <h2 className="text-xl font-semibold text-center text-foreground">{chrome.i18n.getMessage('publishing')}</h2>
+          <h2 className="text-xl font-semibold text-center text-foreground">{chrome.i18n.getMessage("publishing")}</h2>
           {title && <p className="text-sm text-center truncate text-muted-foreground">{title}</p>}
           <Progress
             value={isProcessing ? undefined : 100}
             isIndeterminate={isProcessing}
-            aria-label={notice || chrome.i18n.getMessage('publishingInProgress')}
-            className={`w-full ${isProcessing ? 'bg-green-500' : ''}`}
+            aria-label={notice || chrome.i18n.getMessage("publishingInProgress")}
+            className={`w-full ${isProcessing ? "bg-green-500" : ""}`}
             size="sm"
           />
           {notice && <p className="text-sm text-center text-muted-foreground">{notice}</p>}
@@ -589,7 +590,7 @@ export default function Publish() {
 
           {errors.length > 0 && (
             <div className="space-y-2">
-              <p className="text-sm text-center text-muted-foreground">{chrome.i18n.getMessage('errorMessages')}</p>
+              <p className="text-sm text-center text-muted-foreground">{chrome.i18n.getMessage("errorMessages")}</p>
               <ul className="space-y-2">
                 {errors.map((error, index) => (
                   <li key={index}>{error}</li>
@@ -601,20 +602,16 @@ export default function Publish() {
             {publishedTabs.length > 0 &&
               publishedTabs.map((tab) => {
                 return (
-                  <div
-                    key={tab.tab.id}
-                    className="mb-6">
+                  <div key={tab.tab.id} className="mb-6">
                     <ul className="space-y-2">
-                      <li
-                        key={tab.tab.id}
-                        className="relative flex items-center">
+                      <li key={tab.tab.id} className="relative flex items-center">
                         <Button
                           isIconOnly
                           size="sm"
                           variant="light"
                           className="mr-2"
                           onPress={() => handleReloadTab(tab.tab.id)}
-                          aria-label={chrome.i18n.getMessage('sidepanelReloadTab')}>
+                          aria-label={chrome.i18n.getMessage("sidepanelReloadTab")}>
                           <RefreshCw className="w-4 h-4" />
                         </Button>
                         <Button
@@ -626,7 +623,7 @@ export default function Publish() {
                               src={tab.tab.favIconUrl}
                               alt=""
                               className="w-4 h-4 mr-2 shrink-0"
-                              onError={(e) => (e.currentTarget.style.display = 'none')}
+                              onError={(e) => (e.currentTarget.style.display = "none")}
                             />
                           )}
                           <span className="truncate">{tab.tab.title || tab.tab.url}</span>
@@ -638,7 +635,7 @@ export default function Publish() {
                           variant="light"
                           className="absolute -translate-y-1/2 right-2 top-1/2"
                           onPress={() => handleCloseTab(tab.tab.id)}
-                          aria-label={chrome.i18n.getMessage('sidepanelCloseTab')}>
+                          aria-label={chrome.i18n.getMessage("sidepanelCloseTab")}>
                           <X className="w-4 h-4" />
                         </Button>
                       </li>
@@ -660,7 +657,7 @@ export default function Publish() {
                     onChange={handleAutoCloseChange}
                     size="sm"
                     className="data-[state=checked]:bg-primary-600 cursor-help">
-                    <span className="text-sm text-gray-700">{chrome.i18n.getMessage('publishAutoClose')}</span>
+                    <span className="text-sm text-gray-700">{chrome.i18n.getMessage("publishAutoClose")}</span>
                   </Switch>
                 </Tooltip>
                 {autoClose && (
@@ -684,7 +681,7 @@ export default function Publish() {
                 <div className="flex gap-1.5 items-center">
                   <div className="w-1.5 h-1.5 bg-orange-500 rounded-full animate-pulse" />
                   <span className="text-xs font-medium text-orange-700">
-                    {chrome.i18n.getMessage('publishAutoCloseCountdown', [countdown.toString()])}
+                    {chrome.i18n.getMessage("publishAutoCloseCountdown", [countdown.toString()])}
                   </span>
                 </div>
               )}
@@ -711,12 +708,8 @@ export default function Publish() {
 
           {!isProcessing && (
             <div className="flex justify-center gap-2 mt-4">
-              <Button
-                color="primary"
-                variant="solid"
-                onPress={handleCloseWindow}
-                className="flex-1">
-                {chrome.i18n.getMessage('finishPublishing')}
+              <Button color="primary" variant="solid" onPress={handleCloseWindow} className="flex-1">
+                {chrome.i18n.getMessage("finishPublishing")}
               </Button>
               <Button
                 color="danger"
@@ -726,7 +719,7 @@ export default function Publish() {
                   handleCloseWindow();
                 }}
                 className="flex-1">
-                {chrome.i18n.getMessage('finishAndCloseTabs')}
+                {chrome.i18n.getMessage("finishAndCloseTabs")}
               </Button>
             </div>
           )}
@@ -735,7 +728,7 @@ export default function Publish() {
         {/* Contact us footer tip */}
         <div className="mt-8 text-center">
           <p className="text-xs text-gray-500">
-            {chrome.i18n.getMessage('contactUsIfProblem')}
+            {chrome.i18n.getMessage("contactUsIfProblem")}
             <a
               href="https://docs.multipost.app/docs/user-guide/contact-us"
               target="_blank"

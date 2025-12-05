@@ -1,42 +1,43 @@
-import React, { useState, useRef, useEffect } from 'react';
 import {
-  Card,
-  Button,
-  Input,
-  Textarea,
-  CardHeader,
-  CardBody,
-  CardFooter,
   Accordion,
   AccordionItem,
-} from '@heroui/react';
-import { VideoIcon, XIcon, TrashIcon, SendIcon, Eraser } from 'lucide-react';
-import { Player } from 'video-react';
-import 'video-react/dist/video-react.css';
+  Button,
+  Card,
+  CardBody,
+  CardFooter,
+  CardHeader,
+  Input,
+  Textarea,
+} from "@heroui/react";
+import { Eraser, SendIcon, TrashIcon, VideoIcon, XIcon } from "lucide-react";
+import type React from "react";
+import { useEffect, useRef, useState } from "react";
+import { Player } from "video-react";
+import "video-react/dist/video-react.css";
+import { Icon } from "@iconify/react";
+import { Storage } from "@plasmohq/storage";
+import { useStorage } from "@plasmohq/storage/hook";
+import { ACCOUNT_INFO_STORAGE_KEY } from "~sync/account";
 // import ReactPlayer from 'react-player';
-import { type SyncData, type FileData } from '~sync/common';
-import type { PlatformInfo } from '~sync/common';
-import PlatformCheckbox from './PlatformCheckbox';
-import { getPlatformInfos } from '~sync/common';
-import { Storage } from '@plasmohq/storage';
-import { Icon } from '@iconify/react';
-import { useStorage } from '@plasmohq/storage/hook';
-import { ACCOUNT_INFO_STORAGE_KEY } from '~sync/account';
-import { EXTRA_CONFIG_STORAGE_KEY } from '~sync/extraconfig';
+import type { FileData, SyncData } from "~sync/common";
+import type { PlatformInfo } from "~sync/common";
+import { getPlatformInfos } from "~sync/common";
+import { EXTRA_CONFIG_STORAGE_KEY } from "~sync/extraconfig";
+import PlatformCheckbox from "./PlatformCheckbox";
 
 interface VideoTabProps {
   funcPublish: (data: SyncData) => void;
 }
 
 const VideoTab: React.FC<VideoTabProps> = ({ funcPublish }) => {
-  const [title, setTitle] = useState<string>('');
-  const [content, setContent] = useState<string>('');
+  const [title, setTitle] = useState<string>("");
+  const [content, setContent] = useState<string>("");
   const [videoFile, setVideoFile] = useState<FileData | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [selectedPlatforms, setSelectedPlatforms] = useState<string[]>([]);
   const [platforms, setPlatforms] = useState<PlatformInfo[]>([]);
   const storage = new Storage({
-    area: 'local', // 明确指定使用 localStorage
+    area: "local", // 明确指定使用 localStorage
   });
 
   const [accountInfos] = useStorage({
@@ -49,21 +50,21 @@ const VideoTab: React.FC<VideoTabProps> = ({ funcPublish }) => {
   });
 
   useEffect(() => {
-    if (process.env.NODE_ENV === 'development') {
-      setTitle('开发环境标题');
-      setContent('开发环境内容');
+    if (process.env.NODE_ENV === "development") {
+      setTitle("开发环境标题");
+      setContent("开发环境内容");
     }
-    setSelectedPlatforms(JSON.parse(localStorage.getItem('videoPlatforms') || '[]'));
+    setSelectedPlatforms(JSON.parse(localStorage.getItem("videoPlatforms") || "[]"));
   }, []);
 
   // 加载平台信息
   useEffect(() => {
     const loadPlatformInfos = async () => {
       try {
-        const infos = await getPlatformInfos('VIDEO');
+        const infos = await getPlatformInfos("VIDEO");
         setPlatforms(infos);
       } catch (error) {
-        console.error('加载平台信息失败:', error);
+        console.error("加载平台信息失败:", error);
       }
     };
 
@@ -72,7 +73,7 @@ const VideoTab: React.FC<VideoTabProps> = ({ funcPublish }) => {
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFile = event.target.files?.[0];
-    if (selectedFile && selectedFile.type.startsWith('video/')) {
+    if (selectedFile?.type.startsWith("video/")) {
       setVideoFile({
         name: selectedFile.name,
         url: URL.createObjectURL(selectedFile),
@@ -85,7 +86,7 @@ const VideoTab: React.FC<VideoTabProps> = ({ funcPublish }) => {
   const handleRemoveVideo = () => {
     setVideoFile(null);
     if (fileInputRef.current) {
-      fileInputRef.current.value = '';
+      fileInputRef.current.value = "";
     }
   };
 
@@ -94,16 +95,16 @@ const VideoTab: React.FC<VideoTabProps> = ({ funcPublish }) => {
       ? [...selectedPlatforms, platform]
       : selectedPlatforms.filter((p) => p !== platform);
     setSelectedPlatforms(newSelectedPlatforms);
-    await storage.set('videoPlatforms', newSelectedPlatforms);
+    await storage.set("videoPlatforms", newSelectedPlatforms);
   };
 
   const clearSelectedPlatforms = async () => {
     setSelectedPlatforms([]);
-    await storage.set('videoPlatforms', []);
+    await storage.set("videoPlatforms", []);
   };
 
   const loadPlatforms = async () => {
-    const platforms = await storage.get<string[]>('videoPlatforms');
+    const platforms = await storage.get<string[]>("videoPlatforms");
     setSelectedPlatforms((platforms as string[]) || []);
   };
   loadPlatforms();
@@ -112,7 +113,7 @@ const VideoTab: React.FC<VideoTabProps> = ({ funcPublish }) => {
     return {
       platforms: selectedPlatforms.map((platform) => ({
         name: platform,
-        injectUrl: platforms.find((p) => p.name === platform)?.injectUrl || '',
+        injectUrl: platforms.find((p) => p.name === platform)?.injectUrl || "",
         extraConfig: platforms.find((p) => p.name === platform)?.extraConfig || {},
       })),
       data: {
@@ -126,13 +127,13 @@ const VideoTab: React.FC<VideoTabProps> = ({ funcPublish }) => {
 
   const handlePublish = async () => {
     if (!title || !videoFile) {
-      console.log('请输入标题并上传视频');
-      alert(chrome.i18n.getMessage('optionsEnterVideoTitle'));
+      console.log("请输入标题并上传视频");
+      alert(chrome.i18n.getMessage("optionsEnterVideoTitle"));
       return;
     }
     if (selectedPlatforms.length === 0) {
-      console.log('至少选择一个平台');
-      alert(chrome.i18n.getMessage('optionsSelectPublishPlatforms'));
+      console.log("至少选择一个平台");
+      alert(chrome.i18n.getMessage("optionsSelectPublishPlatforms"));
       return;
     }
 
@@ -145,7 +146,7 @@ const VideoTab: React.FC<VideoTabProps> = ({ funcPublish }) => {
         });
       });
     } catch (error) {
-      console.error('检查服务状态时出错:', error);
+      console.error("检查服务状态时出错:", error);
       funcPublish(data);
     }
   };
@@ -155,12 +156,12 @@ const VideoTab: React.FC<VideoTabProps> = ({ funcPublish }) => {
   };
 
   const handleClearAll = () => {
-    setTitle('');
-    setContent('');
+    setTitle("");
+    setContent("");
     setVideoFile(null);
     setSelectedPlatforms([]);
     if (fileInputRef.current) {
-      fileInputRef.current.value = '';
+      fileInputRef.current.value = "";
     }
   };
 
@@ -173,10 +174,10 @@ const VideoTab: React.FC<VideoTabProps> = ({ funcPublish }) => {
               <Input
                 isClearable
                 variant="underlined"
-                label={chrome.i18n.getMessage('optionsEnterVideoTitle')}
+                label={chrome.i18n.getMessage("optionsEnterVideoTitle")}
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
-                onClear={() => setTitle('')}
+                onClear={() => setTitle("")}
                 className="w-full"
               />
             </CardHeader>
@@ -184,14 +185,14 @@ const VideoTab: React.FC<VideoTabProps> = ({ funcPublish }) => {
             <CardBody>
               <Textarea
                 isClearable
-                label={chrome.i18n.getMessage('optionsEnterVideoDescription')}
+                label={chrome.i18n.getMessage("optionsEnterVideoDescription")}
                 value={content}
                 onChange={(e) => setContent(e.target.value)}
                 variant="underlined"
                 minRows={5}
                 className="w-full"
                 autoFocus
-                onClear={() => setContent('')}
+                onClear={() => setContent("")}
               />
             </CardBody>
 
@@ -205,10 +206,7 @@ const VideoTab: React.FC<VideoTabProps> = ({ funcPublish }) => {
                     onChange={handleFileChange}
                     className="hidden"
                   />
-                  <Button
-                    isIconOnly
-                    variant="light"
-                    onPress={handleIconClick}>
+                  <Button isIconOnly variant="light" onPress={handleIconClick}>
                     <VideoIcon className="w-5 h-5" />
                   </Button>
                 </div>
@@ -218,7 +216,7 @@ const VideoTab: React.FC<VideoTabProps> = ({ funcPublish }) => {
                     variant="light"
                     color="danger"
                     onPress={handleClearAll}
-                    title={chrome.i18n.getMessage('optionsClearAll')}>
+                    title={chrome.i18n.getMessage("optionsClearAll")}>
                     <TrashIcon className="size-5" />
                   </Button>
                 )}
@@ -230,9 +228,7 @@ const VideoTab: React.FC<VideoTabProps> = ({ funcPublish }) => {
             <Card className="shadow-none bg-default-50">
               <CardBody className="p-4">
                 <div className="relative w-full group aspect-video">
-                  <Player
-                    playsInline
-                    src={videoFile.url}>
+                  <Player playsInline src={videoFile.url}>
                     <source src={videoFile.url} />
                   </Player>
                   <Button
@@ -255,7 +251,7 @@ const VideoTab: React.FC<VideoTabProps> = ({ funcPublish }) => {
           <div className="flex flex-col gap-4 p-4 rounded-lg bg-default-50">
             <div className="flex flex-col gap-2">
               <div className="flex items-center justify-between mb-2">
-                <div className="flex items-center gap-2"></div>
+                <div className="flex items-center gap-2" />
                 {selectedPlatforms.length > 0 && (
                   <Button
                     isIconOnly
@@ -270,32 +266,25 @@ const VideoTab: React.FC<VideoTabProps> = ({ funcPublish }) => {
                 )}
               </div>
 
-              <Accordion
-                isCompact
-                variant="light"
-                selectionMode="multiple"
-                defaultExpandedKeys={['CN']}>
+              <Accordion isCompact variant="light" selectionMode="multiple" defaultExpandedKeys={["CN"]}>
                 <AccordionItem
                   key="CN"
-                  title={chrome.i18n.getMessage('optionsCNPlatforms')}
+                  title={chrome.i18n.getMessage("optionsCNPlatforms")}
                   subtitle={`${
                     selectedPlatforms.filter((platform) => {
                       const info = platforms.find((p) => p.name === platform);
-                      return info?.tags?.includes('CN');
+                      return info?.tags?.includes("CN");
                     }).length
-                  }/${platforms.filter((platform) => platform.tags?.includes('CN')).length}`}
+                  }/${platforms.filter((platform) => platform.tags?.includes("CN")).length}`}
                   startContent={
                     <div className="w-8">
-                      <Icon
-                        icon="openmoji:flag-china"
-                        className="w-full h-max"
-                      />
+                      <Icon icon="openmoji:flag-china" className="w-full h-max" />
                     </div>
                   }
                   className="py-1">
                   <div className="grid grid-cols-2 gap-2">
                     {platforms
-                      .filter((platform) => platform.tags?.includes('CN'))
+                      .filter((platform) => platform.tags?.includes("CN"))
                       .map((platform) => (
                         <PlatformCheckbox
                           key={platform.name}
@@ -310,25 +299,22 @@ const VideoTab: React.FC<VideoTabProps> = ({ funcPublish }) => {
                 </AccordionItem>
                 <AccordionItem
                   key="International"
-                  title={chrome.i18n.getMessage('optionsInternationalPlatforms')}
+                  title={chrome.i18n.getMessage("optionsInternationalPlatforms")}
                   subtitle={`${
                     selectedPlatforms.filter((platform) => {
                       const info = platforms.find((p) => p.name === platform);
-                      return info?.tags?.includes('International');
+                      return info?.tags?.includes("International");
                     }).length
-                  }/${platforms.filter((platform) => platform.tags?.includes('International')).length}`}
+                  }/${platforms.filter((platform) => platform.tags?.includes("International")).length}`}
                   startContent={
                     <div className="w-8">
-                      <Icon
-                        icon="openmoji:globe-with-meridians"
-                        className="w-full h-max"
-                      />
+                      <Icon icon="openmoji:globe-with-meridians" className="w-full h-max" />
                     </div>
                   }
                   className="py-1">
                   <div className="grid grid-cols-2 gap-2">
                     {platforms
-                      .filter((platform) => platform.tags?.includes('International'))
+                      .filter((platform) => platform.tags?.includes("International"))
                       .map((platform) => (
                         <PlatformCheckbox
                           key={platform.name}
@@ -351,7 +337,7 @@ const VideoTab: React.FC<VideoTabProps> = ({ funcPublish }) => {
               disabled={!videoFile || !title || !content || selectedPlatforms.length === 0}
               className="w-full mt-2 font-medium shadow-none">
               <SendIcon className="mr-2 size-4" />
-              {chrome.i18n.getMessage('optionsSyncVideo')}
+              {chrome.i18n.getMessage("optionsSyncVideo")}
             </Button>
           </div>
         </div>

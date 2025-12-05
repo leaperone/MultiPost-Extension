@@ -1,4 +1,4 @@
-import { type DynamicData, type SyncData } from '../common';
+import type { DynamicData, SyncData } from "../common";
 
 // 不支持发布视频
 export async function DynamicToutiaohao(data: SyncData) {
@@ -38,23 +38,23 @@ export async function DynamicToutiaohao(data: SyncData) {
     await new Promise((resolve) => setTimeout(resolve, 1000));
 
     const editor = document.querySelector('div[contenteditable="true"]') as HTMLDivElement;
-    console.debug('qlEditor', editor);
+    console.debug("qlEditor", editor);
     if (!editor) {
-      console.debug('未找到编辑器元素');
+      console.debug("未找到编辑器元素");
       return;
     }
 
-    editor.innerText = content || '';
+    editor.innerText = content || "";
     editor.focus();
-    editor.dispatchEvent(new Event('input', { bubbles: true }));
+    editor.dispatchEvent(new Event("input", { bubbles: true }));
     await new Promise((resolve) => setTimeout(resolve, 3000));
 
     // 移除已存在的图片
     const removeExistingImages = async () => {
       for (let i = 0; i < 20; i++) {
-        const closeButton = document.querySelector('.image-remove-btn');
+        const closeButton = document.querySelector(".image-remove-btn");
         if (!closeButton) break;
-        console.debug('Clicking close button', closeButton);
+        console.debug("Clicking close button", closeButton);
         (closeButton as HTMLElement).click();
         await new Promise((resolve) => setTimeout(resolve, 500));
       }
@@ -64,69 +64,69 @@ export async function DynamicToutiaohao(data: SyncData) {
 
     // 处理图片上传
     if (images?.length > 0) {
-      const uploadButtons = document.querySelectorAll('button.syl-toolbar-button');
-      const uploadButton = Array.from(uploadButtons).find((button) => button.textContent?.includes('图片'));
+      const uploadButtons = document.querySelectorAll("button.syl-toolbar-button");
+      const uploadButton = Array.from(uploadButtons).find((button) => button.textContent?.includes("图片"));
 
       if (uploadButton) {
-        console.debug('Found upload image button', uploadButton);
-        uploadButton.dispatchEvent(new Event('click', { bubbles: true }));
+        console.debug("Found upload image button", uploadButton);
+        uploadButton.dispatchEvent(new Event("click", { bubbles: true }));
         await new Promise((resolve) => setTimeout(resolve, 3000));
 
         const fileInput = document.querySelector('input[type="file"]') as HTMLInputElement;
-        console.debug('fileInput', fileInput);
+        console.debug("fileInput", fileInput);
 
         if (!fileInput) {
-          console.debug('未找到文件输入元素');
+          console.debug("未找到文件输入元素");
           return;
         }
 
         const dataTransfer = new DataTransfer();
         for (const image of images || []) {
-          if (!image.type.startsWith('image/')) {
-            console.debug('skip non-image file', image);
+          if (!image.type.startsWith("image/")) {
+            console.debug("skip non-image file", image);
             continue;
           }
-          console.debug('try upload file', image);
+          console.debug("try upload file", image);
           const response = await fetch(image.url);
           const arrayBuffer = await response.arrayBuffer();
           const file = new File([arrayBuffer], image.name, { type: image.type });
           dataTransfer.items.add(file);
-          console.debug('uploaded');
+          console.debug("uploaded");
         }
 
         if (dataTransfer.files.length > 0) {
           fileInput.files = dataTransfer.files;
-          fileInput.dispatchEvent(new Event('change', { bubbles: true }));
-          fileInput.dispatchEvent(new Event('input', { bubbles: true }));
-          console.debug('文件上传操作完成');
+          fileInput.dispatchEvent(new Event("change", { bubbles: true }));
+          fileInput.dispatchEvent(new Event("input", { bubbles: true }));
+          console.debug("文件上传操作完成");
         }
 
         await new Promise((resolve) => setTimeout(resolve, 5000));
 
         const confirmButton = document.querySelector('button[data-e2e="imageUploadConfirm-btn"]') as HTMLButtonElement;
-        console.debug('confirmButton', confirmButton);
+        console.debug("confirmButton", confirmButton);
         if (confirmButton) {
-          console.debug('Clicking confirm button for image upload');
-          confirmButton.dispatchEvent(new Event('click', { bubbles: true }));
+          console.debug("Clicking confirm button for image upload");
+          confirmButton.dispatchEvent(new Event("click", { bubbles: true }));
           await new Promise((resolve) => setTimeout(resolve, 2000));
         } else {
-          console.debug('未找到图片上传确认按钮');
+          console.debug("未找到图片上传确认按钮");
         }
       }
     }
 
-    const publishButton = document.querySelector('button.publish-content') as HTMLButtonElement;
-    console.debug('sendButton', publishButton);
+    const publishButton = document.querySelector("button.publish-content") as HTMLButtonElement;
+    console.debug("sendButton", publishButton);
 
     if (publishButton) {
       if (data.isAutoPublish) {
-        console.debug('sendButton clicked');
-        publishButton.dispatchEvent(new Event('click', { bubbles: true }));
+        console.debug("sendButton clicked");
+        publishButton.dispatchEvent(new Event("click", { bubbles: true }));
       }
     } else {
       console.debug("未找到'发送'按钮");
     }
   } catch (error) {
-    console.error('头条号发布过程中出错:', error);
+    console.error("头条号发布过程中出错:", error);
   }
 }

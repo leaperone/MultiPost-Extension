@@ -8,8 +8,9 @@
     "dev": "plasmo dev",
     "build": "plasmo build && plasmo package",
     "package": "plasmo package",
-    "lint": "eslint",
-    "lint:fix": "eslint --fix",
+    "lint": "biome check",
+    "lint:fix": "biome check --fix",
+    "format": "biome format --write",
     "lint:staged": "lint-staged",
     "prepare": "husky"
   },
@@ -29,24 +30,17 @@
     "video-react": "^0.16.0"
   },
   "devDependencies": {
+    "@biomejs/biome": "^1.9.4",
     "@commitlint/cli": "^19.5.0",
     "@commitlint/config-conventional": "^19.5.0",
-    "@ianvs/prettier-plugin-sort-imports": "4.1.1",
     "@iconify/react": "^5.2.0",
     "@types/chrome": "0.0.251",
     "@types/node": "20.9.0",
     "@types/react": "18.2.37",
     "@types/react-dom": "18.2.15",
-    "@typescript-eslint/eslint-plugin": "^8.8.1",
-    "@typescript-eslint/parser": "^8.8.1",
-    "eslint": "^8",
-    "eslint-plugin-tailwindcss": "^3.17.4",
     "husky": "^9.1.6",
     "lint-staged": "^15.2.10",
     "postcss": "8.4.31",
-    "prettier": "3.0.3",
-    "stylelint": "^16.9.0",
-    "stylelint-config-standard": "^36.0.1",
     "typescript": "5.2.2"
   },
   "pnpm": {
@@ -73,28 +67,16 @@
   },
   "manifest": {
     "default_locale": "zh_CN",
-    "host_permissions": [
-      "https://*/*",
-      "http://127.0.0.1/*",
-      "http://localhost/*"
-    ],
-    "permissions": [
-      "activeTab",
-      "tabs",
-      "background",
-      "scripting",
-      "tabGroups",
-      "sidePanel"
-    ],
+    "host_permissions": ["https://*/*", "http://127.0.0.1/*", "http://localhost/*"],
+    "permissions": ["activeTab", "tabs", "background", "scripting", "tabGroups", "sidePanel"],
     "web_accessible_resources": [
       {
-        "resources": [
-          "assets/icon.png"
-        ],
-        "matches": [
-          "https://www.plasmo.com/*"
-        ]
+        "resources": ["assets/icon.png"],
+        "matches": ["https://www.plasmo.com/*"]
       }
     ]
+  },
+  "lint-staged": {
+    "*.{js,ts,cjs,mjs,d.cts,d.mts,jsx,tsx,json,jsonc}": ["biome check --write --unsafe --no-errors-on-unmatched"]
   }
 }

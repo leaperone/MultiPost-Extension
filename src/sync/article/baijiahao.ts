@@ -1,4 +1,4 @@
-import type { ArticleData, FileData, SyncData } from '~sync/common';
+import type { ArticleData, FileData, SyncData } from "~sync/common";
 
 interface CoverResult {
   originSrc: string;
@@ -16,20 +16,20 @@ export async function ArticleBaijiahao(data: SyncData) {
       const file = new File([blob], fileInfo.name, { type: fileInfo.type });
 
       const formData = new FormData();
-      formData.append('org_file_name', fileInfo.name);
-      formData.append('type', 'image');
-      formData.append('app_id', '');
-      formData.append('is_waterlog', '1');
-      formData.append('save_material', '1');
-      formData.append('no_compress', '0');
-      formData.append('is_events', '');
-      formData.append('article_type', 'news');
-      formData.append('media', file);
+      formData.append("org_file_name", fileInfo.name);
+      formData.append("type", "image");
+      formData.append("app_id", "");
+      formData.append("is_waterlog", "1");
+      formData.append("save_material", "1");
+      formData.append("no_compress", "0");
+      formData.append("is_events", "");
+      formData.append("article_type", "news");
+      formData.append("media", file);
 
-      const response = await fetch('https://baijiahao.baidu.com/materialui/picture/uploadProxy', {
-        method: 'POST',
+      const response = await fetch("https://baijiahao.baidu.com/materialui/picture/uploadProxy", {
+        method: "POST",
         body: formData,
-        credentials: 'include',
+        credentials: "include",
         headers: {
           Token: getEditToken(),
         },
@@ -45,15 +45,15 @@ export async function ArticleBaijiahao(data: SyncData) {
       }
       return null;
     } catch (error) {
-      console.error('上传图片失败:', error);
+      console.error("上传图片失败:", error);
       return null;
     }
   }
 
   // 获取编辑token
   function getEditToken(): string {
-    const token = localStorage.getItem('edit-token')?.replace(/"/g, '');
-    return token || '';
+    const token = localStorage.getItem("edit-token")?.replace(/"/g, "");
+    return token || "";
   }
 
   // 裁剪图片
@@ -63,17 +63,17 @@ export async function ArticleBaijiahao(data: SyncData) {
   ): Promise<string | null> {
     try {
       const formData = new FormData();
-      formData.append('auto', 'true');
-      formData.append('x', params.x.toString());
-      formData.append('y', params.y.toString());
-      formData.append('w', params.w.toString());
-      formData.append('h', params.h.toString());
-      formData.append('src', src);
-      formData.append('type', 'newsRow');
-      formData.append('cutting_type', 'cover_image');
+      formData.append("auto", "true");
+      formData.append("x", params.x.toString());
+      formData.append("y", params.y.toString());
+      formData.append("w", params.w.toString());
+      formData.append("h", params.h.toString());
+      formData.append("src", src);
+      formData.append("type", "newsRow");
+      formData.append("cutting_type", "cover_image");
 
-      const response = await fetch('https://baijiahao.baidu.com/pcui/Picture/CuttingPicproxy', {
-        method: 'POST',
+      const response = await fetch("https://baijiahao.baidu.com/pcui/Picture/CuttingPicproxy", {
+        method: "POST",
         body: formData,
       });
 
@@ -85,9 +85,9 @@ export async function ArticleBaijiahao(data: SyncData) {
       if (result.errno === 0 && result.data?.https_src) {
         return result.data.https_src;
       }
-      throw new Error(result.errmsg || '裁剪图片失败');
+      throw new Error(result.errmsg || "裁剪图片失败");
     } catch (error) {
-      console.error('裁剪图片失败:', error);
+      console.error("裁剪图片失败:", error);
       return null;
     }
   }
@@ -95,13 +95,13 @@ export async function ArticleBaijiahao(data: SyncData) {
   // 处理文章内容中的图片
   async function processContent(htmlContent: string, imageDatas: FileData[]): Promise<string> {
     const parser = new DOMParser();
-    const doc = parser.parseFromString(htmlContent, 'text/html');
-    const images = Array.from(doc.getElementsByTagName('img'));
+    const doc = parser.parseFromString(htmlContent, "text/html");
+    const images = Array.from(doc.getElementsByTagName("img"));
 
     console.log(`处理文章图片，共 ${images.length} 张`);
 
     const uploadPromises = images.map(async (img) => {
-      const src = img.getAttribute('src');
+      const src = img.getAttribute("src");
       if (!src) return;
 
       const fileInfo = imageDatas.find((f) => f.url === src);
@@ -109,7 +109,7 @@ export async function ArticleBaijiahao(data: SyncData) {
 
       const newUrl = await uploadSingleImage(fileInfo);
       if (newUrl) {
-        img.setAttribute('src', newUrl);
+        img.setAttribute("src", newUrl);
       } else {
         console.error(`图片处理失败: ${src}`);
       }
@@ -153,7 +153,7 @@ export async function ArticleBaijiahao(data: SyncData) {
         });
       };
       img.onerror = () => {
-        console.error('获取图片尺寸失败:', url);
+        console.error("获取图片尺寸失败:", url);
         resolve(null);
       };
       img.src = url;
@@ -162,7 +162,7 @@ export async function ArticleBaijiahao(data: SyncData) {
 
   // 发布文章
   async function publishArticle(articleData: ArticleData): Promise<string | null> {
-    console.log('开始发布文章:', articleData.title);
+    console.log("开始发布文章:", articleData.title);
 
     if (articleData.images) {
       articleData.htmlContent = await processContent(articleData.htmlContent, articleData.images);
@@ -172,37 +172,37 @@ export async function ArticleBaijiahao(data: SyncData) {
     if (articleData.cover) {
       coverResults = await processCover(articleData.cover);
       if (!coverResults) {
-        console.error('封面处理失败');
+        console.error("封面处理失败");
         return null;
       }
     }
 
     const formData = new FormData();
-    formData.append('type', 'news');
-    formData.append('title', articleData.title?.slice(0, 30) || '');
-    formData.append('content', articleData.htmlContent || '');
-    formData.append('vertical_cover', coverResults?.[1].src || '');
-    formData.append('abstract', articleData.digest || '');
+    formData.append("type", "news");
+    formData.append("title", articleData.title?.slice(0, 30) || "");
+    formData.append("content", articleData.htmlContent || "");
+    formData.append("vertical_cover", coverResults?.[1].src || "");
+    formData.append("abstract", articleData.digest || "");
 
     const contentLength =
-      new DOMParser().parseFromString(articleData.htmlContent || '', 'text/html').documentElement.textContent?.length ||
+      new DOMParser().parseFromString(articleData.htmlContent || "", "text/html").documentElement.textContent?.length ||
       0;
 
-    formData.append('len', contentLength.toString());
-    formData.append('activity_list[0][id]', 'ttv');
-    formData.append('activity_list[0][is_checked]', '1');
-    formData.append('activity_list[1][id]', 'reward');
-    formData.append('activity_list[1][is_checked]', '1');
-    formData.append('activity_list[2][id]', 'aigc_bjh_status');
-    formData.append('activity_list[2][is_checked]', '0');
-    formData.append('source_reprinted_allow', '0');
-    formData.append('is_auto_optimize_cover', '1');
-    formData.append('abstract_from', '1');
-    formData.append('cover_layout', 'one');
+    formData.append("len", contentLength.toString());
+    formData.append("activity_list[0][id]", "ttv");
+    formData.append("activity_list[0][is_checked]", "1");
+    formData.append("activity_list[1][id]", "reward");
+    formData.append("activity_list[1][is_checked]", "1");
+    formData.append("activity_list[2][id]", "aigc_bjh_status");
+    formData.append("activity_list[2][is_checked]", "0");
+    formData.append("source_reprinted_allow", "0");
+    formData.append("is_auto_optimize_cover", "1");
+    formData.append("abstract_from", "1");
+    formData.append("cover_layout", "one");
 
     if (coverResults) {
       formData.append(
-        'cover_images',
+        "cover_images",
         JSON.stringify([
           {
             src: coverResults[0].src,
@@ -214,13 +214,13 @@ export async function ArticleBaijiahao(data: SyncData) {
             },
             machine_chooseimg: 0,
             isLegal: 0,
-            cover_source_tag: 'local',
+            cover_source_tag: "local",
           },
         ]),
       );
 
       formData.append(
-        '_cover_images_map',
+        "_cover_images_map",
         JSON.stringify([
           {
             src: coverResults[0].src,
@@ -230,14 +230,14 @@ export async function ArticleBaijiahao(data: SyncData) {
       );
     }
 
-    formData.append('source', 'upload');
-    formData.append('cover_source', 'upload');
+    formData.append("source", "upload");
+    formData.append("cover_source", "upload");
 
     try {
-      const response = await fetch('https://baijiahao.baidu.com/pcui/article/save?callback=bjhdraft', {
-        method: 'POST',
+      const response = await fetch("https://baijiahao.baidu.com/pcui/article/save?callback=bjhdraft", {
+        method: "POST",
         body: formData,
-        credentials: 'include',
+        credentials: "include",
         headers: {
           Token: getEditToken(),
         },
@@ -249,21 +249,23 @@ export async function ArticleBaijiahao(data: SyncData) {
 
       const result = await response.json();
       if (result.errno === 0) {
-        console.log('文章发布成功，ID:', result.ret?.id);
+        console.log("文章发布成功，ID:", result.ret?.id);
         return result.ret?.id;
-      } else {
-        console.error('发布失败:', result.message);
-        return null;
       }
+      console.error("发布失败:", result.message);
+      return null;
     } catch (error) {
-      console.error('发布过程出错:', error);
+      console.error("发布过程出错:", error);
       return null;
     }
   }
 
   // 计算裁剪参数
   function calculateCropParams(width: number, height: number, ratio: number) {
-    let w, h, x, y;
+    let w;
+    let h;
+    let x;
+    let y;
     if (width / height > ratio) {
       h = height;
       w = Math.floor(height * ratio);
@@ -279,18 +281,18 @@ export async function ArticleBaijiahao(data: SyncData) {
   }
 
   // 主流程
-  const host = document.createElement('div') as HTMLDivElement;
-  const tip = document.createElement('div') as HTMLDivElement;
+  const host = document.createElement("div") as HTMLDivElement;
+  const tip = document.createElement("div") as HTMLDivElement;
 
   try {
     // 添加漂浮提示
-    host.style.position = 'fixed';
-    host.style.bottom = '20px';
-    host.style.right = '20px';
-    host.style.zIndex = '9999';
+    host.style.position = "fixed";
+    host.style.bottom = "20px";
+    host.style.right = "20px";
+    host.style.zIndex = "9999";
     document.body.appendChild(host);
 
-    const shadow = host.attachShadow({ mode: 'open' });
+    const shadow = host.attachShadow({ mode: "open" });
 
     tip.innerHTML = `
       <style>
@@ -323,7 +325,7 @@ export async function ArticleBaijiahao(data: SyncData) {
     const articleId = await publishArticle(articleData);
 
     if (articleId) {
-      (tip.querySelector('.float-tip') as HTMLDivElement).textContent = '文章同步成功！';
+      (tip.querySelector(".float-tip") as HTMLDivElement).textContent = "文章同步成功！";
 
       setTimeout(() => {
         document.body.removeChild(host);
@@ -335,16 +337,16 @@ export async function ArticleBaijiahao(data: SyncData) {
     }
   } catch (error) {
     if (document.body.contains(host)) {
-      const floatTip = tip.querySelector('.float-tip') as HTMLDivElement;
-      floatTip.textContent = '同步失败，请重试';
-      floatTip.style.backgroundColor = '#dc2626';
+      const floatTip = tip.querySelector(".float-tip") as HTMLDivElement;
+      floatTip.textContent = "同步失败，请重试";
+      floatTip.style.backgroundColor = "#dc2626";
 
       setTimeout(() => {
         document.body.removeChild(host);
       }, 3000);
     }
 
-    console.error('发布文章失败:', error);
+    console.error("发布文章失败:", error);
     throw error;
   }
 }

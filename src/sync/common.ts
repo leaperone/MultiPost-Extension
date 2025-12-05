@@ -1,9 +1,9 @@
-import { getAccountInfoFromPlatformInfo, getAccountInfoFromPlatformInfos } from './account';
-import { ArticleInfoMap } from './article';
-import { DynamicInfoMap } from './dynamic';
-import { getExtraConfigFromPlatformInfo, getExtraConfigFromPlatformInfos } from './extraconfig';
-import { PodcastInfoMap } from './podcast';
-import { VideoInfoMap } from './video';
+import { getAccountInfoFromPlatformInfo, getAccountInfoFromPlatformInfos } from "./account";
+import { ArticleInfoMap } from "./article";
+import { DynamicInfoMap } from "./dynamic";
+import { getExtraConfigFromPlatformInfo, getExtraConfigFromPlatformInfos } from "./extraconfig";
+import { PodcastInfoMap } from "./podcast";
+import { VideoInfoMap } from "./video";
 
 export interface SyncDataPlatform {
   name: string;
@@ -63,7 +63,7 @@ export interface VideoData {
 }
 
 export interface PlatformInfo {
-  type: 'DYNAMIC' | 'VIDEO' | 'ARTICLE' | 'PODCAST';
+  type: "DYNAMIC" | "VIDEO" | "ARTICLE" | "PODCAST";
   name: string;
   homeUrl: string;
   faviconUrl?: string;
@@ -106,7 +106,7 @@ export function getRawPlatformInfo(platform: string): PlatformInfo | null {
   return infoMap[platform];
 }
 
-export async function getPlatformInfos(type?: 'DYNAMIC' | 'VIDEO' | 'ARTICLE' | 'PODCAST'): Promise<PlatformInfo[]> {
+export async function getPlatformInfos(type?: "DYNAMIC" | "VIDEO" | "ARTICLE" | "PODCAST"): Promise<PlatformInfo[]> {
   const platformInfos: PlatformInfo[] = [];
   for (const info of Object.values(infoMap)) {
     if (type && info.type !== type) continue;
@@ -132,7 +132,7 @@ export async function createTabsForPlatforms(data: SyncData) {
           // 等待标签页加载完成
           await new Promise<void>((resolve) => {
             chrome.tabs.onUpdated.addListener(function listener(tabId, info) {
-              if (tabId === tab!.id && info.status === 'complete') {
+              if (tabId === tab!.id && info.status === "complete") {
                 chrome.tabs.onUpdated.removeListener(listener);
                 resolve();
               }
@@ -161,8 +161,8 @@ export async function createTabsForPlatforms(data: SyncData) {
           if (!groupId) {
             groupId = await chrome.tabs.group({ tabIds: [tab.id!] });
             await chrome.tabGroups.update(groupId, {
-              color: 'blue',
-              title: `MultiPost-${new Date().toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' })}`,
+              color: "blue",
+              title: `MultiPost-${new Date().toLocaleTimeString("zh-CN", { hour: "2-digit", minute: "2-digit" })}`,
             });
           } else {
             // 将新标签页添加到现有组中
@@ -171,7 +171,7 @@ export async function createTabsForPlatforms(data: SyncData) {
           // 等待3秒再继续
           await new Promise<void>((resolve) => {
             chrome.tabs.onUpdated.addListener(function listener(tabId, info) {
-              if (tabId === tab!.id && info.status === 'complete') {
+              if (tabId === tab!.id && info.status === "complete") {
                 chrome.tabs.onUpdated.removeListener(listener);
                 resolve();
               }
@@ -195,7 +195,7 @@ export async function injectScriptsToTabs(
     const platform = t.platformInfo;
     if (tab.id) {
       chrome.tabs.onUpdated.addListener(function listener(tabId, info) {
-        if (tabId === tab.id && info.status === 'complete') {
+        if (tabId === tab.id && info.status === "complete") {
           chrome.tabs.onUpdated.removeListener(listener);
           getPlatformInfo(platform.name).then((info) => {
             if (info) {

@@ -1,4 +1,4 @@
-import { type DynamicData, type SyncData } from '../common';
+import type { DynamicData, SyncData } from "../common";
 
 // 不支持发布视频
 export async function DynamicToutiao(data: SyncData) {
@@ -39,17 +39,17 @@ export async function DynamicToutiao(data: SyncData) {
 
     if (editor) {
       // 更新编辑器内容，将标题和内容合并
-      const combinedContent = title ? `${title}\n\n${content || ''}` : content || '';
+      const combinedContent = title ? `${title}\n\n${content || ""}` : content || "";
       editor.innerText = combinedContent;
       editor.focus();
-      editor.dispatchEvent(new Event('input', { bubbles: true }));
+      editor.dispatchEvent(new Event("input", { bubbles: true }));
       await new Promise((resolve) => setTimeout(resolve, 3000));
     }
 
     // 清除已有图片
     const clearExistingImages = async () => {
       for (let i = 0; i < 20; i++) {
-        const closeButton = document.querySelector('.image-remove-btn') as HTMLElement;
+        const closeButton = document.querySelector(".image-remove-btn") as HTMLElement;
         if (!closeButton) break;
         closeButton.click();
         await new Promise((resolve) => setTimeout(resolve, 500));
@@ -59,11 +59,11 @@ export async function DynamicToutiao(data: SyncData) {
 
     // 处理图片上传
     if (images?.length > 0) {
-      const uploadButtons = document.querySelectorAll('button.syl-toolbar-button');
-      const uploadButton = Array.from(uploadButtons).find((button) => button.textContent?.includes('图片'));
+      const uploadButtons = document.querySelectorAll("button.syl-toolbar-button");
+      const uploadButton = Array.from(uploadButtons).find((button) => button.textContent?.includes("图片"));
 
       if (uploadButton) {
-        uploadButton.dispatchEvent(new Event('click', { bubbles: true }));
+        uploadButton.dispatchEvent(new Event("click", { bubbles: true }));
         await new Promise((resolve) => setTimeout(resolve, 1000));
 
         const fileInput = document.querySelector('input[type="file"]') as HTMLInputElement;
@@ -71,8 +71,8 @@ export async function DynamicToutiao(data: SyncData) {
           const dataTransfer = new DataTransfer();
 
           for (const image of images) {
-            if (!image.type.startsWith('image/')) {
-              console.log('跳过非图片文件:', image);
+            if (!image.type.startsWith("image/")) {
+              console.log("跳过非图片文件:", image);
               continue;
             }
 
@@ -84,8 +84,8 @@ export async function DynamicToutiao(data: SyncData) {
 
           if (dataTransfer.files.length > 0) {
             fileInput.files = dataTransfer.files;
-            fileInput.dispatchEvent(new Event('change', { bubbles: true }));
-            fileInput.dispatchEvent(new Event('input', { bubbles: true }));
+            fileInput.dispatchEvent(new Event("change", { bubbles: true }));
+            fileInput.dispatchEvent(new Event("input", { bubbles: true }));
           }
 
           // 等待上传完成
@@ -94,7 +94,7 @@ export async function DynamicToutiao(data: SyncData) {
           // 点击确认按钮
           const confirmButton = document.querySelector('button[data-e2e="imageUploadConfirm-btn"]');
           if (confirmButton) {
-            confirmButton.dispatchEvent(new Event('click', { bubbles: true }));
+            confirmButton.dispatchEvent(new Event("click", { bubbles: true }));
             await new Promise((resolve) => setTimeout(resolve, 2000));
           }
         }
@@ -102,13 +102,13 @@ export async function DynamicToutiao(data: SyncData) {
     }
 
     // 发布内容
-    const publishButton = document.querySelector('button.publish-content') as HTMLButtonElement;
+    const publishButton = document.querySelector("button.publish-content") as HTMLButtonElement;
     if (publishButton) {
       if (data.isAutoPublish) {
-        publishButton.dispatchEvent(new Event('click', { bubbles: true }));
+        publishButton.dispatchEvent(new Event("click", { bubbles: true }));
       }
     }
   } catch (error) {
-    console.error('头条发布过程中出错:', error);
+    console.error("头条发布过程中出错:", error);
   }
 }

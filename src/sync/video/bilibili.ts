@@ -1,4 +1,4 @@
-import { type FileData, type SyncData, type VideoData } from '../common';
+import type { FileData, SyncData, VideoData } from "../common";
 
 export async function VideoBilibili(data: SyncData) {
   function waitForElement(selector: string, timeout = 10000): Promise<Element> {
@@ -30,26 +30,26 @@ export async function VideoBilibili(data: SyncData) {
   }
 
   async function uploadCover(cover: FileData): Promise<void> {
-    console.log('开始上传封面', cover);
-    await waitForElement('div.cover-main-img > div.img');
-    const coverUploadButton = document.querySelector('div.cover-main-img > div.img') as HTMLElement;
+    console.log("开始上传封面", cover);
+    await waitForElement("div.cover-main-img > div.img");
+    const coverUploadButton = document.querySelector("div.cover-main-img > div.img") as HTMLElement;
     if (!coverUploadButton) {
-      console.log('未找到封面上传按钮');
+      console.log("未找到封面上传按钮");
       return;
     }
 
     coverUploadButton.click();
     await new Promise((resolve) => setTimeout(resolve, 1000));
 
-    const tabContainer = document.querySelector('div.cover-select-header-tab');
+    const tabContainer = document.querySelector("div.cover-select-header-tab");
     if (!tabContainer) {
-      console.log('未找到封面选择的tab容器');
+      console.log("未找到封面选择的tab容器");
       return;
     }
 
     const uploadTab = tabContainer.firstChild?.nextSibling as HTMLElement;
     if (!uploadTab) {
-      console.log('未找到上传封面tab');
+      console.log("未找到上传封面tab");
       return;
     }
     uploadTab.click();
@@ -60,13 +60,13 @@ export async function VideoBilibili(data: SyncData) {
     ) as HTMLInputElement;
 
     if (!fileInput) {
-      console.log('未找到封面上传的文件输入框');
+      console.log("未找到封面上传的文件输入框");
       return;
     }
 
     const dataTransfer = new DataTransfer();
-    if (!cover.type.includes('image/')) {
-      console.log('封面文件类型不正确');
+    if (!cover.type.includes("image/")) {
+      console.log("封面文件类型不正确");
       return;
     }
 
@@ -80,18 +80,18 @@ export async function VideoBilibili(data: SyncData) {
     }
 
     fileInput.files = dataTransfer.files;
-    fileInput.dispatchEvent(new Event('change', { bubbles: true }));
-    fileInput.dispatchEvent(new Event('input', { bubbles: true }));
+    fileInput.dispatchEvent(new Event("change", { bubbles: true }));
+    fileInput.dispatchEvent(new Event("input", { bubbles: true }));
 
-    console.log('封面文件上传操作已触发');
+    console.log("封面文件上传操作已触发");
     await new Promise((resolve) => setTimeout(resolve, 3000));
 
-    const doneButtons = document.querySelectorAll('div.cover-select-footer-pick button');
-    const doneButton = Array.from(doneButtons).find((btn) => btn.textContent === ' 完成 ');
+    const doneButtons = document.querySelectorAll("div.cover-select-footer-pick button");
+    const doneButton = Array.from(doneButtons).find((btn) => btn.textContent === " 完成 ");
 
     if (doneButton) {
       (doneButton as HTMLElement).click();
-      console.log('封面上传完成');
+      console.log("封面上传完成");
     } else {
       console.log('未找到"完成"按钮');
     }
@@ -106,29 +106,27 @@ export async function VideoBilibili(data: SyncData) {
     fileInput.files = dataTransfer.files;
 
     // 触发 change 事件
-    const changeEvent = new Event('change', { bubbles: true });
+    const changeEvent = new Event("change", { bubbles: true });
     fileInput.dispatchEvent(changeEvent);
 
-    console.log('视频上传事件已触发');
+    console.log("视频上传事件已触发");
   }
 
   async function waitForUploadCompletion(timeout = 600000): Promise<void> {
     return new Promise((resolve, reject) => {
       const checkInterval = setInterval(() => {
-        const spans = document.querySelectorAll('span');
-        const uploadCompleteElement = Array.from(spans).find(
-          (span) => span.textContent && span.textContent.includes('上传完成'),
-        );
+        const spans = document.querySelectorAll("span");
+        const uploadCompleteElement = Array.from(spans).find((span) => span.textContent?.includes("上传完成"));
         if (uploadCompleteElement) {
           clearInterval(checkInterval);
-          console.log('视频上传完成');
+          console.log("视频上传完成");
           resolve();
         }
       }, 1000);
 
       setTimeout(() => {
         clearInterval(checkInterval);
-        reject(new Error('视频上传超时'));
+        reject(new Error("视频上传超时"));
       }, timeout);
     });
   }
@@ -143,24 +141,24 @@ export async function VideoBilibili(data: SyncData) {
 
       const response = await fetch(video.url);
       const blob = await response.arrayBuffer();
-      const extension = video.name.split('.').pop() || 'mp4';
+      const extension = video.name.split(".").pop() || "mp4";
       const videoFilename = `${title}.${extension}`;
       const videoFile = new File([blob], videoFilename, { type: video.type });
 
       console.log(`视频文件: ${videoFile.name} ${videoFile.type} ${videoFile.size}`);
 
       await uploadVideo(videoFile);
-      console.log('视频上传已初始化');
+      console.log("视频上传已初始化");
 
       try {
         await waitForUploadCompletion();
-        console.log('视频上传已完成，继续后续操作');
+        console.log("视频上传已完成，继续后续操作");
       } catch (error) {
-        console.error('等待视频上传完成时出错:', error);
+        console.error("等待视频上传完成时出错:", error);
         return;
       }
     } else {
-      console.error('没有视频文件');
+      console.error("没有视频文件");
       return;
     }
 
@@ -169,27 +167,27 @@ export async function VideoBilibili(data: SyncData) {
     if (title) {
       titleInput.focus();
       titleInput.value = title;
-      titleInput.dispatchEvent(new Event('input', { bubbles: true }));
-      titleInput.dispatchEvent(new Event('change', { bubbles: true }));
-      console.log('标题已输入:', title);
+      titleInput.dispatchEvent(new Event("input", { bubbles: true }));
+      titleInput.dispatchEvent(new Event("change", { bubbles: true }));
+      console.log("标题已输入:", title);
     }
 
     // 等待简介编辑器出现并输入内容
     const editor = (await waitForElement('div.ql-editor[contenteditable="true"]')) as HTMLDivElement;
     if (editor) {
-      editor.innerHTML = content || '';
-      console.log('简介已输入:', content);
+      editor.innerHTML = content || "";
+      console.log("简介已输入:", content);
     }
 
     await new Promise((resolve) => setTimeout(resolve, 3000));
 
     // 处理标签
     // 清除已有标签
-    const existingTags = document.querySelectorAll('div.tag-pre-wrp > div.label-item-v2-container');
+    const existingTags = document.querySelectorAll("div.tag-pre-wrp > div.label-item-v2-container");
     console.log(`发现 ${existingTags.length} 个已有标签，准备清除...`);
     for (let i = 0; i < existingTags.length; i++) {
       const tag = existingTags[i] as HTMLElement;
-      const closeButton = tag.querySelector('.label-item-v2-close');
+      const closeButton = tag.querySelector(".label-item-v2-close");
       if (closeButton) {
         (closeButton as HTMLElement).click();
         await new Promise((resolve) => setTimeout(resolve, 400));
@@ -198,8 +196,8 @@ export async function VideoBilibili(data: SyncData) {
 
     if (!tags || tags.length === 0) {
       // 如果没有指定标签，选择热门标签
-      console.log('未指定标签，选择热门标签...');
-      const hotTags = document.querySelectorAll('.hot-tag-item');
+      console.log("未指定标签，选择热门标签...");
+      const hotTags = document.querySelectorAll(".hot-tag-item");
       if (hotTags.length > 0) {
         for (let i = 0; i < 3 && i < hotTags.length; i++) {
           const tag = hotTags[i] as HTMLElement;
@@ -209,16 +207,16 @@ export async function VideoBilibili(data: SyncData) {
       }
     } else {
       // 添加指定的标签
-      console.log('添加指定标签...');
+      console.log("添加指定标签...");
       const tagInput = document.querySelector('input[placeholder="按回车键Enter创建标签"]') as HTMLInputElement;
       if (tagInput) {
         for (const tag of tags.slice(0, 10)) {
           tagInput.value = tag;
-          const enterEvent = new KeyboardEvent('keydown', {
+          const enterEvent = new KeyboardEvent("keydown", {
             bubbles: true,
             cancelable: true,
-            key: 'Enter',
-            code: 'Enter',
+            key: "Enter",
+            code: "Enter",
             keyCode: 13,
             which: 13,
           });
@@ -238,15 +236,15 @@ export async function VideoBilibili(data: SyncData) {
 
     // 如果需要自动发布
     if (data.isAutoPublish) {
-      const submitButton = document.querySelector('span.submit-add') as HTMLElement;
+      const submitButton = document.querySelector("span.submit-add") as HTMLElement;
       if (submitButton) {
-        console.log('点击发布按钮');
+        console.log("点击发布按钮");
         submitButton.click();
       } else {
         console.log('未找到"发送"按钮');
       }
     }
   } catch (error) {
-    console.error('BilibiliVideo 发布过程中出错:', error);
+    console.error("BilibiliVideo 发布过程中出错:", error);
   }
 }

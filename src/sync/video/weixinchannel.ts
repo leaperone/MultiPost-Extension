@@ -5,7 +5,7 @@
  * @date 2024-01-01
  */
 
-import type { SyncData, VideoData } from '../common';
+import type { SyncData, VideoData } from "../common";
 
 /**
  * 微信视频号视频发布处理函数
@@ -21,10 +21,10 @@ export async function VideoWeiXinChannel(data: SyncData) {
    */
   function formatDate(date: Date): string {
     const year = date.getFullYear();
-    const month = String(date.getMonth() + 1).padStart(2, '0');
-    const day = String(date.getDate()).padStart(2, '0');
-    const hours = String(date.getHours()).padStart(2, '0');
-    const minutes = String(date.getMinutes()).padStart(2, '0');
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    const day = String(date.getDate()).padStart(2, "0");
+    const hours = String(date.getHours()).padStart(2, "0");
+    const minutes = String(date.getMinutes()).padStart(2, "0");
     return `${year}-${month}-${day} ${hours}:${minutes}`;
   }
 
@@ -47,7 +47,7 @@ export async function VideoWeiXinChannel(data: SyncData) {
         if (element) return element;
 
         // 查找所有可能包含shadow-root的元素
-        const allElements = root.querySelectorAll('*');
+        const allElements = root.querySelectorAll("*");
         for (const el of allElements) {
           if (el.shadowRoot) {
             const found = findElementInRoot(el.shadowRoot);
@@ -64,9 +64,9 @@ export async function VideoWeiXinChannel(data: SyncData) {
        */
       function findInWujieApp(): Element | null {
         // 查找wujie-app元素
-        const wujieApp = document.querySelector('wujie-app');
+        const wujieApp = document.querySelector("wujie-app");
 
-        if (wujieApp && wujieApp.shadowRoot) {
+        if (wujieApp?.shadowRoot) {
           const element = wujieApp.shadowRoot.querySelector(selector);
 
           if (element) {
@@ -105,8 +105,8 @@ export async function VideoWeiXinChannel(data: SyncData) {
 
       // 特别处理wujie-app的shadow-root
       const checkWujieApp = () => {
-        const wujieApp = document.querySelector('wujie-app');
-        if (wujieApp && wujieApp.shadowRoot) {
+        const wujieApp = document.querySelector("wujie-app");
+        if (wujieApp?.shadowRoot) {
           const shadowObserver = new MutationObserver(() => {
             const element = wujieApp.shadowRoot!.querySelector(selector);
             if (element) {
@@ -162,12 +162,12 @@ export async function VideoWeiXinChannel(data: SyncData) {
     fileInput.files = dataTransfer.files;
 
     // 触发文件选择变化事件
-    const changeEvent = new Event('change', { bubbles: true });
+    const changeEvent = new Event("change", { bubbles: true });
     fileInput.dispatchEvent(changeEvent);
-    const inputEvent = new Event('input', { bubbles: true });
+    const inputEvent = new Event("input", { bubbles: true });
     fileInput.dispatchEvent(inputEvent);
 
-    console.log('视频上传事件已触发');
+    console.log("视频上传事件已触发");
   }
 
   /**
@@ -180,15 +180,15 @@ export async function VideoWeiXinChannel(data: SyncData) {
     root: Document | ShadowRoot = document,
   ): Promise<void> {
     try {
-      const labels = root.querySelectorAll('label');
-      console.debug('labels -->', labels);
+      const labels = root.querySelectorAll("label");
+      console.debug("labels -->", labels);
 
       const scheduledLabel = Array.from(labels).find((label) => {
-        console.debug('label -->', label.textContent);
-        return label.textContent?.trim() === '定时';
+        console.debug("label -->", label.textContent);
+        return label.textContent?.trim() === "定时";
       });
 
-      console.debug('scheduledLabel -->', scheduledLabel);
+      console.debug("scheduledLabel -->", scheduledLabel);
 
       if (scheduledLabel) {
         (scheduledLabel as HTMLElement).click();
@@ -197,7 +197,7 @@ export async function VideoWeiXinChannel(data: SyncData) {
 
       const publishTimeInput = root.querySelector('input[placeholder="请选择发表时间"]') as HTMLInputElement;
 
-      console.debug('publishTimeInput -->', publishTimeInput);
+      console.debug("publishTimeInput -->", publishTimeInput);
 
       if (publishTimeInput) {
         // 阻止事件冒泡的处理函数
@@ -207,7 +207,7 @@ export async function VideoWeiXinChannel(data: SyncData) {
         };
 
         // 需要阻止的事件类型
-        const eventTypes = ['input', 'change', 'blur', 'focus', 'keydown', 'keyup'];
+        const eventTypes = ["input", "change", "blur", "focus", "keydown", "keyup"];
 
         // 添加事件监听器以阻止事件
         eventTypes.forEach((eventType) => {
@@ -216,18 +216,18 @@ export async function VideoWeiXinChannel(data: SyncData) {
 
         try {
           // 移除 readonly 属性
-          publishTimeInput.removeAttribute('readonly');
+          publishTimeInput.removeAttribute("readonly");
 
           // 格式化时间
           const formattedTime = formatDate(new Date(scheduledPublishTime));
 
           // 设置时间值（多种方式确保生效）
           publishTimeInput.value = formattedTime;
-          publishTimeInput.setAttribute('value', formattedTime);
+          publishTimeInput.setAttribute("value", formattedTime);
           publishTimeInput.defaultValue = formattedTime;
-          publishTimeInput.setAttribute('data-value', formattedTime);
+          publishTimeInput.setAttribute("data-value", formattedTime);
 
-          console.debug('设置时间值:', formattedTime, '当前值:', publishTimeInput.value);
+          console.debug("设置时间值:", formattedTime, "当前值:", publishTimeInput.value);
         } finally {
           // 延迟移除事件监听器
           setTimeout(() => {
@@ -239,12 +239,12 @@ export async function VideoWeiXinChannel(data: SyncData) {
           await new Promise((resolve) => setTimeout(resolve, 1000));
 
           // 触发 change 和 input 事件
-          publishTimeInput.dispatchEvent(new Event('change', { bubbles: true }));
-          publishTimeInput.dispatchEvent(new Event('input', { bubbles: true }));
+          publishTimeInput.dispatchEvent(new Event("change", { bubbles: true }));
+          publishTimeInput.dispatchEvent(new Event("input", { bubbles: true }));
         }
       }
     } catch (error) {
-      console.error('setScheduledPublishTime failed:', error);
+      console.error("setScheduledPublishTime failed:", error);
     }
   }
 
@@ -254,35 +254,35 @@ export async function VideoWeiXinChannel(data: SyncData) {
    */
   async function uploadCover(cover: { url: string; name: string; type?: string }): Promise<void> {
     try {
-      console.debug('tryCover', cover);
+      console.debug("tryCover", cover);
 
-      const coverUploadButton = (await waitForElement('div.video-cover div.tag-inner')) as HTMLElement;
-      console.debug('coverUpload', coverUploadButton);
+      const coverUploadButton = (await waitForElement("div.video-cover div.tag-inner")) as HTMLElement;
+      console.debug("coverUpload", coverUploadButton);
 
       if (!coverUploadButton) return;
 
-      while (coverUploadButton.parentElement?.classList.contains('disabled')) {
-        console.debug('coverUpload is disabled, wait 3s');
+      while (coverUploadButton.parentElement?.classList.contains("disabled")) {
+        console.debug("coverUpload is disabled, wait 3s");
         await new Promise((resolve) => setTimeout(resolve, 3000));
       }
 
       coverUploadButton.click();
       await new Promise((resolve) => setTimeout(resolve, 1000));
 
-      const wujieApp = document.querySelector('wujie-app');
+      const wujieApp = document.querySelector("wujie-app");
       const root = wujieApp?.shadowRoot || document;
 
       const fileInput = root.querySelector("div.crop-area input[type='file']") as HTMLInputElement;
 
       if (!fileInput) {
-        console.error('封面上传文件输入框未找到');
+        console.error("封面上传文件输入框未找到");
         return;
       }
-      console.debug('fileInput', fileInput);
+      console.debug("fileInput", fileInput);
 
       const dataTransfer = new DataTransfer();
-      if (cover.type && cover.type.includes('image/')) {
-        console.debug('try upload file', cover);
+      if (cover.type?.includes("image/")) {
+        console.debug("try upload file", cover);
         const response = await fetch(cover.url);
         const arrayBuffer = await response.arrayBuffer();
         const imageFile = new File([arrayBuffer], cover.name, {
@@ -294,38 +294,38 @@ export async function VideoWeiXinChannel(data: SyncData) {
       if (dataTransfer.files.length === 0) return;
 
       fileInput.files = dataTransfer.files;
-      fileInput.dispatchEvent(new Event('change', { bubbles: true }));
-      fileInput.dispatchEvent(new Event('input', { bubbles: true }));
-      console.debug('文件上传操作触发');
+      fileInput.dispatchEvent(new Event("change", { bubbles: true }));
+      fileInput.dispatchEvent(new Event("input", { bubbles: true }));
+      console.debug("文件上传操作触发");
 
       await new Promise((resolve) => setTimeout(resolve, 2000));
 
-      const h3s = root.querySelectorAll('h3');
-      console.debug('h3s', h3s);
-      const cropTitle = Array.from(h3s).find((h) => h.textContent === '裁剪封面图');
+      const h3s = root.querySelectorAll("h3");
+      console.debug("h3s", h3s);
+      const cropTitle = Array.from(h3s).find((h) => h.textContent === "裁剪封面图");
 
       if (cropTitle) {
-        console.debug('h3', cropTitle);
-        const doneButtons = root.querySelectorAll('div.finder-dialog-footer button');
-        console.debug('doneButtons', doneButtons);
-        const doneButton = Array.from(doneButtons).find((b) => b.textContent === '确定') as HTMLButtonElement;
+        console.debug("h3", cropTitle);
+        const doneButtons = root.querySelectorAll("div.finder-dialog-footer button");
+        console.debug("doneButtons", doneButtons);
+        const doneButton = Array.from(doneButtons).find((b) => b.textContent === "确定") as HTMLButtonElement;
         if (doneButton) {
-          console.debug('doneButton', doneButton);
+          console.debug("doneButton", doneButton);
           doneButton.click();
           await new Promise((resolve) => setTimeout(resolve, 1000));
         }
       }
 
-      const finalConfirmButtons = root.querySelectorAll('div.finder-dialog-footer button');
-      console.debug('doneButtons', finalConfirmButtons);
-      const confirmButton = Array.from(finalConfirmButtons).find((b) => b.textContent === '确认') as HTMLButtonElement;
+      const finalConfirmButtons = root.querySelectorAll("div.finder-dialog-footer button");
+      console.debug("doneButtons", finalConfirmButtons);
+      const confirmButton = Array.from(finalConfirmButtons).find((b) => b.textContent === "确认") as HTMLButtonElement;
 
       if (confirmButton) {
-        console.debug('doneButton', confirmButton);
+        console.debug("doneButton", confirmButton);
         confirmButton.click();
       }
     } catch (error) {
-      console.error('uploadCover failed:', error);
+      console.error("uploadCover failed:", error);
     }
   }
 
@@ -340,7 +340,7 @@ export async function VideoWeiXinChannel(data: SyncData) {
       console.log(`视频文件: ${videoFile.name} ${videoFile.type} ${videoFile.size}`);
 
       await uploadVideo(videoFile);
-      console.log('视频上传已初始化');
+      console.log("视频上传已初始化");
     }
 
     // 等待视频上传完成
@@ -351,7 +351,7 @@ export async function VideoWeiXinChannel(data: SyncData) {
       'input[placeholder="概括视频主要内容，字数建议6-16个字符"]',
     )) as HTMLInputElement;
     titleInput.value = title;
-    titleInput.dispatchEvent(new Event('input', { bubbles: true }));
+    titleInput.dispatchEvent(new Event("input", { bubbles: true }));
 
     // 处理内容和标签输入
     const descriptionInput = (await waitForElement('div[data-placeholder="添加描述"]')) as HTMLDivElement;
@@ -359,36 +359,36 @@ export async function VideoWeiXinChannel(data: SyncData) {
     if (descriptionInput) {
       // 输入主要内容
       descriptionInput.focus();
-      const pasteEvent = new ClipboardEvent('paste', {
+      const pasteEvent = new ClipboardEvent("paste", {
         bubbles: true,
         cancelable: true,
         clipboardData: new DataTransfer(),
       });
-      pasteEvent.clipboardData.setData('text/plain', content || '');
+      pasteEvent.clipboardData.setData("text/plain", content || "");
       descriptionInput.dispatchEvent(pasteEvent);
 
       await new Promise((resolve) => setTimeout(resolve, 500));
 
       // 添加标签
       for (const tag of tags) {
-        console.log('添加标签:', tag);
+        console.log("添加标签:", tag);
         descriptionInput.focus();
 
-        const tagPasteEvent = new ClipboardEvent('paste', {
+        const tagPasteEvent = new ClipboardEvent("paste", {
           bubbles: true,
           cancelable: true,
           clipboardData: new DataTransfer(),
         });
-        tagPasteEvent.clipboardData.setData('text/plain', ` #${tag}`);
+        tagPasteEvent.clipboardData.setData("text/plain", ` #${tag}`);
         descriptionInput.dispatchEvent(tagPasteEvent);
 
         await new Promise((resolve) => setTimeout(resolve, 1000));
 
-        const enterEvent = new KeyboardEvent('keydown', {
+        const enterEvent = new KeyboardEvent("keydown", {
           bubbles: true,
           cancelable: true,
-          key: 'Enter',
-          code: 'Enter',
+          key: "Enter",
+          code: "Enter",
           keyCode: 13,
           which: 13,
         });
@@ -412,10 +412,10 @@ export async function VideoWeiXinChannel(data: SyncData) {
       await new Promise((resolve) => setTimeout(resolve, 1000));
 
       // 在shadow-root中查找声明输入框
-      const wujieApp = document.querySelector('wujie-app');
+      const wujieApp = document.querySelector("wujie-app");
       let declareInput: HTMLInputElement | null = null;
 
-      if (wujieApp && wujieApp.shadowRoot) {
+      if (wujieApp?.shadowRoot) {
         declareInput = wujieApp.shadowRoot.querySelector(
           'div.declare-body-wrapper input[type="checkbox"][class="ant-checkbox-input"]',
         ) as HTMLInputElement;
@@ -431,8 +431,8 @@ export async function VideoWeiXinChannel(data: SyncData) {
           document.querySelectorAll('button[type="button"]');
 
         for (const button of Array.from(buttons)) {
-          if (button.textContent === '声明原创') {
-            console.log('点击声明原创按钮');
+          if (button.textContent === "声明原创") {
+            console.log("点击声明原创按钮");
             (button as HTMLElement).click();
             await new Promise((resolve) => setTimeout(resolve, 1000));
             break;
@@ -445,7 +445,7 @@ export async function VideoWeiXinChannel(data: SyncData) {
     if (scheduledPublishTime) {
       await new Promise((resolve) => setTimeout(resolve, 2000));
 
-      const wujieApp = document.querySelector('wujie-app');
+      const wujieApp = document.querySelector("wujie-app");
       const root = wujieApp?.shadowRoot || document;
 
       await setScheduledPublishTime(scheduledPublishTime, root);
@@ -453,19 +453,19 @@ export async function VideoWeiXinChannel(data: SyncData) {
       await new Promise((resolve) => setTimeout(resolve, 5000));
 
       // 处理发布按钮 - 支持shadow DOM查询
-      const buttons = root.querySelectorAll('button');
-      const publishButton = Array.from(buttons).find((b) => b.textContent?.trim() === '发表') as HTMLButtonElement;
+      const buttons = root.querySelectorAll("button");
+      const publishButton = Array.from(buttons).find((b) => b.textContent?.trim() === "发表") as HTMLButtonElement;
 
-      console.debug('sendButton', publishButton);
+      console.debug("sendButton", publishButton);
 
       if (publishButton) {
-        console.debug('sendButton clicked');
+        console.debug("sendButton clicked");
         publishButton.click();
       } else {
         console.error('未找到"发表"按钮');
       }
     }
   } catch (error) {
-    console.error('WeiXinVideo 发布过程中出错:', error);
+    console.error("WeiXinVideo 发布过程中出错:", error);
   }
 }

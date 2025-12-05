@@ -5,7 +5,7 @@
  * @date 2024-01-01
  */
 
-import type { SyncData, DynamicData, FileData } from '../common';
+import type { DynamicData, FileData, SyncData } from "../common";
 
 /**
  * 微信视频号动态发布处理函数
@@ -33,7 +33,7 @@ export async function DynamicWeiXinChannel(data: SyncData) {
         if (element) return element;
 
         // 查找所有可能包含shadow-root的元素
-        const allElements = root.querySelectorAll('*');
+        const allElements = root.querySelectorAll("*");
         for (const el of allElements) {
           if (el.shadowRoot) {
             const found = findElementInRoot(el.shadowRoot);
@@ -50,9 +50,9 @@ export async function DynamicWeiXinChannel(data: SyncData) {
        */
       function findInWujieApp(): Element | null {
         // 查找wujie-app元素
-        const wujieApp = document.querySelector('wujie-app');
+        const wujieApp = document.querySelector("wujie-app");
 
-        if (wujieApp && wujieApp.shadowRoot) {
+        if (wujieApp?.shadowRoot) {
           const element = wujieApp.shadowRoot.querySelector(selector);
 
           if (element) {
@@ -91,8 +91,8 @@ export async function DynamicWeiXinChannel(data: SyncData) {
 
       // 特别处理wujie-app的shadow-root
       const checkWujieApp = () => {
-        const wujieApp = document.querySelector('wujie-app');
-        if (wujieApp && wujieApp.shadowRoot) {
+        const wujieApp = document.querySelector("wujie-app");
+        if (wujieApp?.shadowRoot) {
           const shadowObserver = new MutationObserver(() => {
             const element = wujieApp.shadowRoot!.querySelector(selector);
             if (element) {
@@ -169,10 +169,10 @@ export async function DynamicWeiXinChannel(data: SyncData) {
 
     // 触发更完整的事件序列来模拟真实用户行为
     const events = [
-      new Event('focus', { bubbles: true }),
-      new Event('change', { bubbles: true, cancelable: true }),
-      new Event('input', { bubbles: true, cancelable: true }),
-      new Event('blur', { bubbles: true }),
+      new Event("focus", { bubbles: true }),
+      new Event("change", { bubbles: true, cancelable: true }),
+      new Event("input", { bubbles: true, cancelable: true }),
+      new Event("blur", { bubbles: true }),
     ];
 
     for (const event of events) {
@@ -180,7 +180,7 @@ export async function DynamicWeiXinChannel(data: SyncData) {
       await new Promise((resolve) => setTimeout(resolve, 100));
     }
 
-    console.log('所有图片上传事件已触发');
+    console.log("所有图片上传事件已触发");
   }
 
   try {
@@ -195,32 +195,32 @@ export async function DynamicWeiXinChannel(data: SyncData) {
     await new Promise((resolve) => setTimeout(resolve, 5000));
 
     // 处理内容输入
-    const editorElement = (await waitForElement('div.input-editor')) as HTMLDivElement;
+    const editorElement = (await waitForElement("div.input-editor")) as HTMLDivElement;
     if (editorElement) {
       // 先清空内容
-      editorElement.innerHTML = '';
+      editorElement.innerHTML = "";
       editorElement.focus();
       await new Promise((resolve) => setTimeout(resolve, 300));
 
       // 直接设置innerHTML
-      editorElement.innerHTML = content || '';
+      editorElement.innerHTML = content || "";
 
       // 触发完整的事件序列
       const events = [
-        new Event('focus', { bubbles: true }),
-        new ClipboardEvent('paste', {
+        new Event("focus", { bubbles: true }),
+        new ClipboardEvent("paste", {
           bubbles: true,
           cancelable: true,
           clipboardData: new DataTransfer(),
         }),
-        new Event('input', { bubbles: true, cancelable: true }),
-        new Event('change', { bubbles: true, cancelable: true }),
-        new Event('keyup', { bubbles: true }),
-        new Event('blur', { bubbles: true }),
+        new Event("input", { bubbles: true, cancelable: true }),
+        new Event("change", { bubbles: true, cancelable: true }),
+        new Event("keyup", { bubbles: true }),
+        new Event("blur", { bubbles: true }),
       ];
 
       // 设置粘贴事件的数据
-      (events[1] as ClipboardEvent).clipboardData?.setData('text/plain', content || '');
+      (events[1] as ClipboardEvent).clipboardData?.setData("text/plain", content || "");
 
       for (const event of events) {
         editorElement.dispatchEvent(event);
@@ -235,18 +235,18 @@ export async function DynamicWeiXinChannel(data: SyncData) {
     await new Promise((resolve) => setTimeout(resolve, 200));
 
     // 先清空再设置值
-    titleInput.value = '';
+    titleInput.value = "";
     await new Promise((resolve) => setTimeout(resolve, 100));
 
     titleInput.value = title;
 
     // 触发完整的事件序列
     const titleEvents = [
-      new Event('focus', { bubbles: true }),
-      new Event('input', { bubbles: true, cancelable: true }),
-      new Event('change', { bubbles: true, cancelable: true }),
-      new Event('keyup', { bubbles: true }),
-      new Event('blur', { bubbles: true }),
+      new Event("focus", { bubbles: true }),
+      new Event("input", { bubbles: true, cancelable: true }),
+      new Event("change", { bubbles: true, cancelable: true }),
+      new Event("keyup", { bubbles: true }),
+      new Event("blur", { bubbles: true }),
     ];
 
     for (const event of titleEvents) {
@@ -258,19 +258,19 @@ export async function DynamicWeiXinChannel(data: SyncData) {
     await new Promise((resolve) => setTimeout(resolve, 5000));
 
     // 处理发布按钮 - 支持shadow DOM查询
-    const wujieApp = document.querySelector('wujie-app');
+    const wujieApp = document.querySelector("wujie-app");
     let publishButton: HTMLButtonElement | null = null;
 
     // 优先在shadow-root中查找发布按钮
-    if (wujieApp && wujieApp.shadowRoot) {
-      const buttons = wujieApp.shadowRoot.querySelectorAll('button');
-      publishButton = Array.from(buttons).find((b) => b.textContent?.trim() === '发表') as HTMLButtonElement;
+    if (wujieApp?.shadowRoot) {
+      const buttons = wujieApp.shadowRoot.querySelectorAll("button");
+      publishButton = Array.from(buttons).find((b) => b.textContent?.trim() === "发表") as HTMLButtonElement;
     }
 
     // 如果shadow-root中没找到，再在主文档中查找
     if (!publishButton) {
-      const buttons = document.querySelectorAll('button');
-      publishButton = Array.from(buttons).find((b) => b.textContent?.trim() === '发表') as HTMLButtonElement;
+      const buttons = document.querySelectorAll("button");
+      publishButton = Array.from(buttons).find((b) => b.textContent?.trim() === "发表") as HTMLButtonElement;
     }
 
     if (publishButton && data.isAutoPublish) {
@@ -280,22 +280,21 @@ export async function DynamicWeiXinChannel(data: SyncData) {
 
       // 模拟真实的鼠标点击行为
       const mouseEvents = [
-        new MouseEvent('mousedown', { bubbles: true, cancelable: true }),
-        new MouseEvent('mouseup', { bubbles: true, cancelable: true }),
-        new MouseEvent('click', { bubbles: true, cancelable: true }),
+        new MouseEvent("mousedown", { bubbles: true, cancelable: true }),
+        new MouseEvent("mouseup", { bubbles: true, cancelable: true }),
+        new MouseEvent("click", { bubbles: true, cancelable: true }),
       ];
 
       for (const event of mouseEvents) {
         publishButton.dispatchEvent(event);
         await new Promise((resolve) => setTimeout(resolve, 50));
       }
-
     } else if (!publishButton) {
       console.error('未找到"发表"按钮');
     } else {
-      console.log('自动发布已关闭，跳过发布操作');
+      console.log("自动发布已关闭，跳过发布操作");
     }
   } catch (error) {
-    console.error('WeiXinChannel Dynamic 发布过程中出错:', error);
+    console.error("WeiXinChannel Dynamic 发布过程中出错:", error);
   }
 }

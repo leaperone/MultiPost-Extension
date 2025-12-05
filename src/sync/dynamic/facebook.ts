@@ -1,8 +1,8 @@
-import type { SyncData, DynamicData } from '../common';
+import type { DynamicData, SyncData } from "../common";
 
 // 允许发布图文和视频
 export async function DynamicFacebook(data: SyncData) {
-  console.log('Facebook 函数被调用');
+  console.log("Facebook 函数被调用");
 
   function waitForElement(selector: string, timeout = 10000): Promise<Element> {
     return new Promise((resolve, reject) => {
@@ -36,7 +36,7 @@ export async function DynamicFacebook(data: SyncData) {
     const { title, content, images, videos } = data.data as DynamicData;
 
     // 等待页面加载完成
-    await waitForElement('body');
+    await waitForElement("body");
     await new Promise((resolve) => setTimeout(resolve, 1000));
 
     // 查找创建帖子按钮并触发点击事件
@@ -46,26 +46,26 @@ export async function DynamicFacebook(data: SyncData) {
       document.querySelector('div[aria-label="建立貼文"]');
 
     if (!createPostButton) {
-      throw new Error('未找到创建帖子按钮');
+      throw new Error("未找到创建帖子按钮");
     }
 
     // 使用原生事件触发点击
-    createPostButton.dispatchEvent(new Event('click', { bubbles: true }));
+    createPostButton.dispatchEvent(new Event("click", { bubbles: true }));
     await new Promise((resolve) => setTimeout(resolve, 1000));
 
     // 查找并点击照片/视频按钮
-    const spans = document.querySelectorAll('span');
+    const spans = document.querySelectorAll("span");
     const photoButton = Array.from(spans).find(
       (span) =>
-        span.textContent?.includes('照片/视频') ||
-        span.textContent?.includes('Photo/video') ||
-        span.textContent?.includes('相片／影片'),
+        span.textContent?.includes("照片/视频") ||
+        span.textContent?.includes("Photo/video") ||
+        span.textContent?.includes("相片／影片"),
     );
 
     if (!photoButton) {
-      throw new Error('未找到照片/视频按钮');
+      throw new Error("未找到照片/视频按钮");
     }
-    photoButton.dispatchEvent(new Event('click', { bubbles: true }));
+    photoButton.dispatchEvent(new Event("click", { bubbles: true }));
 
     await new Promise((resolve) => setTimeout(resolve, 1500));
 
@@ -75,7 +75,7 @@ export async function DynamicFacebook(data: SyncData) {
     )) as HTMLElement;
 
     if (!editor) {
-      throw new Error('未找到编辑器元素');
+      throw new Error("未找到编辑器元素");
     }
 
     // 填写内容
@@ -83,14 +83,14 @@ export async function DynamicFacebook(data: SyncData) {
     const text = `${title}\n${content}`;
 
     // 使用 execCommand 插入文本
-    document.execCommand('insertText', false, text);
+    document.execCommand("insertText", false, text);
 
     // 上传文件
     if (images?.length > 0 || videos?.length > 0) {
       const fileInput = (await waitForElement('input[type="file"][accept*="image/*"]')) as HTMLInputElement;
 
       if (!fileInput) {
-        throw new Error('未找到文件输入元素');
+        throw new Error("未找到文件输入元素");
       }
 
       const dataTransfer = new DataTransfer();
@@ -104,7 +104,7 @@ export async function DynamicFacebook(data: SyncData) {
             const file = new File([blob], image.name, { type: image.type });
             dataTransfer.items.add(file);
           } catch (error) {
-            console.error('获取图片失败:', error);
+            console.error("获取图片失败:", error);
           }
         }
       }
@@ -118,12 +118,12 @@ export async function DynamicFacebook(data: SyncData) {
           const file = new File([blob], video.name, { type: video.type });
           dataTransfer.items.add(file);
         } catch (error) {
-          console.error('获取视频失败:', error);
+          console.error("获取视频失败:", error);
         }
       }
 
       fileInput.files = dataTransfer.files;
-      const changeEvent = new Event('change', { bubbles: true });
+      const changeEvent = new Event("change", { bubbles: true });
       fileInput.dispatchEvent(changeEvent);
     }
 
@@ -141,8 +141,8 @@ export async function DynamicFacebook(data: SyncData) {
         ) as HTMLElement;
 
         if (postButton) {
-          postButton.dispatchEvent(new Event('click', { bubbles: true }));
-          console.log('已点击发布按钮');
+          postButton.dispatchEvent(new Event("click", { bubbles: true }));
+          console.log("已点击发布按钮");
           await new Promise((resolve) => setTimeout(resolve, 5000));
           window.location.reload();
           return;
@@ -152,10 +152,10 @@ export async function DynamicFacebook(data: SyncData) {
         attempt++;
       }
 
-      throw new Error('发布按钮点击失败：超过最大重试次数');
+      throw new Error("发布按钮点击失败：超过最大重试次数");
     }
   } catch (error) {
-    console.error('FacebookDynamic 发布过程中出错:', error);
+    console.error("FacebookDynamic 发布过程中出错:", error);
     throw error; // 向上传递错误
   }
 }

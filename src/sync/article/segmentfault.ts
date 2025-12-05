@@ -1,14 +1,14 @@
-import type { ArticleData, FileData, SyncData } from '~sync/common';
+import type { ArticleData, FileData, SyncData } from "~sync/common";
 
 export async function ArticleSegmentfault(data: SyncData) {
-  console.debug('ArticleSegmentfault', data);
+  console.debug("ArticleSegmentfault", data);
   const articleData = data.data as ArticleData;
 
   // 获取 PHPSESSID cookie
   function getCookie(name: string): string | null {
     const value = `; ${document.cookie}`;
     const parts = value.split(`; ${name}=`);
-    return parts.length === 2 ? parts.pop()?.split(';').shift() ?? null : null;
+    return parts.length === 2 ? (parts.pop()?.split(";").shift() ?? null) : null;
   }
 
   // 上传图片到思否服务器
@@ -19,13 +19,13 @@ export async function ArticleSegmentfault(data: SyncData) {
       const imageFile = new File([blob], file.name, { type: file.type });
 
       const formData = new FormData();
-      formData.append('image', imageFile);
+      formData.append("image", imageFile);
 
-      const uploadResponse = await fetch('https://segmentfault.com/gateway/image', {
-        method: 'POST',
+      const uploadResponse = await fetch("https://segmentfault.com/gateway/image", {
+        method: "POST",
         body: formData,
         headers: {
-          token: getCookie('PHPSESSID') ?? '',
+          token: getCookie("PHPSESSID") ?? "",
         },
       });
 
@@ -34,10 +34,10 @@ export async function ArticleSegmentfault(data: SyncData) {
       }
 
       const result = await uploadResponse.json();
-      console.debug('图片上传结果:', result);
+      console.debug("图片上传结果:", result);
       return result.url;
     } catch (error) {
-      console.error('上传图片错误:', error);
+      console.error("上传图片错误:", error);
       return null;
     }
   }
@@ -48,19 +48,19 @@ export async function ArticleSegmentfault(data: SyncData) {
       // 使用 markdown 内容如果存在
       const textContent = content;
 
-      const response = await fetch('https://segmentfault.com/gateway/draft', {
-        method: 'POST',
+      const response = await fetch("https://segmentfault.com/gateway/draft", {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
-          token: getCookie('PHPSESSID') ?? '',
+          "Content-Type": "application/json",
+          token: getCookie("PHPSESSID") ?? "",
         },
         body: JSON.stringify({
           title: articleData.title,
           tags: [],
           text: textContent,
-          object_id: '',
-          type: 'article',
-          language: '',
+          object_id: "",
+          type: "article",
+          language: "",
           cover: coverUrl,
         }),
       });
@@ -70,10 +70,10 @@ export async function ArticleSegmentfault(data: SyncData) {
       }
 
       const result = await response.json();
-      console.debug('发布结果:', result);
+      console.debug("发布结果:", result);
       return result.id ?? null;
     } catch (error) {
-      console.error('发布草稿错误:', error);
+      console.error("发布草稿错误:", error);
       return null;
     }
   }
@@ -81,27 +81,27 @@ export async function ArticleSegmentfault(data: SyncData) {
   // 处理文章内容中的图片
   async function processContent(htmlContent: string, imageDatas: FileData[]): Promise<string> {
     const parser = new DOMParser();
-    const doc = parser.parseFromString(htmlContent, 'text/html');
-    const images = Array.from(doc.getElementsByTagName('img'));
+    const doc = parser.parseFromString(htmlContent, "text/html");
+    const images = Array.from(doc.getElementsByTagName("img"));
 
-    console.debug('找到图片元素数量:', images.length);
-    console.debug('可用的文件数据:', imageDatas);
+    console.debug("找到图片元素数量:", images.length);
+    console.debug("可用的文件数据:", imageDatas);
 
     const uploadPromises = images.map(async (img) => {
-      const src = img.getAttribute('src');
-      console.debug('处理图片 src:', src);
+      const src = img.getAttribute("src");
+      console.debug("处理图片 src:", src);
 
       if (!src) return;
 
       const fileInfo = imageDatas?.find((f) => f.url === src);
-      console.debug('找到对应的文件信息:', fileInfo);
+      console.debug("找到对应的文件信息:", fileInfo);
 
       if (fileInfo) {
         const newUrl = await uploadImage(fileInfo);
-        console.debug('上传后的新URL:', newUrl);
+        console.debug("上传后的新URL:", newUrl);
 
         if (newUrl) {
-          img.setAttribute('src', newUrl);
+          img.setAttribute("src", newUrl);
         }
       }
     });
@@ -112,7 +112,7 @@ export async function ArticleSegmentfault(data: SyncData) {
 
   // 处理 Markdown 内容中的图片
   async function processMarkdownContent(content: string, imageDatas: FileData[]): Promise<string> {
-    console.debug('开始处理 Markdown 内容:', {
+    console.debug("开始处理 Markdown 内容:", {
       contentLength: content.length,
       imageDatasCount: imageDatas?.length ?? 0,
     });
@@ -124,7 +124,7 @@ export async function ArticleSegmentfault(data: SyncData) {
     const matches = Array.from(content.matchAll(imageRegex));
 
     console.debug(
-      '找到 Markdown 图片:',
+      "找到 Markdown 图片:",
       matches.map((m) => ({
         url: m[2],
       })),
@@ -139,7 +139,7 @@ export async function ArticleSegmentfault(data: SyncData) {
         if (newUrl) {
           const newImageMarkdown = `![${alt}](${newUrl})`;
           processedContent = processedContent.replace(fullMatch, newImageMarkdown);
-          console.debug('图片替换完成:', {
+          console.debug("图片替换完成:", {
             from: url,
             to: newUrl,
           });
@@ -151,18 +151,18 @@ export async function ArticleSegmentfault(data: SyncData) {
   }
 
   // 主流程
-  const host = document.createElement('div') as HTMLDivElement;
-  const tip = document.createElement('div') as HTMLDivElement;
+  const host = document.createElement("div") as HTMLDivElement;
+  const tip = document.createElement("div") as HTMLDivElement;
 
   try {
     // 添加漂浮提示
-    host.style.position = 'fixed';
-    host.style.bottom = '20px';
-    host.style.right = '20px';
-    host.style.zIndex = '9999';
+    host.style.position = "fixed";
+    host.style.bottom = "20px";
+    host.style.right = "20px";
+    host.style.zIndex = "9999";
     document.body.appendChild(host);
 
-    const shadow = host.attachShadow({ mode: 'open' });
+    const shadow = host.attachShadow({ mode: "open" });
 
     tip.innerHTML = `
       <style>
@@ -192,7 +192,7 @@ export async function ArticleSegmentfault(data: SyncData) {
     `;
     shadow.appendChild(tip);
 
-    console.debug('开始处理文章:', {
+    console.debug("开始处理文章:", {
       hasMarkdown: !!articleData.markdownContent,
       filesCount: articleData.images?.length,
     });
@@ -214,7 +214,7 @@ export async function ArticleSegmentfault(data: SyncData) {
     const draftId = await publishDraft(processedContent, coverUrl);
 
     // 发布成功后更新提示
-    (tip.querySelector('.float-tip') as HTMLDivElement).textContent = '文章同步成功！';
+    (tip.querySelector(".float-tip") as HTMLDivElement).textContent = "文章同步成功！";
 
     // 3秒后移除提示
     setTimeout(() => {
@@ -228,16 +228,16 @@ export async function ArticleSegmentfault(data: SyncData) {
   } catch (error) {
     // 发生错误时更新提示
     if (document.body.contains(host)) {
-      const floatTip = tip.querySelector('.float-tip') as HTMLDivElement;
-      floatTip.textContent = '同步失败，请重试';
-      floatTip.style.backgroundColor = '#dc2626';
+      const floatTip = tip.querySelector(".float-tip") as HTMLDivElement;
+      floatTip.textContent = "同步失败，请重试";
+      floatTip.style.backgroundColor = "#dc2626";
 
       setTimeout(() => {
         document.body.removeChild(host);
       }, 3000);
     }
 
-    console.error('发布文章失败:', error);
+    console.error("发布文章失败:", error);
     throw error;
   }
 }

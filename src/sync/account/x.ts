@@ -1,14 +1,14 @@
-import type { AccountInfo } from '~sync/common';
+import type { AccountInfo } from "~sync/common";
 
 export async function getXAccountInfo(): Promise<AccountInfo> {
   // 直接使用fetch API获取 X 页面HTML
-  const response = await fetch('https://x.com/home', {
-    method: 'GET',
+  const response = await fetch("https://x.com/home", {
+    method: "GET",
     headers: {
-      Accept: 'text/html',
-      'Content-Type': 'text/html',
+      Accept: "text/html",
+      "Content-Type": "text/html",
     },
-    credentials: 'include', // 包含cookie以确保认证
+    credentials: "include", // 包含cookie以确保认证
   });
 
   if (!response.ok) {
@@ -21,7 +21,7 @@ export async function getXAccountInfo(): Promise<AccountInfo> {
   const initialStateMatch = htmlText.match(/window\.__INITIAL_STATE__\s*=\s*(\{.+?\})(?:\s*;|\s*<\/script>)/s);
 
   if (!initialStateMatch || !initialStateMatch[1]) {
-    throw new Error('无法找到 __INITIAL_STATE__ 数据');
+    throw new Error("无法找到 __INITIAL_STATE__ 数据");
   }
 
   const jsonStr = initialStateMatch[1];
@@ -31,20 +31,19 @@ export async function getXAccountInfo(): Promise<AccountInfo> {
   try {
     initialState = JSON.parse(jsonStr);
   } catch (parseError) {
-    console.error('解析 X __INITIAL_STATE__ 数据失败:', parseError);
+    console.error("解析 X __INITIAL_STATE__ 数据失败:", parseError);
     // 清理可能的JSON问题
     const cleanedJsonStr = jsonStr
-      .replace(/[\u0000-\u001F\u007F-\u009F]/g, '') // 移除控制字符
-      .replace(/:undefined,/g, ':null,') // 处理undefined
-      .replace(/:undefined}/g, ':null}'); // 处理末尾的undefined
+      .replace(/[\u0000-\u001F\u007F-\u009F]/g, "") // 移除控制字符
+      .replace(/:undefined,/g, ":null,") // 处理undefined
+      .replace(/:undefined}/g, ":null}"); // 处理末尾的undefined
 
     try {
       initialState = JSON.parse(cleanedJsonStr);
     } catch {
-      throw new Error('解析 __INITIAL_STATE__ 数据失败');
+      throw new Error("解析 __INITIAL_STATE__ 数据失败");
     }
   }
-
 
   // 从entities.users.entities中获取用户信息，这里的键是动态的用户ID
   const usersEntities = initialState.entities?.users?.entities;
@@ -61,7 +60,7 @@ export async function getXAccountInfo(): Promise<AccountInfo> {
   }
 
   const result: AccountInfo = {
-    provider: 'x',
+    provider: "x",
     accountId: userInfo.screen_name,
     username: userInfo.name,
     description: userInfo.description,

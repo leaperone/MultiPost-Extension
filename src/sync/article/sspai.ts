@@ -1,7 +1,7 @@
-import type { ArticleData, SyncData } from '~sync/common';
+import type { ArticleData, SyncData } from "~sync/common";
 
 export async function ArticleSSPai(data: SyncData) {
-  console.debug('ArticleSSPai', data);
+  console.debug("ArticleSSPai", data);
 
   function waitForElement(selector: string, timeout = 10000): Promise<Element> {
     return new Promise((resolve, reject) => {
@@ -59,21 +59,21 @@ export async function ArticleSSPai(data: SyncData) {
   async function uploadCoverImage() {
     // 检查是否有封面图片
     if (!articleData.cover) {
-      console.debug('没有封面图片需要上传');
+      console.debug("没有封面图片需要上传");
       return true;
     }
 
     try {
       const fileInput = document.querySelector('input[type="file"]') as HTMLInputElement;
       if (!fileInput) {
-        console.debug('未找到文件上传输入框');
+        console.debug("未找到文件上传输入框");
         return false;
       }
 
       const dataTransfer = new DataTransfer();
       const coverImage = articleData.cover;
 
-      console.debug('开始上传文件', coverImage);
+      console.debug("开始上传文件", coverImage);
 
       // 从blob URL获取文件内容并创建File对象
       const response = await fetch(coverImage.url);
@@ -82,30 +82,30 @@ export async function ArticleSSPai(data: SyncData) {
 
       // 添加文件到DataTransfer对象
       dataTransfer.items.add(file);
-      console.debug('文件已准备');
+      console.debug("文件已准备");
 
       if (dataTransfer.files.length > 0) {
         // 设置文件输入框的files属性并触发change事件
         fileInput.files = dataTransfer.files;
-        const changeEvent = new Event('change', { bubbles: true });
+        const changeEvent = new Event("change", { bubbles: true });
         fileInput.dispatchEvent(changeEvent);
-        console.debug('文件上传操作完成');
+        console.debug("文件上传操作完成");
       }
 
       await new Promise((resolve) => setTimeout(resolve, 5000));
 
-      const cutAndUseButtonSpan = await findElementByText('span', '裁切并使用');
+      const cutAndUseButtonSpan = await findElementByText("span", "裁切并使用");
       if (cutAndUseButtonSpan) {
         const cutAndUseButton = cutAndUseButtonSpan.parentElement;
         if (cutAndUseButton) {
-          const clickEvent = new Event('click', { bubbles: true });
+          const clickEvent = new Event("click", { bubbles: true });
           cutAndUseButton.dispatchEvent(clickEvent);
         }
       }
 
       return true;
     } catch (error) {
-      console.error('上传封面图片失败:', error);
+      console.error("上传封面图片失败:", error);
       return false;
     }
   }
@@ -117,43 +117,43 @@ export async function ArticleSSPai(data: SyncData) {
     await new Promise((resolve) => setTimeout(resolve, 1000));
 
     // 设置标题
-    titleTextarea.value = articleData.title?.slice(0, 100) || '';
-    titleTextarea.dispatchEvent(new Event('input', { bubbles: true }));
-    titleTextarea.dispatchEvent(new Event('change', { bubbles: true }));
-    console.debug('titleTextarea', titleTextarea, titleTextarea.value);
+    titleTextarea.value = articleData.title?.slice(0, 100) || "";
+    titleTextarea.dispatchEvent(new Event("input", { bubbles: true }));
+    titleTextarea.dispatchEvent(new Event("change", { bubbles: true }));
+    console.debug("titleTextarea", titleTextarea, titleTextarea.value);
 
     // 等待编辑器加载
     const editorDiv = (await waitForElement('div[contenteditable="true"]')) as HTMLDivElement;
     if (!editorDiv) {
-      console.debug('未找到编辑器元素');
+      console.debug("未找到编辑器元素");
       return false;
     }
 
-    const editor = editorDiv.querySelector('p') as HTMLParagraphElement;
+    const editor = editorDiv.querySelector("p") as HTMLParagraphElement;
     if (!editor) {
-      console.debug('未找到编辑器元素');
+      console.debug("未找到编辑器元素");
       return false;
     }
 
     // 填充内容
     editor.focus();
-    const pasteEvent = new ClipboardEvent('paste', {
+    const pasteEvent = new ClipboardEvent("paste", {
       bubbles: true,
       cancelable: true,
       clipboardData: new DataTransfer(),
     });
-    pasteEvent.clipboardData.setData('text/plain', articleData.markdownContent || '');
+    pasteEvent.clipboardData.setData("text/plain", articleData.markdownContent || "");
     editor.dispatchEvent(pasteEvent);
-    editor.dispatchEvent(new Event('input', { bubbles: true }));
-    editor.dispatchEvent(new Event('change', { bubbles: true }));
+    editor.dispatchEvent(new Event("input", { bubbles: true }));
+    editor.dispatchEvent(new Event("change", { bubbles: true }));
 
     await new Promise((resolve) => setTimeout(resolve, 3000));
 
-    const convertButtonSpan = await findElementByText('span', '立即转换');
+    const convertButtonSpan = await findElementByText("span", "立即转换");
     if (convertButtonSpan) {
       const convertButton = convertButtonSpan.parentElement;
       if (convertButton) {
-        const clickEvent = new Event('click', { bubbles: true });
+        const clickEvent = new Event("click", { bubbles: true });
         convertButton.dispatchEvent(clickEvent);
       }
     }
@@ -163,20 +163,20 @@ export async function ArticleSSPai(data: SyncData) {
   // 发布文章
   async function publishArticle(): Promise<void> {
     if (data.isAutoPublish) {
-      const publishButton = await findElementByText('button', '发布');
+      const publishButton = await findElementByText("button", "发布");
       if (publishButton) {
-        const clickEvent = new Event('click', { bubbles: true });
+        const clickEvent = new Event("click", { bubbles: true });
         publishButton.dispatchEvent(clickEvent);
       }
       return;
     }
 
-    const previewButton = await findElementByText('button', '预览');
-    console.debug('previewButton', previewButton);
+    const previewButton = await findElementByText("button", "预览");
+    console.debug("previewButton", previewButton);
 
     if (previewButton) {
-      console.debug('previewButton clicked');
-      const clickEvent = new Event('click', { bubbles: true });
+      console.debug("previewButton clicked");
+      const clickEvent = new Event("click", { bubbles: true });
       previewButton.dispatchEvent(clickEvent);
     } else {
       console.debug('未找到"预览"按钮');
@@ -190,11 +190,11 @@ export async function ArticleSSPai(data: SyncData) {
 
     const contentFilled = await fillArticleContent();
     if (!contentFilled) {
-      throw new Error('填充文章内容失败');
+      throw new Error("填充文章内容失败");
     }
 
     await publishArticle();
   } catch (error) {
-    console.error('发布文章失败:', error);
+    console.error("发布文章失败:", error);
   }
 }

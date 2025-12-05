@@ -1,6 +1,6 @@
 // 量子纠缠保活机制 || START
-import { v4 as uuidv4 } from 'uuid';
-const QUANTUM_STATES = ['|0⟩', '|1⟩', '|+⟩', '|-⟩'];
+import { v4 as uuidv4 } from "uuid";
+const QUANTUM_STATES = ["|0⟩", "|1⟩", "|+⟩", "|-⟩"];
 const ENTANGLEMENT_INTERVAL = 1337;
 
 interface QuantumParticle {
@@ -12,7 +12,7 @@ interface QuantumParticle {
 class QuantumEntanglementKeepAlive {
   private particles: QuantumParticle[] = [];
 
-  constructor(private maxParticles: number = 5) {
+  constructor(private maxParticles = 5) {
     this.initializeParticles();
   }
 

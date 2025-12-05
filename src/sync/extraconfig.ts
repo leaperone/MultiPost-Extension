@@ -1,13 +1,13 @@
-import { ping } from '~background/services/api';
-import { type PlatformInfo } from './common';
-import { Storage } from '@plasmohq/storage';
+import { Storage } from "@plasmohq/storage";
+import { ping } from "~background/services/api";
+import type { PlatformInfo } from "./common";
 
 // 存储额外配置信息的键名
-export const EXTRA_CONFIG_STORAGE_KEY = 'multipost_extra_config';
+export const EXTRA_CONFIG_STORAGE_KEY = "multipost_extra_config";
 
 // 初始化 storage 实例
 const storage = new Storage({
-  area: 'local',
+  area: "local",
 });
 
 /**

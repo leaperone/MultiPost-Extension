@@ -1,4 +1,4 @@
-import { type DynamicData, type SyncData } from '../common';
+import type { DynamicData, SyncData } from "../common";
 
 // 不支持发布视频
 export async function DynamicBluesky(data: SyncData) {
@@ -39,7 +39,7 @@ export async function DynamicBluesky(data: SyncData) {
     if (newPostButton) {
       newPostButton.click();
     } else {
-      console.log('未找到撰写新帖文按钮');
+      console.log("未找到撰写新帖文按钮");
       return;
     }
 
@@ -48,9 +48,9 @@ export async function DynamicBluesky(data: SyncData) {
     const contentInput = (await waitForElement('div[contenteditable="true"]')) as HTMLDivElement;
     contentInput.focus();
     contentInput.textContent = title ? `${title}\n${content}` : content;
-    contentInput.dispatchEvent(new Event('input', { bubbles: true }));
-    contentInput.dispatchEvent(new Event('change', { bubbles: true }));
-    console.log('内容已输入:', content);
+    contentInput.dispatchEvent(new Event("input", { bubbles: true }));
+    contentInput.dispatchEvent(new Event("change", { bubbles: true }));
+    console.log("内容已输入:", content);
 
     if (images.length > 0) {
       const imageData = [];
@@ -63,7 +63,7 @@ export async function DynamicBluesky(data: SyncData) {
       }
       await new Promise((resolve) => setTimeout(resolve, 1000));
 
-      window.postMessage({ type: 'BLUESKY_IMAGE_UPLOAD', images: imageData }, '*');
+      window.postMessage({ type: "BLUESKY_IMAGE_UPLOAD", images: imageData }, "*");
     }
 
     // 发布动态
@@ -75,7 +75,7 @@ export async function DynamicBluesky(data: SyncData) {
         ) as HTMLButtonElement;
         if (publishButton) {
           publishButton.click();
-          console.log('已点击发布按钮');
+          console.log("已点击发布按钮");
           await new Promise((resolve) => setTimeout(resolve, 3000));
           window.location.reload();
           return;
@@ -84,6 +84,6 @@ export async function DynamicBluesky(data: SyncData) {
       }
     }
   } catch (error) {
-    console.error('bluesky 发布过程中出错:', error);
+    console.error("bluesky 发布过程中出错:", error);
   }
 }

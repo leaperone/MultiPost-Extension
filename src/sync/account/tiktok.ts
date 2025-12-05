@@ -1,14 +1,14 @@
-import type { AccountInfo } from '~sync/common';
+import type { AccountInfo } from "~sync/common";
 
 export async function getTiktokAccountInfo(): Promise<AccountInfo> {
   // 访问抖音创作者API获取用户信息
-  const response = await fetch('https://www.tiktok.com/node-webapp/api/common-app-context', {
-    method: 'GET',
+  const response = await fetch("https://www.tiktok.com/node-webapp/api/common-app-context", {
+    method: "GET",
     headers: {
-      Accept: 'application/json',
-      'Content-Type': 'application/json',
+      Accept: "application/json",
+      "Content-Type": "application/json",
     },
-    credentials: 'include', // 包含cookie以确保认证
+    credentials: "include", // 包含cookie以确保认证
   });
 
   if (!response.ok) {
@@ -22,7 +22,7 @@ export async function getTiktokAccountInfo(): Promise<AccountInfo> {
   }
 
   const result: AccountInfo = {
-    provider: 'tiktok',
+    provider: "tiktok",
     accountId: responseData.user.secUid,
     username: responseData.user.uniqueId,
     description: responseData.user.signature,

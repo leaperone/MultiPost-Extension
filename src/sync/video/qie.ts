@@ -1,786 +1,19 @@
-import type { SyncData } from '../common';
-
-/* eslint-disable @typescript-eslint/no-unused-vars */
-/* eslint-disable @typescript-eslint/no-explicit-any */
-
-/**
- * QiE视频上传器类
- * 用于处理企鹅号平台的视频上传流程
- */
-class QiEVideoUploader {
-  /**
-   * 等待元素出现
-   * @param selector 元素选择器
-   * @param timeout 超时时间（毫秒）
-   */
-  private waitForElement(selector: string, timeout = 10000): Promise<Element> {
-    return new Promise((resolve, reject) => {
-      const element = document.querySelector(selector);
-      if (element) {
-        resolve(element);
-        return;
-      }
-
-      const observer = new MutationObserver(() => {
-        const element = document.querySelector(selector);
-        if (element) {
-          resolve(element);
-          observer.disconnect();
-        }
-      });
-
-      observer.observe(document.body, {
-        childList: true,
-        subtree: true,
-      });
-
-      setTimeout(() => {
-        observer.disconnect();
-        reject(new Error(`Element with selector "${selector}" not found within ${timeout}ms`));
-      }, timeout);
-    });
-  }
-
-  /**
-   * 等待指定时间
-   * @param ms 等待时间（毫秒）
-   */
-  private sleep(ms: number): Promise<void> {
-    return new Promise(resolve => setTimeout(resolve, ms));
-  }
-
-  /**
-   * 模拟鼠标点击
-   * @param element 目标元素
-   */
-  private simulateClick(element: HTMLElement): void {
-    const rect = element.getBoundingClientRect();
-    const clickX = rect.left + rect.width / 2;
-    const clickY = rect.top + rect.height / 2;
-
-    element.dispatchEvent(new MouseEvent('mousedown', {
-      view: window,
-      bubbles: true,
-      cancelable: true,
-      clientX: clickX,
-      clientY: clickY,
-    }));
-
-    element.dispatchEvent(new MouseEvent('mouseup', {
-      view: window,
-      bubbles: true,
-      cancelable: true,
-      clientX: clickX,
-      clientY: clickY,
-    }));
-
-    element.dispatchEvent(new MouseEvent('click', {
-      view: window,
-      bubbles: true,
-      cancelable: true,
-      clientX: clickX,
-      clientY: clickY,
-    }));
-  }
-
-  /**
-   * 点击本地上传选项卡
-   */
-  private async clickLocalUploadTab(): Promise<boolean> {
-    try {
-      console.log('🔍 查找"本地上传"选项卡...');
-
-      // 优先查找弹框中的选项卡
-      const dialogTabLabels = document.querySelectorAll('.omui-dialog .omui-tab__label') as NodeListOf<HTMLElement>;
-      console.log(`找到 ${dialogTabLabels.length} 个弹框选项卡`);
-
-      // 查找页面选项卡（用于区分）
-      const pageTabLabels = document.querySelectorAll('.omui-tab__label:not(.omui-dialog .omui-tab__label)') as NodeListOf<HTMLElement>;
-      console.log(`找到 ${pageTabLabels.length} 个页面选项卡`);
-
-      // 打印所有找到的选项卡详情
-      console.log('📋 弹框选项卡详情:');
-      dialogTabLabels.forEach((label, index) => {
-        console.log(`弹框选项卡 ${index + 1}: "${label.textContent?.trim()}"`, {
-          isActive: label.classList.contains('is--active'),
-          className: label.className
-        });
-      });
-
-      console.log('📋 页面选项卡详情:');
-      pageTabLabels.forEach((label, index) => {
-        console.log(`页面选项卡 ${index + 1}: "${label.textContent?.trim()}"`, {
-          isActive: label.classList.contains('is--active'),
-          className: label.className
-        });
-      });
-
-      // 首先在弹框选项卡中查找
-      for (let i = 0; i < dialogTabLabels.length; i++) {
-        const label = dialogTabLabels[i];
-        if (label.textContent?.includes('本地上传')) {
-          console.log(`✅ 在弹框中找到"本地上传"选项卡 (索引 ${i})`);
-
-          // 如果已经是激活状态，直接返回成功
-          if (label.classList.contains('is--active')) {
-            console.log('✅ "本地上传"选项卡已经是激活状态');
-            return true;
-          }
-
-          // 点击选项卡
-          console.log('🖱️ 点击"本地上传"选项卡...');
-          this.simulateClick(label);
-          await this.sleep(500);
-
-          // 验证是否成功激活
-          if (label.classList.contains('is--active')) {
-            console.log('✅ 成功激活"本地上传"选项卡');
-            return true;
-          } else {
-            console.log('⚠️ 点击后选项卡未激活，尝试强制激活...');
-
-            // 强制激活：移除其他选项卡的激活状态，添加当前选项卡的激活状态
-            dialogTabLabels.forEach((tab, tabIndex) => {
-              if (tabIndex === i) {
-                tab.classList.add('is--active', 'is--animated');
-              } else {
-                tab.classList.remove('is--active', 'is--animated');
-              }
-            });
-
-            await this.sleep(300);
-
-            // 再次验证
-            if (label.classList.contains('is--active')) {
-              console.log('✅ 强制激活成功');
-              return true;
-            } else {
-              console.log('❌ 强制激活失败');
-            }
-          }
-        }
-      }
-
-      // 如果弹框中没找到，在页面选项卡中查找
-      for (let i = 0; i < pageTabLabels.length; i++) {
-        const label = pageTabLabels[i];
-        if (label.textContent?.includes('本地上传')) {
-          console.log(`✅ 在页面中找到"本地上传"选项卡 (索引 ${i})`);
-
-          if (label.classList.contains('is--active')) {
-            console.log('✅ "本地上传"选项卡已经是激活状态');
-            return true;
-          }
-
-          console.log('🖱️ 点击页面中的"本地上传"选项卡...');
-          this.simulateClick(label);
-          await this.sleep(500);
-
-          if (label.classList.contains('is--active')) {
-            console.log('✅ 成功激活页面中的"本地上传"选项卡');
-            return true;
-          }
-        }
-      }
-
-      console.log('❌ 未找到"本地上传"选项卡');
-      return false;
-
-    } catch (error) {
-      console.error('❌ 点击"本地上传"选项卡时出错:', error);
-      return false;
-    }
-  }
-
-  /**
-   * 执行文件上传
-   * @param coverDataUrl 封面图片URL
-   */
-  private async performFileUpload(coverDataUrl: string): Promise<boolean> {
-    try {
-      console.log('📁 开始执行文件上传...');
-
-      // 查找文件输入框
-      const fileInputSelectors = [
-        '.omui-dialog input[type="file"][accept*="image"]',
-        'input[type="file"][accept*="image"][hidden]',
-        'input[accept*="image/jpeg"]'
-      ];
-
-      let fileInput: HTMLInputElement | null = null;
-      for (const selector of fileInputSelectors) {
-        fileInput = document.querySelector(selector) as HTMLInputElement;
-        if (fileInput) {
-          console.log(`✅ 找到文件输入框: ${selector}`);
-          break;
-        }
-      }
-
-      if (!fileInput) {
-        console.log('❌ 未找到文件输入框');
-        return false;
-      }
-
-      // 获取图片数据
-      console.log('🖼️ 获取图片数据...');
-      const response = await fetch(coverDataUrl);
-      const blob = await response.blob();
-      const fileName = `cover_${Date.now()}.${blob.type.split('/')[1] || 'jpg'}`;
-      const coverFile = new File([blob], fileName, { type: blob.type });
-
-      console.log('📄 图片文件信息:', {
-        name: coverFile.name,
-        type: coverFile.type,
-        size: coverFile.size
-      });
-
-      // 创建DataTransfer并添加文件
-      const dataTransfer = new DataTransfer();
-      dataTransfer.items.add(coverFile);
-      fileInput.files = dataTransfer.files;
-
-      // 触发事件
-      fileInput.dispatchEvent(new Event('change', { bubbles: true }));
-      fileInput.dispatchEvent(new Event('input', { bubbles: true }));
-
-      console.log('✅ 文件上传事件已触发');
-      return true;
-
-    } catch (error) {
-      console.error('❌ 执行文件上传时出错:', error);
-      return false;
-    }
-  }
-
-  /**
-   * 直接文件上传（备用方案）
-   * @param coverDataUrl 封面图片URL
-   * @param fileInput 文件输入框
-   */
-  private async performDirectFileUpload(coverDataUrl: string, fileInput: HTMLInputElement): Promise<boolean> {
-    try {
-      console.log('📁 执行直接文件上传...');
-
-      const response = await fetch(coverDataUrl);
-      const blob = await response.blob();
-      const fileName = `cover_${Date.now()}.${blob.type.split('/')[1] || 'jpg'}`;
-      const coverFile = new File([blob], fileName, { type: blob.type });
-
-      const dataTransfer = new DataTransfer();
-      dataTransfer.items.add(coverFile);
-      fileInput.files = dataTransfer.files;
-
-      fileInput.dispatchEvent(new Event('change', { bubbles: true }));
-      fileInput.dispatchEvent(new Event('input', { bubbles: true }));
-
-      console.log('✅ 直接文件上传完成');
-      return true;
-
-    } catch (error) {
-      console.error('❌ 直接文件上传失败:', error);
-      return false;
-    }
-  }
-
-  /**
-   * 上传封面图片
-   * @param coverDataUrl 封面图片URL
-   */
-  private async uploadCover(coverDataUrl: string): Promise<boolean> {
-    try {
-      console.log('🖼️ 开始上传封面图片...');
-
-      // 首先点击本地上传选项卡
-      console.log('📋 开始点击本地上传选项卡...');
-      const uploadTabClicked = await this.clickLocalUploadTab();
-
-      if (!uploadTabClicked) {
-        console.log('⚠️ 无法点击本地上传选项卡，尝试其他方式');
-        // 尝试直接点击本地上传按钮
-        const directUploadButton = await this.waitForElement('input[type="file"][accept*="image"]', 5000) as HTMLInputElement;
-        if (directUploadButton) {
-          console.log('📁 找到直接文件上传按钮，尝试上传...');
-          return this.performDirectFileUpload(coverDataUrl, directUploadButton);
-        }
-        return true; // 不阻断流程
-      }
-
-      // 等待弹框出现
-      console.log('⏳ 等待文件选择弹框出现...');
-      await this.sleep(1500);
-
-      // 执行文件上传
-      const uploadSuccess = await this.performFileUpload(coverDataUrl);
-
-      if (uploadSuccess) {
-        console.log('✅ 封面上传完成，等待处理...');
-        // 等待上传处理
-        await this.sleep(3000);
-
-        // 检查是否有下一步按钮需要点击
-        console.log('🔍 检查是否需要点击下一步...');
-        const nextButton = await this.waitForElement('.omui-button.next-btn, .omui-button--primary', 5000) as HTMLElement;
-        if (nextButton && nextButton.textContent?.includes('下一步')) {
-          console.log('➡️ 点击下一步按钮...');
-          this.simulateClick(nextButton);
-          await this.sleep(2000);
-        }
-
-        return true;
-      } else {
-        console.log('⚠️ 封面上传失败，但不影响后续流程');
-        return true;
-      }
-
-    } catch (error) {
-      console.error('❌ 封面上传过程出错:', error);
-      return true; // 出错也不阻断流程
-    }
-  }
-
-  /**
-   * 上传视频文件
-   * @param file 视频文件
-   */
-  private async uploadVideo(file: File): Promise<void> {
-    console.log('开始查找企鹅号视频上传输入框...');
-
-    // 尝试多种选择器来找到文件输入框
-    let fileInput: HTMLInputElement | null = null;
-    const selectors = [
-      'input[name="Filedata"]',  // 企鹅号特定的文件输入框
-      '.uploadfileBox-cls1wycs input[type="file"]',  // 在上传容器内的文件输入框
-      'input[type="file"]'  // 备用选择器
-    ];
-
-    for (const selector of selectors) {
-      try {
-        console.log(`尝试选择器: ${selector}`);
-        fileInput = await this.waitForElement(selector, 3000) as HTMLInputElement;
-        if (fileInput) {
-          console.log(`成功找到文件输入框，使用选择器: ${selector}`);
-          break;
-        }
-      } catch (error) {
-        console.log(`选择器 ${selector} 未找到元素，尝试下一个...`);
-      }
-    }
-
-    if (!fileInput) {
-      console.error('未找到企鹅号视频上传输入框');
-      return;
-    }
-
-    console.log('找到企鹅号文件输入框:', {
-      name: fileInput.name,
-      type: fileInput.type,
-      accept: fileInput.accept,
-      className: fileInput.className
-    });
-
-    // 创建一个新的 File 对象
-    const dataTransfer = new DataTransfer();
-    dataTransfer.items.add(file);
-    fileInput.files = dataTransfer.files;
-
-    // 触发 change 和 input 事件
-    const changeEvent = new Event('change', { bubbles: true });
-    fileInput.dispatchEvent(changeEvent);
-
-    const inputEvent = new Event('input', { bubbles: true });
-    fileInput.dispatchEvent(inputEvent);
-
-    console.log('企鹅号视频上传事件已触发');
-  }
-
-  /**
-   * 等待视频上传完成
-   * @param timeout 超时时间
-   */
-  private async waitForVideoUpload(timeout = 300000): Promise<void> {
-    return new Promise((resolve, reject) => {
-      let currentUrl = window.location.href;
-      let uploadCompleted = false;
-
-      const checkInterval = setInterval(() => {
-        // 检查URL是否变化（页面跳转）
-        if (window.location.href !== currentUrl) {
-          console.log('检测到页面跳转，从', currentUrl, '跳转到', window.location.href);
-          currentUrl = window.location.href;
-        }
-
-        const uploadStatusElements = document.querySelectorAll('[class*="progress"], [class*="upload"], span');
-        const uploadCompleteElement = Array.from(uploadStatusElements).find(
-          (element) => element.textContent &&
-          (element.textContent.includes('上传完成') ||
-           element.textContent.includes('100%') ||
-           element.textContent.includes('完成'))
-        );
-
-        // 检查是否有标题输入框出现（表示进入编辑页面）
-        const titleInput = document.querySelector('.omui-inputautogrowing.omui-articletitle__input');
-
-        if (uploadCompleteElement || titleInput) {
-          if (!uploadCompleted) {
-            uploadCompleted = true;
-            clearInterval(checkInterval);
-            console.log('企鹅号视频上传完成，已进入编辑页面');
-            // 额外等待页面完全加载
-            setTimeout(() => {
-              resolve();
-            }, 3000);
-          }
-        }
-      }, 2000);
-
-      setTimeout(() => {
-        clearInterval(checkInterval);
-        if (!uploadCompleted) {
-          reject(new Error('企鹅号视频上传超时'));
-        }
-      }, timeout);
-    });
-  }
-
-  /**
-   * 主处理函数
-   * @param data 同步数据
-   */
-  async process(data: SyncData): Promise<void> {
-    console.log('🚀 开始QiE处理流程...');
-    console.log('🌐 当前页面URL:', window.location.href);
-    console.log('📄 页面标题:', document.title);
-
-    // 检查是否在正确的页面
-    if (!window.location.href.includes('om.qq.com')) {
-      console.log('⚠️ 当前页面不是企鹅号页面，跳过处理');
-      return;
-    }
-
-    try {
-      const videoData = data.data as any;
-      const { content, video, title, tags, cover } = videoData;
-
-      console.log('📋 解析的数据内容:', {
-        title: title || '无标题',
-        contentLength: content?.length || 0,
-        hasVideo: !!video,
-        videoName: video?.name || '无视频文件',
-        hasCover: !!cover,
-        coverName: cover?.name || '无封面文件',
-        tagsCount: tags?.length || 0,
-        tags: tags || []
-      });
-
-      // 处理视频上传
-      if (video) {
-        await this.sleep(1000);
-
-        const response = await fetch(video.url);
-        const blob = await response.arrayBuffer();
-        const extension = video.name.split('.').pop() || 'mp4';
-        const videoFilename = `${title}.${extension}`;
-        const videoFile = new File([blob], videoFilename, { type: video.type });
-
-        console.log(`企鹅号视频文件: ${videoFile.name} ${videoFile.type} ${videoFile.size}`);
-
-        await this.uploadVideo(videoFile);
-        console.log('企鹅号视频上传已初始化');
-
-        try {
-          await this.waitForVideoUpload();
-          console.log('企鹅号视频上传已完成，继续后续操作');
-        } catch (error) {
-          console.error('等待企鹅号视频上传完成时出错:', error);
-          return;
-        }
-      } else {
-        console.error('没有视频文件');
-        return;
-      }
-
-      // 页面可能已经跳转，等待新页面完全加载
-      console.log('等待编辑页面完全加载...');
-      await this.sleep(5000);
-
-      // 处理标题输入
-      if (title) {
-        console.log('开始处理标题输入...');
-        const titleSelectors = [
-          '.omui-inputautogrowing.omui-articletitle__input.omui-articletitle__input1',
-          '.omui-inputautogrowing.omui-articletitle__input.omui-articletitle__input2',
-          '.omui-articletitle__input',
-          'div.omui-inputautogrowing'
-        ];
-
-        let titleInput: HTMLElement | null = null;
-        for (const selector of titleSelectors) {
-          try {
-            titleInput = await this.waitForElement(selector, 10000) as HTMLElement;
-            if (titleInput) {
-              console.log('找到标题输入框:', selector);
-              break;
-            }
-          } catch (error) {
-            console.log(`标题输入框选择器 ${selector} 未找到，尝试下一个...`);
-          }
-        }
-
-        if (titleInput) {
-          // 对于可编辑的div，需要先点击激活
-          titleInput.click();
-          await this.sleep(500);
-
-          if (titleInput.contentEditable === 'true') {
-            // 如果是contenteditable的div
-            titleInput.textContent = title;
-            const inputEvent = new Event('input', { bubbles: true });
-            titleInput.dispatchEvent(inputEvent);
-          } else {
-            // 如果是普通的input
-            const input = titleInput as HTMLInputElement;
-            input.value = title;
-            input.dispatchEvent(new Event('input', { bubbles: true }));
-            input.dispatchEvent(new Event('change', { bubbles: true }));
-          }
-          console.log('企鹅号标题已输入:', title);
-        } else {
-          console.log('未找到任何标题输入框');
-        }
-      }
-
-      await this.sleep(2000);
-
-      // 处理简介输入
-      if (content) {
-        console.log('开始处理简介输入...');
-        try {
-          const textarea = await this.waitForElement('textarea.omui-textarea__inner', 10000) as HTMLTextAreaElement;
-          if (textarea) {
-            textarea.value = content || '';
-            textarea.dispatchEvent(new Event('input', { bubbles: true }));
-            textarea.dispatchEvent(new Event('change', { bubbles: true }));
-            console.log('企鹅号简介已输入:', content);
-          }
-        } catch (error) {
-          console.log('未找到简介输入框:', error);
-        }
-      }
-
-      await this.sleep(1500);
-
-      // 处理标签
-      if (tags && tags.length > 0) {
-        console.log('添加企鹅号标签...');
-
-        // 查找标签输入框 - 在-tag容器内
-        const tagContainer = document.getElementById('-tag');
-        let tagInput: HTMLInputElement | null = null;
-
-        if (tagContainer) {
-          tagInput = tagContainer.querySelector('.omui-suggestion__value') as HTMLInputElement;
-          if (!tagInput) {
-            tagInput = tagContainer.querySelector('input.omui-suggestion__value') as HTMLInputElement;
-          }
-          if (!tagInput) {
-            tagInput = tagContainer.querySelector('.omui-suggestion__input input') as HTMLInputElement;
-          }
-          if (!tagInput) {
-            tagInput = tagContainer.querySelector('input[style*="width: 2px"]') as HTMLInputElement;
-          }
-        } else {
-          // 备用方案：全局查找
-          const tagSelectors = [
-            '.omui-suggestion__value',
-            'input.omui-suggestion__value',
-            '.omui-suggestion__input input',
-            'input[style*="width: 2px"]'
-          ];
-
-          for (const selector of tagSelectors) {
-            try {
-              tagInput = await this.waitForElement(selector, 3000) as HTMLInputElement;
-              if (tagInput) break;
-            } catch (error) {
-              // 继续尝试下一个选择器
-            }
-          }
-        }
-
-        if (tagInput) {
-          // 先点击整个标签区域确保激活
-          const tagContainer = document.querySelector('.omui-suggestion__input');
-          if (tagContainer) {
-            (tagContainer as HTMLElement).click();
-            await this.sleep(300);
-          }
-
-          for (const tag of tags.slice(0, 9)) { // 企鹅号最多支持9个标签
-            console.log(`添加标签: ${tag}`);
-
-            // 确保输入框获得焦点
-            tagInput.focus();
-            await this.sleep(200);
-
-            // 根据placeholder提示，使用空格键添加标签
-            console.log('🔧 使用空格键添加标签:', tag);
-
-            // 方法1: 先输入标签，然后按空格键
-            tagInput.value = tag;
-            tagInput.dispatchEvent(new Event('input', { bubbles: true }));
-            await this.sleep(200);
-
-            // 按空格键添加标签（根据placeholder提示）
-            const spaceEvent = new KeyboardEvent('keydown', {
-              bubbles: true,
-              cancelable: true,
-              key: ' ',
-              code: 'Space',
-              keyCode: 32,
-              which: 32,
-            });
-            tagInput.dispatchEvent(spaceEvent);
-
-            const spaceKeyUpEvent = new KeyboardEvent('keyup', {
-              bubbles: true,
-              cancelable: true,
-              key: ' ',
-              code: 'Space',
-              keyCode: 32,
-              which: 32,
-            });
-            tagInput.dispatchEvent(spaceKeyUpEvent);
-
-            await this.sleep(300);
-
-            // 方法2: 如果空格键不行，尝试Enter键
-            const enterEvent = new KeyboardEvent('keydown', {
-              bubbles: true,
-              cancelable: true,
-              key: 'Enter',
-              code: 'Enter',
-              keyCode: 13,
-              which: 13,
-            });
-            tagInput.dispatchEvent(enterEvent);
-
-            await this.sleep(200);
-
-            // 方法3: 点击建议选项
-            const suggestionOptions = document.querySelectorAll('.omui-suggestion__option') as NodeListOf<HTMLElement>;
-            for (const option of suggestionOptions) {
-              if (option.textContent?.trim() === tag && !option.classList.contains('disabled')) {
-                console.log('✅ 找到匹配的标签建议选项，点击添加');
-                option.click();
-                await this.sleep(500);
-                break;
-              }
-            }
-
-            // 方法4: 检查是否有已创建的标签
-            const addedTags = document.querySelectorAll('.omui-tag, .omui-suggestion__tag, [class*="tag"], .omui-suggestion__value-wrap .tag');
-            console.log(`📋 当前已添加的标签数量: ${addedTags.length}`);
-
-            // 如果还是没有添加，尝试直接在value中添加空格
-            if (addedTags.length === 0) {
-              console.log('🔄 尝试直接在输入值中添加空格');
-              tagInput.value = tag + ' ';
-              tagInput.dispatchEvent(new Event('input', { bubbles: true }));
-              await this.sleep(200);
-            }
-
-            // 清空输入框准备下一个标签
-            tagInput.value = '';
-            tagInput.dispatchEvent(new Event('input', { bubbles: true }));
-            await this.sleep(100);
-          }
-          console.log('企鹅号标签已添加');
-        } else {
-          console.log('未找到企鹅号标签输入框，尝试查找其他元素');
-
-          // 尝试查找标签相关的其他元素
-          const tagRelatedElements = document.querySelectorAll('input, div[contenteditable="true"]');
-          console.log(`找到 ${tagRelatedElements.length} 个可能的标签输入元素`);
-
-          // 打印前几个元素的属性用于调试
-          for (let i = 0; i < Math.min(3, tagRelatedElements.length); i++) {
-            const element = tagRelatedElements[i];
-            console.log(`元素 ${i + 1}:`, {
-              tagName: element.tagName,
-              type: (element as HTMLInputElement).type,
-              placeholder: (element as HTMLInputElement).placeholder,
-              className: element.className,
-              id: element.id,
-              style: (element as HTMLElement).style.width
-            });
-          }
-
-          // 打印标签区域的结构用于调试
-          const tagArea = document.querySelector('.omui-suggestion');
-          if (tagArea) {
-            console.log('找到标签区域:', tagArea.innerHTML.substring(0, 200) + '...');
-          }
-        }
-      }
-
-      // 上传封面
-      if (cover) {
-        await this.sleep(1000);
-        await this.uploadCover(cover.url);
-      }
-
-      // 等待所有操作完成
-      await this.sleep(3000);
-
-      // 如果需要自动发布
-      if (data.isAutoPublish) {
-        const publishSelectors = [
-          'button[type="submit"]',
-          '.publish-btn',
-          '.submit-btn',
-          'button[class*="publish"]',
-          'button[class*="submit"]'
-        ];
-
-        let publishButton: HTMLElement | null = null;
-        for (const selector of publishSelectors) {
-          const button = document.querySelector(selector) as HTMLElement;
-          if (button && (button.textContent?.includes('发布') ||
-                         button.textContent?.includes('提交') ||
-                         button.textContent?.includes('提交'))) {
-            publishButton = button;
-            break;
-          }
-        }
-
-        if (publishButton) {
-          console.log('点击企鹅号发布按钮');
-          publishButton.click();
-        } else {
-          console.log('未找到企鹅号发布按钮');
-        }
-      }
-
-    } catch (error) {
-      console.error('企鹅号视频发布过程中出错:', error);
-    }
-  }
-}
+import type { SyncData } from "../common";
 
 // 主导出函数
 export async function VideoQiE(data: SyncData) {
-  console.log('🎬 QiE视频上传开始...');
-  console.log('📊 接收到的数据:', {
+  console.log("🎬 QiE视频上传开始...");
+  console.log("📊 接收到的数据:", {
     hasVideo: !!(data.data as any)?.video,
     hasCover: !!(data.data as any)?.cover,
     hasTitle: !!(data.data as any)?.title,
     hasContent: !!(data.data as any)?.content,
     tagsCount: (data.data as any)?.tags?.length || 0,
-    isAutoPublish: data.isAutoPublish
+    isAutoPublish: data.isAutoPublish,
   });
 
   try {
-    console.log('开始创建QiEVideoUploader实例...');
+    console.log("开始创建QiEVideoUploader实例...");
     // 直接在这里定义类，避免作用域问题
     class QiEVideoUploader {
       private waitForElement(selector: string, timeout = 10000): Promise<Element> {
@@ -806,7 +39,7 @@ export async function VideoQiE(data: SyncData) {
       }
 
       private sleep(ms: number): Promise<void> {
-        return new Promise(resolve => setTimeout(resolve, ms));
+        return new Promise((resolve) => setTimeout(resolve, ms));
       }
 
       private simulateClick(element: HTMLElement): void {
@@ -814,37 +47,43 @@ export async function VideoQiE(data: SyncData) {
         const clickX = rect.left + rect.width / 2;
         const clickY = rect.top + rect.height / 2;
 
-        element.dispatchEvent(new MouseEvent('mousedown', {
-          view: window,
-          bubbles: true,
-          cancelable: true,
-          clientX: clickX,
-          clientY: clickY,
-        }));
+        element.dispatchEvent(
+          new MouseEvent("mousedown", {
+            view: window,
+            bubbles: true,
+            cancelable: true,
+            clientX: clickX,
+            clientY: clickY,
+          }),
+        );
 
-        element.dispatchEvent(new MouseEvent('mouseup', {
-          view: window,
-          bubbles: true,
-          cancelable: true,
-          clientX: clickX,
-          clientY: clickY,
-        }));
+        element.dispatchEvent(
+          new MouseEvent("mouseup", {
+            view: window,
+            bubbles: true,
+            cancelable: true,
+            clientX: clickX,
+            clientY: clickY,
+          }),
+        );
 
-        element.dispatchEvent(new MouseEvent('click', {
-          view: window,
-          bubbles: true,
-          cancelable: true,
-          clientX: clickX,
-          clientY: clickY,
-        }));
+        element.dispatchEvent(
+          new MouseEvent("click", {
+            view: window,
+            bubbles: true,
+            cancelable: true,
+            clientX: clickX,
+            clientY: clickY,
+          }),
+        );
       }
 
       async process(data: SyncData): Promise<void> {
-        console.log('🚀 开始QiE处理流程...');
-        console.log('🌐 当前页面URL:', window.location.href);
+        console.log("🚀 开始QiE处理流程...");
+        console.log("🌐 当前页面URL:", window.location.href);
 
-        if (!window.location.href.includes('om.qq.com')) {
-          console.log('⚠️ 当前页面不是企鹅号页面，跳过处理');
+        if (!window.location.href.includes("om.qq.com")) {
+          console.log("⚠️ 当前页面不是企鹅号页面，跳过处理");
           return;
         }
 
@@ -852,16 +91,16 @@ export async function VideoQiE(data: SyncData) {
         const { video, title, content, tags, cover } = videoData;
 
         if (video) {
-          console.log('开始上传视频文件:', video.name);
+          console.log("开始上传视频文件:", video.name);
 
           // 执行视频上传
           const uploadSuccess = await this.performVideoUpload(video, videoData);
           if (!uploadSuccess) {
-            console.log('❌ 视频上传失败，终止流程');
+            console.log("❌ 视频上传失败，终止流程");
             return;
           }
 
-          console.log('✅ 视频上传完成，开始处理内容编辑...');
+          console.log("✅ 视频上传完成，开始处理内容编辑...");
 
           // 等待页面完全加载
           await this.sleep(3000);
@@ -905,21 +144,21 @@ export async function VideoQiE(data: SyncData) {
         try {
           const fileInput = await this.findVideoFileInput();
           if (!fileInput) {
-            console.log('❌ 未找到视频上传输入框');
+            console.log("❌ 未找到视频上传输入框");
             return false;
           }
 
-          console.log('📁 开始上传视频文件...');
+          console.log("📁 开始上传视频文件...");
           const response = await fetch(video.url);
           const blob = await response.arrayBuffer();
-          const extension = video.name.split('.').pop() || 'mp4';
-          const videoFilename = `${videoData.title || 'video'}.${extension}`;
+          const extension = video.name.split(".").pop() || "mp4";
+          const videoFilename = `${videoData.title || "video"}.${extension}`;
           const videoFile = new File([blob], videoFilename, { type: video.type });
 
-          console.log('📹 视频文件信息:', {
+          console.log("📹 视频文件信息:", {
             name: videoFile.name,
             type: videoFile.type,
-            size: videoFile.size
+            size: videoFile.size,
           });
 
           const dataTransfer = new DataTransfer();
@@ -927,31 +166,30 @@ export async function VideoQiE(data: SyncData) {
           fileInput.files = dataTransfer.files;
 
           // 触发多个事件确保上传
-          fileInput.dispatchEvent(new Event('change', { bubbles: true }));
-          fileInput.dispatchEvent(new Event('input', { bubbles: true }));
-          fileInput.dispatchEvent(new Event('change', { bubbles: true }));
+          fileInput.dispatchEvent(new Event("change", { bubbles: true }));
+          fileInput.dispatchEvent(new Event("input", { bubbles: true }));
+          fileInput.dispatchEvent(new Event("change", { bubbles: true }));
 
-          console.log('✅ 视频上传事件已触发');
+          console.log("✅ 视频上传事件已触发");
 
           // 等待视频上传完成并页面跳转
           await this.waitForVideoUpload();
           return true;
-
         } catch (error) {
-          console.error('❌ 视频上传过程出错:', error);
+          console.error("❌ 视频上传过程出错:", error);
           return false;
         }
       }
 
       private async findVideoFileInput(): Promise<HTMLInputElement | null> {
         const fileSelectors = [
-          'input[type="file"]',         // 通用文件输入框选择器
-          'input[name="Filedata"]',     // 企鹅号特定的文件输入框
-          '#upload-input',              // 如果有ID的话
-          '.upload-input'               // 如果有固定类名的话
+          'input[type="file"]', // 通用文件输入框选择器
+          'input[name="Filedata"]', // 企鹅号特定的文件输入框
+          "#upload-input", // 如果有ID的话
+          ".upload-input", // 如果有固定类名的话
         ];
 
-        console.log('🔍 开始查找视频上传输入框...');
+        console.log("🔍 开始查找视频上传输入框...");
 
         // 首次尝试
         for (const selector of fileSelectors) {
@@ -959,13 +197,12 @@ export async function VideoQiE(data: SyncData) {
           if (fileInput) {
             console.log(`✅ 找到视频上传输入框，使用选择器: ${selector}`);
             return fileInput;
-          } else {
-            console.log(`❌ 选择器 ${selector} 未找到元素`);
           }
+          console.log(`❌ 选择器 ${selector} 未找到元素`);
         }
 
         // 延迟重试
-        console.log('⏳ 等待3秒后再次尝试查找文件输入框...');
+        console.log("⏳ 等待3秒后再次尝试查找文件输入框...");
         await this.sleep(3000);
 
         for (const selector of fileSelectors) {
@@ -976,24 +213,24 @@ export async function VideoQiE(data: SyncData) {
           }
         }
 
-        console.log('❌ 延迟查找后仍未找到文件输入框');
+        console.log("❌ 延迟查找后仍未找到文件输入框");
         return null;
       }
 
       private async fillTitle(title: string): Promise<void> {
-        console.log('开始处理标题输入...');
+        console.log("开始处理标题输入...");
         const titleSelectors = [
-          '.omui-inputautogrowing.omui-articletitle__input.omui-articletitle__input1',
-          '.omui-inputautogrowing.omui-articletitle__input.omui-articletitle__input2',
-          '.omui-articletitle__input',
-          'div.omui-inputautogrowing'
+          ".omui-inputautogrowing.omui-articletitle__input.omui-articletitle__input1",
+          ".omui-inputautogrowing.omui-articletitle__input.omui-articletitle__input2",
+          ".omui-articletitle__input",
+          "div.omui-inputautogrowing",
         ];
 
         let titleInput: HTMLElement | null = null;
         for (const selector of titleSelectors) {
           titleInput = document.querySelector(selector) as HTMLElement;
           if (titleInput) {
-            console.log('找到标题输入框:', selector);
+            console.log("找到标题输入框:", selector);
             break;
           }
         }
@@ -1002,63 +239,63 @@ export async function VideoQiE(data: SyncData) {
           titleInput.click();
           await this.sleep(500);
 
-          if (titleInput.contentEditable === 'true') {
+          if (titleInput.contentEditable === "true") {
             titleInput.textContent = title;
-            titleInput.dispatchEvent(new Event('input', { bubbles: true }));
+            titleInput.dispatchEvent(new Event("input", { bubbles: true }));
           } else {
             const input = titleInput as HTMLInputElement;
             input.value = title;
-            input.dispatchEvent(new Event('input', { bubbles: true }));
-            input.dispatchEvent(new Event('change', { bubbles: true }));
+            input.dispatchEvent(new Event("input", { bubbles: true }));
+            input.dispatchEvent(new Event("change", { bubbles: true }));
           }
-          console.log('✅ 企鹅号标题已输入:', title);
+          console.log("✅ 企鹅号标题已输入:", title);
         } else {
-          console.log('❌ 未找到任何标题输入框');
+          console.log("❌ 未找到任何标题输入框");
         }
       }
 
       private async fillContent(content: string): Promise<void> {
-        console.log('开始处理简介输入...');
-        const textarea = document.querySelector('textarea.omui-textarea__inner') as HTMLTextAreaElement;
+        console.log("开始处理简介输入...");
+        const textarea = document.querySelector("textarea.omui-textarea__inner") as HTMLTextAreaElement;
         if (textarea) {
-          textarea.value = content || '';
-          textarea.dispatchEvent(new Event('input', { bubbles: true }));
-          textarea.dispatchEvent(new Event('change', { bubbles: true }));
-          console.log('✅ 企鹅号简介已输入:', content.substring(0, 50) + '...');
+          textarea.value = content || "";
+          textarea.dispatchEvent(new Event("input", { bubbles: true }));
+          textarea.dispatchEvent(new Event("change", { bubbles: true }));
+          console.log("✅ 企鹅号简介已输入:", `${content.substring(0, 50)}...`);
         } else {
-          console.log('❌ 未找到简介输入框');
+          console.log("❌ 未找到简介输入框");
         }
       }
 
       private async fillTags(tags: string[]): Promise<void> {
-        console.log('开始添加企鹅号标签...');
+        console.log("开始添加企鹅号标签...");
 
         // 查找标签输入框 - 在-tag容器内
-        const tagContainerEl = document.getElementById('-tag');
+        const tagContainerEl = document.getElementById("-tag");
         let tagInput: HTMLInputElement | null = null;
 
         if (tagContainerEl) {
-          console.log('✅ 找到-tag容器，在其中查找标签输入框');
-          tagInput = tagContainerEl.querySelector('.omui-suggestion__value') as HTMLInputElement;
+          console.log("✅ 找到-tag容器，在其中查找标签输入框");
+          tagInput = tagContainerEl.querySelector(".omui-suggestion__value") as HTMLInputElement;
 
           if (!tagInput) {
-            tagInput = tagContainerEl.querySelector('input.omui-suggestion__value') as HTMLInputElement;
+            tagInput = tagContainerEl.querySelector("input.omui-suggestion__value") as HTMLInputElement;
           }
 
           if (!tagInput) {
-            tagInput = tagContainerEl.querySelector('.omui-suggestion__input input') as HTMLInputElement;
+            tagInput = tagContainerEl.querySelector(".omui-suggestion__input input") as HTMLInputElement;
           }
 
           if (!tagInput) {
             tagInput = tagContainerEl.querySelector('input[style*="width: 2px"]') as HTMLInputElement;
           }
         } else {
-          console.log('⚠️ 未找到-tag容器，尝试全局查找');
-          tagInput = document.querySelector('.omui-suggestion__value') as HTMLInputElement;
+          console.log("⚠️ 未找到-tag容器，尝试全局查找");
+          tagInput = document.querySelector(".omui-suggestion__value") as HTMLInputElement;
         }
         if (tagInput) {
           // 先点击整个标签区域确保激活
-          const tagContainer = document.querySelector('.omui-suggestion__input');
+          const tagContainer = document.querySelector(".omui-suggestion__input");
           if (tagContainer) {
             (tagContainer as HTMLElement).click();
             await this.sleep(300);
@@ -1069,29 +306,29 @@ export async function VideoQiE(data: SyncData) {
             tagInput.focus();
             await this.sleep(200);
             // 根据placeholder提示，使用空格键添加标签
-            console.log('🔧 使用空格键添加标签:', tag);
+            console.log("🔧 使用空格键添加标签:", tag);
 
             // 方法1: 先输入标签，然后按空格键
             tagInput.value = tag;
-            tagInput.dispatchEvent(new Event('input', { bubbles: true }));
+            tagInput.dispatchEvent(new Event("input", { bubbles: true }));
             await this.sleep(200);
 
             // 按空格键添加标签（根据placeholder提示）
-            const spaceEvent = new KeyboardEvent('keydown', {
+            const spaceEvent = new KeyboardEvent("keydown", {
               bubbles: true,
               cancelable: true,
-              key: ' ',
-              code: 'Space',
+              key: " ",
+              code: "Space",
               keyCode: 32,
               which: 32,
             });
             tagInput.dispatchEvent(spaceEvent);
 
-            const spaceKeyUpEvent = new KeyboardEvent('keyup', {
+            const spaceKeyUpEvent = new KeyboardEvent("keyup", {
               bubbles: true,
               cancelable: true,
-              key: ' ',
-              code: 'Space',
+              key: " ",
+              code: "Space",
               keyCode: 32,
               which: 32,
             });
@@ -1100,11 +337,11 @@ export async function VideoQiE(data: SyncData) {
             await this.sleep(300);
 
             // 方法2: 如果空格键不行，尝试Enter键
-            const enterEvent = new KeyboardEvent('keydown', {
+            const enterEvent = new KeyboardEvent("keydown", {
               bubbles: true,
               cancelable: true,
-              key: 'Enter',
-              code: 'Enter',
+              key: "Enter",
+              code: "Enter",
               keyCode: 13,
               which: 13,
             });
@@ -1113,10 +350,10 @@ export async function VideoQiE(data: SyncData) {
             await this.sleep(200);
 
             // 方法3: 点击建议选项
-            const suggestionOptions = document.querySelectorAll('.omui-suggestion__option') as NodeListOf<HTMLElement>;
+            const suggestionOptions = document.querySelectorAll(".omui-suggestion__option") as NodeListOf<HTMLElement>;
             for (const option of suggestionOptions) {
-              if (option.textContent?.trim() === tag && !option.classList.contains('disabled')) {
-                console.log('✅ 找到匹配的标签建议选项，点击添加');
+              if (option.textContent?.trim() === tag && !option.classList.contains("disabled")) {
+                console.log("✅ 找到匹配的标签建议选项，点击添加");
                 option.click();
                 await this.sleep(500);
                 break;
@@ -1124,34 +361,38 @@ export async function VideoQiE(data: SyncData) {
             }
 
             // 方法4: 检查是否有已创建的标签
-            const addedTags = document.querySelectorAll('.omui-tag, .omui-suggestion__tag, [class*="tag"], .omui-suggestion__value-wrap .tag');
+            const addedTags = document.querySelectorAll(
+              '.omui-tag, .omui-suggestion__tag, [class*="tag"], .omui-suggestion__value-wrap .tag',
+            );
             console.log(`📋 当前已添加的标签数量: ${addedTags.length}`);
 
             // 如果还是没有添加，尝试直接在value中添加空格
             if (addedTags.length === 0) {
-              console.log('🔄 尝试直接在输入值中添加空格');
-              tagInput.value = tag + ' ';
-              tagInput.dispatchEvent(new Event('input', { bubbles: true }));
+              console.log("🔄 尝试直接在输入值中添加空格");
+              tagInput.value = `${tag} `;
+              tagInput.dispatchEvent(new Event("input", { bubbles: true }));
               await this.sleep(200);
             }
 
-            tagInput.value = '';
-            tagInput.dispatchEvent(new Event('input', { bubbles: true }));
+            tagInput.value = "";
+            tagInput.dispatchEvent(new Event("input", { bubbles: true }));
             await this.sleep(100);
           }
-          console.log('✅ 企鹅号标签已添加');
+          console.log("✅ 企鹅号标签已添加");
         } else {
-          console.log('❌ 未找到标签输入框');
+          console.log("❌ 未找到标签输入框");
         }
       }
 
       private async attemptAutoPublish(): Promise<void> {
-        const publishButton = document.querySelector('button[class*="publish"], button[class*="submit"]') as HTMLElement;
+        const publishButton = document.querySelector(
+          'button[class*="publish"], button[class*="submit"]',
+        ) as HTMLElement;
         if (publishButton) {
-          console.log('点击企鹅号发布按钮');
+          console.log("点击企鹅号发布按钮");
           publishButton.click();
         } else {
-          console.log('❌ 未找到发布按钮');
+          console.log("❌ 未找到发布按钮");
         }
       }
 
@@ -1162,16 +403,16 @@ export async function VideoQiE(data: SyncData) {
 
           const checkInterval = setInterval(() => {
             if (window.location.href !== currentUrl) {
-              console.log('🔄 检测到页面跳转，从', currentUrl, '跳转到', window.location.href);
+              console.log("🔄 检测到页面跳转，从", currentUrl, "跳转到", window.location.href);
               currentUrl = window.location.href;
             }
 
             // 检查是否有标题输入框出现（表示进入编辑页面）
-            const titleInput = document.querySelector('.omui-inputautogrowing.omui-articletitle__input');
+            const titleInput = document.querySelector(".omui-inputautogrowing.omui-articletitle__input");
             if (titleInput && !uploadCompleted) {
               uploadCompleted = true;
               clearInterval(checkInterval);
-              console.log('✅ 企鹅号视频上传完成，已进入编辑页面');
+              console.log("✅ 企鹅号视频上传完成，已进入编辑页面");
               setTimeout(() => {
                 resolve();
               }, 3000);
@@ -1181,83 +422,81 @@ export async function VideoQiE(data: SyncData) {
           setTimeout(() => {
             clearInterval(checkInterval);
             if (!uploadCompleted) {
-              reject(new Error('企鹅号视频上传超时'));
+              reject(new Error("企鹅号视频上传超时"));
             }
           }, timeout);
         });
       }
 
-        private async clickCoverUploadButton(): Promise<boolean> {
+      private async clickCoverUploadButton(): Promise<boolean> {
         try {
-          console.log('🔍 查找封面上传按钮...');
+          console.log("🔍 查找封面上传按钮...");
 
           // 首先查找 id 为 -poster 的元素
-          const posterContainer = document.querySelector('#-poster') as HTMLElement;
+          const posterContainer = document.querySelector("#-poster") as HTMLElement;
           if (!posterContainer) {
-            console.log('❌ 未找到 # -poster 容器');
+            console.log("❌ 未找到 # -poster 容器");
             return false;
           }
 
-          console.log('✅ 找到 # -poster 容器');
+          console.log("✅ 找到 # -poster 容器");
 
           // 在该容器内查找 omui-button omui-button--add 按钮
-          const uploadButton = posterContainer.querySelector('.omui-button.omui-button--add') as HTMLElement;
+          const uploadButton = posterContainer.querySelector(".omui-button.omui-button--add") as HTMLElement;
           if (!uploadButton) {
-            console.log('❌ 在 # -poster 容器内未找到上传按钮');
+            console.log("❌ 在 # -poster 容器内未找到上传按钮");
             // 打印容器内的元素用于调试
-            const buttons = posterContainer.querySelectorAll('button');
+            const buttons = posterContainer.querySelectorAll("button");
             console.log(`📋 容器内找到 ${buttons.length} 个按钮:`);
             buttons.forEach((button, index) => {
               console.log(`按钮 ${index + 1}:`, {
                 className: button.className,
                 textContent: button.textContent?.trim(),
-                id: button.id
+                id: button.id,
               });
             });
             return false;
           }
 
-          console.log('✅ 找到封面上传按钮，准备点击...');
+          console.log("✅ 找到封面上传按钮，准备点击...");
 
           // 点击按钮
           this.simulateClick(uploadButton);
           await this.sleep(500);
 
-          console.log('✅ 封面上传按钮点击完成');
+          console.log("✅ 封面上传按钮点击完成");
           return true;
-
         } catch (error) {
-          console.error('❌ 点击封面上传按钮时出错:', error);
+          console.error("❌ 点击封面上传按钮时出错:", error);
           return false;
         }
       }
 
-    private async uploadCover(coverUrl: string): Promise<boolean> {
-        console.log('🖼️ 开始上传封面图片...');
+      private async uploadCover(coverUrl: string): Promise<boolean> {
+        console.log("🖼️ 开始上传封面图片...");
 
         try {
           // 首先点击封面上传按钮触发弹框
           const uploadButtonClicked = await this.clickCoverUploadButton();
           if (!uploadButtonClicked) {
-            console.log('⚠️ 无法点击封面上传按钮，尝试其他方式');
+            console.log("⚠️ 无法点击封面上传按钮，尝试其他方式");
             return true;
           }
 
           // 等待弹框出现
-          console.log('⏳ 等待封面上传弹框出现...');
+          console.log("⏳ 等待封面上传弹框出现...");
           await this.sleep(1500);
 
           // 切换到本地上传模式并上传
           return await this.switchToLocalUpload(coverUrl);
-
         } catch (error) {
-          console.error('❌ 封面上传过程出错:', error);
+          console.error("❌ 封面上传过程出错:", error);
           return true; // 出错也不阻断流程
         }
       }
 
       private async switchToLocalUpload(coverUrl: string): Promise<boolean> {
-        console.log('🔄 处理封面上传弹框，切换到本地上传模式...');
+        console.log("🔄 处理封面上传弹框，切换到本地上传模式...");
 
         // 等待弹框完全出现
         await this.sleep(1000);
@@ -1266,29 +505,31 @@ export async function VideoQiE(data: SyncData) {
         let localUploadTab: HTMLElement | null = null;
 
         // 查找所有弹框中的选项卡
-        const dialogTabs = document.querySelectorAll('.omui-dialog .omui-tab__label, .omui-dialog-wrapper .omui-tab__label') as NodeListOf<HTMLElement>;
+        const dialogTabs = document.querySelectorAll(
+          ".omui-dialog .omui-tab__label, .omui-dialog-wrapper .omui-tab__label",
+        ) as NodeListOf<HTMLElement>;
         console.log(`📋 在弹框中找到 ${dialogTabs.length} 个选项卡`);
 
         // 打印所有找到的选项卡信息用于调试
         dialogTabs.forEach((tab, index) => {
           console.log(`弹框选项卡 ${index + 1}: "${tab.textContent?.trim()}"`, {
-            isActive: tab.classList.contains('is--active'),
-            className: tab.className
+            isActive: tab.classList.contains("is--active"),
+            className: tab.className,
           });
         });
 
         // 更精确地查找封面选择弹框中的本地上传选项卡
-        console.log('🔍 查找封面选择弹框中的本地上传选项卡...');
+        console.log("🔍 查找封面选择弹框中的本地上传选项卡...");
 
         // 方式1：查找包含"封面截取"和"本地上传"的选项卡组
-        const allTabNavs = document.querySelectorAll('.omui-tab__nav') as NodeListOf<HTMLElement>;
-        let foundCorrectGroup = false;
+        const allTabNavs = document.querySelectorAll(".omui-tab__nav") as NodeListOf<HTMLElement>;
+        let _foundCorrectGroup = false;
 
         console.log(`📋 找到 ${allTabNavs.length} 个选项卡导航组`);
 
         for (let i = 0; i < allTabNavs.length; i++) {
           const nav = allTabNavs[i];
-          const labels = nav.querySelectorAll('.omui-tab__label') as NodeListOf<HTMLElement>;
+          const labels = nav.querySelectorAll(".omui-tab__label") as NodeListOf<HTMLElement>;
 
           console.log(`检查第 ${i + 1} 个选项卡组，包含 ${labels.length} 个选项卡:`);
 
@@ -1302,10 +543,10 @@ export async function VideoQiE(data: SyncData) {
             const firstTab = labels[0].textContent?.trim();
             const secondTab = labels[1].textContent?.trim();
 
-            if (firstTab === '封面截取' && secondTab === '本地上传') {
+            if (firstTab === "封面截取" && secondTab === "本地上传") {
               localUploadTab = labels[1]; // 第二个选项卡
-              foundCorrectGroup = true;
-              console.log(`✅ 找到正确的封面选择选项卡组，本地上传是第2个选项卡`);
+              _foundCorrectGroup = true;
+              console.log("✅ 找到正确的封面选择选项卡组，本地上传是第2个选项卡");
               break;
             }
           }
@@ -1313,8 +554,10 @@ export async function VideoQiE(data: SyncData) {
 
         // 如果方式1没找到，使用方式2：在打开的弹框中查找
         if (!localUploadTab) {
-          console.log('⚠️ 方式1未找到，尝试在打开的弹框中查找...');
-          const openDialogTabs = document.querySelectorAll('.omui-dialog-wrapper.open .omui-tab__nav .omui-tab__label') as NodeListOf<HTMLElement>;
+          console.log("⚠️ 方式1未找到，尝试在打开的弹框中查找...");
+          const openDialogTabs = document.querySelectorAll(
+            ".omui-dialog-wrapper.open .omui-tab__nav .omui-tab__label",
+          ) as NodeListOf<HTMLElement>;
           console.log(`📋 在打开的弹框中找到 ${openDialogTabs.length} 个选项卡`);
 
           openDialogTabs.forEach((tab, index) => {
@@ -1324,9 +567,9 @@ export async function VideoQiE(data: SyncData) {
           // 查找第二个选项卡（本地上传）
           if (openDialogTabs.length >= 2) {
             const secondTab = openDialogTabs[1];
-            if (secondTab.textContent?.includes('本地上传')) {
+            if (secondTab.textContent?.includes("本地上传")) {
               localUploadTab = secondTab;
-              console.log(`✅ 在打开弹框中找到本地上传选项卡（第2个）`);
+              console.log("✅ 在打开弹框中找到本地上传选项卡（第2个）");
             }
           }
 
@@ -1334,7 +577,7 @@ export async function VideoQiE(data: SyncData) {
           if (!localUploadTab) {
             for (let i = 0; i < openDialogTabs.length; i++) {
               const tab = openDialogTabs[i];
-              if (tab.textContent?.includes('本地上传')) {
+              if (tab.textContent?.includes("本地上传")) {
                 localUploadTab = tab;
                 console.log(`✅ 遍历找到本地上传选项卡（第${i + 1}个）`);
                 break;
@@ -1344,80 +587,80 @@ export async function VideoQiE(data: SyncData) {
         }
 
         if (!localUploadTab) {
-          console.log('❌ 未找到本地上传选项卡');
+          console.log("❌ 未找到本地上传选项卡");
           return true;
         }
 
         // 点击本地上传选项卡
-        console.log('🎯 点击本地上传选项卡...');
+        console.log("🎯 点击本地上传选项卡...");
         this.simulateClick(localUploadTab);
         await this.sleep(1000);
 
         // 获取同一个选项卡组中的所有选项卡，用于设置激活状态
-        const parentNav = localUploadTab.closest('.omui-tab__nav') as HTMLElement;
+        const parentNav = localUploadTab.closest(".omui-tab__nav") as HTMLElement;
         if (parentNav) {
-          const siblingTabs = parentNav.querySelectorAll('.omui-tab__label') as NodeListOf<HTMLElement>;
+          const siblingTabs = parentNav.querySelectorAll(".omui-tab__label") as NodeListOf<HTMLElement>;
 
           // 强制设置为激活状态，同时移除其他选项卡的激活状态
-          siblingTabs.forEach((tab, index) => {
+          siblingTabs.forEach((tab, _index) => {
             if (tab === localUploadTab) {
-              tab.classList.add('is--active', 'is--selected');
+              tab.classList.add("is--active", "is--selected");
               console.log(`✅ 激活选项卡: "${tab.textContent?.trim()}"`);
             } else {
-              tab.classList.remove('is--active', 'is--selected');
+              tab.classList.remove("is--active", "is--selected");
             }
           });
         } else {
           // 备用方案：直接设置单个选项卡的激活状态
-          localUploadTab.classList.add('is--active', 'is--selected');
+          localUploadTab.classList.add("is--active", "is--selected");
           console.log(`✅ 激活选项卡: "${localUploadTab.textContent?.trim()}"`);
         }
 
         await this.sleep(500);
 
-        if (localUploadTab.classList.contains('is--active')) {
-          console.log('✅ 成功切换到本地上传选项卡');
+        if (localUploadTab.classList.contains("is--active")) {
+          console.log("✅ 成功切换到本地上传选项卡");
         } else {
-          console.log('⚠️ 选项卡状态可能未正确更新，但继续执行');
+          console.log("⚠️ 选项卡状态可能未正确更新，但继续执行");
         }
 
         // 等待本地上传面板加载完成
-        console.log('⏳ 等待本地上传面板加载...');
+        console.log("⏳ 等待本地上传面板加载...");
         await this.sleep(1500);
 
         // 查找文件输入框 - 专门查找图片输入框，排除视频输入框
-        console.log('🔍 开始专门查找图片上传输入框...');
+        console.log("🔍 开始专门查找图片上传输入框...");
 
         // 首先收集所有可能的文件输入框
         const allFileInputs = document.querySelectorAll('input[type="file"]') as NodeListOf<HTMLInputElement>;
         console.log(`📋 页面总共有 ${allFileInputs.length} 个文件输入框`);
 
         let fileInput: HTMLInputElement | null = null;
-        let selectorUsed = '';
+        let selectorUsed = "";
 
         // 详细检查每个文件输入框
         for (let i = 0; i < allFileInputs.length; i++) {
           const input = allFileInputs[i];
-          const accept = input.accept?.toLowerCase() || '';
+          const accept = input.accept?.toLowerCase() || "";
 
           console.log(`🔍 检查输入框 ${i + 1}:`, {
             accept: input.accept,
             type: input.type,
-            hidden: input.hasAttribute('hidden'),
+            hidden: input.hasAttribute("hidden"),
             style: input.style.display,
             offsetParent: !!input.offsetParent,
             className: input.className,
-            name: input.name
+            name: input.name,
           });
 
           // 严格排除视频输入框
-          if (accept.includes('video')) {
+          if (accept.includes("video")) {
             console.log(`❌ 跳过视频输入框 ${i + 1}: accept="${input.accept}"`);
             continue;
           }
 
           // 优先选择明确接受图片的输入框
-          if (accept.includes('image')) {
+          if (accept.includes("image")) {
             fileInput = input;
             selectorUsed = `图片专用输入框 #${i + 1}`;
             console.log(`✅ 找到图片专用输入框 ${i + 1}: accept="${input.accept}"`);
@@ -1434,21 +677,23 @@ export async function VideoQiE(data: SyncData) {
 
         // 如果还没找到，在弹框中再次精确查找
         if (!fileInput) {
-          console.log('⚠️ 在所有输入框中未找到合适的，尝试在弹框中精确查找...');
-          const dialogInputs = document.querySelectorAll('.omui-dialog input[type="file"], .omui-dialog-wrapper input[type="file"]') as NodeListOf<HTMLInputElement>;
+          console.log("⚠️ 在所有输入框中未找到合适的，尝试在弹框中精确查找...");
+          const dialogInputs = document.querySelectorAll(
+            '.omui-dialog input[type="file"], .omui-dialog-wrapper input[type="file"]',
+          ) as NodeListOf<HTMLInputElement>;
 
           for (let i = 0; i < dialogInputs.length; i++) {
             const input = dialogInputs[i];
-            const accept = input.accept?.toLowerCase() || '';
+            const accept = input.accept?.toLowerCase() || "";
 
             // 严格排除视频输入框
-            if (accept.includes('video')) {
+            if (accept.includes("video")) {
               console.log(`❌ 跳过弹框中的视频输入框 ${i + 1}: accept="${input.accept}"`);
               continue;
             }
 
             // 优先选择图片输入框
-            if (accept.includes('image')) {
+            if (accept.includes("image")) {
               fileInput = input;
               selectorUsed = `弹框图片输入框 #${i + 1}`;
               console.log(`✅ 找到弹框图片输入框 ${i + 1}: accept="${input.accept}"`);
@@ -1466,7 +711,7 @@ export async function VideoQiE(data: SyncData) {
 
         // 不管输入框是否隐藏，只要有就使用
         if (!fileInput) {
-          console.log('❌ 完全未找到合适的图片输入框，无法上传封面');
+          console.log("❌ 完全未找到合适的图片输入框，无法上传封面");
           return true;
         }
 
@@ -1474,55 +719,54 @@ export async function VideoQiE(data: SyncData) {
         console.log(`🎯 最终使用的文件输入框: ${selectorUsed}`, {
           accept: fileInput.accept,
           type: fileInput.type,
-          hidden: fileInput.hasAttribute('hidden'),
+          hidden: fileInput.hasAttribute("hidden"),
           style: fileInput.style.display,
           offsetParent: !!fileInput.offsetParent,
           className: fileInput.className,
-          name: fileInput.name
+          name: fileInput.name,
         });
 
         // 如果找到的输入框没有明确接受图片，添加图片支持
-        if (!fileInput.accept || (!fileInput.accept.includes('image') && !fileInput.accept.includes('video'))) {
-          console.log('🔧 设置输入框accept属性支持图片...');
-          fileInput.setAttribute('accept', 'image/*');
+        if (!fileInput.accept || (!fileInput.accept.includes("image") && !fileInput.accept.includes("video"))) {
+          console.log("🔧 设置输入框accept属性支持图片...");
+          fileInput.setAttribute("accept", "image/*");
         }
 
         // 先点击上传按钮以确保文件输入框被激活
-        console.log('🖱️ 点击上传按钮以确保文件输入框激活...');
+        console.log("🖱️ 点击上传按钮以确保文件输入框激活...");
         // 通过"上传图片"文本找到对应的标题，然后找到同级的按钮
-        const uploadTitle = Array.from(document.querySelectorAll('h4')).find(h4 =>
-          h4.textContent?.includes('上传图片')
+        const uploadTitle = Array.from(document.querySelectorAll("h4")).find((h4) =>
+          h4.textContent?.includes("上传图片"),
         );
-        const uploadButton = uploadTitle?.parentElement?.querySelector('button') as HTMLElement;
+        const uploadButton = uploadTitle?.parentElement?.querySelector("button") as HTMLElement;
         if (uploadButton) {
           this.simulateClick(uploadButton);
           await this.sleep(500);
         } else {
-          console.log('⚠️ 未找到上传按钮，直接尝试文件上传');
+          console.log("⚠️ 未找到上传按钮，直接尝试文件上传");
         }
 
         // 获取图片数据并上传
-        console.log('🖼️ 获取封面图片数据...');
+        console.log("🖼️ 获取封面图片数据...");
         return await this.performCoverUpload(fileInput, coverUrl);
-
       }
 
       private async performCoverUpload(fileInput: HTMLInputElement, coverUrl: string): Promise<boolean> {
         try {
           const response = await fetch(coverUrl);
           const blob = await response.blob();
-          const fileName = `cover_${Date.now()}.${blob.type.split('/')[1] || 'jpg'}`;
+          const fileName = `cover_${Date.now()}.${blob.type.split("/")[1] || "jpg"}`;
           const coverFile = new File([blob], fileName, { type: blob.type });
 
-          console.log('📄 封面文件信息:', {
+          console.log("📄 封面文件信息:", {
             name: coverFile.name,
             type: coverFile.type,
-            size: coverFile.size
+            size: coverFile.size,
           });
 
           // 验证文件类型是否为图片
-          if (!coverFile.type.startsWith('image/')) {
-            console.log('⚠️ 文件类型不是图片:', coverFile.type);
+          if (!coverFile.type.startsWith("image/")) {
+            console.log("⚠️ 文件类型不是图片:", coverFile.type);
           }
 
           // 创建DataTransfer并添加文件
@@ -1531,25 +775,25 @@ export async function VideoQiE(data: SyncData) {
           fileInput.files = dataTransfer.files;
 
           // 触发多个事件确保上传
-          fileInput.dispatchEvent(new Event('change', { bubbles: true }));
-          fileInput.dispatchEvent(new Event('input', { bubbles: true }));
-          fileInput.dispatchEvent(new Event('change', { bubbles: true })); // 再次触发
+          fileInput.dispatchEvent(new Event("change", { bubbles: true }));
+          fileInput.dispatchEvent(new Event("input", { bubbles: true }));
+          fileInput.dispatchEvent(new Event("change", { bubbles: true })); // 再次触发
 
-          console.log('✅ 封面上传事件已触发');
+          console.log("✅ 封面上传事件已触发");
           await this.sleep(3000);
 
           // 检查是否有下一步按钮需要点击
-          console.log('🔍 查找下一步按钮...');
+          console.log("🔍 查找下一步按钮...");
 
           let nextButton: HTMLElement | null = null;
 
           // 方式1：在封面上传容器内查找"下一步"按钮
           if (fileInput) {
-            const uploadContainer = fileInput.closest('.omui-tab__panel-inner');
+            const uploadContainer = fileInput.closest(".omui-tab__panel-inner");
             if (uploadContainer) {
-              const buttons = uploadContainer.querySelectorAll('button') as NodeListOf<HTMLElement>;
+              const buttons = uploadContainer.querySelectorAll("button") as NodeListOf<HTMLElement>;
               for (const button of buttons) {
-                if (button.textContent?.trim() === '下一步') {
+                if (button.textContent?.trim() === "下一步") {
                   nextButton = button;
                   console.log('✅ 在上传容器内找到"下一步"按钮');
                   break;
@@ -1560,9 +804,9 @@ export async function VideoQiE(data: SyncData) {
 
           // 方式2：如果容器内没找到，查找带有omui-button--primary类的"下一步"按钮
           if (!nextButton) {
-            const buttons = document.querySelectorAll('button.omui-button--primary') as NodeListOf<HTMLElement>;
+            const buttons = document.querySelectorAll("button.omui-button--primary") as NodeListOf<HTMLElement>;
             for (const button of buttons) {
-              if (button.textContent?.trim() === '下一步') {
+              if (button.textContent?.trim() === "下一步") {
                 nextButton = button;
                 console.log('✅ 找到primary样式的"下一步"按钮');
                 break;
@@ -1572,9 +816,9 @@ export async function VideoQiE(data: SyncData) {
 
           // 方式3：最后fallback，查找任何"下一步"按钮
           if (!nextButton) {
-            const buttons = document.querySelectorAll('button') as NodeListOf<HTMLElement>;
+            const buttons = document.querySelectorAll("button") as NodeListOf<HTMLElement>;
             for (const button of buttons) {
-              if (button.textContent?.trim() === '下一步') {
+              if (button.textContent?.trim() === "下一步") {
                 nextButton = button;
                 console.log('✅ 找到任意"下一步"按钮');
                 break;
@@ -1583,26 +827,25 @@ export async function VideoQiE(data: SyncData) {
           }
 
           if (nextButton) {
-            console.log('➡️ 点击下一步/完成按钮...');
+            console.log("➡️ 点击下一步/完成按钮...");
             this.simulateClick(nextButton);
 
             // 等待更长时间让页面完全加载
             await this.sleep(3000);
 
             // 检查是否还有其他需要处理的步骤
-            console.log('🔍 检查是否还有后续步骤...');
+            console.log("🔍 检查是否还有后续步骤...");
             const hasMoreSteps = await this.checkAndHandleNextSteps();
 
             if (!hasMoreSteps) {
-              console.log('✅ 没有发现更多需要处理的步骤');
+              console.log("✅ 没有发现更多需要处理的步骤");
             }
           }
 
-          console.log('✅ 封面上传完成');
+          console.log("✅ 封面上传完成");
           return true;
-
         } catch (error) {
-          console.error('❌ 执行封面上传时出错:', error);
+          console.error("❌ 执行封面上传时出错:", error);
           return true;
         }
       }
@@ -1612,23 +855,27 @@ export async function VideoQiE(data: SyncData) {
        */
       private async handlePreviewOptions(): Promise<boolean> {
         try {
-          console.log('🔍 查找预览选项...');
+          console.log("🔍 查找预览选项...");
 
           // 等待页面完全加载
           await this.sleep(1000);
 
           // 首先在主DOM中查找
-          const previewOptions = Array.from(document.querySelectorAll('.preview__option-item input[type="radio"]')) as HTMLInputElement[];
+          const previewOptions = Array.from(
+            document.querySelectorAll('.preview__option-item input[type="radio"]'),
+          ) as HTMLInputElement[];
 
           // 如果主DOM中没找到，搜索Shadow DOM
           if (previewOptions.length === 0) {
-            console.log('🌐 主DOM中未找到预览选项，开始搜索Shadow DOM...');
+            console.log("🌐 主DOM中未找到预览选项，开始搜索Shadow DOM...");
 
             // 查找所有可能包含Shadow DOM的元素
-            const shadowHosts = Array.from(document.querySelectorAll('*')).filter(el => el.shadowRoot);
+            const shadowHosts = Array.from(document.querySelectorAll("*")).filter((el) => el.shadowRoot);
 
             shadowHosts.forEach((host, index) => {
-              const shadowOptions = host.shadowRoot.querySelectorAll('.preview__option-item input[type="radio"]') as NodeListOf<HTMLInputElement>;
+              const shadowOptions = host.shadowRoot.querySelectorAll(
+                '.preview__option-item input[type="radio"]',
+              ) as NodeListOf<HTMLInputElement>;
               if (shadowOptions.length > 0) {
                 console.log(`📱 Shadow DOM ${index} 中找到 ${shadowOptions.length} 个预览选项`);
                 previewOptions.push(...Array.from(shadowOptions));
@@ -1637,7 +884,7 @@ export async function VideoQiE(data: SyncData) {
           }
 
           if (previewOptions.length === 0) {
-            console.log('⚠️ 未找到预览选项中的 radio 元素');
+            console.log("⚠️ 未找到预览选项中的 radio 元素");
             return false;
           }
 
@@ -1646,30 +893,30 @@ export async function VideoQiE(data: SyncData) {
           // 依次点击每个 radio
           for (let i = 0; i < previewOptions.length; i++) {
             const radio = previewOptions[i];
-            console.log(`🎯 处理第 ${i + 1} 个预览选项 radio，当前状态: ${radio.checked ? '已选中' : '未选中'}`);
+            console.log(`🎯 处理第 ${i + 1} 个预览选项 radio，当前状态: ${radio.checked ? "已选中" : "未选中"}`);
 
             // 如果未选中，则点击
             if (!radio.checked) {
               radio.click();
               await this.sleep(300);
-              console.log(`✅ 已点击第 ${i + 1} 个选项，新状态: ${radio.checked ? '已选中' : '未选中'}`);
+              console.log(`✅ 已点击第 ${i + 1} 个选项，新状态: ${radio.checked ? "已选中" : "未选中"}`);
             }
           }
 
-          console.log('✅ 所有预览选项处理完成');
+          console.log("✅ 所有预览选项处理完成");
 
           // 点击"完成"按钮
           console.log('🔍 查找并点击"完成"按钮...');
           let completeButtonClicked = false;
 
           // 1. 首先在主DOM中查找
-          const buttons = document.querySelectorAll('button') as NodeListOf<HTMLElement>;
+          const buttons = document.querySelectorAll("button") as NodeListOf<HTMLElement>;
           for (const button of buttons) {
-            if (button.textContent?.trim() === '完成') {
+            if (button.textContent?.trim() === "完成") {
               console.log('✅ 在主DOM中找到"完成"按钮，点击...');
               this.simulateClick(button);
               await this.sleep(1000);
-              console.log('✅ 已点击完成按钮');
+              console.log("✅ 已点击完成按钮");
               completeButtonClicked = true;
               break;
             }
@@ -1678,16 +925,16 @@ export async function VideoQiE(data: SyncData) {
           // 2. 如果主DOM中没找到，搜索Shadow DOM
           if (!completeButtonClicked) {
             console.log('🌐 主DOM中未找到"完成"按钮，搜索Shadow DOM...');
-            const shadowHosts = Array.from(document.querySelectorAll('*')).filter(el => el.shadowRoot);
+            const shadowHosts = Array.from(document.querySelectorAll("*")).filter((el) => el.shadowRoot);
 
             for (const host of shadowHosts) {
-              const shadowButtons = host.shadowRoot.querySelectorAll('button') as NodeListOf<HTMLElement>;
+              const shadowButtons = host.shadowRoot.querySelectorAll("button") as NodeListOf<HTMLElement>;
               for (const button of shadowButtons) {
-                if (button.textContent?.trim() === '完成') {
+                if (button.textContent?.trim() === "完成") {
                   console.log('✅ 在Shadow DOM中找到"完成"按钮，点击...');
                   this.simulateClick(button);
                   await this.sleep(1000);
-                  console.log('✅ 已点击Shadow DOM中的完成按钮');
+                  console.log("✅ 已点击Shadow DOM中的完成按钮");
                   completeButtonClicked = true;
                   break;
                 }
@@ -1701,9 +948,8 @@ export async function VideoQiE(data: SyncData) {
           }
 
           return true;
-
         } catch (error) {
-          console.error('❌ 处理预览选项时出错:', error);
+          console.error("❌ 处理预览选项时出错:", error);
           return false;
         }
       }
@@ -1714,22 +960,24 @@ export async function VideoQiE(data: SyncData) {
       private async checkAndHandleNextSteps(): Promise<boolean> {
         try {
           // 0. 首先处理指定复选框
-          console.log('🔍 查找并勾选指定复选框...');
-          const userOriginalContainer = document.getElementById('-user_original');
+          console.log("🔍 查找并勾选指定复选框...");
+          const userOriginalContainer = document.getElementById("-user_original");
           if (userOriginalContainer) {
-            const targetCheckbox = userOriginalContainer.querySelector('input[type="checkbox"].omui-checkbox__input[value="1"]') as HTMLInputElement;
+            const targetCheckbox = userOriginalContainer.querySelector(
+              'input[type="checkbox"].omui-checkbox__input[value="1"]',
+            ) as HTMLInputElement;
             if (targetCheckbox && !targetCheckbox.checked) {
-              console.log('✅ 在-user_original容器中找到目标复选框，执行勾选...');
+              console.log("✅ 在-user_original容器中找到目标复选框，执行勾选...");
               targetCheckbox.click();
               await this.sleep(300);
-              console.log('✅ 已勾选指定复选框');
-            } else if (targetCheckbox && targetCheckbox.checked) {
-              console.log('✅ 目标复选框已勾选');
+              console.log("✅ 已勾选指定复选框");
+            } else if (targetCheckbox?.checked) {
+              console.log("✅ 目标复选框已勾选");
             } else {
-              console.log('⚠️ 在-user_original容器中未找到目标复选框');
+              console.log("⚠️ 在-user_original容器中未找到目标复选框");
             }
           } else {
-            console.log('⚠️ 未找到-user_original容器');
+            console.log("⚠️ 未找到-user_original容器");
           }
 
           // 1. 首先尝试处理预览选项
@@ -1740,17 +988,17 @@ export async function VideoQiE(data: SyncData) {
 
           // 2. 查找是否有"完成"或"确认"按钮需要点击
           const confirmButtons = [
-            { text: '完成', selector: 'button' },
-            { text: '确认', selector: 'button' },
-            { text: '保存', selector: 'button' },
-            { text: '提交', selector: 'button' }
+            { text: "完成", selector: "button" },
+            { text: "确认", selector: "button" },
+            { text: "保存", selector: "button" },
+            { text: "提交", selector: "button" },
           ];
 
           for (const buttonConfig of confirmButtons) {
             const buttons = document.querySelectorAll(buttonConfig.selector) as NodeListOf<HTMLElement>;
             for (const button of buttons) {
-              if (button.textContent?.trim() === buttonConfig.text &&
-                  button.offsetParent !== null) { // 确保按钮是可见的
+              if (button.textContent?.trim() === buttonConfig.text && button.offsetParent !== null) {
+                // 确保按钮是可见的
                 console.log(`✅ 找到 "${buttonConfig.text}" 按钮，准备点击...`);
                 this.simulateClick(button);
                 await this.sleep(1000);
@@ -1760,17 +1008,19 @@ export async function VideoQiE(data: SyncData) {
           }
 
           // 3. 检查是否有其他可能的交互元素
-          const interactiveElements = document.querySelectorAll('input[type="radio"], input[type="checkbox"], .omui-suggestion__option') as NodeListOf<HTMLElement>;
+          const interactiveElements = document.querySelectorAll(
+            'input[type="radio"], input[type="checkbox"], .omui-suggestion__option',
+          ) as NodeListOf<HTMLElement>;
           let foundInteractions = false;
 
           for (const element of interactiveElements) {
             // 对于建议选项，只点击未禁用的
-            if (element.classList.contains('omui-suggestion__option') &&
-                element.classList.contains('disabled')) {
+            if (element.classList.contains("omui-suggestion__option") && element.classList.contains("disabled")) {
               continue;
             }
 
-            if (element.offsetParent !== null) { // 确保元素是可见的
+            if (element.offsetParent !== null) {
+              // 确保元素是可见的
               console.log(`🎯 找到可交互元素: ${element.tagName}.${element.className}`);
               element.click();
               await this.sleep(300);
@@ -1783,27 +1033,26 @@ export async function VideoQiE(data: SyncData) {
           }
 
           // 4. 最后检查页面状态
-          console.log('🔍 检查页面当前状态...');
+          console.log("🔍 检查页面当前状态...");
           const pageTitle = document.title;
           const url = window.location.href;
           console.log(`当前页面: ${pageTitle} - ${url}`);
 
           return foundInteractions;
-
         } catch (error) {
-          console.error('❌ 检查后续步骤时出错:', error);
+          console.error("❌ 检查后续步骤时出错:", error);
           return false;
         }
       }
     }
 
     const uploader = new QiEVideoUploader();
-    console.log('✅ QiEVideoUploader实例创建成功');
+    console.log("✅ QiEVideoUploader实例创建成功");
     const result = await uploader.process(data);
-    console.log('🎉 QiE视频上传处理完成');
+    console.log("🎉 QiE视频上传处理完成");
     return result;
   } catch (error) {
-    console.error('❌ QiE视频上传过程中出现错误:', error);
+    console.error("❌ QiE视频上传过程中出现错误:", error);
     throw error;
   }
 }

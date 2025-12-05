@@ -1,4 +1,4 @@
-import type { DynamicData, SyncData } from '../common';
+import type { DynamicData, SyncData } from "../common";
 
 // 优先发布图文
 export async function DynamicRednote(data: SyncData) {
@@ -36,7 +36,7 @@ export async function DynamicRednote(data: SyncData) {
   async function uploadImages() {
     const fileInput = (await waitForElement('input[type="file"]')) as HTMLInputElement;
     if (!fileInput) {
-      console.error('未找到文件输入元素');
+      console.error("未找到文件输入元素");
       return;
     }
 
@@ -58,11 +58,11 @@ export async function DynamicRednote(data: SyncData) {
 
     if (dataTransfer.files.length > 0) {
       fileInput.files = dataTransfer.files;
-      fileInput.dispatchEvent(new Event('change', { bubbles: true }));
+      fileInput.dispatchEvent(new Event("change", { bubbles: true }));
       await new Promise((resolve) => setTimeout(resolve, 2000)); // 等待文件处理
-      console.log('文件上传操作完成');
+      console.log("文件上传操作完成");
     } else {
-      console.error('没有成功添加任何文件');
+      console.error("没有成功添加任何文件");
     }
   }
 
@@ -73,17 +73,17 @@ export async function DynamicRednote(data: SyncData) {
 
     // 点击上传图文按钮
     const uploadButtons = document.querySelectorAll('span[class="title"]');
-    const uploadButton = Array.from(uploadButtons).find(
-      (element) => element.textContent?.includes('上传图文'),
+    const uploadButton = Array.from(uploadButtons).find((element) =>
+      element.textContent?.includes("上传图文"),
     ) as HTMLElement;
 
     if (!uploadButton) {
-      console.error('未找到上传图文按钮');
+      console.error("未找到上传图文按钮");
       return;
     }
 
     uploadButton.click();
-    uploadButton.dispatchEvent(new Event('click', { bubbles: true }));
+    uploadButton.dispatchEvent(new Event("click", { bubbles: true }));
     await new Promise((resolve) => setTimeout(resolve, 1000));
 
     // 上传文件
@@ -93,46 +93,46 @@ export async function DynamicRednote(data: SyncData) {
     // 填写标题
     const titleInput = (await waitForElement('input[type="text"]')) as HTMLInputElement;
     if (titleInput) {
-      const titleText = title || content?.slice(0, 20) || '';
+      const titleText = title || content?.slice(0, 20) || "";
       titleInput.value = titleText;
-      titleInput.dispatchEvent(new Event('input', { bubbles: true }));
+      titleInput.dispatchEvent(new Event("input", { bubbles: true }));
     }
 
     // 填写内容
     const contentEditor = (await waitForElement('div[contenteditable="true"]')) as HTMLDivElement;
     if (contentEditor) {
       contentEditor.focus();
-      const contentPasteEvent = new ClipboardEvent('paste', {
+      const contentPasteEvent = new ClipboardEvent("paste", {
         bubbles: true,
         cancelable: true,
         clipboardData: new DataTransfer(),
       });
-      contentPasteEvent.clipboardData.setData('text/plain', content || '');
+      contentPasteEvent.clipboardData.setData("text/plain", content || "");
       contentEditor.dispatchEvent(contentPasteEvent);
       await new Promise((resolve) => setTimeout(resolve, 1000));
       contentEditor.blur();
-      console.log('设置内容:', content);
+      console.log("设置内容:", content);
     }
 
     // 自动发布
     if (data.isAutoPublish) {
       await new Promise((resolve) => setTimeout(resolve, 2000));
-      const buttons = document.querySelectorAll('button');
-      const publishButton = Array.from(buttons).find(
-        (button) => button.textContent?.includes('发布'),
+      const buttons = document.querySelectorAll("button");
+      const publishButton = Array.from(buttons).find((button) =>
+        button.textContent?.includes("发布"),
       ) as HTMLButtonElement;
 
       if (publishButton) {
         // 等待按钮可用
-        while (publishButton.getAttribute('aria-disabled') === 'true') {
+        while (publishButton.getAttribute("aria-disabled") === "true") {
           await new Promise((resolve) => setTimeout(resolve, 1000));
-          console.log('等待发布按钮可用...');
+          console.log("等待发布按钮可用...");
         }
 
-        console.log('点击发布按钮');
+        console.log("点击发布按钮");
         publishButton.click();
         await new Promise((resolve) => setTimeout(resolve, 10000));
-        window.location.href = 'https://creator.xiaohongshu.com/new/note-manager';
+        window.location.href = "https://creator.xiaohongshu.com/new/note-manager";
       }
     }
   }
