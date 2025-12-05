@@ -537,6 +537,10 @@
     "message": "Toutiaohao",
     "description": "Platform name for Toutiaohao"
   },
+  "platformMaimai": {
+    "message": "Maimai",
+    "description": "Platform name for Maimai"
+  },
   "optionsFeedbackPrefix": {
     "message": "Missing a platform you need?"
   },

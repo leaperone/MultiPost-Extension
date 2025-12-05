@@ -7,8 +7,10 @@ import { DynamicDouban } from "./dynamic/douban";
 import { DynamicDouyin } from "./dynamic/douyin";
 import { DynamicFacebook } from "./dynamic/facebook";
 import { DynamicInstagram } from "./dynamic/instagram";
+import { DynamicJuejin } from "./dynamic/juejin";
 import { DynamicKuaishou } from "./dynamic/kuaishou";
 import { DynamicLinkedin } from "./dynamic/linkedin";
+import { DynamicMaimai } from "./dynamic/maimai";
 import { DynamicOkjike } from "./dynamic/okjike";
 import { DynamicReddit } from "./dynamic/reddit";
 import { DynamicRednote } from "./dynamic/rednote";
@@ -330,5 +332,27 @@ export const DynamicInfoMap: Record<string, PlatformInfo> = {
     injectFunction: DynamicSubstack,
     tags: ["International"],
     accountKey: "substack",
+  },
+  DYNAMIC_MAIMAI: {
+    type: "DYNAMIC",
+    name: "DYNAMIC_MAIMAI",
+    homeUrl: "https://maimai.cn/",
+    faviconUrl: "https://maimai.cn/favicon.ico",
+    platformName: chrome.i18n.getMessage("platformMaimai"),
+    injectUrl: "https://maimai.cn/community/home/following",
+    injectFunction: DynamicMaimai,
+    tags: ["CN"],
+    accountKey: "maimai",
+  },
+  DYNAMIC_JUEJIN: {
+    type: "DYNAMIC",
+    name: "DYNAMIC_JUEJIN",
+    homeUrl: "https://juejin.cn/",
+    faviconUrl: "https://juejin.cn/favicon.ico",
+    platformName: chrome.i18n.getMessage("platformJuejin"),
+    injectUrl: "https://juejin.cn/pins",
+    injectFunction: DynamicJuejin,
+    tags: ["CN"],
+    accountKey: "juejin",
   },
 };

@@ -544,6 +544,10 @@
     "message": "今日头条号",
     "description": "今日头条号平台名称"
   },
+  "platformMaimai": {
+    "message": "脉脉",
+    "description": "脉脉平台名称"
+  },
   "optionsFeedbackPrefix": {
     "message": "没有你需要的平台？"
   },
