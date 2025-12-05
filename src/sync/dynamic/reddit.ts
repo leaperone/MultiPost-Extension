@@ -1,7 +1,7 @@
 import type { DynamicData, SyncData } from "../common";
 
 export async function DynamicReddit(data: SyncData) {
-  const { title, content, images, videos } = data.data as DynamicData;
+  console.log("Reddit 函数被调用");
 
   function waitForElement(selector: string, timeout = 10000): Promise<Element> {
     return new Promise((resolve, reject) => {
@@ -31,127 +31,107 @@ export async function DynamicReddit(data: SyncData) {
     });
   }
 
-  async function uploadFiles(files: File[], fileInput: HTMLInputElement) {
-    // const fileInput = (await waitForElement(selector)) as HTMLInputElement;
-    if (!fileInput) {
-      console.error("未找到文件输入元素");
-      return;
-    }
-
-    const dataTransfer = new DataTransfer();
-    for (const file of files) {
-      dataTransfer.items.add(file);
-    }
-
-    fileInput.files = dataTransfer.files;
-    fileInput.dispatchEvent(new Event("change", { bubbles: true }));
-    fileInput.dispatchEvent(new Event("input", { bubbles: true }));
-    await new Promise((resolve) => setTimeout(resolve, 2000));
-    console.debug("文件上传操作完成");
-  }
-
-  // 辅助函数：等待多个元素出现
-
   try {
-    const selectButton = (await waitForElement("#post-submit-community-picker", 5000)).shadowRoot.querySelector(
-      "#dropdown-button",
-    ) as HTMLButtonElement;
-    selectButton.click();
+    const { title, content, images, videos } = data.data as DynamicData;
 
-    const community = (await waitForElement(
-      "#post-submit-community-picker > li > ul > li:nth-child(1)",
-      5000,
-    )) as HTMLElement;
-    community.click();
+    // 等待页面加载
+    await waitForElement("faceplate-textarea-input");
 
-    const titleEditor = (await waitForElement(
-      "#post-composer__title > faceplate-tracker > faceplate-textarea-input",
-    )) as HTMLDivElement;
-    await new Promise((resolve) => setTimeout(resolve, 1000));
-    const titleInput = titleEditor.shadowRoot.querySelector("#innerTextArea") as HTMLTextAreaElement;
-    // 聚焦编辑器
-    titleInput.value = title;
-    titleInput.dispatchEvent(new Event("input", { bubbles: true }));
-
-    // 填写内容
-    const editorElement = (await waitForElement('div[name="body"][contenteditable="true"]')) as HTMLDivElement;
-    if (!editorElement) {
-      console.debug("未找到编辑器元素");
-      return;
-    }
-    editorElement.focus();
-    const pasteEvent = new ClipboardEvent("paste", {
-      bubbles: true,
-      cancelable: true,
-      clipboardData: new DataTransfer(),
-    });
-    pasteEvent.clipboardData.setData("text/plain", content || "");
-    editorElement.dispatchEvent(pasteEvent);
-    editorElement.dispatchEvent(new Event("input", { bubbles: true }));
-    editorElement.dispatchEvent(new Event("change", { bubbles: true }));
-    console.log("编辑器内容已更新");
-
-    // 处理图片上传
-    if (images && images.length > 0) {
-      const imageInput = document
-        .querySelector("#post-composer_bodytext > shreddit-composer > rte-toolbar-button-image")
-        .shadowRoot.querySelector("input") as HTMLInputElement;
-      if (imageInput) {
-        const imageFiles = await Promise.all(
-          images.map(async (file) => {
-            const response = await fetch(file.url);
-            const blob = await response.blob();
-            return new File([blob], file.name, { type: file.type });
-          }),
-        );
-        await uploadFiles(imageFiles, imageInput);
-      }
-    }
-
-    if (videos && videos.length > 0) {
-      const videoInput = document
-        .querySelector("#post-composer_bodytext > shreddit-composer > rte-toolbar-button-video")
-        .shadowRoot.querySelector("input") as HTMLInputElement;
-      if (videoInput) {
-        const videoFiles = await Promise.all(
-          videos.map(async (fileData) => {
-            const response = await fetch(fileData.url);
-            const blob = await response.arrayBuffer();
-            return new File([blob], fileData.name, { type: fileData.type });
-          }),
-        );
-        await uploadFiles(videoFiles, videoInput);
-      }
-    }
-
-    console.debug("成功上传");
-
-    // 等待一段时间后尝试提交
-    await new Promise((resolve) => setTimeout(resolve, 5000));
-
-    // 自动提交
-    if (data.isAutoPublish) {
-      const maxAttempts = 3;
-      for (let attempt = 0; attempt < maxAttempts; attempt++) {
-        try {
-          const submitButton = (await waitForElement("#submit-post-button", 5000)).shadowRoot.querySelector(
-            "#inner-post-submit-button",
-          ) as HTMLButtonElement;
-          submitButton.click();
-          console.log("提交按钮已点击");
-          await new Promise((resolve) => setTimeout(resolve, 3000)); // 等待提交完成
-          window.location.reload(); // 提交后刷新页面
-          break; // 成功点击后退出循环
-        } catch (error) {
-          console.warn(`第 ${attempt + 1} 次尝试查找提交按钮失败:`, error);
-          if (attempt === maxAttempts - 1) {
-            console.error("达到最大尝试次数，无法找到提交按钮");
-          }
-          await new Promise((resolve) => setTimeout(resolve, 2000)); // 等待2秒后重试
+    // 如果有媒体文件，点击 Image & Video 标签
+    const mediaFiles = [...(images || []), ...(videos || [])];
+    if (mediaFiles.length > 0) {
+      const tablist = document
+        .querySelector("r-post-type-select")
+        ?.shadowRoot?.querySelector("div[role='tablist']")
+        ?.querySelectorAll("faceplate-tracker");
+      console.debug("tablist", tablist);
+      if (tablist && tablist.length > 1) {
+        const tabButton = tablist[1].querySelector("button");
+        if (tabButton) {
+          tabButton.click();
+          await new Promise((resolve) => setTimeout(resolve, 1000));
         }
       }
     }
+
+    // 填写标题
+    const titleTextarea = document
+      .querySelector("faceplate-textarea-input")
+      ?.shadowRoot?.querySelector('textarea[id="innerTextArea"]') as HTMLTextAreaElement;
+    console.debug("titleTextarea", titleTextarea);
+    if (!titleTextarea) {
+      console.debug("未找到标题元素");
+      return;
+    }
+    titleTextarea.value = title?.slice(0, 300) || "";
+    titleTextarea.dispatchEvent(new Event("input", { bubbles: true }));
+    titleTextarea.dispatchEvent(new Event("change", { bubbles: true }));
+
+    // 上传媒体文件
+    if (mediaFiles.length > 0) {
+      const fileInput = document
+        .querySelector("r-post-media-input")
+        ?.shadowRoot?.querySelector("input") as HTMLInputElement;
+      console.debug("input", fileInput);
+
+      if (fileInput) {
+        const dataTransfer = new DataTransfer();
+        for (const fileData of mediaFiles) {
+          console.debug("try upload file", fileData);
+          try {
+            const response = await fetch(fileData.url);
+            const arrayBuffer = await response.arrayBuffer();
+            const file = new File([arrayBuffer], fileData.name, { type: fileData.type });
+            dataTransfer.items.add(file);
+          } catch (error) {
+            console.error("获取文件失败:", error);
+          }
+        }
+
+        fileInput.files = dataTransfer.files;
+        fileInput.dispatchEvent(new Event("change", { bubbles: true }));
+        fileInput.dispatchEvent(new Event("input", { bubbles: true }));
+        console.debug("文件上传操作完成");
+      }
+    }
+
+    // 填写内容 - 查找第三个 contenteditable div
+    const editors = document.querySelectorAll('div[contenteditable="true"]');
+    console.debug("qlEditors", editors);
+    if (editors && editors.length > 2) {
+      const editor = editors[2] as HTMLDivElement;
+      console.debug("qlEditor -->", editor);
+      editor.focus();
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+
+      const pasteEvent = new ClipboardEvent("paste", {
+        bubbles: true,
+        cancelable: true,
+        clipboardData: new DataTransfer(),
+      });
+      pasteEvent.clipboardData?.setData("text/plain", content || "");
+      editor.dispatchEvent(pasteEvent);
+      editor.dispatchEvent(new Event("input", { bubbles: true }));
+      editor.dispatchEvent(new Event("change", { bubbles: true }));
+    }
+
+    // 自动提交
+    if (data.autoPublish) {
+      await new Promise((resolve) => setTimeout(resolve, 5000));
+
+      const submitButton = document.querySelector("r-post-form-submit-button#submit-post-button");
+      console.debug("submitButton", submitButton);
+      if (submitButton) {
+        const innerButton = submitButton.shadowRoot?.querySelector("button");
+        if (innerButton) {
+          console.debug("自动发布：点击提交按钮");
+          innerButton.click();
+        }
+      }
+    } else {
+      console.debug("帖子准备就绪，等待手动发布");
+    }
   } catch (error) {
-    console.error("填入内容或上传图片或上传视频时出错:", error);
+    console.error("Reddit 发布过程中出错:", error);
   }
 }
