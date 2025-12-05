@@ -161,7 +161,7 @@ export const DynamicInfoMap: Record<string, PlatformInfo> = {
     homeUrl: "https://www.reddit.com/",
     faviconUrl: "https://www.reddit.com/favicon.ico",
     platformName: chrome.i18n.getMessage("platformReddit"),
-    injectUrl: "https://www.reddit.com/submit?type=TEXT",
+    injectUrl: "https://www.reddit.com/submit?type=IMAGE",
     injectFunction: DynamicReddit,
     tags: ["International"],
     accountKey: "reddit",
