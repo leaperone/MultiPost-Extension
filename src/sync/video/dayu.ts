@@ -1118,29 +1118,23 @@ export async function VideoDayu(data: SyncData): Promise<void> {
             // 标记为需要手动处理
             console.log("ℹ️ 标签处理需要手动完成（使用框架方法）");
             return;
-
-            console.log("✅ 标签已填写到输入框");
-          } else {
-            // 如果仍然没有找到输入框，尝试使用其他方法
-            console.log("⚠️ 仍未找到可编辑的标签输入框");
-            console.log("💡 尝试将标签写入剪贴板，方便手动粘贴...");
-
-            // 尝试复制到剪贴板
-            try {
-              await navigator.clipboard.writeText(tagString);
-              console.log("✅ 标签已复制到剪贴板: ", tagString);
-              console.log("💡 提示: 请手动粘贴到标签输入框中");
-            } catch (_err) {
-              console.log("⚠️ 剪贴板复制失败，请手动输入标签");
-            }
-
-            // 标记为成功（因为可能是需要手动输入的区域）
-            console.log("ℹ️ 标签处理标记为完成（可能需要手动输入）");
-            return;
           }
 
-          console.log("✅ 视频标签处理成功");
-          return;
+          // 如果仍然没有找到输入框，尝试使用其他方法
+          console.log("⚠️ 仍未找到可编辑的标签输入框");
+          console.log("💡 尝试将标签写入剪贴板，方便手动粘贴...");
+
+          // 尝试复制到剪贴板
+          try {
+            await navigator.clipboard.writeText(tagString);
+            console.log("✅ 标签已复制到剪贴板: ", tagString);
+            console.log("💡 提示: 请手动粘贴到标签输入框中");
+          } catch (_err) {
+            console.log("⚠️ 剪贴板复制失败，请手动输入标签");
+          }
+
+          // 标记为成功（因为可能是需要手动输入的区域）
+          console.log("ℹ️ 标签处理标记为完成（可能需要手动输入）");
         } catch (error) {
           console.error("视频标签处理失败:", error);
           return;

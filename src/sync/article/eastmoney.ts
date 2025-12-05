@@ -1,59 +1,8 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
-import type { ArticleData, FileData, SyncData } from "~sync/common";
+import type { ArticleData, SyncData } from "~sync/common";
 
 export async function ArticleEastmoney(data: SyncData) {
-  // 获取 cookie 的辅助函数
-  const getCookie = (name: string) => {
-    const cookies = document.cookie.split("; ");
-    const cookie = cookies.find((c) => c.startsWith(`${name}=`));
-    return cookie?.split("=")[1];
-  };
-
-  // 上传单个图片
-  async function uploadImage(fileInfo: FileData): Promise<string | null> {
-    try {
-      console.debug("uploadImage", fileInfo);
-
-      // 构建上传 URL
-      const url = new URL("https://gbapi.eastmoney.com/iimage/image");
-      url.searchParams.set("platform", "");
-      const uploadUrl = url.toString();
-
-      // 获取图片 blob 并创建 File 对象
-      const blob = await (await fetch(fileInfo.url)).blob();
-      const file = new File([blob], fileInfo.name, { type: fileInfo.type });
-
-      // 创建表单数据
-      const formData = new FormData();
-      formData.append("file", file);
-      formData.append("ctoken", getCookie("ct"));
-      formData.append("utoken", getCookie("ut"));
-
-      // 发送上传请求
-      const response = await fetch(uploadUrl, {
-        method: "POST",
-        body: formData,
-      });
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-
-      const result = await response.json();
-      console.debug("Image upload result:", result);
-
-      if (result?.data?.url) {
-        return result.data.url;
-      }
-      return null;
-    } catch (error) {
-      console.debug("Error uploading image:", error);
-      return null;
-    }
-  }
-
   // 处理文章内容中的图片
-  async function processContent(htmlContent: string, imageFiles: FileData[]): Promise<string> {
+  async function processContent(htmlContent: string): Promise<string> {
     const parser = new DOMParser();
     const doc = parser.parseFromString(htmlContent, "text/html");
     const images = doc.getElementsByTagName("img");
@@ -61,29 +10,6 @@ export async function ArticleEastmoney(data: SyncData) {
     for (const img of images) {
       img.remove();
     }
-    return doc.body.innerHTML;
-
-    console.debug("images", images);
-
-    for (let i = 0; i < images.length; i++) {
-      updateTip(`正在上传第 ${i + 1}/${images.length} 张图片`);
-
-      const img = images[i];
-      const src = img.getAttribute("src");
-
-      if (src) {
-        console.debug("try replace ", src);
-        const fileInfo = imageFiles.find((f) => f.url === src);
-
-        if (fileInfo) {
-          const newUrl = await uploadImage(fileInfo);
-          if (newUrl) {
-            img.remove();
-          }
-        }
-      }
-    }
-
     return doc.body.innerHTML;
   }
 
@@ -119,7 +45,7 @@ export async function ArticleEastmoney(data: SyncData) {
   // 发布文章
   async function publishArticle(syncData: SyncData, updateTipFn: (message: string) => void): Promise<void> {
     const articleData = syncData.data as ArticleData;
-    articleData.htmlContent = await processContent(articleData.htmlContent, articleData.images || []);
+    articleData.htmlContent = await processContent(articleData.htmlContent);
 
     // 等待标题输入框加载
     await waitForElement('input[placeholder="标题(1-64字)"]');
