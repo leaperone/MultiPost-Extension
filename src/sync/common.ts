@@ -70,7 +70,7 @@ export interface PlatformInfo {
   iconifyIcon?: string;
   platformName: string;
   injectUrl: string;
-  injectFunction: (data: SyncData, file?: File) => Promise<boolean>;
+  injectFunction: (data: SyncData) => Promise<void>;
   tags?: string[];
   accountKey: string;
   accountInfo?: AccountInfo;
