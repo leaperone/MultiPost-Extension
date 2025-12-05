@@ -2,6 +2,8 @@ import type { DynamicData, SyncData } from "../common";
 
 // 只能图片或视频，不能同时上传
 export async function DynamicLinkedin(data: SyncData) {
+  console.log("LinkedIn 函数被调用");
+
   function waitForElement(selector: string, timeout = 10000): Promise<Element> {
     return new Promise((resolve, reject) => {
       const element = document.querySelector(selector);
@@ -30,79 +32,98 @@ export async function DynamicLinkedin(data: SyncData) {
     });
   }
 
-  async function uploadFiles(files: File[]): Promise<void> {
-    console.log("上传文件", files);
-    const editor = (await waitForElement('div.ql-editor[contenteditable="true"]')) as HTMLDivElement;
-    if (!editor) {
-      throw new Error("未找到编辑器元素");
-    }
-
-    const dataTransfer = new DataTransfer();
-    for (let i = 0; i < Math.min(files.length, 8); i++) {
-      dataTransfer.items.add(files[i]);
-    }
-
-    const pasteEvent = new ClipboardEvent("paste", {
-      bubbles: true,
-      cancelable: true,
-      clipboardData: dataTransfer,
-    });
-    editor.dispatchEvent(pasteEvent);
-    console.debug("文件上传操作完成");
-  }
-
   try {
     const { title, content, images, videos } = data.data as DynamicData;
 
-    // 点击发帖触发按钮
-    const triggerButton = (await waitForElement("button.share-box-feed-entry__trigger")) as HTMLButtonElement;
+    // 等待页面加载并点击发帖触发按钮
+    await waitForElement("div.share-box-feed-entry__top-bar");
+    await new Promise((resolve) => setTimeout(resolve, 500));
+
+    const triggerButton = document.querySelector("div.share-box-feed-entry__top-bar > button") as HTMLButtonElement;
+    console.debug("triggerButton", triggerButton);
+    if (!triggerButton) {
+      console.debug("未找到触发按钮");
+      return;
+    }
     triggerButton.click();
-    await new Promise((resolve) => setTimeout(resolve, 1000));
+
+    // 等待编辑器出现
+    await waitForElement('div.ql-editor[contenteditable="true"]');
+    await new Promise((resolve) => setTimeout(resolve, 500));
+
+    // 查找正确的编辑器
+    const editor =
+      (document.querySelector(
+        'div.ql-editor[contenteditable="true"][data-placeholder="What do you want to talk about?"]',
+      ) as HTMLDivElement) ||
+      (document.querySelector(
+        'div.ql-editor[contenteditable="true"][data-placeholder="您想讨论什么话题？"]',
+      ) as HTMLDivElement) ||
+      (document.querySelector(
+        'div.ql-editor[contenteditable="true"][data-placeholder="分享您的意见想法⋯⋯"]',
+      ) as HTMLDivElement);
+
+    console.debug("qlEditor", editor);
+    if (!editor) {
+      console.debug("未找到编辑器元素");
+      return;
+    }
 
     // 处理内容输入
-    const editor = (await waitForElement('div.ql-editor[contenteditable="true"]')) as HTMLDivElement;
     editor.focus();
-    editor.innerHTML = `${title || ""}\n${content}`;
+    const textContent = title ? `${title}\n${content}` : content || "";
+    editor.innerText = textContent;
     editor.dispatchEvent(new Event("input", { bubbles: true }));
     editor.dispatchEvent(new Event("change", { bubbles: true }));
 
-    await new Promise((resolve) => setTimeout(resolve, 2000));
+    await new Promise((resolve) => setTimeout(resolve, 500));
 
-    // 处理图片和视频上传，优先处理图片
-    let mediaFiles: File[] = [];
-
-    if (images && images.length > 0) {
-      const imageFiles = await Promise.all(
-        images.map(async (fileData) => {
-          const response = await fetch(fileData.url);
-          const blob = await response.arrayBuffer();
-          return new File([blob], fileData.name, { type: fileData.type });
-        }),
-      );
-      mediaFiles = imageFiles;
-    } else if (videos && videos.length > 0) {
-      const videoFiles = await Promise.all(
-        videos.map(async (fileData) => {
-          const response = await fetch(fileData.url);
-          const blob = await response.arrayBuffer();
-          return new File([blob], fileData.name, { type: fileData.type });
-        }),
-      );
-      mediaFiles = videoFiles;
-    }
-
+    // 处理图片和视频上传
+    const mediaFiles = [...(images || []), ...(videos || [])];
     if (mediaFiles.length > 0) {
-      await uploadFiles(mediaFiles);
+      const dataTransfer = new DataTransfer();
+
+      for (let i = 0; i < mediaFiles.length; i++) {
+        if (i >= 8) {
+          console.debug("Linkedin 最多支持 8 张 ，跳过");
+          break;
+        }
+        const fileData = mediaFiles[i];
+        console.debug("try upload file", fileData);
+        try {
+          const response = await fetch(fileData.url);
+          const arrayBuffer = await response.arrayBuffer();
+          const file = new File([arrayBuffer], fileData.name, { type: fileData.type });
+          dataTransfer.items.add(file);
+        } catch (error) {
+          console.error("获取文件失败:", error);
+        }
+      }
+
+      const pasteEvent = new ClipboardEvent("paste", {
+        bubbles: true,
+        cancelable: true,
+        clipboardData: dataTransfer,
+      });
+      editor.dispatchEvent(pasteEvent);
+      console.debug("文件上传操作完成");
     }
 
     // 等待上传完成
     await new Promise((resolve) => setTimeout(resolve, 5000));
 
     // 处理发布按钮
-    const publishButton = document.querySelector("button.share-actions__primary-action") as HTMLButtonElement;
-    if (publishButton && data.isAutoPublish) {
-      console.debug("点击发布按钮");
-      publishButton.click();
+    const sendButton = document.querySelector("button.share-actions__primary-action") as HTMLButtonElement;
+    console.debug("sendButton", sendButton);
+    if (sendButton) {
+      if (data.autoPublish) {
+        console.debug("自动发布：点击发布按钮");
+        sendButton.click();
+      } else {
+        console.debug("帖子准备就绪，等待手动发布");
+      }
+    } else {
+      console.debug("未找到'发送'按钮");
     }
   } catch (error) {
     console.error("LinkedIn 发布过程中出错:", error);
