@@ -1,7 +1,7 @@
-import React, { useEffect, useState } from 'react';
-import { Button, Modal, ModalContent, ModalHeader, ModalBody, ModalFooter } from '@heroui/react';
-import { Settings } from 'lucide-react';
-import { saveExtraConfig, getExtraConfig } from '~sync/extraconfig';
+import { Button, Modal, ModalBody, ModalContent, ModalFooter, ModalHeader } from "@heroui/react";
+import { Settings } from "lucide-react";
+import { useEffect, useState } from "react";
+import { getExtraConfig, saveExtraConfig } from "~sync/extraconfig";
 
 interface ZsxqGroup {
   group_id: number;
@@ -51,7 +51,7 @@ export default function DynamicZsxq({ platformKey }: ZsxqProps) {
     const fetchGroups = async () => {
       setIsLoading(true);
       try {
-        const response = await fetch('https://api.zsxq.com/v2/groups');
+        const response = await fetch("https://api.zsxq.com/v2/groups");
         const data: ZsxqApiResponse = await response.json();
         if (data.succeeded) {
           setGroups(data.resp_data.groups);
@@ -76,7 +76,7 @@ export default function DynamicZsxq({ platformKey }: ZsxqProps) {
           });
         }
       } catch (error) {
-        console.error('Failed to fetch ZSXQ groups:', error);
+        console.error("Failed to fetch ZSXQ groups:", error);
       } finally {
         setIsLoading(false);
       }
@@ -108,40 +108,31 @@ export default function DynamicZsxq({ platformKey }: ZsxqProps) {
 
   return (
     <>
-      <Button
-        variant="light"
-        size="sm"
-        onPress={() => setIsOpen(true)}
-        className="flex items-center gap-1">
+      <Button variant="light" size="sm" onPress={() => setIsOpen(true)} className="flex items-center gap-1">
         <Settings className="w-4 h-4" />
         {selectedGroupIds.length > 0
           ? `已选择 ${selectedGroupIds.length} 个星球`
-          : chrome.i18n.getMessage('extraConfigZsxqSelectGroups')}
+          : chrome.i18n.getMessage("extraConfigZsxqSelectGroups")}
       </Button>
 
-      <Modal
-        isOpen={isOpen}
-        onOpenChange={setIsOpen}
-        size="md"
-        placement="center"
-        backdrop="blur">
+      <Modal isOpen={isOpen} onOpenChange={setIsOpen} size="md" placement="center" backdrop="blur">
         <ModalContent>
-          <ModalHeader>{chrome.i18n.getMessage('extraConfigZsxqConfigureGroups')}</ModalHeader>
+          <ModalHeader>{chrome.i18n.getMessage("extraConfigZsxqConfigureGroups")}</ModalHeader>
           <ModalBody>
             <div className="space-y-4">
               {isLoading ? (
-                <div className="py-4 text-center">{chrome.i18n.getMessage('extraConfigZsxqLoading')}</div>
+                <div className="py-4 text-center">{chrome.i18n.getMessage("extraConfigZsxqLoading")}</div>
               ) : groups.length === 0 ? (
                 <div className="py-4 text-center text-gray-500">
-                  {chrome.i18n.getMessage('extraConfigZsxqNoGroups')}
+                  {chrome.i18n.getMessage("extraConfigZsxqNoGroups")}
                 </div>
               ) : (
                 <div className="flex flex-wrap gap-2">
                   {groups.map((group) => (
                     <Button
                       key={group.group_id}
-                      variant={selectedGroupIds.includes(String(group.group_id)) ? 'solid' : 'light'}
-                      color={selectedGroupIds.includes(String(group.group_id)) ? 'primary' : 'default'}
+                      variant={selectedGroupIds.includes(String(group.group_id)) ? "solid" : "light"}
+                      color={selectedGroupIds.includes(String(group.group_id)) ? "primary" : "default"}
                       onPress={() => handleSelectGroup(group.group_id)}
                       className="flex-none">
                       {group.name}
@@ -152,15 +143,11 @@ export default function DynamicZsxq({ platformKey }: ZsxqProps) {
             </div>
           </ModalBody>
           <ModalFooter>
-            <Button
-              variant="light"
-              onPress={() => setIsOpen(false)}>
-              {chrome.i18n.getMessage('extraConfigZsxqCancel')}
+            <Button variant="light" onPress={() => setIsOpen(false)}>
+              {chrome.i18n.getMessage("extraConfigZsxqCancel")}
             </Button>
-            <Button
-              variant="solid"
-              onPress={handleSave}>
-              {chrome.i18n.getMessage('extraConfigZsxqSaveConfig')}
+            <Button variant="solid" onPress={handleSave}>
+              {chrome.i18n.getMessage("extraConfigZsxqSaveConfig")}
             </Button>
           </ModalFooter>
         </ModalContent>

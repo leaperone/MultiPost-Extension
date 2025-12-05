@@ -1,4 +1,4 @@
-import type { SyncData, DynamicData } from '../common';
+import type { DynamicData, SyncData } from "../common";
 
 // 只能图片或视频，不能同时上传
 export async function DynamicLinkedin(data: SyncData) {
@@ -31,10 +31,10 @@ export async function DynamicLinkedin(data: SyncData) {
   }
 
   async function uploadFiles(files: File[]): Promise<void> {
-    console.log('上传文件', files);
+    console.log("上传文件", files);
     const editor = (await waitForElement('div.ql-editor[contenteditable="true"]')) as HTMLDivElement;
     if (!editor) {
-      throw new Error('未找到编辑器元素');
+      throw new Error("未找到编辑器元素");
     }
 
     const dataTransfer = new DataTransfer();
@@ -42,29 +42,29 @@ export async function DynamicLinkedin(data: SyncData) {
       dataTransfer.items.add(files[i]);
     }
 
-    const pasteEvent = new ClipboardEvent('paste', {
+    const pasteEvent = new ClipboardEvent("paste", {
       bubbles: true,
       cancelable: true,
       clipboardData: dataTransfer,
     });
     editor.dispatchEvent(pasteEvent);
-    console.debug('文件上传操作完成');
+    console.debug("文件上传操作完成");
   }
 
   try {
     const { title, content, images, videos } = data.data as DynamicData;
 
     // 点击发帖触发按钮
-    const triggerButton = (await waitForElement('button.share-box-feed-entry__trigger')) as HTMLButtonElement;
+    const triggerButton = (await waitForElement("button.share-box-feed-entry__trigger")) as HTMLButtonElement;
     triggerButton.click();
     await new Promise((resolve) => setTimeout(resolve, 1000));
 
     // 处理内容输入
     const editor = (await waitForElement('div.ql-editor[contenteditable="true"]')) as HTMLDivElement;
     editor.focus();
-    editor.innerHTML = `${title || ''}\n${content}`;
-    editor.dispatchEvent(new Event('input', { bubbles: true }));
-    editor.dispatchEvent(new Event('change', { bubbles: true }));
+    editor.innerHTML = `${title || ""}\n${content}`;
+    editor.dispatchEvent(new Event("input", { bubbles: true }));
+    editor.dispatchEvent(new Event("change", { bubbles: true }));
 
     await new Promise((resolve) => setTimeout(resolve, 2000));
 
@@ -99,12 +99,12 @@ export async function DynamicLinkedin(data: SyncData) {
     await new Promise((resolve) => setTimeout(resolve, 5000));
 
     // 处理发布按钮
-    const publishButton = document.querySelector('button.share-actions__primary-action') as HTMLButtonElement;
+    const publishButton = document.querySelector("button.share-actions__primary-action") as HTMLButtonElement;
     if (publishButton && data.isAutoPublish) {
-      console.debug('点击发布按钮');
+      console.debug("点击发布按钮");
       publishButton.click();
     }
   } catch (error) {
-    console.error('LinkedIn 发布过程中出错:', error);
+    console.error("LinkedIn 发布过程中出错:", error);
   }
 }

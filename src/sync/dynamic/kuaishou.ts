@@ -1,4 +1,4 @@
-import type { DynamicData, SyncData } from '../common';
+import type { DynamicData, SyncData } from "../common";
 
 /**
  * 快手图文动态发布函数
@@ -10,7 +10,7 @@ export async function DynamicKuaishou(data: SyncData) {
 
   // 检查图片数量
   if (!images || images.length === 0) {
-    alert('发布图文，请至少提供一张图片');
+    alert("发布图文，请至少提供一张图片");
     return;
   }
 
@@ -46,12 +46,12 @@ export async function DynamicKuaishou(data: SyncData) {
   // 模拟拖拽事件的函数
   function simulateDragAndDrop(element: HTMLElement, dataTransfer: DataTransfer) {
     const events = [
-      new DragEvent('dragenter', { bubbles: true }),
-      new DragEvent('dragover', { bubbles: true }),
-      new DragEvent('drop', { bubbles: true, dataTransfer: dataTransfer }),
+      new DragEvent("dragenter", { bubbles: true }),
+      new DragEvent("dragover", { bubbles: true }),
+      new DragEvent("drop", { bubbles: true, dataTransfer: dataTransfer }),
     ];
     events.forEach((event) => {
-      Object.defineProperty(event, 'preventDefault', { value: () => {} });
+      Object.defineProperty(event, "preventDefault", { value: () => {} });
     });
     events.forEach((event) => {
       element.dispatchEvent(event);
@@ -63,9 +63,9 @@ export async function DynamicKuaishou(data: SyncData) {
   await new Promise((resolve) => setTimeout(resolve, 1000));
 
   // 查找并点击上传图片的tab
-  const uploadTab = document.querySelector('div#rc-tabs-0-tab-2') as HTMLElement;
+  const uploadTab = document.querySelector("div#rc-tabs-0-tab-2") as HTMLElement;
   if (!uploadTab) {
-    console.error('未找到 uploadTab');
+    console.error("未找到 uploadTab");
     return;
   }
   uploadTab.click();
@@ -74,7 +74,7 @@ export async function DynamicKuaishou(data: SyncData) {
   // 创建 DataTransfer 对象并添加文件
   const dataTransfer = new DataTransfer();
   for (const fileInfo of images) {
-    console.log('try upload file', fileInfo);
+    console.log("try upload file", fileInfo);
     try {
       const response = await fetch(fileInfo.url);
       if (!response.ok) {
@@ -89,8 +89,8 @@ export async function DynamicKuaishou(data: SyncData) {
   }
 
   // 查找上传图片按钮
-  const buttons = document.querySelectorAll('button');
-  const uploadButton = Array.from(buttons).find((button) => button.textContent === '上传图片') as HTMLElement;
+  const buttons = document.querySelectorAll("button");
+  const uploadButton = Array.from(buttons).find((button) => button.textContent === "上传图片") as HTMLElement;
 
   if (!uploadButton) {
     console.error("未找到'上传图片'按钮");
@@ -100,7 +100,7 @@ export async function DynamicKuaishou(data: SyncData) {
   // 执行拖拽上传
   const dropTarget = uploadButton.parentElement?.parentElement as HTMLElement;
   simulateDragAndDrop(dropTarget, dataTransfer);
-  console.log('文件上传操作完成');
+  console.log("文件上传操作完成");
 
   // 等待描述输入框出现
   await waitForElement('div[placeholder="添加合适的话题和描述，作品能获得更多推荐～"][contenteditable="true"]');
@@ -117,12 +117,12 @@ export async function DynamicKuaishou(data: SyncData) {
     const textContent = title ? `${title}\n${content}` : content;
 
     // 使用 ClipboardEvent 粘贴内容
-    const pasteEvent = new ClipboardEvent('paste', {
+    const pasteEvent = new ClipboardEvent("paste", {
       bubbles: true,
       cancelable: true,
       clipboardData: new DataTransfer(),
     });
-    pasteEvent.clipboardData?.setData('text/plain', textContent);
+    pasteEvent.clipboardData?.setData("text/plain", textContent);
     descriptionInput.dispatchEvent(pasteEvent);
   }
 
@@ -130,6 +130,6 @@ export async function DynamicKuaishou(data: SyncData) {
 
   // 如果是自动发布，提示需要手动确认
   if (data.isAutoPublish) {
-    alert('为确保内容符合预期，请手动确认发布');
+    alert("为确保内容符合预期，请手动确认发布");
   }
 }

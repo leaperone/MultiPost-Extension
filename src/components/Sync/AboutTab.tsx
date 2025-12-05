@@ -1,5 +1,5 @@
-import React from 'react';
-import { Card, CardBody, Link, Button } from '@heroui/react';
+import { Button, Card, CardBody, Link } from "@heroui/react";
+import type React from "react";
 
 const AboutTab: React.FC = () => {
   return (
@@ -7,17 +7,13 @@ const AboutTab: React.FC = () => {
       <Card className="shadow-none bg-default-50">
         <CardBody className="gap-6">
           <div className="flex justify-center items-center">
-            <img
-              src="/assets/icon.png"
-              alt="logo"
-              className="w-24 h-24 rounded-xl shadow-lg"
-            />
+            <img src="/assets/icon.png" alt="logo" className="w-24 h-24 rounded-xl shadow-lg" />
           </div>
           <div className="space-y-2 text-center">
-            <h2 className="text-2xl font-bold">{chrome.i18n.getMessage('extensionDisplayName')}</h2>
+            <h2 className="text-2xl font-bold">{chrome.i18n.getMessage("extensionDisplayName")}</h2>
             <p className="text-sm text-foreground/60">v{chrome.runtime.getManifest().version}</p>
           </div>
-          <p className="text-base text-center text-foreground/80">{chrome.i18n.getMessage('aboutDescription')}</p>
+          <p className="text-base text-center text-foreground/80">{chrome.i18n.getMessage("aboutDescription")}</p>
         </CardBody>
       </Card>
 
@@ -30,7 +26,7 @@ const AboutTab: React.FC = () => {
             rel="noopener noreferrer"
             variant="flat"
             className="justify-center w-full">
-            {chrome.i18n.getMessage('readMore') || 'Read More'}
+            {chrome.i18n.getMessage("readMore") || "Read More"}
           </Button>
         </CardBody>
       </Card>

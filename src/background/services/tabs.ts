@@ -1,4 +1,4 @@
-import { injectScriptsToTabs, type SyncData, type SyncDataPlatform } from '~sync/common';
+import { type SyncData, type SyncDataPlatform, injectScriptsToTabs } from "~sync/common";
 
 // Tab Manager || 标签页管理 || START
 export interface TabManagerMessage {
@@ -11,7 +11,7 @@ export interface TabManagerMessage {
 
 const tabsManagerMessages: TabManagerMessage[] = [];
 
-const handleTabUpdated = (tabId: number, changeInfo: chrome.tabs.TabChangeInfo, tab: chrome.tabs.Tab) => {
+const handleTabUpdated = (tabId: number, _changeInfo: chrome.tabs.TabChangeInfo, tab: chrome.tabs.Tab) => {
   tabsManagerMessages.forEach((group, index) => {
     const updatedTabs = group.tabs.map((item) => (item.tab.id === tabId ? { ...item, tab } : item));
     tabsManagerMessages[index] = { ...group, tabs: updatedTabs };
@@ -36,8 +36,8 @@ export const addTabsManagerMessages = (data: TabManagerMessage) => {
 export const tabsManagerHandleTabUpdated = handleTabUpdated;
 export const tabsManagerHandleTabRemoved = handleTabRemoved;
 
-export const tabsManagerMessageHandler = (request, sender, sendResponse) => {
-  if (request.type === 'MULTIPOST_EXTENSION_REQUEST_PUBLISH_RELOAD') {
+export const tabsManagerMessageHandler = (request, _sender, sendResponse) => {
+  if (request.type === "MULTIPOST_EXTENSION_REQUEST_PUBLISH_RELOAD") {
     const { tabId } = request.data;
     const info = tabsManagerMessages.find((group) => group.tabs.some((t) => t.tab.id === tabId));
     const tabInfo = info?.tabs.find((t) => t.tab.id === tabId);
@@ -48,16 +48,16 @@ export const tabsManagerMessageHandler = (request, sender, sendResponse) => {
       });
     } else {
       console.error(`未找到标签页 ID ${tabId} 的信息`);
-      sendResponse('error');
+      sendResponse("error");
       return;
     }
 
-    sendResponse('success');
+    sendResponse("success");
   }
-  if (request.type === 'MULTIPOST_EXTENSION_TABS_MANAGER_REQUEST_TABS') {
+  if (request.type === "MULTIPOST_EXTENSION_TABS_MANAGER_REQUEST_TABS") {
     sendResponse(getTabsManagerMessages());
   }
-  if (request.type === 'MULTIPOST_EXTENSION_TABS_MANAGER_REQUEST_ADD_TABS') {
+  if (request.type === "MULTIPOST_EXTENSION_TABS_MANAGER_REQUEST_ADD_TABS") {
     const { data, tabs } = request;
     addTabsManagerMessages({
       syncData: data,
@@ -66,7 +66,7 @@ export const tabsManagerMessageHandler = (request, sender, sendResponse) => {
         platformInfo: t.platformInfo,
       })),
     });
-    sendResponse('success');
+    sendResponse("success");
   }
 };
 

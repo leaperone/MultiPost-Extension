@@ -1,4 +1,4 @@
-import type { DynamicData, SyncData } from '../common';
+import type { DynamicData, SyncData } from "../common";
 
 export async function DynamicX(data: SyncData) {
   const { title, content, images, videos } = data.data as DynamicData;
@@ -39,7 +39,7 @@ export async function DynamicX(data: SyncData) {
     // 获取编辑器元素
     const editor = document.querySelector('div[data-contents="true"]');
     if (!editor) {
-      console.debug('未找到编辑器元素');
+      console.debug("未找到编辑器元素");
       return;
     }
 
@@ -47,13 +47,13 @@ export async function DynamicX(data: SyncData) {
     (editor as HTMLElement).focus();
 
     // 使用 ClipboardEvent 粘贴文本
-    const combinedText = title ? `${title}\n${content || ''}` : content || '';
-    const pasteEvent = new ClipboardEvent('paste', {
+    const combinedText = title ? `${title}\n${content || ""}` : content || "";
+    const pasteEvent = new ClipboardEvent("paste", {
       bubbles: true,
       cancelable: true,
       clipboardData: new DataTransfer(),
     });
-    pasteEvent.clipboardData!.setData('text/plain', combinedText);
+    pasteEvent.clipboardData!.setData("text/plain", combinedText);
     editor.dispatchEvent(pasteEvent);
 
     // 处理媒体上传（图片和视频）
@@ -62,7 +62,7 @@ export async function DynamicX(data: SyncData) {
       // 查找文件输入元素
       const fileInput = document.querySelector('input[type="file"]') as HTMLInputElement;
       if (!fileInput) {
-        console.debug('未找到文件输入元素');
+        console.debug("未找到文件输入元素");
         return;
       }
 
@@ -72,18 +72,18 @@ export async function DynamicX(data: SyncData) {
       // 上传文件（最多4个）
       for (let i = 0; i < mediaFiles.length; i++) {
         if (i >= 4) {
-          console.debug('X 最多支持 4 张 ，跳过');
+          console.debug("X 最多支持 4 张 ，跳过");
           break;
         }
 
         const fileInfo = mediaFiles[i];
-        console.debug('try upload file', fileInfo);
+        console.debug("try upload file", fileInfo);
 
         // 获取文件内容
         const response = await fetch(fileInfo.url);
         const arrayBuffer = await response.arrayBuffer();
         const file = new File([arrayBuffer], fileInfo.name, { type: fileInfo.type });
-        console.log('file', file);
+        console.log("file", file);
         dataTransfer.items.add(file);
       }
 
@@ -91,14 +91,14 @@ export async function DynamicX(data: SyncData) {
       fileInput.files = dataTransfer.files;
 
       // 触发change事件
-      const changeEvent = new Event('change', { bubbles: true });
+      const changeEvent = new Event("change", { bubbles: true });
       fileInput.dispatchEvent(changeEvent);
 
       // 触发input事件
-      const inputEvent = new Event('input', { bubbles: true });
+      const inputEvent = new Event("input", { bubbles: true });
       fileInput.dispatchEvent(inputEvent);
 
-      console.debug('文件上传操作完成');
+      console.debug("文件上传操作完成");
     }
 
     // 判断是否自动发布
@@ -108,15 +108,15 @@ export async function DynamicX(data: SyncData) {
     await new Promise((resolve) => setTimeout(resolve, 3000));
 
     // 查找发布按钮
-    const allButtons = document.querySelectorAll('button');
+    const allButtons = document.querySelectorAll("button");
     const publishButton = Array.from(allButtons).find(
       (button) =>
-        button.textContent?.includes('发帖') ||
-        button.textContent?.includes('Post') ||
-        button.textContent?.includes('發佈'),
+        button.textContent?.includes("发帖") ||
+        button.textContent?.includes("Post") ||
+        button.textContent?.includes("發佈"),
     );
 
-    console.debug('sendButton', publishButton);
+    console.debug("sendButton", publishButton);
 
     if (publishButton) {
       // 如果找到发布按钮，检查是否可点击
@@ -128,22 +128,22 @@ export async function DynamicX(data: SyncData) {
       }
 
       if (publishButton.disabled) {
-        console.debug('Send button is still disabled after 10 attempts');
+        console.debug("Send button is still disabled after 10 attempts");
         return;
       }
 
-      console.debug('sendButton clicked');
+      console.debug("sendButton clicked");
       // 点击发布按钮
-      const clickEvent = new Event('click', { bubbles: true });
+      const clickEvent = new Event("click", { bubbles: true });
       publishButton.dispatchEvent(clickEvent);
     } else {
       // 如果没找到发布按钮，尝试使用快捷键发布
       console.debug("未找到'发送'按钮");
-      const keyEvent = new KeyboardEvent('keydown', {
+      const keyEvent = new KeyboardEvent("keydown", {
         bubbles: true,
         cancelable: true,
-        key: 'Enter',
-        code: 'Enter',
+        key: "Enter",
+        code: "Enter",
         keyCode: 13,
         which: 13,
         metaKey: true,
@@ -153,9 +153,9 @@ export async function DynamicX(data: SyncData) {
       // 再次聚焦编辑器并发送快捷键
       (editor as HTMLElement).focus();
       editor.dispatchEvent(keyEvent);
-      console.debug('CMD+Enter 事件触发完成');
+      console.debug("CMD+Enter 事件触发完成");
     }
   } catch (error) {
-    console.error('X 发布过程中出错:', error);
+    console.error("X 发布过程中出错:", error);
   }
 }

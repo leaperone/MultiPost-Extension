@@ -1,4 +1,4 @@
-import { type VideoData, type SyncData } from '../common';
+import type { SyncData, VideoData } from "../common";
 
 // 不支持发布视频
 export async function VideoXiaoheihe(data: SyncData) {
@@ -34,8 +34,8 @@ export async function VideoXiaoheihe(data: SyncData) {
     const { content, video, title } = data.data as VideoData;
 
     await new Promise((resolve) => setTimeout(resolve, 3000));
-    const titleEditorSelector = 'div.hb-cpt__editor-title .ProseMirror.hb-editor';
-    const contentEditorSelector = 'div.video__edit-content .ProseMirror.hb-editor';
+    const titleEditorSelector = "div.hb-cpt__editor-title .ProseMirror.hb-editor";
+    const contentEditorSelector = "div.video__edit-content .ProseMirror.hb-editor";
 
     // 等待编辑器元素出现
     await waitForElement(contentEditorSelector);
@@ -48,35 +48,35 @@ export async function VideoXiaoheihe(data: SyncData) {
         const titleEditor = document.querySelector(titleEditorSelector);
         if (titleEditor) {
           (titleEditor as HTMLElement).focus();
-          const titlePasteEvent = new ClipboardEvent('paste', {
+          const titlePasteEvent = new ClipboardEvent("paste", {
             bubbles: true,
             cancelable: true,
             clipboardData: new DataTransfer(),
           });
-          titlePasteEvent.clipboardData!.setData('text/plain', title);
+          titlePasteEvent.clipboardData!.setData("text/plain", title);
           titleEditor.dispatchEvent(titlePasteEvent);
           await new Promise((resolve) => setTimeout(resolve, 500));
         }
       } catch {
-        console.debug('未找到标题编辑器元素, 跳过标题填写');
+        console.debug("未找到标题编辑器元素, 跳过标题填写");
       }
     }
 
     // 填写正文
     const contentEditor = document.querySelector(contentEditorSelector);
     if (!contentEditor) {
-      console.debug('未找到正文编辑器元素');
+      console.debug("未找到正文编辑器元素");
       return;
     }
 
     (contentEditor as HTMLElement).focus();
 
-    const contentPasteEvent = new ClipboardEvent('paste', {
+    const contentPasteEvent = new ClipboardEvent("paste", {
       bubbles: true,
       cancelable: true,
       clipboardData: new DataTransfer(),
     });
-    contentPasteEvent.clipboardData!.setData('text/plain', content || '');
+    contentPasteEvent.clipboardData!.setData("text/plain", content || "");
     contentEditor.dispatchEvent(contentPasteEvent);
 
     if (video) {
@@ -87,7 +87,7 @@ export async function VideoXiaoheihe(data: SyncData) {
 
       await new Promise((resolve) => setTimeout(resolve, 1000));
 
-      window.postMessage({ type: 'XIAOHEIHE_VIDEO_UPLOAD', video: videoFile }, '*');
+      window.postMessage({ type: "XIAOHEIHE_VIDEO_UPLOAD", video: videoFile }, "*");
     }
 
     // 发布动态
@@ -95,11 +95,11 @@ export async function VideoXiaoheihe(data: SyncData) {
       const maxAttempts = 3;
       for (let attempt = 0; attempt < maxAttempts; attempt++) {
         const publishButton = document.querySelector<HTMLButtonElement>(
-          'button.editor-publish__btn',
+          "button.editor-publish__btn",
         ) as HTMLButtonElement;
         if (publishButton) {
           publishButton.click();
-          console.log('已点击发布按钮');
+          console.log("已点击发布按钮");
           await new Promise((resolve) => setTimeout(resolve, 3000));
           window.location.reload();
           return;
@@ -108,6 +108,6 @@ export async function VideoXiaoheihe(data: SyncData) {
       }
     }
   } catch (error) {
-    console.error('小黑盒发布过程中出错:', error);
+    console.error("小黑盒发布过程中出错:", error);
   }
 }

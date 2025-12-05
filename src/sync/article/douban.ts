@@ -1,7 +1,7 @@
-import type { ArticleData, SyncData } from '~sync/common';
+import type { ArticleData, SyncData } from "~sync/common";
 
 export async function ArticleDouban(data: SyncData) {
-  console.debug('ArticleDouban', data);
+  console.debug("ArticleDouban", data);
 
   function waitForElement(selector: string, timeout = 10000): Promise<Element> {
     return new Promise((resolve, reject) => {
@@ -40,29 +40,29 @@ export async function ArticleDouban(data: SyncData) {
     await new Promise((resolve) => setTimeout(resolve, 1000));
 
     // 设置标题
-    titleTextarea.value = articleData.title?.slice(0, 100) || '';
-    titleTextarea.dispatchEvent(new Event('input', { bubbles: true }));
-    titleTextarea.dispatchEvent(new Event('change', { bubbles: true }));
-    console.debug('titleTextarea', titleTextarea, titleTextarea.value);
+    titleTextarea.value = articleData.title?.slice(0, 100) || "";
+    titleTextarea.dispatchEvent(new Event("input", { bubbles: true }));
+    titleTextarea.dispatchEvent(new Event("change", { bubbles: true }));
+    console.debug("titleTextarea", titleTextarea, titleTextarea.value);
 
     // 等待编辑器加载
     const editor = document.querySelector('div[data-contents="true"]') as HTMLDivElement;
     if (!editor) {
-      console.debug('未找到编辑器元素');
+      console.debug("未找到编辑器元素");
       return false;
     }
 
     // 填充内容
     editor.focus();
-    const pasteEvent = new ClipboardEvent('paste', {
+    const pasteEvent = new ClipboardEvent("paste", {
       bubbles: true,
       cancelable: true,
       clipboardData: new DataTransfer(),
     });
-    pasteEvent.clipboardData.setData('text/html', articleData.htmlContent || '');
+    pasteEvent.clipboardData.setData("text/html", articleData.htmlContent || "");
     editor.dispatchEvent(pasteEvent);
-    editor.dispatchEvent(new Event('input', { bubbles: true }));
-    editor.dispatchEvent(new Event('change', { bubbles: true }));
+    editor.dispatchEvent(new Event("input", { bubbles: true }));
+    editor.dispatchEvent(new Event("change", { bubbles: true }));
 
     await new Promise((resolve) => setTimeout(resolve, 5000));
     return true;
@@ -70,13 +70,13 @@ export async function ArticleDouban(data: SyncData) {
 
   // 发布文章
   async function publishArticle(): Promise<void> {
-    const previewButton = document.querySelector('a.editor-extra-button-preview');
-    console.debug('previewButton', previewButton);
+    const previewButton = document.querySelector("a.editor-extra-button-preview");
+    console.debug("previewButton", previewButton);
 
     if (previewButton) {
       if (data.isAutoPublish) {
-        console.debug('previewButton clicked');
-        const clickEvent = new Event('click', { bubbles: true });
+        console.debug("previewButton clicked");
+        const clickEvent = new Event("click", { bubbles: true });
         previewButton.dispatchEvent(clickEvent);
       }
     } else {
@@ -88,11 +88,11 @@ export async function ArticleDouban(data: SyncData) {
   try {
     const contentFilled = await fillArticleContent();
     if (!contentFilled) {
-      throw new Error('填充文章内容失败');
+      throw new Error("填充文章内容失败");
     }
 
     await publishArticle();
   } catch (error) {
-    console.error('发布文章失败:', error);
+    console.error("发布文章失败:", error);
   }
 }

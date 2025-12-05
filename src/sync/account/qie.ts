@@ -1,15 +1,15 @@
-import type { AccountInfo } from '~sync/common';
+import type { AccountInfo } from "~sync/common";
 
 export async function getQiEAccountInfo(): Promise<AccountInfo> {
   try {
     // 访问企鹅号API获取用户信息
-    const response = await fetch('https://om.qq.com/user/auth/info', {
-      method: 'GET',
+    const response = await fetch("https://om.qq.com/user/auth/info", {
+      method: "GET",
       headers: {
-        Accept: 'application/json',
-        'Content-Type': 'application/json',
+        Accept: "application/json",
+        "Content-Type": "application/json",
       },
-      credentials: 'include', // 包含cookie以确保认证
+      credentials: "include", // 包含cookie以确保认证
     });
 
     if (!response.ok) {
@@ -24,18 +24,18 @@ export async function getQiEAccountInfo(): Promise<AccountInfo> {
     }
 
     const result: AccountInfo = {
-      provider: 'qie',
+      provider: "qie",
       accountId: responseData.data.userId,
       username: responseData.data.nickName || responseData.data.name,
-      description: responseData.data.desc || '',
-      profileUrl: `https://om.qq.com/`,
+      description: responseData.data.desc || "",
+      profileUrl: "https://om.qq.com/",
       avatarUrl: responseData.data.headImg || responseData.data.avatar,
       extraData: responseData,
     };
 
     return result;
   } catch (error) {
-    console.error('获取企鹅号账户信息失败:', error);
+    console.error("获取企鹅号账户信息失败:", error);
 
     // 如果API调用失败，尝试从页面获取基本信息
     try {
@@ -44,18 +44,18 @@ export async function getQiEAccountInfo(): Promise<AccountInfo> {
 
       if (usernameElement) {
         const result: AccountInfo = {
-          provider: 'qie',
-          accountId: 'unknown',
-          username: usernameElement.textContent || '企鹅号用户',
-          description: '',
-          profileUrl: `https://om.qq.com/`,
-          avatarUrl: avatarElement ? (avatarElement as HTMLImageElement).src : '',
+          provider: "qie",
+          accountId: "unknown",
+          username: usernameElement.textContent || "企鹅号用户",
+          description: "",
+          profileUrl: "https://om.qq.com/",
+          avatarUrl: avatarElement ? (avatarElement as HTMLImageElement).src : "",
           extraData: null,
         };
         return result;
       }
     } catch (pageError) {
-      console.error('从页面获取企鹅号信息也失败:', pageError);
+      console.error("从页面获取企鹅号信息也失败:", pageError);
     }
 
     return null;

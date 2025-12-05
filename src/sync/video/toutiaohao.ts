@@ -1,4 +1,4 @@
-import type { FileData, SyncData, VideoData } from '../common';
+import type { FileData, SyncData, VideoData } from "../common";
 
 export async function VideoToutiaohao(data: SyncData) {
   function waitForElement(selector: string, timeout = 10000): Promise<Element> {
@@ -36,35 +36,35 @@ export async function VideoToutiaohao(data: SyncData) {
     dataTransfer.items.add(file);
     fileInput.files = dataTransfer.files;
 
-    const changeEvent = new Event('change', { bubbles: true });
+    const changeEvent = new Event("change", { bubbles: true });
     fileInput.dispatchEvent(changeEvent);
 
-    const inputEvent = new Event('input', { bubbles: true });
+    const inputEvent = new Event("input", { bubbles: true });
     fileInput.dispatchEvent(inputEvent);
 
-    console.log('视频上传事件已触发');
+    console.log("视频上传事件已触发");
   }
 
   async function uploadCover(cover: FileData): Promise<void> {
-    console.log('尝试上传封面', cover);
-    const coverUploadContainer = await waitForElement('div.cover-container');
-    console.log('封面上传容器', coverUploadContainer);
+    console.log("尝试上传封面", cover);
+    const coverUploadContainer = await waitForElement("div.cover-container");
+    console.log("封面上传容器", coverUploadContainer);
     if (!coverUploadContainer) return;
 
     (coverUploadContainer as HTMLElement).click();
     await new Promise((resolve) => setTimeout(resolve, 1000));
 
-    const changeCoverButton = await waitForElement('div.byte-upload-trigger');
+    const changeCoverButton = await waitForElement("div.byte-upload-trigger");
     (changeCoverButton as HTMLElement).click();
 
     await new Promise((resolve) => setTimeout(resolve, 1000));
 
     const fileInput = (await waitForElement('input[type="file"].byte-upload-input')) as HTMLInputElement;
-    console.log('封面文件输入框', fileInput);
+    console.log("封面文件输入框", fileInput);
     if (!fileInput) return;
 
-    if (!cover.type?.includes('image/')) {
-      console.log('提供的封面文件不是图片类型', cover);
+    if (!cover.type?.includes("image/")) {
+      console.log("提供的封面文件不是图片类型", cover);
       return;
     }
 
@@ -76,14 +76,14 @@ export async function VideoToutiaohao(data: SyncData) {
     dataTransfer.items.add(imageFile);
     fileInput.files = dataTransfer.files;
 
-    const changeEvent = new Event('change', { bubbles: true });
+    const changeEvent = new Event("change", { bubbles: true });
     fileInput.dispatchEvent(changeEvent);
 
-    console.log('封面文件上传操作已触发');
+    console.log("封面文件上传操作已触发");
     await new Promise((resolve) => setTimeout(resolve, 3000));
 
-    const doneButton = await waitForElement('button.primary');
-    console.log('完成按钮', doneButton);
+    const doneButton = await waitForElement("button.primary");
+    console.log("完成按钮", doneButton);
     if (doneButton) {
       (doneButton as HTMLElement).click();
     }
@@ -99,7 +99,7 @@ export async function VideoToutiaohao(data: SyncData) {
       console.log(`视频文件: ${videoFile.name} ${videoFile.type} ${videoFile.size}`);
 
       await uploadVideo(videoFile);
-      console.log('视频上传已初始化');
+      console.log("视频上传已初始化");
     }
 
     await new Promise((resolve) => setTimeout(resolve, 1000));
@@ -109,9 +109,9 @@ export async function VideoToutiaohao(data: SyncData) {
     if (titleInput) {
       titleInput.focus();
       titleInput.value = title || content.slice(0, 20);
-      titleInput.dispatchEvent(new Event('input', { bubbles: true }));
-      titleInput.dispatchEvent(new Event('change', { bubbles: true }));
-      console.log('标题已填写:', titleInput.value);
+      titleInput.dispatchEvent(new Event("input", { bubbles: true }));
+      titleInput.dispatchEvent(new Event("change", { bubbles: true }));
+      console.log("标题已填写:", titleInput.value);
     }
 
     // 填写内容和标签
@@ -121,12 +121,12 @@ export async function VideoToutiaohao(data: SyncData) {
     if (contentEditor) {
       contentEditor.focus();
       // 填写描述内容
-      const contentPasteEvent = new ClipboardEvent('paste', {
+      const contentPasteEvent = new ClipboardEvent("paste", {
         bubbles: true,
         cancelable: true,
         clipboardData: new DataTransfer(),
       });
-      contentPasteEvent.clipboardData.setData('text/plain', content + '\n\n');
+      contentPasteEvent.clipboardData.setData("text/plain", `${content}\n\n`);
       contentEditor.dispatchEvent(contentPasteEvent);
 
       await new Promise((resolve) => setTimeout(resolve, 500));
@@ -135,15 +135,15 @@ export async function VideoToutiaohao(data: SyncData) {
       if (tags && tags.length > 0) {
         const tagsToSync = tags.slice(0, 5);
         for (const tag of tagsToSync) {
-          console.log('添加标签:', tag);
+          console.log("添加标签:", tag);
 
-          const pasteEvent = new ClipboardEvent('paste', {
+          const pasteEvent = new ClipboardEvent("paste", {
             bubbles: true,
             cancelable: true,
             clipboardData: new DataTransfer(),
           });
 
-          pasteEvent.clipboardData.setData('text/plain', `#${tag} `);
+          pasteEvent.clipboardData.setData("text/plain", `#${tag} `);
           contentEditor.dispatchEvent(pasteEvent);
 
           await new Promise((resolve) => setTimeout(resolve, 500));
@@ -160,23 +160,23 @@ export async function VideoToutiaohao(data: SyncData) {
     await new Promise((resolve) => setTimeout(resolve, 5000));
 
     // 处理自动发布
-    const buttons = document.querySelectorAll('button');
-    const publishButton = Array.from(buttons).find((button) => button.textContent === '发布');
+    const buttons = document.querySelectorAll("button");
+    const publishButton = Array.from(buttons).find((button) => button.textContent === "发布");
 
     if (publishButton) {
       while ((publishButton as HTMLButtonElement).disabled) {
-        console.log('发布按钮不可用，等待...');
+        console.log("发布按钮不可用，等待...");
         await new Promise((resolve) => setTimeout(resolve, 1000));
       }
 
       if (data.isAutoPublish) {
-        console.log('点击发布按钮');
+        console.log("点击发布按钮");
         (publishButton as HTMLElement).click();
       }
     } else {
       console.log('未找到"发布"按钮');
     }
   } catch (error) {
-    console.error('ToutiaohaoVideo 发布过程中出错:', error);
+    console.error("ToutiaohaoVideo 发布过程中出错:", error);
   }
 }

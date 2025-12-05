@@ -1,14 +1,14 @@
-import type { AccountInfo } from '~sync/common';
+import type { AccountInfo } from "~sync/common";
 
 export async function getBilibiliAccountInfo(): Promise<AccountInfo> {
   // 访问Bilibili API获取用户信息
-  const response = await fetch('https://api.bilibili.com/x/web-interface/nav', {
-    method: 'GET',
+  const response = await fetch("https://api.bilibili.com/x/web-interface/nav", {
+    method: "GET",
     headers: {
-      Accept: 'application/json',
-      'Content-Type': 'application/json',
+      Accept: "application/json",
+      "Content-Type": "application/json",
     },
-    credentials: 'include', // 包含cookie以确保认证
+    credentials: "include", // 包含cookie以确保认证
   });
 
   if (!response.ok) {
@@ -18,14 +18,14 @@ export async function getBilibiliAccountInfo(): Promise<AccountInfo> {
   const responseData = await response.json();
 
   if (!responseData.data.isLogin) {
-    return null
+    return null;
   }
 
   const result: AccountInfo = {
-    provider: 'bilibili',
+    provider: "bilibili",
     accountId: responseData.data.mid,
     username: responseData.data.uname,
-    description: '',
+    description: "",
     profileUrl: `https://space.bilibili.com/${responseData.data.mid}`,
     avatarUrl: responseData.data.face,
     extraData: responseData,

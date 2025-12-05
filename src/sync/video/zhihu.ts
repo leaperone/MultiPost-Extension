@@ -1,4 +1,4 @@
-import type { SyncData, VideoData } from '../common';
+import type { SyncData, VideoData } from "../common";
 
 export async function VideoZhihu(data: SyncData) {
   function waitForElement(selector: string, timeout = 10000): Promise<Element> {
@@ -30,7 +30,7 @@ export async function VideoZhihu(data: SyncData) {
   }
 
   async function uploadVideo(file: File): Promise<void> {
-    const fileInput = (await waitForElement('input[type=file]')) as HTMLInputElement;
+    const fileInput = (await waitForElement("input[type=file]")) as HTMLInputElement;
 
     // 创建一个新的 File 对象，因为某些浏览器可能不允许直接设置 fileInput.files
     const dataTransfer = new DataTransfer();
@@ -38,10 +38,10 @@ export async function VideoZhihu(data: SyncData) {
     fileInput.files = dataTransfer.files;
 
     // 触发 change 事件
-    const changeEvent = new Event('change', { bubbles: true });
+    const changeEvent = new Event("change", { bubbles: true });
     fileInput.dispatchEvent(changeEvent);
 
-    console.log('视频上传事件已触发');
+    console.log("视频上传事件已触发");
   }
 
   try {
@@ -54,7 +54,7 @@ export async function VideoZhihu(data: SyncData) {
       console.log(`视频文件: ${videoFile.name} ${videoFile.type} ${videoFile.size}`);
 
       await uploadVideo(videoFile);
-      console.log('视频上传已初始化');
+      console.log("视频上传已初始化");
     }
 
     await new Promise((resolve) => setTimeout(resolve, 5000));
@@ -63,7 +63,7 @@ export async function VideoZhihu(data: SyncData) {
     const titleInput = (await waitForElement('input[placeholder="输入视频标题"]')) as HTMLInputElement;
     if (titleInput) {
       titleInput.value = title || content.slice(0, 20);
-      titleInput.dispatchEvent(new Event('input', { bubbles: true }));
+      titleInput.dispatchEvent(new Event("input", { bubbles: true }));
     }
 
     // 填写内容
@@ -75,8 +75,8 @@ export async function VideoZhihu(data: SyncData) {
       contentEditor.value = content;
 
       // 触发必要的事件以确保内容更新被识别
-      contentEditor.dispatchEvent(new Event('input', { bubbles: true }));
-      contentEditor.dispatchEvent(new Event('change', { bubbles: true }));
+      contentEditor.dispatchEvent(new Event("input", { bubbles: true }));
+      contentEditor.dispatchEvent(new Event("change", { bubbles: true }));
 
       // 模拟用户输入
       contentEditor.focus();
@@ -91,6 +91,6 @@ export async function VideoZhihu(data: SyncData) {
     //   // 自动发布逻辑
     // }
   } catch (error) {
-    console.error('DouyinVideo 发布过程中出错:', error);
+    console.error("DouyinVideo 发布过程中出错:", error);
   }
 }

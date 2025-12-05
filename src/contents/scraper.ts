@@ -1,14 +1,13 @@
-export {};
-import type { PlasmoCSConfig } from 'plasmo';
-import scrapeContent from './scraper/default';
+import type { PlasmoCSConfig } from "plasmo";
+import scrapeContent from "./scraper/default";
 
 export const config: PlasmoCSConfig = {
-  matches: ['<all_urls>'],
-  run_at: 'document_start',
+  matches: ["<all_urls>"],
+  run_at: "document_start",
 };
 
-chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
-  if (message.type === 'MULTIPOST_EXTENSION_REQUEST_SCRAPER_START') {
+chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
+  if (message.type === "MULTIPOST_EXTENSION_REQUEST_SCRAPER_START") {
     const scrapeFunc = async () => {
       const articleData = await scrapeContent();
       await new Promise((resolve) => setTimeout(resolve, 1000));
@@ -17,7 +16,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     // 平滑滚动到页面底部
     window.scrollTo({
       top: document.body.scrollHeight,
-      behavior: 'smooth',
+      behavior: "smooth",
     });
 
     // 监听滚动完成事件
@@ -28,11 +27,11 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
       }
     };
 
-    window.addEventListener('scroll', checkScrollEnd);
+    window.addEventListener("scroll", checkScrollEnd);
 
     // 设置超时，以防滚动没有触发完成事件
     setTimeout(() => {
-      window.removeEventListener('scroll', checkScrollEnd);
+      window.removeEventListener("scroll", checkScrollEnd);
       scrapeFunc();
     }, 5000); // 5秒后超时
   }

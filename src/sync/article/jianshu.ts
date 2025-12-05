@@ -1,4 +1,4 @@
-import type { ArticleData, FileData, SyncData } from '~sync/common';
+import type { ArticleData, FileData, SyncData } from "~sync/common";
 
 // 上传图片的配置接口
 interface UploadConfig {
@@ -7,7 +7,7 @@ interface UploadConfig {
 }
 
 export async function ArticleJianshu(data: SyncData) {
-  console.log('ArticleJianshu', data);
+  console.log("ArticleJianshu", data);
 
   const articleData = data.data as ArticleData;
 
@@ -16,31 +16,31 @@ export async function ArticleJianshu(data: SyncData) {
     const params = new URLSearchParams({ filename });
     const url = `https://www.jianshu.com/upload_images/token.json?${params.toString()}`;
     const response = await fetch(url, {
-      method: 'GET',
-      credentials: 'include',
+      method: "GET",
+      credentials: "include",
     });
     return await response.json();
   }
 
   // 上传单个图片
   async function uploadImage(fileInfo: FileData): Promise<string | null> {
-    console.log('uploadImage', fileInfo);
+    console.log("uploadImage", fileInfo);
 
     const config = await getUploadConfig(fileInfo.name);
-    console.log('uploadConfig', config);
+    console.log("uploadConfig", config);
 
     const response = await fetch(fileInfo.url);
     const blob = await response.blob();
 
     const formData = new FormData();
-    formData.append('token', config.token);
-    formData.append('key', config.key);
-    formData.append('file', blob, fileInfo.name);
-    formData.append('x:protocol', 'https');
+    formData.append("token", config.token);
+    formData.append("key", config.key);
+    formData.append("file", blob, fileInfo.name);
+    formData.append("x:protocol", "https");
 
     try {
-      const uploadResponse = await fetch('https://upload.qiniup.com/', {
-        method: 'POST',
+      const uploadResponse = await fetch("https://upload.qiniup.com/", {
+        method: "POST",
         body: formData,
       });
 
@@ -49,11 +49,11 @@ export async function ArticleJianshu(data: SyncData) {
       }
 
       const result = await uploadResponse.json();
-      console.log('Image upload result:', result);
+      console.log("Image upload result:", result);
 
       return result?.url || null;
     } catch (error) {
-      console.log('Error uploading image:', error);
+      console.log("Error uploading image:", error);
       return null;
     }
   }
@@ -61,21 +61,21 @@ export async function ArticleJianshu(data: SyncData) {
   // 处理文章内容中的图片
   async function processContent(htmlContent: string, imageDatas: FileData[]): Promise<string> {
     const parser = new DOMParser();
-    const doc = parser.parseFromString(htmlContent, 'text/html');
-    const images = doc.getElementsByTagName('img');
+    const doc = parser.parseFromString(htmlContent, "text/html");
+    const images = doc.getElementsByTagName("img");
 
-    console.log('images', images);
+    console.log("images", images);
 
     for (let i = 0; i < images.length; i++) {
       const img = images[i];
-      const src = img.getAttribute('src');
+      const src = img.getAttribute("src");
 
       if (src) {
-        console.log('try replace ', src);
+        console.log("try replace ", src);
         const fileInfo = imageDatas.find((f) => f.url === src);
         const newUrl = await uploadImage(fileInfo);
         if (newUrl) {
-          img.setAttribute('src', newUrl);
+          img.setAttribute("src", newUrl);
         }
       }
     }
@@ -86,9 +86,9 @@ export async function ArticleJianshu(data: SyncData) {
   // 发布文章
   async function publishArticle(articleData: ArticleData): Promise<string | null> {
     // 获取笔记本列表
-    const notebooksResponse = await fetch('https://www.jianshu.com/author/notebooks', {
-      method: 'GET',
-      credentials: 'include',
+    const notebooksResponse = await fetch("https://www.jianshu.com/author/notebooks", {
+      method: "GET",
+      credentials: "include",
     });
 
     if (!notebooksResponse.ok) {
@@ -97,17 +97,17 @@ export async function ArticleJianshu(data: SyncData) {
     }
 
     const notebooks = await notebooksResponse.json();
-    console.log('Notebooks:', notebooks);
+    console.log("Notebooks:", notebooks);
 
     const notebookId = notebooks[0]?.id || null;
 
     // 创建新文章
-    const createResponse = await fetch('https://www.jianshu.com/author/notes', {
-      method: 'POST',
-      credentials: 'include',
+    const createResponse = await fetch("https://www.jianshu.com/author/notes", {
+      method: "POST",
+      credentials: "include",
       headers: {
-        accept: 'application/json',
-        'Content-Type': 'application/json',
+        accept: "application/json",
+        "Content-Type": "application/json",
       },
       body: JSON.stringify({
         notebook_id: notebookId,
@@ -122,17 +122,17 @@ export async function ArticleJianshu(data: SyncData) {
     }
 
     const createResult = await createResponse.json();
-    console.log('result', createResult);
+    console.log("result", createResult);
 
     const noteId = createResult.id;
 
     // 更新文章内容
     const updateResponse = await fetch(`https://www.jianshu.com/author/notes/${noteId}`, {
-      method: 'PUT',
-      credentials: 'include',
+      method: "PUT",
+      credentials: "include",
       headers: {
-        accept: 'application/json',
-        'Content-Type': 'application/json',
+        accept: "application/json",
+        "Content-Type": "application/json",
       },
       body: JSON.stringify({
         id: noteId,
@@ -148,15 +148,14 @@ export async function ArticleJianshu(data: SyncData) {
     }
 
     const updateResult = await updateResponse.json();
-    console.log('updateResult', updateResult);
+    console.log("updateResult", updateResult);
 
     if (createResult.id) {
-      console.log('草稿发布成功');
+      console.log("草稿发布成功");
       return `https://www.jianshu.com/writer#/notebooks/${notebookId}/notes/${noteId}/writing`;
-    } else {
-      console.error('草稿发布失败', createResult.message);
-      return null;
     }
+    console.error("草稿发布失败", createResult.message);
+    return null;
   }
 
   // 主流程

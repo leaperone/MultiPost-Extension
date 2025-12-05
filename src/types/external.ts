@@ -1,12 +1,12 @@
 export type ExtensionExternalRequest<T> = {
-  type: 'request';
+  type: "request";
   traceId: string;
   action: string;
   data: T;
 };
 
 export interface ExtensionExternalResponse<T> {
-  type: 'response';
+  type: "response";
   traceId: string;
   action: string;
   code: number;
@@ -16,11 +16,11 @@ export interface ExtensionExternalResponse<T> {
 
 export function successResponse<T>(request: ExtensionExternalRequest<T>, data: T) {
   return {
-    type: 'response',
+    type: "response",
     traceId: request.traceId,
     action: request.action,
     code: 0,
-    message: 'success',
+    message: "success",
     data,
   };
 }

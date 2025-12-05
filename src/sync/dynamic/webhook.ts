@@ -1,4 +1,4 @@
-import type { SyncData } from '../common';
+import type { SyncData } from "../common";
 
 interface WebhookConfig {
   urls: string[];
@@ -6,22 +6,22 @@ interface WebhookConfig {
 
 // 优先发布图文
 export async function DynamicWebhook(data: SyncData) {
-  console.log('DynamicWebhook', data);
-  const extraConfig = data.platforms.find((platform) => platform.name === 'DYNAMIC_WEBHOOK')
+  console.log("DynamicWebhook", data);
+  const extraConfig = data.platforms.find((platform) => platform.name === "DYNAMIC_WEBHOOK")
     ?.extraConfig as WebhookConfig;
 
   // 创建浮动提示
   function createFloatingTip() {
-    const host = document.createElement('div');
-    const tip = document.createElement('div');
+    const host = document.createElement("div");
+    const tip = document.createElement("div");
 
-    host.style.position = 'fixed';
-    host.style.bottom = '20px';
-    host.style.right = '20px';
-    host.style.zIndex = '9999';
+    host.style.position = "fixed";
+    host.style.bottom = "20px";
+    host.style.right = "20px";
+    host.style.zIndex = "9999";
     document.body.appendChild(host);
 
-    const shadow = host.attachShadow({ mode: 'open' });
+    const shadow = host.attachShadow({ mode: "open" });
 
     tip.innerHTML = `
     <style>
@@ -54,7 +54,7 @@ export async function DynamicWebhook(data: SyncData) {
     return {
       host,
       updateMessage: (message: string) => {
-        const tipElement = shadow.querySelector('.float-tip');
+        const tipElement = shadow.querySelector(".float-tip");
         if (tipElement) {
           tipElement.textContent = message;
         }
@@ -73,9 +73,9 @@ export async function DynamicWebhook(data: SyncData) {
     const urlObj = new URL(url);
     const hostname = urlObj.hostname;
 
-    if (hostname === 'qyapi.weixin.qq.com' || hostname === 'oapi.dingtalk.com') {
+    if (hostname === "qyapi.weixin.qq.com" || hostname === "oapi.dingtalk.com") {
       return {
-        msgtype: 'text',
+        msgtype: "text",
         text: {
           content: content,
         },
@@ -84,7 +84,7 @@ export async function DynamicWebhook(data: SyncData) {
 
     // 默认消息格式
     return {
-      msg_type: 'text',
+      msg_type: "text",
       content: {
         text: content,
       },
@@ -95,9 +95,9 @@ export async function DynamicWebhook(data: SyncData) {
     try {
       const messageBody = getMessageBody(url, content);
       const response = await fetch(url, {
-        method: 'POST',
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify(messageBody),
       });
@@ -108,7 +108,7 @@ export async function DynamicWebhook(data: SyncData) {
 
       return true;
     } catch (error) {
-      console.error('Webhook test failed:', error);
+      console.error("Webhook test failed:", error);
       return false;
     }
   };
@@ -119,13 +119,13 @@ export async function DynamicWebhook(data: SyncData) {
     const isValid = await sendMessageCheck(url, content);
     if (isValid) {
       successCount++;
-      console.log('Webhook成功:', url);
+      console.log("Webhook成功:", url);
       floatingTip.updateMessage(`已成功发布到 ${successCount}/${extraConfig.urls.length} 个 Webhook`);
     }
   }
 
   if (successCount === extraConfig.urls.length) {
-    floatingTip.updateMessage('所有 Webhook 发布成功！');
+    floatingTip.updateMessage("所有 Webhook 发布成功！");
   } else {
     floatingTip.updateMessage(`部分 Webhook 发布失败，成功 ${successCount}/${extraConfig.urls.length}`);
   }

@@ -1,4 +1,4 @@
-import type { DynamicData, SyncData } from '../common';
+import type { DynamicData, SyncData } from "../common";
 
 // 只支持图文，不支持视频
 export async function DynamicXueqiu(data: SyncData) {
@@ -35,7 +35,7 @@ export async function DynamicXueqiu(data: SyncData) {
   async function uploadFiles(files: File[]) {
     const fileInput = (await waitForElement('input[type="file"]')) as HTMLInputElement;
     if (!fileInput) {
-      console.error('未找到文件输入元素');
+      console.error("未找到文件输入元素");
       return;
     }
 
@@ -45,10 +45,10 @@ export async function DynamicXueqiu(data: SyncData) {
     }
 
     fileInput.files = dataTransfer.files;
-    fileInput.dispatchEvent(new Event('change', { bubbles: true }));
-    fileInput.dispatchEvent(new Event('input', { bubbles: true }));
+    fileInput.dispatchEvent(new Event("change", { bubbles: true }));
+    fileInput.dispatchEvent(new Event("input", { bubbles: true }));
     await new Promise((resolve) => setTimeout(resolve, 2000));
-    console.debug('文件上传操作完成');
+    console.debug("文件上传操作完成");
   }
 
   // 辅助函数：等待多个元素出现
@@ -87,16 +87,16 @@ export async function DynamicXueqiu(data: SyncData) {
     const fullContent = `${title}\n${content}`;
 
     // 使用粘贴事件输入内容
-    const pasteEvent = new ClipboardEvent('paste', {
+    const pasteEvent = new ClipboardEvent("paste", {
       bubbles: true,
       cancelable: true,
       clipboardData: new DataTransfer(),
     });
-    pasteEvent.clipboardData.setData('text/plain', fullContent);
+    pasteEvent.clipboardData.setData("text/plain", fullContent);
     inputElement.focus();
     inputElement.dispatchEvent(pasteEvent);
 
-    console.debug('成功填入雪球内容');
+    console.debug("成功填入雪球内容");
 
     // 处理图片上传
     if (images && images.length > 0) {
@@ -107,12 +107,12 @@ export async function DynamicXueqiu(data: SyncData) {
           return new File([blob], file.name, { type: file.type });
         }),
       );
-      const currentUploaded = document.querySelectorAll('.img-single-upload');
+      const currentUploaded = document.querySelectorAll(".img-single-upload");
       await uploadFiles(imageFiles);
-      await waitForElements('.img-single-upload', images.length + currentUploaded.length);
+      await waitForElements(".img-single-upload", images.length + currentUploaded.length);
     }
 
-    console.debug('成功填入雪球内容和图片');
+    console.debug("成功填入雪球内容和图片");
 
     // 等待一段时间后尝试发布
     await new Promise((resolve) => setTimeout(resolve, 5000));
@@ -123,20 +123,20 @@ export async function DynamicXueqiu(data: SyncData) {
         try {
           const sendButton = (await waitForElement('a[class="lite-editor__submit"]', 5000)) as HTMLElement;
           sendButton.click();
-          console.log('发送按钮已点击');
+          console.log("发送按钮已点击");
           await new Promise((resolve) => setTimeout(resolve, 3000));
           window.location.reload();
           break; // 成功点击后退出循环
         } catch (error) {
           console.warn(`第 ${attempt + 1} 次尝试查找发送按钮失败:`, error);
           if (attempt === maxAttempts - 1) {
-            console.error('达到最大尝试次数，无法找到发送按钮');
+            console.error("达到最大尝试次数，无法找到发送按钮");
           }
           await new Promise((resolve) => setTimeout(resolve, 2000)); // 等待2秒后重试
         }
       }
     }
   } catch (error) {
-    console.error('填入雪球内容或上传图片时出错:', error);
+    console.error("填入雪球内容或上传图片时出错:", error);
   }
 }

@@ -1,4 +1,4 @@
-import { type DynamicData, type SyncData } from '../common';
+import type { DynamicData, SyncData } from "../common";
 
 // 不支持发布视频
 export async function DynamicV2EX(data: SyncData) {
@@ -34,18 +34,18 @@ export async function DynamicV2EX(data: SyncData) {
     const { content, title } = data.data as DynamicData;
 
     // 等待标题输入框出现
-    const titleInput = (await waitForElement('#topic_title')) as HTMLTextAreaElement;
+    const titleInput = (await waitForElement("#topic_title")) as HTMLTextAreaElement;
     if (titleInput && title) {
       titleInput.value = title;
-      titleInput.dispatchEvent(new Event('input', { bubbles: true }));
-      console.log('标题已更新');
+      titleInput.dispatchEvent(new Event("input", { bubbles: true }));
+      console.log("标题已更新");
     }
 
     // 等待 CodeMirror 编辑器初始化完成
     await new Promise((resolve) => setTimeout(resolve, 1000));
 
     window.postMessage({
-      type: 'V2EX_DYNAMIC_UPLOAD',
+      type: "V2EX_DYNAMIC_UPLOAD",
       content,
     });
 
@@ -55,13 +55,13 @@ export async function DynamicV2EX(data: SyncData) {
 
     if (publishButton) {
       if (data.isAutoPublish) {
-        console.log('点击发布按钮');
+        console.log("点击发布按钮");
         publishButton.click();
       }
     } else {
-      console.log('未找到发布按钮');
+      console.log("未找到发布按钮");
     }
   } catch (error) {
-    console.error('V2EX发布过程中出错:', error);
+    console.error("V2EX发布过程中出错:", error);
   }
 }

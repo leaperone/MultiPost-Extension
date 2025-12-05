@@ -1,4 +1,4 @@
-import type { DynamicData, SyncData } from '../common';
+import type { DynamicData, SyncData } from "../common";
 
 // 只支持图文，不支持视频
 export async function DynamicThreads(data: SyncData) {
@@ -43,18 +43,18 @@ export async function DynamicThreads(data: SyncData) {
     const editor = dialog.querySelector('div[aria-label="文本栏为空白。请输入内容，撰写新帖子。"]') as HTMLElement;
     editor.click();
     if (!editor) {
-      throw new Error('未找到编辑器元素');
+      throw new Error("未找到编辑器元素");
     }
     editor.focus();
-    const pasteEvent = new ClipboardEvent('paste', {
+    const pasteEvent = new ClipboardEvent("paste", {
       bubbles: true,
       cancelable: true,
       clipboardData: new DataTransfer(),
     });
-    pasteEvent.clipboardData.setData('text/plain', `${title}\n${content}` || '');
+    pasteEvent.clipboardData.setData("text/plain", `${title}\n${content}` || "");
     editor.dispatchEvent(pasteEvent);
 
-    console.debug('成功填入Threads内容');
+    console.debug("成功填入Threads内容");
 
     if (images?.length > 0 || videos?.length > 0) {
       const fileInput = (await waitForElement(
@@ -62,7 +62,7 @@ export async function DynamicThreads(data: SyncData) {
       )) as HTMLInputElement;
 
       if (!fileInput) {
-        throw new Error('未找到文件输入元素');
+        throw new Error("未找到文件输入元素");
       }
 
       const dataTransfer = new DataTransfer();
@@ -76,7 +76,7 @@ export async function DynamicThreads(data: SyncData) {
             const file = new File([blob], image.name, { type: image.type });
             dataTransfer.items.add(file);
           } catch (error) {
-            console.error('获取图片失败:', error);
+            console.error("获取图片失败:", error);
           }
         }
       }
@@ -90,26 +90,26 @@ export async function DynamicThreads(data: SyncData) {
           const file = new File([blob], video.name, { type: video.type });
           dataTransfer.items.add(file);
         } catch (error) {
-          console.error('获取视频失败:', error);
+          console.error("获取视频失败:", error);
         }
       }
 
       fileInput.files = dataTransfer.files;
-      const changeEvent = new Event('change', { bubbles: true });
+      const changeEvent = new Event("change", { bubbles: true });
       fileInput.dispatchEvent(changeEvent);
     }
 
-    console.debug('成功填入Threads内容和图片');
+    console.debug("成功填入Threads内容和图片");
 
     // 等待一段时间后尝试发布
     await new Promise((resolve) => setTimeout(resolve, 5000));
     if (data.isAutoPublish) {
-      const publishDiv = Array.from(dialog.querySelectorAll('div')).find((el) => el.textContent.trim() === '发布');
-      const nextDiv = publishDiv?.querySelector('div');
+      const publishDiv = Array.from(dialog.querySelectorAll("div")).find((el) => el.textContent.trim() === "发布");
+      const nextDiv = publishDiv?.querySelector("div");
       console.log(nextDiv);
       nextDiv.click();
     }
   } catch (error) {
-    console.error('填入Threads内容或上传图片时出错:', error);
+    console.error("填入Threads内容或上传图片时出错:", error);
   }
 }

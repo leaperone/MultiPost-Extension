@@ -1,4 +1,4 @@
-import type { DynamicData, SyncData } from '../common';
+import type { DynamicData, SyncData } from "../common";
 
 export async function DynamicXiaoheihe(data: SyncData) {
   const { title, content, images } = data.data as DynamicData;
@@ -32,8 +32,8 @@ export async function DynamicXiaoheihe(data: SyncData) {
   }
 
   try {
-    const titleEditorSelector = 'div.hb-cpt__editor-title .ProseMirror.hb-editor';
-    const contentEditorSelector = 'div.image-text__edit-content .ProseMirror.hb-editor';
+    const titleEditorSelector = "div.hb-cpt__editor-title .ProseMirror.hb-editor";
+    const contentEditorSelector = "div.image-text__edit-content .ProseMirror.hb-editor";
 
     // 等待编辑器元素出现
     await waitForElement(contentEditorSelector);
@@ -46,35 +46,35 @@ export async function DynamicXiaoheihe(data: SyncData) {
         const titleEditor = document.querySelector(titleEditorSelector);
         if (titleEditor) {
           (titleEditor as HTMLElement).focus();
-          const titlePasteEvent = new ClipboardEvent('paste', {
+          const titlePasteEvent = new ClipboardEvent("paste", {
             bubbles: true,
             cancelable: true,
             clipboardData: new DataTransfer(),
           });
-          titlePasteEvent.clipboardData!.setData('text/plain', title);
+          titlePasteEvent.clipboardData!.setData("text/plain", title);
           titleEditor.dispatchEvent(titlePasteEvent);
           await new Promise((resolve) => setTimeout(resolve, 500));
         }
       } catch {
-        console.debug('未找到标题编辑器元素, 跳过标题填写');
+        console.debug("未找到标题编辑器元素, 跳过标题填写");
       }
     }
 
     // 填写正文
     const contentEditor = document.querySelector(contentEditorSelector);
     if (!contentEditor) {
-      console.debug('未找到正文编辑器元素');
+      console.debug("未找到正文编辑器元素");
       return;
     }
 
     (contentEditor as HTMLElement).focus();
 
-    const contentPasteEvent = new ClipboardEvent('paste', {
+    const contentPasteEvent = new ClipboardEvent("paste", {
       bubbles: true,
       cancelable: true,
       clipboardData: new DataTransfer(),
     });
-    contentPasteEvent.clipboardData!.setData('text/plain', content || '');
+    contentPasteEvent.clipboardData!.setData("text/plain", content || "");
     contentEditor.dispatchEvent(contentPasteEvent);
 
     // 处理媒体上传（图片和视频）
@@ -89,7 +89,7 @@ export async function DynamicXiaoheihe(data: SyncData) {
       }
       await new Promise((resolve) => setTimeout(resolve, 1000));
 
-      window.postMessage({ type: 'XIAOHEIHE_IMAGE_UPLOAD', images: imageData }, '*');
+      window.postMessage({ type: "XIAOHEIHE_IMAGE_UPLOAD", images: imageData }, "*");
     }
 
     // 判断是否自动发布
@@ -99,9 +99,9 @@ export async function DynamicXiaoheihe(data: SyncData) {
     await new Promise((resolve) => setTimeout(resolve, 3000));
 
     // 查找发布按钮
-    const publishButton = document.querySelector<HTMLButtonElement>('button.editor-publish__btn');
+    const publishButton = document.querySelector<HTMLButtonElement>("button.editor-publish__btn");
 
-    console.debug('sendButton', publishButton);
+    console.debug("sendButton", publishButton);
 
     if (publishButton) {
       // 如果找到发布按钮，检查是否可点击
@@ -113,18 +113,18 @@ export async function DynamicXiaoheihe(data: SyncData) {
       }
 
       if (publishButton.disabled) {
-        console.debug('Send button is still disabled after 10 attempts');
+        console.debug("Send button is still disabled after 10 attempts");
         return;
       }
 
-      console.debug('sendButton clicked');
+      console.debug("sendButton clicked");
       // 点击发布按钮
-      const clickEvent = new Event('click', { bubbles: true });
+      const clickEvent = new Event("click", { bubbles: true });
       publishButton.dispatchEvent(clickEvent);
     } else {
-      throw new Error('未找到发布按钮');
+      throw new Error("未找到发布按钮");
     }
   } catch (error) {
-    console.error('小黑盒发布过程中出错:', error);
+    console.error("小黑盒发布过程中出错:", error);
   }
 }

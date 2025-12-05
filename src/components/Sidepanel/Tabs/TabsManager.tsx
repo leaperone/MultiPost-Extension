@@ -1,14 +1,15 @@
-import React, { useState, useEffect } from 'react';
-import { Button } from '@heroui/react';
-import { X, RefreshCw } from 'lucide-react';
-import type { TabManagerMessage } from '~background/services/tabs';
+import { Button } from "@heroui/react";
+import { RefreshCw, X } from "lucide-react";
+import type React from "react";
+import { useEffect, useState } from "react";
+import type { TabManagerMessage } from "~background/services/tabs";
 
 function TabsManager() {
   const [tabGroup, setTabGroup] = useState<TabManagerMessage[]>([]);
 
   useEffect(() => {
     const interval = setInterval(() => {
-      chrome.runtime.sendMessage({ type: 'MULTIPOST_EXTENSION_TABS_MANAGER_REQUEST_TABS' }).then((data) => {
+      chrome.runtime.sendMessage({ type: "MULTIPOST_EXTENSION_TABS_MANAGER_REQUEST_TABS" }).then((data) => {
         setTabGroup(data);
       });
     }, 1000);
@@ -46,7 +47,7 @@ function TabsManager() {
   };
 
   const handleReloadTab = (tabGroup: TabManagerMessage, tabId: number) => {
-    chrome.runtime.sendMessage({ type: 'MULTIPOST_EXTENSION_REQUEST_PUBLISH_RELOAD', data: { tabId, tabGroup } });
+    chrome.runtime.sendMessage({ type: "MULTIPOST_EXTENSION_REQUEST_PUBLISH_RELOAD", data: { tabId, tabGroup } });
   };
 
   // 过滤掉没有标签的组
@@ -56,24 +57,20 @@ function TabsManager() {
     <div className="p-4">
       {nonEmptyGroups.length > 0 ? (
         nonEmptyGroups.map((group, groupIndex) => (
-          <div
-            key={groupIndex}
-            className="mb-6">
+          <div key={groupIndex} className="mb-6">
             <h3 className="mb-2 text-lg font-semibold">
-              {group.syncData.data.title || chrome.i18n.getMessage('sidepanelUntitledGroup', `${groupIndex + 1}`)}
+              {group.syncData.data.title || chrome.i18n.getMessage("sidepanelUntitledGroup", `${groupIndex + 1}`)}
             </h3>
             <ul className="space-y-2">
               {group.tabs.map((tabItem) => (
-                <li
-                  key={tabItem.tab.id}
-                  className="flex relative items-center">
+                <li key={tabItem.tab.id} className="flex relative items-center">
                   <Button
                     isIconOnly
                     size="sm"
                     variant="light"
                     className="mr-2"
                     onPress={() => handleReloadTab(group, tabItem.tab.id)}
-                    aria-label={chrome.i18n.getMessage('sidepanelReloadTab')}>
+                    aria-label={chrome.i18n.getMessage("sidepanelReloadTab")}>
                     <RefreshCw className="w-4 h-4" />
                   </Button>
                   <Button
@@ -85,7 +82,7 @@ function TabsManager() {
                         src={tabItem.tab.favIconUrl}
                         alt=""
                         className="mr-2 w-4 h-4 shrink-0"
-                        onError={(e) => (e.currentTarget.style.display = 'none')}
+                        onError={(e) => (e.currentTarget.style.display = "none")}
                       />
                     )}
                     <span className="truncate">{tabItem.tab.title}</span>
@@ -97,7 +94,7 @@ function TabsManager() {
                     variant="light"
                     className="absolute right-2 top-1/2 -translate-y-1/2"
                     onPress={() => handleCloseTab(tabItem.tab.id)}
-                    aria-label={chrome.i18n.getMessage('sidepanelCloseTab')}>
+                    aria-label={chrome.i18n.getMessage("sidepanelCloseTab")}>
                     <X className="w-4 h-4" />
                   </Button>
                 </li>
@@ -107,11 +104,9 @@ function TabsManager() {
         ))
       ) : (
         <div className="py-8 text-center">
-          <p className="mb-4 text-lg">{chrome.i18n.getMessage('sidepanelNoTabsMessage')}</p>
-          <Button
-            color="primary"
-            onPress={() => chrome.runtime.openOptionsPage()}>
-            {chrome.i18n.getMessage('sidepanelCreateNewTabButton')}
+          <p className="mb-4 text-lg">{chrome.i18n.getMessage("sidepanelNoTabsMessage")}</p>
+          <Button color="primary" onPress={() => chrome.runtime.openOptionsPage()}>
+            {chrome.i18n.getMessage("sidepanelCreateNewTabButton")}
           </Button>
         </div>
       )}

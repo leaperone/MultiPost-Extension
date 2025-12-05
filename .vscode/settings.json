@@ -23,15 +23,10 @@
     "editor.formatOnSave": true // 保存的时候自动格式化
   },
 
-  "i18n-ally.enabledFrameworks": [
-    "chrome-ext",
-    "react"
-  ],
+  "i18n-ally.enabledFrameworks": ["chrome-ext", "react"],
   "i18n-ally.localesPaths": ["locales"],
   "i18n-ally.dirStructure": "auto",
   "i18n-ally.keystyle": "nested",
-  "i18n-ally.enabledParsers": [
-    "json"
-  ],
+  "i18n-ally.enabledParsers": ["json"],
   "makefile.configureOnOpen": false
 }

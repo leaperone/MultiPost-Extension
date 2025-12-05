@@ -1,8 +1,7 @@
-import { Image, Checkbox, Link } from '@heroui/react';
-import type { PlatformInfo, SyncData } from '~sync/common';
-import React from 'react';
-import { Icon } from '@iconify/react';
-import ExtraInfoConfig from './ExtraInfoConfig';
+import { Checkbox, Image, Link } from "@heroui/react";
+import { Icon } from "@iconify/react";
+import type { PlatformInfo, SyncData } from "~sync/common";
+import ExtraInfoConfig from "./ExtraInfoConfig";
 
 interface PlatformCheckboxProps {
   platformInfo: PlatformInfo;
@@ -33,10 +32,7 @@ export default function PlatformCheckbox({
 
         <div className="flex items-center gap-1.5">
           {platformInfo.iconifyIcon ? (
-            <Icon
-              icon={platformInfo.iconifyIcon}
-              className="w-5 h-5"
-            />
+            <Icon icon={platformInfo.iconifyIcon} className="w-5 h-5" />
           ) : (
             platformInfo.faviconUrl && (
               <Image
@@ -80,10 +76,7 @@ export default function PlatformCheckbox({
         </div>
       </div>
 
-      <ExtraInfoConfig
-        platformInfo={platformInfo}
-        syncData={syncData}
-      />
+      <ExtraInfoConfig platformInfo={platformInfo} syncData={syncData} />
     </div>
   );
 }
