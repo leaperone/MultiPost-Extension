@@ -14,6 +14,7 @@ import { ArticleWeixin } from './article/weixin';
 import { ArticleWordpress } from './article/wordpress';
 import { ArticleXueqiu } from './article/xueqiu';
 import { ArticleZhihu } from './article/zhihu';
+import { ArticleSubstack } from './article/substack';
 import type { PlatformInfo } from './common';
 
 export const ArticleInfoMap: Record<string, PlatformInfo> = {
@@ -192,6 +193,17 @@ export const ArticleInfoMap: Record<string, PlatformInfo> = {
     injectFunction: ArticleEastmoney,
     tags: ['CN'],
     accountKey: 'eastmoney',
+  },
+  ARTICLE_SUBSTACK: {
+    type: 'ARTICLE',
+    name: 'ARTICLE_SUBSTACK',
+    homeUrl: 'https://substack.com/',
+    faviconUrl: 'https://substack.com/favicon.ico',
+    platformName: chrome.i18n.getMessage('platformSubstack'),
+    injectUrl: 'https://substack.com/publish/post',
+    injectFunction: ArticleSubstack,
+    tags: ['International'],
+    accountKey: 'substack',
   },
 };
 

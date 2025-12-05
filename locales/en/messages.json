@@ -1073,5 +1073,9 @@
   "publishAutoCloseCountdown": {
     "message": "Auto close in $1 seconds",
     "description": "Auto close countdown text for publish page"
+  },
+  "platformSubstack": {
+    "message": "Substack",
+    "description": "Substack platform name"
   }
 }

@@ -25,6 +25,7 @@ import { DynamicZhihu } from './dynamic/zhihu';
 import { DynamicZSXQ } from './dynamic/zsxq';
 import { DynamicXiaoheihe } from './dynamic/xiaoheihe';
 import { DynamicToutiaohao } from './dynamic/toutiaohao';
+import { DynamicSubstack } from './dynamic/substack';
 
 export const DynamicInfoMap: Record<string, PlatformInfo> = {
   DYNAMIC_BILIBILI: {
@@ -318,5 +319,16 @@ export const DynamicInfoMap: Record<string, PlatformInfo> = {
     injectFunction: DynamicToutiaohao,
     tags: ['CN'],
     accountKey: 'toutiaohao',
+  },
+  DYNAMIC_SUBSTACK: {
+    type: 'DYNAMIC',
+    name: 'DYNAMIC_SUBSTACK',
+    homeUrl: 'https://substack.com/',
+    faviconUrl: 'https://substack.com/favicon.ico',
+    platformName: chrome.i18n.getMessage('platformSubstack'),
+    injectUrl: 'https://substack.com/home',
+    injectFunction: DynamicSubstack,
+    tags: ['International'],
+    accountKey: 'substack',
   },
 };
