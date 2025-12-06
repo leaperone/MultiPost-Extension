@@ -189,7 +189,7 @@ export async function DynamicInstagram(data: SyncData) {
       return;
     }
 
-    if (data.autoPublish) {
+    if (data.isAutoPublish) {
       console.debug("自动发布：点击分享按钮");
       shareButton.dispatchEvent(new Event("click", { bubbles: true }));
     } else {

@@ -62,7 +62,7 @@ export async function ArticleJuejin(data: SyncData) {
       cancelable: true,
       clipboardData: new DataTransfer(),
     });
-    pasteEvent.clipboardData?.setData("text/html", articleData.content || "");
+    pasteEvent.clipboardData?.setData("text/html", articleData.htmlContent || "");
     editor.dispatchEvent(pasteEvent);
     editor.dispatchEvent(new Event("input", { bubbles: true }));
     editor.dispatchEvent(new Event("change", { bubbles: true }));
@@ -77,7 +77,7 @@ export async function ArticleJuejin(data: SyncData) {
     console.debug("sendButton", sendButton);
 
     if (sendButton) {
-      if (data.autoPublish) {
+      if (data.isAutoPublish) {
         console.debug("自动发布：点击发布按钮");
         sendButton.dispatchEvent(new Event("click", { bubbles: true }));
       } else {

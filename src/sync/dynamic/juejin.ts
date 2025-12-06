@@ -89,7 +89,7 @@ export async function DynamicJuejin(data: SyncData) {
     }
 
     // 查找发布按钮
-    if (data.autoPublish) {
+    if (data.isAutoPublish) {
       const buttons = document.querySelectorAll("button");
       console.debug("buttons", buttons);
       const sendButton = Array.from(buttons).find((btn) => btn.textContent?.includes("发布"));

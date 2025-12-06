@@ -116,7 +116,7 @@ export async function DynamicReddit(data: SyncData) {
     }
 
     // 自动提交
-    if (data.autoPublish) {
+    if (data.isAutoPublish) {
       await new Promise((resolve) => setTimeout(resolve, 5000));
 
       const submitButton = document.querySelector("r-post-form-submit-button#submit-post-button");

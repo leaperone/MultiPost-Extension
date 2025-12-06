@@ -120,7 +120,7 @@ export async function DynamicMaimai(data: SyncData) {
     console.debug("sendButton", sendButton);
 
     if (sendButton) {
-      if (data.autoPublish) {
+      if (data.isAutoPublish) {
         console.debug("自动发布：点击发布按钮");
         sendButton.dispatchEvent(new Event("click", { bubbles: true }));
       } else {

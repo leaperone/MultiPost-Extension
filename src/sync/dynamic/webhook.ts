@@ -1,4 +1,4 @@
-import type { SyncData } from "../common";
+import type { DynamicData, SyncData } from "../common";
 
 interface WebhookConfig {
   urls: string[];
@@ -115,7 +115,8 @@ export async function DynamicWebhook(data: SyncData) {
 
   let successCount = 0;
   for (const url of extraConfig.urls) {
-    const content = data.data.title ? `${data.data.title}\n${data.data.content}` : data.data.content;
+    const dynamicData = data.data as DynamicData;
+    const content = dynamicData.title ? `${dynamicData.title}\n${dynamicData.content}` : dynamicData.content;
     const isValid = await sendMessageCheck(url, content);
     if (isValid) {
       successCount++;
