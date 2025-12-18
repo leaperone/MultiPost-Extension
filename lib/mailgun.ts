@@ -1,3 +1,6 @@
+import { posthogClient } from './posthog/server';
+import crypto from 'crypto';
+
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export async function sendVerificationRequest(params: any) {
   const { identifier: to, provider, url } = params;
@@ -21,6 +24,20 @@ export async function sendVerificationRequest(params: any) {
   });
 
   if (!res.ok) throw new Error('Mailgun error: ' + (await res.text()));
+
+  // 追踪邮件验证发送事件
+  // 对邮箱进行哈希处理以保护隐私
+  const emailHash = crypto.createHash('sha256').update(to).digest('hex').substring(0, 8);
+  if (posthogClient) {
+    posthogClient.capture({
+      distinctId: emailHash,
+      event: 'email_verification_sent',
+      properties: {
+        email_hash: emailHash,
+        timestamp: Date.now(),
+      },
+    });
+  }
 }
 
 function html(params: { url: string }) {

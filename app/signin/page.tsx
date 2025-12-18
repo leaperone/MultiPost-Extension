@@ -4,6 +4,7 @@ import { Button, Input, Card, CardBody, Divider } from '@heroui/react';
 import { createTranslation } from '@/i18n/server';
 import { PasskeyAuthButton } from './PasskeyAuthButton';
 import { SubmitButton } from './SubmitButton';
+import { SigninAnalytics } from './SigninAnalytics';
 import { AlertCircle } from 'lucide-react';
 import { redirect } from 'next/navigation';
 
@@ -30,6 +31,7 @@ const SigninPage = async (props: { searchParams: Promise<{ redirect?: string; er
 
   return (
     <div className="flex min-h-[40px] flex-col items-center gap-4">
+      <SigninAnalytics />
       <h1 className="text-xl font-medium">Sign In</h1>
 
       {error && errorToI18nKey[error as SignInError] && (
@@ -47,6 +49,7 @@ const SigninPage = async (props: { searchParams: Promise<{ redirect?: string; er
       )}
 
       <form
+        data-signin-method="github"
         action={async () => {
           'use server';
           await signIn('github', { redirectTo });
@@ -60,6 +63,7 @@ const SigninPage = async (props: { searchParams: Promise<{ redirect?: string; er
         </SubmitButton>
       </form>
       <form
+        data-signin-method="google"
         action={async () => {
           'use server';
           await signIn('google', { redirectTo });
@@ -74,6 +78,7 @@ const SigninPage = async (props: { searchParams: Promise<{ redirect?: string; er
       <Divider />
 
       <form
+        data-signin-method="email"
         action={async (formData: FormData) => {
           'use server';
           await signIn('mailgun', {
@@ -99,6 +104,7 @@ const SigninPage = async (props: { searchParams: Promise<{ redirect?: string; er
         <>
           <Divider />
           <form
+            data-signin-method="http-email"
             action={async (formData: FormData) => {
               'use server';
               await signIn('http-email', {

@@ -11,6 +11,12 @@ import { nanoid } from 'nanoid';
 import { Decimal } from '@prisma/client/runtime/library';
 import { RechargeStatus, RechargeType } from './actions/credit/types';
 import { addCredit } from './actions/credit';
+import {
+  trackUserCreatedServer,
+  trackSigninCompletedServer,
+  trackGithubSignupBonusServer,
+} from './lib/posthog/server-events';
+import type { SigninMethod } from './lib/posthog/events';
 
 declare module 'next-auth' {
   interface Session {
@@ -80,11 +86,21 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       });
 
       await addCredit(user.id, new Decimal(0.5), true);
+
+      // 追踪新用户创建事件
+      trackUserCreatedServer(user.id);
     },
     async signIn({ user, account, isNewUser }) {
       if (!user.id) {
         return;
       }
+
+      // 追踪登录成功事件
+      const method = account?.provider as SigninMethod | undefined;
+      if (method) {
+        trackSigninCompletedServer(user.id, method, isNewUser || false);
+      }
+
       // 如果是Github注册，则赠送1Credit
       if (account?.provider === 'github' && isNewUser) {
         await prisma.rechargeCredit.create({
@@ -97,6 +113,9 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
           },
         });
         await addCredit(user.id, new Decimal(1), true);
+
+        // 追踪 GitHub 注册奖励发放
+        trackGithubSignupBonusServer(user.id, 1);
       }
     },
   },

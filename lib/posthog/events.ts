@@ -65,3 +65,120 @@ export const trackAdClick = (
     });
   });
 };
+
+/**
+ * 登录方式类型
+ */
+export type SigninMethod = "github" | "google" | "passkey" | "email" | "http-email";
+
+/**
+ * 追踪登录方式点击事件
+ * @param method - 登录方式
+ */
+export const trackSigninMethodClicked = (method: SigninMethod) => {
+  if (typeof window === "undefined") {
+    return;
+  }
+
+  import("posthog-js").then((module) => {
+    const posthog = module.default;
+    posthog.capture("signin_method_clicked", {
+      method,
+      timestamp: Date.now(),
+    });
+  });
+};
+
+/**
+ * 追踪登录开始事件
+ * @param method - 登录方式
+ */
+export const trackSigninStarted = (method: SigninMethod) => {
+  if (typeof window === "undefined") {
+    return;
+  }
+
+  import("posthog-js").then((module) => {
+    const posthog = module.default;
+    posthog.capture("signin_started", {
+      method,
+      timestamp: Date.now(),
+    });
+  });
+};
+
+/**
+ * 追踪登录成功事件
+ * @param method - 登录方式
+ * @param isNewUser - 是否为新用户
+ */
+export const trackSigninCompleted = (method: SigninMethod, isNewUser: boolean) => {
+  if (typeof window === "undefined") {
+    return;
+  }
+
+  import("posthog-js").then((module) => {
+    const posthog = module.default;
+    posthog.capture("signin_completed", {
+      method,
+      is_new_user: isNewUser,
+      timestamp: Date.now(),
+    });
+  });
+};
+
+/**
+ * 追踪登录失败事件
+ * @param method - 登录方式
+ * @param error - 错误信息
+ */
+export const trackSigninFailed = (method: SigninMethod, error?: string) => {
+  if (typeof window === "undefined") {
+    return;
+  }
+
+  import("posthog-js").then((module) => {
+    const posthog = module.default;
+    posthog.capture("signin_failed", {
+      method,
+      error,
+      timestamp: Date.now(),
+    });
+  });
+};
+
+/**
+ * 追踪邮件验证发送事件
+ * @param email - 邮箱地址（哈希处理以保护隐私）
+ */
+export const trackEmailVerificationSent = (emailHash?: string) => {
+  if (typeof window === "undefined") {
+    return;
+  }
+
+  import("posthog-js").then((module) => {
+    const posthog = module.default;
+    posthog.capture("email_verification_sent", {
+      email_hash: emailHash,
+      timestamp: Date.now(),
+    });
+  });
+};
+
+/**
+ * 追踪邮件验证链接点击事件
+ * @param source - 来源（例如: email_link）
+ */
+export const trackEmailVerificationClicked = (source?: string) => {
+  if (typeof window === "undefined") {
+    return;
+  }
+
+  import("posthog-js").then((module) => {
+    const posthog = module.default;
+    posthog.capture("email_verification_clicked", {
+      source,
+      timestamp: Date.now(),
+    });
+  });
+};

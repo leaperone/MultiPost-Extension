@@ -7,6 +7,7 @@ import { signIn } from 'next-auth/webauthn';
 import { useTranslation } from '@/i18n/client';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
+import { trackSigninMethodClicked } from '@/lib/posthog/events';
 
 interface PasskeyAuthButtonProps {
   redirect: string;
@@ -33,6 +34,9 @@ export function PasskeyAuthButton({ redirect }: PasskeyAuthButtonProps) {
 
   const handlePasskeyAuth = async () => {
     if (!isWebAuthnSupported) return;
+
+    // 追踪登录方式点击事件
+    trackSigninMethodClicked('passkey');
 
     setIsLoading(true);
     try {
