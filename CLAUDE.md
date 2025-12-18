@@ -2,43 +2,52 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+## Important Communication Rules
+
+**🇨🇳 Always respond in Chinese (中文) when communicating with the user.** This is a Chinese-focused project and the development team prefers Chinese communication.
+
+**Git commit messages must use English always.** Follow conventional commit format (e.g., `feat:`, `fix:`, `chore:`). Emoji commits are allowed.
+
+**When creating Pull Requests, always create as draft PR by default** using `gh pr create --draft`.
+
+**When creating feature branches, use `feature/` prefix** (e.g., `feature/add-user-profile`, `feature/fix-login-bug`).
+
+**Never auto commit. Never push to remote automatically.** Only push when the user explicitly asks to push.
+
 ## Development Commands
 
 ### Setup and Installation
 ```bash
-pnpm i
-sh prisma/generate.sh
+pnpm i                      # Install dependencies
 ```
 
 ### Development Server
 ```bash
-pnpm dev
-# or with environment
-NODE_ENV=development pnpm dev
+pnpm dev                    # Start development server
 ```
 
-### Build and Production
+### Database Quick Setup
 ```bash
-pnpm build                    # Runs Prisma generate and Next.js build
-pnpm start                   # Start production server
-```
+make dev                    # Start dev DB + deploy migrations (recommended)
+make dbdev                  # Generate Prisma clients + deploy migrations
 
-### Code Quality
-```bash
-pnpm lint                    # Next.js linter
-pnpm eslint                  # ESLint check
-pnpm eslint:fix             # ESLint with auto-fix
-```
-
-### Testing
-This codebase currently has no test setup. When implementing tests, add appropriate npm scripts to package.json.
-
-### Database
-```bash
+# Manual commands (if needed)
 sh prisma/generate.sh       # Generate Prisma client
 sh prisma/migrate.sh        # Run database migrations
 sh prisma/migrate_deploy.sh # Deploy migrations to production
 ```
+
+### Code Quality
+```bash
+pnpm lint                   # Next.js linter (recommended for quick checks)
+pnpm eslint                 # ESLint check
+pnpm eslint:fix             # ESLint with auto-fix
+```
+
+**Note:** Don't run `pnpm build` during development, just use lint to check. Biome handles all linting and formatting (not ESLint/Prettier).
+
+### Testing
+This codebase currently has no test setup. When implementing tests, add appropriate npm scripts to package.json.
 
 ### Worker Process
 ```bash
@@ -64,6 +73,26 @@ pnpm release:001            # Patch version
 ## Architecture Overview
 
 **MultiPost** is a Next.js 15 social media publishing platform with browser extension integration.
+
+### Directory Structure
+
+```
+app/                    # Next.js App Router pages and routes
+├── api/               # API routes (REST endpoints)
+├── dashboard/         # Dashboard pages with settings
+├── (default)/         # Route group for default pages
+├── (others)/          # Route group for other pages
+├── [username]/        # Dynamic user profile routes
+└── auth/              # Authentication pages
+
+actions/               # Server Actions (Next.js server-side functions)
+components/            # Reusable React components
+lib/                   # Library code and utilities
+hooks/                 # Custom React hooks
+store/                 # Global state management (Zustand)
+prisma/                # Database schemas and migrations
+types/                 # TypeScript type definitions
+```
 
 ### Core Architecture
 - **Next.js App Router**: Modern routing with server/client components
@@ -131,19 +160,32 @@ pnpm release:001            # Patch version
 ## Code Standards
 
 ### TypeScript Guidelines
-- Use interfaces over types
-- Avoid enums; use maps instead
+
+**Type Definitions:**
+- **Always use `interface`** over `type` for object types
+- **Avoid `enum`** - use const objects or maps instead
+- Use Zod for form validation and schema definition
+
+**Naming Conventions:**
+- **Components/Interfaces**: `PascalCase`
+- **Files/folders**: `camelCase` with hyphens
+- **Variables/functions**: `camelCase`
+- **Constants**: `SNAKE_CASE`
+
+**Code Patterns:**
+- **Function components only** - avoid class components
+- **Early returns** for error handling and guard clauses
 - Use functional and declarative programming patterns; avoid classes
-- Use PascalCase for components and interfaces
-- Use camelCase for utilities, variables, and methods
-- Use SNAKE_CASE for constants
-- Prefer early returns and guard clauses
 - Use descriptive variable names with auxiliary verbs (isLoading, hasError)
 
+**Component Organization:**
+- When asked to "封装成一个组件", export in the **same file**, don't create a new file
+
 ### Performance Optimization
-- Minimize 'use client', 'useEffect', and 'setState'; favor React Server Components (RSC)
-- Wrap client components in Suspense with fallback
-- Use dynamic loading for non-critical components
+- **Minimize `use client`** - prefer React Server Components (RSC)
+- **Minimize `useEffect` and `setState`** - favor server-side logic
+- **Wrap client components** in `<Suspense>` boundaries with fallback
+- **Use dynamic imports** for heavy/non-critical components
 - Optimize images: use WebP format, include size data, implement lazy loading
 
 ### AI Integration
@@ -157,6 +199,67 @@ pnpm release:001            # Patch version
 - Use JSDoc style for functions and interfaces
 - Write comments in English
 - Use TODO/FIXME comments with GitHub username and issue references
+
+## UI/Styling Guidelines
+
+### Component Libraries
+
+- **HeroUI** (primary UI library, @heroui/react)
+- **Radix UI** for context menus, dialogs, dropdowns
+- **Lucide React** for icons (preferred, **ignore** any @iconify/react)
+- **Framer Motion** for animations
+- **Tailwind CSS** for all styling
+- **Shadcn UI** ContextMenu for right-click menus
+
+### Design System - Minimalist Black & White Style
+
+**Critical Rules:**
+- **Only use Tailwind semantic colors**: `bg-background`, `text-foreground`, `text-muted-foreground`
+- **Borders**: Only `border` class, **never** `border-gray-xxx` or colored borders
+- **No colored backgrounds** - strictly black and white aesthetic
+
+**Card Style:**
+```tsx
+<Card className="shadow-none border">
+  {/* Content */}
+</Card>
+```
+
+### Layout Guidelines
+
+- **Mobile-first responsive design**
+- Use `flex` and `grid` for layouts
+- Use `gap` for spacing, **avoid margins** between elements
+
+```tsx
+// ✅ Correct: Mobile-first, gap for spacing
+<div className="w-full md:w-1/2 lg:w-1/3 flex gap-4">
+
+// ❌ Wrong: Desktop-first, margins for spacing
+<div className="lg:w-1/3 md:w-1/2 w-full flex [&>*]:mr-4">
+```
+
+### Toast Notifications
+
+```tsx
+import { addToast } from "@heroui/react";
+
+addToast({
+  title: "Toast Title",
+  description: "Toast Description",
+  hideIcon: true,
+});
+```
+
+### Icons (Lucide React)
+
+- Use `<HomeIcon />` without size classes by default
+- **Only add `className='size-4'` when button size is 'sm'**
+
+### Borders
+
+- **Don't overuse borders** - inputs, forms generally don't need borders
+- When borders are needed, use plain `border` class only
 
 ## Pricing System
 
@@ -190,3 +293,19 @@ pnpm release:001            # Patch version
 - `actions/credit/index.ts` - Credit operations (deduct, add, batch)
 - `actions/credit/worker.ts` - Worker process credit deduction
 - `actions/credit/recharge.ts` - Stripe/Alipay recharge functionality
+
+## PostHog Analytics
+
+- **Project ID**: 259332
+- **Project Name**: MultiPost
+- **Organization**: 0199e216-bb22-0000-9349-7facf8dca509
+
+## Important Notes
+
+- Uses **pnpm exclusively** (enforced by preinstall hook)
+- Node version managed via `.nvmrc` (v19.7.0)
+- **Biome** handles all linting and formatting (not ESLint/Prettier)
+- Three separate databases (Main, Region, Bilibili)
+- **Don't run `pnpm build`** during development, just use lint to check
+- Uses **next-safe-action** for type-safe server actions
+- Custom authentication implementation (session-based, not NextAuth)

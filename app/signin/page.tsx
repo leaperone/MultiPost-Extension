@@ -1,9 +1,9 @@
 import React from 'react';
 import { signIn } from '@/auth';
 import { Button, Input, Card, CardBody, Divider } from '@heroui/react';
-import { Icon } from '@iconify/react/dist/iconify.js';
 import { createTranslation } from '@/i18n/server';
 import { PasskeyAuthButton } from './PasskeyAuthButton';
+import { SubmitButton } from './SubmitButton';
 import { AlertCircle } from 'lucide-react';
 import { redirect } from 'next/navigation';
 
@@ -52,17 +52,7 @@ const SigninPage = async (props: { searchParams: Promise<{ redirect?: string; er
           await signIn('google', { redirectTo });
         }}
         className="w-full max-w-md">
-        <Button
-          type="submit"
-          className="w-full"
-          startContent={
-            <Icon
-              icon="logos:google-icon"
-              className="size-6"
-            />
-          }>
-          {t('signin.google')}
-        </Button>
+        <SubmitButton icon="logos:google-icon">{t('signin.google')}</SubmitButton>
       </form>
       <form
         action={async () => {
@@ -70,17 +60,7 @@ const SigninPage = async (props: { searchParams: Promise<{ redirect?: string; er
           await signIn('github', { redirectTo });
         }}
         className="w-full max-w-md">
-        <Button
-          type="submit"
-          className="w-full"
-          startContent={
-            <Icon
-              icon="logos:github-icon"
-              className="size-6"
-            />
-          }>
-          {t('signin.github')}
-        </Button>
+        <SubmitButton icon="logos:github-icon">{t('signin.github')}</SubmitButton>
       </form>
       <div className="w-full max-w-md">
         <PasskeyAuthButton redirect={redirectTo} />
@@ -105,11 +85,7 @@ const SigninPage = async (props: { searchParams: Promise<{ redirect?: string; er
             required
             className="bg-transparent"
           />
-          <Button
-            type="submit"
-            className="w-full">
-            {t('signin.email')}
-          </Button>
+          <SubmitButton icon="lucide:mail">{t('signin.email')}</SubmitButton>
         </div>
       </form>
 

@@ -1,6 +1,6 @@
 'use client';
 
-import { Button } from '@heroui/react';
+import { Button, Tooltip } from '@heroui/react';
 import { Icon } from '@iconify/react';
 import { useSession } from 'next-auth/react';
 import { signIn } from 'next-auth/webauthn';
@@ -17,11 +17,25 @@ export function PasskeyAuthButton({ redirect }: PasskeyAuthButtonProps) {
   const { t } = useTranslation('auth');
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
+  const [isWebAuthnSupported, setIsWebAuthnSupported] = useState(true);
+
+  useEffect(() => {
+    // Check if WebAuthn is supported
+    const checkWebAuthnSupport = () => {
+      const supported =
+        typeof window !== 'undefined' &&
+        window.PublicKeyCredential !== undefined &&
+        typeof window.PublicKeyCredential === 'function';
+      setIsWebAuthnSupported(supported);
+    };
+    checkWebAuthnSupport();
+  }, []);
 
   const handlePasskeyAuth = async () => {
+    if (!isWebAuthnSupported) return;
+
     setIsLoading(true);
     try {
-      // 使用 passkey 登录
       await signIn('passkey', { redirect: true, redirectTo: redirect });
     } catch {
       setIsLoading(false);
@@ -32,15 +46,16 @@ export function PasskeyAuthButton({ redirect }: PasskeyAuthButtonProps) {
     if (status === 'authenticated') {
       router.push(redirect);
     }
-  }, [status]);
+  }, [status, redirect, router]);
 
   if (status === 'loading') return null;
 
-  return (
+  const button = (
     <Button
       onPress={handlePasskeyAuth}
       className="w-full"
       isLoading={isLoading}
+      isDisabled={!isWebAuthnSupported}
       startContent={
         !isLoading && (
           <Icon
@@ -52,4 +67,14 @@ export function PasskeyAuthButton({ redirect }: PasskeyAuthButtonProps) {
       {t('signin.passkey')}
     </Button>
   );
+
+  if (!isWebAuthnSupported) {
+    return (
+      <Tooltip content={t('signin.passkey_not_supported')} placement="bottom">
+        <div className="w-full">{button}</div>
+      </Tooltip>
+    );
+  }
+
+  return button;
 }

@@ -34,6 +34,9 @@ import {
   ArrowRight,
   VideoIcon,
   PodcastIcon,
+  AlertTriangleIcon,
+  RefreshCwIcon,
+  Loader2Icon,
 } from 'lucide-react';
 import { useTranslation } from '@/i18n/client';
 import {
@@ -85,7 +88,7 @@ import { useRouter } from 'next/navigation';
 
 import type { PlatformInfo } from '@/lib/extension';
 
-import { funcPublish, getPlatformInfos, requestRefreshAccountInfo } from '@/lib/extension';
+import { funcPublish, getPlatformInfos, requestRefreshAccountInfo, checkServiceStatus } from '@/lib/extension';
 import PlatformCheckbox from '@/app/dashboard/publish/components/PlatformCheckbox';
 import { usePlatformStore } from '@/store/publish.store';
 import { getPlatformExtraConfigList } from '@/app/dashboard/publish/action';
@@ -178,6 +181,8 @@ export default function OnInstallPage() {
   const [viewerVisible, setViewerVisible] = useState(false);
   const [currentImage, setCurrentImage] = useState(0);
   const [platforms, setPlatforms] = useState<PlatformInfo[]>([]);
+  const [extensionReady, setExtensionReady] = useState<boolean | null>(null);
+  const [isLoadingPlatforms, setIsLoadingPlatforms] = useState(false);
 
   // Login modal state
   const { isOpen, onOpen, onOpenChange } = useDisclosure();
@@ -227,28 +232,51 @@ export default function OnInstallPage() {
 
   useEffect(() => {
     async function fetchPlatforms() {
-      const [platformData, extraConfigList] = await Promise.all([
-        getPlatformInfos('DYNAMIC'),
-        getPlatformExtraConfigList(),
-      ]);
+      if (process.env.NODE_ENV === 'development') {
+        setExtensionReady(true);
+        return;
+      }
 
-      if (extraConfigList.success && extraConfigList.data) {
-        const extraConfigMap = extraConfigList.data.reduce(
-          (acc: Record<string, unknown>, item: { platform: string; data: unknown }) => {
-            acc[item.platform] = item.data;
-            return acc;
-          },
-          {} as Record<string, unknown>,
-        );
+      setIsLoadingPlatforms(true);
 
-        const platformsWithExtra = platformData.map((platform: PlatformInfo) => ({
-          ...platform,
-          extraConfig: extraConfigMap[platform.name],
-        })) satisfies PlatformInfo[];
+      // Check if extension is available with a shorter timeout (3s)
+      const isExtensionReady = await checkServiceStatus(3000);
+      setExtensionReady(isExtensionReady);
 
-        setPlatforms(platformsWithExtra);
-      } else {
-        setPlatforms(platformData);
+      if (!isExtensionReady) {
+        setIsLoadingPlatforms(false);
+        return;
+      }
+
+      try {
+        const [platformData, extraConfigList] = await Promise.all([
+          getPlatformInfos('DYNAMIC'),
+          getPlatformExtraConfigList(),
+        ]);
+
+        if (extraConfigList.success && extraConfigList.data) {
+          const extraConfigMap = extraConfigList.data.reduce(
+            (acc: Record<string, unknown>, item: { platform: string; data: unknown }) => {
+              acc[item.platform] = item.data;
+              return acc;
+            },
+            {} as Record<string, unknown>,
+          );
+
+          const platformsWithExtra = platformData.map((platform: PlatformInfo) => ({
+            ...platform,
+            extraConfig: extraConfigMap[platform.name],
+          })) satisfies PlatformInfo[];
+
+          setPlatforms(platformsWithExtra);
+        } else {
+          setPlatforms(platformData);
+        }
+      } catch (error) {
+        console.error('Failed to fetch platforms:', error);
+        setExtensionReady(false);
+      } finally {
+        setIsLoadingPlatforms(false);
       }
     }
     fetchPlatforms();
@@ -566,6 +594,57 @@ export default function OnInstallPage() {
                   </div>
                 </SortableContext>
               </DndContext>
+            </CardBody>
+          </Card>
+        )}
+
+        {/* Extension Status Warning */}
+        {extensionReady === false && (
+          <Card className="border border-warning-200 bg-warning-50 shadow-none">
+            <CardBody>
+              <div className="flex items-start gap-3">
+                <AlertTriangleIcon className="mt-0.5 size-5 shrink-0 text-warning" />
+                <div className="flex-1">
+                  <p className="font-medium text-warning-800">{t('extension.notReady', 'Extension Not Ready')}</p>
+                  <p className="mt-1 text-sm text-warning-700">
+                    {t(
+                      'extension.notReadyDesc',
+                      'Please make sure the MultiPost extension is installed and enabled, then refresh the page.',
+                    )}
+                  </p>
+                  <div className="mt-3 flex gap-2">
+                    <Button
+                      size="sm"
+                      color="warning"
+                      variant="flat"
+                      startContent={<RefreshCwIcon className="size-4" />}
+                      onPress={() => window.location.reload()}>
+                      {t('extension.refresh', 'Refresh Page')}
+                    </Button>
+                    <Button
+                      as={Link}
+                      size="sm"
+                      color="primary"
+                      variant="flat"
+                      href="/extension"
+                      startContent={<PuzzleIcon className="size-4" />}>
+                      {t('extension.install', 'Install Extension')}
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            </CardBody>
+          </Card>
+        )}
+
+        {/* Loading State */}
+        {isLoadingPlatforms && (
+          <Card className="border bg-default-50 shadow-none">
+            <CardBody>
+              <div className="flex items-center justify-center gap-2 py-4">
+                <Loader2Icon className="size-5 animate-spin text-primary" />
+                <span className="text-default-500">{t('extension.loading', 'Loading platforms...')}</span>
+              </div>
             </CardBody>
           </Card>
         )}
