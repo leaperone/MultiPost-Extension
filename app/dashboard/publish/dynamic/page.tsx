@@ -217,7 +217,8 @@ export default function DynamicPage() {
   const [title, setTitle] = useState<string>('');
   const [content, setContent] = useState<string>('');
   const { dynamicPlatforms, setDynamicPlatforms, clearDynamicPlatforms } = usePlatformStore();
-  const [selectedPlatforms, setSelectedPlatforms] = useState<string[]>(dynamicPlatforms);
+  // Initialize with empty array to prevent hydration mismatch - sync from store after mount
+  const [selectedPlatforms, setSelectedPlatforms] = useState<string[]>([]);
   const [autoPublish, setAutoPublish] = useState<boolean>(false);
   const [viewerVisible, setViewerVisible] = useState(false);
   const [currentImage, setCurrentImage] = useState(0);
@@ -233,6 +234,13 @@ export default function DynamicPage() {
   const [isLibraryModalOpen, setLibraryModalOpen] = useState(false);
   const [showDraftAd, setShowDraftAd] = useState(true);
   const [isAiModalOpen, setIsAiModalOpen] = useState(false);
+
+  // Sync persisted platform selection after hydration to prevent mismatch
+  useEffect(() => {
+    if (dynamicPlatforms.length > 0) {
+      setSelectedPlatforms(dynamicPlatforms);
+    }
+  }, []);
 
   useEffect(() => {
     if (images.some((i) => !i.id)) {
@@ -470,12 +478,13 @@ export default function DynamicPage() {
       isAutoPublish: autoPublish,
     };
 
-    try {
-      funcPublish(data);
-      console.log('Publishing:', data);
-    } catch (error) {
-      console.error('Error publishing:', error);
-      funcPublish(data);
+    const result = await funcPublish(data);
+    if (!result.success) {
+      addToast({
+        title: t('publish.failed', '发布失败'),
+        description: result.error || t('publish.unknownError', '未知错误'),
+        color: 'danger',
+      });
     }
   };
 

@@ -132,7 +132,8 @@ export default function PodcastPage() {
   const [description, setDescription] = useState<string>('');
   const audioInputRef = useRef<HTMLInputElement>(null);
   const { podcastPlatforms, setPodcastPlatforms, clearPodcastPlatforms } = usePlatformStore();
-  const [selectedPlatforms, setSelectedPlatforms] = useState<string[]>(podcastPlatforms);
+  // Initialize with empty array to prevent hydration mismatch - sync from store after mount
+  const [selectedPlatforms, setSelectedPlatforms] = useState<string[]>([]);
   const [autoPublish, setAutoPublish] = useState<boolean>(false);
   const [platforms, setPlatforms] = useState<PlatformInfo[]>([]);
 
@@ -192,6 +193,13 @@ export default function PodcastPage() {
       </CardBody>
     </Card>
   );
+
+  // Sync persisted platform selection after hydration to prevent mismatch
+  useEffect(() => {
+    if (podcastPlatforms.length > 0) {
+      setSelectedPlatforms(podcastPlatforms);
+    }
+  }, []);
 
   useEffect(() => {
     if (process.env.NODE_ENV === 'development') {
@@ -333,11 +341,13 @@ export default function PodcastPage() {
       isAutoPublish: autoPublish,
     };
 
-    try {
-      funcPublish(data);
-    } catch (error) {
-      console.error('Error publishing:', error);
-      funcPublish(data);
+    const result = await funcPublish(data);
+    if (!result.success) {
+      addToast({
+        title: t('publish.failed', '发布失败'),
+        description: result.error || t('publish.unknownError', '未知错误'),
+        color: 'danger',
+      });
     }
   };
 

@@ -6,6 +6,7 @@ import { getLocale } from '@/i18n/server';
 import { LocaleProvider } from '@/i18n/locale-provider';
 import { Locales } from '@/i18n/settings';
 import { ToastProvider } from '@heroui/toast';
+import { DeploymentErrorHandler } from '@/components/DeploymentErrorHandler';
 
 export async function Providers({ children }: { children: React.ReactNode }) {
   const session = await auth();
@@ -14,6 +15,7 @@ export async function Providers({ children }: { children: React.ReactNode }) {
     <SessionProvider session={session}>
       <HeroUIProvider>
         <ToastProvider />
+        <DeploymentErrorHandler />
         <LocaleProvider value={locale as Locales}>
           <NextThemesProvider
             attribute="class"

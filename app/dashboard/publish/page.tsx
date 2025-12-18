@@ -1,10 +1,10 @@
 'use client';
 
-import { Card, CardBody, CardHeader } from '@heroui/react';
-import { MessageCircleHeartIcon, VideoIcon, FileTextIcon, PodcastIcon } from 'lucide-react';
+import { Card, CardBody, CardHeader, Chip } from '@heroui/react';
+import { MessageCircleHeartIcon, VideoIcon, FileTextIcon, PodcastIcon, CalendarClockIcon, SparklesIcon, ArrowRightIcon } from 'lucide-react';
 import Link from 'next/link';
 import { useSession } from 'next-auth/react';
-import { useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from '@/i18n/client';
 
 export default function PublishPage() {
@@ -45,21 +45,21 @@ export default function PublishPage() {
     [t],
   );
 
-  const getGreeting = () => {
+  // Defer greeting calculation to client-side to prevent hydration mismatch
+  const [greeting, setGreeting] = useState('');
+
+  useEffect(() => {
     const hour = new Date().getHours();
     if (hour >= 5 && hour < 12) {
-      return t('publishPage.greeting.morning');
+      setGreeting(t('publishPage.greeting.morning'));
+    } else if (hour >= 12 && hour < 14) {
+      setGreeting(t('publishPage.greeting.noon'));
+    } else if (hour >= 14 && hour < 18) {
+      setGreeting(t('publishPage.greeting.afternoon'));
+    } else {
+      setGreeting(t('publishPage.greeting.evening'));
     }
-    if (hour >= 12 && hour < 14) {
-      return t('publishPage.greeting.noon');
-    }
-    if (hour >= 14 && hour < 18) {
-      return t('publishPage.greeting.afternoon');
-    }
-    return t('publishPage.greeting.evening');
-  };
-
-  const greeting = useMemo(() => getGreeting(), [t]);
+  }, [t]);
 
   return (
     <div className="flex h-full flex-col items-center justify-center">
@@ -71,6 +71,42 @@ export default function PublishPage() {
           {t('publishPage.whatToWriteToday')}
         </h1>
       </div>
+
+      {/* Feature Tips Banner */}
+      <div className="mb-8 flex w-full max-w-2xl flex-col gap-3 sm:flex-row">
+        <Link href="/dashboard/draw/image" className="flex-1">
+          <Card className="group h-full border-none bg-gradient-to-r from-amber-500/10 to-orange-500/10 shadow-sm transition-all hover:shadow-md">
+            <CardBody className="flex flex-row items-center gap-3 p-4">
+              <div className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-amber-500 to-orange-500 text-white">
+                <SparklesIcon className="size-5" />
+              </div>
+              <div className="flex-1">
+                <h3 className="text-sm font-semibold text-foreground">{t('publishPage.featureTips.aiImage.title')}</h3>
+                <p className="text-xs text-foreground/60">{t('publishPage.featureTips.aiImage.description')}</p>
+              </div>
+              <ArrowRightIcon className="size-4 text-foreground/40 transition-transform group-hover:translate-x-1" />
+            </CardBody>
+          </Card>
+        </Link>
+        <Link href="/dashboard/schedule" className="flex-1">
+          <Card className="group h-full border-none bg-gradient-to-r from-green-500/10 to-emerald-500/10 shadow-sm transition-all hover:shadow-md">
+            <CardBody className="flex flex-row items-center gap-3 p-4">
+              <div className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-green-500 to-emerald-500 text-white">
+                <CalendarClockIcon className="size-5" />
+              </div>
+              <div className="flex-1">
+                <div className="flex items-center gap-2">
+                  <h3 className="text-sm font-semibold text-foreground">{t('publishPage.featureTips.schedule.title')}</h3>
+                  <Chip size="sm" color="success" variant="flat" className="h-5 text-xs">{t('publishPage.featureTips.schedule.tag')}</Chip>
+                </div>
+                <p className="text-xs text-foreground/60">{t('publishPage.featureTips.schedule.description')}</p>
+              </div>
+              <ArrowRightIcon className="size-4 text-foreground/40 transition-transform group-hover:translate-x-1" />
+            </CardBody>
+          </Card>
+        </Link>
+      </div>
+
       <div className="grid grid-cols-1 gap-8 md:grid-cols-2">
         {publishTypes.map((item) => (
           <Link

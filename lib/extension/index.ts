@@ -186,11 +186,30 @@ export async function openOptions(timeout: number = 5000): Promise<boolean> {
   }
 }
 
-export const funcPublish = async (data: SyncData | PublishPostData | SchedulePublishPostData) => {
+export interface PublishResult {
+  success: boolean;
+  error?: string;
+}
+
+export const funcPublish = async (
+  data: SyncData | PublishPostData | SchedulePublishPostData,
+  timeout: number = 30000,
+): Promise<PublishResult> => {
   if (process.env.NODE_ENV === 'development') {
     console.log('funcPublish', data);
   }
-  sendRequest<SyncData | PublishPostData | SchedulePublishPostData, void>('MUTLIPOST_EXTENSION_PUBLISH', data);
+  try {
+    await sendRequest<SyncData | PublishPostData | SchedulePublishPostData, void>(
+      'MUTLIPOST_EXTENSION_PUBLISH',
+      data,
+      timeout,
+    );
+    return { success: true };
+  } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    console.error('funcPublish failed:', errorMessage);
+    return { success: false, error: errorMessage };
+  }
 };
 
 export const funcGetPlatformInfos = async (): Promise<PlatformInfo[]> => {

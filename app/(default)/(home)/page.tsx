@@ -434,28 +434,25 @@ export default async function HomePage() {
                 />
                 <h3 className="text-2xl font-semibold">MultiPost-Extension</h3>
               </div>
-              <div className="mb-6 flex items-center justify-center gap-6">
-                <div className="flex items-center">
-                  <Icon
-                    icon="octicon:star-fill-16"
-                    className="mr-2 size-5 text-amber-400"
-                  />
-                  <span>1.5k</span>
-                </div>
-                <div className="flex items-center">
-                  <Icon
-                    icon="octicon:repo-forked-16"
-                    className="mr-2 size-5"
-                  />
-                  <span>135</span>
-                </div>
-                <div className="flex items-center">
-                  <Icon
-                    icon="octicon:issue-opened-16"
-                    className="mr-2 size-5"
-                  />
-                  <span>5</span>
-                </div>
+              <div className="mb-6 flex items-center justify-center gap-3">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src="https://img.shields.io/github/stars/leaper-one/MultiPost-Extension?style=flat&logo=github&color=yellow"
+                  alt="GitHub Stars"
+                  className="h-5"
+                />
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src="https://img.shields.io/github/forks/leaper-one/MultiPost-Extension?style=flat&logo=github&color=blue"
+                  alt="GitHub Forks"
+                  className="h-5"
+                />
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src="https://img.shields.io/github/issues/leaper-one/MultiPost-Extension?style=flat&logo=github&color=green"
+                  alt="GitHub Issues"
+                  className="h-5"
+                />
               </div>
               <p className="mb-6 text-white/80">{t('openSource.description')}</p>
             </div>

@@ -4,6 +4,7 @@ export const TaskStatus = {
   PENDING: 'PENDING',
   ACTIVE: 'ACTIVE',
   DONE: 'DONE',
+  FAILED: 'FAILED',
 } as const;
 
 export const TaskType = {

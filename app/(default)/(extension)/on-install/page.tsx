@@ -172,7 +172,8 @@ export default function OnInstallPage() {
     'My first post via #MultiPost , post your content to multiple platforms with one click',
   );
   const { dynamicPlatforms, setDynamicPlatforms, clearDynamicPlatforms } = usePlatformStore();
-  const [selectedPlatforms, setSelectedPlatforms] = useState<string[]>(dynamicPlatforms);
+  // Initialize with empty array to prevent hydration mismatch - sync from store after mount
+  const [selectedPlatforms, setSelectedPlatforms] = useState<string[]>([]);
   const [autoPublish, setAutoPublish] = useState<boolean>(true);
   const [viewerVisible, setViewerVisible] = useState(false);
   const [currentImage, setCurrentImage] = useState(0);
@@ -187,6 +188,13 @@ export default function OnInstallPage() {
       coordinateGetter: sortableKeyboardCoordinates,
     }),
   );
+
+  // Sync persisted platform selection after hydration to prevent mismatch
+  useEffect(() => {
+    if (dynamicPlatforms.length > 0) {
+      setSelectedPlatforms(dynamicPlatforms);
+    }
+  }, []);
 
   useEffect(() => {
     if (process.env.NODE_ENV === 'development') {
@@ -314,12 +322,13 @@ export default function OnInstallPage() {
       isAutoPublish: autoPublish,
     };
 
-    try {
-      funcPublish(data);
-      console.log('Publishing:', data);
-    } catch (error) {
-      console.error('Error publishing:', error);
-      funcPublish(data);
+    const result = await funcPublish(data);
+    if (!result.success) {
+      addToast({
+        title: t('publish.failed', '发布失败'),
+        description: result.error || t('publish.unknownError', '未知错误'),
+        color: 'danger',
+      });
     }
   };
 

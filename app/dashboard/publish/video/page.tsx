@@ -203,7 +203,8 @@ export default function VideoPage() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const coverInputRef = useRef<HTMLInputElement>(null);
   const { videoPlatforms, setVideoPlatforms, clearVideoPlatforms } = usePlatformStore();
-  const [selectedPlatforms, setSelectedPlatforms] = useState<string[]>(videoPlatforms);
+  // Initialize with empty array to prevent hydration mismatch - sync from store after mount
+  const [selectedPlatforms, setSelectedPlatforms] = useState<string[]>([]);
   const [platforms, setPlatforms] = useState<PlatformInfo[]>([]);
   const [tags, setTags] = useState<string[]>([]);
   const [scheduleEnabled, setScheduleEnabled] = useState<boolean>(false);
@@ -273,6 +274,13 @@ export default function VideoPage() {
       </CardBody>
     </Card>
   );
+
+  // Sync persisted platform selection after hydration to prevent mismatch
+  useEffect(() => {
+    if (videoPlatforms.length > 0) {
+      setSelectedPlatforms(videoPlatforms);
+    }
+  }, []);
 
   useEffect(() => {
     async function fetchPlatforms() {
@@ -470,7 +478,14 @@ export default function VideoPage() {
       isAutoPublish: false,
     };
 
-    funcPublish(data);
+    const result = await funcPublish(data);
+    if (!result.success) {
+      addToast({
+        title: t('publish.failed', '发布失败'),
+        description: result.error || t('publish.unknownError', '未知错误'),
+        color: 'danger',
+      });
+    }
   };
 
   const handleIconClick = () => {

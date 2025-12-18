@@ -36,20 +36,20 @@ export default function OnTaskPage() {
     await updateTaskStatus(taskId, 'ACTIVE');
 
     if (task.taskType === TaskType.PUBLISH_POST) {
-      await funcPublish(task.taskData as PublishPostData);
-      await updateTaskStatus(taskId, TaskStatus.DONE);
+      const result = await funcPublish(task.taskData as PublishPostData);
+      await updateTaskStatus(taskId, result.success ? TaskStatus.DONE : TaskStatus.FAILED);
       setIsTaskProcessing(true);
     } else if (task.taskType === TaskType.SCHEDULE_PUBLISH_POST) {
       const data = task.taskData as SchedulePublishPostData;
       if (data.timestamp <= new Date().getTime() + 10 * 60 * 1000 && data.timestamp > new Date().getTime()) {
         setTimeout(async () => {
-          await funcPublish(data);
-          await updateTaskStatus(taskId, TaskStatus.DONE);
+          const result = await funcPublish(data);
+          await updateTaskStatus(taskId, result.success ? TaskStatus.DONE : TaskStatus.FAILED);
           setIsTaskProcessing(true);
         }, data.timestamp - new Date().getTime());
       } else if (data.timestamp <= new Date().getTime()) {
-        await funcPublish(data);
-        await updateTaskStatus(taskId, TaskStatus.DONE);
+        const result = await funcPublish(data);
+        await updateTaskStatus(taskId, result.success ? TaskStatus.DONE : TaskStatus.FAILED);
         setIsTaskProcessing(true);
       }
     } else if (task.taskType === TaskType.DRAFT_POST) {
@@ -65,8 +65,8 @@ export default function OnTaskPage() {
             images: draft.files as unknown as FileData[],
           },
         };
-        await funcPublish(publishData as PublishPostData);
-        await updateTaskStatus(taskId, TaskStatus.DONE);
+        const result = await funcPublish(publishData as PublishPostData);
+        await updateTaskStatus(taskId, result.success ? TaskStatus.DONE : TaskStatus.FAILED);
         setIsTaskProcessing(true);
       }
     }
