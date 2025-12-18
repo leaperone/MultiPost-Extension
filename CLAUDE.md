@@ -8,7 +8,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 **Git commit messages must use English always.** Follow conventional commit format (e.g., `feat:`, `fix:`, `chore:`). Emoji commits are allowed.
 
-**When creating Pull Requests, always create as draft PR by default** using `gh pr create --draft`.
+**When creating Pull Requests, always create as draft PR by default** using `gh pr create --draft`. Link the relative issues.
 
 **When creating feature branches, use `feature/` prefix** (e.g., `feature/add-user-profile`, `feature/fix-login-bug`).
 

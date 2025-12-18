@@ -24,7 +24,9 @@
   },
   "platforms": {
     "cn": "Chinese Platforms",
-    "international": "International Platforms"
+    "international": "International Platforms",
+    "popular": "Popular",
+    "others": "Others"
   },
   "validation": {
     "contentRequired": "Please enter content",
@@ -50,5 +52,12 @@
     "cancel": "Cancel",
     "goLogin": "Go Login",
     "loginToFullVersion": "Login to Full Version"
+  },
+  "extension": {
+    "notReady": "Extension Not Ready",
+    "notReadyDesc": "Please make sure the MultiPost extension is installed and enabled, then refresh the page.",
+    "refresh": "Refresh Page",
+    "install": "Install Extension",
+    "loading": "Loading platforms..."
   }
 }

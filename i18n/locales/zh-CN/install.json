@@ -52,5 +52,12 @@
     "cancel": "取消",
     "goLogin": "去登录",
     "loginToFullVersion": "登录使用完整版"
+  },
+  "extension": {
+    "notReady": "扩展未就绪",
+    "notReadyDesc": "请确保已安装并启用 MultiPost 扩展，然后刷新页面。",
+    "refresh": "刷新页面",
+    "install": "安装扩展",
+    "loading": "正在加载平台..."
   }
 }
