@@ -9,10 +9,10 @@ on:
 
 jobs:
   claude-review:
-    # 只在非草稿 PR 且来自 feature/*, feat/*, refactor/* 分支时运行
+    # 只在非草稿 PR 且来自 feature/*, feat/*, refactor/*, fix/* 分支时运行
     if: |
       github.event.pull_request.draft == false &&
-      (startsWith(github.head_ref, 'feature/') || startsWith(github.head_ref, 'feat/') || startsWith(github.head_ref, 'refactor/'))
+      (startsWith(github.head_ref, 'feature/') || startsWith(github.head_ref, 'feat/') || startsWith(github.head_ref, 'refactor/') || startsWith(github.head_ref, 'fix/'))
 
     runs-on: ubuntu-latest
     permissions:
