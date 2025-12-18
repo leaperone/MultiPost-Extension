@@ -49,18 +49,23 @@ const SigninPage = async (props: { searchParams: Promise<{ redirect?: string; er
       <form
         action={async () => {
           'use server';
-          await signIn('google', { redirectTo });
+          await signIn('github', { redirectTo });
         }}
         className="w-full max-w-md">
-        <SubmitButton icon="logos:google-icon">{t('signin.google')}</SubmitButton>
+        <SubmitButton icon="logos:github-icon">
+          {t('signin.github')}
+          <span className="ml-2 rounded-full bg-green-500/20 px-2 py-0.5 text-xs text-green-600 dark:text-green-400">
+            {t('signin.bonus')}
+          </span>
+        </SubmitButton>
       </form>
       <form
         action={async () => {
           'use server';
-          await signIn('github', { redirectTo });
+          await signIn('google', { redirectTo });
         }}
         className="w-full max-w-md">
-        <SubmitButton icon="logos:github-icon">{t('signin.github')}</SubmitButton>
+        <SubmitButton icon="logos:google-icon">{t('signin.google')}</SubmitButton>
       </form>
       <div className="w-full max-w-md">
         <PasskeyAuthButton redirect={redirectTo} />
@@ -83,6 +88,7 @@ const SigninPage = async (props: { searchParams: Promise<{ redirect?: string; er
             name="email"
             placeholder={t('signin.email_placeholder')}
             required
+            autoFocus
             className="bg-transparent"
           />
           <SubmitButton icon="lucide:mail">{t('signin.email')}</SubmitButton>
