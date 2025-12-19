@@ -1,7 +1,6 @@
 'use client';
 
-import { Users, FileText, Github, TrendingUp } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { Users, FileText, TrendingUp } from 'lucide-react';
 
 interface StatItemProps {
   icon: React.ReactNode;
@@ -26,24 +25,8 @@ function StatItem({ icon, value, label, trend }: StatItemProps) {
 }
 
 export function SocialProof() {
-  const [githubStars, setGithubStars] = useState('1.2k');
-
-  // 从 shields.io 获取 GitHub stars 数据（通过服务端 API）
-  useEffect(() => {
-    fetch('/api/github/stars')
-      .then((res) => res.json())
-      .then((data) => {
-        if (data.stars) {
-          setGithubStars(data.stars);
-        }
-      })
-      .catch(() => {
-        // 如果API请求失败，保持默认值
-      });
-  }, []);
-
   return (
-    <div className="mt-8 grid grid-cols-2 gap-4 md:grid-cols-4">
+    <div className="mt-8 grid grid-cols-2 gap-4 md:grid-cols-3">
       <StatItem
         icon={<Users className="size-5 text-blue-500" />}
         value="5k+"
@@ -54,11 +37,6 @@ export function SocialProof() {
         icon={<FileText className="size-5 text-green-500" />}
         value="50k+"
         label="内容发布"
-      />
-      <StatItem
-        icon={<Github className="size-5 text-purple-500" />}
-        value={githubStars}
-        label="GitHub Stars"
       />
       <StatItem
         icon={<TrendingUp className="size-5 text-orange-500" />}

@@ -10,6 +10,7 @@ import { auth } from '@/auth';
 import SocialShareNotifications from '@/components/HomePage/SocialShareNotifications';
 import { GlowingEffect } from '@/components/ui/glowing-effect';
 import { SocialProof } from '@/components/HomePage/SocialProof';
+import packageJson from '../../../package.json';
 
 export const metadata = {
   title: 'MultiPost - Open Source Social Media Publishing Tool',
@@ -211,7 +212,7 @@ export default async function HomePage() {
       name: 'MultiPost Team',
       url: 'https://multipost.app',
     },
-    softwareVersion: '2.0.0',
+    softwareVersion: packageJson.version,
     datePublished: '2024-01-01',
     dateModified: new Date().toISOString().split('T')[0],
     license: 'https://github.com/leaperone/MultiPost-Extension/blob/main/LICENSE',
