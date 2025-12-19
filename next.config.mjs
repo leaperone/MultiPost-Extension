@@ -53,7 +53,7 @@ export default withPostHogConfig(nextConfig, {
   envId: process.env.POSTHOG_MULTIPOST_ENV_ID,
   host: process.env.NEXT_PUBLIC_POSTHOG_HOST,
   sourcemaps: {
-    enabled: true,
+    enabled: process.env.NODE_ENV === 'production' && !!process.env.POSTHOG_API_KEY,
     project: 'multipost',
     deleteAfterUpload: true,
   },
