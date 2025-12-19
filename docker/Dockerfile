@@ -17,6 +17,15 @@ WORKDIR /app
 
 FROM base AS builder
 ENV NODE_OPTIONS="--max-old-space-size=8192"
+
+# PostHog source map upload configuration
+ARG POSTHOG_API_KEY
+ARG POSTHOG_MULTIPOST_ENV_ID
+ARG NEXT_PUBLIC_POSTHOG_HOST
+ENV POSTHOG_API_KEY=$POSTHOG_API_KEY
+ENV POSTHOG_MULTIPOST_ENV_ID=$POSTHOG_MULTIPOST_ENV_ID
+ENV NEXT_PUBLIC_POSTHOG_HOST=$NEXT_PUBLIC_POSTHOG_HOST
+
 RUN --mount=type=cache,id=pnpm-multipost,target=/pnpm/store pnpm install --frozen-lockfile
 RUN sh prisma/generate.sh
 RUN pnpm run build
