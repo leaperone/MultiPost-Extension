@@ -19,7 +19,3 @@ services:
       context: ..
       dockerfile: ./docker/Dockerfile
       target: backend
-      args:
-        - POSTHOG_API_KEY=${POSTHOG_API_KEY}
-        - POSTHOG_MULTIPOST_ENV_ID=${POSTHOG_MULTIPOST_ENV_ID}
-        - NEXT_PUBLIC_POSTHOG_HOST=${NEXT_PUBLIC_POSTHOG_HOST}

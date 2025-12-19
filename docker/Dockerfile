@@ -15,16 +15,21 @@ RUN apk update --no-cache && apk add --no-cache \
 COPY . /app
 WORKDIR /app
 
-FROM base AS builder
+FROM base AS deps
+RUN --mount=type=cache,id=pnpm-multipost,target=/pnpm/store pnpm install --frozen-lockfile
+RUN sh prisma/generate.sh
+
+FROM deps AS builder
 ENV NODE_OPTIONS="--max-old-space-size=8192"
 
 # PostHog source map upload configuration
 ARG POSTHOG_API_KEY
 ARG POSTHOG_MULTIPOST_ENV_ID
 ARG NEXT_PUBLIC_POSTHOG_HOST
+ENV POSTHOG_API_KEY=$POSTHOG_API_KEY
+ENV POSTHOG_MULTIPOST_ENV_ID=$POSTHOG_MULTIPOST_ENV_ID
+ENV NEXT_PUBLIC_POSTHOG_HOST=$NEXT_PUBLIC_POSTHOG_HOST
 
-RUN --mount=type=cache,id=pnpm-multipost,target=/pnpm/store pnpm install --frozen-lockfile
-RUN sh prisma/generate.sh
 RUN pnpm run build
 
 FROM node:20.18.1-alpine3.20 AS final
@@ -54,7 +59,7 @@ CMD [ "node", "server.js" ]
 
 FROM denoland/deno:latest as backend-cache
 WORKDIR /app
-COPY --from=builder /app/backend/ .
+COPY --from=deps /app/backend/ .
 RUN deno cache main.ts
 
 FROM denoland/deno:latest as backend
