@@ -10,5 +10,15 @@ export { POSTHOG_HOST, POSTHOG_KEY } from "./config";
 // 事件追踪 (客户端专用)
 export { trackAdClick, trackAdImpression } from "./events";
 
+// 发布事件追踪
+export {
+  trackDraftCreated,
+  trackPlatformSelected,
+  trackPublishInitiated,
+  trackPublishSuccess,
+  trackPublishFailed,
+} from "./events";
+export type { PublishType } from "./events";
+
 // 用户身份管理 (客户端专用)
 export { getCurrentUserId, identifyUser, isUserIdentified, resetUser, setUserProperties } from "./user";

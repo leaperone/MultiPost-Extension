@@ -182,3 +182,148 @@ export const trackEmailVerificationClicked = (source?: string) => {
     });
   });
 };
+
+/**
+ * 发布类型
+ */
+export type PublishType = "dynamic" | "video" | "article" | "podcast";
+
+/**
+ * 追踪草稿创建事件
+ * @param publishType - 发布类型
+ * @param hasTitle - 是否有标题
+ * @param hasContent - 是否有内容
+ * @param hasMedia - 是否有媒体文件
+ */
+export const trackDraftCreated = (
+  publishType: PublishType,
+  hasTitle: boolean,
+  hasContent: boolean,
+  hasMedia: boolean,
+) => {
+  if (typeof window === "undefined") {
+    return;
+  }
+
+  import("posthog-js").then((module) => {
+    const posthog = module.default;
+    posthog.capture("draft_created", {
+      publish_type: publishType,
+      has_title: hasTitle,
+      has_content: hasContent,
+      has_media: hasMedia,
+      timestamp: Date.now(),
+    });
+  });
+};
+
+/**
+ * 追踪平台选择事件
+ * @param platforms - 选中的平台列表
+ * @param publishType - 发布类型
+ */
+export const trackPlatformSelected = (platforms: string[], publishType: PublishType) => {
+  if (typeof window === "undefined") {
+    return;
+  }
+
+  import("posthog-js").then((module) => {
+    const posthog = module.default;
+    posthog.capture("platform_selected", {
+      platforms,
+      platform_count: platforms.length,
+      publish_type: publishType,
+      timestamp: Date.now(),
+    });
+  });
+};
+
+/**
+ * 追踪发布发起事件
+ * @param publishType - 发布类型
+ * @param platforms - 发布平台列表
+ * @param hasImages - 是否包含图片
+ * @param hasVideos - 是否包含视频
+ * @param autoPublish - 是否自动发布
+ */
+export const trackPublishInitiated = (
+  publishType: PublishType,
+  platforms: string[],
+  hasImages: boolean,
+  hasVideos: boolean,
+  autoPublish: boolean,
+) => {
+  if (typeof window === "undefined") {
+    return;
+  }
+
+  import("posthog-js").then((module) => {
+    const posthog = module.default;
+    posthog.capture("publish_initiated", {
+      publish_type: publishType,
+      platforms,
+      platform_count: platforms.length,
+      has_images: hasImages,
+      has_videos: hasVideos,
+      auto_publish: autoPublish,
+      timestamp: Date.now(),
+    });
+  });
+};
+
+/**
+ * 追踪发布成功事件
+ * @param publishType - 发布类型
+ * @param platforms - 发布平台列表
+ * @param contentLength - 内容长度
+ * @param mediaCount - 媒体文件数量
+ */
+export const trackPublishSuccess = (
+  publishType: PublishType,
+  platforms: string[],
+  contentLength: number,
+  mediaCount: number,
+) => {
+  if (typeof window === "undefined") {
+    return;
+  }
+
+  import("posthog-js").then((module) => {
+    const posthog = module.default;
+    posthog.capture("publish_success", {
+      publish_type: publishType,
+      platforms,
+      platform_count: platforms.length,
+      content_length: contentLength,
+      media_count: mediaCount,
+      timestamp: Date.now(),
+    });
+  });
+};
+
+/**
+ * 追踪发布失败事件
+ * @param publishType - 发布类型
+ * @param platforms - 发布平台列表
+ * @param error - 错误信息
+ */
+export const trackPublishFailed = (
+  publishType: PublishType,
+  platforms: string[],
+  error?: string,
+) => {
+  if (typeof window === "undefined") {
+    return;
+  }
+
+  import("posthog-js").then((module) => {
+    const posthog = module.default;
+    posthog.capture("publish_failed", {
+      publish_type: publishType,
+      platforms,
+      platform_count: platforms.length,
+      error,
+      timestamp: Date.now(),
+    });
+  });
+};

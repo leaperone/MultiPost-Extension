@@ -47,6 +47,12 @@ import { Icon } from '@iconify/react';
 import { cn } from '@/lib/utils';
 import { useRouter } from 'next/navigation';
 import { CalendarDateTime, now, getLocalTimeZone } from '@internationalized/date';
+import {
+  trackPublishInitiated,
+  trackPublishSuccess,
+  trackPublishFailed,
+  trackPlatformSelected,
+} from '@/lib/posthog/events';
 
 const ReactPlayer = dynamic(() => import('react-player'), {
   ssr: false,
@@ -393,6 +399,11 @@ export default function VideoPage() {
       const newSelected = isSelected ? [...prev, platform] : prev.filter((p) => p !== platform);
       setVideoPlatforms(newSelected);
 
+      // 追踪平台选择事件
+      if (newSelected.length > 0) {
+        trackPlatformSelected(newSelected, 'video');
+      }
+
       // Clear schedule settings if no schedule-supported platforms are selected
       const hasScheduleSupport = newSelected.some((p) => scheduleSupportedPlatforms.includes(p));
       if (!hasScheduleSupport) {
@@ -451,6 +462,15 @@ export default function VideoPage() {
       });
     }
 
+    // 追踪发布发起事件 (PostHog)
+    trackPublishInitiated(
+      'video',
+      selectedPlatforms,
+      false, // 视频发布不支持图片
+      true, // 有视频
+      false, // 视频发布默认不自动发布
+    );
+
     // Convert CalendarDateTime to timestamp if scheduled
     let scheduledPublishTime: number | undefined = undefined;
     if (scheduleEnabled && scheduledDateTime) {
@@ -480,10 +500,26 @@ export default function VideoPage() {
 
     const result = await funcPublish(data);
     if (!result.success) {
+      // 追踪发布失败事件
+      trackPublishFailed('video', selectedPlatforms, result.error);
+
       addToast({
         title: t('publish.failed', '发布失败'),
         description: result.error || t('publish.unknownError', '未知错误'),
         color: 'danger',
+      });
+    } else {
+      // 追踪发布成功事件
+      trackPublishSuccess(
+        'video',
+        selectedPlatforms,
+        content.length,
+        1, // 1个视频文件
+      );
+
+      addToast({
+        title: t('publish.success', '发布成功'),
+        color: 'success',
       });
     }
   };

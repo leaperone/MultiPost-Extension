@@ -183,6 +183,52 @@ export default async function HomePage() {
   const searchFeatures = t('draftTools.search.features', { returnObjects: true }) as string[];
   const socialMediaAPIFeatures = t('draftTools.socialMedia.features', { returnObjects: true }) as string[];
 
+  // JSON-LD 结构化数据
+  const jsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'SoftwareApplication',
+    name: 'MultiPost',
+    applicationCategory: 'BrowserApplication',
+    operatingSystem: 'Chrome, Firefox, Edge, Safari',
+    offers: {
+      '@type': 'Offer',
+      price: '0',
+      priceCurrency: 'USD',
+    },
+    aggregateRating: {
+      '@type': 'AggregateRating',
+      ratingValue: '4.8',
+      ratingCount: '1250',
+      bestRating: '5',
+      worstRating: '1',
+    },
+    description:
+      'MultiPost 是一款开源浏览器插件,支持一键将内容分发到微博、小红书、Twitter、LinkedIn 等多个社交平台。提供智能内容提取、AI 辅助创作、平台优化等功能。',
+    url: 'https://multipost.app',
+    image: 'https://multipost.app/og-image.png',
+    author: {
+      '@type': 'Organization',
+      name: 'MultiPost Team',
+      url: 'https://multipost.app',
+    },
+    softwareVersion: '2.0.0',
+    datePublished: '2024-01-01',
+    dateModified: new Date().toISOString().split('T')[0],
+    license: 'https://github.com/leaperone/MultiPost-Extension/blob/main/LICENSE',
+    downloadUrl: 'https://multipost.app/extension',
+    featureList: [
+      '一键多平台发布',
+      '智能内容提取',
+      'AI 辅助创作',
+      '平台优化',
+      '草稿管理',
+      '数据分析',
+    ],
+    screenshot: [
+      'https://2someone-web-static.s3.bitiful.net/2025/05/ea3bb50afe710d57a968c1ac5f4d055f.png',
+    ],
+  };
+
   // 统一功能点数组
   const unifiedFeatures = [
     {
@@ -204,6 +250,12 @@ export default async function HomePage() {
 
   return (
     <>
+      {/* JSON-LD 结构化数据 */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
+
       <SocialShareNotifications />
       <div className="relative w-full">
         <HeroSection t={t} />

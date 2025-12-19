@@ -30,6 +30,12 @@ import PlatformCheckbox from '../components/PlatformCheckbox';
 import { usePlatformStore } from '@/store/publish.store';
 import { getPlatformExtraConfigList } from '../action';
 import { useRouter } from 'next/navigation';
+import {
+  trackPublishInitiated,
+  trackPublishSuccess,
+  trackPublishFailed,
+  trackPlatformSelected,
+} from '@/lib/posthog/events';
 
 interface AudioPlayerProps {
   url: string;
@@ -289,6 +295,12 @@ export default function PodcastPage() {
   const handlePlatformChange = (platform: string, isSelected: boolean) => {
     setSelectedPlatforms((prev) => {
       const newSelected = isSelected ? [...prev, platform] : prev.filter((p) => p !== platform);
+
+      // 追踪平台选择事件
+      if (newSelected.length > 0) {
+        trackPlatformSelected(newSelected, 'podcast');
+      }
+
       return newSelected;
     });
   };
@@ -331,6 +343,15 @@ export default function PodcastPage() {
       });
     }
 
+    // 追踪发布发起事件 (PostHog)
+    trackPublishInitiated(
+      'podcast',
+      selectedPlatforms,
+      false, // 播客发布不支持图片
+      false, // 播客发布不支持视频
+      autoPublish,
+    );
+
     const data: SyncData = {
       platforms: platforms.filter((platform) => selectedPlatforms.includes(platform.name)),
       data: {
@@ -343,10 +364,26 @@ export default function PodcastPage() {
 
     const result = await funcPublish(data);
     if (!result.success) {
+      // 追踪发布失败事件
+      trackPublishFailed('podcast', selectedPlatforms, result.error);
+
       addToast({
         title: t('publish.failed', '发布失败'),
         description: result.error || t('publish.unknownError', '未知错误'),
         color: 'danger',
+      });
+    } else {
+      // 追踪发布成功事件
+      trackPublishSuccess(
+        'podcast',
+        selectedPlatforms,
+        description.length,
+        1, // 1个音频文件
+      );
+
+      addToast({
+        title: t('publish.success', '发布成功'),
+        color: 'success',
       });
     }
   };

@@ -74,6 +74,12 @@ import { getPlatformExtraConfigList } from '../action';
 import LibraryModal from './components/LibraryModal';
 import { FileData } from '@/lib/extension';
 import { ImageGenerateModal } from './components/ImageGenerateModal';
+import {
+  trackPublishInitiated,
+  trackPublishSuccess,
+  trackPublishFailed,
+  trackPlatformSelected,
+} from '@/lib/posthog/events';
 
 const ReactPlayer = dynamic(() => import('react-player'), {
   ssr: false,
@@ -431,6 +437,12 @@ export default function DynamicPage() {
   const handlePlatformChange = (platform: string, isSelected: boolean) => {
     setSelectedPlatforms((prev) => {
       const newSelected = isSelected ? [...prev, platform] : prev.filter((p) => p !== platform);
+
+      // 追踪平台选择事件
+      if (newSelected.length > 0) {
+        trackPlatformSelected(newSelected, 'dynamic');
+      }
+
       return newSelected;
     });
   };
@@ -467,6 +479,15 @@ export default function DynamicPage() {
       });
     }
 
+    // 追踪发布发起事件 (PostHog)
+    trackPublishInitiated(
+      'dynamic',
+      selectedPlatforms,
+      images.length > 0,
+      videos.length > 0,
+      autoPublish,
+    );
+
     const data = {
       platforms: platforms.filter((platform) => selectedPlatforms.includes(platform.name)),
       data: {
@@ -480,10 +501,26 @@ export default function DynamicPage() {
 
     const result = await funcPublish(data);
     if (!result.success) {
+      // 追踪发布失败事件
+      trackPublishFailed('dynamic', selectedPlatforms, result.error);
+
       addToast({
         title: t('publish.failed', '发布失败'),
         description: result.error || t('publish.unknownError', '未知错误'),
         color: 'danger',
+      });
+    } else {
+      // 追踪发布成功事件
+      trackPublishSuccess(
+        'dynamic',
+        selectedPlatforms,
+        content.length,
+        images.length + videos.length,
+      );
+
+      addToast({
+        title: t('publish.success', '发布成功'),
+        color: 'success',
       });
     }
   };
