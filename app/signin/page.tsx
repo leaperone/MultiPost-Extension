@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { Suspense } from 'react';
 import { signIn } from '@/auth';
 import { Button, Input, Card, CardBody, Divider } from '@heroui/react';
 import { createTranslation } from '@/i18n/server';
@@ -31,7 +31,9 @@ const SigninPage = async (props: { searchParams: Promise<{ redirect?: string; er
 
   return (
     <div className="flex min-h-[40px] flex-col items-center gap-4">
-      <SigninAnalytics />
+      <Suspense fallback={null}>
+        <SigninAnalytics />
+      </Suspense>
       <h1 className="text-xl font-medium">Sign In</h1>
 
       {error && errorToI18nKey[error as SignInError] && (

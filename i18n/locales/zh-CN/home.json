@@ -123,7 +123,9 @@
   "hero": {
     "description": "打造自媒体柔性流水线",
     "buttons": {
-      "post": "开始发布"
+      "post": "开始发布",
+      "start_free": "免费开始",
+      "watch_demo": "观看演示"
     },
     "features": {
       "draft": "撰稿",
@@ -132,6 +134,11 @@
         "and": "和",
         "comma": "、"
       }
+    },
+    "trust": {
+      "free": "永久免费",
+      "no_card": "无需信用卡",
+      "quick_start": "1分钟开始"
     }
   },
   "sectionLabels": {

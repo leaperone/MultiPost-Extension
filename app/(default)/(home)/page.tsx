@@ -1,5 +1,5 @@
 import { Card, CardBody, Button, Link, Image } from '@heroui/react';
-import { Sparkles, Box, Settings, Send, SendIcon, FileTypeIcon } from 'lucide-react';
+import { Sparkles, Box, Settings, Send, SendIcon, FileTypeIcon, CheckCircle } from 'lucide-react';
 import { Icon } from '@iconify/react';
 import { cn } from '@/lib/utils';
 import { BackgroundLines } from '@/components/background-lines';
@@ -9,6 +9,7 @@ import { createTranslation } from '@/i18n/server';
 import { auth } from '@/auth';
 import SocialShareNotifications from '@/components/HomePage/SocialShareNotifications';
 import { GlowingEffect } from '@/components/ui/glowing-effect';
+import { SocialProof } from '@/components/HomePage/SocialProof';
 
 export const metadata = {
   title: 'MultiPost - Open Source Social Media Publishing Tool',
@@ -106,28 +107,53 @@ function HeroSection({ t, className }: { t: TranslationFunction; className?: str
           </div>
 
           {/* 描述文本 - 修改样式 */}
-          <p className="mb-10 mt-4 w-full max-w-2xl px-4 text-center text-lg leading-7 text-foreground-600 sm:text-xl sm:leading-8">
+          <p className="mb-8 mt-4 w-full max-w-2xl px-4 text-center text-lg leading-7 text-foreground-600 sm:text-xl sm:leading-8">
             {description}
           </p>
 
-          {/* 操作按钮 - 修改样式 */}
-          <Button
-            as={Link}
-            href="/dashboard/publish"
-            color="primary"
-            size="lg"
-            variant="bordered"
-            startContent={
-              <Image
-                src="/MultiPost-Latest.png"
-                alt="MultiPost Latest Logo"
-                width={36}
-                height={36}
-              />
-            }
-            className="mx-auto">
-            {t('hero.buttons.post')}
-          </Button>
+          {/* 操作按钮 - 优化样式 */}
+          <div className="flex flex-col items-center gap-4">
+            {/* 主CTA - 更突出 */}
+            <Button
+              as={Link}
+              href="/signin"
+              size="lg"
+              color="primary"
+              className="group relative overflow-hidden bg-gradient-to-r from-blue-500 to-indigo-500 px-12 py-7 text-lg font-semibold shadow-lg transition-all hover:scale-105 hover:shadow-xl"
+              startContent={<Sparkles className="size-5 animate-pulse" />}>
+              {t('hero.buttons.start_free')}
+              <span className="ml-2 animate-bounce">→</span>
+            </Button>
+
+            {/* 次要CTA */}
+            <Button
+              as={Link}
+              href="#demo"
+              size="md"
+              variant="light"
+              className="text-foreground-600">
+              {t('hero.buttons.watch_demo')}
+            </Button>
+
+            {/* 信任标记 */}
+            <div className="mt-4 flex flex-wrap items-center justify-center gap-4 text-sm text-foreground-600 sm:gap-6">
+              <div className="flex items-center gap-2">
+                <CheckCircle className="size-5 shrink-0 text-green-500" />
+                <span>{t('hero.trust.free')}</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <CheckCircle className="size-5 shrink-0 text-green-500" />
+                <span>{t('hero.trust.no_card')}</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <CheckCircle className="size-5 shrink-0 text-green-500" />
+                <span>{t('hero.trust.quick_start')}</span>
+              </div>
+            </div>
+
+            {/* 社会认证 */}
+            <SocialProof />
+          </div>
         </div>
       </div>
 

@@ -132,7 +132,9 @@
   "hero": {
     "description": "Build flexible social media pipeline",
     "buttons": {
-      "post": "Start Posting"
+      "post": "Start Posting",
+      "start_free": "Start Free",
+      "watch_demo": "Watch Demo"
     },
     "features": {
       "draft": "Draft",
@@ -141,6 +143,11 @@
         "and": "and",
         "comma": ", "
       }
+    },
+    "trust": {
+      "free": "Forever Free",
+      "no_card": "No Credit Card",
+      "quick_start": "1-Min Setup"
     }
   },
   "sectionLabels": {
