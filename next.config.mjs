@@ -1,4 +1,5 @@
 import { PrismaPlugin } from '@prisma/nextjs-monorepo-workaround-plugin';
+import { withPostHogConfig } from '@posthog/nextjs-config';
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
@@ -16,7 +17,7 @@ const nextConfig = {
     if (isServer) {
       config.plugins = [...config.plugins, new PrismaPlugin()];
     }
-    
+
     // Exclude backend directory from webpack processing
     config.module.rules.push({
       test: /\.(ts|tsx|js|jsx)$/,
@@ -47,4 +48,13 @@ const nextConfig = {
   ],
 };
 
-export default nextConfig;
+export default withPostHogConfig(nextConfig, {
+  personalApiKey: process.env.POSTHOG_API_KEY,
+  envId: process.env.POSTHOG_MULTIPOST_ENV_ID,
+  host: process.env.NEXT_PUBLIC_POSTHOG_HOST,
+  sourcemaps: {
+    enabled: true,
+    project: 'multipost',
+    deleteAfterUpload: true,
+  },
+});
