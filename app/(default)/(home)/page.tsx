@@ -126,15 +126,39 @@ function HeroSection({ t, className }: { t: TranslationFunction; className?: str
               <span className="ml-2 animate-bounce">→</span>
             </Button>
 
-            {/* 次要CTA */}
-            <Button
-              as={Link}
-              href="#demo"
-              size="md"
-              variant="light"
-              className="text-foreground-600">
-              {t('hero.buttons.watch_demo')}
-            </Button>
+            {/* 应用商店按钮 */}
+            <div className="flex flex-col gap-3 sm:flex-row">
+              <Button
+                as={Link}
+                href="https://chromewebstore.google.com/detail/multipost/dhohkaclnjgcikfoaacfgijgjgceofih"
+                target="_blank"
+                size="md"
+                variant="bordered"
+                className="min-w-[180px]"
+                startContent={
+                  <Icon
+                    icon="logos:chrome"
+                    className="size-5"
+                  />
+                }>
+                Chrome 商店
+              </Button>
+              <Button
+                as={Link}
+                href="https://microsoftedge.microsoft.com/addons/detail/multipost/ckoiphiceimehjkolnfffgbmihoppgjg"
+                target="_blank"
+                size="md"
+                variant="bordered"
+                className="min-w-[180px]"
+                startContent={
+                  <Icon
+                    icon="logos:microsoft-edge"
+                    className="size-5"
+                  />
+                }>
+                Edge 商店
+              </Button>
+            </div>
 
             {/* 信任标记 */}
             <div className="mt-4 flex flex-wrap items-center justify-center gap-4 text-sm text-foreground-600 sm:gap-6">
@@ -367,7 +391,7 @@ export default async function HomePage() {
                 </Button>
               </div>
             </div>
-            <div className="relative hidden md:block">
+            <div className="relative mt-8 md:mt-0">
               <div className="relative z-10 aspect-video overflow-hidden rounded-2xl shadow-2xl">
                 <Image
                   src="https://2someone-web-static.s3.bitiful.net/2025/05/ea3bb50afe710d57a968c1ac5f4d055f.png"
@@ -414,7 +438,7 @@ export default async function HomePage() {
                       className="size-6 text-blue-500"
                     />
                   </div>
-                  <h3 className="text-2xl font-semibold text-blue-500">{t('draftTools.webreader.title')}</h3>
+                  <h3 className="text-xl font-semibold text-blue-500 sm:text-2xl">{t('draftTools.webreader.title')}</h3>
                 </div>
                 <p className="mb-6 text-lg leading-relaxed text-foreground/80">
                   {t('draftTools.webreader.description')}
@@ -446,7 +470,7 @@ export default async function HomePage() {
                       className="size-6 text-amber-500"
                     />
                   </div>
-                  <h3 className="text-2xl font-semibold text-amber-500">{t('draftTools.search.title')}</h3>
+                  <h3 className="text-xl font-semibold text-amber-500 sm:text-2xl">{t('draftTools.search.title')}</h3>
                 </div>
                 <p className="mb-6 text-lg leading-relaxed text-foreground/80">{t('draftTools.search.description')}</p>
                 <ul className="space-y-3">
@@ -476,7 +500,7 @@ export default async function HomePage() {
                       className="size-6 text-purple-500"
                     />
                   </div>
-                  <h3 className="text-2xl font-semibold text-purple-500">{t('draftTools.socialMedia.title')}</h3>
+                  <h3 className="text-xl font-semibold text-purple-500 sm:text-2xl">{t('draftTools.socialMedia.title')}</h3>
                 </div>
                 <p className="mb-6 text-lg leading-relaxed text-foreground/80">
                   {t('draftTools.socialMedia.description')}
@@ -503,17 +527,17 @@ export default async function HomePage() {
       <section className="bg-gradient-to-r from-primary via-blue-500 to-secondary py-24 text-white">
         <div className="container mx-auto px-4">
           <div className="mx-auto max-w-4xl text-center">
-            <h2 className="mb-8 text-5xl font-bold">{t('finalCta.title')}</h2>
-            <p className="mx-auto mb-10 max-w-2xl text-xl text-white/90">{t('finalCta.description')}</p>
+            <h2 className="mb-8 text-3xl font-bold sm:text-4xl md:text-5xl">{t('finalCta.title')}</h2>
+            <p className="mx-auto mb-10 max-w-2xl text-base text-white/90 sm:text-lg md:text-xl">{t('finalCta.description')}</p>
             <div className="mx-auto mb-10 max-w-2xl rounded-xl bg-white/10 p-8 shadow-lg dark:bg-gray-800/30">
               <div className="mb-4 flex items-center justify-center">
                 <Icon
                   icon="mdi:github"
                   className="mr-3 size-8"
                 />
-                <h3 className="text-2xl font-semibold">MultiPost-Extension</h3>
+                <h3 className="text-xl font-semibold sm:text-2xl">MultiPost-Extension</h3>
               </div>
-              <div className="mb-6 flex items-center justify-center gap-3">
+              <div className="mb-6 flex flex-wrap items-center justify-center gap-3">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
                   src="https://img.shields.io/github/stars/leaper-one/MultiPost-Extension?style=flat&logo=github&color=yellow"
