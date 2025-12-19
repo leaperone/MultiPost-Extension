@@ -1,4 +1,5 @@
 import { Inter } from 'next/font/google';
+import Script from 'next/script';
 import './globals.css';
 import { Providers } from './providers';
 import { PostHogAnalyticsProvider } from './posthog-provider';
@@ -113,6 +114,13 @@ export default async function RootLayout({
         </PostHogAnalyticsProvider>
       </body>
       {process.env.NODE_ENV === 'production' && <GoogleAnalytics gaId={'G-6JJ7JNT2GY'} />}
+      {process.env.NODE_ENV === 'development' && (
+        <Script
+          src="//unpkg.com/react-grab/dist/index.global.js"
+          crossOrigin="anonymous"
+          strategy="beforeInteractive"
+        />
+      )}
     </html>
   );
 }
