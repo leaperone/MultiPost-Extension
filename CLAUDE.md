@@ -78,20 +78,25 @@ pnpm release:001            # Patch version
 
 ```
 app/                    # Next.js App Router pages and routes
+├── (default)/         # Route group for default pages (homepage, etc.)
+├── account/           # Account management pages
+├── activity/          # User activity pages
+├── admin/             # Admin dashboard and management
 ├── api/               # API routes (REST endpoints)
-├── dashboard/         # Dashboard pages with settings
-├── (default)/         # Route group for default pages
-├── (others)/          # Route group for other pages
-├── [username]/        # Dynamic user profile routes
-└── auth/              # Authentication pages
+├── auth/              # Authentication pages
+├── dashboard/         # User dashboard with publish, draw, analytics
+├── legal/             # Legal pages (terms, privacy)
+├── signin/            # Sign in page
+└── signout/           # Sign out page
 
 actions/               # Server Actions (Next.js server-side functions)
+backend/               # Backend worker and job processing
 components/            # Reusable React components
-lib/                   # Library code and utilities
 hooks/                 # Custom React hooks
-store/                 # Global state management (Zustand)
+i18n/                  # Internationalization (i18n) files
+lib/                   # Library code and utilities
 prisma/                # Database schemas and migrations
-types/                 # TypeScript type definitions
+store/                 # Global state management (Zustand)
 ```
 
 ### Core Architecture

@@ -28,13 +28,14 @@ function StatItem({ icon, value, label, trend }: StatItemProps) {
 export function SocialProof() {
   const [githubStars, setGithubStars] = useState('1.2k');
 
-  // 从GitHub API获取真实的stars数据
+  // 从 shields.io 获取 GitHub stars 数据（通过服务端 API）
   useEffect(() => {
-    fetch('https://api.github.com/repos/leaperone/MultiPost-Extension')
+    fetch('/api/github/stars')
       .then((res) => res.json())
       .then((data) => {
-        const stars = data.stargazers_count;
-        setGithubStars(stars >= 1000 ? `${(stars / 1000).toFixed(1)}k` : stars.toString());
+        if (data.stars) {
+          setGithubStars(data.stars);
+        }
       })
       .catch(() => {
         // 如果API请求失败，保持默认值
