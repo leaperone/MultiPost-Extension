@@ -60,5 +60,12 @@
   "messages": {
     "taskCancelled": "任务已成功取消",
     "taskRestarted": "任务已成功重新启动"
+  },
+  "notices": {
+    "postPublish": "发布后，您的内容可能需要几分钟才能处理完成并显示在您的主页上。"
+  },
+  "dateFormat": {
+    "scheduledTime": "yyyy年MM月dd日 HH:mm",
+    "datetime": "yyyy-MM-dd HH:mm:ss"
   }
 }

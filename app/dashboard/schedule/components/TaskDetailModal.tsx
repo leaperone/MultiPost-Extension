@@ -15,7 +15,7 @@ import {
   Snippet,
 } from '@heroui/react';
 import { format } from 'date-fns';
-import { zhCN } from 'date-fns/locale';
+import { zhCN, enUS } from 'date-fns/locale';
 import {
   CalendarIcon,
   ClockIcon,
@@ -77,7 +77,8 @@ const statusConfig = {
 };
 
 export default function TaskDetailModal({ isOpen, onClose, task }: TaskDetailModalProps) {
-  const { t } = useTranslation('schedule');
+  const { t, i18n } = useTranslation('schedule');
+  const dateLocale = i18n.language === 'zh-CN' ? zhCN : enUS;
   const [isCancelling, setIsCancelling] = useState(false);
   const [isRestarting, setIsRestarting] = useState(false);
   const [cancelError, setCancelError] = useState<string | null>(null);
@@ -235,10 +236,7 @@ export default function TaskDetailModal({ isOpen, onClose, task }: TaskDetailMod
                 {showPostPublishNotice && (
                   <div className="flex items-start gap-3 rounded-md border border-primary/30 bg-primary/5 p-3 text-sm">
                     <InfoIcon className="mt-0.5 size-4 text-primary" />
-                    <p className="leading-relaxed text-default-700">
-                      After publishing, it may take a few minutes for your content to be processed and appear on your
-                      profile.
-                    </p>
+                    <p className="leading-relaxed text-default-700">{t('notices.postPublish')}</p>
                   </div>
                 )}
                 {/* 基本信息 */}
@@ -264,7 +262,7 @@ export default function TaskDetailModal({ isOpen, onClose, task }: TaskDetailMod
                         <p className="text-sm text-default-500">{t('taskDetail.scheduledTime')}</p>
                         <p className="flex items-center gap-1 text-sm font-medium">
                           <ClockIcon className="size-3" />
-                          {format(new Date(task.publishedAt), 'yyyy年MM月dd日 HH:mm', { locale: zhCN })}
+                          {format(new Date(task.publishedAt), t('dateFormat.scheduledTime'), { locale: dateLocale })}
                         </p>
                       </div>
                     </div>
@@ -273,13 +271,13 @@ export default function TaskDetailModal({ isOpen, onClose, task }: TaskDetailMod
                       <div>
                         <p className="text-sm text-default-500">{t('taskDetail.createdAt')}</p>
                         <p className="text-sm">
-                          {format(new Date(task.createdAt), 'yyyy-MM-dd HH:mm:ss', { locale: zhCN })}
+                          {format(new Date(task.createdAt), t('dateFormat.datetime'), { locale: dateLocale })}
                         </p>
                       </div>
                       <div>
                         <p className="text-sm text-default-500">{t('taskDetail.updatedAt')}</p>
                         <p className="text-sm">
-                          {format(new Date(task.updatedAt), 'yyyy-MM-dd HH:mm:ss', { locale: zhCN })}
+                          {format(new Date(task.updatedAt), t('dateFormat.datetime'), { locale: dateLocale })}
                         </p>
                       </div>
                     </div>
@@ -354,7 +352,7 @@ export default function TaskDetailModal({ isOpen, onClose, task }: TaskDetailMod
                                   {log.publishedAt && (
                                     <p>
                                       {t('taskDetail.publishTime')}:{' '}
-                                      {format(new Date(log.publishedAt), 'yyyy-MM-dd HH:mm:ss', { locale: zhCN })}
+                                      {format(new Date(log.publishedAt), t('dateFormat.datetime'), { locale: dateLocale })}
                                     </p>
                                   )}
                                   {log.message && (

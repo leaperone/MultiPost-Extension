@@ -32,7 +32,7 @@ export default function Header() {
       className="fixed inset-x-0 top-0 z-50">
       <NavbarContent>
         <NavbarMenuToggle
-          aria-label={isMenuOpen ? '关闭菜单' : '打开菜单'}
+          aria-label={isMenuOpen ? t('navigation.closeMenu') : t('navigation.openMenu')}
           className="sm:hidden"
         />
         <NavbarBrand>

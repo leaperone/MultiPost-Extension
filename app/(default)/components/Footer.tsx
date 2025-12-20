@@ -22,16 +22,16 @@ export default function Footer() {
       { name: '2SOMEren', href: 'https://2some.ren' },
     ],
     support: [
-      { name: 'Documentation', href: 'https://docs.multipost.app' },
-      { name: 'Status', href: 'https://monitor.leaper.one' },
+      { name: t('footer.navigation.support.documentation'), href: 'https://docs.multipost.app' },
+      { name: t('footer.navigation.support.status'), href: 'https://monitor.leaper.one' },
     ],
     contact: [
-      { name: 'Discord', href: 'https://discord.gg/GNsCX9zFwQ' },
+      { name: t('footer.navigation.contact.discord'), href: 'https://discord.gg/GNsCX9zFwQ' },
       {
-        name: 'QQ Group',
+        name: t('footer.navigation.contact.qqGroup'),
         href: 'http://qm.qq.com/cgi-bin/qm/qr?_wv=1027&k=c5BjhD8JxNAuwjKh6qvCoROU301PppYU&authKey=NfKianfDwngrwJyVQbefIQET9vUQs46xb0PfOYUm6KzdeCjPd5YbvlRoO8trJUUZ&noverify=0&group_code=921137242',
       },
-      { name: 'Email', href: 'mailto:support@leaper.one' },
+      { name: t('footer.navigation.contact.email'), href: 'mailto:support@leaper.one' },
     ],
     legal: [
       { name: t('footer.navigation.legal.privacy'), href: '/legal/privacy' },

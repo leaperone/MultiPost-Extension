@@ -220,13 +220,12 @@ function GallerySection() {
 
   const handleDownload = async (url: string) => {
     try {
-      toast.loading('Downloading...');
+      toast.loading(t('gallery_page.download.loading'));
       const response = await fetch(url);
       const blob = await response.blob();
       const downloadUrl = window.URL.createObjectURL(blob);
       const link = document.createElement('a');
       link.href = downloadUrl;
-      // 从URL中提取原始文件名
       const fileName = `poster-${new Date().getTime()}.webp`;
       link.download = fileName;
       document.body.appendChild(link);
@@ -235,8 +234,8 @@ function GallerySection() {
       window.URL.revokeObjectURL(downloadUrl);
       toast.dismiss();
     } catch (error) {
-      console.error('下载失败:', error);
-      toast.error('Download failed');
+      console.error('Download failed:', error);
+      toast.error(t('gallery_page.download.failed'));
     }
   };
 

@@ -2,9 +2,11 @@
 
 import { Button, Link } from "@heroui/react";
 import { useSession } from 'next-auth/react';
+import { useTranslation } from '@/i18n/client';
 
 const SignInButton = () => {
   const session = useSession();
+  const { t } = useTranslation('auth');
 
   if (session.data?.user) {
     return <UserInfoDisplay />;
@@ -14,7 +16,7 @@ const SignInButton = () => {
     <Button
       as={Link}
       href="/signin">
-      Sign In
+      {t('signin.button')}
     </Button>
   );
 };

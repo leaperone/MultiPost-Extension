@@ -86,6 +86,10 @@
       "title": "暂无海报",
       "action": "创建第一张海报"
     },
-    "get_image_failed": "获取海报失败"
+    "get_image_failed": "获取海报失败",
+    "download": {
+      "loading": "下载中...",
+      "failed": "下载失败"
+    }
   }
 }

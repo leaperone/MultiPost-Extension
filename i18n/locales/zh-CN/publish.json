@@ -1,5 +1,9 @@
 {
   "contactUs": "联系我们",
+  "extensionNotDetected": {
+    "title": "未检测到 MultiPost 扩展",
+    "description": "请先安装扩展"
+  },
   "library": {
     "title": "库",
     "images": "图片",
@@ -287,6 +291,17 @@
       "article": {
         "title": "发布文章",
         "description": "使用 Markdown 编辑器发布文章。"
+      }
+    },
+    "featureTips": {
+      "aiImage": {
+        "title": "AI 配图",
+        "description": "使用 AI 一键生成与内容匹配的精美配图。"
+      },
+      "schedule": {
+        "title": "定时发布",
+        "tag": "即将推出",
+        "description": "设置定时任务，让内容在指定时间自动发布。"
       }
     }
   },

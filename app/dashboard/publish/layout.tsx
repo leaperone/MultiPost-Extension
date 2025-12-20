@@ -7,19 +7,21 @@ import ForceInstallExtension from '@/components/ForceInstallExtension';
 import { useEffect } from 'react';
 import { checkServiceStatus, funcGetPermission } from '@/lib/extension';
 import { useRouter } from 'next/navigation';
+import { useTranslation } from '@/i18n/client';
 // TODO: 暂时隐藏余额功能
 // import BalanceButtonClient from '../components/BalanceButtonClient';
 
 export default function PublishLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
+  const { t } = useTranslation('publish');
 
   useEffect(() => {
     checkServiceStatus().then((status) => {
       if (!status) {
         addToast({
-          title: '未检测到 MultiPost 扩展',
-          description: '请先安装扩展',
+          title: t('extensionNotDetected.title'),
+          description: t('extensionNotDetected.description'),
         });
         router.push('/extension');
         return;
@@ -81,7 +83,7 @@ export default function PublishLayout({ children }: { children: React.ReactNode 
               color="primary"
               size="sm"
               startContent={<MessageSquareIcon className="size-5" />}>
-              Contact Us
+              {t('contactUs')}
             </Button>
           </div>
         </div>

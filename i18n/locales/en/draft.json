@@ -79,6 +79,26 @@
     },
     "untitledDraft": "Untitled Draft"
   },
+  "schedulePublish": "Schedule Publish",
+  "toast": {
+    "selectDraftFirst": "Please select a draft first",
+    "cannotGetImageUrl": "Cannot get image URL",
+    "imageAddedSuccess": "Successfully added image to current draft",
+    "imageAddFailed": "Failed to add image",
+    "insertingImage": "Inserting image...",
+    "imageInsertedSuccess": "Image successfully inserted to draft",
+    "imageInsertFailed": "Failed to insert image",
+    "loadDraftsFailed": "Failed to load drafts",
+    "createDraftFailed": "Failed to create draft",
+    "deleteDraftSuccess": "Draft deleted successfully",
+    "deleteDraftFailed": "Failed to delete draft",
+    "noDraftSelected": "No draft selected",
+    "saveDraftSuccess": "Draft saved successfully",
+    "saveDraftFailed": "Failed to save draft",
+    "selectDraftToPublish": "Please select a draft to publish",
+    "publishTaskSuccess": "Publish task created successfully",
+    "directPublishSuccess": "Direct publish completed successfully"
+  },
   "publish": {
     "modal": {
       "title": "Publish Draft to Platforms",
@@ -163,7 +183,8 @@
     "copy": "Copy Text",
     "copied": "Copied",
     "stop": "Stop",
-    "inputPlaceholder": "Enter your requirements... (Shift + Enter for new line)"
+    "inputPlaceholder": "Enter your requirements... (Shift + Enter for new line)",
+    "continueQueuePlaceholder": "Process queue task (Enter) or input new instructions..."
   },
   "aiImage": {
     "attachPrompt": "Attach to prompt based on current draft content:",

@@ -213,7 +213,7 @@ export default function DraftsPage() {
   }) => {
     if (!selectedDraftId) {
       addToast({
-        title: '请先选择一个草稿',
+        title: t('toast.selectDraftFirst'),
         color: 'warning',
       });
       return;
@@ -232,7 +232,7 @@ export default function DraftsPage() {
 
       if (!imageUrl) {
         addToast({
-          title: '无法获取图片URL',
+          title: t('toast.cannotGetImageUrl'),
           color: 'danger',
         });
         return;
@@ -253,13 +253,13 @@ export default function DraftsPage() {
       addFileToCurrentDraft(newImageFile);
 
       addToast({
-        title: `成功添加图片到当前草稿`,
+        title: t('toast.imageAddedSuccess'),
         color: 'success',
       });
     } catch (error) {
       console.error('Failed to add image to draft:', error);
       addToast({
-        title: '添加图片失败',
+        title: t('toast.imageAddFailed'),
         color: 'danger',
       });
     }
@@ -270,12 +270,12 @@ export default function DraftsPage() {
    */
   const handleInsertGeneratedImage = async (imageUrl: string) => {
     if (!selectedDraftId) {
-      addToast({ title: '请先选择一个草稿', color: 'warning' });
+      addToast({ title: t('toast.selectDraftFirst'), color: 'warning' });
       return;
     }
 
     try {
-      addToast({ title: '正在插入图片...', color: 'default' });
+      addToast({ title: t('toast.insertingImage'), color: 'default' });
 
       // Fetch the image to get blob for size and type
       const response = await fetch(imageUrl);
@@ -292,10 +292,10 @@ export default function DraftsPage() {
       };
 
       addFileToCurrentDraft(newImageFile);
-      addToast({ title: '图片已成功插入草稿', color: 'success' });
+      addToast({ title: t('toast.imageInsertedSuccess'), color: 'success' });
     } catch (error) {
       console.error('Failed to insert generated image:', error);
-      addToast({ title: '插入图片失败', color: 'danger' });
+      addToast({ title: t('toast.imageInsertFailed'), color: 'danger' });
     }
   };
 
@@ -325,13 +325,13 @@ export default function DraftsPage() {
         }
       } else {
         addToast({
-          title: result.error || 'Failed to load drafts',
+          title: result.error || t('toast.loadDraftsFailed'),
           color: 'danger',
         });
       }
     } catch (error) {
       addToast({
-        title: 'Failed to load drafts',
+        title: t('toast.loadDraftsFailed'),
         color: 'danger',
       });
     } finally {
@@ -349,13 +349,13 @@ export default function DraftsPage() {
         }
       } else {
         addToast({
-          title: result.error || 'Failed to create draft',
+          title: result.error || t('toast.createDraftFailed'),
           color: 'danger',
         });
       }
     } catch (error) {
       addToast({
-        title: 'Failed to create draft',
+        title: t('toast.createDraftFailed'),
         color: 'danger',
       });
     } finally {
@@ -376,18 +376,18 @@ export default function DraftsPage() {
           router.push('/dashboard/drafts');
         }
         addToast({
-          title: 'Draft deleted successfully',
+          title: t('toast.deleteDraftSuccess'),
           color: 'success',
         });
       } else {
         addToast({
-          title: result.error || 'Failed to delete draft',
+          title: result.error || t('toast.deleteDraftFailed'),
           color: 'danger',
         });
       }
     } catch (error) {
       addToast({
-        title: 'Failed to delete draft',
+        title: t('toast.deleteDraftFailed'),
         color: 'danger',
       });
     }
@@ -396,7 +396,7 @@ export default function DraftsPage() {
   const handleSave = async () => {
     if (!selectedDraftId) {
       addToast({
-        title: 'No draft selected',
+        title: t('toast.noDraftSelected'),
         color: 'warning',
       });
       return;
@@ -406,12 +406,12 @@ export default function DraftsPage() {
     try {
       await saveCurrentDraft();
       addToast({
-        title: 'Draft saved successfully',
+        title: t('toast.saveDraftSuccess'),
         color: 'success',
       });
     } catch (error) {
       addToast({
-        title: 'Failed to save draft',
+        title: t('toast.saveDraftFailed'),
         color: 'danger',
       });
     } finally {
@@ -428,7 +428,7 @@ export default function DraftsPage() {
   const handleOpenPublishModal = () => {
     if (!selectedDraftId) {
       addToast({
-        title: 'Please select a draft to publish',
+        title: t('toast.selectDraftToPublish'),
         color: 'warning',
       });
       return;
@@ -439,7 +439,7 @@ export default function DraftsPage() {
   const handleOpenPublishTaskModal = () => {
     if (!selectedDraftId) {
       addToast({
-        title: 'Please select a draft to publish',
+        title: t('toast.selectDraftToPublish'),
         color: 'warning',
       });
       return;
@@ -470,14 +470,14 @@ export default function DraftsPage() {
 
   const handlePublishSuccess = () => {
     addToast({
-      title: 'Publish task created successfully',
+      title: t('toast.publishTaskSuccess'),
       color: 'success',
     });
   };
 
   const handlePublishTaskSuccess = () => {
     addToast({
-      title: 'Publish task created successfully',
+      title: t('toast.publishTaskSuccess'),
       color: 'success',
     });
     setIsPublishTaskModalOpen(false);
@@ -486,7 +486,7 @@ export default function DraftsPage() {
   const handleDirectPublish = () => {
     if (!selectedDraftId) {
       addToast({
-        title: 'Please select a draft to publish',
+        title: t('toast.selectDraftToPublish'),
         color: 'warning',
       });
       return;
@@ -500,7 +500,7 @@ export default function DraftsPage() {
 
   const handleDirectPublishSuccess = () => {
     addToast({
-      title: 'Direct publish completed successfully',
+      title: t('toast.directPublishSuccess'),
       color: 'success',
     });
     setIsDirectPublishModalOpen(false);
@@ -549,7 +549,7 @@ export default function DraftsPage() {
                       .replace(/\n+/g, ' ');
                     return plainText;
                   }
-                  return 'Untitled Draft';
+                  return t('list.untitledDraft');
                 };
 
                 return getTitleText();
@@ -596,7 +596,7 @@ export default function DraftsPage() {
             startContent={<Send className="size-4" />}
             onPress={handleOpenPublishTaskModal}
             isDisabled={!selectedDraftId}>
-            Schedule Publish
+            {t('schedulePublish')}
           </Button>
 
           <Button

@@ -14,7 +14,9 @@
       "support": {
         "pricing": "Pricing",
         "userManual": "User Manual (Docs)",
-        "devDocs": "LEAPERone Developer Docs"
+        "devDocs": "LEAPERone Developer Docs",
+        "documentation": "Documentation",
+        "status": "Status"
       },
       "aboutUs": {
         "team": "Our Team"
@@ -22,6 +24,11 @@
       "legal": {
         "privacy": "Privacy Policy",
         "terms": "Terms of Service"
+      },
+      "contact": {
+        "discord": "Discord",
+        "qqGroup": "QQ Group",
+        "email": "Email"
       }
     }
   },
@@ -30,7 +37,9 @@
     "publish": "Publish",
     "draw": "Draw",
     "docs": "Docs",
-    "blog": "Blog"
+    "blog": "Blog",
+    "openMenu": "Open menu",
+    "closeMenu": "Close menu"
   },
   "multiPost": {
     "title": "Multi-Platform Publishing",
@@ -134,7 +143,9 @@
     "buttons": {
       "post": "Start Posting",
       "start_free": "Start Free",
-      "watch_demo": "Watch Demo"
+      "watch_demo": "Watch Demo",
+      "chromeStore": "Chrome Store",
+      "edgeStore": "Edge Store"
     },
     "features": {
       "draft": "Draft",
@@ -155,5 +166,11 @@
     "openSource": "Open Source",
     "powerfulSimple": "Powerful & Simple",
     "faq": "FAQ"
+  },
+  "images": {
+    "multiPlatformPublishing": "Multi Platform Publishing"
+  },
+  "badges": {
+    "magicBoxFeatured": "This project is featured on MagicBox.tools"
   }
 }

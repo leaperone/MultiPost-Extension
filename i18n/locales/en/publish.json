@@ -1,5 +1,9 @@
 {
   "contactUs": "Contact Us",
+  "extensionNotDetected": {
+    "title": "MultiPost extension not detected",
+    "description": "Please install the extension first"
+  },
   "library": {
     "title": "Library",
     "images": "Images",
@@ -287,6 +291,17 @@
       "article": {
         "title": "Publish Article",
         "description": "Use Markdown editor to publish articles."
+      }
+    },
+    "featureTips": {
+      "aiImage": {
+        "title": "AI Image Generation",
+        "description": "Use AI to generate matching images for your content with one click."
+      },
+      "schedule": {
+        "title": "Scheduled Publishing",
+        "tag": "Coming Soon",
+        "description": "Schedule your content to be published automatically at specified times."
       }
     }
   },

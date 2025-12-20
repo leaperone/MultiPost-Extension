@@ -105,6 +105,43 @@
     },
     "error": {
       "operation_failed": "Operation failed"
+    },
+    "create": {
+      "button": "Create Activity",
+      "modal_title": "Create Activity",
+      "task_types": {
+        "publish_post": "Publish Post",
+        "comment_post": "Comment Post"
+      },
+      "labels": {
+        "activity_type": "Activity Type",
+        "activity_title": "Activity Title",
+        "activity_description": "Activity Description",
+        "activity_link": "Activity Link",
+        "keywords": "Keywords",
+        "examples": "Examples",
+        "reward": "Reward",
+        "deadline": "Deadline"
+      },
+      "placeholders": {
+        "title": "Enter activity title",
+        "description": "Enter activity description",
+        "link": "Enter activity link",
+        "keywords": "Enter keywords, press Enter or comma to add",
+        "examples": "Enter examples, press Enter or comma to add",
+        "reward": "Enter reward Credit",
+        "deadline": "Select deadline"
+      },
+      "validation": {
+        "required_fields": "Please fill in required fields"
+      },
+      "success": {
+        "created": "Activity created"
+      },
+      "buttons": {
+        "cancel": "Cancel",
+        "create": "Create Activity"
+      }
     }
   }
 }

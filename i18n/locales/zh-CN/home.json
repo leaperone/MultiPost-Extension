@@ -14,7 +14,9 @@
       "support": {
         "pricing": "定价",
         "userManual": "用户手册（文档）",
-        "devDocs": "LEAPERone 开发文档"
+        "devDocs": "LEAPERone 开发文档",
+        "documentation": "文档",
+        "status": "状态"
       },
       "aboutUs": {
         "team": "我们的团队"
@@ -22,6 +24,11 @@
       "legal": {
         "privacy": "隐私政策",
         "terms": "服务条款"
+      },
+      "contact": {
+        "discord": "Discord",
+        "qqGroup": "QQ 群",
+        "email": "邮箱"
       }
     }
   },
@@ -30,7 +37,9 @@
     "publish": "发布",
     "draw": "绘图",
     "docs": "文档",
-    "blog": "博客"
+    "blog": "博客",
+    "openMenu": "打开菜单",
+    "closeMenu": "关闭菜单"
   },
   "multiPost": {
     "title": "多平台内容发布",
@@ -125,7 +134,9 @@
     "buttons": {
       "post": "开始发布",
       "start_free": "免费开始",
-      "watch_demo": "观看演示"
+      "watch_demo": "观看演示",
+      "chromeStore": "Chrome 商店",
+      "edgeStore": "Edge 商店"
     },
     "features": {
       "draft": "撰稿",
@@ -146,5 +157,11 @@
     "openSource": "开源",
     "powerfulSimple": "强大而简单",
     "faq": "问答"
+  },
+  "images": {
+    "multiPlatformPublishing": "多平台发布"
+  },
+  "badges": {
+    "magicBoxFeatured": "本项目在 MagicBox.tools 上展示"
   }
 }

@@ -34,7 +34,7 @@ const SigninPage = async (props: { searchParams: Promise<{ redirect?: string; er
       <Suspense fallback={null}>
         <SigninAnalytics />
       </Suspense>
-      <h1 className="text-xl font-medium">Sign In</h1>
+      <h1 className="text-xl font-medium">{t('signin.title')}</h1>
 
       {error && errorToI18nKey[error as SignInError] && (
         <Card className="mb-4 w-full max-w-md border-red-200">

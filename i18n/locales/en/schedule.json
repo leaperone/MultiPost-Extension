@@ -60,5 +60,12 @@
   "messages": {
     "taskCancelled": "Task cancelled successfully",
     "taskRestarted": "Task restarted successfully"
+  },
+  "notices": {
+    "postPublish": "After publishing, it may take a few minutes for your content to be processed and appear on your profile."
+  },
+  "dateFormat": {
+    "scheduledTime": "MMM dd, yyyy HH:mm",
+    "datetime": "yyyy-MM-dd HH:mm:ss"
   }
 }

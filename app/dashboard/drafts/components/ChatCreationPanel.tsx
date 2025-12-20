@@ -606,7 +606,7 @@ export function ChatCreationPanel({ draftId, draftTitle, draftContent, onApply }
                 onKeyDown={handleKeyDown}
                 placeholder={
                   todoQueue.length > 0
-                    ? t('aiCreation.continueQueuePlaceholder') || '继续处理队列任务 (回车) 或输入新指令...'
+                    ? t('aiCreation.continueQueuePlaceholder')
                     : t('aiCreation.inputPlaceholder')
                 }
                 minRows={1}

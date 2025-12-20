@@ -105,6 +105,43 @@
     },
     "error": {
       "operation_failed": "操作失败"
+    },
+    "create": {
+      "button": "创建活动",
+      "modal_title": "创建活动",
+      "task_types": {
+        "publish_post": "发布帖子",
+        "comment_post": "评论帖子"
+      },
+      "labels": {
+        "activity_type": "活动类型",
+        "activity_title": "活动标题",
+        "activity_description": "活动描述",
+        "activity_link": "活动链接",
+        "keywords": "关键词",
+        "examples": "示例",
+        "reward": "奖励",
+        "deadline": "截止日期"
+      },
+      "placeholders": {
+        "title": "输入活动标题",
+        "description": "输入活动描述",
+        "link": "输入活动链接",
+        "keywords": "输入关键词，按回车或逗号添加",
+        "examples": "输入示例，按回车或逗号添加",
+        "reward": "输入奖励 Credit",
+        "deadline": "选择截止日期"
+      },
+      "validation": {
+        "required_fields": "请填写必填字段"
+      },
+      "success": {
+        "created": "活动已创建"
+      },
+      "buttons": {
+        "cancel": "取消",
+        "create": "创建活动"
+      }
     }
   }
 }

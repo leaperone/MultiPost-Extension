@@ -27,20 +27,22 @@ import { toast } from 'sonner';
 import { parseDate, type DateValue } from '@internationalized/date';
 import { PlusIcon } from 'lucide-react';
 import { TagInput } from '@/components/ui/tag-input';
-
-const taskTypes = [
-  { value: 'PUBLISH_POST', label: '发布帖子' },
-  { value: 'COMMENT_POST', label: '评论帖子' },
-] as const;
+import { useTranslation } from '@/i18n/client';
 
 export function CreateActivityModal() {
   const router = useRouter();
+  const { t } = useTranslation('admin');
   const { isOpen, onOpen, onOpenChange } = useDisclosure();
   const [isLoading, setIsLoading] = React.useState(false);
   const [expiredAt, setExpiredAt] = React.useState<Date>();
   const [taskType, setTaskType] = React.useState<string>('');
   const [keywords, setKeywords] = React.useState<string[]>([]);
   const [examples, setExamples] = React.useState<string[]>([]);
+
+  const taskTypes = [
+    { value: 'PUBLISH_POST', label: t('activity.create.task_types.publish_post') },
+    { value: 'COMMENT_POST', label: t('activity.create.task_types.comment_post') },
+  ] as const;
 
   const handleDateChange = (value: DateValue | null) => {
     if (value) {
@@ -69,7 +71,7 @@ export function CreateActivityModal() {
       };
 
       if (!data.taskType || !data.title || !expiredAt) {
-        throw new Error('请填写必填字段');
+        throw new Error(t('activity.create.validation.required_fields'));
       }
 
       const response = await fetch('/api/promotion/task', {
@@ -83,14 +85,14 @@ export function CreateActivityModal() {
       const result = await response.json();
 
       if (!response.ok) {
-        throw new Error(result.error || '操作失败');
+        throw new Error(result.error || t('activity.error.operation_failed'));
       }
 
-      toast.success('活动已创建');
+      toast.success(t('activity.create.success.created'));
       router.refresh();
       onOpenChange();
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : '操作失败');
+      toast.error(error instanceof Error ? error.message : t('activity.error.operation_failed'));
     } finally {
       setIsLoading(false);
     }
@@ -102,7 +104,7 @@ export function CreateActivityModal() {
         color="primary"
         startContent={<PlusIcon className="size-4" />}
         onPress={onOpen}>
-        创建活动
+        {t('activity.create.button')}
       </Button>
 
       <Modal
@@ -113,14 +115,14 @@ export function CreateActivityModal() {
         <ModalContent>
           {(onClose) => (
             <form onSubmit={onSubmit}>
-              <ModalHeader className="flex flex-col gap-1">创建活动</ModalHeader>
+              <ModalHeader className="flex flex-col gap-1">{t('activity.create.modal_title')}</ModalHeader>
               <ModalBody>
                 <div className="space-y-4">
                   <div>
                     <label
                       htmlFor="taskType"
                       className="text-sm font-medium">
-                      活动类型
+                      {t('activity.create.labels.activity_type')}
                     </label>
                     <Select
                       id="taskType"
@@ -138,13 +140,13 @@ export function CreateActivityModal() {
                     <label
                       htmlFor="title"
                       className="text-sm font-medium">
-                      活动标题
+                      {t('activity.create.labels.activity_title')}
                     </label>
                     <Input
                       id="title"
                       name="title"
                       required
-                      placeholder="输入活动标题"
+                      placeholder={t('activity.create.placeholders.title')}
                     />
                   </div>
 
@@ -152,12 +154,12 @@ export function CreateActivityModal() {
                     <label
                       htmlFor="description"
                       className="text-sm font-medium">
-                      活动描述
+                      {t('activity.create.labels.activity_description')}
                     </label>
                     <Textarea
                       id="description"
                       name="description"
-                      placeholder="输入活动描述"
+                      placeholder={t('activity.create.placeholders.description')}
                       rows={4}
                     />
                   </div>
@@ -166,13 +168,13 @@ export function CreateActivityModal() {
                     <label
                       htmlFor="link"
                       className="text-sm font-medium">
-                      活动链接
+                      {t('activity.create.labels.activity_link')}
                     </label>
                     <Input
                       id="link"
                       name="link"
                       type="url"
-                      placeholder="输入活动链接"
+                      placeholder={t('activity.create.placeholders.link')}
                     />
                   </div>
 
@@ -180,13 +182,13 @@ export function CreateActivityModal() {
                     <label
                       htmlFor="keywords"
                       className="text-sm font-medium">
-                      关键词
+                      {t('activity.create.labels.keywords')}
                     </label>
                     <TagInput
                       id="keywords"
                       value={keywords}
                       onChange={setKeywords}
-                      placeholder="输入关键词，按回车或逗号添加"
+                      placeholder={t('activity.create.placeholders.keywords')}
                     />
                   </div>
 
@@ -194,13 +196,13 @@ export function CreateActivityModal() {
                     <label
                       htmlFor="examples"
                       className="text-sm font-medium">
-                      示例
+                      {t('activity.create.labels.examples')}
                     </label>
                     <TagInput
                       id="examples"
                       value={examples}
                       onChange={setExamples}
-                      placeholder="输入示例，按回车或逗号添加"
+                      placeholder={t('activity.create.placeholders.examples')}
                     />
                   </div>
 
@@ -208,24 +210,24 @@ export function CreateActivityModal() {
                     <label
                       htmlFor="reward"
                       className="text-sm font-medium">
-                      奖励
+                      {t('activity.create.labels.reward')}
                     </label>
                     <Input
                       id="reward"
                       name="reward"
                       type="number"
                       defaultValue="0"
-                      placeholder="输入奖励 Credit"
+                      placeholder={t('activity.create.placeholders.reward')}
                     />
                   </div>
 
                   <div>
-                    <label className="text-sm font-medium">截止日期</label>
+                    <label className="text-sm font-medium">{t('activity.create.labels.deadline')}</label>
                     <DatePicker
                       className="w-full"
                       onChange={handleDateChange}
                       minValue={parseDate(new Date().toISOString().split('T')[0])}
-                      label="选择截止日期"
+                      label={t('activity.create.placeholders.deadline')}
                     />
                   </div>
                 </div>
@@ -236,13 +238,13 @@ export function CreateActivityModal() {
                   variant="light"
                   onPress={onClose}
                   disabled={isLoading}>
-                  取消
+                  {t('activity.create.buttons.cancel')}
                 </Button>
                 <Button
                   type="submit"
                   color="primary"
                   isLoading={isLoading}>
-                  创建活动
+                  {t('activity.create.buttons.create')}
                 </Button>
               </ModalFooter>
             </form>

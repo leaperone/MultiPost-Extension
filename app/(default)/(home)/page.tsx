@@ -141,7 +141,7 @@ function HeroSection({ t, className }: { t: TranslationFunction; className?: str
                     className="size-5"
                   />
                 }>
-                Chrome 商店
+                {t('hero.buttons.chromeStore')}
               </Button>
               <Button
                 as={Link}
@@ -156,7 +156,7 @@ function HeroSection({ t, className }: { t: TranslationFunction; className?: str
                     className="size-5"
                   />
                 }>
-                Edge 商店
+                {t('hero.buttons.edgeStore')}
               </Button>
             </div>
 
@@ -395,7 +395,7 @@ export default async function HomePage() {
               <div className="relative z-10 aspect-video overflow-hidden rounded-2xl shadow-2xl">
                 <Image
                   src="https://2someone-web-static.s3.bitiful.net/2025/05/ea3bb50afe710d57a968c1ac5f4d055f.png"
-                  alt="Multi Platform Publishing"
+                  alt={t('images.multiPlatformPublishing')}
                 />
               </div>
               <div className="absolute -bottom-6 -right-6 -z-0 size-32 rounded-2xl bg-blue-100 dark:bg-blue-900/30"></div>
@@ -602,7 +602,7 @@ export default async function HomePage() {
               className="mb-2"
             />
           </a>
-          <p className="text-center text-sm text-foreground/60">This project is featured on MagicBox.tools</p>
+          <p className="text-center text-sm text-foreground/60">{t('badges.magicBoxFeatured')}</p>
         </div>
       </section>
     </>

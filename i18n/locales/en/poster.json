@@ -85,6 +85,10 @@
       "title": "No posters yet",
       "action": "Create your first poster"
     },
-    "get_image_failed": "Failed to get posters"
+    "get_image_failed": "Failed to get posters",
+    "download": {
+      "loading": "Downloading...",
+      "failed": "Download failed"
+    }
   }
 }

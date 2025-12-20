@@ -79,6 +79,26 @@
     },
     "untitledDraft": "无标题草稿"
   },
+  "schedulePublish": "定时发布",
+  "toast": {
+    "selectDraftFirst": "请先选择一个草稿",
+    "cannotGetImageUrl": "无法获取图片URL",
+    "imageAddedSuccess": "成功添加图片到当前草稿",
+    "imageAddFailed": "添加图片失败",
+    "insertingImage": "正在插入图片...",
+    "imageInsertedSuccess": "图片已成功插入草稿",
+    "imageInsertFailed": "插入图片失败",
+    "loadDraftsFailed": "加载草稿失败",
+    "createDraftFailed": "创建草稿失败",
+    "deleteDraftSuccess": "草稿删除成功",
+    "deleteDraftFailed": "删除草稿失败",
+    "noDraftSelected": "未选择草稿",
+    "saveDraftSuccess": "草稿保存成功",
+    "saveDraftFailed": "保存草稿失败",
+    "selectDraftToPublish": "请选择要发布的草稿",
+    "publishTaskSuccess": "发布任务创建成功",
+    "directPublishSuccess": "直接发布完成"
+  },
   "publish": {
     "modal": {
       "title": "发布草稿到平台",
@@ -163,7 +183,8 @@
     "copy": "复制文本",
     "copied": "已复制",
     "stop": "停止",
-    "inputPlaceholder": "输入你的要求... (Shift + Enter 换行)"
+    "inputPlaceholder": "输入你的要求... (Shift + Enter 换行)",
+    "continueQueuePlaceholder": "继续处理队列任务 (回车) 或输入新指令..."
   },
   "aiImage": {
     "attachPrompt": "根据当前草稿内容附加到提示词：",
