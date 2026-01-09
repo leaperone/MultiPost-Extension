@@ -51,14 +51,14 @@ export default async function RootLayout({
             </div>
 
             <div className="flex w-full flex-row justify-between gap-4 rounded-large bg-background/60 px-8 py-4 shadow-xsall backdrop-blur-md backdrop-saturate-150 dark:bg-default-100/50">
-              <Button
-                as={Link}
-                href="/"
-                size="sm"
-                isIconOnly
-                className={buttonClasses}>
-                <HomeIcon />
-              </Button>
+              <Link href="/">
+                <Button
+                  size="sm"
+                  isIconOnly
+                  className={buttonClasses}>
+                  <HomeIcon />
+                </Button>
+              </Link>
               <ThemeSwitcher />
             </div>
           </div>
