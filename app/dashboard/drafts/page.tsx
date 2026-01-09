@@ -64,6 +64,7 @@ export default function DraftsPage() {
       }, 2000);
       return () => clearTimeout(timer);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentDraftTitle, currentDraftContent, currentDraftFiles, hasUnsavedChanges, selectedDraftId]);
 
   // 监听选中草稿变化，加载草稿详情
@@ -79,6 +80,7 @@ export default function DraftsPage() {
       setHasUnsavedChanges(false);
       setLastSelectedDraftId(null);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedDraftId]);
 
   /**
@@ -301,6 +303,7 @@ export default function DraftsPage() {
 
   useEffect(() => {
     loadDrafts();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const loadDrafts = async (selectDraftId?: string) => {

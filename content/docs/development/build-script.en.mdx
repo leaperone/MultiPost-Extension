@@ -1,0 +1,101 @@
+---
+title: Build Publishing Script
+---
+
+Currently, all platforms adopt page operation methods for implementation, mainly including the following key parts:
+
+## Basic Architecture
+
+Each platform's dynamic publishing functionality needs to implement the following interface:
+
+```typescript
+export async function DynamicPlatform(data: SyncData) {
+  // Implement platform-specific publishing logic
+}
+```
+
+## Implementation Pattern
+
+All platforms follow similar implementation patterns:
+
+### 1. Register Platform Information to infos
+
+Each platform needs to be registered in `infos`, then initialized through the information in `infos`.
+
+For example, Bilibili dynamic publishing platform information is as follows:
+
+```typescript
+// src/sync/dynamic.ts
+  DYNAMIC_BILIBILI: {
+    type: 'DYNAMIC', // Platform type
+    name: 'DYNAMIC_BILIBILI', // Platform name, generally starts with DYNAMIC_, ARTICEL_ or VIDEO_
+    homeUrl: 'https://t.bilibili.com', // Platform homepage, recommended to set as platform login page
+    faviconUrl: 'https://static.hdslb.com/images/favicon.ico', // Platform icon, can find favicon resource sources of different platforms in F12 webpage
+    iconifyIcon: 'ant-design:bilibili-outlined', // Platform icon (optional)
+    platformName: chrome.i18n.getMessage('platformBilibili'), // Platform name, configured for i18n in locales
+    injectUrl: 'https://t.bilibili.com', // Platform publishing page, the page opened when injecting scripts
+    injectFunction: DynamicBilibili, // Platform publishing function
+    tags: ['CN'], // Platform tags, for example ['CN'] means Chinese platform, ['EN'] means English platform
+    accountKey: 'bilibili', // Platform account identifier, key used to get account information
+  },
+```
+
+Where accountKey is the key to get account information, used to retrieve account information. For details, see `src/sync/account.ts` and the `src/sync/account` folder.
+
+### 2. Content Processing
+
+#### 2.1 Title
+
+Get the input box or other input area, then fill in content. Consider directly using `textContent` or `innerHTML` for filling, or using copy-paste events and other methods.
+
+```typescript
+const titleElement = await waitForElement('h1[class*="title"]');
+const title = titleElement.textContent;
+```
+
+#### 2.2 Content
+
+Get the input box or other input area, then fill in content. Consider directly using `textContent` or `innerHTML` for filling, or using copy-paste events and other methods.
+
+```typescript
+const contentElement = await waitForElement('div[class*="content"]');
+const content = contentElement.textContent;
+```
+
+#### 2.3 Upload Images/Videos etc.
+
+After finding the file input Input, use fetch to download images/videos etc., then use DataTransfer to simulate file upload.
+
+```typescript
+const response = await fetch(imageUrl);
+const blob = await response.blob();
+const imageFile = new File([blob], file.name, { type: file.type });
+
+const dataTransfer = new DataTransfer();
+dataTransfer.items.add(imageFile);
+const imageData = dataTransfer.files[0];
+
+fileInput.files = dataTransfer.files;
+fileInput.dispatchEvent(new Event('change', { bubbles: true }));
+```
+
+#### 3. Auto Publish (Optional)
+
+```typescript
+if (autoPublish) {
+  const publishButton = await waitForElement('button[type="submit"]');
+  publishButton.click();
+} else {
+  // Listen for manual publish
+  publishButton.addEventListener('click', () => {
+    setTimeout(() => window.location.reload(), 3000);
+  });
+}
+```
+
+## Development Suggestions
+
+- Learn to use `devtools`, use element inspection to get element information.
+- Learn the use of various `events`, such as `input`, `change`, `click`, etc.
+- Learn the use of `browser APIs`, such as `fetch`, `DataTransfer`, `ClipboardEvent`, etc. For more information, refer to [MDN](https://developer.mozilla.org/en-US/docs/Web/API)
+- When encountering problems, try using `console.log` to output information first, then judge the problem based on the information. 

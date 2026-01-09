@@ -1,0 +1,39 @@
+---
+title: 文件结构
+---
+
+## Top Level
+
+| 文件夹 | 说明 |
+| --- | --- |
+| src | 存放了实际运行的代码 |
+| build | 存放了构建后的文件，包括 Dev 和 Prod 版本 |
+| docs | 存放了开发文档 |
+| assets | 存放了扩展的图标等资源 |
+| locales | 存放了多语言的翻译文件 |
+| .cursor| 存放了 Cursor 的规则文件 |
+
+## Src 文件夹
+
+| 文件夹 | 说明 |
+| --- | --- |
+| src/sync | 存放了有关操作不同平台的代码 |
+| src/options | 存放了 Options 页面，在这里组织和发布内容 |
+| src/components | 存放了所有前端界面操作的组件 |
+| src/contents | 存放了注入网页的内容脚本 |
+| src/background | 存放了后台脚本 |
+| src/popup | 存放了弹窗页面 |
+| src/sidepanel | 存放了侧边栏页面 |
+| src/utils | 存放了工具函数 |
+
+## Sync 文件夹
+
+| 文件夹 | 说明 |
+| --- | --- |
+| src/sync/dynamic | 存放了各平台动态发布的操作脚本 |
+| src/sync/video | 存放了各平台视频发布的操作脚本 |
+| src/sync/article | 存放了各平台文章发布的操作脚本 |
+| src/sync/account | 存放了获取各平台账号信息的脚本 |
+| src/sync/common.ts | 定义了通用的类型和函数 |
+| src/sync/account.ts | 定义了账号信息类型和通用方法 |
+| src/sync/extraconfig.ts | 定义了各平台额外配置的存储和读取 |

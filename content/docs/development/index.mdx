@@ -1,0 +1,65 @@
+---
+title: 开始开发
+---
+
+## Overview
+Development 专题介绍 MultiPost Extension 的开发流程。帮助你快速参与开发社区，并贡献代码。
+
+## 环境准备
+node v20.17.0
+pnpm v10.7.0
+
+## 开始使用
+
+首先，安装依赖：
+
+```bash
+pnpm i
+```
+
+之后，运行 Plasmo 开发服务器：
+
+```bash
+pnpm dev
+```
+
+在浏览器扩展程序页面中打开开发者模式，点击 `加载已解压的扩展程序` 并找到 `build/chrome-mv3-dev` 进行加载。
+
+## 构建生产版本
+
+运行以下命令：
+
+```bash
+pnpm build
+```
+
+你可以在 `build` 文件夹下找到构建内容
+
+## 开发说明
+
+### 你需要了解的文档
+
+[Chrome Extension API Reference](https://developer.chrome.com/docs/extensions/reference/api)
+
+[Edge Extension](https://learn.microsoft.com/en-us/microsoft-edge/extensions-chromium/)
+
+[Plasmo Docs](https://docs.plasmo.com/)
+
+## 推荐文章
+
+- [AI全栈指南 Vol.033：5分钟学会内容一键发布多平台](https://mp.weixin.qq.com/s/K7yh6EsBLOGJzl8Gh8SwLw)
+
+### 开发文档
+
+需要注意的是，不同平台的开发在细节上存在不同，不过大体上遵循类似的实现模式。脱离不开 `查找元素 - 编辑元素 - 自动发布` 的实现模式。你可以通过以下文档来了解不同平台的开发细节：
+
+- [构建发布脚本](/docs/development/build-script)
+- [抖音动态发布功能开发记录](/docs/development/douyin-dynamic)
+- [抖音账号信息获取](/docs/development/douyin-account)
+- [B站动态发布功能开发记录](/docs/development/bilibili-dynamic)
+
+### 提出贡献
+
+我们非常欢迎你提出贡献，你可以通过 `pull request` 来提交你的代码。
+
+在提交之前，请先阅读[贡献指南](https://github.com/leaperone/MultiPost-Extension/blob/main/CONTRIBUTING.md)。

@@ -1,0 +1,154 @@
+---
+title: 类型定义
+---
+
+## 发布内容的基础数据
+
+首先我们定义了一系列类型，作为扩展发布内容的通信基础。
+
+当你需要发布内容的时候，需要组织一个 `SyncData` 类型的数据，然后调用 `funcPublish` 函数来进行发布。
+
+```typescript
+export interface SyncData {
+  platforms: SyncDataPlatform[];
+  isAutoPublish: boolean;
+  data: DynamicData | ArticleData | VideoData;
+}
+
+export interface SyncDataPlatform {
+  name: string;
+  injectUrl: string;
+  extraConfig:
+    | {
+        customInjectUrls?: string[]; // Beta 功能，用于自定义注入 URL
+      }
+    | unknown;
+}
+```
+
+### 发布数据的组织
+
+发布数据需要根据平台类型来组织，例如动态发布、文章发布、视频发布等。
+
+例如当你要发布动态的时候，需要组织一个 `DynamicData` 类型的数据到 `SyncData` 的 `data` 字段中。
+
+```typescript
+// DynamicData 是动态发布的数据，用于组织动态发布的数据
+export interface DynamicData {
+  title: string; // 标题
+  content: string; // 内容
+  images: FileData[]; // 图片
+  videos: FileData[]; // 视频，该字段目前仅用于某些允许同时发布图片和视频的平台，例如 Instagram、 X 等
+}
+
+// ArticleData 是文章发布的数据，用于组织文章发布的数据
+// 在发布的时候根据平台需要，使用 HTML 或者 Markdown 格式内容进行发布处理
+export interface ArticleData {
+  title: string; // 标题
+  content: string; // 内容 HTML
+  digest: string; // 摘要
+  cover: FileData; // 封面
+  images: FileData[]; // 图片
+  videos: FileData[]; // 视频
+  fileDatas: FileData[]; // 文件
+  originContent?: string; // 原始内容 HTML
+  markdownContent?: string; // 转换后的 markdown 内容
+  markdownOriginContent?: string; // 原始 markdown 内容
+}
+
+// VideoData 是视频发布的数据，用于组织视频发布的数据
+export interface VideoData {
+  title: string; // 标题
+  content: string; // 内容 HTML
+  video: FileData; // 视频
+}
+
+// FileData 是文件数据，用于组织文件数据
+export interface FileData {
+  name: string; // 文件名
+  url: string; // 文件链接，一般为 blob 链接，扩展的脚本允许从任意 blob 链接中下载文件
+  type: string; // 文件类型
+  size: number; // 文件大小
+  originUrl?: string; // 文件原始链接，一般用于存储 https 来源的文件原 Url
+}
+```
+
+### 平台信息
+
+当你组织 `SyncData` 数据的时候，需要获取基本的平台信息，例如平台名称、注入的 Url等。
+
+为了便于管理，我们定义了一个 `PlatformInfo` 类型的数据，用于组织平台信息。
+
+```typescript
+// PlatformInfo 是平台信息，用于组织平台信息
+export interface PlatformInfo {
+  type: 'DYNAMIC' | 'VIDEO' | 'ARTICLE'; // 平台类型
+  name: string; // 平台名称
+  homeUrl: string; // 平台首页
+  faviconUrl?: string; // 平台图标
+  iconifyIcon?: string; // 平台图标
+  platformName: string; // 平台名称
+  username?: string; // 用户名
+  userAvatarUrl?: string; // 用户头像
+  injectUrl: string; // 平台发布页面
+  injectFunction: (data: SyncData) => Promise<void>; // 平台发布函数
+  tags?: string[]; // 平台标签
+  accountKey: string; // 平台账号标识
+  accountInfo?: AccountInfo; // 平台账号信息
+}
+
+// AccountInfo 是账号信息，用于组织账号信息
+export interface AccountInfo {
+  provider: string; // 账号提供商
+  accountId: string; // 账号 ID
+  username: string; // 账号名称
+  description?: string; // 账号描述
+  profileUrl?: string; // 账号链接
+  avatarUrl?: string; // 账号头像
+  extraData: unknown; // 账号额外数据
+}
+```
+
+## 标签页管理
+
+标签页管理是扩展的另一个重要功能，用于管理发布过程中创建的标签页。
+
+我们定义了一个 `TabManagerMessage` 类型的数据，用于组织标签页管理的数据。
+
+```typescript
+export interface TabManagerMessage {
+  syncData: SyncData;
+  tabs: {
+    tab: chrome.tabs.Tab;
+    platformInfo: SyncDataPlatform;
+  }[];
+}
+```
+
+## 扩展接口
+
+扩展接口是扩展的另一个重要功能，我们允许开发者通过扩展接口来调用扩展的发布内容功能。
+
+我们定义了一个 `ExtensionExternalRequest` 和 `ExtensionExternalResponse` 类型的数据，用于组织扩展接口的数据。
+
+更多信息参考 [API 文档](/docs/api-reference)
+
+```typescript
+export type ExtensionExternalRequest<T> = {
+  type: 'request';
+  traceId: string;
+  action: string;
+  data: T;
+};
+
+export interface ExtensionExternalResponse<T> {
+  type: 'response';
+  traceId: string;
+  action: string;
+  code: number;
+  message: string;
+  data: T;
+}
+```
+
+

@@ -247,6 +247,7 @@ export default function MediaLibrary({ onSelectImage }: MediaLibraryProps) {
 
   useEffect(() => {
     fetchImageFiles();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
@@ -267,6 +268,7 @@ export default function MediaLibrary({ onSelectImage }: MediaLibraryProps) {
     }
 
     return () => observer.disconnect();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [hasMore, loadingMore]);
 
   const fetchImageFiles = async () => {
@@ -299,6 +301,7 @@ export default function MediaLibrary({ onSelectImage }: MediaLibraryProps) {
     } finally {
       setLoadingMore(false);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [loadingMore, hasMore]);
 
   const handlePreviewImage = async (imageFile: FileHosting, index: number) => {

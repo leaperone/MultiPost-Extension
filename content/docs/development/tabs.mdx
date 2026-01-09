@@ -1,0 +1,107 @@
+---
+title: 标签页管理
+---
+
+标签页管理，在 `src/background/services/tabs.ts` 文件中。
+
+标签页管理主要是为了在标签页创建后允许用户通过 Sidepanel 来管理标签页，例如重新加载、关闭、刷新等。
+
+```ts
+import { injectScriptsToTabs, type SyncData } from '~sync/common';
+import { getDefaultPlatformInfo } from '~sync/common';
+
+// 定义了标签页管理使用的类型
+export interface TabManagerMessage {
+  // 发布信息
+  syncData: SyncData;
+  // 标签页信息
+  tabs: {
+    tab: chrome.tabs.Tab;
+    platform: string;
+  }[];
+}
+
+// 标签页管理消息数组
+const tabsManagerMessages: TabManagerMessage[] = [];
+
+// 处理标签页更新
+const handleTabUpdated = (tabId: number, changeInfo: chrome.tabs.TabChangeInfo, tab: chrome.tabs.Tab) => {
+  tabsManagerMessages.forEach((group, index) => {
+    const updatedTabs = group.tabs.map((item) => (item.tab.id === tabId ? { ...item, tab } : item));
+    tabsManagerMessages[index] = { ...group, tabs: updatedTabs };
+  });
+};
+
+// 处理标签页删除
+const handleTabRemoved = (tabId: number) => {
+  tabsManagerMessages.forEach((group, index) => {
+    const filteredTabs = group.tabs.filter((item) => item.tab.id !== tabId);
+    tabsManagerMessages[index] = { ...group, tabs: filteredTabs };
+  });
+};
+
+// 获取标签页管理消息
+export const getTabsManagerMessages = () => {
+  return tabsManagerMessages;
+};
+
+// 添加标签页管理消息
+export const addTabsManagerMessages = (data: TabManagerMessage) => {
+  tabsManagerMessages.push(data);
+};
+
+// 标签页更新处理
+export const tabsManagerHandleTabUpdated = handleTabUpdated;
+// 标签页删除处理
+export const tabsManagerHandleTabRemoved = handleTabRemoved;
+// 标签页管理消息处理
+export const tabsManagerMessageHandler = (request, sender, sendResponse) => {
+  // 重新加载标签页
+  if (request.type === 'MUTLIPOST_EXTENSION_REQUEST_PUBLISH_RELOAD') {
+    const { tabId, tabGroup } = request.data;
+    const tabInfo = tabGroup.tabs.find((t) => t.tab.id === tabId);
+
+    // 如果标签页信息存在，则获取平台信息
+    if (tabInfo) {
+      const platformInfo = getDefaultPlatformInfo(tabInfo.platform);
+
+      // 如果平台信息存在，则更新标签页 URL 并注入脚本
+      if (platformInfo) {
+        chrome.tabs.update(tabId, { url: platformInfo.injectUrl, active: true }).then(() => {
+          injectScriptsToTabs([[tabInfo.tab, tabInfo.platform]], tabGroup.syncData);
+        });
+      } else {
+        console.error(`无法获取平台 ${tabInfo.platform} 的信息`);
+        sendResponse('error');
+        return;
+      }
+    } else {
+      console.error(`未找到标签页 ID ${tabId} 的信息`);
+      sendResponse('error');
+      return;
+    }
+    sendResponse('success');
+  }
+  // 获取标签页管理消息
+  if (request.type === 'MUTLIPOST_EXTENSION_TABS_MANAGER_REQUEST_TABS') {
+    sendResponse(getTabsManagerMessages());
+  }
+  // 添加标签页管理消息
+  if (request.type === 'MUTLIPOST_EXTENSION_TABS_MANAGER_REQUEST_ADD_TABS') {
+    const { data, tabs } = request;
+    addTabsManagerMessages({
+      syncData: data,
+      tabs: tabs.map((t: [chrome.tabs.Tab, string]) => ({
+        tab: t[0],
+        platform: t[1],
+      })),
+    });
+    sendResponse('success');
+  }
+};
+```
+
+具体使用该功能的位置在 `src/components/Sidepanel/Tabs/TabsManager.tsx` 文件中。
+
+
+

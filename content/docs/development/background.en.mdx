@@ -1,0 +1,39 @@
+---
+title: Background
+---
+
+In the `src/background/index.ts` file, we define the `background` logic, such as tab management, message handling, etc.
+
+Listen to messages, process messages through the `defaultMessageHandler` function, handle tab management messages through the `tabsManagerMessageHandler` function, and handle trusted domain messages through the `trustDomainMessageHandler` function.
+
+Browser extensions listen to messages through `chrome.runtime.onMessage`, which can receive messages from `content script` as well as messages from the `options` page.
+
+At the same time, we listen to tab update and delete events for tab management. When users use the browser's tab management functionality, these events are triggered, passing updated information to us for processing, such as reload, close, refresh, etc. To synchronize tab states in the `Sidepanel`.
+
+```ts
+chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
+  defaultMessageHandler(request, sender, sendResponse);
+  tabsManagerMessageHandler(request, sender, sendResponse);
+  trustDomainMessageHandler(request, sender, sendResponse);
+  return true;
+});
+
+// Listen to tab updates
+chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
+  tabsManagerHandleTabUpdated(tabId, changeInfo, tab);
+});
+
+// Listen to tab deletion
+chrome.tabs.onRemoved.addListener((tabId) => {
+  tabsManagerHandleTabRemoved(tabId);
+});
+```
+
+The keep-alive mechanism is to keep Background running continuously in the browser background and prevent it from being killed by the browser.
+
+```ts
+// Keep Alive || Keep-alive mechanism || START
+const quantumKeepAlive = new QuantumEntanglementKeepAlive();
+quantumKeepAlive.startEntanglementProcess();
+// Keep Alive || Keep-alive mechanism || END
+``` 

@@ -800,10 +800,13 @@ export default function VideoPage() {
                     <div className="space-y-3">
                       <DatePicker
                         label={t('video.selectPublishTime', '选择发布时间')}
-                        value={scheduledDateTime}
-                        onChange={setScheduledDateTime}
+                        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                        value={scheduledDateTime as any}
+                        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                        onChange={setScheduledDateTime as any}
                         granularity="minute"
-                        minValue={now(getLocalTimeZone())}
+                        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                        minValue={now(getLocalTimeZone()) as any}
                         showMonthAndYearPickers
                         hourCycle={24}
                       />

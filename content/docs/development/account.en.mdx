@@ -1,0 +1,91 @@
+---
+title: Account Information Retrieval Principle
+---
+
+In order to let users know the platform account information they use when publishing content, we designed to retrieve platform account information and store the platform information in `localStorage`.
+
+The specific implementation is in the `src/sync/account.ts` file and the `src/sync/account` folder.
+
+First, we added `accountKey` and `accountInfo` fields to the `PlatformInfo` type for attaching platform account information when requesting platform data from the frontend.
+
+Then we need to get this platform account information and store it in `localStorage`.
+
+```ts
+/**
+ * Get the latest information for the specified platform account
+ * @param accountKey Account identifier
+ * @returns Returns account information
+ */
+export async function refreshAccountInfo(accountKey: string): Promise<AccountInfo> {
+  // Get platform information
+  const platformInfos = getPlatformInfos();
+  // Get specified platform account information
+  const platformInfo = platformInfos.find((p) => p.accountKey === accountKey);
+  // If the specified platform account information cannot be found, throw an error
+  if (!platformInfo) {
+    throw new Error(`Account information not found: ${accountKey}`);
+  }
+
+  let accountInfo: AccountInfo;
+
+  // Get account information based on platform type, specific function implementations are in the `src/sync/account` folder
+  if (accountKey === 'x') {
+    accountInfo = await getXAccountInfo();
+  } else if (accountKey === 'tiktok') {
+    accountInfo = await getTiktokAccountInfo();
+  } else if (accountKey === 'douyin') {
+    accountInfo = await getDouyinAccountInfo();
+  } else if (accountKey === 'rednote') {
+    accountInfo = await getRednoteAccountInfo();
+  } else if (accountKey === 'bilibili') {
+    accountInfo = await getBilibiliAccountInfo();
+  } else {
+    return null;
+  }
+
+  if (!accountInfo) {
+    console.error(`Failed to get account information: ${accountKey}`);
+    removeAccountInfo(accountKey);
+    return null;
+  }
+
+  // Update platform information and save to storage
+  await saveAccountInfo(accountKey, accountInfo);
+
+  return accountInfo;
+}
+
+/**
+ * Refresh account information for all platforms
+ * @returns Map of all account information
+ */
+
+// This function is called in the `src/options/index.tsx` file, i.e., when the user opens the options page, this function will be called to get platform account information
+export async function refreshAllAccountInfo(): Promise<Record<string, AccountInfo>> {
+  // Get all platform information
+  const platformInfos = getPlatformInfos();
+  const results: Record<string, AccountInfo> = {};
+  const errors: Record<string, Error> = {};
+
+  // Refresh all account information in parallel
+  await Promise.allSettled(
+    platformInfos.map(async (platformInfo) => {
+      try {
+        if (platformInfo.accountKey) {
+          const accountInfo = await refreshAccountInfo(platformInfo.accountKey);
+          results[platformInfo.accountKey] = accountInfo;
+        }
+      } catch (error) {
+        console.error(`Failed to refresh account information: ${platformInfo.accountKey}`, error);
+        errors[platformInfo.accountKey] = error as Error;
+      }
+    }),
+  );
+
+  // If all requests failed, throw an error
+  if (Object.keys(results).length === 0 && Object.keys(errors).length > 0) {
+    throw new Error('All account information refresh failed');
+  }
+
+  return results;
+} 

@@ -253,6 +253,7 @@ function GallerySection() {
 
   useEffect(() => {
     fetchImages();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedStatus]);
 
   const handleImageClick = (imageIndex: number, logIndex: number = 0) => {

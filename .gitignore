@@ -61,3 +61,6 @@ worker/dist
 task_plan.md
 findings.md
 progress.md
+
+# fumadocs-mdx generated files
+.source/

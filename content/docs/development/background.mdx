@@ -1,0 +1,39 @@
+---
+title: 后台
+---
+
+在 `src/background/index.ts` 文件中，我们定义了 `background` 的逻辑，例如标签页管理、消息处理等。
+
+监听消息，通过 `defaultMessageHandler` 函数来处理消息，通过 `tabsManagerMessageHandler` 函数来处理标签页管理消息，通过 `trustDomainMessageHandler` 函数来处理信任域消息。
+
+浏览器扩展通过 `chrome.runtime.onMessage` 来监听消息，可以接受来自 `content script` 的消息，也可以接受来自 `options` 页面的消息。
+
+同时我们监听了标签页的更新和删除事件，用于标签页管理，当用户使用浏览器的标签页管理功能时，会触发这些事件，将更新的信息传递到我们来处理，例如重新加载、关闭、刷新等。以同步标签页在 `Sidepanel` 中的状态。
+
+```ts
+chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
+  defaultMessageHandler(request, sender, sendResponse);
+  tabsManagerMessageHandler(request, sender, sendResponse);
+  trustDomainMessageHandler(request, sender, sendResponse);
+  return true;
+});
+
+// 监听标签页更新
+chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
+  tabsManagerHandleTabUpdated(tabId, changeInfo, tab);
+});
+
+// 监听标签页删除
+chrome.tabs.onRemoved.addListener((tabId) => {
+  tabsManagerHandleTabRemoved(tabId);
+});
+```
+
+保活机制是为了能够保持 Background 在浏览器后台持续运行，防止被浏览器杀死。
+
+```ts
+// Keep Alive || 保活机制 || START
+const quantumKeepAlive = new QuantumEntanglementKeepAlive();
+quantumKeepAlive.startEntanglementProcess();
+// Keep Alive || 保活机制 || END
+```

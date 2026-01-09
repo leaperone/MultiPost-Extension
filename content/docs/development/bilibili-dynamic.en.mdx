@@ -1,0 +1,377 @@
+---
+title: Bilibili Dynamic Publishing Feature Development Record
+---
+
+## Add Platform at Corresponding Location
+
+Register `Bilibili` platform's dynamic publishing in the `src/sync/dynamic.ts` file.
+
+```ts
+  DYNAMIC_BILIBILI: {
+    type: 'DYNAMIC', // Identifies this platform as a dynamic publishing platform
+    name: 'DYNAMIC_BILIBILI', // Platform name, globally unique
+    homeUrl: 'https://t.bilibili.com', // Platform homepage, can be filled with any URL, can be the login page
+    faviconUrl: 'https://static.hdslb.com/images/favicon.ico', // Platform icon, can find the website's Favicon icon address in F12
+    iconifyIcon: 'ant-design:bilibili-outlined', // Platform icon, can find icons at [Iconify](https://icones.js.org/), this field is optional
+    platformName: chrome.i18n.getMessage('platformBilibili'), // Platform name | i18n internationalization
+    injectUrl: 'https://t.bilibili.com', // Dynamic publishing page, the page that will be opened first when the actual script executes and script injection occurs
+    injectFunction: DynamicBilibili, // Dynamic publishing function, this function will be injected into the page opened by `injectUrl`
+    tags: ['CN'], // Platform tags | CN tag identifies this platform as a Chinese platform (this tag is a default tag, similar tags include EN tag for English platforms)
+    accountKey: 'bilibili', // Platform account, this field is used to distinguish accounts of different platforms, when the actual script executes, it will find the corresponding account information in the `src/sync/account/bilibili.ts` file based on this field
+  },
+```
+
+## Dynamic Publishing Function
+
+The dynamic publishing function is the core of the dynamic publishing feature. This function will be injected into the page opened by `injectUrl`.
+
+We implement the `DynamicBilibili` function in the `src/sync/dynamic/bilibili.ts` file. You can view the specific code by clicking [here](https://github.com/leaperone/MultiPost-Extension/blob/main/src/sync/dynamic/bilibili.ts).
+
+The following record is extracted from the `DynamicBilibili` function, mainly recording some key steps of dynamic publishing.
+
+### 1. Open Dynamic Publishing Page
+
+Bilibili's dynamic publishing page is `https://t.bilibili.com`, we first need to open this page; this step is already defined when injecting the script.
+
+### 2. Find Title and Content Input Boxes and Input Content
+
+After entering the dynamic publishing page, we need to find the title and content input boxes.
+
+Manually open Bilibili's dynamic publishing page, then open F12 developer tools, right-click on the title and content input boxes, select `Inspect`, and find the corresponding elements.
+
+Through element inspection, we can find the title and content input box elements as follows:
+
+```html
+<div class="bili-dyn-publishing__title">
+  <input
+    maxlength="20"
+    placeholder="好的标题更容易获得支持，选填20字"
+    class="bili-dyn-publishing__title__input"
+  />
+  <div
+    class="bili-dyn-publishing__title__helper"
+    style="display: none;"
+  >
+    <div class="bili-dyn-publishing__title__clear"><div class="bili-dyn-publishing__title__close"></div></div>
+    <div class="bili-dyn-publishing__title__indicator">0</div>
+  </div>
+</div>
+```
+
+```html
+<div class="bili-dyn-publishing__input">
+  <div
+    class="bili-rich-textarea"
+    style="max-height: 180px;"
+  >
+    <div
+      placeholder="有什么想和大家分享的？"
+      contenteditable="true"
+      class="bili-rich-textarea__inner empty"
+      style="font-size: 15px; line-height: 24px; min-height: 24px;"
+    ></div>
+  </div>
+  <div
+    class="bili-at-popup"
+    style="left: 0px; top: 24px; display: none;"
+  >
+    <div class="bili-at-popup__hint">选择或输入你想@的人</div>
+    <div class="bili-at-popup__list"></div>
+  </div>
+</div>
+```
+
+From the above code, we can see the key elements of the title and content input boxes are:
+
+- Title input box: `<input maxlength="20" placeholder="好的标题更容易获得支持，选填20字" class="bili-dyn-publishing__title__input">`
+- Content input box: `<div placeholder="有什么想和大家分享的？" contenteditable="true" class="bili-rich-textarea__inner empty" style="font-size: 15px; line-height: 24px; min-height: 24px;">​</div>`
+
+To input content into the title and content input boxes, we need to first find these two elements, then input content into them. In the code it appears as follows:
+
+```ts
+// Destructure the required fields from the incoming data
+// content: dynamic text content
+// images: dynamic image content (if any)
+// title: dynamic title (if any)
+const { content, images, title } = data.data as DynamicData;
+
+// Wait for Bilibili's dynamic publishing page content editor to load
+// Use attribute selector to locate the div element with specific placeholder and contenteditable attributes
+// This element is Bilibili's rich text editor container
+// waitForElement function will wait for the element to appear on the page, then return that element, specific implementation can be referenced in the waitForElement function in src/sync/dynamic/bilibili.ts file
+// If you don't understand, you can Google to review HTML attribute selectors
+const editor = (await waitForElement(
+  'div[placeholder="有什么想和大家分享的？"][contenteditable="true"]',
+)) as HTMLDivElement;
+
+// Simulate user clicking on the editor behavior, trigger the editor's focus event
+// This step is necessary because some editor functions only work properly after gaining focus
+editor.focus();
+
+// Clear the current content in the editor
+// Bilibili automatically caches user's unpublished dynamic content
+// To avoid content confusion, need to clear the editor first
+editor.textContent = '';
+
+// Set new dynamic content to the editor
+// If content is empty, set to empty string
+editor.textContent = content || '';
+
+// Create an event object that simulates user input
+// InputEvent can better simulate real user input behavior than ordinary Event objects
+// cancelable: true means the event can be canceled
+// inputType: 'insertText' means this is a text insertion operation
+// data: contains the actual text content to be inserted
+const inputEvent = new InputEvent('input', {
+  bubbles: true,
+  cancelable: true,
+  inputType: 'insertText',
+  data: content || '',
+});
+
+// Trigger input event
+// This step is necessary because Bilibili's editor needs to update its internal state through this event
+// Including character count, publish button state, etc., all depend on this event
+editor.dispatchEvent(inputEvent);
+
+// If title parameter exists, perform title input processing
+if (title) {
+  // Wait for the title input box element to appear on the page
+  // Use CSS selector 'input.bili-dyn-publishing__title__input' to locate the element
+  // Assert the returned element as HTMLInputElement type to get input box specific properties and methods
+  const titleInput = (await waitForElement('input.bili-dyn-publishing__title__input')) as HTMLInputElement;
+
+  // Trigger the input box focus event, simulating user clicking on the input box behavior
+  titleInput.focus();
+
+  // Set the input box value to the incoming title content
+  titleInput.value = title;
+
+  // Create and trigger input event
+  // bubbles: true means the event will bubble to parent elements
+  // This is to ensure that Bilibili's event listeners can capture the input event
+  titleInput.dispatchEvent(new Event('input', { bubbles: true }));
+
+  // Create and trigger change event
+  // Need to trigger this event when the input box value changes
+  // This ensures that Bilibili's form validation and data synchronization mechanisms can work properly
+  titleInput.dispatchEvent(new Event('change', { bubbles: true }));
+}
+```
+
+### 3. Upload Images
+
+After completing the above steps, we need to upload images.
+
+For general platforms, image uploading is done through `type="file"` input tags.
+
+But in Bilibili's dynamic publishing page, we can't directly find `type="file"` input tags.
+
+For this, we think this Input might be hidden and not directly mounted to the page.
+
+So we create content scripts to listen for Input creation. The specific code is in the `src/contents/helper.ts` file.
+
+```ts
+/* eslint-disable prefer-const */
+
+export {};
+import type { PlasmoCSConfig } from 'plasmo';
+
+// Plasmo content script configuration
+export const config: PlasmoCSConfig = {
+  matches: ['<all_urls>'], // Match all URLs, so the script can run on any page
+  world: 'MAIN', // Execute in the main world, so it can access the page's DOM and JavaScript context
+  run_at: 'document_start', // Execute the script when the page starts loading, ensuring no element creation is missed
+};
+
+// Save the original createElement method for subsequent calls
+let originalCreateElement = document.createElement.bind(document);
+// Array to store all created input elements
+export let createdInputs: HTMLInputElement[] = [];
+
+// Rewrite document.createElement method to listen for input element creation
+// This way we can capture all dynamically created input elements
+document.createElement = function (tagName, options) {
+  // Call the original createElement method to create the element
+  let element = originalCreateElement(tagName, options);
+  // If the created element is an input element, add it to the array
+  if (tagName.toLowerCase() === 'input') {
+    createdInputs.push(element);
+  }
+  return element;
+};
+
+// Handle messages from other scripts
+function handleMessage(event: MessageEvent) {
+  const data = event.data;
+
+  // If it's a Bilibili dynamic image upload message, call the corresponding handler function
+  if (data.type === 'BILIBILI_DYNAMIC_UPLOAD_IMAGES') {
+    handleBilibiliImageUpload(event);
+  }
+  // Handler logic for other platforms can be added here
+}
+
+// Add message event listener
+window.addEventListener('message', handleMessage);
+```
+
+By rewriting the `document.createElement` method, we listened to the creation of `input` tags, then use the `createdInputs` array to store the created `input` tags.
+
+During development, you can print out the created `input` tags through `console.log(createdInputs)`.
+
+After injecting the script, we found the hidden `input` tag. Next, we need to use `window.postMessage` to pass files to the content script during publishing. This is why the `helper.ts` file needs to listen for `message` events through `window.addEventListener('message', handleMessage);`.
+
+We return to the `src/sync/dynamic/bilibili.ts` file and use `window.postMessage` to pass files to the content script during publishing.
+
+First, because Bilibili's dynamic publishing page caches images from the last unsubmitted upload, we need to clean up uploaded images first.
+
+```ts
+// Function to clean up uploaded images
+async function cleanUploadedImages(): Promise<void> {
+  console.log('Starting to clean up uploaded images');
+
+  // Clean up at most 20 images to prevent infinite loops
+  for (let i = 0; i < 20; i++) {
+    // 1 second interval between each operation to avoid too fast operations causing page unresponsiveness
+    await new Promise((resolve) => setTimeout(resolve, 1000));
+
+    // Find image delete button
+    // Use querySelector to get the first delete button
+    const removeButton = document.querySelector('div.bili-pics-uploader__item__remove') as HTMLElement;
+
+    // If no delete button is found, it means there are no more images to clean up
+    if (!removeButton) {
+      console.log(`No more images found, cleaned up ${i} images`);
+      break;
+    }
+
+    // Simulate clicking the delete button
+    removeButton.click();
+    console.log(`Cleaned up image ${i + 1}`);
+  }
+
+  console.log('Image cleanup completed');
+}
+
+// Main function to handle image uploading
+export async function handleBilibiliImageUpload(event: MessageEvent) {
+  // Prevent duplicate image upload processing
+  if (isProcessingImage) {
+    return;
+  }
+  isProcessingImage = true;
+  const files = event.data.files;
+
+  // Wait for image upload component to load
+  await waitForElement('.bili-dyn-publishing__image-upload');
+
+  // Find image upload input box among all created input elements
+  const uploadInput = createdInputs.find((input) => input.type === 'file' && input.name === 'upload');
+  if (!uploadInput) {
+    return;
+  }
+
+  // Create DataTransfer object to simulate file dragging
+  const dataTransfer = new DataTransfer();
+
+  // Add all image files to the DataTransfer object
+  files.forEach((file) => dataTransfer.items.add(file));
+  // Set the file list to the upload input box
+  uploadInput.files = dataTransfer.files;
+
+  // Get the add image button
+  const addButton = document.querySelector('.bili-pics-uploader__add');
+
+  // Temporarily disable the input box to prevent duplicate uploads
+  uploadInput.disabled = true;
+  // Trigger click event on the add button
+  addButton?.dispatchEvent(new Event('click', { bubbles: true }));
+
+  // Wait 1 second to ensure the click event has been processed
+  await new Promise((resolve) => setTimeout(resolve, 1000));
+
+  // Re-enable the input box and trigger change event
+  uploadInput.disabled = false;
+  uploadInput.dispatchEvent(new Event('change', { bubbles: true }));
+
+  // Reset processing state
+  isProcessingImage = false;
+}
+
+// Function to check if image upload is completed
+async function checkImageUploadCompletion(
+  expectedNewCount: number, // Expected number of newly uploaded images
+  initialCount: number, // Number of images before upload
+  maxAttempts = 30, // Maximum number of attempts, default 30
+  interval = 1000, // Interval between each check, default 1 second
+): Promise<void> {
+  // Loop check within maximum attempts
+  for (let attempt = 0; attempt < maxAttempts; attempt++) {
+    // Get current number of successfully uploaded images
+    const currentSuccessCount = document.querySelectorAll('div.bili-pics-uploader__item.success').length;
+    // Calculate number of newly uploaded successful images
+    const newlyUploadedCount = currentSuccessCount - initialCount;
+
+    // If the number of newly uploaded images reaches the expected number, upload is complete
+    if (newlyUploadedCount === expectedNewCount) {
+      console.log(`All ${expectedNewCount} new images have been successfully uploaded`);
+      return;
+    }
+    // Wait for the specified time before checking again
+    await new Promise((resolve) => setTimeout(resolve, interval));
+  }
+
+  // If maximum attempts are exceeded and still not completed, output warning information
+  const finalSuccessCount = document.querySelectorAll('div.bili-pics-uploader__item.success').length;
+  const actualNewlyUploadedCount = finalSuccessCount - initialCount;
+  console.warn(`Image upload check timeout: expected ${expectedNewCount} new images, actually ${actualNewlyUploadedCount} new images`);
+}
+```
+
+### 4. Publish Dynamic
+
+After completing the above steps, we need additional processing for auto-publishing. Specifically, find the publish button and click it.
+
+The specific code is in the `src/sync/dynamic/bilibili.ts` file.
+
+```ts
+if (data.isAutoPublish) {
+  const maxAttempts = 3;
+  for (let attempt = 0; attempt < maxAttempts; attempt++) {
+    const publishButton = document.querySelector('div.bili-dyn-publishing__action.launcher') as HTMLDivElement;
+    if (publishButton) {
+      publishButton.click();
+      console.log('Publish button clicked');
+      await new Promise((resolve) => setTimeout(resolve, 3000));
+      window.location.reload();
+      return;
+    }
+    await new Promise((resolve) => setTimeout(resolve, 1000));
+  }
+} else {
+  // If auto-publish is not needed, find the publish button and add click event listener, after listening to user clicking publish button, refresh the page
+  const publishButton = (await waitForElement('div.bili-dyn-publishing__action.launcher')) as HTMLDivElement;
+
+  if (publishButton) {
+    // Add click event listener
+    publishButton.addEventListener('click', async () => {
+      await new Promise((resolve) => setTimeout(resolve, 3000));
+      window.location.reload();
+    });
+    console.log('Click event listener added to publish button');
+  } else {
+    console.log('Publish button not found');
+  }
+}
+```
+
+## Mission Accomplished
+
+So far, we have completed Bilibili's dynamic publishing feature.
+
+The difficulty of Bilibili's dynamic publishing mainly lies in image upload processing, because there's no obvious `type="file"` input tag.
+
+For this, we listened to the creation of `input` tags by rewriting the `document.createElement` method, then used the `createdInputs` array to store the created `input` tags.
+
+During publishing, we use `window.postMessage` to pass files to the content script. 

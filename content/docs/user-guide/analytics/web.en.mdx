@@ -1,0 +1,41 @@
+---
+title: Analytics Web (Beta)
+description: Analyze your own website traffic. Open beta testing in progress.
+---
+
+## Introduction
+
+MultiPost Analytics is a one-stop analysis service launched by MultiPost, which can monitor your web browsing, social media accounts, etc.  
+Currently Web trace has been launched for open beta testing, you can use it to analyze your own website traffic.
+
+It's very simple to use, you just need to add your website in MultiPost Web and add the monitoring code to your webpage `<head>`.
+
+## Usage 
+1. Go to [MultiPost Analytics Dashboard](https://multipost.app/dashboard/analytics);
+2. Add your website in the upper right corner of the page;
+3. Add the monitoring code to your webpage `<head>`;
+4. Refresh your webpage, wait a moment, and you can see your website traffic in the MultiPost Analytics dashboard.
+
+## Monitoring Code
+
+{/* prettier-ignore */}
+```html copy
+{`<script
+  async
+  src="https://multipost.app/tracker/index.js"
+  mdata-website-id="<your website ID>"
+  mdata-auto-track="true"
+/>`}
+```
+
+Description:
+- `mdata-auto-track` is whether to automatically track your webpage browsing.
+- `mdata-website-id` is the website ID you added in MultiPost Analytics.
+
+## Dashboard
+
+In the dashboard, you can see your website traffic and other data. Since Web trace is still in open beta, there are still many placeholders, please pay attention to identify them.
+
+## Data
+
+WIP 

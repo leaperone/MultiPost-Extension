@@ -1,0 +1,152 @@
+---
+title: Type Definitions
+---
+
+## Basic Data for Publishing Content
+
+First, we define a series of types as the communication foundation for the extension to publish content.
+
+When you need to publish content, you need to organize data of type `SyncData`, then call the `funcPublish` function to publish.
+
+```typescript
+export interface SyncData {
+  platforms: SyncDataPlatform[];
+  isAutoPublish: boolean;
+  data: DynamicData | ArticleData | VideoData;
+}
+
+export interface SyncDataPlatform {
+  name: string;
+  injectUrl: string;
+  extraConfig:
+    | {
+        customInjectUrls?: string[]; // Beta feature for custom injection URLs
+      }
+    | unknown;
+}
+```
+
+### Organization of Publishing Data
+
+Publishing data needs to be organized according to platform type, such as dynamic publishing, article publishing, video publishing, etc.
+
+For example, when you want to publish dynamics, you need to organize data of type `DynamicData` into the `data` field of `SyncData`.
+
+```typescript
+// DynamicData is data for dynamic publishing, used to organize dynamic publishing data
+export interface DynamicData {
+  title: string; // Title
+  content: string; // Content
+  images: FileData[]; // Images
+  videos: FileData[]; // Videos, this field is currently only used for certain platforms that allow simultaneous publishing of images and videos, such as Instagram, X, etc.
+}
+
+// ArticleData is data for article publishing, used to organize article publishing data
+// When publishing, HTML or Markdown format content is used for publishing processing according to platform needs
+export interface ArticleData {
+  title: string; // Title
+  content: string; // Content HTML
+  digest: string; // Summary
+  cover: FileData; // Cover
+  images: FileData[]; // Images
+  videos: FileData[]; // Videos
+  fileDatas: FileData[]; // Files
+  originContent?: string; // Original content HTML
+  markdownContent?: string; // Converted markdown content
+  markdownOriginContent?: string; // Original markdown content
+}
+
+// VideoData is data for video publishing, used to organize video publishing data
+export interface VideoData {
+  title: string; // Title
+  content: string; // Content HTML
+  video: FileData; // Video
+}
+
+// FileData is file data, used to organize file data
+export interface FileData {
+  name: string; // File name
+  url: string; // File link, usually a blob link, extension scripts allow downloading files from any blob link
+  type: string; // File type
+  size: number; // File size
+  originUrl?: string; // Original file link, usually used to store the original Url of files from https sources
+}
+```
+
+### Platform Information
+
+When you organize `SyncData` data, you need to get basic platform information, such as platform name, injection URL, etc.
+
+For ease of management, we define data of type `PlatformInfo` to organize platform information.
+
+```typescript
+// PlatformInfo is platform information, used to organize platform information
+export interface PlatformInfo {
+  type: 'DYNAMIC' | 'VIDEO' | 'ARTICLE'; // Platform type
+  name: string; // Platform name
+  homeUrl: string; // Platform homepage
+  faviconUrl?: string; // Platform icon
+  iconifyIcon?: string; // Platform icon
+  platformName: string; // Platform name
+  username?: string; // Username
+  userAvatarUrl?: string; // User avatar
+  injectUrl: string; // Platform publishing page
+  injectFunction: (data: SyncData) => Promise<void>; // Platform publishing function
+  tags?: string[]; // Platform tags
+  accountKey: string; // Platform account identifier
+  accountInfo?: AccountInfo; // Platform account information
+}
+
+// AccountInfo is account information, used to organize account information
+export interface AccountInfo {
+  provider: string; // Account provider
+  accountId: string; // Account ID
+  username: string; // Account name
+  description?: string; // Account description
+  profileUrl?: string; // Account link
+  avatarUrl?: string; // Account avatar
+  extraData: unknown; // Account extra data
+}
+```
+
+## Tab Management
+
+Tab management is another important feature of the extension, used to manage tabs created during the publishing process.
+
+We define data of type `TabManagerMessage` to organize tab management data.
+
+```typescript
+export interface TabManagerMessage {
+  syncData: SyncData;
+  tabs: {
+    tab: chrome.tabs.Tab;
+    platformInfo: SyncDataPlatform;
+  }[];
+}
+```
+
+## Extension Interface
+
+Extension interface is another important feature of the extension. We allow developers to call the extension's content publishing functionality through the extension interface.
+
+We define data of types `ExtensionExternalRequest` and `ExtensionExternalResponse` to organize extension interface data.
+
+For more information, refer to [API Documentation](/docs/api-reference)
+
+```typescript
+export type ExtensionExternalRequest<T> = {
+  type: 'request';
+  traceId: string;
+  action: string;
+  data: T;
+};
+
+export interface ExtensionExternalResponse<T> {
+  type: 'response';
+  traceId: string;
+  action: string;
+  code: number;
+  message: string;
+  data: T;
+}
+``` 

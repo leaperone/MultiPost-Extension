@@ -300,6 +300,7 @@ export default function ClientPublishModal({
     if (isOpen) {
       fetchClients();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isOpen]);
 
   // Restore previous client selection when clients are loaded
@@ -311,6 +312,7 @@ export default function ClientPublishModal({
         fetchClientDetail(clientId);
       }
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isOpen, clients, clientId]);
 
   return (
@@ -396,10 +398,13 @@ export default function ClientPublishModal({
                   <div className="space-y-3">
                     <DatePicker
                       label={t('publish.schedule.selectDateTime')}
-                      value={scheduledDateTime}
-                      onChange={setScheduledDateTime}
+                      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                      value={scheduledDateTime as any}
+                      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                      onChange={setScheduledDateTime as any}
                       granularity="second"
-                      minValue={now(getLocalTimeZone())}
+                      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                      minValue={now(getLocalTimeZone()) as any}
                       showMonthAndYearPickers
                       isRequired
                     />

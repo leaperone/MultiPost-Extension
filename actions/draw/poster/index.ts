@@ -1,7 +1,7 @@
 'use server';
 
 import { multipostDb } from '@/lib/db';
-import { PosterGenerationSchema, PosterGenerationStatus, Category } from './types';
+import { PosterGenerationStatus, Category, type PosterGenerationSchema as PosterGenerationSchemaType } from './types';
 import { auth } from '@/auth';
 import { deductCredit } from '@/actions/credit';
 import { PRICING } from '@/actions/credit/types';
@@ -28,7 +28,7 @@ export async function getAvailableModels() {
   };
 }
 
-export async function generatePoster(data: PosterGenerationSchema) {
+export async function generatePoster(data: PosterGenerationSchemaType) {
   try {
     const session = await auth();
     if (!session?.user || !session.user.id) {

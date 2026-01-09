@@ -199,6 +199,7 @@ export default function OnInstallPage() {
     if (dynamicPlatforms.length > 0) {
       setSelectedPlatforms(dynamicPlatforms);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {

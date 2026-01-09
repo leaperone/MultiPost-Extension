@@ -1,0 +1,65 @@
+---
+title: Start Development
+---
+
+## Overview
+The Development section introduces the development process of MultiPost Extension. It helps you quickly participate in the development community and contribute code.
+
+## Environment Setup
+node v20.17.0
+pnpm v10.7.0
+
+## Getting Started
+
+First, install dependencies:
+
+```bash
+pnpm i
+```
+
+Then, run the Plasmo development server:
+
+```bash
+pnpm dev
+```
+
+Turn on developer mode in the browser extension page, click `Load unpacked extension` and find `build/chrome-mv3-dev` to load.
+
+## Build Production Version
+
+Run the following command:
+
+```bash
+pnpm build
+```
+
+You can find the build content in the `build` folder
+
+## Development Instructions
+
+### Documentation You Need to Know
+
+[Chrome Extension API Reference](https://developer.chrome.com/docs/extensions/reference/api)
+
+[Edge Extension](https://learn.microsoft.com/en-us/microsoft-edge/extensions-chromium/)
+
+[Plasmo Docs](https://docs.plasmo.com/)
+
+## Recommended Articles
+
+- [AI Full-Stack Guide Vol.033: Learn to Publish Content to Multiple Platforms in 5 Minutes](https://mp.weixin.qq.com/s/K7yh6EsBLOGJzl8Gh8SwLw)
+
+### Development Documentation
+
+It should be noted that development for different platforms differs in details, but generally follows similar implementation patterns. It cannot escape the implementation pattern of `find elements - edit elements - auto publish`. You can learn about the development details of different platforms through the following documentation:
+
+- [Build Publish Script](/docs/development/build-script)
+- [Douyin Dynamic Publishing Feature Development Record](/docs/development/douyin-dynamic)
+- [Douyin Account Information Retrieval](/docs/development/douyin-account)
+- [Bilibili Dynamic Publishing Feature Development Record](/docs/development/bilibili-dynamic)
+
+### Contributing
+
+We very much welcome your contributions, you can submit your code through `pull request`.
+
+Before submitting, please first read the [Contributing Guide](https://github.com/leaperone/MultiPost-Extension/blob/main/CONTRIBUTING.md). 

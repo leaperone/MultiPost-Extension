@@ -1,0 +1,8 @@
+{
+  "title": "API Reference",
+  "description": "How to use the API of MultiPost",
+  "root": true,
+  "pages": [
+    "index"
+  ]
+}

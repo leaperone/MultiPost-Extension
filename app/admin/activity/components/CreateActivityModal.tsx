@@ -24,7 +24,7 @@ import {
 } from '@heroui/react';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
-import { parseDate, type DateValue } from '@internationalized/date';
+import { parseDate } from '@internationalized/date';
 import { PlusIcon } from 'lucide-react';
 import { TagInput } from '@/components/ui/tag-input';
 import { useTranslation } from '@/i18n/client';
@@ -44,7 +44,7 @@ export function CreateActivityModal() {
     { value: 'COMMENT_POST', label: t('activity.create.task_types.comment_post') },
   ] as const;
 
-  const handleDateChange = (value: DateValue | null) => {
+  const handleDateChange = (value: { toDate: (timezone: string) => Date } | null) => {
     if (value) {
       const date = value.toDate('UTC');
       setExpiredAt(date);
@@ -225,8 +225,10 @@ export function CreateActivityModal() {
                     <label className="text-sm font-medium">{t('activity.create.labels.deadline')}</label>
                     <DatePicker
                       className="w-full"
-                      onChange={handleDateChange}
-                      minValue={parseDate(new Date().toISOString().split('T')[0])}
+                      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                      onChange={handleDateChange as any}
+                      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                      minValue={parseDate(new Date().toISOString().split('T')[0]) as any}
                       label={t('activity.create.placeholders.deadline')}
                     />
                   </div>

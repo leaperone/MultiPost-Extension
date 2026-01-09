@@ -1,0 +1,104 @@
+---
+title: Tab Management
+---
+
+Tab management is located in the `src/background/services/tabs.ts` file.
+
+Tab management is mainly to allow users to manage tabs through Sidepanel after tab creation, such as reload, close, refresh, etc.
+
+```ts
+import { injectScriptsToTabs, type SyncData } from '~sync/common';
+import { getDefaultPlatformInfo } from '~sync/common';
+
+// Define types used for tab management
+export interface TabManagerMessage {
+  // Publishing information
+  syncData: SyncData;
+  // Tab information
+  tabs: {
+    tab: chrome.tabs.Tab;
+    platform: string;
+  }[];
+}
+
+// Tab management message array
+const tabsManagerMessages: TabManagerMessage[] = [];
+
+// Handle tab updates
+const handleTabUpdated = (tabId: number, changeInfo: chrome.tabs.TabChangeInfo, tab: chrome.tabs.Tab) => {
+  tabsManagerMessages.forEach((group, index) => {
+    const updatedTabs = group.tabs.map((item) => (item.tab.id === tabId ? { ...item, tab } : item));
+    tabsManagerMessages[index] = { ...group, tabs: updatedTabs };
+  });
+};
+
+// Handle tab removal
+const handleTabRemoved = (tabId: number) => {
+  tabsManagerMessages.forEach((group, index) => {
+    const filteredTabs = group.tabs.filter((item) => item.tab.id !== tabId);
+    tabsManagerMessages[index] = { ...group, tabs: filteredTabs };
+  });
+};
+
+// Get tab management messages
+export const getTabsManagerMessages = () => {
+  return tabsManagerMessages;
+};
+
+// Add tab management messages
+export const addTabsManagerMessages = (data: TabManagerMessage) => {
+  tabsManagerMessages.push(data);
+};
+
+// Tab update handling
+export const tabsManagerHandleTabUpdated = handleTabUpdated;
+// Tab removal handling
+export const tabsManagerHandleTabRemoved = handleTabRemoved;
+// Tab management message handling
+export const tabsManagerMessageHandler = (request, sender, sendResponse) => {
+  // Reload tab
+  if (request.type === 'MUTLIPOST_EXTENSION_REQUEST_PUBLISH_RELOAD') {
+    const { tabId, tabGroup } = request.data;
+    const tabInfo = tabGroup.tabs.find((t) => t.tab.id === tabId);
+
+    // If tab information exists, get platform information
+    if (tabInfo) {
+      const platformInfo = getDefaultPlatformInfo(tabInfo.platform);
+
+      // If platform information exists, update tab URL and inject script
+      if (platformInfo) {
+        chrome.tabs.update(tabId, { url: platformInfo.injectUrl, active: true }).then(() => {
+          injectScriptsToTabs([[tabInfo.tab, tabInfo.platform]], tabGroup.syncData);
+        });
+      } else {
+        console.error(`Unable to get information for platform ${tabInfo.platform}`);
+        sendResponse('error');
+        return;
+      }
+    } else {
+      console.error(`Information for tab ID ${tabId} not found`);
+      sendResponse('error');
+      return;
+    }
+    sendResponse('success');
+  }
+  // Get tab management messages
+  if (request.type === 'MUTLIPOST_EXTENSION_TABS_MANAGER_REQUEST_TABS') {
+    sendResponse(getTabsManagerMessages());
+  }
+  // Add tab management messages
+  if (request.type === 'MUTLIPOST_EXTENSION_TABS_MANAGER_REQUEST_ADD_TABS') {
+    const { data, tabs } = request;
+    addTabsManagerMessages({
+      syncData: data,
+      tabs: tabs.map((t: [chrome.tabs.Tab, string]) => ({
+        tab: t[0],
+        platform: t[1],
+      })),
+    });
+    sendResponse('success');
+  }
+};
+```
+
+The specific location where this functionality is used is in the `src/components/Sidepanel/Tabs/TabsManager.tsx` file. 

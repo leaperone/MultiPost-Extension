@@ -1,0 +1,39 @@
+---
+title: File Structure
+---
+
+## Top Level
+
+| Folder | Description |
+| --- | --- |
+| src | Contains actual running code |
+| build | Contains built files, including Dev and Prod versions |
+| docs | Contains development documentation |
+| assets | Contains extension icons and other resources |
+| locales | Contains translation files for multiple languages |
+| .cursor| Contains Cursor rule files |
+
+## Src Folder
+
+| Folder | Description |
+| --- | --- |
+| src/sync | Contains code for operating different platforms |
+| src/options | Contains Options page, where content is organized and published |
+| src/components | Contains all frontend interface operation components |
+| src/contents | Contains content scripts injected into web pages |
+| src/background | Contains background scripts |
+| src/popup | Contains popup page |
+| src/sidepanel | Contains sidebar page |
+| src/utils | Contains utility functions |
+
+## Sync Folder
+
+| Folder | Description |
+| --- | --- |
+| src/sync/dynamic | Contains operation scripts for dynamic publishing on various platforms |
+| src/sync/video | Contains operation scripts for video publishing on various platforms |
+| src/sync/article | Contains operation scripts for article publishing on various platforms |
+| src/sync/account | Contains scripts for getting account information from various platforms |
+| src/sync/common.ts | Defines common types and functions |
+| src/sync/account.ts | Defines account information types and common methods |
+| src/sync/extraconfig.ts | Defines storage and retrieval of additional configurations for each platform | 

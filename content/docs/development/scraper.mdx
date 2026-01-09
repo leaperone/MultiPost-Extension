@@ -1,0 +1,107 @@
+---
+title: 内容获取原理
+---
+
+在 `src/contents/scraper.ts` 文件中，我们定义了 `scraper` 的逻辑，用于文章发布的时候获取网页内容。
+
+同样，我们会监听来自 `Options` 页面的消息，当用户在 `Article` 标签页中点击 `获取内容` 按钮时，会触发该消息，并调用 `scrapeContent` 函数来获取网页内容。
+
+```ts
+chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+  if (message.type === 'MUTLIPOST_EXTENSION_REQUEST_SCRAPER_START') {
+    const scrapeFunc = async () => {
+      const articleData = await scrapeContent();
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+      sendResponse(articleData);
+    };
+    // 平滑滚动到页面底部
+    window.scrollTo({
+      top: document.body.scrollHeight,
+      behavior: 'smooth',
+    });
+
+    // 监听滚动完成事件
+    const checkScrollEnd = () => {
+      if (window.innerHeight + window.pageYOffset >= document.body.offsetHeight - 2) {
+        // 滚动完成，发送响应
+        scrapeFunc();
+      }
+    };
+
+    window.addEventListener('scroll', checkScrollEnd);
+
+    // 设置超时，以防滚动没有触发完成事件
+    setTimeout(() => {
+      window.removeEventListener('scroll', checkScrollEnd);
+      scrapeFunc();
+    }, 5000); // 5秒后超时
+  }
+  return true; // 保持消息通道开放
+});
+```
+
+默认我们会使用 `defaultScraper` 函数来获取网页内容，其次它会根据网页的 URL 来判断使用哪个 `scraper` 函数。
+
+例如 `https://blog.csdn.net/` 会使用 `scrapeCSDNContent` 函数来获取网页内容。
+
+```ts
+export default async function scrapeContent(): Promise<ArticleData | undefined> {
+  const url = window.location.href;
+
+  // 针对不同网址开头使用不同的scraper
+  const scraperMap: { [key: string]: () => Promise<ArticleData | undefined> } = {
+    'https://blog.csdn.net/': scrapeCSDNContent,
+    'https://zhuanlan.zhihu.com/p/': scrapeZhihuContent,
+    'https://mp.weixin.qq.com/s/': scrapeWeixinContent,
+    'https://juejin.cn/post/': scrapeJuejinContent,
+    'https://www.jianshu.com/p/': scrapeJianshuContent,
+  };
+
+  const scraper = Object.keys(scraperMap).find((key) => url.startsWith(key));
+  if (scraper) {
+    return scraperMap[scraper]();
+  }
+
+  return defaultScraper();
+}
+```
+
+以 `CSDN` 为例，我们使用 `scrapeCSDNContent` 函数来获取网页内容。其原理是使用 `Readability` 库来获取网页内容，并使用 `preprocessor` 函数来处理网页内容，最后根据不同类型网站的特性，使用不同的选择器来获取文章标题、作者、封面、内容、摘要等信息。
+
+```ts
+export default async function scrapeCSDNContent(): Promise<ArticleData | undefined> {
+  console.debug('CSDN spider ...');
+
+  const preprocess = (content: string) => preprocessor(content);
+
+  // 获取文章标题
+  const title = document.querySelector('h1.title-article')?.textContent || '';
+  
+  // 获取作者信息
+  const author = document.querySelector('a.follow-nickName')?.textContent || '';
+  
+  // 获取封面图
+  const cover = document.querySelector('meta[property="og:image"]')?.getAttribute('content') || '';
+  
+  // 获取文章内容
+  const content = document.querySelector('div#content_views')?.innerHTML || '';
+  
+  // 获取文章摘要
+  const digest = document.querySelector('meta[property="og:description"]')?.getAttribute('content') || '';
+
+  if (!title || !content) {
+    console.log('failedToGetArticleContent');
+    return;
+  }
+
+  const articleData: ArticleData = {
+    title: title.trim(),
+    author: author.trim(),
+    cover,
+    content: preprocess(content.trim()),
+    digest: digest.trim()
+  };
+
+  return articleData;
+} 
+```

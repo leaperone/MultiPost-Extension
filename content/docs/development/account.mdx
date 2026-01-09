@@ -1,0 +1,92 @@
+---
+title: 账号信息获取原理
+---
+
+为了能让用户得知他们在发布内容时使用的平台账号信息，我们设计获取了平台账号信息，并将平台信息存储到 `localStorage` 中。
+
+具体实现在 `src/sync/account.ts` 文件以及 `src/sync/account` 文件夹中。
+
+首先我们为 `PlatformInfo` 类型添加了 `accountKey` 和 `accountInfo` 字段，用于在前端请求平台数据时附加平台账号信息。
+
+然后我们需要获取这些平台账号信息，并将其存储到 `localStorage` 中。
+
+```ts
+/**
+ * 获取指定平台账号的最新信息
+ * @param accountKey 账号标识符
+ * @returns 返回账号信息
+ */
+export async function refreshAccountInfo(accountKey: string): Promise<AccountInfo> {
+  // 获取平台信息
+  const platformInfos = getPlatformInfos();
+  // 获取指定平台账号信息
+  const platformInfo = platformInfos.find((p) => p.accountKey === accountKey);
+  // 如果找不到指定平台账号信息，则抛出错误
+  if (!platformInfo) {
+    throw new Error(`找不到账号信息: ${accountKey}`);
+  }
+
+  let accountInfo: AccountInfo;
+
+  // 根据平台类型获取账号信息，具体的函数实现在 `src/sync/account` 文件夹中
+  if (accountKey === 'x') {
+    accountInfo = await getXAccountInfo();
+  } else if (accountKey === 'tiktok') {
+    accountInfo = await getTiktokAccountInfo();
+  } else if (accountKey === 'douyin') {
+    accountInfo = await getDouyinAccountInfo();
+  } else if (accountKey === 'rednote') {
+    accountInfo = await getRednoteAccountInfo();
+  } else if (accountKey === 'bilibili') {
+    accountInfo = await getBilibiliAccountInfo();
+  } else {
+    return null;
+  }
+
+  if (!accountInfo) {
+    console.error(`获取账号信息失败: ${accountKey}`);
+    removeAccountInfo(accountKey);
+    return null;
+  }
+
+  // 更新平台信息并保存到storage
+  await saveAccountInfo(accountKey, accountInfo);
+
+  return accountInfo;
+}
+
+/**
+ * 刷新所有平台的账号信息
+ * @returns 所有账号信息的映射表
+ */
+
+// 该函数在 `src/options/index.tsx` 文件中被调用，即在用户打开选项页时，会调用该函数来获取平台账号信息
+export async function refreshAllAccountInfo(): Promise<Record<string, AccountInfo>> {
+  // 获取所有平台信息
+  const platformInfos = getPlatformInfos();
+  const results: Record<string, AccountInfo> = {};
+  const errors: Record<string, Error> = {};
+
+  // 并行刷新所有账号信息
+  await Promise.allSettled(
+    platformInfos.map(async (platformInfo) => {
+      try {
+        if (platformInfo.accountKey) {
+          const accountInfo = await refreshAccountInfo(platformInfo.accountKey);
+          results[platformInfo.accountKey] = accountInfo;
+        }
+      } catch (error) {
+        console.error(`刷新账号信息失败: ${platformInfo.accountKey}`, error);
+        errors[platformInfo.accountKey] = error as Error;
+      }
+    }),
+  );
+
+  // 如果所有请求都失败了，抛出错误
+  if (Object.keys(results).length === 0 && Object.keys(errors).length > 0) {
+    throw new Error('所有账号信息刷新失败');
+  }
+
+  return results;
+}
+```

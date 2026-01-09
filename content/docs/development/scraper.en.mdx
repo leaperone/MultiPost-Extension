@@ -1,0 +1,106 @@
+---
+title: Content Scraping Principle
+---
+
+In the `src/contents/scraper.ts` file, we define the `scraper` logic for getting webpage content when publishing articles.
+
+Similarly, we listen for messages from the `Options` page. When users click the `Get Content` button in the `Article` tab, it triggers this message and calls the `scrapeContent` function to get webpage content.
+
+```ts
+chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+  if (message.type === 'MUTLIPOST_EXTENSION_REQUEST_SCRAPER_START') {
+    const scrapeFunc = async () => {
+      const articleData = await scrapeContent();
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+      sendResponse(articleData);
+    };
+    // Smooth scroll to bottom of page
+    window.scrollTo({
+      top: document.body.scrollHeight,
+      behavior: 'smooth',
+    });
+
+    // Listen for scroll completion event
+    const checkScrollEnd = () => {
+      if (window.innerHeight + window.pageYOffset >= document.body.offsetHeight - 2) {
+        // Scroll completed, send response
+        scrapeFunc();
+      }
+    };
+
+    window.addEventListener('scroll', checkScrollEnd);
+
+    // Set timeout in case scroll doesn't trigger completion event
+    setTimeout(() => {
+      window.removeEventListener('scroll', checkScrollEnd);
+      scrapeFunc();
+    }, 5000); // 5 second timeout
+  }
+  return true; // Keep message channel open
+});
+```
+
+By default, we use the `defaultScraper` function to get webpage content, and it determines which `scraper` function to use based on the webpage URL.
+
+For example, `https://blog.csdn.net/` will use the `scrapeCSDNContent` function to get webpage content.
+
+```ts
+export default async function scrapeContent(): Promise<ArticleData | undefined> {
+  const url = window.location.href;
+
+  // Use different scrapers for different URL prefixes
+  const scraperMap: { [key: string]: () => Promise<ArticleData | undefined> } = {
+    'https://blog.csdn.net/': scrapeCSDNContent,
+    'https://zhuanlan.zhihu.com/p/': scrapeZhihuContent,
+    'https://mp.weixin.qq.com/s/': scrapeWeixinContent,
+    'https://juejin.cn/post/': scrapeJuejinContent,
+    'https://www.jianshu.com/p/': scrapeJianshuContent,
+  };
+
+  const scraper = Object.keys(scraperMap).find((key) => url.startsWith(key));
+  if (scraper) {
+    return scraperMap[scraper]();
+  }
+
+  return defaultScraper();
+}
+```
+
+Taking `CSDN` as an example, we use the `scrapeCSDNContent` function to get webpage content. The principle is to use the `Readability` library to get webpage content, use the `preprocessor` function to process webpage content, and finally use different selectors to get article title, author, cover, content, summary and other information based on the characteristics of different types of websites.
+
+```ts
+export default async function scrapeCSDNContent(): Promise<ArticleData | undefined> {
+  console.debug('CSDN spider ...');
+
+  const preprocess = (content: string) => preprocessor(content);
+
+  // Get article title
+  const title = document.querySelector('h1.title-article')?.textContent || '';
+  
+  // Get author information
+  const author = document.querySelector('a.follow-nickName')?.textContent || '';
+  
+  // Get cover image
+  const cover = document.querySelector('meta[property="og:image"]')?.getAttribute('content') || '';
+  
+  // Get article content
+  const content = document.querySelector('div#content_views')?.innerHTML || '';
+  
+  // Get article summary
+  const digest = document.querySelector('meta[property="og:description"]')?.getAttribute('content') || '';
+
+  if (!title || !content) {
+    console.log('failedToGetArticleContent');
+    return;
+  }
+
+  const articleData: ArticleData = {
+    title: title.trim(),
+    author: author.trim(),
+    cover,
+    content: preprocess(content.trim()),
+    digest: digest.trim()
+  };
+
+  return articleData;
+} 

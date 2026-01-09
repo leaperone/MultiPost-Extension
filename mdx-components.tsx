@@ -1,7 +1,15 @@
 import defaultMdxComponents from 'fumadocs-ui/mdx';
-import type { MDXComponents } from 'mdx/types';
+import type { FC, DetailedHTMLProps, AnchorHTMLAttributes } from 'react';
 
-export function getMDXComponents(components?: MDXComponents): MDXComponents {
+type AnchorComponent = FC<
+  DetailedHTMLProps<AnchorHTMLAttributes<HTMLAnchorElement>, HTMLAnchorElement>
+>;
+
+type MDXComponents = typeof defaultMdxComponents & {
+  a?: AnchorComponent;
+};
+
+export function getMDXComponents(components?: { a?: AnchorComponent }): MDXComponents {
   return {
     ...defaultMdxComponents,
     ...components,

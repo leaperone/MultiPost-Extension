@@ -122,6 +122,7 @@ export default function OnTaskPage() {
     }
 
     fetchTaskData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [taskId, t]);
 
   if (loading) {

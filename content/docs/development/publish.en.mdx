@@ -1,0 +1,130 @@
+---
+title: Content Publishing Principle
+---
+
+## Publishing Function
+
+In the `src/components/Sync` folder, there are publishing components corresponding to different platforms, such as `DynamicTab`, `ArticleTab`, `VideoTab`, etc.
+
+After they organize the information needed for publishing, i.e., data of type `SyncData`, they will call the `funcPublish` function in the `src/options/index.tsx` file to create tabs and inject scripts.
+
+```ts
+const funcPublish = async (data: SyncData) => {
+  // If the platforms array is not empty, create tabs
+  if (Array.isArray(data.platforms) && data.platforms.length > 0) {
+    // Create tabs
+    createTabsForPlatforms(data)
+      .then(async (tabs) => {
+        // Inject scripts
+        injectScriptsToTabs(tabs, data);
+
+        // Notify tab manager that new tabs have been created
+        // This will trigger the `tabsManagerMessageHandler` function in `src/background/services/tabs.ts`
+        chrome.runtime.sendMessage({
+          type: 'MUTLIPOST_EXTENSION_TABS_MANAGER_REQUEST_ADD_TABS',
+          data: data,
+          tabs: tabs,
+        });
+
+        // Activate tabs sequentially so that injected scripts can work properly
+        for (const [tab] of tabs) {
+          if (tab.id) {
+            await chrome.tabs.update(tab.id, { active: true });
+            await new Promise((resolve) => setTimeout(resolve, 2000));
+          }
+        }
+      })
+      .catch((error) => {
+        console.error('Error creating tabs or groups:', error);
+      });
+  } else {
+    console.error('No valid platforms specified');
+  }
+};
+```
+
+## Creating Tabs
+
+In the previous section, we saw that the `funcPublish` function calls the `createTabsForPlatforms` function to create tabs, and then calls the `injectScriptsToTabs` function to inject scripts. These two functions are in the `src/sync/common.ts` file.
+
+The principle is to use the `chrome.tabs` and `chrome.scripting` APIs to create tabs and inject scripts.
+
+```ts
+// Platform information mapping, because there are many defined types, it's split into multiple files: article.ts, dynamic.ts, video.ts
+export const infoMap: Record<string, PlatformInfo> = {
+  ...DynamicInfoMap,
+  ...ArticleInfoMap,
+  ...VideoInfoMap,
+};
+
+// Get platform information
+export function getDefaultPlatformInfo(platform: string): PlatformInfo | null {
+  return infoMap[platform] || null;
+}
+
+// Create tabs
+export async function createTabsForPlatforms(data: SyncData) {
+  const tabs = [];
+  // Get platforms to publish from SyncData
+  for (const platform of data.platforms) {
+    // Get platform information
+    const info = getDefaultPlatformInfo(platform);
+    if (info) {
+      // Create tab
+      const tab = await chrome.tabs.create({ url: info.injectUrl });
+      // Push tab and platform information into array
+      tabs.push([tab, platform]);
+    }
+  }
+
+  // Create tab group
+  const groupId = await chrome.tabs.group({ tabIds: tabs.map((t) => t[0].id!) });
+  const group = await chrome.tabGroups.get(groupId);
+
+  // Update tab group title and color
+  await chrome.tabGroups.update(group.id, {
+    color: 'blue',
+    title: `MultiPost-${new Date().toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' })}`,
+  });
+
+  return tabs;
+}
+```
+
+## Injecting Scripts
+
+In the `injectScriptsToTabs` function, we add listeners for each tab. When the tab finishes loading, it calls the `getDefaultPlatformInfo` function to get platform information and inject scripts.
+
+```ts
+// Inject scripts
+export async function injectScriptsToTabs(tabs: [chrome.tabs.Tab, string][], data: SyncData) {
+  // Iterate through tabs
+  for (const t of tabs) {
+    // Get tab and platform information
+    const tab = t[0];
+    const platform = t[1];
+    // If tab ID exists, add listener
+    if (tab.id) {
+      // Add listener
+      chrome.tabs.onUpdated.addListener(function listener(tabId, info) {
+        // If tab ID and platform information match, inject script
+        if (tabId === tab.id && info.status === 'complete') {
+          // Remove listener
+          chrome.tabs.onUpdated.removeListener(listener);
+          // Get platform information
+          const info = getDefaultPlatformInfo(platform);
+          // If platform information exists, inject script
+          if (info) {
+            // Inject script
+            chrome.scripting.executeScript({
+              target: { tabId: tab.id },
+              func: info.injectFunction,
+              args: [data],
+            });
+          }
+        }
+      });
+    }
+  }
+}
+``` 

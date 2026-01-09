@@ -1,0 +1,174 @@
+---
+title: Douyin Image-Text Dynamic Publishing Script Development Record
+---
+
+## Add Platform at Corresponding Location
+
+Register `Douyin` platform's dynamic publishing in the `src/sync/dynamic.ts` file.
+
+```ts
+  DYNAMIC_DOUYIN: {
+    type: 'DYNAMIC',
+    name: 'DYNAMIC_DOUYIN',
+    homeUrl: 'https://creator.douyin.com/',
+    faviconUrl: 'https://lf1-cdn-tos.bytegoofy.com/goofy/ies/douyin_web/public/favicon.ico',
+    platformName: chrome.i18n.getMessage('platformDouyin'),
+    injectUrl: 'https://creator.douyin.com/creator-micro/content/upload?default-tab=3',
+    injectFunction: DynamicDouyin,
+    tags: ['CN'],
+    accountKey: 'douyin',
+  },
+```
+
+injectUrl is the Douyin image-text dynamic publishing page, and our subsequent scripts will execute on this page. The default-tab=3 parameter opens the image-text dynamic publishing page.
+
+When developing scripts, we should minimize script-side operations. For example, in this case, Douyin's actual publishing page could be `https://creator.douyin.com/creator-micro/content/upload`, but the default publishing page accessed this way is the video publishing page, not the image-text publishing page. We would need to find and click the image-text publishing button in the script to switch to image-text publishing, which would be more complex. By directly using the query parameter `default-tab=3` to open the page, it defaults to the image-text publishing page, allowing us to reduce script-side operations.
+
+## Dynamic Publishing Function
+
+The dynamic publishing function is the core of the dynamic publishing feature. This function will open the page according to `injectUrl` and then inject it into the page.
+
+### 1. Upload Images
+
+When doing Douyin image-text publishing, we first need to upload images.
+
+Using element inspection, we found that Douyin's image upload component is an `input` tag with type `file`, `accept` attribute as `image/png,image/jpeg,image/jpg,image/bmp,image/webp,image/tif`, and `multiple` attribute as `true`.
+
+We first use the `waitForElement` method to wait for the image upload component to load. Then we create a `DataTransfer` object to simulate file dragging.
+
+Next, we iterate through the `images` array and add image files to the `DataTransfer` object.
+
+Finally, we set the `files` property of `fileInput` to the `files` property of the `DataTransfer` object and trigger the `change` event.
+
+```ts
+async function uploadImages() {
+  const fileInput = (await waitForElement(
+    'input[accept="image/png,image/jpeg,image/jpg,image/bmp,image/webp,image/tif"][multiple][type="file"]',
+  )) as HTMLInputElement;
+  if (!fileInput) {
+    console.error('File input element not found');
+    return;
+  }
+
+  const dataTransfer = new DataTransfer();
+
+  for (const fileInfo of images) {
+    try {
+      const response = await fetch(fileInfo.url);
+      if (!response.ok) {
+        throw new Error(`HTTP error! Status: ${response.status}`);
+      }
+      const blob = await response.blob();
+      const file = new File([blob], fileInfo.name, { type: fileInfo.type });
+      dataTransfer.items.add(file);
+    } catch (error) {
+      console.error(`Failed to upload image ${fileInfo.url}:`, error);
+    }
+  }
+
+  if (dataTransfer.files.length > 0) {
+    fileInput.files = dataTransfer.files;
+    fileInput.dispatchEvent(new Event('change', { bubbles: true }));
+    await new Promise((resolve) => setTimeout(resolve, 2000)); // Wait for file processing
+    console.log('File upload operation completed');
+  } else {
+    console.error('No files were successfully added');
+  }
+}
+```
+
+### 2. Input Content
+
+After uploading images, Douyin automatically jumps to the content editing page, so we just need to wait for the content editing component to load and wait for the input box to load.
+
+Using element inspection, we found that Douyin's title input box is an `input` tag with `placeholder` attribute as `添加作品标题` (Add work title).
+
+We first use the `waitForElement` method to wait for the title input box to load. Then we set the `value` property of the title input box to `title` or `content.slice(0, 20)` and trigger the `input` event.
+
+Using element inspection, we found that Douyin's content editing component is a `div` tag with `data-line-wrapper="true"` attribute.
+
+We also use the `waitForElement` method to wait for the content editing component to load. Then we create a `ClipboardEvent` object to simulate a paste event.
+
+We set the clipboard data to `content` and trigger the paste event.
+
+```ts
+// Fill in title
+const titleInput = (await waitForElement('input[placeholder="添加作品标题"]')) as HTMLInputElement;
+if (titleInput) {
+  titleInput.value = title || content.slice(0, 20);
+  titleInput.dispatchEvent(new Event('input', { bubbles: true }));
+}
+
+// Fill in content
+const contentEditor = (await waitForElement('div[data-line-wrapper="true"]')) as HTMLDivElement;
+if (contentEditor) {
+  // Create a new ClipboardEvent
+  const pasteEvent = new ClipboardEvent('paste', {
+    bubbles: true,
+    cancelable: true,
+    clipboardData: new DataTransfer(),
+  });
+
+  // Set clipboard data
+  pasteEvent.clipboardData.setData('text/plain', content);
+
+  // Trigger paste event
+  contentEditor.dispatchEvent(pasteEvent);
+}
+```
+
+### 3. Image Upload Check
+
+Before auto-publishing, we need to check if images have finished uploading.
+
+We use the querySelectorAll method to get all `span` tags and check if the text of `span` tags is `查看` (View).
+
+If the text of `span` tags is `查看` (View), it means image upload is complete. We compare the number of `span` tags with the length of the `images` array to determine if image upload is complete.
+
+```ts
+async function checkImagesUploaded(expectedCount: number, maxRetries = 10, retryInterval = 3000): Promise<boolean> {
+  for (let i = 0; i < maxRetries; i++) {
+    const viewTexts = document.querySelectorAll('span:contains("查看")');
+    const imageCount = viewTexts.length;
+
+    console.log(`Currently found ${imageCount} "查看" texts, expected count: ${expectedCount}`);
+
+    if (imageCount === expectedCount) {
+      console.log('Image upload completed');
+      return true;
+    }
+
+    console.log(`Image upload not completed, waiting... (Attempt: ${i + 1})`);
+    await new Promise((resolve) => setTimeout(resolve, retryInterval));
+  }
+
+  console.error(`After ${maxRetries} attempts, image upload is still not completed`);
+  return true;
+}
+```
+
+### 4. Auto Publish
+
+After completing the above steps, we need additional processing for auto-publishing. Specifically, find the publish button and click it.
+
+We use the `findElementByText` method to get the publish button and click it.
+
+```ts
+const publishButton = (await findElementByText('button', '发布', 5, 1000)) as HTMLButtonElement;
+if (publishButton) {
+  publishButton.click();
+  console.log('Publish button clicked');
+  await new Promise((resolve) => setTimeout(resolve, 3000));
+  window.location.href = 'https://creator.douyin.com/creator-micro/content/manage';
+}
+```
+
+The findElementByText method finds elements by getting the text content of elements.
+
+After successful publishing, we navigate to the `https://creator.douyin.com/creator-micro/content/manage` page and refresh the page.
+
+## Mission Accomplished
+
+So far, we have completed the development of the Douyin image-text dynamic publishing script.
+
+Douyin's development is relatively simple and fast. We just need to use the `waitForElement` method to wait for elements to load, input to the editor, then use the `findElementByText` method to get the publish button and click it to publish. 

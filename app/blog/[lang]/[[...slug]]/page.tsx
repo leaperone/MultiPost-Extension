@@ -187,7 +187,7 @@ function BlogHomePage({ lang }: { lang: string }) {
                       {blog.data.keywords
                         .split(',')
                         .slice(0, 5)
-                        .map((keyword, index) => (
+                        .map((keyword: string, index: number) => (
                           <span
                             key={index}
                             className="rounded-md bg-fd-secondary px-2 py-1 text-xs text-fd-secondary-foreground"

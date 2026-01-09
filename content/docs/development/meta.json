@@ -1,0 +1,20 @@
+{
+  "title": "Development",
+  "description": "Recording implementation details during development",
+  "root": true,
+  "pages": [
+    "---Introduction---",
+    "index",
+    "files",
+    "build-script",
+    "types",
+    "---Development---",
+    "publish",
+    "account",
+    "scraper",
+    "background",
+    "tabs",
+    "---Reference---",
+    "..."
+  ]
+}
