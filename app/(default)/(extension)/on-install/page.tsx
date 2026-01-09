@@ -415,28 +415,28 @@ export default function OnInstallPage() {
         {/* Page Title */}
         <div className="mb-8 flex flex-row items-center justify-between">
           <h1 className="text-3xl font-bold">{t('title')}</h1>
-          <Button
-            as={Link}
-            href="/dashboard/publish/dynamic"
-            variant="flat"
-            color="primary"
-            startContent={<ArrowRight className="size-4" />}>
-            {t('ui.loginToFullVersion')}
-          </Button>
+          <Link href="/dashboard/publish/dynamic">
+            <Button
+              variant="flat"
+              color="primary"
+              startContent={<ArrowRight className="size-4" />}>
+              {t('ui.loginToFullVersion')}
+            </Button>
+          </Link>
           <div className="flex items-center gap-2">
             <ButtonGroup
               variant="flat"
               color="primary">
-              <Button
-                as={Link}
-                href="/dashboard/publish/video">
-                <VideoIcon />
-              </Button>
-              <Button
-                as={Link}
-                href="/dashboard/publish/podcast">
-                <PodcastIcon />
-              </Button>
+              <Link href="/dashboard/publish/video">
+                <Button>
+                  <VideoIcon />
+                </Button>
+              </Link>
+              <Link href="/dashboard/publish/podcast">
+                <Button>
+                  <PodcastIcon />
+                </Button>
+              </Link>
             </ButtonGroup>
           </div>
         </div>
@@ -491,15 +491,16 @@ export default function OnInstallPage() {
                     {t('ui.aiGenerate')}
                   </Button>
 
-                  <Button
-                    as={Link}
+                  <Link
                     href="https://docs.multipost.app/docs/user-guide/contact-us"
-                    target="_blank"
-                    variant="flat"
-                    color="primary"
-                    startContent={<MessageSquareIcon className="size-5" />}>
-                    {t('ui.contactUs')}
-                  </Button>
+                    target="_blank">
+                    <Button
+                      variant="flat"
+                      color="primary"
+                      startContent={<MessageSquareIcon className="size-5" />}>
+                      {t('ui.contactUs')}
+                    </Button>
+                  </Link>
                   {(title.length > 0 || content.length > 0) && (
                     <Tooltip content={`${t('ui.total')}: ${title.length + content.length}`}>
                       <Button
@@ -622,15 +623,15 @@ export default function OnInstallPage() {
                       onPress={() => window.location.reload()}>
                       {t('extension.refresh', 'Refresh Page')}
                     </Button>
-                    <Button
-                      as={Link}
-                      size="sm"
-                      color="primary"
-                      variant="flat"
-                      href="/extension"
-                      startContent={<PuzzleIcon className="size-4" />}>
-                      {t('extension.install', 'Install Extension')}
-                    </Button>
+                    <Link href="/extension">
+                      <Button
+                        size="sm"
+                        color="primary"
+                        variant="flat"
+                        startContent={<PuzzleIcon className="size-4" />}>
+                        {t('extension.install', 'Install Extension')}
+                      </Button>
+                    </Link>
                   </div>
                 </div>
               </div>

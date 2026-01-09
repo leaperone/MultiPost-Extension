@@ -75,16 +75,17 @@ export default function PublishLayout({ children }: { children: React.ReactNode 
           <div className="flex w-56 flex-row items-center justify-end gap-2">
             {/* TODO: 暂时隐藏余额功能 */}
             {/* <BalanceButtonClient size="sm" /> */}
-            <Button
-              as={Link}
+            <Link
               href="https://docs.multipost.app/docs/user-guide/contact-us"
-              target="_blank"
-              variant="flat"
-              color="primary"
-              size="sm"
-              startContent={<MessageSquareIcon className="size-5" />}>
-              {t('contactUs')}
-            </Button>
+              target="_blank">
+              <Button
+                variant="flat"
+                color="primary"
+                size="sm"
+                startContent={<MessageSquareIcon className="size-5" />}>
+                {t('contactUs')}
+              </Button>
+            </Link>
           </div>
         </div>
         <Divider className="my-0.5" />

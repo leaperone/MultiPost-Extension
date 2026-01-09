@@ -64,18 +64,19 @@ export default function Header() {
           <LanguageSwitcher />
         </NavbarItem>
         <NavbarMenuItem className="hidden sm:block">
-          <Button
-            as={Link}
+          <Link
             href="https://github.com/leaperone/MultiPost-Extension"
-            target="_blank"
-            isIconOnly
-            variant="light"
-            size="sm">
-            <Icon
-              icon="line-md:github-loop"
-              className="size-6 text-foreground"
-            />
-          </Button>
+            target="_blank">
+            <Button
+              isIconOnly
+              variant="light"
+              size="sm">
+              <Icon
+                icon="line-md:github-loop"
+                className="size-6 text-foreground"
+              />
+            </Button>
+          </Link>
         </NavbarMenuItem>
         <NavbarItem>
           <SignInButton />
@@ -111,19 +112,20 @@ export default function Header() {
           </Link>
         </NavbarMenuItem>
         <NavbarMenuItem>
-          <Button
-            as={Link}
+          <Link
             href="https://github.com/leaperone/MultiPost-Extension"
-            target="_blank"
-            variant="light"
-            startContent={
-              <Icon
-                icon="logos:github-icon"
-                className="size-5"
-              />
-            }>
-            GitHub
-          </Button>
+            target="_blank">
+            <Button
+              variant="light"
+              startContent={
+                <Icon
+                  icon="logos:github-icon"
+                  className="size-5"
+                />
+              }>
+              GitHub
+            </Button>
+          </Link>
         </NavbarMenuItem>
         <NavbarMenuItem>
           <LanguageSwitcher />

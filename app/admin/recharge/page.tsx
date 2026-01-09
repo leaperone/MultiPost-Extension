@@ -137,12 +137,9 @@ export default function AdminRechargePage() {
   return (
     <div className="flex max-w-7xl flex-col gap-4">
       <div className="flex items-center justify-between">
-        <Button
-          as={Link}
-          href="/admin"
-          startContent={<ChevronLeft className="size-4" />}>
-          {t('recharge.back')}
-        </Button>
+        <Link href="/admin">
+          <Button startContent={<ChevronLeft className="size-4" />}>{t('recharge.back')}</Button>
+        </Link>
         <h1 className="text-3xl font-bold">{t('recharge.title')}</h1>
         <Button
           onPress={onOpen}

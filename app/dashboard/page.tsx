@@ -180,15 +180,15 @@ export default function DashboardPage() {
                 <span className="hidden sm:inline">{t('welcome.extension')}</span>
               </LiquidGlassButton>
 
-              <Button
-                as={Link}
-                href="/dashboard/settings"
-                isIconOnly
-                className="bg-white/20 backdrop-blur-xl dark:bg-white/10"
-                variant="flat"
-                radius="full">
-                <SettingsIcon className="size-5" />
-              </Button>
+              <Link href="/dashboard/settings">
+                <Button
+                  isIconOnly
+                  className="bg-white/20 backdrop-blur-xl dark:bg-white/10"
+                  variant="flat"
+                  radius="full">
+                  <SettingsIcon className="size-5" />
+                </Button>
+              </Link>
             </div>
           </div>
         </motion.div>

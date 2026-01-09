@@ -1,9 +1,10 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Input, Button, Link } from '@heroui/react';
+import { Input, Button } from '@heroui/react';
 import { HashIcon, MailIcon, SearchIcon } from 'lucide-react';
 import { useTranslation } from '@/i18n/client';
+import Link from 'next/link';
 
 export function UserSearchModal() {
   const { t } = useTranslation('admin');
@@ -20,14 +21,15 @@ export function UserSearchModal() {
         onChange={(e) => setQuery(e.target.value)}
         className="w-full max-w-lg"
       />
-      <Button
-        as={Link}
+      <Link
         href={isQueryEmail ? `/admin/user?email=${query}` : `/admin/user?userid=${query}`}
-        target="_blank"
-        isIconOnly
-        color="primary">
-        <SearchIcon />
-      </Button>
+        target="_blank">
+        <Button
+          isIconOnly
+          color="primary">
+          <SearchIcon />
+        </Button>
+      </Link>
     </div>
   );
 }

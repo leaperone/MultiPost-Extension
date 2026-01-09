@@ -43,41 +43,45 @@ const StatusCard: React.FC<StatusCardProps> = ({ isInstalled }) => {
               </Alert>
             )}
             <Spacer y={4} />
-            <Button
-              as={Link}
-              href="/dashboard/publish"
-              size="lg"
-              startContent={<ArrowRightIcon className="size-4" />}>
-              {t('start_publishing')}
-            </Button>
+            <Link href="/dashboard/publish">
+              <Button
+                size="lg"
+                startContent={<ArrowRightIcon className="size-4" />}>
+                {t('start_publishing')}
+              </Button>
+            </Link>
           </>
         ) : (
           <>
             <div className="flex gap-3">
-              <Button
-                as={Link}
+              <Link
                 href="https://chromewebstore.google.com/detail/multipost/dhohkaclnjgcikfoaacfgijgjgceofih"
                 target="_blank"
-                color="primary"
                 className="w-full">
-                <Icon
-                  icon="logos:chrome"
-                  className="mr-2 size-5"
-                />
-                {t('chrome_store')}
-              </Button>
-              <Button
-                as={Link}
+                <Button
+                  color="primary"
+                  className="w-full">
+                  <Icon
+                    icon="logos:chrome"
+                    className="mr-2 size-5"
+                  />
+                  {t('chrome_store')}
+                </Button>
+              </Link>
+              <Link
                 href="https://microsoftedge.microsoft.com/addons/detail/multipost/ckoiphiceimehjkolnfffgbmihoppgjg"
                 target="_blank"
-                variant="bordered"
                 className="w-full">
-                <Icon
-                  icon="logos:microsoft-edge"
-                  className="mr-2 size-5"
-                />
-                {t('edge_store')}
-              </Button>
+                <Button
+                  variant="bordered"
+                  className="w-full">
+                  <Icon
+                    icon="logos:microsoft-edge"
+                    className="mr-2 size-5"
+                  />
+                  {t('edge_store')}
+                </Button>
+              </Link>
             </div>
           </>
         )}

@@ -285,16 +285,17 @@ export default function ActivityDetail({ task: initialTask }: Props) {
                         AI生成文案
                       </Button>
 
-                      <Button
-                        color="primary"
-                        variant="bordered"
-                        className="min-w-[120px] flex-1"
-                        startContent={<ExternalLink size={16} />}
-                        as={Link}
+                      <Link
                         href="https://x.com/compose/tweet"
                         target="_blank">
-                        去X发帖
-                      </Button>
+                        <Button
+                          color="primary"
+                          variant="bordered"
+                          className="min-w-[120px] flex-1"
+                          startContent={<ExternalLink size={16} />}>
+                          去X发帖
+                        </Button>
+                      </Link>
                     </div>
 
                     <div className="rounded-md bg-muted/30 p-2 text-xs text-muted-foreground">
@@ -320,16 +321,17 @@ export default function ActivityDetail({ task: initialTask }: Props) {
                       </Button>
 
                       {task.link && (
-                        <Button
-                          color="primary"
-                          variant="bordered"
-                          className="min-w-[120px] flex-1"
-                          startContent={<MessageCircle size={16} />}
-                          as={Link}
+                        <Link
                           href={task.link}
                           target="_blank">
-                          去发表评论
-                        </Button>
+                          <Button
+                            color="primary"
+                            variant="bordered"
+                            className="min-w-[120px] flex-1"
+                            startContent={<MessageCircle size={16} />}>
+                            去发表评论
+                          </Button>
+                        </Link>
                       )}
                     </div>
 

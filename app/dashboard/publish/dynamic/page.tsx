@@ -717,15 +717,15 @@ export default function DynamicPage() {
                 </p>
               </div>
               <div className="flex items-center gap-2">
-                <Button
-                  as={Link}
-                  href="/dashboard/drafts"
-                  size="sm"
-                  color="primary"
-                  variant="flat"
-                  className="text-xs">
-                  {t('dynamic.draftAd.tryNow', '立即体验')}
-                </Button>
+                <Link href="/dashboard/drafts">
+                  <Button
+                    size="sm"
+                    color="primary"
+                    variant="flat"
+                    className="text-xs">
+                    {t('dynamic.draftAd.tryNow', '立即体验')}
+                  </Button>
+                </Link>
                 <Button
                   isIconOnly
                   size="sm"
@@ -813,15 +813,16 @@ export default function DynamicPage() {
                 <div className="flex w-full flex-col gap-4">
                   <div className="flex items-center justify-between gap-2">
                     <div className="flex items-center gap-2">
-                      <Button
-                        as={Link}
+                      <Link
                         href="https://docs.multipost.app/docs/user-guide/contact-us"
-                        target="_blank"
-                        variant="flat"
-                        color="primary"
-                        startContent={<MessageSquareIcon className="size-5" />}>
-                        {t('contactUs', '联系我们')}
-                      </Button>
+                        target="_blank">
+                        <Button
+                          variant="flat"
+                          color="primary"
+                          startContent={<MessageSquareIcon className="size-5" />}>
+                          {t('contactUs', '联系我们')}
+                        </Button>
+                      </Link>
                       {(title.length > 0 || content.length > 0) && (
                         <Tooltip content={`${t('dynamic.total', 'Total')}: ${title.length + content.length}`}>
                           <Button

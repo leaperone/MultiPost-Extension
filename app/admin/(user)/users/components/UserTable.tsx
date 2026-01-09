@@ -94,15 +94,16 @@ export default function UserTable() {
               </TableCell>
               <TableCell>{new Date(user.createdAt).toLocaleString()}</TableCell>
               <TableCell>
-                <Button
-                  as={Link}
+                <Link
                   href={`/admin/user?userid=${user.id}`}
-                  target="_blank"
-                  variant="flat"
-                  size="sm"
-                  isIconOnly>
-                  <EyeIcon />
-                </Button>
+                  target="_blank">
+                  <Button
+                    variant="flat"
+                    size="sm"
+                    isIconOnly>
+                    <EyeIcon />
+                  </Button>
+                </Link>
               </TableCell>
             </TableRow>
           )}

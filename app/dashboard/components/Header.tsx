@@ -23,13 +23,13 @@ export default async function Header({ title, description, isShowBalance = true 
       <div className="flex items-center gap-2">
         {/* TODO: 暂时隐藏余额功能 */}
         {/* {isShowBalance && <BalanceButton alert={1} />} */}
-        <Button
-          as={Link}
-          href="/dashboard/settings"
-          variant="light"
-          isIconOnly>
-          <BookOpenIcon />
-        </Button>
+        <Link href="/dashboard/settings">
+          <Button
+            variant="light"
+            isIconOnly>
+            <BookOpenIcon />
+          </Button>
+        </Link>
         <Button
           variant="light"
           isIconOnly>

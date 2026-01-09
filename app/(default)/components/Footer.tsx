@@ -111,18 +111,19 @@ export default function Footer() {
             <p className="text-small text-default-500">{t('footer.slogan')}</p>
             <div className="flex space-x-6">
               {footerNavigation.social.map((item) => (
-                <Button
+                <Link
                   key={item.name}
-                  as={Link}
                   href={item.href}
-                  target="_blank"
-                  size="sm"
-                  isIconOnly>
-                  <item.icon
-                    aria-hidden="true"
-                    className="size-5"
-                  />
-                </Button>
+                  target="_blank">
+                  <Button
+                    size="sm"
+                    isIconOnly>
+                    <item.icon
+                      aria-hidden="true"
+                      className="size-5"
+                    />
+                  </Button>
+                </Link>
               ))}
             </div>
           </div>

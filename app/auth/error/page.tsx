@@ -65,22 +65,21 @@ export default async function AuthErrorPage(props: { searchParams: Promise<{ err
           </div>
 
           <div className="flex flex-col justify-center gap-4 sm:flex-row">
-            <Button
-              as={Link}
-              href="/"
-              variant="flat"
-              className="flex items-center justify-center gap-2 bg-gray-200 text-gray-700 hover:bg-gray-300 dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600">
-              <Home size={18} />
-              {t('error.back_home')}
-            </Button>
+            <Link href="/">
+              <Button
+                variant="flat"
+                className="flex items-center justify-center gap-2 bg-gray-200 text-gray-700 hover:bg-gray-300 dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600">
+                <Home size={18} />
+                {t('error.back_home')}
+              </Button>
+            </Link>
 
-            <Button
-              as={Link}
-              href="/signin"
-              className="flex items-center justify-center gap-2">
-              <RefreshCcw size={18} />
-              {t('error.try_again')}
-            </Button>
+            <Link href="/signin">
+              <Button className="flex items-center justify-center gap-2">
+                <RefreshCcw size={18} />
+                {t('error.try_again')}
+              </Button>
+            </Link>
           </div>
         </CardBody>
       </Card>

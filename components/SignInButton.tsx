@@ -1,8 +1,9 @@
 'use client';
 
-import { Button, Link } from "@heroui/react";
+import { Button } from '@heroui/react';
 import { useSession } from 'next-auth/react';
 import { useTranslation } from '@/i18n/client';
+import Link from 'next/link';
 
 const SignInButton = () => {
   const session = useSession();
@@ -13,11 +14,9 @@ const SignInButton = () => {
   }
 
   return (
-    <Button
-      as={Link}
-      href="/signin">
-      {t('signin.button')}
-    </Button>
+    <Link href="/signin">
+      <Button>{t('signin.button')}</Button>
+    </Link>
   );
 };
 

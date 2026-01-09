@@ -115,49 +115,51 @@ function HeroSection({ t, className }: { t: TranslationFunction; className?: str
           {/* 操作按钮 - 优化样式 */}
           <div className="flex flex-col items-center gap-4">
             {/* 主CTA - 更突出 */}
-            <Button
-              as={Link}
-              href="/signin"
-              size="lg"
-              color="primary"
-              className="group relative overflow-hidden bg-gradient-to-r from-blue-500 to-indigo-500 px-12 py-7 text-lg font-semibold shadow-lg transition-all hover:scale-105 hover:shadow-xl"
-              startContent={<Sparkles className="size-5 animate-pulse" />}>
-              {t('hero.buttons.start_free')}
-              <span className="ml-2 animate-bounce">→</span>
-            </Button>
+            <Link href="/signin">
+              <Button
+                size="lg"
+                color="primary"
+                className="group relative overflow-hidden bg-gradient-to-r from-blue-500 to-indigo-500 px-12 py-7 text-lg font-semibold shadow-lg transition-all hover:scale-105 hover:shadow-xl"
+                startContent={<Sparkles className="size-5 animate-pulse" />}>
+                {t('hero.buttons.start_free')}
+                <span className="ml-2 animate-bounce">→</span>
+              </Button>
+            </Link>
 
             {/* 应用商店按钮 */}
             <div className="flex flex-col gap-3 sm:flex-row">
-              <Button
-                as={Link}
+              <Link
                 href="https://chromewebstore.google.com/detail/multipost/dhohkaclnjgcikfoaacfgijgjgceofih"
-                target="_blank"
-                size="md"
-                variant="bordered"
-                className="min-w-[180px]"
-                startContent={
-                  <Icon
-                    icon="logos:chrome"
-                    className="size-5"
-                  />
-                }>
-                {t('hero.buttons.chromeStore')}
-              </Button>
-              <Button
-                as={Link}
+                target="_blank">
+                <Button
+                  size="md"
+                  variant="bordered"
+                  className="min-w-[180px]"
+                  startContent={
+                    <Icon
+                      icon="logos:chrome"
+                      className="size-5"
+                    />
+                  }>
+                  {t('hero.buttons.chromeStore')}
+                </Button>
+              </Link>
+              <Link
                 href="https://microsoftedge.microsoft.com/addons/detail/multipost/ckoiphiceimehjkolnfffgbmihoppgjg"
-                target="_blank"
-                size="md"
-                variant="bordered"
-                className="min-w-[180px]"
-                startContent={
-                  <Icon
-                    icon="logos:microsoft-edge"
-                    className="size-5"
-                  />
-                }>
-                {t('hero.buttons.edgeStore')}
-              </Button>
+                target="_blank">
+                <Button
+                  size="md"
+                  variant="bordered"
+                  className="min-w-[180px]"
+                  startContent={
+                    <Icon
+                      icon="logos:microsoft-edge"
+                      className="size-5"
+                    />
+                  }>
+                  {t('hero.buttons.edgeStore')}
+                </Button>
+              </Link>
             </div>
 
             {/* 信任标记 */}
@@ -384,13 +386,13 @@ export default async function HomePage() {
               </div>
 
               <div className="mt-10 flex flex-col items-center gap-4 sm:flex-row sm:justify-center">
-                <Button
-                  className="rounded-xl bg-gradient-to-r from-blue-500 to-indigo-500 px-10 py-4 text-base font-medium"
-                  size="lg"
-                  as={Link}
-                  href="/extension">
-                  {t('multiPost.cta')}
-                </Button>
+                <Link href="/extension">
+                  <Button
+                    className="rounded-xl bg-gradient-to-r from-blue-500 to-indigo-500 px-10 py-4 text-base font-medium"
+                    size="lg">
+                    {t('multiPost.cta')}
+                  </Button>
+                </Link>
               </div>
             </div>
             <div className="relative mt-8 md:mt-0">
@@ -592,27 +594,28 @@ export default async function HomePage() {
               <p className="mb-6 text-white/80">{t('openSource.description')}</p>
             </div>
             <div className="flex flex-col justify-center gap-6 sm:flex-row">
-              <Button
-                size="lg"
-                as={Link}
-                href="/extension"
-                className="rounded-xl bg-white px-10 py-7 text-lg font-medium text-primary hover:bg-white/90">
-                {t('finalCta.install')}
-              </Button>
-              <Button
-                size="lg"
-                as={Link}
+              <Link href="/extension">
+                <Button
+                  size="lg"
+                  className="rounded-xl bg-white px-10 py-7 text-lg font-medium text-primary hover:bg-white/90">
+                  {t('finalCta.install')}
+                </Button>
+              </Link>
+              <Link
                 href="https://github.com/leaperone/MultiPost-Extension"
-                target="_blank"
-                className="rounded-xl border-2 border-white bg-transparent px-10 py-7 text-lg font-medium text-white hover:bg-white/10"
-                startContent={
-                  <Icon
-                    icon="mdi:github"
-                    className="size-5"
-                  />
-                }>
-                {t('finalCta.github')}
-              </Button>
+                target="_blank">
+                <Button
+                  size="lg"
+                  className="rounded-xl border-2 border-white bg-transparent px-10 py-7 text-lg font-medium text-white hover:bg-white/10"
+                  startContent={
+                    <Icon
+                      icon="mdi:github"
+                      className="size-5"
+                    />
+                  }>
+                  {t('finalCta.github')}
+                </Button>
+              </Link>
             </div>
           </div>
         </div>

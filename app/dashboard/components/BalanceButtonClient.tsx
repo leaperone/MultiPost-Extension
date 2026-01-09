@@ -1,8 +1,9 @@
 'use client';
 
 import { getUserSelfCredit } from '@/actions/credit';
-import { Button, Link } from '@heroui/react';
+import { Button } from '@heroui/react';
 import { BadgeAlertIcon, DollarSignIcon } from 'lucide-react';
+import Link from 'next/link';
 import { useEffect } from 'react';
 import { useState } from 'react';
 
@@ -26,17 +27,17 @@ export function BalanceButtonClient({
   }, []);
 
   return (
-    <Button
-      as={Link}
-      href="/dashboard/settings/credit-and-usage"
-      size={size}
-      variant="flat"
-      color="primary"
-      startContent={<DollarSignIcon className="size-4" />}
-      endContent={balance < alert ? <BadgeAlertIcon className="size-4 text-danger-500" /> : null}
-      className={className}>
-      {balance.toFixed(2)}
-    </Button>
+    <Link href="/dashboard/settings/credit-and-usage">
+      <Button
+        size={size}
+        variant="flat"
+        color="primary"
+        startContent={<DollarSignIcon className="size-4" />}
+        endContent={balance < alert ? <BadgeAlertIcon className="size-4 text-danger-500" /> : null}
+        className={className}>
+        {balance.toFixed(2)}
+      </Button>
+    </Link>
   );
 }
 

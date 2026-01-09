@@ -21,14 +21,13 @@ export default function Error({ error, reset }: { error: Error & { digest?: stri
           persists.
         </p>
         <div className="mx-auto mt-6 flex w-fit flex-row gap-4">
-          <Button
-            as={Link}
-            href="/"
-            startContent={<HomeIcon />}
-            prefetch={false}
-            color="primary">
-            Homepage
-          </Button>
+          <Link href="/">
+            <Button
+              startContent={<HomeIcon />}
+              color="primary">
+              Homepage
+            </Button>
+          </Link>
 
           <Button
             onPress={() => reset()}
