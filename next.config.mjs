@@ -57,15 +57,19 @@ const nextConfig = {
   ],
 };
 
-export default withMDX(
-  withPostHogConfig(nextConfig, {
-    personalApiKey: process.env.POSTHOG_API_KEY,
-    envId: process.env.POSTHOG_MULTIPOST_ENV_ID,
-    host: process.env.NEXT_PUBLIC_POSTHOG_HOST,
-    sourcemaps: {
-      enabled: process.env.NODE_ENV === 'production' && !!process.env.POSTHOG_API_KEY,
-      project: 'multipost',
-      deleteAfterUpload: true,
-    },
-  })
-);
+const configWithPostHog = withPostHogConfig(nextConfig, {
+  personalApiKey: process.env.POSTHOG_API_KEY,
+  envId: process.env.POSTHOG_MULTIPOST_ENV_ID,
+  host: process.env.NEXT_PUBLIC_POSTHOG_HOST,
+  sourcemaps: {
+    enabled: process.env.NODE_ENV === 'production' && !!process.env.POSTHOG_API_KEY,
+    project: 'multipost',
+    deleteAfterUpload: true,
+  },
+});
+
+// Ensure standalone output is preserved after plugin wrappers
+export default withMDX({
+  ...configWithPostHog,
+  output: 'standalone',
+});
