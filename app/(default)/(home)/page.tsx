@@ -207,6 +207,8 @@ export default async function HomePage() {
   const webreaderFeatures = t('draftTools.webreader.features', { returnObjects: true }) as string[];
   const searchFeatures = t('draftTools.search.features', { returnObjects: true }) as string[];
   const socialMediaAPIFeatures = t('draftTools.socialMedia.features', { returnObjects: true }) as string[];
+  // TODO: 视频转录功能暂时隐藏
+  // const videoTranscribeFeatures = t('draftTools.videoTranscribe.features', { returnObjects: true }) as string[];
 
   // JSON-LD 结构化数据
   const jsonLd = {
@@ -426,7 +428,7 @@ export default async function HomePage() {
             {t('draftTools.description')}
           </p>
 
-          <div className="grid gap-8 md:grid-cols-3">
+          <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-4">
             {/* Webreader */}
             <Card className="group overflow-hidden border-none shadow-lg transition-shadow duration-300 hover:shadow-xl">
               <div className="h-3 bg-gradient-to-r from-blue-400 to-teal-400"></div>
@@ -520,6 +522,36 @@ export default async function HomePage() {
                 </ul>
               </CardBody>
             </Card>
+
+            {/* TODO: 视频转录功能暂时隐藏，待功能完善后重新启用 */}
+            {/* Video Transcription */}
+            {/* <Card className="group overflow-hidden border-none shadow-lg transition-shadow duration-300 hover:shadow-xl">
+              <div className="h-3 bg-gradient-to-r from-rose-400 to-red-400"></div>
+              <CardBody className="p-8">
+                <div className="mb-4 flex items-center">
+                  <div className="mr-4 rounded-xl bg-rose-100 p-3 transition-transform duration-300 group-hover:scale-110 dark:bg-rose-900/30">
+                    <VideoIcon className="size-6 text-rose-500" />
+                  </div>
+                  <h3 className="text-xl font-semibold text-rose-500 sm:text-2xl">{t('draftTools.videoTranscribe.title')}</h3>
+                </div>
+                <p className="mb-6 text-lg leading-relaxed text-foreground/80">
+                  {t('draftTools.videoTranscribe.description')}
+                </p>
+                <ul className="space-y-3">
+                  {videoTranscribeFeatures.map((feature, i) => (
+                    <li
+                      key={i}
+                      className="flex items-center gap-3 rounded-lg py-2 pl-2 transition-colors hover:bg-rose-50 dark:hover:bg-rose-900/10">
+                      <Icon
+                        icon="lucide:check-circle"
+                        className="size-5 shrink-0 text-rose-500"
+                      />
+                      <span className="text-lg">{feature}</span>
+                    </li>
+                  ))}
+                </ul>
+              </CardBody>
+            </Card> */}
           </div>
         </div>
       </section>

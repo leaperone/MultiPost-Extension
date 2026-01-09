@@ -11,6 +11,12 @@ const nextConfig = {
       { protocol: 'https', hostname: '2someone-web-static.s3.bitiful.net' },
       { protocol: 'https', hostname: 'filesystem.site' },
       { protocol: 'https', hostname: 'assets.seede.ai' },
+      // Douyin/TikTok CDN domains for video covers
+      { protocol: 'https', hostname: '*.douyinpic.com' },
+      { protocol: 'https', hostname: '*.byteimg.com' },
+      { protocol: 'https', hostname: '*.tiktokcdn.com' },
+      { protocol: 'https', hostname: 'p*.douyinpic.com' },
+      { protocol: 'https', hostname: 'p*.byteimg.com' },
     ],
   },
   webpack: (config, { isServer }) => {

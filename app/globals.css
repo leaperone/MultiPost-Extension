@@ -24,13 +24,15 @@
     --input: 0 0% 89.8%;
     --ring: 0 0% 3.9%;
     --radius: 0.5rem;
-    --sidebar-background: 0 0% 98%;
+
+    /* iOS 26 Liquid Glass Sidebar */
+    --sidebar-background: 0 0% 100% / 0.7;
     --sidebar-foreground: 240 5.3% 26.1%;
     --sidebar-primary: 240 5.9% 10%;
     --sidebar-primary-foreground: 0 0% 98%;
-    --sidebar-accent: 240 4.8% 95.9%;
+    --sidebar-accent: 0 0% 100% / 0.5;
     --sidebar-accent-foreground: 240 5.9% 10%;
-    --sidebar-border: 220 13% 91%;
+    --sidebar-border: 0 0% 100% / 0.2;
     --sidebar-ring: 217.2 91.2% 59.8%;
   }
 
@@ -54,13 +56,15 @@
     --border: 0 0% 14.9%;
     --input: 0 0% 14.9%;
     --ring: 0 0% 83.1%;
-    --sidebar-background: 240 5.9% 10%;
+
+    /* iOS 26 Liquid Glass Sidebar - Dark Mode */
+    --sidebar-background: 0 0% 0% / 0.5;
     --sidebar-foreground: 240 4.8% 95.9%;
     --sidebar-primary: 224.3 76.3% 48%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 240 3.7% 15.9%;
+    --sidebar-accent: 0 0% 100% / 0.1;
     --sidebar-accent-foreground: 240 4.8% 95.9%;
-    --sidebar-border: 240 3.7% 15.9%;
+    --sidebar-border: 0 0% 100% / 0.1;
     --sidebar-ring: 217.2 91.2% 59.8%;
   }
 }

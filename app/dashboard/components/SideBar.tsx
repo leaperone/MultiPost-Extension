@@ -123,6 +123,12 @@ function getMenuGroups(t: TranslationFunction): MenuGroup[] {
           url: '/dashboard/grid',
           icon: GridIcon,
         },
+        // TODO: 视频转录功能暂时隐藏，待功能完善后重新启用
+        // {
+        //   title: t('sidebar.menu.videoTranscribe'),
+        //   url: '/dashboard/video-transcribe',
+        //   icon: VideoIcon,
+        // },
       ],
     },
     {
@@ -164,7 +170,7 @@ export async function DashboardSidebar() {
   return (
     <Sidebar
       side="left"
-      variant="sidebar"
+      variant="floating"
       collapsible="icon">
       <SidebarHeader>
         <SidebarMenu>

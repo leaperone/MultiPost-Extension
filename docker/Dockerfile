@@ -67,3 +67,14 @@ RUN apt-get update && apt-get install -y openssl
 WORKDIR /app
 COPY --from=backend-cache /app .
 CMD ["deno", "run", "-A", "main.ts"]
+
+FROM denoland/deno:latest as video-stt-worker-cache
+WORKDIR /app
+COPY --from=deps /app/worker/video-stt-worker/ .
+RUN deno cache src/main.ts
+
+FROM denoland/deno:latest as video-stt-worker
+RUN apt-get update && apt-get install -y openssl ffmpeg
+WORKDIR /app
+COPY --from=video-stt-worker-cache /app .
+CMD ["deno", "run", "-A", "src/main.ts"]

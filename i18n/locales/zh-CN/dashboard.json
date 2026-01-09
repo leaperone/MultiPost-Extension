@@ -23,6 +23,10 @@
     "drafts": {
       "title": "草稿",
       "description": "管理您的草稿"
+    },
+    "videoTranscribe": {
+      "title": "视频转录",
+      "description": "使用 AI 将视频转换为文字"
     }
   },
   "sidebar": {
@@ -41,7 +45,8 @@
       "apiKeys": "API-Keys",
       "recharge": "充值",
       "drafts": "草稿 (Beta)",
-      "schedule": "计划 (Beta)"
+      "schedule": "计划 (Beta)",
+      "videoTranscribe": "视频转录 (Beta)"
     },
     "collapse": "收起侧边栏"
   },
@@ -51,5 +56,62 @@
   },
   "common": {
     "close": "关闭"
+  },
+  "videoTranscribe": {
+    "page": {
+      "title": "视频转录",
+      "description": "将抖音、TikTok 视频自动转录为文字"
+    },
+    "create": {
+      "title": "创建转录任务",
+      "description": "输入视频链接，自动提取音频并转录为文字（支持抖音、TikTok）",
+      "placeholder": "粘贴抖音或 TikTok 视频链接",
+      "extractBtn": "解析",
+      "createBtn": "创建转录任务",
+      "resetBtn": "重置",
+      "coverAlt": "视频封面"
+    },
+    "toast": {
+      "enterUrl": "请输入视频链接",
+      "extractSuccess": "视频解析成功",
+      "extractFailed": "解析失败，链接可能已过期或无效，请尝试重新复制分享链接",
+      "parseFirst": "请先解析视频",
+      "createSuccess": "任务创建成功",
+      "createFailed": "创建任务失败",
+      "deleteSuccess": "任务已删除",
+      "deleteFailed": "删除失败",
+      "retrySuccess": "任务已重新排队",
+      "retryFailed": "重试失败",
+      "copied": "已复制到剪贴板"
+    },
+    "status": {
+      "pending": "等待处理",
+      "processing": "处理中",
+      "completed": "已完成",
+      "failed": "失败"
+    },
+    "task": {
+      "listTitle": "任务列表",
+      "empty": "暂无转录任务",
+      "emptyHint": "创建一个新任务开始转录视频",
+      "refresh": "刷新",
+      "retry": "重试",
+      "delete": "删除",
+      "copy": "复制",
+      "expand": "展开",
+      "collapse": "收起",
+      "author": "作者",
+      "result": "转录结果",
+      "charCount": "{{count}} 字"
+    },
+    "format": {
+      "duration": "{{mins}}分{{secs}}秒"
+    },
+    "deleteConfirm": {
+      "title": "确认删除",
+      "description": "确定要删除这个转录任务吗？此操作无法撤销。",
+      "cancel": "取消",
+      "confirm": "删除"
+    }
   }
 }

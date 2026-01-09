@@ -56,3 +56,8 @@ public/tracker/
 .devcontainer/.env.dev
 
 worker/dist
+
+# Planning files (claude code)
+task_plan.md
+findings.md
+progress.md

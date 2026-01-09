@@ -93,6 +93,11 @@
       "description": "Obtain content and data from social media to enrich your creation",
       "features": ["Tweet information retrieval", "Account data analysis", "Social media search"]
     },
+    "videoTranscribe": {
+      "title": "Video Transcription",
+      "description": "Convert video audio to text using AI, perfect for creating subtitles or repurposing video content",
+      "features": ["AI-powered speech recognition", "Multiple language support", "High accuracy transcription"]
+    },
     "cta": "Explore More Draft Tools"
   },
   "demo": {

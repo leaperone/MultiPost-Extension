@@ -4,6 +4,7 @@ files:
   - .env
   - .env.local
   - ./backend/.env
+  - ./worker/video-stt-worker/.env
 env:
   MULTIPOST_DATABASE_URL:
   APP_URL:
@@ -53,3 +54,7 @@ env:
   FACEBOOK_REDIRECT_URI:
   LEAPERONE_API_BASE_URL:
   LEAPERONE_API_KEY:
+  VIDEO_EXTRACT_API_URL:
+  VIDEO_EXTRACT_API_KEY:
+  STT_API_URL:
+  STT_API_KEY:

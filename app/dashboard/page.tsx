@@ -1,8 +1,10 @@
-import { Button, Link, Skeleton, Card, CardBody } from '@heroui/react';
-import { Suspense } from 'react';
+'use client';
 
-import { auth } from '@/auth';
-import { createTranslation } from '@/i18n/server';
+import { Button, Link, Skeleton } from '@heroui/react';
+import { Suspense } from 'react';
+import { motion } from 'framer-motion';
+
+import { useTranslation } from '@/i18n/client';
 import {
   SendIcon,
   FileTextIcon,
@@ -10,147 +12,223 @@ import {
   PaletteIcon,
   MessageSquareIcon,
   PuzzleIcon,
+  SparklesIcon,
+  BookOpenIcon,
 } from 'lucide-react';
-// TODO: 暂时隐藏余额功能
-// import { BalanceButton } from './components/BalanceButton';
+import {
+  LiquidGlassMotionCard,
+  LiquidGlassButton,
+  LiquidGlassIconContainer,
+} from '@/components/ui/liquid-glass';
 
 interface DashboardCardProps {
   href: string;
   title: string;
   description: string;
   icon: React.ReactNode;
+  iconColor?: 'primary' | 'secondary' | 'success' | 'warning' | 'danger' | 'default';
   external?: boolean;
+  index?: number;
 }
 
-function DashboardCard({ href, title, description, icon, external }: DashboardCardProps) {
+function DashboardCard({ href, title, description, icon, iconColor = 'default', external, index = 0 }: DashboardCardProps) {
   return (
-    <Card
-      as={Link}
+    <motion.a
       href={href}
       target={external ? '_blank' : undefined}
-      isPressable
-      isBlurred
-      className="bg-background-100/50 group border shadow-inner transition-all dark:border-none dark:bg-default-100/50">
-      <CardBody className="grid grid-rows-4 gap-2 p-4 sm:gap-4 sm:p-6">
-        <div className="row-span-3 m-auto">{icon}</div>
-        <div className="mx-auto space-y-1 text-center">
-          <h3 className="text-lg font-semibold text-foreground/80 sm:text-xl">{title}</h3>
-          <p className="sm:text-md text-sm text-foreground/40">{description}</p>
+      rel={external ? 'noopener noreferrer' : undefined}
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ delay: index * 0.1, duration: 0.5, ease: 'easeOut' }}>
+      <LiquidGlassMotionCard
+        className="group h-full cursor-pointer p-6 sm:p-8"
+        variant="default">
+        <div className="flex flex-col items-center gap-4 sm:gap-6">
+          {/* Icon Container with glass effect */}
+          <LiquidGlassIconContainer
+            size="xl"
+            color={iconColor}
+            className="transition-transform duration-300 group-hover:scale-110">
+            {icon}
+          </LiquidGlassIconContainer>
+
+          {/* Text Content */}
+          <div className="space-y-2 text-center">
+            <h3 className="text-lg font-semibold text-foreground/90 sm:text-xl">{title}</h3>
+            <p className="text-sm text-foreground/50 sm:text-base">{description}</p>
+          </div>
         </div>
-      </CardBody>
-    </Card>
+      </LiquidGlassMotionCard>
+    </motion.a>
   );
 }
 
-export default async function DashboardPage() {
-  const session = await auth();
-  const user = session?.user;
-
-  const { t } = await createTranslation('dashboard');
+export default function DashboardPage() {
+  const { t } = useTranslation('dashboard');
 
   const cards = [
     {
       href: '/dashboard/publish',
       title: t('welcome.publish.title'),
       description: t('welcome.publish.description'),
-      icon: <SendIcon className="size-20 text-primary-600 dark:text-primary-400 sm:size-32" />,
+      icon: <SendIcon className="size-10 text-blue-500 dark:text-blue-400 sm:size-14" />,
+      iconColor: 'primary' as const,
     },
     {
       href: 'https://md.multipost.app',
       title: t('welcome.markdown.title'),
       description: t('welcome.markdown.description'),
-      icon: <FileTextIcon className="size-20 text-secondary-600 dark:text-secondary-400 sm:size-32" />,
+      icon: <BookOpenIcon className="size-10 text-purple-500 dark:text-purple-400 sm:size-14" />,
+      iconColor: 'secondary' as const,
       external: true,
     },
     {
       href: '/dashboard/drafts',
       title: t('welcome.drafts.title'),
       description: t('welcome.drafts.description'),
-      icon: <FileTextIcon className="size-20 text-secondary-600 dark:text-secondary-400 sm:size-32" />,
+      icon: <FileTextIcon className="size-10 text-slate-500 dark:text-slate-400 sm:size-14" />,
+      iconColor: 'default' as const,
     },
     {
       href: '/dashboard/draw',
       title: t('welcome.draw.title'),
       description: t('welcome.draw.description'),
-      icon: <PaletteIcon className="size-20 text-danger-600 dark:text-danger-400 sm:size-32" />,
+      icon: <PaletteIcon className="size-10 text-pink-500 dark:text-pink-400 sm:size-14" />,
+      iconColor: 'danger' as const,
     },
+    // TODO: 视频转录功能暂时隐藏，待功能完善后重新启用
+    // {
+    //   href: '/dashboard/video-transcribe',
+    //   title: t('welcome.videoTranscribe.title'),
+    //   description: t('welcome.videoTranscribe.description'),
+    //   icon: <VideoIcon className="size-10 text-amber-500 dark:text-amber-400 sm:size-14" />,
+    //   iconColor: 'warning' as const,
+    // },
   ];
 
   return (
-    <div
-      className="relative mx-auto h-full overflow-y-auto bg-cover bg-center bg-no-repeat p-4"
-      style={{
-        backgroundImage: "url('https://i.ibb.co/xtN61cRf/Comfy-UI-Output-4-1.png')",
-      }}>
-      {/* 添加半透明遮罩层以提高文字可读性 */}
-      <div className="absolute inset-0 size-full bg-white/60 backdrop-blur-sm dark:bg-black/60"></div>
+    <div className="relative h-full overflow-y-auto">
+      {/* Fixed Background */}
+      <div
+        className="fixed inset-0 bg-cover bg-center bg-no-repeat"
+        style={{
+          backgroundImage: "url('https://i.ibb.co/xtN61cRf/Comfy-UI-Output-4-1.png')",
+        }}
+      />
 
-      <div className="relative z-10 mx-auto grid max-w-7xl gap-6 sm:grid-cols-2 lg:grid-cols-3">
-        <div className="col-span-full space-y-4 md:col-span-3">
-          <div className="flex flex-col items-center justify-between gap-2 md:flex-row">
-            <h2 className="text-2xl font-bold">{t('welcome.title', { name: user?.name || 'Dear' })}</h2>
-            <div className="flex max-w-sm flex-wrap items-center justify-center gap-4 sm:max-w-full sm:flex-row sm:flex-nowrap">
-              {/* TODO: 暂时隐藏余额功能 */}
-              {/* <BalanceButton alert={1} /> */}
-              <Button
-                as={Link}
-                href="https://docs.multipost.app/docs/user-guide/contact-us"
-                target="_blank"
-                variant="flat"
-                color="success"
-                startContent={<MessageSquareIcon className="size-5" />}>
-                {t('welcome.contact_us')}
-              </Button>
-              <Button
-                as={Link}
-                href="/extension"
-                variant="flat"
-                color="warning"
-                startContent={<PuzzleIcon className="size-5" />}>
-                {t('welcome.extension')}
-              </Button>
+      {/* Fixed Semi-transparent overlay */}
+      <div className="fixed inset-0 bg-white/60 backdrop-blur-sm dark:bg-black/60" />
+
+      {/* Fixed Animated gradient orbs */}
+      <div className="pointer-events-none fixed inset-0 overflow-hidden">
+        <motion.div
+          className="absolute -left-32 -top-32 size-96 rounded-full bg-blue-400/20 blur-3xl dark:bg-blue-600/10"
+          animate={{
+            x: [0, 30, 0],
+            y: [0, 20, 0],
+          }}
+          transition={{
+            duration: 8,
+            repeat: Infinity,
+            ease: 'easeInOut',
+          }}
+        />
+        <motion.div
+          className="absolute -bottom-32 -right-32 size-96 rounded-full bg-purple-400/20 blur-3xl dark:bg-purple-600/10"
+          animate={{
+            x: [0, -30, 0],
+            y: [0, -20, 0],
+          }}
+          transition={{
+            duration: 10,
+            repeat: Infinity,
+            ease: 'easeInOut',
+          }}
+        />
+      </div>
+
+      {/* Content */}
+      <div className="relative z-10 mx-auto max-w-7xl p-4 sm:p-6 lg:p-8">
+        {/* Header Section */}
+        <motion.div
+          className="mb-8 sm:mb-12"
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}>
+          <div className="flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center">
+            {/* Welcome Title */}
+            <div className="flex items-center gap-2">
+              <SparklesIcon className="size-6 text-amber-500" />
+              <h1 className="text-2xl font-bold text-foreground/90 sm:text-3xl">
+                {t('welcome.title', { name: '' }).replace('，', '')}
+              </h1>
+            </div>
+
+            {/* Action Buttons */}
+            <div className="flex flex-wrap items-center gap-3">
+              <LiquidGlassButton
+                onClick={() => window.open('https://docs.multipost.app/docs/user-guide/contact-us', '_blank')}
+                className="flex items-center gap-2">
+                <MessageSquareIcon className="size-4" />
+                <span className="hidden sm:inline">{t('welcome.contact_us')}</span>
+              </LiquidGlassButton>
+
+              <LiquidGlassButton
+                onClick={() => (window.location.href = '/extension')}
+                className="flex items-center gap-2">
+                <PuzzleIcon className="size-4" />
+                <span className="hidden sm:inline">{t('welcome.extension')}</span>
+              </LiquidGlassButton>
+
               <Button
                 as={Link}
                 href="/dashboard/settings"
                 isIconOnly
-                variant="flat">
-                <SettingsIcon />
+                className="bg-white/20 backdrop-blur-xl dark:bg-white/10"
+                variant="flat"
+                radius="full">
+                <SettingsIcon className="size-5" />
               </Button>
             </div>
           </div>
+        </motion.div>
 
-          <div className="grid gap-6 sm:grid-cols-2 sm:gap-12 lg:grid-cols-3 lg:gap-16">
+        {/* Cards Grid */}
+        <Suspense fallback={<CardGridSkeleton />}>
+          <div className="grid gap-4 sm:grid-cols-2 sm:gap-6 lg:grid-cols-3 lg:gap-8">
             {cards.map((card, index) => (
               <DashboardCard
-                key={index}
+                key={card.href}
                 {...card}
+                index={index}
               />
             ))}
           </div>
-          <Suspense fallback={<CardSkeleton />}></Suspense>
-        </div>
+        </Suspense>
+
+        {/* Bottom Spacer */}
+        <div className="h-8" />
       </div>
     </div>
   );
 }
 
-function CardSkeleton() {
+function CardGridSkeleton() {
   return (
-    <div className="rounded-lg bg-background/60 p-4 backdrop-blur-md dark:bg-default-100/50">
-      <Skeleton className="rounded-lg">
-        <div className="h-24 rounded-lg bg-default-300"></div>
-      </Skeleton>
-      <div className="space-y-3 pt-4">
-        <Skeleton className="w-3/5 rounded-lg">
-          <div className="h-3 w-3/5 rounded-lg bg-default-200"></div>
-        </Skeleton>
-        <Skeleton className="w-4/5 rounded-lg">
-          <div className="h-3 w-4/5 rounded-lg bg-default-200"></div>
-        </Skeleton>
-        <Skeleton className="w-2/5 rounded-lg">
-          <div className="h-3 w-2/5 rounded-lg bg-default-300"></div>
-        </Skeleton>
-      </div>
+    <div className="grid gap-4 sm:grid-cols-2 sm:gap-6 lg:grid-cols-3 lg:gap-8">
+      {[...Array(5)].map((_, i) => (
+        <div
+          key={i}
+          className="rounded-3xl border border-white/20 bg-white/15 p-6 backdrop-blur-xl dark:border-white/10 dark:bg-black/30 sm:p-8">
+          <div className="flex flex-col items-center gap-4 sm:gap-6">
+            <Skeleton className="size-24 rounded-full sm:size-32" />
+            <div className="w-full space-y-2 text-center">
+              <Skeleton className="mx-auto h-6 w-2/3 rounded-lg" />
+              <Skeleton className="mx-auto h-4 w-4/5 rounded-lg" />
+            </div>
+          </div>
+        </div>
+      ))}
     </div>
   );
 }

@@ -19,3 +19,10 @@ services:
       context: ..
       dockerfile: ./docker/Dockerfile
       target: backend
+
+  video-stt-worker:
+    image: registry.cn-hongkong.aliyuncs.com/leaperone/multipost:video-stt-worker-latest
+    build:
+      context: ..
+      dockerfile: ./docker/Dockerfile
+      target: video-stt-worker

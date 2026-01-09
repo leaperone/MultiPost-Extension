@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "TikHub.io API Docs": {
+      "command": "npx",
+      "args": ["-y", "apifox-mcp-server@latest", "--site-id=4705614"]
+    }
+  }
+}

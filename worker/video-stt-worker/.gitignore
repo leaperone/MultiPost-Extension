@@ -1,0 +1,37 @@
+# Environment variables
+.env
+.env.local
+
+# Deno
+deno.lock
+.deno/
+node_modules/
+
+# Prisma client (generated, should be copied from backend)
+src/prisma/
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+
+# Logs
+*.log
+logs/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Build output
+dist/
+build/
+
+# Uploaded files
+uploads/

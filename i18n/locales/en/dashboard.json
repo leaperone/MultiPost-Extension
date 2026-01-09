@@ -23,6 +23,10 @@
     "drafts": {
       "title": "Drafts",
       "description": "Manage your drafts"
+    },
+    "videoTranscribe": {
+      "title": "Video Transcribe",
+      "description": "Transcribe video to text with AI"
     }
   },
   "sidebar": {
@@ -41,7 +45,8 @@
       "apiKeys": "API-Keys",
       "recharge": "Recharge",
       "drafts": "Drafts (Beta)",
-      "schedule": "Schedule (Beta)"
+      "schedule": "Schedule (Beta)",
+      "videoTranscribe": "Video Transcribe (Beta)"
     },
     "collapse": "Collapse Sidebar"
   },
@@ -51,5 +56,62 @@
   },
   "common": {
     "close": "Close"
+  },
+  "videoTranscribe": {
+    "page": {
+      "title": "Video Transcription",
+      "description": "Automatically transcribe Douyin and TikTok videos to text"
+    },
+    "create": {
+      "title": "Create Transcription Task",
+      "description": "Enter a video link to extract audio and transcribe to text (supports Douyin, TikTok)",
+      "placeholder": "Paste Douyin or TikTok video link",
+      "extractBtn": "Extract",
+      "createBtn": "Create Task",
+      "resetBtn": "Reset",
+      "coverAlt": "Video cover"
+    },
+    "toast": {
+      "enterUrl": "Please enter a video URL",
+      "extractSuccess": "Video extracted successfully",
+      "extractFailed": "Extraction failed, the link may have expired. Please try copying a fresh share link",
+      "parseFirst": "Please extract the video first",
+      "createSuccess": "Task created successfully",
+      "createFailed": "Failed to create task",
+      "deleteSuccess": "Task deleted",
+      "deleteFailed": "Failed to delete",
+      "retrySuccess": "Task requeued",
+      "retryFailed": "Failed to retry",
+      "copied": "Copied to clipboard"
+    },
+    "status": {
+      "pending": "Pending",
+      "processing": "Processing",
+      "completed": "Completed",
+      "failed": "Failed"
+    },
+    "task": {
+      "listTitle": "Task List",
+      "empty": "No transcription tasks",
+      "emptyHint": "Create a new task to start transcribing videos",
+      "refresh": "Refresh",
+      "retry": "Retry",
+      "delete": "Delete",
+      "copy": "Copy",
+      "expand": "Expand",
+      "collapse": "Collapse",
+      "author": "Author",
+      "result": "Transcription Result",
+      "charCount": "{{count}} characters"
+    },
+    "format": {
+      "duration": "{{mins}}m {{secs}}s"
+    },
+    "deleteConfirm": {
+      "title": "Confirm Delete",
+      "description": "Are you sure you want to delete this transcription task? This action cannot be undone.",
+      "cancel": "Cancel",
+      "confirm": "Delete"
+    }
   }
 }

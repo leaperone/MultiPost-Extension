@@ -11,6 +11,13 @@ generator denoclient {
   runtime       = "deno"
 }
 
+generator workerclient {
+  provider      = "prisma-client"
+  output        = "../worker/video-stt-worker/src/prisma/client_multipost_deno"
+  binaryTargets = ["native", "darwin-arm64", "debian-openssl-1.1.x", "debian-openssl-3.0.x"]
+  runtime       = "deno"
+}
+
 datasource db {
   provider = "postgresql"
   url      = env("MULTIPOST_DATABASE_URL")
@@ -48,6 +55,7 @@ model User {
   PublishTask         PublishTask[]
   PublishTaskLog      PublishTaskLog[]
   ImageGenerationLog  ImageGenerationLog[]
+  VideoTranscription  VideoTranscription[]
 }
 
 model Account {
@@ -524,4 +532,26 @@ model PublishTaskLog {
 
   publishTask PublishTask @relation(fields: [publishTaskId], references: [id], onDelete: Cascade)
   User        User        @relation(fields: [userId], references: [id])
+}
+
+model VideoTranscription {
+  id         String   @id @unique @default(cuid())
+  userId     String
+  videoUrl   String   // 原始视频链接 (抖音/TikTok等)
+  videoId    String?  // 平台视频ID
+  platform   String?  // 平台类型: douyin, tiktok, etc.
+  audioUrl   String?  // 提取的音频URL
+  duration   Int?     // 音频时长(秒)
+  transcript String?  @db.Text // 转录文本
+  status     String   @default("pending") // pending, processing, completed, failed
+  error      String?  // 错误信息
+  metadata   Json?    // 额外信息(视频标题、作者等)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([status])
+  @@index([createdAt])
 }

@@ -44,7 +44,7 @@ pnpm eslint                 # ESLint check
 pnpm eslint:fix             # ESLint with auto-fix
 ```
 
-**Note:** Don't run `pnpm build` during development, just use lint to check. Biome handles all linting and formatting (not ESLint/Prettier).
+**Note:** Don't run `pnpm build` during development, just use lint to check.
 
 ### Testing
 This codebase currently has no test setup. When implementing tests, add appropriate npm scripts to package.json.
@@ -305,11 +305,31 @@ addToast({
 - **Project Name**: MultiPost
 - **Organization**: 0199e216-bb22-0000-9349-7facf8dca509
 
+## MCP Servers
+
+Configuration file: `.mcp.json`
+
+### TikHub.io API Docs
+
+TikHub provides APIs for extracting video/audio from social media platforms (Douyin, TikTok, etc.).
+
+- **MCP Server**: `apifox-mcp-server` with site-id `4705614`
+- **Usage**: Query TikHub API documentation via MCP tools
+- **Available tools**:
+  - `read_project_oas` - Read OpenAPI Spec
+  - `read_project_oas_ref_resources` - Read $ref resources from OAS
+  - `refresh_project_oas` - Refresh OAS from server
+
+**Current usage in project**:
+- `lib/tikhub.ts` - TikHub API client wrapper
+- `app/api/video/extract/route.ts` - Video extraction endpoint using TikHub
+
 ## Important Notes
 
 - Uses **pnpm exclusively** (enforced by preinstall hook)
 - Node version managed via `.nvmrc` (v19.7.0)
-- **Biome** handles all linting and formatting (not ESLint/Prettier)
+- **ESLint** for JS/TS linting, **Stylelint** for CSS, **Prettier** for formatting
+- **lint-staged + husky** for pre-commit hooks
 - Three separate databases (Main, Region, Bilibili)
 - **Don't run `pnpm build`** during development, just use lint to check
 - Uses **next-safe-action** for type-safe server actions
