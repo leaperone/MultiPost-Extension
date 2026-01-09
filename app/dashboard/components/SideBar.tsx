@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
+ 
 import {
   BookIcon,
   GridIcon,
@@ -170,7 +170,7 @@ export async function DashboardSidebar() {
   return (
     <Sidebar
       side="left"
-      variant="floating"
+      variant="sidebar"
       collapsible="icon">
       <SidebarHeader>
         <SidebarMenu>

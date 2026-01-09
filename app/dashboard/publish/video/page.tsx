@@ -138,6 +138,54 @@ const HeroTagInput = React.forwardRef<
 });
 HeroTagInput.displayName = 'HeroTagInput';
 
+// Stepper组件
+interface StepperProps {
+  steps: { id: number; name: string; description: string }[];
+  currentStep: number;
+  setCurrentStep: (step: number) => void;
+  title: string;
+  onStepOneClick: () => void;
+}
+
+const Stepper = ({ steps, currentStep, setCurrentStep, title, onStepOneClick }: StepperProps) => (
+  <Card className="sticky top-4 h-fit">
+    <CardHeader>
+      <p className="text-lg font-bold">{title}</p>
+    </CardHeader>
+    <CardBody>
+      <div className="flex flex-col gap-8">
+        {steps.map((step, index) => (
+          <div
+            key={step.id}
+            className={cn('flex items-start gap-4', currentStep > step.id ? 'cursor-pointer' : 'cursor-default')}
+            onClick={() => {
+              if (step.id === 1) {
+                onStepOneClick();
+              } else if (currentStep > step.id) {
+                setCurrentStep(step.id);
+              }
+            }}>
+            <div
+              className={cn(
+                'flex h-8 w-8 shrink-0 items-center justify-center rounded-full font-bold transition-colors',
+                step.id === currentStep
+                  ? 'bg-primary text-primary-foreground'
+                  : 'bg-default-200 text-default-foreground',
+                currentStep > step.id && 'bg-primary/20 text-primary',
+              )}>
+              {index + 1}
+            </div>
+            <div>
+              <p className="font-semibold">{step.name}</p>
+              <p className="text-sm text-default-500">{step.description}</p>
+            </div>
+          </div>
+        ))}
+      </div>
+    </CardBody>
+  </Card>
+);
+
 // 拖放区域组件
 const DropZone = ({ onFileDrop, onClick }: { onFileDrop: (file: File) => void; onClick: () => void }) => {
   const { t } = useTranslation('publish');
@@ -242,51 +290,12 @@ export default function VideoPage() {
     },
   ];
 
-  const Stepper = () => (
-    <Card className="sticky top-4 h-fit">
-      <CardHeader>
-        <p className="text-lg font-bold">{t('video.newTask')}</p>
-      </CardHeader>
-      <CardBody>
-        <div className="flex flex-col gap-8">
-          {steps.map((step, index) => (
-            <div
-              key={step.id}
-              className={cn('flex items-start gap-4', currentStep > step.id ? 'cursor-pointer' : 'cursor-default')}
-              onClick={() => {
-                if (step.id === 1) {
-                  router.push('/dashboard/publish');
-                } else if (currentStep > step.id) {
-                  setCurrentStep(step.id);
-                }
-              }}>
-              <div
-                className={cn(
-                  'flex h-8 w-8 shrink-0 items-center justify-center rounded-full font-bold transition-colors',
-                  step.id === currentStep
-                    ? 'bg-primary text-primary-foreground'
-                    : 'bg-default-200 text-default-foreground',
-                  currentStep > step.id && 'bg-primary/20 text-primary',
-                )}>
-                {index + 1}
-              </div>
-              <div>
-                <p className="font-semibold">{step.name}</p>
-                <p className="text-sm text-default-500">{step.description}</p>
-              </div>
-            </div>
-          ))}
-        </div>
-      </CardBody>
-    </Card>
-  );
-
   // Sync persisted platform selection after hydration to prevent mismatch
   useEffect(() => {
     if (videoPlatforms.length > 0) {
       setSelectedPlatforms(videoPlatforms);
     }
-  }, []);
+  }, [videoPlatforms]);
 
   useEffect(() => {
     async function fetchPlatforms() {
@@ -545,7 +554,13 @@ export default function VideoPage() {
 
   return (
     <div className="grid h-full grid-cols-1 justify-center gap-8 p-4 md:grid-cols-[280px_minmax(0,560px)]">
-      <Stepper />
+      <Stepper
+        steps={steps}
+        currentStep={currentStep}
+        setCurrentStep={setCurrentStep}
+        title={t('video.newTask')}
+        onStepOneClick={() => router.push('/dashboard/publish')}
+      />
       <div className="overflow-y-auto">
         {currentStep === 2 && (
           <div className="flex flex-col gap-2">
@@ -800,12 +815,12 @@ export default function VideoPage() {
                     <div className="space-y-3">
                       <DatePicker
                         label={t('video.selectPublishTime', '选择发布时间')}
-                        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                         
                         value={scheduledDateTime as any}
-                        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                         
                         onChange={setScheduledDateTime as any}
                         granularity="minute"
-                        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                         
                         minValue={now(getLocalTimeZone()) as any}
                         showMonthAndYearPickers
                         hourCycle={24}

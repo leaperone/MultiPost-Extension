@@ -67,7 +67,7 @@ interface ClientPublishModalProps {
 export default function ClientPublishModal({
   isOpen,
   onClose,
-  draftId: _draftId, // eslint-disable-line @typescript-eslint/no-unused-vars
+  draftId: _draftId,  
   onSuccess,
 }: ClientPublishModalProps) {
   const { t } = useTranslation('draft');
@@ -398,12 +398,12 @@ export default function ClientPublishModal({
                   <div className="space-y-3">
                     <DatePicker
                       label={t('publish.schedule.selectDateTime')}
-                      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                       
                       value={scheduledDateTime as any}
-                      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                       
                       onChange={setScheduledDateTime as any}
                       granularity="second"
-                      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                       
                       minValue={now(getLocalTimeZone()) as any}
                       showMonthAndYearPickers
                       isRequired

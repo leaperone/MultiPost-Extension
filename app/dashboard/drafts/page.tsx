@@ -132,7 +132,7 @@ export default function DraftsPage() {
 
     try {
       setAutoSaving(true);
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+       
       const filesToSave: DraftFileData[] = currentDraftFiles.map(({ file: _f, uploadProgress: _u, ...rest }) => rest);
       const result = await updateDynamicDraft(selectedDraftId, {
         title: currentDraftTitle,

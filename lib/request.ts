@@ -33,7 +33,7 @@ export function unauthResp() {
 
 export function errorResp(error: unknown): NextResponse<RespT> {
   if (error instanceof z.ZodError) {
-    return resp(-1, 'Invalid request data', error.errors, 400);
+    return resp(-1, 'Invalid request data', error.issues, 400);
   }
   return resp(-1, (error as Error).message, {}, 500);
 }

@@ -15,7 +15,7 @@ export function unauthenticatedResponse() {
 
 export function errorResponse(error: unknown) {
   if (error instanceof z.ZodError) {
-    return NextResponse.json({ success: false, error: 'Invalid request data', details: error.errors }, { status: 400 });
+    return NextResponse.json({ success: false, error: 'Invalid request data', details: error.issues }, { status: 400 });
   }
   return NextResponse.json({ success: false, error: (error as Error).message }, { status: 500 });
 }

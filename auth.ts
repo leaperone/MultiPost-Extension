@@ -52,7 +52,7 @@ function getProviders() {
 }
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+   
   adapter: PrismaAdapter(prisma as any),
   providers: getProviders(),
   experimental: {

@@ -33,6 +33,12 @@ const nextConfig = {
       exclude: [/node_modules/, /backend/],
     });
 
+    // Suppress fumadocs-mdx dynamic import warning (safe to ignore)
+    config.infrastructureLogging = {
+      ...config.infrastructureLogging,
+      level: 'error',
+    };
+
     return config;
   },
   headers: async () => [
@@ -69,7 +75,12 @@ const configWithPostHog = withPostHogConfig(nextConfig, {
 });
 
 // Ensure standalone output is preserved after plugin wrappers
-export default withMDX({
+const finalConfig = withMDX({
   ...configWithPostHog,
   output: 'standalone',
 });
+
+// Remove turbopack field to fix Next.js 15.2.x warning
+delete finalConfig.turbopack;
+
+export default finalConfig;

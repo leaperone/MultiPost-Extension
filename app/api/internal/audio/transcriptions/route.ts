@@ -27,7 +27,7 @@ export async function POST(request: NextRequest) {
     // 验证请求数据格式
     const validationResult = AudioTranscriptionSchema.safeParse(rawData);
     if (!validationResult.success) {
-      throw new Error(`Invalid request data: ${validationResult.error.errors[0].message}`);
+      throw new Error(`Invalid request data: ${validationResult.error.issues[0].message}`);
     }
 
     const { duration } = validationResult.data;

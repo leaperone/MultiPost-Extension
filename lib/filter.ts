@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
+ 
 export const urlFilter = (data: any[]) => {
   const map = data.reduce((obj, { x, y }) => {
     if (x) {

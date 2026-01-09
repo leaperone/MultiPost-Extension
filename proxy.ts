@@ -3,7 +3,7 @@ import { NextRequest, NextResponse } from 'next/server';
 const DOCS_LANGUAGES = ['zh', 'en'];
 const DEFAULT_DOCS_LANG = 'zh';
 
-export async function middleware(request: NextRequest) {
+export async function proxy(request: NextRequest) {
   const { nextUrl } = request;
   const isApiRequest = nextUrl.pathname.startsWith('/api');
 

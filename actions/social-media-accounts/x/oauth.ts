@@ -194,7 +194,7 @@ export async function revokeXToken(accessToken: string): Promise<void> {
   // 由于我们只有OAuth 2.0的访问token，这里我们只进行本地撤销
   // 实际的token撤销需要在应用级别进行，或者需要额外的OAuth 1.0a认证
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+   
   console.log(
     'X token revocation: Local revocation only. For full revocation, OAuth 1.0a credentials are required. Access token:',
     accessToken,

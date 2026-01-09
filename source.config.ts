@@ -1,12 +1,7 @@
-import {
-  defineConfig,
-  defineDocs,
-  frontmatterSchema,
-  metaSchema,
-} from 'fumadocs-mdx/config';
-import { z } from 'zod';
+import { defineConfig, defineDocs, frontmatterSchema, metaSchema } from 'fumadocs-mdx/config';
+// Use zod v4 for schema extension (fumadocs-mdx uses zod v4 internally)
+import { z } from 'zod/v4';
 
-// @ts-expect-error - Type instantiation is excessively deep
 const blogFrontmatter = frontmatterSchema.extend({
   keywords: z.string().optional(),
   date: z.date().optional(),

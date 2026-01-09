@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
+ 
 import jwt from 'jsonwebtoken';
 import { decrypt, encrypt } from '@/lib/crypto';
 

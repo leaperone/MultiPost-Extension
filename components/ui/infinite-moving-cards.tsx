@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
+ 
 'use client';
 
 import { cn } from '@/lib/utils';
@@ -23,12 +23,9 @@ export const InfiniteMovingCards = ({
 }) => {
   const containerRef = React.useRef<HTMLDivElement>(null);
   const scrollerRef = React.useRef<HTMLUListElement>(null);
+  const [start, setStart] = useState(false);
 
   useEffect(() => {
-    addAnimation();
-  }, []);
-  const [start, setStart] = useState(false);
-  function addAnimation() {
     if (containerRef.current && scrollerRef.current) {
       const scrollerContent = Array.from(scrollerRef.current.children);
 
@@ -39,22 +36,14 @@ export const InfiniteMovingCards = ({
         }
       });
 
-      getDirection();
-      getSpeed();
-      setStart(true);
-    }
-  }
-  const getDirection = () => {
-    if (containerRef.current) {
+      // Set direction
       if (direction === 'left') {
         containerRef.current.style.setProperty('--animation-direction', 'forwards');
       } else {
         containerRef.current.style.setProperty('--animation-direction', 'reverse');
       }
-    }
-  };
-  const getSpeed = () => {
-    if (containerRef.current) {
+
+      // Set speed
       if (speed === 'fast') {
         containerRef.current.style.setProperty('--animation-duration', '20s');
       } else if (speed === 'normal') {
@@ -62,8 +51,10 @@ export const InfiniteMovingCards = ({
       } else {
         containerRef.current.style.setProperty('--animation-duration', '80s');
       }
+
+      setStart(true);
     }
-  };
+  }, [direction, speed]);
   return (
     <div
       ref={containerRef}

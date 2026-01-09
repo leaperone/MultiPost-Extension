@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
+ 
 'use client';
 
 import { CSSProperties, ReactElement, ReactNode, useEffect, useRef, useState } from 'react';

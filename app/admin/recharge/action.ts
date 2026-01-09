@@ -84,7 +84,7 @@ export async function adminRecharge(formData: RechargeFormData) {
     return { success: true, message: '充值成功' };
   } catch (error) {
     if (error instanceof z.ZodError) {
-      return { success: false, message: '表单数据验证失败', errors: error.errors };
+      return { success: false, message: '表单数据验证失败', errors: error.issues };
     }
 
     console.error('充值失败:', error);

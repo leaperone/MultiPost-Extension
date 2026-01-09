@@ -19,7 +19,7 @@ export const getPosthogClient = (): PostHog | undefined => {
   }
 
   if (!cachedClient) {
-    // eslint-disable-next-line @typescript-eslint/no-var-requires
+     
     const { PostHog } = require("posthog-node");
 
     cachedClient = new PostHog(POSTHOG_KEY, {

@@ -12,7 +12,7 @@ interface HeaderProps {
 }
 
 // TODO: 暂时隐藏余额功能，isShowBalance 参数暂时不使用
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
+ 
 export default async function Header({ title, description, isShowBalance = true }: HeaderProps) {
   return (
     <div className="flex items-center justify-between p-2">

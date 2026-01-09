@@ -16,7 +16,7 @@ import {
 const FACEBOOK_USER_PLATFORM = 'facebook';
 const FACEBOOK_PAGE_PLATFORM = 'facebook-pages';
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+ 
 function getMetadataRecord(metadata: unknown): any {
   if (metadata && typeof metadata === 'object' && !Array.isArray(metadata)) {
     return { ...metadata };
@@ -206,7 +206,7 @@ export async function cancelFacebookPagesSelection() {
   });
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+ 
 function buildMetadata(page: FacebookPageSummary, details: FacebookPageDetails): any {
   return {
     tasks: page.tasks,

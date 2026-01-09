@@ -32,7 +32,7 @@ interface TikTokAccount {
   avatarUrl: string | null;
   description: string | null;
   expiresAt: Date | null;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+   
   metadata: any;
   createdAt: Date;
   updatedAt: Date;
@@ -46,7 +46,7 @@ interface XAccount {
   avatarUrl: string | null;
   description: string | null;
   expiresAt: Date | null;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+   
   metadata: any;
   createdAt: Date;
   updatedAt: Date;
@@ -60,7 +60,7 @@ interface FacebookAccount {
   avatarUrl: string | null;
   description: string | null;
   expiresAt: Date | null;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+   
   metadata: any;
   createdAt: Date;
   updatedAt: Date;

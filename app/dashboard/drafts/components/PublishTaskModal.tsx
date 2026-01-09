@@ -877,12 +877,12 @@ export default function PublishTaskModal({ isOpen, onClose, draftId, onSuccess }
               <label className="mb-2 block text-sm font-medium">Schedule Publish Time</label>
               <DatePicker
                 label="Select publish date and time"
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                 
                 value={publishedAt as any}
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                 
                 onChange={setPublishedAt as any}
                 granularity="minute"
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                 
                 minValue={now(getLocalTimeZone()) as any}
                 showMonthAndYearPickers
                 hourCycle={24}

@@ -68,7 +68,7 @@ export interface PlatformInfo {
   tags?: string[];
   accountKey: string;
   accountInfo?: AccountInfo;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+   
   extraConfig?: any;
 }
 

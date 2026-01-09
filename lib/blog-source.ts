@@ -1,5 +1,5 @@
 import { blogI18n } from '@/lib/blog-i18n';
-import { blog } from '@/.source';
+import { blog } from '@/.source/server';
 import { loader } from 'fumadocs-core/source';
 
 export const blogSource = loader({

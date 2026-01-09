@@ -83,7 +83,7 @@ const ScrollingBanner = React.forwardRef<HTMLDivElement, ScrollingBannerProps>(
           className,
         )}
         style={{
-          // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+           
           // @ts-expect-error
           '--gap': gap,
           '--duration': `${duration}s`,

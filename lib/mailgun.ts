@@ -1,7 +1,7 @@
 import { posthogClient } from './posthog/server';
 import crypto from 'crypto';
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+ 
 export async function sendVerificationRequest(params: any) {
   const { identifier: to, provider, url } = params;
   const domain = provider.from.split('@').at(1);

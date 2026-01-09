@@ -225,9 +225,9 @@ export function CreateActivityModal() {
                     <label className="text-sm font-medium">{t('activity.create.labels.deadline')}</label>
                     <DatePicker
                       className="w-full"
-                      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                       
                       onChange={handleDateChange as any}
-                      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                       
                       minValue={parseDate(new Date().toISOString().split('T')[0]) as any}
                       label={t('activity.create.placeholders.deadline')}
                     />

@@ -1,4 +1,4 @@
-import { DocsLayout } from 'fumadocs-ui/layouts/notebook';
+import { DocsLayout } from 'fumadocs-ui/layouts/docs';
 import type { ReactNode } from 'react';
 import { blogSource } from '@/lib/blog-source';
 import { blogI18n } from '@/lib/blog-i18n';

@@ -66,7 +66,7 @@ export async function POST(request: Request) {
   } catch (error) {
     console.error('Error creating API key:', error);
     if (error instanceof z.ZodError) {
-      return new NextResponse(error.errors[0].message, { status: 400 });
+      return new NextResponse(error.issues[0].message, { status: 400 });
     }
     return new NextResponse('Internal Server Error', { status: 500 });
   }

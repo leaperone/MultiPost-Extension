@@ -1,6 +1,6 @@
 'use client';
 
-import { RootProvider } from 'fumadocs-ui/provider';
+import { RootProvider } from 'fumadocs-ui/provider/next';
 import { usePathname, useRouter } from 'next/navigation';
 import type { ReactNode } from 'react';
 import { blogI18n } from '@/lib/blog-i18n';

@@ -223,11 +223,11 @@ export function EditActivityModal({ isOpen, onOpenChange, initialData }: EditAct
                   <label className="text-sm font-medium">截止日期</label>
                   <DatePicker
                     className="w-full"
-                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                     
                     defaultValue={parseDate(new Date(initialData.expiredAt).toISOString().split('T')[0]) as any}
-                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                     
                     onChange={handleDateChange as any}
-                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                     
                     minValue={parseDate(new Date().toISOString().split('T')[0]) as any}
                     label="选择截止日期"
                   />
