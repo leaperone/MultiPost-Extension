@@ -43,11 +43,11 @@ export async function generatePoster(data: PosterGenerationSchema) {
       const created = await tx.posterGeneration.create({
         data: {
           userId: session.user.id as string,
-          prompt: data.prompt,
+          prompt: data.prompt as string,
           status: PosterGenerationStatus.PENDING,
-          width: data.width,
-          height: data.height,
-          model: data.model,
+          width: data.width as number,
+          height: data.height as number,
+          model: data.model as string,
           systemPrompt: Category.find((item) => item.name === data.category)?.systemPrompt,
         },
       });
