@@ -43,7 +43,7 @@ export default function PlatformCheckbox({
                 alt={platformInfo.platformName}
                 width={20}
                 height={20}
-                className="rounded-sm"
+                className="rounded-xs"
               />
             )
           )}

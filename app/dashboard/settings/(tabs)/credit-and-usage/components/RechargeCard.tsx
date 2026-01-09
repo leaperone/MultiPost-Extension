@@ -92,7 +92,7 @@ export default function RechargeCard() {
           onPress={() => handleRecharge(Number(customAmount), 'stripe')}
           className="border border-secondary/20 shadow-none"
           startContent={
-            <span className="flex size-6 items-center justify-center rounded-md bg-white p-0.5 shadow-sm">
+            <span className="flex size-6 items-center justify-center rounded-md bg-white p-0.5 shadow-xs">
               <Icon
                 icon="logos:stripe"
                 className="size-5"

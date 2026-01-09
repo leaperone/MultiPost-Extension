@@ -116,7 +116,7 @@ export function ImageGeneratePanel({ draftTitle, draftContent, onInsertImage }: 
 
   return (
     <div className="mx-auto w-full max-w-3xl">
-      <div className="mt-8 rounded-lg border bg-white p-6 shadow-sm dark:border-gray-700 dark:bg-gray-900">
+      <div className="mt-8 rounded-lg border bg-white p-6 shadow-xs dark:border-gray-700 dark:bg-gray-900">
         {step === 'form' && (
           <div>
             {(draftTitle || draftContent) && (
@@ -190,7 +190,7 @@ export function ImageGeneratePanel({ draftTitle, draftContent, onInsertImage }: 
                       isIconOnly
                       size="lg"
                       variant="flat"
-                      className="border border-white/30 bg-white/20 text-white backdrop-blur-sm hover:bg-white/30"
+                      className="border border-white/30 bg-white/20 text-white backdrop-blur-xs hover:bg-white/30"
                       onPress={() => {
                         setActiveIndex(index);
                         setViewerVisible(true);
@@ -203,7 +203,7 @@ export function ImageGeneratePanel({ draftTitle, draftContent, onInsertImage }: 
                         isIconOnly
                         size="lg"
                         variant="flat"
-                        className="border border-white/30 bg-white/20 text-white backdrop-blur-sm hover:bg-white/30"
+                        className="border border-white/30 bg-white/20 text-white backdrop-blur-xs hover:bg-white/30"
                         onPress={() => handleInsertSpecific(imageUrl)}>
                         <Plus className="size-5" />
                       </Button>

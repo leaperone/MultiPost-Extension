@@ -8,7 +8,7 @@ interface CardCommentProps {
 export const CardComment = ({ commenter, replier }: CardCommentProps) => {
   return (
     <div className="storybook-fix group mx-auto h-48 w-full max-w-md rounded-xl bg-white p-4 shadow">
-      <div className="relative flex h-40 flex-col space-y-4 overflow-hidden rounded-md bg-neutral-50 text-black shadow-sm hover:shadow-lg">
+      <div className="relative flex h-40 flex-col space-y-4 overflow-hidden rounded-md bg-neutral-50 text-black shadow-xs hover:shadow-lg">
         <div className="h-fit p-4 transition-all group-hover:-translate-y-1/3">
           <h3 className="text-sm font-semibold">{commenter} commented</h3>
           <div className="my-2 h-3 w-full animate-pulse rounded-md bg-neutral-300" />

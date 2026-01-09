@@ -117,7 +117,7 @@ export default function DashboardPage() {
       />
 
       {/* Fixed Semi-transparent overlay */}
-      <div className="fixed inset-0 bg-white/60 backdrop-blur-sm dark:bg-black/60" />
+      <div className="fixed inset-0 bg-white/60 backdrop-blur-xs dark:bg-black/60" />
 
       {/* Fixed Animated gradient orbs */}
       <div className="pointer-events-none fixed inset-0 overflow-hidden">

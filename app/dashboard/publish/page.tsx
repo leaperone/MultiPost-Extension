@@ -75,7 +75,7 @@ export default function PublishPage() {
       {/* Feature Tips Banner */}
       <div className="mb-8 flex w-full max-w-2xl flex-col gap-3 sm:flex-row">
         <Link href="/dashboard/draw/image" className="flex-1">
-          <Card className="group h-full border-none bg-gradient-to-r from-amber-500/10 to-orange-500/10 shadow-sm transition-all hover:shadow-md">
+          <Card className="group h-full border-none bg-gradient-to-r from-amber-500/10 to-orange-500/10 shadow-xs transition-all hover:shadow-md">
             <CardBody className="flex flex-row items-center gap-3 p-4">
               <div className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-amber-500 to-orange-500 text-white">
                 <SparklesIcon className="size-5" />
@@ -89,7 +89,7 @@ export default function PublishPage() {
           </Card>
         </Link>
         <Link href="/dashboard/schedule" className="flex-1">
-          <Card className="group h-full border-none bg-gradient-to-r from-green-500/10 to-emerald-500/10 shadow-sm transition-all hover:shadow-md">
+          <Card className="group h-full border-none bg-gradient-to-r from-green-500/10 to-emerald-500/10 shadow-xs transition-all hover:shadow-md">
             <CardBody className="flex flex-row items-center gap-3 p-4">
               <div className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-green-500 to-emerald-500 text-white">
                 <CalendarClockIcon className="size-5" />

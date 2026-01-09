@@ -208,7 +208,7 @@ export function GenerationForm({ onSubmit, loading, initialValues, extraPrompt }
                   size="sm"
                   classNames={{
                     tabList: 'w-full justify-start bg-default-50 p-0.5 rounded-md',
-                    tab: 'rounded-md data-[selected=true]:shadow-sm',
+                    tab: 'rounded-md data-[selected=true]:shadow-xs',
                     panel: 'pt-3',
                   }}>
                   <Tab

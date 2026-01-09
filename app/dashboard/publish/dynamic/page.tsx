@@ -904,7 +904,7 @@ export default function DynamicPage() {
                 </DndContext>
               </CardBody>
               {isDraggingOver && (
-                <div className="absolute inset-0 z-10 flex flex-col items-center justify-center rounded-lg bg-primary/20 backdrop-blur-sm">
+                <div className="absolute inset-0 z-10 flex flex-col items-center justify-center rounded-lg bg-primary/20 backdrop-blur-xs">
                   <Icon
                     icon="lucide:upload-cloud"
                     className="size-16 text-primary"
@@ -965,7 +965,7 @@ export default function DynamicPage() {
                 </div>
               </CardFooter>
               {isVideoDraggingOver && (
-                <div className="absolute inset-0 z-10 flex flex-col items-center justify-center rounded-lg bg-primary/20 backdrop-blur-sm">
+                <div className="absolute inset-0 z-10 flex flex-col items-center justify-center rounded-lg bg-primary/20 backdrop-blur-xs">
                   <Icon
                     icon="lucide:upload-cloud"
                     className="size-16 text-primary"

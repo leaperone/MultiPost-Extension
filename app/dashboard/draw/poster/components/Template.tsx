@@ -96,7 +96,7 @@ export function Template({ onSelect, category }: TemplateProps) {
                         isIconOnly
                         size="lg"
                         variant="flat"
-                        className="bg-white/20 backdrop-blur-sm hover:bg-white/40"
+                        className="bg-white/20 backdrop-blur-xs hover:bg-white/40"
                         onPress={() => handleViewImage(index)}>
                         <Maximize2 className="size-6 text-white" />
                       </Button>
@@ -111,7 +111,7 @@ export function Template({ onSelect, category }: TemplateProps) {
                         color="primary"
                         variant="flat"
                         size="sm"
-                        className="bg-white/10 backdrop-blur-sm"
+                        className="bg-white/10 backdrop-blur-xs"
                         onPress={() =>
                           onSelect({
                             prompt: template.meta.prompt,

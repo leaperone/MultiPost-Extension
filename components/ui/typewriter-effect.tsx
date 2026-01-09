@@ -85,7 +85,7 @@ export const TypewriterEffect = ({
           repeat: Infinity,
           repeatType: 'reverse',
         }}
-        className={cn('inline-block rounded-sm w-[4px] h-4 md:h-6 lg:h-10 bg-blue-500', cursorClassName)}></motion.span>
+        className={cn('inline-block rounded-xs w-[4px] h-4 md:h-6 lg:h-10 bg-blue-500', cursorClassName)}></motion.span>
     </div>
   );
 };
@@ -148,7 +148,6 @@ export const TypewriterEffectSmooth = ({
           delay: 1,
         }}>
         <div
-          // eslint-disable-next-line tailwindcss/no-custom-classname
           className="lg:text:3xl text-xs font-bold sm:text-base md:text-xl xl:text-5xl"
           style={{
             whiteSpace: 'nowrap',
@@ -169,7 +168,7 @@ export const TypewriterEffectSmooth = ({
           repeat: Infinity,
           repeatType: 'reverse',
         }}
-        className={cn('block rounded-sm w-[4px]  h-4 sm:h-6 xl:h-12 bg-blue-500', cursorClassName)}></motion.span>
+        className={cn('block rounded-xs w-[4px]  h-4 sm:h-6 xl:h-12 bg-blue-500', cursorClassName)}></motion.span>
     </div>
   );
 };

@@ -44,7 +44,7 @@ export function SigninBenefits() {
   ];
 
   return (
-    <Card className="border-none bg-background/60 shadow-small backdrop-blur-md backdrop-saturate-150 dark:bg-default-100/50">
+    <Card className="border-none bg-background/60 shadow-xsall backdrop-blur-md backdrop-saturate-150 dark:bg-default-100/50">
       <CardHeader className="flex-col items-start pb-4">
         <h2 className="text-lg font-bold text-foreground">
           {t('signin.benefits.title')}

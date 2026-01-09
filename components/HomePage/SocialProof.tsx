@@ -11,7 +11,7 @@ interface StatItemProps {
 
 function StatItem({ icon, value, label, trend }: StatItemProps) {
   return (
-    <div className="flex flex-col items-center gap-2 rounded-xl bg-white/80 p-4 backdrop-blur-sm transition-transform hover:scale-105 dark:bg-gray-800/50">
+    <div className="flex flex-col items-center gap-2 rounded-xl bg-white/80 p-4 backdrop-blur-xs transition-transform hover:scale-105 dark:bg-gray-800/50">
       <div className="rounded-full bg-primary/10 p-2">{icon}</div>
       <div className="text-center">
         <div className="text-2xl font-bold text-foreground">

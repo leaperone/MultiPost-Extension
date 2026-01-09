@@ -21,11 +21,11 @@ const errorToI18nKey = {
 };
 
 const errorCodeMap = {
-  [Error.Configuration]: <code className="rounded-sm bg-slate-100 p-1 text-xs">Configuration</code>,
-  [Error.AccessDenied]: <code className="rounded-sm bg-slate-100 p-1 text-xs">AccessDenied</code>,
-  [Error.Verification]: <code className="rounded-sm bg-slate-100 p-1 text-xs">Verification</code>,
-  [Error.Default]: <code className="rounded-sm bg-slate-100 p-1 text-xs">Default</code>,
-  [Error.OAuthAccountNotLinked]: <code className="rounded-sm bg-slate-100 p-1 text-xs">OAuthAccountNotLinked</code>,
+  [Error.Configuration]: <code className="rounded-xs bg-slate-100 p-1 text-xs">Configuration</code>,
+  [Error.AccessDenied]: <code className="rounded-xs bg-slate-100 p-1 text-xs">AccessDenied</code>,
+  [Error.Verification]: <code className="rounded-xs bg-slate-100 p-1 text-xs">Verification</code>,
+  [Error.Default]: <code className="rounded-xs bg-slate-100 p-1 text-xs">Default</code>,
+  [Error.OAuthAccountNotLinked]: <code className="rounded-xs bg-slate-100 p-1 text-xs">OAuthAccountNotLinked</code>,
 };
 
 export default async function AuthErrorPage(props: { searchParams: Promise<{ error?: string }> }) {

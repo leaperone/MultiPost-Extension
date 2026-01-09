@@ -43,7 +43,7 @@ interface SortableMediaProps {
 }
 
 const UploadOverlay = ({ progress }: { progress: number }) => (
-  <div className="absolute inset-0 z-10 flex flex-col items-center justify-center bg-black/50 backdrop-blur-sm">
+  <div className="absolute inset-0 z-10 flex flex-col items-center justify-center bg-black/50 backdrop-blur-xs">
     <Progress
       size="lg"
       isIndeterminate={progress === 0}
@@ -399,7 +399,7 @@ export function DraftEditor({
               value={content}
               onChange={(e) => onContentChange(e.target.value)}
               placeholder={t('editor.contentPlaceholder')}
-              className="size-full resize-none rounded-lg bg-zinc-100 p-3 pb-8 text-foreground focus:border-primary focus:outline-none dark:bg-zinc-800"
+              className="size-full resize-none rounded-lg bg-zinc-100 p-3 pb-8 text-foreground focus:border-primary focus:outline-hidden dark:bg-zinc-800"
             />
             <div className="pointer-events-none absolute bottom-2 right-3 text-xs text-default-400">
               {content.length}

@@ -41,7 +41,7 @@ export default async function RootLayout({
               {t('signin.github_bonus')}
             </Alert>
 
-            <div className="flex w-full flex-col gap-4 rounded-large bg-background/60 px-8 pb-10 pt-6 shadow-small backdrop-blur-md backdrop-saturate-150 dark:bg-default-100/50">
+            <div className="flex w-full flex-col gap-4 rounded-large bg-background/60 px-8 pb-10 pt-6 shadow-xsall backdrop-blur-md backdrop-saturate-150 dark:bg-default-100/50">
               <Suspense>{children}</Suspense>
             </div>
 
@@ -50,7 +50,7 @@ export default async function RootLayout({
               <SigninBenefits />
             </div>
 
-            <div className="flex w-full flex-row justify-between gap-4 rounded-large bg-background/60 px-8 py-4 shadow-small backdrop-blur-md backdrop-saturate-150 dark:bg-default-100/50">
+            <div className="flex w-full flex-row justify-between gap-4 rounded-large bg-background/60 px-8 py-4 shadow-xsall backdrop-blur-md backdrop-saturate-150 dark:bg-default-100/50">
               <Button
                 as={Link}
                 href="/"

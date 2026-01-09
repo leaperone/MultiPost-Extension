@@ -1,5 +1,8 @@
 import { PrismaPlugin } from '@prisma/nextjs-monorepo-workaround-plugin';
 import { withPostHogConfig } from '@posthog/nextjs-config';
+import { createMDX } from 'fumadocs-mdx/next';
+
+const withMDX = createMDX();
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
@@ -54,13 +57,15 @@ const nextConfig = {
   ],
 };
 
-export default withPostHogConfig(nextConfig, {
-  personalApiKey: process.env.POSTHOG_API_KEY,
-  envId: process.env.POSTHOG_MULTIPOST_ENV_ID,
-  host: process.env.NEXT_PUBLIC_POSTHOG_HOST,
-  sourcemaps: {
-    enabled: process.env.NODE_ENV === 'production' && !!process.env.POSTHOG_API_KEY,
-    project: 'multipost',
-    deleteAfterUpload: true,
-  },
-});
+export default withMDX(
+  withPostHogConfig(nextConfig, {
+    personalApiKey: process.env.POSTHOG_API_KEY,
+    envId: process.env.POSTHOG_MULTIPOST_ENV_ID,
+    host: process.env.NEXT_PUBLIC_POSTHOG_HOST,
+    sourcemaps: {
+      enabled: process.env.NODE_ENV === 'production' && !!process.env.POSTHOG_API_KEY,
+      project: 'multipost',
+      deleteAfterUpload: true,
+    },
+  })
+);

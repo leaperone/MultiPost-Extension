@@ -1,4 +1,3 @@
-/* eslint-disable tailwindcss/enforces-negative-arbitrary-values */
 'use client';
 import React from 'react';
 import { motion } from 'framer-motion';

@@ -98,7 +98,7 @@ function ImageGenerationSection() {
     <div className="container mx-auto px-4 py-6">
       <div className="mx-auto max-w-3xl">
         {!taskId && (
-          <div className="mt-8 rounded-lg border bg-white p-6 shadow-sm dark:border-gray-700 dark:bg-gray-900">
+          <div className="mt-8 rounded-lg border bg-white p-6 shadow-xs dark:border-gray-700 dark:bg-gray-900">
             <GenerationForm
               onSubmit={handleGenerate}
               loading={loading}
@@ -378,7 +378,7 @@ function GallerySection() {
                                 isIconOnly
                                 size="lg"
                                 variant="flat"
-                                className="bg-white/20 backdrop-blur-sm hover:bg-white/40"
+                                className="bg-white/20 backdrop-blur-xs hover:bg-white/40"
                                 onPress={() => handleImageClick(index, logIndex)}>
                                 <Maximize2 className="size-6 text-white" />
                               </Button>
@@ -394,7 +394,7 @@ function GallerySection() {
                                 isIconOnly
                                 size="sm"
                                 variant="flat"
-                                className="bg-white/10 backdrop-blur-sm"
+                                className="bg-white/10 backdrop-blur-xs"
                                 onPress={() => handleDownload(log.fileHosting!.previewUrl!)}>
                                 <Download className="size-4 text-white" />
                               </Button>

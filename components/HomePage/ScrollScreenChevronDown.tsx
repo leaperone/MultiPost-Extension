@@ -32,7 +32,7 @@ const ScrollScreenChevronDown = ({ color = 'text-foreground' }: ScrollScreenChev
   return (
     <button
       onClick={handleScrollDown}
-      className="animate-bounce cursor-pointer focus:outline-none"
+      className="animate-bounce cursor-pointer focus:outline-hidden"
       aria-label="向下滚动">
       <ChevronDown className={`size-12 ${color} transition-colors hover:opacity-80`} />
     </button>

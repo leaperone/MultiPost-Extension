@@ -420,7 +420,7 @@ export function ChatCreationPanel({ draftId, draftTitle, draftContent, onApply }
                   value={editingContent[m.id] || ''}
                   onChange={(e) => handleContentChange(m.id, e.target.value)}
                   minRows={1}
-                  className="w-full resize-none border-none bg-transparent p-0 focus:outline-none focus:ring-0"
+                  className="w-full resize-none border-none bg-transparent p-0 focus:outline-hidden focus:ring-0"
                 />
                 <div className="mt-2 flex justify-end">
                   <Button

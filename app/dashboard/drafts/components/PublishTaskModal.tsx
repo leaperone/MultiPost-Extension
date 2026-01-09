@@ -751,7 +751,7 @@ export default function PublishTaskModal({ isOpen, onClose, draftId, onSuccess }
                                               handleTiktokMetadataUpdate(account.id, 'brandedContent', false);
                                             }
                                           }}
-                                          className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${
+                                          className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-hidden focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${
                                             metadata.commercialContentDisclosure ? 'bg-blue-600' : 'bg-gray-200'
                                           }`}>
                                           <span

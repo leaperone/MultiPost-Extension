@@ -320,7 +320,7 @@ function GallerySection() {
                           isIconOnly
                           size="lg"
                           variant="flat"
-                          className="bg-white/20 backdrop-blur-sm hover:bg-white/40"
+                          className="bg-white/20 backdrop-blur-xs hover:bg-white/40"
                           onPress={() => handleImageClick(index)}>
                           <Maximize2 className="size-6 text-white" />
                         </Button>
@@ -330,7 +330,7 @@ function GallerySection() {
                           isIconOnly
                           size="sm"
                           variant="flat"
-                          className="bg-white/10 backdrop-blur-sm"
+                          className="bg-white/10 backdrop-blur-xs"
                           onPress={() => handleDownload(poster.lastImageUrl || '')}>
                           <Download className="size-4 text-white" />
                         </Button>
@@ -358,7 +358,7 @@ function GallerySection() {
                           isIconOnly
                           size="sm"
                           variant="flat"
-                          className="bg-white/10 backdrop-blur-sm"
+                          className="bg-white/10 backdrop-blur-xs"
                           onPress={async () => {
                             toast.loading(t('result_waiter.manual_update_toast'));
                             const response = await updatePosterGeneration(poster.id);

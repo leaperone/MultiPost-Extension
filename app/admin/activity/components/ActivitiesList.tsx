@@ -28,7 +28,7 @@ export function ActivitiesList({ tasks }: ClientActivityListProps) {
           {tasks.map((task) => (
             <Card
               key={task.id}
-              className="border-2 border-foreground-200 shadow-sm">
+              className="border-2 border-foreground-200 shadow-xs">
               <CardHeader className="flex items-center justify-between">
                 <div className="flex items-center gap-4">
                   <Chip

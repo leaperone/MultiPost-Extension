@@ -88,7 +88,7 @@ export default async function ActivityDetailPage({ params }: Props) {
                 </div>
 
                 {/* 奖励信息高亮显示 */}
-                <div className="flex shrink-0 items-center gap-2 rounded-lg bg-primary/10 px-3 py-2 shadow-sm">
+                <div className="flex shrink-0 items-center gap-2 rounded-lg bg-primary/10 px-3 py-2 shadow-xs">
                   <span className="text-xs font-medium text-muted-foreground">奖励</span>
                   <span className="text-xl font-bold text-primary">$ {task.reward}</span>
                   <span className="text-xs text-muted-foreground">余额</span>
@@ -106,7 +106,7 @@ export default async function ActivityDetailPage({ params }: Props) {
               <div className="space-y-4">
                 <div>
                   <h3 className="mb-2 text-sm font-medium text-foreground/80">活动详情</h3>
-                  <div className="rounded-xl border border-border/40 bg-gradient-to-b from-primary/5 to-transparent p-4 shadow-sm">
+                  <div className="rounded-xl border border-border/40 bg-gradient-to-b from-primary/5 to-transparent p-4 shadow-xs">
                     {task.keywords && task.keywords.length > 0 ? (
                       <div className="border-b border-border/30 pb-3 last:border-0">
                         <p className="text-sm font-medium text-foreground/80">需包含关键词</p>
@@ -174,7 +174,7 @@ export default async function ActivityDetailPage({ params }: Props) {
               <div className="space-y-4">
                 <div>
                   <h3 className="mb-2 text-sm font-medium text-foreground/80">任务要求</h3>
-                  <div className="rounded-xl border border-border/40 bg-gradient-to-b from-primary/5 to-transparent p-4 shadow-sm">
+                  <div className="rounded-xl border border-border/40 bg-gradient-to-b from-primary/5 to-transparent p-4 shadow-xs">
                     <div className="space-y-3">
                       {task.taskType === PromotionTaskType.PUBLISH_POST ? (
                         <ol className="space-y-3">

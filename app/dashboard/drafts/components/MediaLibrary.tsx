@@ -80,7 +80,7 @@ function ImagePreview({ imageFile, onPreview, onAddToDraft, onDelete }: ImagePre
           size="sm"
           variant="flat"
           isLoading={deleting}
-          className="border border-danger-300 bg-danger-500/20 text-danger-600 backdrop-blur-sm hover:bg-danger-500/30"
+          className="border border-danger-300 bg-danger-500/20 text-danger-600 backdrop-blur-xs hover:bg-danger-500/30"
           onPress={handleDelete}>
           <X className="size-4" />
         </Button>
@@ -91,7 +91,7 @@ function ImagePreview({ imageFile, onPreview, onAddToDraft, onDelete }: ImagePre
           isIconOnly
           size="lg"
           variant="flat"
-          className="border border-background/30 bg-background/20 text-background backdrop-blur-sm hover:bg-background/30"
+          className="border border-background/30 bg-background/20 text-background backdrop-blur-xs hover:bg-background/30"
           onPress={onPreview}>
           <Eye className="size-5" />
         </Button>
@@ -100,7 +100,7 @@ function ImagePreview({ imageFile, onPreview, onAddToDraft, onDelete }: ImagePre
           isIconOnly
           size="lg"
           variant="flat"
-          className="border border-background/30 bg-background/20 text-background backdrop-blur-sm hover:bg-background/30"
+          className="border border-background/30 bg-background/20 text-background backdrop-blur-xs hover:bg-background/30"
           onPress={onAddToDraft}>
           <Plus className="size-5" />
         </Button>

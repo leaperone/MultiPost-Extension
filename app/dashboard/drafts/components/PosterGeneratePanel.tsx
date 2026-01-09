@@ -110,7 +110,7 @@ export function PosterGeneratePanel({ draftTitle, draftContent, onInsertImage }:
 
   return (
     <div className="mx-auto w-full max-w-3xl">
-      <div className="mt-8 rounded-lg border bg-white p-6 shadow-sm dark:border-gray-700 dark:bg-gray-900">
+      <div className="mt-8 rounded-lg border bg-white p-6 shadow-xs dark:border-gray-700 dark:bg-gray-900">
         {step === 'form' && (
           <div>
             {(draftTitle || draftContent) && (
