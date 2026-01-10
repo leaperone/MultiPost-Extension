@@ -12,9 +12,6 @@ import {
   useDisclosure,
   addToast,
   Chip,
-  Card,
-  CardHeader,
-  CardBody,
 } from '@heroui/react';
 import { Plus, Trash2, Key, Clock } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
@@ -22,6 +19,13 @@ import { zhCN } from 'date-fns/locale';
 import { CreateDialog } from './CreateDialog';
 import { DeleteDialog } from './DeleteDialog';
 import { useTranslation } from '@/i18n/client';
+import {
+  LiquidGlassCard,
+  LiquidGlassHeader,
+  LiquidGlassButton,
+  LiquidGlassStatCard,
+} from '@/components/ui/liquid-glass';
+import { cn } from '@/lib/utils';
 
 interface APIKey {
   id: string;
@@ -152,92 +156,66 @@ export default function APIKeysPage() {
   };
 
   return (
-    <div className="size-full overflow-y-auto p-6">
+    <div className="mx-auto max-w-5xl">
       {/* Header Section */}
-      <div className="mb-8 flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold text-foreground">{t('page.title')}</h1>
-          <p className="mt-2 text-foreground/60">{t('page.description')}</p>
-        </div>
-        <Button
-          onPress={onCreateOpen}
-          color="primary"
-          startContent={<Plus className="size-4" />}
-          className="border border-primary/20 shadow-none">
-          {t('page.create_button')}
-        </Button>
-      </div>
+      <LiquidGlassHeader
+        title={t('page.title')}
+        description={t('page.description')}
+        action={
+          <LiquidGlassButton variant="primary" onClick={onCreateOpen}>
+            <Plus className="mr-2 size-4" />
+            {t('page.create_button')}
+          </LiquidGlassButton>
+        }
+      />
 
       {/* Stats Cards */}
       <div className="mb-8 grid grid-cols-1 gap-6 md:grid-cols-3">
-        <Card className="border border-default-200 shadow-none transition-colors hover:border-default-300">
-          <CardHeader className="pb-3">
-            <div className="flex items-center gap-3">
-              <div className="flex size-10 items-center justify-center rounded-lg bg-primary/10">
-                <Key className="size-5 text-primary" />
-              </div>
-              <div>
-                <p className="text-sm text-foreground/60">{t('stats.total_keys')}</p>
-                <p className="text-2xl font-bold text-foreground">{apiKeys.length}</p>
-              </div>
-            </div>
-          </CardHeader>
-        </Card>
-
-        <Card className="border border-default-200 shadow-none transition-colors hover:border-default-300">
-          <CardHeader className="pb-3">
-            <div className="flex items-center gap-3">
-              <div className="flex size-10 items-center justify-center rounded-lg bg-secondary/10">
-                <Clock className="size-5 text-secondary" />
-              </div>
-              <div>
-                <p className="text-sm text-foreground/60">{t('stats.manual_created')}</p>
-                <p className="text-2xl font-bold text-foreground">
-                  {apiKeys.filter((key) => !key.name.startsWith('EXTENSION-')).length}
-                </p>
-              </div>
-            </div>
-          </CardHeader>
-        </Card>
-
-        <Card className="border border-default-200 shadow-none transition-colors hover:border-default-300">
-          <CardHeader className="pb-3">
-            <div className="flex items-center gap-3">
-              <div className="flex size-10 items-center justify-center rounded-lg bg-warning/10">
-                <Key className="size-5 text-warning" />
-              </div>
-              <div>
-                <p className="text-sm text-foreground/60">{t('stats.auto_created')}</p>
-                <p className="text-2xl font-bold text-foreground">
-                  {apiKeys.filter((key) => key.name.startsWith('EXTENSION-')).length}
-                </p>
-              </div>
-            </div>
-          </CardHeader>
-        </Card>
+        <LiquidGlassStatCard
+          icon={<Key className="size-5" />}
+          iconColor="primary"
+          label={t('stats.total_keys')}
+          value={apiKeys.length}
+        />
+        <LiquidGlassStatCard
+          icon={<Clock className="size-5" />}
+          iconColor="secondary"
+          label={t('stats.manual_created')}
+          value={apiKeys.filter((key) => !key.name.startsWith('EXTENSION-')).length}
+        />
+        <LiquidGlassStatCard
+          icon={<Key className="size-5" />}
+          iconColor="warning"
+          label={t('stats.auto_created')}
+          value={apiKeys.filter((key) => key.name.startsWith('EXTENSION-')).length}
+        />
       </div>
 
       {/* API Keys Table */}
-      <Card className="border border-default-200 shadow-none">
-        <CardBody className="p-0">
-          <Table aria-label={t('page.title')}>
-            <TableHeader>
-              {columns.map((column) => (
-                <TableColumn key={column.key}>{column.label}</TableColumn>
-              ))}
-            </TableHeader>
-            <TableBody emptyContent={t('page.empty_message')}>
-              {apiKeys.map((apiKey) => (
-                <TableRow key={apiKey.id}>
-                  {columns.map((column) => (
-                    <TableCell key={column.key}>{renderCell(apiKey, column.key)}</TableCell>
-                  ))}
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </CardBody>
-      </Card>
+      <LiquidGlassCard className="overflow-hidden p-0">
+        <Table
+          aria-label={t('page.title')}
+          classNames={{
+            wrapper: 'bg-transparent shadow-none',
+            th: 'bg-white/10 dark:bg-black/20 text-foreground/80',
+            td: 'text-foreground/90',
+          }}>
+          <TableHeader>
+            {columns.map((column) => (
+              <TableColumn key={column.key}>{column.label}</TableColumn>
+            ))}
+          </TableHeader>
+          <TableBody emptyContent={t('page.empty_message')}>
+            {apiKeys.map((apiKey) => (
+              <TableRow key={apiKey.id} className="hover:bg-white/5 dark:hover:bg-white/5">
+                {columns.map((column) => (
+                  <TableCell key={column.key}>{renderCell(apiKey, column.key)}</TableCell>
+                ))}
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </LiquidGlassCard>
 
       <CreateDialog
         isOpen={isCreateOpen}

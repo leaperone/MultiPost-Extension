@@ -1,4 +1,3 @@
-import { Card, CardBody, CardHeader } from '@heroui/react';
 import { auth } from '@/auth';
 // TODO: 暂时隐藏余额功能
 // import { getCredit } from '@/actions/credit';
@@ -6,6 +5,7 @@ import { auth } from '@/auth';
 import CreditUsageTable from './components/CreditUsageTable';
 // import { ExternalLinkIcon, Wallet, DollarSign, Gift } from 'lucide-react';
 import { createTranslation } from '@/i18n/server';
+import { LiquidGlassCard, LiquidGlassHeader } from '@/components/ui/liquid-glass';
 
 export default async function RechargePage() {
   const session = await auth();
@@ -18,85 +18,45 @@ export default async function RechargePage() {
   const { t } = await createTranslation('settings');
 
   return (
-    <div className="size-full overflow-y-auto p-6">
+    <div className="mx-auto max-w-5xl">
       {/* Header Section */}
-      <div className="mb-8 flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold text-foreground">{t('credit_usage.page.title')}</h1>
-          <p className="mt-2 text-foreground/60">{t('credit_usage.page.description')}</p>
-        </div>
-        {/* TODO: 暂时隐藏余额功能 */}
-        {/* <Button
-          variant="flat"
-          as="a"
-          href="https://docs.multipost.app/docs/user-guide/pricing"
-          target="_blank"
-          rel="noopener noreferrer"
-          startContent={<ExternalLinkIcon className="size-4" />}
-          className="border border-default-200 shadow-none">
-          {t('recharge.details')}
-        </Button> */}
-      </div>
+      <LiquidGlassHeader
+        title={t('credit_usage.page.title')}
+        description={t('credit_usage.page.description')}
+      />
 
       {/* TODO: 暂时隐藏余额功能 */}
       {/* Balance Overview Cards */}
       {/* <div className="mb-8 grid grid-cols-1 gap-6 lg:grid-cols-3">
-        <Card className="border border-default-200 shadow-none transition-colors hover:border-default-300 lg:col-span-1">
-          <CardHeader className="pb-3">
-            <div className="flex items-center gap-3">
-              <div className="flex size-12 items-center justify-center rounded-lg bg-primary/10">
-                <Wallet className="size-6 text-primary" />
-              </div>
-              <div>
-                <p className="text-sm text-foreground/60">{t('credit_usage.balance.total')}</p>
-                <p className="text-3xl font-bold text-primary">${balance.totalCredits.toFixed(2)}</p>
-              </div>
-            </div>
-          </CardHeader>
-        </Card>
-
-        <Card className="border border-default-200 shadow-none transition-colors hover:border-default-300">
-          <CardHeader className="pb-3">
-            <div className="flex items-center gap-3">
-              <div className="flex size-12 items-center justify-center rounded-lg bg-secondary/10">
-                <DollarSign className="size-6 text-secondary" />
-              </div>
-              <div>
-                <p className="text-sm text-foreground/60">{t('credit_usage.balance.paid')}</p>
-                <p className="text-2xl font-bold text-foreground">${balance.credits.toFixed(2)}</p>
-              </div>
-            </div>
-          </CardHeader>
-        </Card>
-
-        <Card className="border border-default-200 shadow-none transition-colors hover:border-default-300">
-          <CardHeader className="pb-3">
-            <div className="flex items-center gap-3">
-              <div className="flex size-12 items-center justify-center rounded-lg bg-success/10">
-                <Gift className="size-6 text-success" />
-              </div>
-              <div>
-                <p className="text-sm text-foreground/60">{t('credit_usage.balance.free')}</p>
-                <p className="text-2xl font-bold text-foreground">${balance.freeCredits.toFixed(2)}</p>
-              </div>
-            </div>
-          </CardHeader>
-        </Card>
+        <LiquidGlassStatCard
+          icon={<Wallet className="size-6" />}
+          iconColor="blue"
+          label={t('credit_usage.balance.total')}
+          value={`$${balance.totalCredits.toFixed(2)}`}
+        />
+        <LiquidGlassStatCard
+          icon={<DollarSign className="size-6" />}
+          iconColor="purple"
+          label={t('credit_usage.balance.paid')}
+          value={`$${balance.credits.toFixed(2)}`}
+        />
+        <LiquidGlassStatCard
+          icon={<Gift className="size-6" />}
+          iconColor="green"
+          label={t('credit_usage.balance.free')}
+          value={`$${balance.freeCredits.toFixed(2)}`}
+        />
       </div>
 
-      <RechargeCard />
-
-      <Spacer y={4} /> */}
+      <RechargeCard /> */}
 
       {/* Usage History */}
-      <Card className="border border-default-200 shadow-none">
-        <CardHeader>
-          <h2 className="text-xl font-semibold text-foreground">{t('credit_usage.usage_history.title')}</h2>
-        </CardHeader>
-        <CardBody className="p-0">
-          <CreditUsageTable />
-        </CardBody>
-      </Card>
+      <LiquidGlassCard className="overflow-hidden p-0">
+        <div className="border-b border-white/10 bg-white/5 px-6 py-4 dark:border-white/5 dark:bg-black/10">
+          <h2 className="text-xl font-semibold text-foreground/90">{t('credit_usage.usage_history.title')}</h2>
+        </div>
+        <CreditUsageTable />
+      </LiquidGlassCard>
     </div>
   );
 }

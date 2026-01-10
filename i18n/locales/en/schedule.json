@@ -34,6 +34,7 @@
     "platformId": "Platform ID"
   },
   "actions": {
+    "createSchedule": "Create Schedule",
     "cancelTask": "Cancel Task",
     "restartTask": "Restart Task",
     "close": "Close",

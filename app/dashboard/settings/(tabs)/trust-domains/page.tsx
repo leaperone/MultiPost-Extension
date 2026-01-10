@@ -1,10 +1,16 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { Card, Button, CardBody, CardHeader } from '@heroui/react';
+import { Button } from '@heroui/react';
 import { XIcon, Shield, Globe, AlertTriangle } from 'lucide-react';
 import { sendRequest } from '@/lib/extension';
 import { useTranslation } from '@/i18n/client';
+import {
+  LiquidGlassCard,
+  LiquidGlassHeader,
+  LiquidGlassStatCard,
+} from '@/components/ui/liquid-glass';
+import { cn } from '@/lib/utils';
 
 // 域名接口定义
 interface TrustedDomain {
@@ -128,16 +134,14 @@ export default function TrustDomainsPage() {
   if (!mounted) {
     // 返回一个骨架屏或加载指示器而不是null，确保DOM结构一致
     return (
-      <div className="size-full overflow-y-auto p-6">
+      <div className="mx-auto max-w-5xl">
         <div className="mb-8">
-          <div className="h-8 w-48 animate-pulse rounded bg-default-200"></div>
-          <div className="mt-2 h-4 w-64 animate-pulse rounded bg-default-100"></div>
+          <div className="h-8 w-48 animate-pulse rounded-2xl bg-white/10 dark:bg-black/20"></div>
+          <div className="mt-2 h-4 w-64 animate-pulse rounded-2xl bg-white/5 dark:bg-black/10"></div>
         </div>
-        <Card className="border border-default-200 shadow-none">
-          <CardBody>
-            <div className="h-10 w-full animate-pulse rounded bg-default-100"></div>
-          </CardBody>
-        </Card>
+        <LiquidGlassCard className="p-6">
+          <div className="h-10 w-full animate-pulse rounded-xl bg-white/10 dark:bg-black/20"></div>
+        </LiquidGlassCard>
       </div>
     );
   }
@@ -146,124 +150,99 @@ export default function TrustDomainsPage() {
   const safeDomains = Array.isArray(domains) ? domains : [];
 
   return (
-    <div className="size-full overflow-y-auto p-6">
+    <div className="mx-auto max-w-5xl">
       {/* Header Section */}
-      <div className="mb-8 flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold text-foreground">{t('trust_domains.page.title')}</h1>
-          <p className="mt-2 text-foreground/60">{t('trust_domains.page.description')}</p>
-        </div>
-      </div>
+      <LiquidGlassHeader
+        title={t('trust_domains.page.title')}
+        description={t('trust_domains.page.description')}
+      />
 
       {/* Stats Cards */}
       <div className="mb-8 grid grid-cols-1 gap-6 md:grid-cols-3">
-        <Card className="border border-default-200 shadow-none transition-colors hover:border-default-300">
-          <CardHeader className="pb-3">
-            <div className="flex items-center gap-3">
-              <div className="flex size-10 items-center justify-center rounded-lg bg-primary/10">
-                <Shield className="size-5 text-primary" />
-              </div>
-              <div>
-                <p className="text-sm text-foreground/60">{t('trust_domains.stats.domain_count')}</p>
-                <p className="text-2xl font-bold text-foreground">{safeDomains.length}</p>
-              </div>
-            </div>
-          </CardHeader>
-        </Card>
-
-        <Card className="border border-default-200 shadow-none transition-colors hover:border-default-300">
-          <CardHeader className="pb-3">
-            <div className="flex items-center gap-3">
-              <div className="flex size-10 items-center justify-center rounded-lg bg-success/10">
-                <Globe className="size-5 text-success" />
-              </div>
-              <div>
-                <p className="text-sm text-foreground/60">{t('trust_domains.stats.security_status')}</p>
-                <p className="text-2xl font-bold text-foreground">
-                  {safeDomains.length > 0
-                    ? t('trust_domains.status_labels.configured')
-                    : t('trust_domains.status_labels.not_configured')}
-                </p>
-              </div>
-            </div>
-          </CardHeader>
-        </Card>
-
-        <Card className="border border-default-200 shadow-none transition-colors hover:border-default-300">
-          <CardHeader className="pb-3">
-            <div className="flex items-center gap-3">
-              <div className="flex size-10 items-center justify-center rounded-lg bg-warning/10">
-                <AlertTriangle className="size-5 text-warning" />
-              </div>
-              <div>
-                <p className="text-sm text-foreground/60">{t('trust_domains.stats.extension_status')}</p>
-                <p className="text-2xl font-bold text-foreground">
-                  {mounted ? t('trust_domains.status_labels.connected') : t('trust_domains.status_labels.disconnected')}
-                </p>
-              </div>
-            </div>
-          </CardHeader>
-        </Card>
+        <LiquidGlassStatCard
+          icon={<Shield className="size-5" />}
+          iconColor="primary"
+          label={t('trust_domains.stats.domain_count')}
+          value={safeDomains.length}
+        />
+        <LiquidGlassStatCard
+          icon={<Globe className="size-5" />}
+          iconColor="success"
+          label={t('trust_domains.stats.security_status')}
+          value={
+            safeDomains.length > 0
+              ? t('trust_domains.status_labels.configured')
+              : t('trust_domains.status_labels.not_configured')
+          }
+        />
+        <LiquidGlassStatCard
+          icon={<AlertTriangle className="size-5" />}
+          iconColor="warning"
+          label={t('trust_domains.stats.extension_status')}
+          value={mounted ? t('trust_domains.status_labels.connected') : t('trust_domains.status_labels.disconnected')}
+        />
       </div>
 
       {/* Domains List */}
-      <Card className="border border-default-200 shadow-none">
-        <CardHeader>
-          <h2 className="text-xl font-semibold text-foreground">{t('trust_domains.domains_list.title')}</h2>
-        </CardHeader>
-        <CardBody>
-          {error && (
-            <div className="mb-4 rounded-lg bg-danger/10 p-4">
-              <p className="text-sm text-danger">{error}</p>
-            </div>
-          )}
+      <LiquidGlassCard className="p-6">
+        <h2 className="mb-6 text-xl font-semibold text-foreground/90">{t('trust_domains.domains_list.title')}</h2>
 
-          {safeDomains.length === 0 ? (
-            <div className="py-12 text-center">
-              <div className="flex flex-col items-center gap-4">
-                <div className="flex size-16 items-center justify-center rounded-full bg-default-100">
-                  <Shield className="size-8 text-default-400" />
-                </div>
-                <div>
-                  <h3 className="text-lg font-medium text-foreground">{t('trust_domains.domains_list.empty.title')}</h3>
-                  <p className="mt-1 text-sm text-foreground/60">{t('trust_domains.domains_list.empty.description')}</p>
-                </div>
+        {error && (
+          <div className="mb-4 rounded-xl bg-red-500/10 p-4">
+            <p className="text-sm text-red-500">{error}</p>
+          </div>
+        )}
+
+        {safeDomains.length === 0 ? (
+          <div className="py-12 text-center">
+            <div className="flex flex-col items-center gap-4">
+              <div className="flex size-16 items-center justify-center rounded-2xl bg-white/10 dark:bg-black/20">
+                <Shield className="size-8 text-foreground/40" />
+              </div>
+              <div>
+                <h3 className="text-lg font-medium text-foreground/90">{t('trust_domains.domains_list.empty.title')}</h3>
+                <p className="mt-1 text-sm text-foreground/60">{t('trust_domains.domains_list.empty.description')}</p>
               </div>
             </div>
-          ) : (
-            <div className="space-y-3">
-              {safeDomains.map((domain) => (
-                <div
-                  key={domain.id || domain.domain}
-                  className="flex items-center justify-between rounded-lg border border-default-200 bg-default-50 p-4 transition-colors hover:border-default-300">
-                  <div className="flex items-center gap-3">
-                    <div className="flex size-8 items-center justify-center rounded-lg bg-primary/10">
-                      <Globe className="size-4 text-primary" />
-                    </div>
-                    <span className="font-mono text-foreground">{domain.domain}</span>
+          </div>
+        ) : (
+          <div className="space-y-3">
+            {safeDomains.map((domain) => (
+              <div
+                key={domain.id || domain.domain}
+                className={cn(
+                  'flex items-center justify-between rounded-xl p-4 transition-all',
+                  'bg-white/10 dark:bg-black/20',
+                  'border border-white/20 dark:border-white/10',
+                  'hover:bg-white/15 dark:hover:bg-black/30',
+                )}>
+                <div className="flex items-center gap-3">
+                  <div className="flex size-8 items-center justify-center rounded-xl bg-blue-500/20">
+                    <Globe className="size-4 text-blue-500 dark:text-blue-400" />
                   </div>
-                  <Button
-                    isIconOnly
-                    size="sm"
-                    color="danger"
-                    variant="light"
-                    isLoading={isLoading}
-                    onPress={() => {
-                      if (!domain.id) {
-                        setError('No domain ID available');
-                        return;
-                      }
-                      handleDeleteDomain(domain.id);
-                    }}
-                    className="shadow-none">
-                    <XIcon className="size-4" />
-                  </Button>
+                  <span className="font-mono text-foreground/90">{domain.domain}</span>
                 </div>
-              ))}
-            </div>
-          )}
-        </CardBody>
-      </Card>
+                <Button
+                  isIconOnly
+                  size="sm"
+                  color="danger"
+                  variant="light"
+                  isLoading={isLoading}
+                  onPress={() => {
+                    if (!domain.id) {
+                      setError('No domain ID available');
+                      return;
+                    }
+                    handleDeleteDomain(domain.id);
+                  }}
+                  className="shadow-none">
+                  <XIcon className="size-4" />
+                </Button>
+              </div>
+            ))}
+          </div>
+        )}
+      </LiquidGlassCard>
     </div>
   );
 }

@@ -1,15 +1,26 @@
 'use client';
 
-import { Tabs, Tab, addToast, Spacer, Divider, Button, Link } from '@heroui/react';
-import { MessageCircleHeartIcon, VideoIcon, FileTextIcon, PodcastIcon, MessageSquareIcon } from 'lucide-react';
+import { addToast } from '@heroui/react';
+import {
+  MessageCircleHeartIcon,
+  VideoIcon,
+  FileTextIcon,
+  PodcastIcon,
+  MessageSquareIcon,
+} from 'lucide-react';
 import { usePathname } from 'next/navigation';
+import Link from 'next/link';
 import ForceInstallExtension from '@/components/ForceInstallExtension';
 import { useEffect } from 'react';
 import { checkServiceStatus, funcGetPermission } from '@/lib/extension';
 import { useRouter } from 'next/navigation';
 import { useTranslation } from '@/i18n/client';
-// TODO: 暂时隐藏余额功能
-// import BalanceButtonClient from '../components/BalanceButtonClient';
+import {
+  LiquidGlassPageLayout,
+  LiquidGlassTabs,
+  LiquidGlassTab,
+  LiquidGlassButton,
+} from '@/components/ui/liquid-glass';
 
 export default function PublishLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
@@ -17,6 +28,9 @@ export default function PublishLayout({ children }: { children: React.ReactNode 
   const { t } = useTranslation('publish');
 
   useEffect(() => {
+    // Skip extension check in development mode
+    if (process.env.NODE_ENV === 'development') return;
+
     checkServiceStatus().then((status) => {
       if (!status) {
         addToast({
@@ -27,75 +41,66 @@ export default function PublishLayout({ children }: { children: React.ReactNode 
         return;
       }
       funcGetPermission().then(() => {});
-      return;
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  const tabs = [
+    {
+      key: '/dashboard/publish/dynamic',
+      href: '/dashboard/publish/dynamic',
+      icon: <MessageCircleHeartIcon className="size-5" />,
+    },
+    {
+      key: '/dashboard/publish/video',
+      href: '/dashboard/publish/video',
+      icon: <VideoIcon className="size-5" />,
+    },
+    {
+      key: '/dashboard/publish/podcast',
+      href: '/dashboard/publish/podcast',
+      icon: <PodcastIcon className="size-5" />,
+    },
+    {
+      key: 'https://md.multipost.app',
+      href: 'https://md.multipost.app',
+      icon: <FileTextIcon className="size-5" />,
+      external: true,
+    },
+  ];
+
   return (
-    <div className="flex h-screen flex-col p-1">
+    <LiquidGlassPageLayout className="h-screen overflow-y-auto">
       {process.env.NODE_ENV !== 'development' && <ForceInstallExtension />}
 
-      {/* Fixed header with tabs */}
-      <div className="shrink-0">
-        <div className="flex w-full flex-row items-center justify-between px-2">
-          <Tabs
-            aria-label="Publish Tabs"
-            selectedKey={pathname}
-            variant="light"
-            color="primary"
-            // classNames={{
-            //   tabList: 'gap-4 w-full p-2 bg-background',
-            //   cursor: 'bg-primary/50',
-            //   tab: 'w-fit px-4 h-fit hover:text-primary',
-            //   tabContent: 'group-data-[selected=true]:text-primary',
-            // }}
-          >
-            <Tab
-              key="/dashboard/publish/dynamic"
-              href="/dashboard/publish/dynamic"
-              title={<MessageCircleHeartIcon />}
-            />
-            <Tab
-              key="/dashboard/publish/video"
-              href="/dashboard/publish/video"
-              title={<VideoIcon />}
-            />
-            <Tab
-              key="/dashboard/publish/podcast"
-              href="/dashboard/publish/podcast"
-              title={<PodcastIcon />}
-            />
-            <Tab
-              key="https://md.multipost.app"
-              href="https://md.multipost.app"
-              title={<FileTextIcon />}
-            />
-          </Tabs>
-          <div className="flex w-56 flex-row items-center justify-end gap-2">
-            {/* TODO: 暂时隐藏余额功能 */}
-            {/* <BalanceButtonClient size="sm" /> */}
-            <Link
-              href="https://docs.multipost.app/docs/user-guide/contact-us"
-              target="_blank">
-              <Button
-                variant="flat"
-                color="primary"
-                size="sm"
-                startContent={<MessageSquareIcon className="size-5" />}>
-                {t('contactUs')}
-              </Button>
-            </Link>
-          </div>
+      {/* Header with tabs */}
+      <div className="sticky top-0 z-20 px-6 pb-4 pt-6 sm:px-8 lg:px-10">
+        <div className="flex w-full flex-row items-center justify-between gap-4">
+          <LiquidGlassTabs>
+            {tabs.map((tab) =>
+              tab.external ? (
+                <a key={tab.key} href={tab.href} target="_blank" rel="noopener noreferrer">
+                  <LiquidGlassTab isActive={false}>{tab.icon}</LiquidGlassTab>
+                </a>
+              ) : (
+                <Link key={tab.key} href={tab.href}>
+                  <LiquidGlassTab isActive={pathname === tab.key}>{tab.icon}</LiquidGlassTab>
+                </Link>
+              ),
+            )}
+          </LiquidGlassTabs>
+
+          <Link href="https://docs.multipost.app/docs/user-guide/contact-us" target="_blank">
+            <LiquidGlassButton size="sm" variant="default">
+              <MessageSquareIcon className="mr-2 size-4" />
+              {t('contactUs')}
+            </LiquidGlassButton>
+          </Link>
         </div>
-        <Divider className="my-0.5" />
-        <Spacer y={2} />
       </div>
 
-      {/* Scrollable content area */}
-      <div className="flex-1 overflow-hidden">
-        <div className="size-full overflow-y-auto px-1 scrollbar-none">{children}</div>
-      </div>
-    </div>
+      {/* Content area - no overflow hidden, let shadows breathe */}
+      <div className="px-6 pb-8 sm:px-8 lg:px-10">{children}</div>
+    </LiquidGlassPageLayout>
   );
 }

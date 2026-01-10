@@ -1,13 +1,12 @@
 'use client';
 
-// 为Google Analytics添加类型声明
 declare global {
   interface Window {
     gtag: (command: string, action: string, params: Record<string, unknown>) => void;
   }
 }
 
-import { Card, Button, Input, Textarea, CardHeader, CardBody, addToast, Accordion, AccordionItem } from '@heroui/react';
+import { Button, Input, Textarea, addToast, Accordion, AccordionItem } from '@heroui/react';
 import {
   XIcon,
   TrashIcon,
@@ -36,6 +35,12 @@ import {
   trackPublishFailed,
   trackPlatformSelected,
 } from '@/lib/posthog/events';
+import {
+  LiquidGlassCard,
+  LiquidGlassStepper,
+  LiquidGlassButton,
+  LiquidGlassDropZone,
+} from '@/components/ui/liquid-glass';
 
 interface AudioPlayerProps {
   url: string;
@@ -47,9 +52,14 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({ url, name, onDelete }) => {
   const audioRef = useRef<HTMLAudioElement>(null);
 
   return (
-    <div className="group relative flex w-full items-center gap-4 rounded-lg border p-4">
+    <div
+      className={cn(
+        'group relative flex w-full items-center gap-4 rounded-2xl p-4',
+        'bg-white/10 dark:bg-black/20',
+        'border border-white/20 dark:border-white/10',
+      )}>
       <div className="flex-1">
-        <p className="text-sm">{name}</p>
+        <p className="mb-2 text-sm text-foreground/80">{name}</p>
         <audio
           ref={audioRef}
           src={url}
@@ -69,66 +79,6 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({ url, name, onDelete }) => {
   );
 };
 
-// 拖放区域组件
-const DropZone = ({ onFileDrop, onClick }: { onFileDrop: (file: File) => void; onClick: () => void }) => {
-  const { t } = useTranslation('publish');
-  const [isDragging, setIsDragging] = useState(false);
-
-  const handleDragEnter = useCallback((event: React.DragEvent) => {
-    event.preventDefault();
-    event.stopPropagation();
-    setIsDragging(true);
-  }, []);
-
-  const handleDragLeave = useCallback((event: React.DragEvent) => {
-    event.preventDefault();
-    event.stopPropagation();
-    setIsDragging(false);
-  }, []);
-
-  const handleDragOver = useCallback((event: React.DragEvent) => {
-    event.preventDefault();
-    event.stopPropagation();
-  }, []);
-
-  const handleDrop = useCallback(
-    (event: React.DragEvent) => {
-      event.preventDefault();
-      event.stopPropagation();
-      setIsDragging(false);
-      const file = Array.from(event.dataTransfer.files).find((f) => f.type.startsWith('audio/'));
-      if (file) {
-        onFileDrop(file);
-      }
-    },
-    [onFileDrop],
-  );
-
-  return (
-    <div
-      className={cn(
-        'relative flex min-h-[120px] w-full cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed p-4 transition-all',
-        isDragging
-          ? 'border-primary bg-primary/10'
-          : 'border-gray-200 hover:bg-gray-50 dark:border-gray-800 dark:hover:bg-gray-800/50',
-      )}
-      onDragEnter={handleDragEnter}
-      onDragLeave={handleDragLeave}
-      onDragOver={handleDragOver}
-      onDrop={handleDrop}
-      onClick={onClick}>
-      <div className="flex flex-col items-center justify-center gap-2 text-center">
-        <UploadIcon className={cn('size-8', isDragging ? 'text-primary' : 'text-gray-500')} />
-        <div className="flex flex-col gap-1">
-          <p className="text-sm font-medium">
-            {isDragging ? t('dynamic.tips.drop') : t('podcast.dragOrClick', 'Click to upload or drag and drop')}
-          </p>
-        </div>
-      </div>
-    </div>
-  );
-};
-
 export default function PodcastPage() {
   const { t } = useTranslation('publish');
   const router = useRouter();
@@ -138,10 +88,10 @@ export default function PodcastPage() {
   const [description, setDescription] = useState<string>('');
   const audioInputRef = useRef<HTMLInputElement>(null);
   const { podcastPlatforms, setPodcastPlatforms, clearPodcastPlatforms } = usePlatformStore();
-  // Initialize with empty array to prevent hydration mismatch - sync from store after mount
   const [selectedPlatforms, setSelectedPlatforms] = useState<string[]>([]);
   const [autoPublish, setAutoPublish] = useState<boolean>(false);
   const [platforms, setPlatforms] = useState<PlatformInfo[]>([]);
+  const [isDraggingOver, setIsDraggingOver] = useState(false);
 
   const steps = [
     {
@@ -161,46 +111,14 @@ export default function PodcastPage() {
     },
   ];
 
-  const Stepper = () => (
-    <Card className="sticky top-4 h-fit">
-      <CardHeader>
-        <p className="text-lg font-bold">{t('podcast.newTask')}</p>
-      </CardHeader>
-      <CardBody>
-        <div className="flex flex-col gap-8">
-          {steps.map((step, index) => (
-            <div
-              key={step.id}
-              className={cn('flex items-start gap-4', currentStep > step.id ? 'cursor-pointer' : 'cursor-default')}
-              onClick={() => {
-                if (step.id === 1) {
-                  router.push('/dashboard/publish');
-                } else if (currentStep > step.id) {
-                  setCurrentStep(step.id);
-                }
-              }}>
-              <div
-                className={cn(
-                  'flex h-8 w-8 shrink-0 items-center justify-center rounded-full font-bold transition-colors',
-                  step.id === currentStep
-                    ? 'bg-primary text-primary-foreground'
-                    : 'bg-default-200 text-default-foreground',
-                  currentStep > step.id && 'bg-primary/20 text-primary',
-                )}>
-                {index + 1}
-              </div>
-              <div>
-                <p className="font-semibold">{step.name}</p>
-                <p className="text-sm text-default-500">{step.description}</p>
-              </div>
-            </div>
-          ))}
-        </div>
-      </CardBody>
-    </Card>
-  );
+  const handleStepClick = (stepId: number) => {
+    if (stepId === 1) {
+      router.push('/dashboard/publish');
+    } else if (currentStep > stepId) {
+      setCurrentStep(stepId);
+    }
+  };
 
-  // Sync persisted platform selection after hydration to prevent mismatch
   useEffect(() => {
     if (podcastPlatforms.length > 0) {
       setSelectedPlatforms(podcastPlatforms);
@@ -243,7 +161,6 @@ export default function PodcastPage() {
     fetchPlatforms();
   }, []);
 
-  // 粘贴上传
   const handlePaste = useCallback((event: ClipboardEvent) => {
     const items = event.clipboardData?.items;
     if (!items) return;
@@ -269,17 +186,21 @@ export default function PodcastPage() {
     };
   }, [handlePaste]);
 
-  // 拖放上传
-  const handleFileDrop = useCallback((file: File) => {
-    setAudio({
-      name: file.name,
-      url: URL.createObjectURL(file),
-      type: file.type,
-      size: file.size,
-    });
-  }, []);
+  const handleFileDrop = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDraggingOver(false);
+    const file = Array.from(e.dataTransfer.files).find((f) => f.type.startsWith('audio/'));
+    if (file) {
+      setAudio({
+        name: file.name,
+        url: URL.createObjectURL(file),
+        type: file.type,
+        size: file.size,
+      });
+    }
+  };
 
-  // input 上传
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFile = event.target.files?.[0];
     if (selectedFile) {
@@ -296,7 +217,6 @@ export default function PodcastPage() {
     setSelectedPlatforms((prev) => {
       const newSelected = isSelected ? [...prev, platform] : prev.filter((p) => p !== platform);
 
-      // 追踪平台选择事件
       if (newSelected.length > 0) {
         trackPlatformSelected(newSelected, 'podcast');
       }
@@ -332,7 +252,6 @@ export default function PodcastPage() {
       return;
     }
 
-    // 向Google Analytics发送自定义事件
     if (typeof window !== 'undefined' && window.gtag) {
       window.gtag('event', 'podcast_publish', {
         event_category: 'publish',
@@ -343,14 +262,7 @@ export default function PodcastPage() {
       });
     }
 
-    // 追踪发布发起事件 (PostHog)
-    trackPublishInitiated(
-      'podcast',
-      selectedPlatforms,
-      false, // 播客发布不支持图片
-      false, // 播客发布不支持视频
-      autoPublish,
-    );
+    trackPublishInitiated('podcast', selectedPlatforms, false, false, autoPublish);
 
     const data: SyncData = {
       platforms: platforms.filter((platform) => selectedPlatforms.includes(platform.name)),
@@ -364,7 +276,6 @@ export default function PodcastPage() {
 
     const result = await funcPublish(data);
     if (!result.success) {
-      // 追踪发布失败事件
       trackPublishFailed('podcast', selectedPlatforms, result.error);
 
       addToast({
@@ -373,13 +284,7 @@ export default function PodcastPage() {
         color: 'danger',
       });
     } else {
-      // 追踪发布成功事件
-      trackPublishSuccess(
-        'podcast',
-        selectedPlatforms,
-        description.length,
-        1, // 1个音频文件
-      );
+      trackPublishSuccess('podcast', selectedPlatforms, description.length, 1);
 
       addToast({
         title: t('publish.success', '发布成功'),
@@ -419,198 +324,222 @@ export default function PodcastPage() {
   };
 
   return (
-    <div className="grid h-full grid-cols-1 justify-center gap-8 p-4 md:grid-cols-[280px_minmax(0,560px)]">
-      <Stepper />
-      <div className="overflow-y-auto">
+    <div className="grid grid-cols-1 justify-center gap-6 md:grid-cols-[280px_minmax(0,560px)]">
+      <LiquidGlassStepper
+        steps={steps}
+        currentStep={currentStep}
+        title={t('podcast.newTask')}
+        onStepClick={handleStepClick}
+      />
+
+      <div className="flex flex-col gap-4">
         {currentStep === 2 && (
-          <div className="flex flex-col gap-2">
+          <div className="flex flex-col gap-4">
             {audio && (
-              <Card className="my-2 border bg-default-50 shadow-none">
-                <CardBody>
-                  <AudioPlayer
-                    url={audio.url}
-                    name={audio.name}
-                    onDelete={() => setAudio(null)}
-                  />
-                </CardBody>
-              </Card>
+              <LiquidGlassCard className="p-4">
+                <AudioPlayer
+                  url={audio.url}
+                  name={audio.name}
+                  onDelete={() => setAudio(null)}
+                />
+              </LiquidGlassCard>
             )}
+
             {!audio ? (
-              <Card className="h-fit border bg-default-50 shadow-none">
-                <CardHeader>
-                  <p className="font-semibold">{t('podcast.uploadAudioTitle', 'Upload your audio')}</p>
-                </CardHeader>
-                <CardBody>
-                  <input
-                    type="file"
-                    ref={audioInputRef}
-                    accept="audio/*"
-                    onChange={handleFileChange}
-                    className="hidden"
-                  />
-                  <DropZone
-                    onFileDrop={handleFileDrop}
-                    onClick={() => audioInputRef.current?.click()}
-                  />
-                </CardBody>
-              </Card>
+              <LiquidGlassCard className="p-6">
+                <p className="mb-4 font-semibold text-foreground/90">
+                  {t('podcast.uploadAudioTitle', '上传您的音频')}
+                </p>
+                <input
+                  type="file"
+                  ref={audioInputRef}
+                  accept="audio/*"
+                  onChange={handleFileChange}
+                  className="hidden"
+                />
+                <LiquidGlassDropZone
+                  isDragging={isDraggingOver}
+                  icon={<UploadIcon className="size-8" />}
+                  text={isDraggingOver ? t('dynamic.tips.drop') : t('podcast.dragOrClick', '点击或拖放音频文件')}
+                  onClick={() => audioInputRef.current?.click()}
+                  onDrop={handleFileDrop}
+                  onDragOver={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                  }}
+                  onDragEnter={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    setIsDraggingOver(true);
+                  }}
+                  onDragLeave={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    setIsDraggingOver(false);
+                  }}
+                />
+              </LiquidGlassCard>
             ) : (
               <>
-                <Card className="h-fit border bg-default-50 shadow-none">
-                  <CardHeader>
-                    <div className="flex w-full items-center justify-between gap-2">
-                      <Input
-                        isClearable
-                        variant="underlined"
-                        placeholder={t('podcast.title')}
-                        value={title}
-                        onChange={(e) => setTitle(e.target.value)}
-                        onClear={() => setTitle('')}
-                        className="w-full"
-                      />
-                      {(title || description || audio) && (
-                        <Button
-                          isIconOnly
-                          variant="light"
-                          color="danger"
-                          onPress={handleClearAll}
-                          title={t('podcast.clearAll')}>
-                          <TrashIcon className="size-6" />
-                        </Button>
-                      )}
-                    </div>
-                  </CardHeader>
-
-                  <CardBody className="gap-4">
-                    <Textarea
+                <LiquidGlassCard className="p-6">
+                  <div className="flex w-full items-center justify-between gap-2">
+                    <Input
                       isClearable
                       variant="underlined"
-                      placeholder={t('podcast.description')}
-                      value={description}
-                      onChange={(e) => setDescription(e.target.value)}
-                      onClear={() => setDescription('')}
-                      fullWidth
-                      minRows={3}
+                      placeholder={t('podcast.title')}
+                      value={title}
+                      onChange={(e) => setTitle(e.target.value)}
+                      onClear={() => setTitle('')}
+                      className="flex-1"
+                      classNames={{
+                        input: 'text-foreground/90',
+                        inputWrapper: 'border-white/20 dark:border-white/10',
+                      }}
                     />
-                  </CardBody>
-                </Card>
+                    {(title || description || audio) && (
+                      <Button
+                        isIconOnly
+                        variant="light"
+                        color="danger"
+                        onPress={handleClearAll}
+                        title={t('podcast.clearAll')}>
+                        <TrashIcon className="size-5" />
+                      </Button>
+                    )}
+                  </div>
 
-                <Button
-                  fullWidth
-                  onPress={handleNextStep}>
-                  <ArrowRightIcon />
-                </Button>
+                  <Textarea
+                    isClearable
+                    variant="underlined"
+                    placeholder={t('podcast.description')}
+                    value={description}
+                    onChange={(e) => setDescription(e.target.value)}
+                    onClear={() => setDescription('')}
+                    fullWidth
+                    minRows={3}
+                    className="mt-4"
+                    classNames={{
+                      input: 'text-foreground/90',
+                      inputWrapper: 'border-white/20 dark:border-white/10',
+                    }}
+                  />
+                </LiquidGlassCard>
+
+                <LiquidGlassButton
+                  variant="primary"
+                  className="w-full"
+                  onClick={handleNextStep}>
+                  <ArrowRightIcon className="size-5" />
+                </LiquidGlassButton>
               </>
             )}
           </div>
         )}
+
         {currentStep === 3 && (
           <div className="flex flex-col gap-4">
-            <Card className="mb-4 border bg-default-50 shadow-none">
-              <CardBody className="gap-2">
-                <div className="flex items-center justify-between">
-                  {selectedPlatforms.length > 0 && (
-                    <Button
-                      isIconOnly
-                      size="sm"
-                      variant="light"
-                      color="danger"
-                      onPress={() => setSelectedPlatforms([])}>
-                      <Eraser className="size-4" />
-                    </Button>
-                  )}
-                </div>
+            <LiquidGlassCard className="p-6">
+              <div className="mb-4 flex items-center justify-between">
+                {selectedPlatforms.length > 0 && (
+                  <Button
+                    isIconOnly
+                    size="sm"
+                    variant="light"
+                    color="danger"
+                    onPress={() => setSelectedPlatforms([])}>
+                    <Eraser className="size-4" />
+                  </Button>
+                )}
+              </div>
 
-                <Accordion
-                  isCompact
-                  variant="light"
-                  selectionMode="multiple"
-                  defaultExpandedKeys={['CN', 'International']}>
-                  <AccordionItem
-                    key="CN"
-                    title={t('platforms.cn')}
-                    subtitle={`${
-                      selectedPlatforms.filter((platform) => {
-                        const info = platforms.find((p) => p.name === platform);
-                        return info?.tags?.includes('CN');
-                      }).length
-                    }/${platforms.filter((platform) => platform.tags?.includes('CN')).length}`}
-                    startContent={
-                      <div className="w-8">
-                        <Icon
-                          icon="openmoji:flag-china"
-                          className="h-max w-full"
-                        />
-                      </div>
-                    }
-                    className="py-1">
-                    <div className="grid grid-cols-2 gap-2">
-                      {platforms
-                        .filter((platform) => platform.tags?.includes('CN'))
-                        .map((platform) => (
-                          <PlatformCheckbox
-                            key={platform.name}
-                            platformInfo={platform}
-                            isSelected={selectedPlatforms.includes(platform.name)}
-                            onChange={(_, isSelected) => handlePlatformChange(platform.name, isSelected)}
-                            isDisabled={false}
-                            onExtraConfigChange={handleExtraConfigChange}
-                          />
-                        ))}
+              <Accordion
+                isCompact
+                variant="light"
+                selectionMode="multiple"
+                defaultExpandedKeys={['CN', 'International']}>
+                <AccordionItem
+                  key="CN"
+                  title={t('platforms.cn')}
+                  subtitle={`${
+                    selectedPlatforms.filter((platform) => {
+                      const info = platforms.find((p) => p.name === platform);
+                      return info?.tags?.includes('CN');
+                    }).length
+                  }/${platforms.filter((platform) => platform.tags?.includes('CN')).length}`}
+                  startContent={
+                    <div className="w-8">
+                      <Icon
+                        icon="openmoji:flag-china"
+                        className="h-max w-full"
+                      />
                     </div>
-                  </AccordionItem>
-                  <AccordionItem
-                    key="International"
-                    title={t('platforms.international')}
-                    subtitle={`${
-                      selectedPlatforms.filter((platform) => {
-                        const info = platforms.find((p) => p.name === platform);
-                        return info?.tags?.includes('International');
-                      }).length
-                    }/${platforms.filter((platform) => platform.tags?.includes('International')).length}`}
-                    startContent={
-                      <div className="w-8">
-                        <Icon
-                          icon="openmoji:globe-with-meridians"
-                          className="h-max w-full"
+                  }
+                  className="py-1">
+                  <div className="grid grid-cols-2 gap-2">
+                    {platforms
+                      .filter((platform) => platform.tags?.includes('CN'))
+                      .map((platform) => (
+                        <PlatformCheckbox
+                          key={platform.name}
+                          platformInfo={platform}
+                          isSelected={selectedPlatforms.includes(platform.name)}
+                          onChange={(_, isSelected) => handlePlatformChange(platform.name, isSelected)}
+                          isDisabled={false}
+                          onExtraConfigChange={handleExtraConfigChange}
                         />
-                      </div>
-                    }
-                    className="py-1">
-                    <div className="grid grid-cols-2 gap-2">
-                      {platforms
-                        .filter((platform) => platform.tags?.includes('International'))
-                        .map((platform) => (
-                          <PlatformCheckbox
-                            key={platform.name}
-                            platformInfo={platform}
-                            isSelected={selectedPlatforms.includes(platform.name)}
-                            onChange={(_, isSelected) => handlePlatformChange(platform.name, isSelected)}
-                            isDisabled={false}
-                            onExtraConfigChange={handleExtraConfigChange}
-                          />
-                        ))}
+                      ))}
+                  </div>
+                </AccordionItem>
+                <AccordionItem
+                  key="International"
+                  title={t('platforms.international')}
+                  subtitle={`${
+                    selectedPlatforms.filter((platform) => {
+                      const info = platforms.find((p) => p.name === platform);
+                      return info?.tags?.includes('International');
+                    }).length
+                  }/${platforms.filter((platform) => platform.tags?.includes('International')).length}`}
+                  startContent={
+                    <div className="w-8">
+                      <Icon
+                        icon="openmoji:globe-with-meridians"
+                        className="h-max w-full"
+                      />
                     </div>
-                  </AccordionItem>
-                </Accordion>
-              </CardBody>
-            </Card>
+                  }
+                  className="py-1">
+                  <div className="grid grid-cols-2 gap-2">
+                    {platforms
+                      .filter((platform) => platform.tags?.includes('International'))
+                      .map((platform) => (
+                        <PlatformCheckbox
+                          key={platform.name}
+                          platformInfo={platform}
+                          isSelected={selectedPlatforms.includes(platform.name)}
+                          onChange={(_, isSelected) => handlePlatformChange(platform.name, isSelected)}
+                          isDisabled={false}
+                          onExtraConfigChange={handleExtraConfigChange}
+                        />
+                      ))}
+                  </div>
+                </AccordionItem>
+              </Accordion>
+            </LiquidGlassCard>
 
-            <div className="flex gap-2">
-              <Button
-                aria-label="back_to_edit"
-                onPress={handlePrevStep}>
-                <ArrowLeftIcon />
-              </Button>
+            <div className="flex gap-3">
+              <LiquidGlassButton
+                variant="default"
+                onClick={handlePrevStep}>
+                <ArrowLeftIcon className="size-5" />
+              </LiquidGlassButton>
 
-              <Button
-                aria-label="publish"
-                fullWidth
-                color={selectedPlatforms.length === 0 ? 'default' : 'primary'}
+              <LiquidGlassButton
+                variant={selectedPlatforms.length === 0 ? 'default' : 'primary'}
+                className="flex-1"
                 disabled={selectedPlatforms.length === 0}
-                onPress={handlePublish}>
-                <SendHorizontal />
-              </Button>
+                onClick={handlePublish}>
+                <SendHorizontal className="size-5" />
+              </LiquidGlassButton>
             </div>
           </div>
         )}

@@ -3,7 +3,6 @@
 import { useRouter } from 'next/navigation';
 import { nanoid } from 'nanoid';
 
-// 为Google Analytics添加类型声明
 declare global {
   interface Window {
     gtag: (command: string, action: string, params: Record<string, unknown>) => void;
@@ -11,14 +10,10 @@ declare global {
 }
 
 import {
-  Card,
   Button,
   Image,
   Input,
   Textarea,
-  CardHeader,
-  CardBody,
-  CardFooter,
   Switch,
   addToast,
   Accordion,
@@ -41,6 +36,9 @@ import {
   SigmaIcon,
   FileTextIcon,
   StarIcon,
+  UploadIcon,
+  FolderOpenIcon,
+  SparklesIcon,
 } from 'lucide-react';
 import dynamic from 'next/dynamic';
 import React, { useState, useEffect, useRef, useCallback } from 'react';
@@ -80,6 +78,13 @@ import {
   trackPublishFailed,
   trackPlatformSelected,
 } from '@/lib/posthog/events';
+import {
+  LiquidGlassCard,
+  LiquidGlassStepper,
+  LiquidGlassButton,
+  LiquidGlassDropZone,
+  glassBaseStyles,
+} from '@/components/ui/liquid-glass';
 
 const ReactPlayer = dynamic(() => import('react-player'), {
   ssr: false,
@@ -87,20 +92,22 @@ const ReactPlayer = dynamic(() => import('react-player'), {
 
 interface ActionPlaceholderProps {
   onClick?: () => void;
-  icon: string;
+  icon: React.ReactNode;
   text: string;
 }
 
 const ActionPlaceholder = ({ onClick, icon, text }: ActionPlaceholderProps) => (
   <button
     type="button"
-    className="flex aspect-square w-[100px] cursor-pointer flex-col items-center justify-center rounded-md border-2 border-dashed border-default-300 bg-default-100 text-default-500 transition-colors hover:border-primary hover:bg-primary/10 hover:text-primary"
+    className={cn(
+      'flex aspect-square w-[100px] cursor-pointer flex-col items-center justify-center rounded-2xl transition-all duration-200',
+      'bg-white/10 hover:bg-white/20 dark:bg-white/5 dark:hover:bg-white/10',
+      'border border-dashed border-white/20 dark:border-white/10',
+      'text-foreground/60 hover:text-foreground/90',
+    )}
     onClick={onClick}>
-    <Icon
-      icon={icon}
-      className="size-8"
-    />
-    <p className="text-xs">{text}</p>
+    {icon}
+    <p className="mt-2 text-xs">{text}</p>
   </button>
 );
 
@@ -128,12 +135,16 @@ const SortableMedia = ({ id, file, index, type, onDelete, onImageClick, onVideoC
     <div
       ref={setNodeRef}
       style={style}
-      className="group relative aspect-square w-[100px] overflow-hidden rounded-md bg-default-100">
+      className={cn(
+        'group relative aspect-square w-[100px] overflow-hidden rounded-2xl',
+        'bg-white/10 dark:bg-black/20',
+        'border border-white/20 dark:border-white/10',
+      )}>
       <div
         {...attributes}
         {...listeners}
         className="absolute left-0 top-0 z-50 m-1 cursor-grab opacity-0 transition-opacity group-hover:opacity-100">
-        <GripVerticalIcon className="size-4" />
+        <GripVerticalIcon className="size-4 text-foreground/60" />
       </div>
       {type === 'image' ? (
         <Image
@@ -189,7 +200,7 @@ const VideoViewer = ({ visible, url, onClose }: VideoViewerProps) => {
 
   return (
     <div
-      className="fixed inset-0 z-[2000] flex items-center justify-center bg-black/80"
+      className="fixed inset-0 z-[2000] flex items-center justify-center bg-black/80 backdrop-blur-sm"
       onClick={onClose}>
       <div
         className="relative aspect-video w-full max-w-4xl"
@@ -223,7 +234,6 @@ export default function DynamicPage() {
   const [title, setTitle] = useState<string>('');
   const [content, setContent] = useState<string>('');
   const { dynamicPlatforms, setDynamicPlatforms, clearDynamicPlatforms } = usePlatformStore();
-  // Initialize with empty array to prevent hydration mismatch - sync from store after mount
   const [selectedPlatforms, setSelectedPlatforms] = useState<string[]>([]);
   const [autoPublish, setAutoPublish] = useState<boolean>(false);
   const [viewerVisible, setViewerVisible] = useState(false);
@@ -241,7 +251,6 @@ export default function DynamicPage() {
   const [showDraftAd, setShowDraftAd] = useState(true);
   const [isAiModalOpen, setIsAiModalOpen] = useState(false);
 
-  // Sync persisted platform selection after hydration to prevent mismatch
   useEffect(() => {
     if (dynamicPlatforms.length > 0) {
       setSelectedPlatforms(dynamicPlatforms);
@@ -278,44 +287,13 @@ export default function DynamicPage() {
     },
   ];
 
-  const Stepper = () => (
-    <Card className="sticky top-4 h-fit">
-      <CardHeader>
-        <p className="text-lg font-bold">{t('dynamic.newTask', '新建发布任务')}</p>
-      </CardHeader>
-      <CardBody>
-        <div className="flex flex-col gap-8">
-          {steps.map((step, index) => (
-            <div
-              key={step.id}
-              className={cn('flex items-start gap-4', currentStep > step.id ? 'cursor-pointer' : 'cursor-default')}
-              onClick={() => {
-                if (step.id === 1) {
-                  router.push('/dashboard/publish');
-                } else if (currentStep > step.id) {
-                  setCurrentStep(step.id);
-                }
-              }}>
-              <div
-                className={cn(
-                  'flex h-8 w-8 shrink-0 items-center justify-center rounded-full font-bold transition-colors',
-                  step.id === currentStep
-                    ? 'bg-primary text-primary-foreground'
-                    : 'bg-default-200 text-default-foreground',
-                  currentStep > step.id && 'bg-primary/20 text-primary',
-                )}>
-                {index + 1}
-              </div>
-              <div>
-                <p className="font-semibold">{step.name}</p>
-                <p className="text-sm text-default-500">{step.description}</p>
-              </div>
-            </div>
-          ))}
-        </div>
-      </CardBody>
-    </Card>
-  );
+  const handleStepClick = (stepId: number) => {
+    if (stepId === 1) {
+      router.push('/dashboard/publish');
+    } else if (currentStep > stepId) {
+      setCurrentStep(stepId);
+    }
+  };
 
   const sensors = useSensors(
     useSensor(PointerSensor),
@@ -351,7 +329,6 @@ export default function DynamicPage() {
   };
 
   useEffect(() => {
-    // Load draft data from session storage if available
     const draftData = sessionStorage.getItem('draftData');
     if (draftData) {
       try {
@@ -360,7 +337,6 @@ export default function DynamicPage() {
         setContent(parsed.content || '');
         setImages(parsed.images || []);
         setVideos(parsed.videos || []);
-        // Clear the session storage after loading
         sessionStorage.removeItem('draftData');
       } catch (error) {
         console.error('Failed to parse draft data:', error);
@@ -420,7 +396,6 @@ export default function DynamicPage() {
 
   const handleNextStep = () => {
     if (!content) {
-      console.log('content is empty');
       addToast({
         title: t('validation.contentRequired', '内容不能为空'),
         color: 'danger',
@@ -437,12 +412,9 @@ export default function DynamicPage() {
   const handlePlatformChange = (platform: string, isSelected: boolean) => {
     setSelectedPlatforms((prev) => {
       const newSelected = isSelected ? [...prev, platform] : prev.filter((p) => p !== platform);
-
-      // 追踪平台选择事件
       if (newSelected.length > 0) {
         trackPlatformSelected(newSelected, 'dynamic');
       }
-
       return newSelected;
     });
   };
@@ -467,7 +439,6 @@ export default function DynamicPage() {
       return;
     }
 
-    // 向Google Analytics发送自定义事件
     if (typeof window !== 'undefined' && window.gtag) {
       window.gtag('event', 'dynamic_publish', {
         event_category: 'publish',
@@ -479,14 +450,7 @@ export default function DynamicPage() {
       });
     }
 
-    // 追踪发布发起事件 (PostHog)
-    trackPublishInitiated(
-      'dynamic',
-      selectedPlatforms,
-      images.length > 0,
-      videos.length > 0,
-      autoPublish,
-    );
+    trackPublishInitiated('dynamic', selectedPlatforms, images.length > 0, videos.length > 0, autoPublish);
 
     const data = {
       platforms: platforms.filter((platform) => selectedPlatforms.includes(platform.name)),
@@ -501,23 +465,14 @@ export default function DynamicPage() {
 
     const result = await funcPublish(data);
     if (!result.success) {
-      // 追踪发布失败事件
       trackPublishFailed('dynamic', selectedPlatforms, result.error);
-
       addToast({
         title: t('publish.failed', '发布失败'),
         description: result.error || t('publish.unknownError', '未知错误'),
         color: 'danger',
       });
     } else {
-      // 追踪发布成功事件
-      trackPublishSuccess(
-        'dynamic',
-        selectedPlatforms,
-        content.length,
-        images.length + videos.length,
-      );
-
+      trackPublishSuccess('dynamic', selectedPlatforms, content.length, images.length + videos.length);
       addToast({
         title: t('publish.success', '发布成功'),
         color: 'success',
@@ -564,7 +519,6 @@ export default function DynamicPage() {
 
   const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
     handleMediaFiles(event.target.files, 'image');
-    // Reset file input to allow selecting the same file again
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
     }
@@ -673,7 +627,6 @@ export default function DynamicPage() {
     };
   }, [handlePaste]);
 
-  // Define popular platforms for each region
   const popularPlatformNames = {
     CN: ['DYNAMIC_WEIBO', 'DYNAMIC_WEIXIN', 'DYNAMIC_DOUYIN', 'DYNAMIC_REDNOTE', 'DYNAMIC_BILIBILI'],
     International: ['DYNAMIC_X', 'DYNAMIC_FACEBOOK', 'DYNAMIC_INSTAGRAM', 'DYNAMIC_LINKEDIN'],
@@ -695,59 +648,63 @@ export default function DynamicPage() {
   };
 
   return (
-    <div className="grid h-full grid-cols-1 justify-center gap-8 p-4 md:grid-cols-[280px_minmax(0,560px)]">
-      <Stepper />
-      <div className="overflow-y-auto">
-        {/* Draft 功能广告横幅 */}
+    <div className="grid grid-cols-1 justify-center gap-6 md:grid-cols-[280px_minmax(0,560px)]">
+      <LiquidGlassStepper
+        steps={steps}
+        currentStep={currentStep}
+        title={t('dynamic.newTask', '新建发布任务')}
+        onStepClick={handleStepClick}
+      />
+
+      <div className="flex flex-col gap-4">
+        {/* Draft feature banner */}
         {showDraftAd && (
-          <Card className="mb-4 border-primary/20 bg-gradient-to-r from-primary/10 to-secondary/10 shadow-none">
-            <CardBody className="flex flex-row items-center gap-3 p-3">
-              <div className="flex size-10 shrink-0 items-center justify-center rounded-full bg-primary/20">
-                <FileTextIcon className="size-5 text-primary" />
+          <LiquidGlassCard className="mb-4 p-4">
+            <div className="flex flex-row items-center gap-4">
+              <div className="flex size-10 shrink-0 items-center justify-center rounded-2xl bg-blue-500/20">
+                <FileTextIcon className="size-5 text-blue-500 dark:text-blue-400" />
               </div>
               <div className="flex-1">
                 <div className="flex items-center gap-2">
-                  <h4 className="text-sm font-semibold text-foreground">
+                  <h4 className="text-sm font-semibold text-foreground/90">
                     {t('dynamic.draftAd.title', '试试我们的草稿功能！')}
                   </h4>
-                  <StarIcon className="size-4 fill-warning text-warning" />
+                  <StarIcon className="size-4 fill-amber-500 text-amber-500" />
                 </div>
-                <p className="text-xs text-default-600">
+                <p className="text-xs text-foreground/50">
                   {t('dynamic.draftAd.description', '保存您的创作进度，随时编辑和发布')}
                 </p>
               </div>
               <div className="flex items-center gap-2">
                 <Link href="/dashboard/drafts">
-                  <Button
+                  <LiquidGlassButton
                     size="sm"
-                    color="primary"
-                    variant="flat"
-                    className="text-xs">
+                    variant="primary">
                     {t('dynamic.draftAd.tryNow', '立即体验')}
-                  </Button>
+                  </LiquidGlassButton>
                 </Link>
                 <Button
                   isIconOnly
                   size="sm"
                   variant="light"
                   onPress={() => setShowDraftAd(false)}
-                  className="text-default-400 hover:text-default-600">
+                  className="text-foreground/40 hover:text-foreground/60">
                   <XIcon className="size-4" />
                 </Button>
               </div>
-            </CardBody>
-          </Card>
+            </div>
+          </LiquidGlassCard>
         )}
 
         {currentStep === 2 && (
-          <div className="flex flex-col gap-2">
+          <div className="flex flex-col gap-4">
             {isLibraryModalOpen && (
               <LibraryModal
                 isOpen={isLibraryModalOpen}
                 onOpenChange={setLibraryModalOpen}
                 onSelectImage={async (fileData) => {
                   setImages((prev) => [...prev, fileData]);
-                  setLibraryModalOpen(false); // close on select
+                  setLibraryModalOpen(false);
                 }}
                 existingFiles={images}
               />
@@ -778,26 +735,28 @@ export default function DynamicPage() {
               className="hidden"
               onChange={handleVideoFileSelect}
             />
-            <Card className="h-fit w-full border bg-default-50 shadow-none">
-              <CardBody className="flex flex-col gap-4">
+
+            {/* Content card */}
+            <LiquidGlassCard className="p-6">
+              <div className="flex flex-col gap-4">
                 <Input
                   isClearable
                   variant="underlined"
-                  // labelPlacement="outside"
-                  // label={t('dynamic.title')}
                   placeholder={t('dynamic.titlePlaceholder', '给你的内容起个标题（可选）')}
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}
                   onClear={() => setTitle('')}
                   className="w-full"
-                  endContent={<div className="text-xs text-default-400">{title.length}</div>}
+                  classNames={{
+                    input: 'text-foreground/90',
+                    inputWrapper: 'border-white/20 dark:border-white/10',
+                  }}
+                  endContent={<div className="text-xs text-foreground/40">{title.length}</div>}
                 />
                 <Textarea
                   isClearable
                   isRequired
                   variant="underlined"
-                  // labelPlacement="outside"
-                  // label={t('dynamic.content')}
                   placeholder={t('dynamic.contentPlaceholder', '在这里输入你的内容...')}
                   value={content}
                   onChange={(e) => setContent(e.target.value)}
@@ -806,114 +765,104 @@ export default function DynamicPage() {
                   minRows={5}
                   maxRows={20}
                   autoFocus
+                  classNames={{
+                    input: 'text-foreground/90',
+                    inputWrapper: 'border-white/20 dark:border-white/10',
+                  }}
                 />
-              </CardBody>
+              </div>
 
-              <CardFooter>
-                <div className="flex w-full flex-col gap-4">
-                  <div className="flex items-center justify-between gap-2">
-                    <div className="flex items-center gap-2">
-                      <Link
-                        href="https://docs.multipost.app/docs/user-guide/contact-us"
-                        target="_blank">
-                        <Button
-                          variant="flat"
-                          color="primary"
-                          startContent={<MessageSquareIcon className="size-5" />}>
-                          {t('contactUs', '联系我们')}
-                        </Button>
-                      </Link>
-                      {(title.length > 0 || content.length > 0) && (
-                        <Tooltip content={`${t('dynamic.total', 'Total')}: ${title.length + content.length}`}>
-                          <Button
-                            disableAnimation
-                            disableRipple
-                            color="default"
-                            variant="flat"
-                            startContent={<SigmaIcon className="size-5" />}
-                            className="flex w-fit cursor-default flex-row items-center gap-1 ">
-                            <p className="text-sm text-default-500">
-                              {title.length > 0 && content.length === 0 && title.length}
-                              {content.length > 0 && title.length === 0 && content.length}
-                              {title.length > 0 && content.length > 0 && `${title.length} + ${content.length}`}
-                            </p>
-                          </Button>
-                        </Tooltip>
-                      )}
-                    </div>
-                    {(title || content || images.length > 0 || videos.length > 0) && (
-                      <Button
-                        isIconOnly
-                        variant="light"
-                        color="danger"
-                        onPress={handleClearAll}
-                        title={t('dynamic.clearAll', '全部清空')}>
-                        <TrashIcon className="size-6" />
-                      </Button>
-                    )}
-                  </div>
+              <div className="mt-4 flex w-full items-center justify-between gap-2">
+                <div className="flex items-center gap-2">
+                  <Link
+                    href="https://docs.multipost.app/docs/user-guide/contact-us"
+                    target="_blank">
+                    <LiquidGlassButton
+                      size="sm"
+                      variant="default">
+                      <MessageSquareIcon className="mr-2 size-4" />
+                      {t('contactUs', '联系我们')}
+                    </LiquidGlassButton>
+                  </Link>
+                  {(title.length > 0 || content.length > 0) && (
+                    <Tooltip content={`${t('dynamic.total', 'Total')}: ${title.length + content.length}`}>
+                      <div className={cn(glassBaseStyles, 'flex items-center gap-1 rounded-xl px-3 py-1.5')}>
+                        <SigmaIcon className="size-4 text-foreground/60" />
+                        <span className="text-sm text-foreground/60">
+                          {title.length > 0 && content.length === 0 && title.length}
+                          {content.length > 0 && title.length === 0 && content.length}
+                          {title.length > 0 && content.length > 0 && `${title.length} + ${content.length}`}
+                        </span>
+                      </div>
+                    </Tooltip>
+                  )}
                 </div>
-              </CardFooter>
-            </Card>
+                {(title || content || images.length > 0 || videos.length > 0) && (
+                  <Button
+                    isIconOnly
+                    variant="light"
+                    color="danger"
+                    onPress={handleClearAll}
+                    title={t('dynamic.clearAll', '全部清空')}>
+                    <TrashIcon className="size-5" />
+                  </Button>
+                )}
+              </div>
+            </LiquidGlassCard>
 
-            <Card
-              className={cn(
-                'relative my-2 border bg-default-50 shadow-none transition-colors',
-                isDraggingOver && 'border-primary',
-              )}
+            {/* Image upload card */}
+            <LiquidGlassCard
+              className={cn('relative p-4 transition-colors', isDraggingOver && 'ring-2 ring-blue-500/50')}
               onDrop={handleDrop}
               onDragOver={handleDragOver}
               onDragEnter={handleDragEnter}
               onDragLeave={handleDragLeave}>
-              <CardBody>
-                <DndContext
-                  sensors={sensors}
-                  collisionDetection={closestCenter}
-                  onDragEnd={(event) => handleDragEnd(event, 'image')}>
-                  <SortableContext
-                    items={images.map((file) => file.id!)}
-                    strategy={horizontalListSortingStrategy}>
-                    <div className="flex flex-row flex-wrap items-center gap-2">
-                      {images.map((file, index) => (
-                        <SortableMedia
-                          key={file.id}
-                          id={file.id!}
-                          file={file}
-                          index={index}
-                          type="image"
-                          onDelete={handleDeleteFile}
-                          onImageClick={handleImageClick}
-                        />
-                      ))}
-                      <ActionPlaceholder
-                        onClick={() => fileInputRef.current?.click()}
-                        icon="lucide:upload"
-                        text={t('dynamic.uploadImage', '上传图片')}
+              <DndContext
+                sensors={sensors}
+                collisionDetection={closestCenter}
+                onDragEnd={(event) => handleDragEnd(event, 'image')}>
+                <SortableContext
+                  items={images.map((file) => file.id!)}
+                  strategy={horizontalListSortingStrategy}>
+                  <div className="flex flex-row flex-wrap items-center gap-3">
+                    {images.map((file, index) => (
+                      <SortableMedia
+                        key={file.id}
+                        id={file.id!}
+                        file={file}
+                        index={index}
+                        type="image"
+                        onDelete={handleDeleteFile}
+                        onImageClick={handleImageClick}
                       />
-                      <ActionPlaceholder
-                        onClick={() => setLibraryModalOpen(true)}
-                        icon="lucide:library"
-                        text={t('dynamic.library', '素材库')}
-                      />
-                      <ActionPlaceholder
-                        onClick={() => setIsAiModalOpen(true)}
-                        icon="lucide:bot"
-                        text={t('dynamic.aiGenerate', 'AI 生成')}
-                      />
-                    </div>
-                  </SortableContext>
-                </DndContext>
-              </CardBody>
+                    ))}
+                    <ActionPlaceholder
+                      onClick={() => fileInputRef.current?.click()}
+                      icon={<UploadIcon className="size-6" />}
+                      text={t('dynamic.uploadImage', '上传图片')}
+                    />
+                    <ActionPlaceholder
+                      onClick={() => setLibraryModalOpen(true)}
+                      icon={<FolderOpenIcon className="size-6" />}
+                      text={t('dynamic.library', '素材库')}
+                    />
+                    <ActionPlaceholder
+                      onClick={() => setIsAiModalOpen(true)}
+                      icon={<SparklesIcon className="size-6" />}
+                      text={t('dynamic.aiGenerate', 'AI 生成')}
+                    />
+                  </div>
+                </SortableContext>
+              </DndContext>
               {isDraggingOver && (
-                <div className="absolute inset-0 z-10 flex flex-col items-center justify-center rounded-lg bg-primary/20 backdrop-blur-xs">
-                  <Icon
-                    icon="lucide:upload-cloud"
-                    className="size-16 text-primary"
-                  />
-                  <p className="mt-2 font-semibold text-primary">{t('dynamic.releaseToUpload', '松开即可上传')}</p>
+                <div className="absolute inset-0 z-10 flex flex-col items-center justify-center rounded-3xl bg-blue-500/20 backdrop-blur-sm">
+                  <UploadIcon className="size-12 text-blue-500 dark:text-blue-400" />
+                  <p className="mt-2 font-semibold text-blue-500 dark:text-blue-400">
+                    {t('dynamic.releaseToUpload', '松开即可上传')}
+                  </p>
                 </div>
               )}
-            </Card>
+            </LiquidGlassCard>
 
             <Viewer
               visible={viewerVisible}
@@ -922,59 +871,52 @@ export default function DynamicPage() {
               activeIndex={currentImage}
             />
 
-            <Card
-              className={cn(
-                'relative my-2 border bg-default-50 shadow-none transition-colors',
-                isVideoDraggingOver && 'border-primary',
-              )}
+            {/* Video upload card */}
+            <LiquidGlassCard
+              className={cn('relative p-4 transition-colors', isVideoDraggingOver && 'ring-2 ring-blue-500/50')}
               onDrop={handleVideoDrop}
               onDragOver={handleVideoDragOver}
               onDragEnter={handleVideoDragEnter}
               onDragLeave={handleVideoDragLeave}>
-              <CardBody>
-                <DndContext
-                  sensors={sensors}
-                  collisionDetection={closestCenter}
-                  onDragEnd={(event) => handleDragEnd(event, 'video')}>
-                  <SortableContext
-                    items={videos.map((file) => file.id!)}
-                    strategy={horizontalListSortingStrategy}>
-                    <div className="flex flex-row flex-wrap items-center gap-2">
-                      {videos.map((file, index) => (
-                        <SortableMedia
-                          key={file.id}
-                          id={file.id!}
-                          file={file}
-                          index={index}
-                          type="video"
-                          onDelete={handleDeleteFile}
-                          onVideoClick={handleVideoClick}
-                        />
-                      ))}
-                      <ActionPlaceholder
-                        onClick={() => videoFileInputRef.current?.click()}
-                        icon="lucide:video"
-                        text={t('dynamic.uploadVideo', '上传视频')}
+              <DndContext
+                sensors={sensors}
+                collisionDetection={closestCenter}
+                onDragEnd={(event) => handleDragEnd(event, 'video')}>
+                <SortableContext
+                  items={videos.map((file) => file.id!)}
+                  strategy={horizontalListSortingStrategy}>
+                  <div className="flex flex-row flex-wrap items-center gap-3">
+                    {videos.map((file, index) => (
+                      <SortableMedia
+                        key={file.id}
+                        id={file.id!}
+                        file={file}
+                        index={index}
+                        type="video"
+                        onDelete={handleDeleteFile}
+                        onVideoClick={handleVideoClick}
                       />
-                    </div>
-                  </SortableContext>
-                </DndContext>
-              </CardBody>
-              <CardFooter className="flex flex-col items-start gap-2">
-                <div className="text-sm text-red-500">
-                  {t('dynamic.videoSupportWarning', '* 仅少量海外平台支持视频发布，例如 X、Instagram、LinkedIn 等')}
-                </div>
-              </CardFooter>
+                    ))}
+                    <ActionPlaceholder
+                      onClick={() => videoFileInputRef.current?.click()}
+                      icon={<PlayCircleIcon className="size-6" />}
+                      text={t('dynamic.uploadVideo', '上传视频')}
+                    />
+                  </div>
+                </SortableContext>
+              </DndContext>
+              <p className="mt-3 text-xs text-red-500/80">
+                {t('dynamic.videoSupportWarning', '* 仅少量海外平台支持视频发布，例如 X、Instagram、LinkedIn 等')}
+              </p>
               {isVideoDraggingOver && (
-                <div className="absolute inset-0 z-10 flex flex-col items-center justify-center rounded-lg bg-primary/20 backdrop-blur-xs">
-                  <Icon
-                    icon="lucide:upload-cloud"
-                    className="size-16 text-primary"
-                  />
-                  <p className="mt-2 font-semibold text-primary">{t('dynamic.releaseToUpload', '松开即可上传')}</p>
+                <div className="absolute inset-0 z-10 flex flex-col items-center justify-center rounded-3xl bg-blue-500/20 backdrop-blur-sm">
+                  <UploadIcon className="size-12 text-blue-500 dark:text-blue-400" />
+                  <p className="mt-2 font-semibold text-blue-500 dark:text-blue-400">
+                    {t('dynamic.releaseToUpload', '松开即可上传')}
+                  </p>
                 </div>
               )}
-            </Card>
+            </LiquidGlassCard>
 
             <VideoViewer
               visible={videoViewer.visible}
@@ -982,193 +924,190 @@ export default function DynamicPage() {
               onClose={() => setVideoViewer({ visible: false, url: null })}
             />
 
-            <Button
-              fullWidth
-              onPress={handleNextStep}>
-              <ArrowRightIcon />
-            </Button>
+            <LiquidGlassButton
+              variant="primary"
+              className="w-full"
+              onClick={handleNextStep}>
+              <ArrowRightIcon className="size-5" />
+            </LiquidGlassButton>
           </div>
         )}
+
         {currentStep === 3 && (
           <div className="flex flex-col gap-4">
-            <Card className="w-full border bg-default-50 shadow-none">
-              <CardBody className="gap-2">
-                <div className="flex items-center justify-between">
-                  <Switch
-                    isSelected={autoPublish}
-                    onValueChange={setAutoPublish}
-                    startContent={<BotIcon className="size-4" />}
-                    endContent={<HandIcon className="size-4" />}>
-                    {t('dynamic.autoPublish', '自动发布')}
-                  </Switch>
-                  <div className="flex items-center justify-between">
-                    {selectedPlatforms.length > 0 && (
-                      <Button
-                        isIconOnly
-                        size="sm"
-                        variant="light"
-                        color="danger"
-                        onPress={() => setSelectedPlatforms([])}>
-                        <Eraser className="size-4" />
-                      </Button>
-                    )}
+            <LiquidGlassCard className="p-6">
+              <div className="mb-4 flex items-center justify-between">
+                <Switch
+                  isSelected={autoPublish}
+                  onValueChange={setAutoPublish}
+                  startContent={<BotIcon className="size-4" />}
+                  endContent={<HandIcon className="size-4" />}>
+                  <span className="text-foreground/80">{t('dynamic.autoPublish', '自动发布')}</span>
+                </Switch>
+                {selectedPlatforms.length > 0 && (
+                  <Button
+                    isIconOnly
+                    size="sm"
+                    variant="light"
+                    color="danger"
+                    onPress={() => setSelectedPlatforms([])}>
+                    <Eraser className="size-4" />
+                  </Button>
+                )}
+              </div>
+
+              <Accordion
+                isCompact
+                variant="light"
+                selectionMode="multiple"
+                defaultExpandedKeys={['CN', 'International']}>
+                <AccordionItem
+                  key="CN"
+                  title={t('platforms.cn', '中国大陆')}
+                  subtitle={`${t('platforms.popular', '热门')}: ${
+                    selectedPlatforms.filter((platform) => {
+                      const info = getPopularPlatforms('CN').find((p) => p.name === platform);
+                      return info;
+                    }).length
+                  }/${getPopularPlatforms('CN').length}`}
+                  startContent={
+                    <div className="w-8">
+                      <Icon
+                        icon="openmoji:flag-china"
+                        className="h-max w-full"
+                      />
+                    </div>
+                  }
+                  className="py-1">
+                  <div className="grid grid-cols-2 gap-2">
+                    {getPopularPlatforms('CN').map((platform) => (
+                      <PlatformCheckbox
+                        key={platform.name}
+                        platformInfo={platform}
+                        isSelected={selectedPlatforms.includes(platform.name)}
+                        onChange={(_, isSelected) => handlePlatformChange(platform.name, isSelected)}
+                        isDisabled={false}
+                        onExtraConfigChange={handleExtraConfigChange}
+                      />
+                    ))}
                   </div>
-                </div>
-
-                <Accordion
-                  isCompact
-                  variant="light"
-                  selectionMode="multiple"
-                  defaultExpandedKeys={['CN', 'International']}>
-                  <AccordionItem
-                    key="CN"
-                    title={t('platforms.cn', '中国大陆')}
-                    subtitle={`${t('platforms.popular', '热门')}: ${
-                      selectedPlatforms.filter((platform) => {
-                        const info = getPopularPlatforms('CN').find((p) => p.name === platform);
-                        return info;
-                      }).length
-                    }/${getPopularPlatforms('CN').length}`}
-                    startContent={
-                      <div className="w-8">
-                        <Icon
-                          icon="openmoji:flag-china"
-                          className="h-max w-full"
-                        />
-                      </div>
-                    }
-                    className="py-1">
-                    <div className="grid grid-cols-2 gap-2">
-                      {getPopularPlatforms('CN').map((platform) => (
-                        <PlatformCheckbox
-                          key={platform.name}
-                          platformInfo={platform}
-                          isSelected={selectedPlatforms.includes(platform.name)}
-                          onChange={(_, isSelected) => handlePlatformChange(platform.name, isSelected)}
-                          isDisabled={false}
-                          onExtraConfigChange={handleExtraConfigChange}
-                        />
-                      ))}
+                  {getOtherPlatforms('CN').length > 0 && (
+                    <Accordion
+                      isCompact
+                      variant="light"
+                      className="mt-2"
+                      defaultExpandedKeys={
+                        getOtherPlatforms('CN').some((p) => selectedPlatforms.includes(p.name)) ? ['CN-Others'] : []
+                      }>
+                      <AccordionItem
+                        key="CN-Others"
+                        title={t('platforms.others', '其他')}
+                        subtitle={`${
+                          selectedPlatforms.filter((platform) => {
+                            const info = getOtherPlatforms('CN').find((p) => p.name === platform);
+                            return info;
+                          }).length
+                        }/${getOtherPlatforms('CN').length}`}
+                        className="py-1">
+                        <div className="grid grid-cols-2 gap-2">
+                          {getOtherPlatforms('CN').map((platform) => (
+                            <PlatformCheckbox
+                              key={platform.name}
+                              platformInfo={platform}
+                              isSelected={selectedPlatforms.includes(platform.name)}
+                              onChange={(_, isSelected) => handlePlatformChange(platform.name, isSelected)}
+                              isDisabled={false}
+                              onExtraConfigChange={handleExtraConfigChange}
+                            />
+                          ))}
+                        </div>
+                      </AccordionItem>
+                    </Accordion>
+                  )}
+                </AccordionItem>
+                <AccordionItem
+                  key="International"
+                  title={t('platforms.international', '国际/地区')}
+                  subtitle={`${t('platforms.popular', '热门')}: ${
+                    selectedPlatforms.filter((platform) => {
+                      const info = getPopularPlatforms('International').find((p) => p.name === platform);
+                      return info;
+                    }).length
+                  }/${getPopularPlatforms('International').length}`}
+                  startContent={
+                    <div className="w-8">
+                      <Icon
+                        icon="openmoji:globe-with-meridians"
+                        className="h-max w-full"
+                      />
                     </div>
-                    {getOtherPlatforms('CN').length > 0 && (
-                      <Accordion
-                        isCompact
-                        variant="light"
-                        className="mt-2"
-                        defaultExpandedKeys={
-                          getOtherPlatforms('CN').some((p) => selectedPlatforms.includes(p.name)) ? ['CN-Others'] : []
-                        }>
-                        <AccordionItem
-                          key="CN-Others"
-                          title={t('platforms.others', '其他')}
-                          subtitle={`${
-                            selectedPlatforms.filter((platform) => {
-                              const info = getOtherPlatforms('CN').find((p) => p.name === platform);
-                              return info;
-                            }).length
-                          }/${getOtherPlatforms('CN').length}`}
-                          className="py-1">
-                          <div className="grid grid-cols-2 gap-2">
-                            {getOtherPlatforms('CN').map((platform) => (
-                              <PlatformCheckbox
-                                key={platform.name}
-                                platformInfo={platform}
-                                isSelected={selectedPlatforms.includes(platform.name)}
-                                onChange={(_, isSelected) => handlePlatformChange(platform.name, isSelected)}
-                                isDisabled={false}
-                                onExtraConfigChange={handleExtraConfigChange}
-                              />
-                            ))}
-                          </div>
-                        </AccordionItem>
-                      </Accordion>
-                    )}
-                  </AccordionItem>
-                  <AccordionItem
-                    key="International"
-                    title={t('platforms.international', '国际/地区')}
-                    subtitle={`${t('platforms.popular', '热门')}: ${
-                      selectedPlatforms.filter((platform) => {
-                        const info = getPopularPlatforms('International').find((p) => p.name === platform);
-                        return info;
-                      }).length
-                    }/${getPopularPlatforms('International').length}`}
-                    startContent={
-                      <div className="w-8">
-                        <Icon
-                          icon="openmoji:globe-with-meridians"
-                          className="h-max w-full"
-                        />
-                      </div>
-                    }
-                    className="py-1">
-                    <div className="grid grid-cols-2 gap-2">
-                      {getPopularPlatforms('International').map((platform) => (
-                        <PlatformCheckbox
-                          key={platform.name}
-                          platformInfo={platform}
-                          isSelected={selectedPlatforms.includes(platform.name)}
-                          onChange={(_, isSelected) => handlePlatformChange(platform.name, isSelected)}
-                          isDisabled={false}
-                          onExtraConfigChange={handleExtraConfigChange}
-                        />
-                      ))}
-                    </div>
-                    {getOtherPlatforms('International').length > 0 && (
-                      <Accordion
-                        isCompact
-                        variant="light"
-                        className="mt-2"
-                        defaultExpandedKeys={
-                          getOtherPlatforms('International').some((p) => selectedPlatforms.includes(p.name))
-                            ? ['International-Others']
-                            : []
-                        }>
-                        <AccordionItem
-                          key="International-Others"
-                          title={t('platforms.others', '其他')}
-                          subtitle={`${
-                            selectedPlatforms.filter((platform) => {
-                              const info = getOtherPlatforms('International').find((p) => p.name === platform);
-                              return info;
-                            }).length
-                          }/${getOtherPlatforms('International').length}`}
-                          className="py-1">
-                          <div className="grid grid-cols-2 gap-2">
-                            {getOtherPlatforms('International').map((platform) => (
-                              <PlatformCheckbox
-                                key={platform.name}
-                                platformInfo={platform}
-                                isSelected={selectedPlatforms.includes(platform.name)}
-                                onChange={(_, isSelected) => handlePlatformChange(platform.name, isSelected)}
-                                isDisabled={false}
-                                onExtraConfigChange={handleExtraConfigChange}
-                              />
-                            ))}
-                          </div>
-                        </AccordionItem>
-                      </Accordion>
-                    )}
-                  </AccordionItem>
-                </Accordion>
-              </CardBody>
-            </Card>
+                  }
+                  className="py-1">
+                  <div className="grid grid-cols-2 gap-2">
+                    {getPopularPlatforms('International').map((platform) => (
+                      <PlatformCheckbox
+                        key={platform.name}
+                        platformInfo={platform}
+                        isSelected={selectedPlatforms.includes(platform.name)}
+                        onChange={(_, isSelected) => handlePlatformChange(platform.name, isSelected)}
+                        isDisabled={false}
+                        onExtraConfigChange={handleExtraConfigChange}
+                      />
+                    ))}
+                  </div>
+                  {getOtherPlatforms('International').length > 0 && (
+                    <Accordion
+                      isCompact
+                      variant="light"
+                      className="mt-2"
+                      defaultExpandedKeys={
+                        getOtherPlatforms('International').some((p) => selectedPlatforms.includes(p.name))
+                          ? ['International-Others']
+                          : []
+                      }>
+                      <AccordionItem
+                        key="International-Others"
+                        title={t('platforms.others', '其他')}
+                        subtitle={`${
+                          selectedPlatforms.filter((platform) => {
+                            const info = getOtherPlatforms('International').find((p) => p.name === platform);
+                            return info;
+                          }).length
+                        }/${getOtherPlatforms('International').length}`}
+                        className="py-1">
+                        <div className="grid grid-cols-2 gap-2">
+                          {getOtherPlatforms('International').map((platform) => (
+                            <PlatformCheckbox
+                              key={platform.name}
+                              platformInfo={platform}
+                              isSelected={selectedPlatforms.includes(platform.name)}
+                              onChange={(_, isSelected) => handlePlatformChange(platform.name, isSelected)}
+                              isDisabled={false}
+                              onExtraConfigChange={handleExtraConfigChange}
+                            />
+                          ))}
+                        </div>
+                      </AccordionItem>
+                    </Accordion>
+                  )}
+                </AccordionItem>
+              </Accordion>
+            </LiquidGlassCard>
 
-            <div className="flex gap-2">
-              <Button
-                aria-label="back_to_edit"
-                onPress={handlePrevStep}>
-                <ArrowLeftIcon />
-              </Button>
+            <div className="flex gap-3">
+              <LiquidGlassButton
+                variant="default"
+                onClick={handlePrevStep}>
+                <ArrowLeftIcon className="size-5" />
+              </LiquidGlassButton>
 
-              <Button
-                aria-label="publish"
-                fullWidth
-                color={selectedPlatforms.length === 0 ? 'default' : 'primary'}
+              <LiquidGlassButton
+                variant={selectedPlatforms.length === 0 ? 'default' : 'primary'}
+                className="flex-1"
                 disabled={selectedPlatforms.length === 0}
-                onPress={handlePublish}>
-                <SendHorizontal />
-              </Button>
+                onClick={handlePublish}>
+                <SendHorizontal className="size-5" />
+              </LiquidGlassButton>
             </div>
           </div>
         )}

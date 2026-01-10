@@ -1,6 +1,5 @@
 'use client';
 
-// 为Google Analytics添加类型声明
 declare global {
   interface Window {
     gtag: (command: string, action: string, params: Record<string, unknown>) => void;
@@ -9,13 +8,9 @@ declare global {
 
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import {
-  Card,
   Button,
   Input,
   Textarea,
-  CardHeader,
-  CardBody,
-  CardFooter,
   addToast,
   Accordion,
   AccordionItem,
@@ -53,12 +48,17 @@ import {
   trackPublishFailed,
   trackPlatformSelected,
 } from '@/lib/posthog/events';
+import {
+  LiquidGlassCard,
+  LiquidGlassStepper,
+  LiquidGlassButton,
+  LiquidGlassDropZone,
+} from '@/components/ui/liquid-glass';
 
 const ReactPlayer = dynamic(() => import('react-player'), {
   ssr: false,
 });
 
-// HeroUI版本的TagInput组件
 const HeroTagInput = React.forwardRef<
   HTMLInputElement,
   {
@@ -96,7 +96,7 @@ const HeroTagInput = React.forwardRef<
   return (
     <div
       className={cn(
-        'flex min-h-10 w-full flex-wrap items-center gap-2 rounded-md bg-transparent px-0 py-2 text-sm mt-4',
+        'mt-4 flex min-h-10 w-full flex-wrap items-center gap-2 rounded-md bg-transparent px-0 py-2 text-sm',
         className,
       )}>
       {value.map((tag) => (
@@ -120,6 +120,10 @@ const HeroTagInput = React.forwardRef<
           variant="underlined"
           className="flex-1 px-0"
           placeholder={value.length === 0 ? placeholder : ''}
+          classNames={{
+            input: 'text-foreground/90',
+            inputWrapper: 'border-white/20 dark:border-white/10',
+          }}
           {...props}
         />
         {inputValue.trim() && (
@@ -138,114 +142,6 @@ const HeroTagInput = React.forwardRef<
 });
 HeroTagInput.displayName = 'HeroTagInput';
 
-// Stepper组件
-interface StepperProps {
-  steps: { id: number; name: string; description: string }[];
-  currentStep: number;
-  setCurrentStep: (step: number) => void;
-  title: string;
-  onStepOneClick: () => void;
-}
-
-const Stepper = ({ steps, currentStep, setCurrentStep, title, onStepOneClick }: StepperProps) => (
-  <Card className="sticky top-4 h-fit">
-    <CardHeader>
-      <p className="text-lg font-bold">{title}</p>
-    </CardHeader>
-    <CardBody>
-      <div className="flex flex-col gap-8">
-        {steps.map((step, index) => (
-          <div
-            key={step.id}
-            className={cn('flex items-start gap-4', currentStep > step.id ? 'cursor-pointer' : 'cursor-default')}
-            onClick={() => {
-              if (step.id === 1) {
-                onStepOneClick();
-              } else if (currentStep > step.id) {
-                setCurrentStep(step.id);
-              }
-            }}>
-            <div
-              className={cn(
-                'flex h-8 w-8 shrink-0 items-center justify-center rounded-full font-bold transition-colors',
-                step.id === currentStep
-                  ? 'bg-primary text-primary-foreground'
-                  : 'bg-default-200 text-default-foreground',
-                currentStep > step.id && 'bg-primary/20 text-primary',
-              )}>
-              {index + 1}
-            </div>
-            <div>
-              <p className="font-semibold">{step.name}</p>
-              <p className="text-sm text-default-500">{step.description}</p>
-            </div>
-          </div>
-        ))}
-      </div>
-    </CardBody>
-  </Card>
-);
-
-// 拖放区域组件
-const DropZone = ({ onFileDrop, onClick }: { onFileDrop: (file: File) => void; onClick: () => void }) => {
-  const { t } = useTranslation('publish');
-  const [isDragging, setIsDragging] = useState(false);
-
-  const handleDragEnter = useCallback((event: React.DragEvent) => {
-    event.preventDefault();
-    event.stopPropagation();
-    setIsDragging(true);
-  }, []);
-
-  const handleDragLeave = useCallback((event: React.DragEvent) => {
-    event.preventDefault();
-    event.stopPropagation();
-    setIsDragging(false);
-  }, []);
-
-  const handleDragOver = useCallback((event: React.DragEvent) => {
-    event.preventDefault();
-    event.stopPropagation();
-  }, []);
-
-  const handleDrop = useCallback(
-    (event: React.DragEvent) => {
-      event.preventDefault();
-      event.stopPropagation();
-      setIsDragging(false);
-      const file = Array.from(event.dataTransfer.files).find((f) => f.type.startsWith('video/'));
-      if (file) {
-        onFileDrop(file);
-      }
-    },
-    [onFileDrop],
-  );
-
-  return (
-    <div
-      className={cn(
-        'relative flex min-h-[120px] w-full cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed p-4 transition-all',
-        isDragging
-          ? 'border-primary bg-primary/10'
-          : 'border-gray-200 hover:bg-gray-50 dark:border-gray-800 dark:hover:bg-gray-800/50',
-      )}
-      onDragEnter={handleDragEnter}
-      onDragLeave={handleDragLeave}
-      onDragOver={handleDragOver}
-      onDrop={handleDrop}
-      onClick={onClick}>
-      <div className="flex flex-col items-center justify-center gap-2 text-center">
-        <UploadIcon className={cn('size-8', isDragging ? 'text-primary' : 'text-gray-500')} />
-        <div className="flex flex-col gap-1">
-          <p className="text-sm font-medium">
-            {isDragging ? t('dynamic.tips.drop') : t('video.dragOrClick', 'Click to upload or drag and drop')}
-          </p>
-        </div>
-      </div>
-    </div>
-  );
-};
-
 export default function VideoPage() {
   const { t } = useTranslation('publish');
   const router = useRouter();
@@ -257,17 +153,15 @@ export default function VideoPage() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const coverInputRef = useRef<HTMLInputElement>(null);
   const { videoPlatforms, setVideoPlatforms, clearVideoPlatforms } = usePlatformStore();
-  // Initialize with empty array to prevent hydration mismatch - sync from store after mount
   const [selectedPlatforms, setSelectedPlatforms] = useState<string[]>([]);
   const [platforms, setPlatforms] = useState<PlatformInfo[]>([]);
   const [tags, setTags] = useState<string[]>([]);
   const [scheduleEnabled, setScheduleEnabled] = useState<boolean>(false);
   const [scheduledDateTime, setScheduledDateTime] = useState<CalendarDateTime | null>(null);
+  const [isDraggingOver, setIsDraggingOver] = useState(false);
 
-  // Platforms that support scheduled publishing
   const scheduleSupportedPlatforms = ['VIDEO_DOUYIN', 'VIDEO_REDNOTE', 'VIDEO_WEIXINCHANNEL', 'VIDEO_KUAISHOU'];
 
-  // Check if any selected platform supports scheduled publishing
   const hasScheduleSupportedPlatform = selectedPlatforms.some((platform) =>
     scheduleSupportedPlatforms.includes(platform),
   );
@@ -290,7 +184,14 @@ export default function VideoPage() {
     },
   ];
 
-  // Sync persisted platform selection after hydration to prevent mismatch
+  const handleStepClick = (stepId: number) => {
+    if (stepId === 1) {
+      router.push('/dashboard/publish');
+    } else if (currentStep > stepId) {
+      setCurrentStep(stepId);
+    }
+  };
+
   useEffect(() => {
     if (videoPlatforms.length > 0) {
       setSelectedPlatforms(videoPlatforms);
@@ -332,7 +233,6 @@ export default function VideoPage() {
     );
   };
 
-  // 粘贴上传
   const handlePaste = useCallback((event: ClipboardEvent) => {
     const items = event.clipboardData?.items;
     if (!items) return;
@@ -358,17 +258,21 @@ export default function VideoPage() {
     };
   }, [handlePaste]);
 
-  // 拖放上传
-  const handleFileDrop = useCallback((file: File) => {
-    setVideoFile({
-      name: file.name,
-      url: URL.createObjectURL(file),
-      type: file.type,
-      size: file.size,
-    });
-  }, []);
+  const handleFileDrop = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDraggingOver(false);
+    const file = Array.from(e.dataTransfer.files).find((f) => f.type.startsWith('video/'));
+    if (file) {
+      setVideoFile({
+        name: file.name,
+        url: URL.createObjectURL(file),
+        type: file.type,
+        size: file.size,
+      });
+    }
+  };
 
-  // input 上传
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFile = event.target.files?.[0];
     if (selectedFile && selectedFile.type.startsWith('video/')) {
@@ -408,12 +312,10 @@ export default function VideoPage() {
       const newSelected = isSelected ? [...prev, platform] : prev.filter((p) => p !== platform);
       setVideoPlatforms(newSelected);
 
-      // 追踪平台选择事件
       if (newSelected.length > 0) {
         trackPlatformSelected(newSelected, 'video');
       }
 
-      // Clear schedule settings if no schedule-supported platforms are selected
       const hasScheduleSupport = newSelected.some((p) => scheduleSupportedPlatforms.includes(p));
       if (!hasScheduleSupport) {
         setScheduleEnabled(false);
@@ -459,7 +361,6 @@ export default function VideoPage() {
       return;
     }
 
-    // 向Google Analytics发送自定义事件
     if (typeof window !== 'undefined' && window.gtag) {
       window.gtag('event', 'video_publish', {
         event_category: 'publish',
@@ -471,16 +372,8 @@ export default function VideoPage() {
       });
     }
 
-    // 追踪发布发起事件 (PostHog)
-    trackPublishInitiated(
-      'video',
-      selectedPlatforms,
-      false, // 视频发布不支持图片
-      true, // 有视频
-      false, // 视频发布默认不自动发布
-    );
+    trackPublishInitiated('video', selectedPlatforms, false, true, false);
 
-    // Convert CalendarDateTime to timestamp if scheduled
     let scheduledPublishTime: number | undefined = undefined;
     if (scheduleEnabled && scheduledDateTime) {
       const scheduledDate = new Date(
@@ -509,7 +402,6 @@ export default function VideoPage() {
 
     const result = await funcPublish(data);
     if (!result.success) {
-      // 追踪发布失败事件
       trackPublishFailed('video', selectedPlatforms, result.error);
 
       addToast({
@@ -518,13 +410,7 @@ export default function VideoPage() {
         color: 'danger',
       });
     } else {
-      // 追踪发布成功事件
-      trackPublishSuccess(
-        'video',
-        selectedPlatforms,
-        content.length,
-        1, // 1个视频文件
-      );
+      trackPublishSuccess('video', selectedPlatforms, content.length, 1);
 
       addToast({
         title: t('publish.success', '发布成功'),
@@ -553,43 +439,39 @@ export default function VideoPage() {
   };
 
   return (
-    <div className="grid h-full grid-cols-1 justify-center gap-8 p-4 md:grid-cols-[280px_minmax(0,560px)]">
-      <Stepper
+    <div className="grid grid-cols-1 justify-center gap-6 md:grid-cols-[280px_minmax(0,560px)]">
+      <LiquidGlassStepper
         steps={steps}
         currentStep={currentStep}
-        setCurrentStep={setCurrentStep}
         title={t('video.newTask')}
-        onStepOneClick={() => router.push('/dashboard/publish')}
+        onStepClick={handleStepClick}
       />
-      <div className="overflow-y-auto">
+
+      <div className="flex flex-col gap-4">
         {currentStep === 2 && (
-          <div className="flex flex-col gap-2">
-            {/* 视频预览 Card */}
+          <div className="flex flex-col gap-4">
             {videoFile && (
-              <Card className="my-2 border bg-default-50 shadow-none">
-                <CardBody>
-                  <div className="w-full">
-                    <div className="group relative mb-2 aspect-video w-full">
-                      <ReactPlayer
-                        url={videoFile.url}
-                        width="100%"
-                        height="100%"
-                        controls
-                        playing={false}
-                      />
-                      <Button
-                        isIconOnly
-                        size="sm"
-                        color="danger"
-                        className="absolute right-2 top-2 z-50 opacity-0 transition-opacity group-hover:opacity-100"
-                        onPress={handleRemoveVideo}>
-                        <XIcon className="size-4" />
-                      </Button>
-                    </div>
-                    <p className="text-sm text-gray-600">{videoFile.name}</p>
-                  </div>
-                </CardBody>
-                <CardFooter>
+              <LiquidGlassCard className="relative overflow-hidden p-4">
+                <div className="group relative mb-2 aspect-video w-full overflow-hidden rounded-2xl">
+                  <ReactPlayer
+                    url={videoFile.url}
+                    width="100%"
+                    height="100%"
+                    controls
+                    playing={false}
+                  />
+                  <Button
+                    isIconOnly
+                    size="sm"
+                    color="danger"
+                    className="absolute right-2 top-2 z-50 opacity-0 transition-opacity group-hover:opacity-100"
+                    onPress={handleRemoveVideo}>
+                    <XIcon className="size-4" />
+                  </Button>
+                </div>
+                <p className="text-sm text-foreground/60">{videoFile.name}</p>
+
+                <div className="mt-4">
                   {!coverFile ? (
                     <>
                       <input
@@ -599,24 +481,24 @@ export default function VideoPage() {
                         onChange={handleCoverFileChange}
                         className="hidden"
                       />
-                      <Button
-                        variant="light"
-                        onPress={() => coverInputRef.current?.click()}>
-                        <ImageIcon className="mr-2 size-5" />
+                      <LiquidGlassButton
+                        variant="default"
+                        size="sm"
+                        onClick={() => coverInputRef.current?.click()}>
+                        <ImageIcon className="mr-2 size-4" />
                         {t('video.addCover')}
-                      </Button>
+                      </LiquidGlassButton>
                     </>
                   ) : (
                     <div className="w-full">
                       <div
-                        className="group relative mb-2 w-full"
+                        className="group relative mb-2 w-full overflow-hidden rounded-xl"
                         style={{ paddingTop: '56.25%' }}>
                         <Image
                           src={coverFile.url}
                           alt={coverFile.name}
-                          layout="fill"
-                          objectFit="cover"
-                          className="rounded-lg"
+                          fill
+                          className="rounded-xl object-cover"
                         />
                         <Button
                           isIconOnly
@@ -627,237 +509,249 @@ export default function VideoPage() {
                           <XIcon className="size-4" />
                         </Button>
                       </div>
-                      <p className="text-sm text-gray-600">{coverFile.name}</p>
+                      <p className="text-sm text-foreground/60">{coverFile.name}</p>
                     </div>
                   )}
-                </CardFooter>
-              </Card>
+                </div>
+              </LiquidGlassCard>
             )}
+
             {!videoFile ? (
-              <Card className="h-fit border bg-default-50 shadow-none">
-                <CardHeader>
-                  <p className="font-semibold">{t('video.uploadVideoTitle', 'Upload your video')}</p>
-                </CardHeader>
-                <CardBody>
-                  <input
-                    type="file"
-                    ref={fileInputRef}
-                    accept="video/*"
-                    onChange={handleFileChange}
-                    className="hidden"
-                  />
-                  <DropZone
-                    onFileDrop={handleFileDrop}
-                    onClick={handleIconClick}
-                  />
-                </CardBody>
-              </Card>
+              <LiquidGlassCard className="p-6">
+                <p className="mb-4 font-semibold text-foreground/90">{t('video.uploadVideoTitle', '上传您的视频')}</p>
+                <input
+                  type="file"
+                  ref={fileInputRef}
+                  accept="video/*"
+                  onChange={handleFileChange}
+                  className="hidden"
+                />
+                <LiquidGlassDropZone
+                  isDragging={isDraggingOver}
+                  icon={<UploadIcon className="size-8" />}
+                  text={isDraggingOver ? t('dynamic.tips.drop') : t('video.dragOrClick', '点击或拖放视频文件')}
+                  onClick={handleIconClick}
+                  onDrop={handleFileDrop}
+                  onDragOver={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                  }}
+                  onDragEnter={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    setIsDraggingOver(true);
+                  }}
+                  onDragLeave={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    setIsDraggingOver(false);
+                  }}
+                />
+              </LiquidGlassCard>
             ) : (
               <>
-                <Card className="h-fit border bg-default-50 shadow-none">
-                  <CardHeader>
-                    <div className="flex w-full items-center justify-between gap-2">
-                      <Input
-                        isClearable
-                        variant="underlined"
-                        placeholder={t('video.title')}
-                        value={title}
-                        onChange={(e) => setTitle(e.target.value)}
-                        onClear={() => setTitle('')}
-                        className="w-full"
-                      />
-                      {(title || content || videoFile) && (
-                        <Button
-                          isIconOnly
-                          variant="light"
-                          color="danger"
-                          onPress={handleClearAll}
-                          title={t('dynamic.clearAll')}>
-                          <TrashIcon className="size-6" />
-                        </Button>
-                      )}
-                    </div>
-                  </CardHeader>
-
-                  <CardBody>
-                    <Textarea
+                <LiquidGlassCard className="p-6">
+                  <div className="flex w-full items-center justify-between gap-2">
+                    <Input
                       isClearable
                       variant="underlined"
-                      placeholder={t('video.description')}
-                      value={content}
-                      onChange={(e) => setContent(e.target.value)}
-                      onClear={() => setContent('')}
-                      fullWidth
-                      minRows={5}
-                      autoFocus
+                      placeholder={t('video.title')}
+                      value={title}
+                      onChange={(e) => setTitle(e.target.value)}
+                      onClear={() => setTitle('')}
+                      className="flex-1"
+                      classNames={{
+                        input: 'text-foreground/90',
+                        inputWrapper: 'border-white/20 dark:border-white/10',
+                      }}
                     />
-                    <HeroTagInput
-                      value={tags}
-                      onChange={setTags}
-                      placeholder={t('video.tags')}
-                      className="mt-2"
-                    />
-                  </CardBody>
-                </Card>
+                    {(title || content || videoFile) && (
+                      <Button
+                        isIconOnly
+                        variant="light"
+                        color="danger"
+                        onPress={handleClearAll}
+                        title={t('dynamic.clearAll')}>
+                        <TrashIcon className="size-5" />
+                      </Button>
+                    )}
+                  </div>
 
-                <Button
-                  fullWidth
-                  onPress={handleNextStep}>
-                  <ArrowRightIcon />
-                </Button>
+                  <Textarea
+                    isClearable
+                    variant="underlined"
+                    placeholder={t('video.description')}
+                    value={content}
+                    onChange={(e) => setContent(e.target.value)}
+                    onClear={() => setContent('')}
+                    fullWidth
+                    minRows={5}
+                    autoFocus
+                    className="mt-4"
+                    classNames={{
+                      input: 'text-foreground/90',
+                      inputWrapper: 'border-white/20 dark:border-white/10',
+                    }}
+                  />
+
+                  <HeroTagInput
+                    value={tags}
+                    onChange={setTags}
+                    placeholder={t('video.tags')}
+                  />
+                </LiquidGlassCard>
+
+                <LiquidGlassButton
+                  variant="primary"
+                  className="w-full"
+                  onClick={handleNextStep}>
+                  <ArrowRightIcon className="size-5" />
+                </LiquidGlassButton>
               </>
             )}
           </div>
         )}
+
         {currentStep === 3 && (
           <div className="flex flex-col gap-4">
-            <Card className="mb-4 border bg-default-50 shadow-none">
-              <CardBody className="gap-2">
-                <div className="flex items-center justify-between">
-                  {selectedPlatforms.length > 0 && (
-                    <Button
-                      isIconOnly
-                      size="sm"
-                      variant="light"
-                      color="danger"
-                      onPress={() => setSelectedPlatforms([])}>
-                      <Eraser className="size-4" />
-                    </Button>
-                  )}
-                </div>
+            <LiquidGlassCard className="p-6">
+              <div className="mb-4 flex items-center justify-between">
+                {selectedPlatforms.length > 0 && (
+                  <Button
+                    isIconOnly
+                    size="sm"
+                    variant="light"
+                    color="danger"
+                    onPress={() => setSelectedPlatforms([])}>
+                    <Eraser className="size-4" />
+                  </Button>
+                )}
+              </div>
 
-                <Accordion
-                  isCompact
-                  variant="light"
-                  selectionMode="multiple"
-                  defaultExpandedKeys={['CN', 'International']}>
-                  <AccordionItem
-                    key="CN"
-                    title={t('platforms.cn')}
-                    subtitle={`$${
-                      selectedPlatforms.filter((platform) => {
-                        const info = platforms.find((p) => p.name === platform);
-                        return info?.tags?.includes('CN');
-                      }).length
-                    }/${platforms.filter((platform) => platform.tags?.includes('CN')).length}`}
-                    startContent={
-                      <div className="w-8">
-                        <Icon
-                          icon="openmoji:flag-china"
-                          className="h-max w-full"
-                        />
-                      </div>
-                    }
-                    className="py-1">
-                    <div className="grid grid-cols-2 gap-2">
-                      {platforms
-                        .filter((platform) => platform.tags?.includes('CN'))
-                        .map((platform) => (
-                          <PlatformCheckbox
-                            key={platform.name}
-                            platformInfo={platform}
-                            isSelected={selectedPlatforms.includes(platform.name)}
-                            onChange={(_, isSelected) => handlePlatformChange(platform.name, isSelected)}
-                            isDisabled={false}
-                            onExtraConfigChange={handleExtraConfigChange}
-                          />
-                        ))}
-                    </div>
-                  </AccordionItem>
-                  <AccordionItem
-                    key="International"
-                    title={t('platforms.international')}
-                    subtitle={`$${
-                      selectedPlatforms.filter((platform) => {
-                        const info = platforms.find((p) => p.name === platform);
-                        return info?.tags?.includes('International');
-                      }).length
-                    }/${platforms.filter((platform) => platform.tags?.includes('International')).length}`}
-                    startContent={
-                      <div className="w-8">
-                        <Icon
-                          icon="openmoji:globe-with-meridians"
-                          className="h-max w-full"
-                        />
-                      </div>
-                    }
-                    className="py-1">
-                    <div className="grid grid-cols-2 gap-2">
-                      {platforms
-                        .filter((platform) => platform.tags?.includes('International'))
-                        .map((platform) => (
-                          <PlatformCheckbox
-                            key={platform.name}
-                            platformInfo={platform}
-                            isSelected={selectedPlatforms.includes(platform.name)}
-                            onChange={(_, isSelected) => handlePlatformChange(platform.name, isSelected)}
-                            isDisabled={false}
-                            onExtraConfigChange={handleExtraConfigChange}
-                          />
-                        ))}
-                    </div>
-                  </AccordionItem>
-                </Accordion>
-              </CardBody>
-            </Card>
-
-            {/* Schedule Publish Options - Only show for supported platforms */}
-            {hasScheduleSupportedPlatform && (
-              <Card className="border bg-default-50 shadow-none">
-                <CardBody className="gap-3">
-                  <Checkbox
-                    isSelected={scheduleEnabled}
-                    onValueChange={setScheduleEnabled}>
-                    {t('video.schedulePublish', '定时发布')}
-                  </Checkbox>
-
-                  {scheduleEnabled && (
-                    <div className="space-y-3">
-                      <DatePicker
-                        label={t('video.selectPublishTime', '选择发布时间')}
-                         
-                        value={scheduledDateTime as any}
-                         
-                        onChange={setScheduledDateTime as any}
-                        granularity="minute"
-                         
-                        minValue={now(getLocalTimeZone()) as any}
-                        showMonthAndYearPickers
-                        hourCycle={24}
+              <Accordion
+                isCompact
+                variant="light"
+                selectionMode="multiple"
+                defaultExpandedKeys={['CN', 'International']}>
+                <AccordionItem
+                  key="CN"
+                  title={t('platforms.cn')}
+                  subtitle={`${
+                    selectedPlatforms.filter((platform) => {
+                      const info = platforms.find((p) => p.name === platform);
+                      return info?.tags?.includes('CN');
+                    }).length
+                  }/${platforms.filter((platform) => platform.tags?.includes('CN')).length}`}
+                  startContent={
+                    <div className="w-8">
+                      <Icon
+                        icon="openmoji:flag-china"
+                        className="h-max w-full"
                       />
-
-                      {scheduledDateTime && (
-                        <div className="rounded-lg bg-blue-50 p-3 dark:bg-blue-950">
-                          <p className="text-sm text-blue-700 dark:text-blue-300">
-                            {t('video.scheduledTime', '计划发布时间')}: {scheduledDateTime.year}-
-                            {String(scheduledDateTime.month).padStart(2, '0')}-
-                            {String(scheduledDateTime.day).padStart(2, '0')}{' '}
-                            {String(scheduledDateTime.hour).padStart(2, '0')}:
-                            {String(scheduledDateTime.minute).padStart(2, '0')}
-                          </p>
-                        </div>
-                      )}
                     </div>
-                  )}
-                </CardBody>
-              </Card>
+                  }
+                  className="py-1">
+                  <div className="grid grid-cols-2 gap-2">
+                    {platforms
+                      .filter((platform) => platform.tags?.includes('CN'))
+                      .map((platform) => (
+                        <PlatformCheckbox
+                          key={platform.name}
+                          platformInfo={platform}
+                          isSelected={selectedPlatforms.includes(platform.name)}
+                          onChange={(_, isSelected) => handlePlatformChange(platform.name, isSelected)}
+                          isDisabled={false}
+                          onExtraConfigChange={handleExtraConfigChange}
+                        />
+                      ))}
+                  </div>
+                </AccordionItem>
+                <AccordionItem
+                  key="International"
+                  title={t('platforms.international')}
+                  subtitle={`${
+                    selectedPlatforms.filter((platform) => {
+                      const info = platforms.find((p) => p.name === platform);
+                      return info?.tags?.includes('International');
+                    }).length
+                  }/${platforms.filter((platform) => platform.tags?.includes('International')).length}`}
+                  startContent={
+                    <div className="w-8">
+                      <Icon
+                        icon="openmoji:globe-with-meridians"
+                        className="h-max w-full"
+                      />
+                    </div>
+                  }
+                  className="py-1">
+                  <div className="grid grid-cols-2 gap-2">
+                    {platforms
+                      .filter((platform) => platform.tags?.includes('International'))
+                      .map((platform) => (
+                        <PlatformCheckbox
+                          key={platform.name}
+                          platformInfo={platform}
+                          isSelected={selectedPlatforms.includes(platform.name)}
+                          onChange={(_, isSelected) => handlePlatformChange(platform.name, isSelected)}
+                          isDisabled={false}
+                          onExtraConfigChange={handleExtraConfigChange}
+                        />
+                      ))}
+                  </div>
+                </AccordionItem>
+              </Accordion>
+            </LiquidGlassCard>
+
+            {hasScheduleSupportedPlatform && (
+              <LiquidGlassCard className="p-6">
+                <Checkbox
+                  isSelected={scheduleEnabled}
+                  onValueChange={setScheduleEnabled}>
+                  <span className="text-foreground/80">{t('video.schedulePublish', '定时发布')}</span>
+                </Checkbox>
+
+                {scheduleEnabled && (
+                  <div className="mt-4 space-y-3">
+                    <DatePicker
+                      label={t('video.selectPublishTime', '选择发布时间')}
+                      value={scheduledDateTime as any}
+                      onChange={setScheduledDateTime as any}
+                      granularity="minute"
+                      minValue={now(getLocalTimeZone()) as any}
+                      showMonthAndYearPickers
+                      hourCycle={24}
+                    />
+
+                    {scheduledDateTime && (
+                      <div className="rounded-xl bg-blue-500/10 p-3">
+                        <p className="text-sm text-blue-600 dark:text-blue-400">
+                          {t('video.scheduledTime', '计划发布时间')}: {scheduledDateTime.year}-
+                          {String(scheduledDateTime.month).padStart(2, '0')}-
+                          {String(scheduledDateTime.day).padStart(2, '0')}{' '}
+                          {String(scheduledDateTime.hour).padStart(2, '0')}:
+                          {String(scheduledDateTime.minute).padStart(2, '0')}
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </LiquidGlassCard>
             )}
 
-            <div className="flex gap-2">
-              <Button
-                aria-label="back_to_edit"
-                onPress={handlePrevStep}>
-                <ArrowLeftIcon />
-              </Button>
+            <div className="flex gap-3">
+              <LiquidGlassButton
+                variant="default"
+                onClick={handlePrevStep}>
+                <ArrowLeftIcon className="size-5" />
+              </LiquidGlassButton>
 
-              <Button
-                aria-label="publish"
-                fullWidth
-                color={selectedPlatforms.length === 0 ? 'default' : 'primary'}
+              <LiquidGlassButton
+                variant={selectedPlatforms.length === 0 ? 'default' : 'primary'}
+                className="flex-1"
                 disabled={selectedPlatforms.length === 0}
-                onPress={handlePublish}>
-                <SendHorizontal />
-              </Button>
+                onClick={handlePublish}>
+                <SendHorizontal className="size-5" />
+              </LiquidGlassButton>
             </div>
           </div>
         )}

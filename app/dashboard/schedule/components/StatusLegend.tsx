@@ -2,6 +2,7 @@
 
 import { Chip } from '@heroui/react';
 import { useTranslation } from '@/i18n/client';
+import { LiquidGlassCard } from '@/components/ui/liquid-glass';
 
 export default function StatusLegend() {
   const { t } = useTranslation('schedule');
@@ -15,17 +16,13 @@ export default function StatusLegend() {
   ];
 
   return (
-    <div className="flex flex-wrap items-center gap-2">
+    <LiquidGlassCard className="flex flex-wrap items-center gap-2 px-4 py-2">
       <span className="text-sm font-medium text-foreground/70">{t('status')}：</span>
       {statusItems.map((item) => (
-        <Chip
-          key={item.status}
-          color={item.color}
-          variant="flat"
-          size="sm">
+        <Chip key={item.status} color={item.color} variant="flat" size="sm">
           {item.label}
         </Chip>
       ))}
-    </div>
+    </LiquidGlassCard>
   );
 }

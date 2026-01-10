@@ -23,6 +23,8 @@ import {
 import { useRouter, useSearchParams } from 'next/navigation';
 import { toast } from 'sonner';
 import { useTranslation } from '@/i18n/client';
+import { LiquidGlassCard, LiquidGlassHeader, LiquidGlassButton } from '@/components/ui/liquid-glass';
+import { cn } from '@/lib/utils';
 
 interface TikTokAccount {
   id: string;
@@ -351,10 +353,7 @@ export default function SocialMediaAccountsPage() {
       <div className="space-y-3">
         {loading ? (
           <div className="flex items-center justify-center py-8">
-            <Icon
-              icon="mingcute:loading-line"
-              className="text-2xl text-muted-foreground"
-            />
+            <Icon icon="mingcute:loading-line" className="text-2xl text-foreground/40" />
           </div>
         ) : accounts.length > 0 ? (
           accounts.map((account) => {
@@ -365,18 +364,20 @@ export default function SocialMediaAccountsPage() {
             return (
               <div
                 key={account.id}
-                className="rounded-lg border border-border bg-background p-4 hover:shadow-md">
+                className={cn(
+                  'rounded-xl p-4 transition-all',
+                  'bg-white/10 dark:bg-black/20',
+                  'border border-white/20 dark:border-white/10',
+                  'hover:bg-white/15 dark:hover:bg-black/30',
+                )}>
                 <div className="flex items-center gap-4">
                   <div className="flex items-center gap-3">
-                    <Icon
-                      icon={platform.icon}
-                      className="shrink-0 text-xl text-muted-foreground"
-                    />
+                    <Icon icon={platform.icon} className="shrink-0 text-xl text-foreground/60" />
                     <Avatar
                       src={account.avatarUrl || undefined}
                       name={account.displayName || account.username || t('socialAccounts.common.user')}
                       size="md"
-                      className="shrink-0 ring-2 ring-border"
+                      className="shrink-0 ring-2 ring-white/20"
                     />
                   </div>
                   <div className="flex min-w-0 flex-1 items-center gap-4">
@@ -387,49 +388,38 @@ export default function SocialMediaAccountsPage() {
                             href={pageLink}
                             target="_blank"
                             rel="noreferrer"
-                            className="truncate text-base font-semibold text-primary underline-offset-2 hover:underline">
+                            className="truncate text-base font-semibold text-blue-500 underline-offset-2 hover:underline dark:text-blue-400">
                             {account.displayName || account.username || t('socialAccounts.common.unknown')}
                           </a>
                         ) : (
-                          <h4 className="truncate text-base font-semibold">
+                          <h4 className="truncate text-base font-semibold text-foreground/90">
                             {account.displayName || account.username || t('socialAccounts.common.unknown')}
                           </h4>
                         )}
                         {isVerified && (
-                          <Icon
-                            icon="mingcute:check-fill"
-                            className="shrink-0 text-sm text-primary"
-                          />
+                          <Icon icon="mingcute:check-fill" className="shrink-0 text-sm text-blue-500" />
                         )}
                       </div>
                     </div>
                     {(account.description || (isFacebook && pageCategory)) && (
-                      <span className="truncate text-sm text-muted-foreground">
+                      <span className="truncate text-sm text-foreground/60">
                         {isFacebook && pageCategory ? pageCategory : account.description}
                       </span>
                     )}
-                    <span className="text-sm text-muted-foreground">
+                    <span className="text-sm text-foreground/60">
                       {new Date(account.createdAt).toLocaleDateString()}
                     </span>
                   </div>
                   <div className="flex shrink-0 items-center gap-2">
                     {showRefreshButton && isTokenExpired(account.expiresAt) && (
-                      <Chip
-                        size="sm"
-                        color="danger"
-                        variant="flat"
-                        className="px-2 text-xs">
+                      <Chip size="sm" color="danger" variant="flat" className="px-2 text-xs">
                         {t('socialAccounts.common.tokenExpired')}
                       </Chip>
                     )}
                     {showRefreshButton &&
                       isTokenExpiringSoon(account.expiresAt) &&
                       !isTokenExpired(account.expiresAt) && (
-                        <Chip
-                          size="sm"
-                          color="warning"
-                          variant="flat"
-                          className="px-2 text-xs">
+                        <Chip size="sm" color="warning" variant="flat" className="px-2 text-xs">
                           {t('socialAccounts.common.expiresSoon')}
                         </Chip>
                       )}
@@ -439,7 +429,7 @@ export default function SocialMediaAccountsPage() {
                           size="sm"
                           color="primary"
                           variant="flat"
-                          className="px-3 text-sm"
+                          className="px-3 text-sm shadow-none"
                           onPress={() => handleRefreshToken(account.id, platform.id)}>
                           {t('socialAccounts.common.refreshToken')}
                         </Button>
@@ -448,7 +438,7 @@ export default function SocialMediaAccountsPage() {
                       size="sm"
                       color="danger"
                       variant="flat"
-                      className="px-3 text-sm"
+                      className="px-3 text-sm shadow-none"
                       onPress={() => handleDisconnect(account.id)}>
                       {t('socialAccounts.common.disconnect')}
                     </Button>
@@ -458,24 +448,17 @@ export default function SocialMediaAccountsPage() {
             );
           })
         ) : (
-          <div className="rounded-lg border border-border bg-background p-6 text-center">
-            <p className="mb-4 text-sm font-medium text-foreground">{emptyCopy}</p>
-            <Button
-              color="primary"
-              variant="flat"
-              size="sm"
-              onPress={handleConnect}
-              isLoading={isLoading}
-              startContent={
-                !isLoading && (
-                  <Icon
-                    icon="mingcute:add-line"
-                    className="text-sm"
-                  />
-                )
-              }>
+          <div
+            className={cn(
+              'rounded-xl p-6 text-center',
+              'bg-white/10 dark:bg-black/20',
+              'border border-white/20 dark:border-white/10',
+            )}>
+            <p className="mb-4 text-sm font-medium text-foreground/90">{emptyCopy}</p>
+            <LiquidGlassButton variant="primary" onClick={handleConnect} disabled={isLoading}>
+              {!isLoading && <Icon icon="mingcute:add-line" className="mr-2 text-sm" />}
               {isLoading ? connectingLabel : connectLabel}
-            </Button>
+            </LiquidGlassButton>
           </div>
         )}
       </div>
@@ -483,21 +466,19 @@ export default function SocialMediaAccountsPage() {
   };
 
   const renderComingSoonRow = (platform: PlatformCard) => (
-    <div className="rounded-lg border border-border bg-background p-4 opacity-60 grayscale">
+    <div
+      className={cn(
+        'rounded-xl p-4 opacity-60 grayscale',
+        'bg-white/10 dark:bg-black/20',
+        'border border-white/20 dark:border-white/10',
+      )}>
       <div className="flex items-center gap-4">
-        <Icon
-          icon={platform.icon}
-          className="shrink-0 text-2xl text-muted-foreground"
-        />
+        <Icon icon={platform.icon} className="shrink-0 text-2xl text-foreground/60" />
         <div className="flex min-w-0 flex-1 items-center gap-4">
-          <h3 className="text-base font-semibold">{platform.title}</h3>
-          <p className="text-sm text-muted-foreground">{platform.description}</p>
+          <h3 className="text-base font-semibold text-foreground/90">{platform.title}</h3>
+          <p className="text-sm text-foreground/60">{platform.description}</p>
         </div>
-        <Chip
-          size="sm"
-          color="default"
-          variant="flat"
-          className="shrink-0 text-xs">
+        <Chip size="sm" color="default" variant="flat" className="shrink-0 text-xs">
           Coming Soon
         </Chip>
       </div>
@@ -505,19 +486,16 @@ export default function SocialMediaAccountsPage() {
   );
 
   return (
-    <div className="mx-auto max-w-6xl space-y-6 px-4">
-      <div className="text-center">
-        <h1 className="mb-2 text-3xl font-bold">{t('socialAccounts.title')}</h1>
-        <p className="text-muted-foreground">{t('socialAccounts.subtitle')}</p>
-      </div>
+    <div className="mx-auto max-w-5xl">
+      <LiquidGlassHeader title={t('socialAccounts.title')} description={t('socialAccounts.subtitle')} />
 
-      <div className="space-y-4">
+      <LiquidGlassCard className="space-y-4 p-6">
         {platforms.map((platform) => (
           <div key={platform.id}>
             {platform.isFunctional ? renderAccountRow(platform) : renderComingSoonRow(platform)}
           </div>
         ))}
-      </div>
+      </LiquidGlassCard>
     </div>
   );
 }

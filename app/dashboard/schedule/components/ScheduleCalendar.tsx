@@ -7,7 +7,8 @@ import timeGridPlugin from '@fullcalendar/timegrid';
 import interactionPlugin from '@fullcalendar/interaction';
 import { useEffect, useState, useRef, useCallback } from 'react';
 import { getScheduledTasks, getPublishTaskDetail } from '../actions';
-import { Card, CardBody, Spinner } from '@heroui/react';
+import { Spinner } from '@heroui/react';
+import { LiquidGlassCard } from '@/components/ui/liquid-glass';
 import TaskDetailModal from './TaskDetailModal';
 import { useTranslation } from '@/i18n/client';
 
@@ -177,13 +178,11 @@ export default function ScheduleCalendar() {
       />
 
       {loadingTask && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-xs">
-          <Card>
-            <CardBody className="flex items-center gap-3 p-6">
-              <Spinner size="sm" />
-              <span>{t('loading.taskDetails')}</span>
-            </CardBody>
-          </Card>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
+          <LiquidGlassCard className="flex items-center gap-3 p-6">
+            <Spinner size="sm" />
+            <span className="text-foreground/90">{t('loading.taskDetails')}</span>
+          </LiquidGlassCard>
         </div>
       )}
     </>

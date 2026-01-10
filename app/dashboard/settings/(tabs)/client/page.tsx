@@ -1,13 +1,19 @@
 import { Suspense } from 'react';
 import { auth } from '@/auth';
 import { prisma } from '@/lib/db';
-import { Alert, Card, CardHeader, CardBody, Button } from '@heroui/react';
+import { Alert, Button } from '@heroui/react';
 import { Loader2, Router, Clock, Users, ArrowRight } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import LinkButton from './LinkExtensionButton';
 import EditNameButton from './EditNameButton';
 import { createTranslation } from '@/i18n/server';
 import DeleteClientButton from './DeleteClientButton';
+import {
+  LiquidGlassCard,
+  LiquidGlassHeader,
+  LiquidGlassStatCard,
+} from '@/components/ui/liquid-glass';
+import { cn } from '@/lib/utils';
 
 // Server component for fetching and displaying clients
 async function ClientsList() {
@@ -22,47 +28,41 @@ async function ClientsList() {
 
   if (clients.length === 0) {
     return (
-      <Card className="border border-default-200 shadow-none">
-        <CardBody className="py-12 text-center">
-          <div className="flex flex-col items-center gap-4">
-            <div className="flex size-16 items-center justify-center rounded-full bg-default-100">
-              <Router className="size-8 text-default-400" />
-            </div>
-            <div>
-              <h3 className="text-lg font-medium text-foreground">{t('client.page.empty')}</h3>
-              <p className="mt-1 text-sm text-foreground/60">{t('client.page.description')}</p>
-            </div>
+      <LiquidGlassCard className="p-12 text-center">
+        <div className="flex flex-col items-center gap-4">
+          <div className="flex size-16 items-center justify-center rounded-2xl bg-white/10 dark:bg-black/20">
+            <Router className="size-8 text-foreground/40" />
           </div>
-        </CardBody>
-      </Card>
+          <div>
+            <h3 className="text-lg font-medium text-foreground/90">{t('client.page.empty')}</h3>
+            <p className="mt-1 text-sm text-foreground/60">{t('client.page.description')}</p>
+          </div>
+        </div>
+      </LiquidGlassCard>
     );
   }
 
   return (
     <div className="grid gap-6 lg:grid-cols-2 xl:grid-cols-3">
       {clients.map((client) => (
-        <Card
-          key={client.id}
-          className="border border-default-200 shadow-none transition-colors hover:border-default-300">
-          <CardHeader className="pb-3">
-            <div className="flex items-center gap-3">
-              <div className="flex size-10 items-center justify-center rounded-lg bg-primary/10">
-                <Router className="size-5 text-primary" />
-              </div>
-              <div className="flex-1">
-                <h4 className="text-lg font-medium text-foreground">{client.name}</h4>
-                <p className="text-sm text-foreground/60">
-                  {t('client.page.last_seen', {
-                    time: formatDistanceToNow(client.updatedAt, { addSuffix: true }),
-                  })}
-                </p>
-              </div>
+        <LiquidGlassCard key={client.id} className="p-6">
+          <div className="mb-4 flex items-center gap-3">
+            <div className="flex size-10 items-center justify-center rounded-2xl bg-blue-500/20">
+              <Router className="size-5 text-blue-500 dark:text-blue-400" />
             </div>
-          </CardHeader>
-          <CardBody className="space-y-4 pt-0">
-            <div className="rounded-lg bg-default-50 p-4">
+            <div className="flex-1">
+              <h4 className="text-lg font-medium text-foreground/90">{client.name}</h4>
+              <p className="text-sm text-foreground/60">
+                {t('client.page.last_seen', {
+                  time: formatDistanceToNow(client.updatedAt, { addSuffix: true }),
+                })}
+              </p>
+            </div>
+          </div>
+          <div className="space-y-4">
+            <div className={cn('rounded-xl p-4', 'bg-white/10 dark:bg-black/20')}>
               <p className="mb-1 text-sm text-foreground/60">Client ID</p>
-              <p className="break-all font-mono text-sm text-foreground">{client.id}</p>
+              <p className="break-all font-mono text-sm text-foreground/90">{client.id}</p>
             </div>
             <div className="flex justify-between gap-2">
               <Button
@@ -70,19 +70,17 @@ async function ClientsList() {
                 href={`/dashboard/settings/client/${client.id}`}
                 size="sm"
                 variant="flat"
+                className="border border-white/20 bg-white/10 shadow-none dark:border-white/10"
                 endContent={<ArrowRight className="size-3" />}>
                 View Details
               </Button>
               <div className="flex gap-2">
-                <EditNameButton
-                  clientId={client.id}
-                  initialName={client.name}
-                />
+                <EditNameButton clientId={client.id} initialName={client.name} />
                 <DeleteClientButton clientId={client.id} />
               </div>
             </div>
-          </CardBody>
-        </Card>
+          </div>
+        </LiquidGlassCard>
       ))}
     </div>
   );
@@ -98,65 +96,42 @@ export default async function ClientsPage() {
   });
 
   return (
-    <div className="size-full overflow-y-auto p-6">
+    <div className="mx-auto max-w-5xl">
       {/* Header Section */}
-      <div className="mb-8 flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold text-foreground">{t('client.page.title')}</h1>
-          <p className="mt-2 text-foreground/60">{t('client.page.description')}</p>
-        </div>
-        <LinkButton />
-      </div>
+      <LiquidGlassHeader
+        title={t('client.page.title')}
+        description={t('client.page.description')}
+        action={<LinkButton />}
+      />
 
       {/* Stats Cards */}
-      <div className="mb-8 grid grid-cols-1 gap-6 md:grid-cols-3">
-        <Card className="border border-default-200 shadow-none transition-colors hover:border-default-300">
-          <CardHeader className="pb-3">
-            <div className="flex items-center gap-3">
-              <div className="flex size-10 items-center justify-center rounded-lg bg-primary/10">
-                <Users className="size-5 text-primary" />
-              </div>
-              <div>
-                <p className="text-sm text-foreground/60">{t('client.page.connected_clients')}</p>
-                <p className="text-2xl font-bold text-foreground">{clientCount}</p>
-              </div>
-            </div>
-          </CardHeader>
-        </Card>
-
-        <Card className="border border-default-200 shadow-none transition-colors hover:border-default-300">
-          <CardHeader className="pb-3">
-            <div className="flex items-center gap-3">
-              <div className="flex size-10 items-center justify-center rounded-lg bg-secondary/10">
-                <Clock className="size-5 text-secondary" />
-              </div>
-              <div>
-                <p className="text-sm text-foreground/60">{t('client.page.active_status')}</p>
-                <p className="text-2xl font-bold text-foreground">
-                  {clientCount > 0
-                    ? t('client.page.online', { count: clientCount })
-                    : t('client.page.offline')}
-                </p>
-              </div>
-            </div>
-          </CardHeader>
-        </Card>
+      <div className="mb-8 grid grid-cols-1 gap-6 md:grid-cols-2">
+        <LiquidGlassStatCard
+          icon={<Users className="size-5" />}
+          iconColor="primary"
+          label={t('client.page.connected_clients')}
+          value={clientCount}
+        />
+        <LiquidGlassStatCard
+          icon={<Clock className="size-5" />}
+          iconColor="secondary"
+          label={t('client.page.active_status')}
+          value={clientCount > 0 ? t('client.page.online', { count: clientCount }) : t('client.page.offline')}
+        />
       </div>
 
       {/* Alert */}
       <div className="mb-8">
-        <Alert
-          variant="flat"
-          className="border border-warning/20 shadow-none">
-          {t('client.page.alert')}
-        </Alert>
+        <LiquidGlassCard className="border-amber-500/20 p-4">
+          <p className="text-sm text-amber-500 dark:text-amber-400">{t('client.page.alert')}</p>
+        </LiquidGlassCard>
       </div>
 
       {/* Clients List */}
       <Suspense
         fallback={
           <div className="flex items-center justify-center py-12">
-            <Loader2 className="size-6 animate-spin" />
+            <Loader2 className="size-6 animate-spin text-foreground/60" />
           </div>
         }>
         <ClientsList />

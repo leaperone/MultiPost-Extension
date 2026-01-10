@@ -34,6 +34,7 @@
     "platformId": "平台ID"
   },
   "actions": {
+    "createSchedule": "创建计划",
     "cancelTask": "取消任务",
     "restartTask": "重新启动",
     "close": "关闭",
