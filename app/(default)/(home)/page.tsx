@@ -1,5 +1,5 @@
-import { Card, CardBody, Button, Link, Image } from '@heroui/react';
-import { Sparkles, Box, Settings, Send, SendIcon, FileTypeIcon, CheckCircle } from 'lucide-react';
+import { Button, Link, Image } from '@heroui/react';
+import { Sparkles, Box, Settings, Send, SendIcon, FileTypeIcon, CheckCircle, GlobeIcon, SearchIcon, Share2Icon } from 'lucide-react';
 import { Icon } from '@iconify/react';
 import { cn } from '@/lib/utils';
 import { BackgroundLines } from '@/components/background-lines';
@@ -8,7 +8,7 @@ import ScrollScreenChevronDown from '@/components/HomePage/ScrollScreenChevronDo
 import { createTranslation } from '@/i18n/server';
 import { auth } from '@/auth';
 import SocialShareNotifications from '@/components/HomePage/SocialShareNotifications';
-import { GlowingEffect } from '@/components/ui/glowing-effect';
+import { LiquidGlassMotionCard, LiquidGlassCard, LiquidGlassIconContainer, glassBaseStyles } from '@/components/ui/liquid-glass';
 import { SocialProof } from '@/components/HomePage/SocialProof';
 import packageJson from '../../../package.json';
 
@@ -209,8 +209,6 @@ export default async function HomePage() {
   const webreaderFeatures = t('draftTools.webreader.features', { returnObjects: true }) as string[];
   const searchFeatures = t('draftTools.search.features', { returnObjects: true }) as string[];
   const socialMediaAPIFeatures = t('draftTools.socialMedia.features', { returnObjects: true }) as string[];
-  // TODO: 视频转录功能暂时隐藏
-  // const videoTranscribeFeatures = t('draftTools.videoTranscribe.features', { returnObjects: true }) as string[];
 
   // JSON-LD 结构化数据
   const jsonLd = {
@@ -290,11 +288,18 @@ export default async function HomePage() {
         <HeroSection t={t} />
       </div>
 
-      {/* MultiPost Bento Grid Section */}
-      <section className="relative z-10 overflow-hidden bg-background py-24">
-        <div className="container mx-auto px-4">
+      {/* MultiPost Bento Grid Section - Liquid Glass */}
+      <section className="relative z-10 overflow-hidden py-24">
+        {/* Glass background with gradient */}
+        <div className="absolute inset-0 bg-gradient-to-br from-blue-100 via-white to-purple-100 dark:from-blue-950 dark:via-background dark:to-purple-950" />
+        {/* Decorative orbs */}
+        <div className="pointer-events-none absolute inset-0 overflow-hidden">
+          <div className="absolute -left-32 top-1/4 size-96 rounded-full bg-blue-400/30 blur-3xl dark:bg-blue-500/20" />
+          <div className="absolute -right-32 bottom-1/4 size-96 rounded-full bg-purple-400/30 blur-3xl dark:bg-purple-500/20" />
+        </div>
+        <div className="container relative z-10 mx-auto px-4">
           <div className="mx-auto mb-16 max-w-3xl text-center">
-            <span className="mb-3 inline-block rounded-full bg-blue-100 px-4 py-1.5 text-sm font-medium text-blue-600 dark:bg-blue-900/30 dark:text-blue-300">
+            <span className={cn(glassBaseStyles, 'mb-3 inline-block rounded-full px-4 py-1.5 text-sm font-medium text-blue-600 dark:text-blue-300')}>
               {t('multiPost.featuresBadge')}
             </span>
             <h2 className="mb-6 bg-gradient-to-r from-blue-500 to-indigo-500 bg-clip-text text-4xl font-bold text-transparent md:text-5xl">
@@ -327,24 +332,14 @@ export default async function HomePage() {
             {/* Card 4: Web Content Extraction */}
             <BentoGridItem
               area="md:[grid-area:2/7/3/13] xl:[grid-area:1/8/2/13]"
-              icon={
-                <Icon
-                  icon="lucide:globe"
-                  className="size-5 text-blue-500 dark:text-blue-300"
-                />
-              }
+              icon={<GlobeIcon className="size-5 text-blue-500 dark:text-blue-300" />}
               title={t('draftTools.webreader.title')}
               description={(t('draftTools.webreader.features', { returnObjects: true }) as string[])[0]}
             />
             {/* Card 5: Search Engine Writing Assistant */}
             <BentoGridItem
               area="md:[grid-area:3/1/4/13] xl:[grid-area:2/8/3/13]"
-              icon={
-                <Icon
-                  icon="lucide:search"
-                  className="size-5 text-blue-500 dark:text-blue-300"
-                />
-              }
+              icon={<SearchIcon className="size-5 text-blue-500 dark:text-blue-300" />}
               title={t('draftTools.search.title')}
               description={(t('draftTools.search.features', { returnObjects: true }) as string[])[0]}
             />
@@ -352,14 +347,19 @@ export default async function HomePage() {
         </div>
       </section>
 
-      {/* 融合多平台发布功能和演示 Section */}
+      {/* 融合多平台发布功能和演示 Section - Liquid Glass */}
       <section className="relative py-16">
-        <div className="absolute right-0 top-0 h-80 w-1/3 rounded-bl-[100px] bg-blue-50 opacity-50 dark:bg-blue-900/10"></div>
-        <div className="absolute -bottom-32 -left-32 size-96 rounded-full bg-secondary/5 blur-3xl"></div>
+        {/* Glass background */}
+        <div className="absolute inset-0 bg-gradient-to-br from-indigo-50 via-white to-blue-50 dark:from-indigo-950 dark:via-background dark:to-blue-950" />
+        {/* Glass background decorations */}
+        <div className="pointer-events-none absolute inset-0 overflow-hidden">
+          <div className="absolute -right-32 -top-32 size-96 rounded-full bg-blue-400/30 blur-3xl dark:bg-blue-500/20" />
+          <div className="absolute -bottom-32 -left-32 size-96 rounded-full bg-indigo-400/30 blur-3xl dark:bg-indigo-500/20" />
+        </div>
 
-        <div className="container mx-auto px-4">
+        <div className="container relative z-10 mx-auto px-4">
           <div className="mx-auto mb-12 max-w-3xl text-center">
-            <span className="mb-3 inline-block rounded-full bg-blue-100 px-4 py-1.5 text-sm font-medium text-blue-600 dark:bg-blue-900/30 dark:text-blue-300">
+            <span className={cn(glassBaseStyles, 'mb-3 inline-block rounded-full px-4 py-1.5 text-sm font-medium text-blue-600 dark:text-blue-300')}>
               {t('sectionLabels.powerfulSimple')}
             </span>
             <h2 className="mb-4 bg-gradient-to-r from-blue-500 to-indigo-500 bg-clip-text text-4xl font-bold text-transparent md:text-5xl">
@@ -371,24 +371,27 @@ export default async function HomePage() {
             <div>
               <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-2">
                 {unifiedFeatures.map((feature, i) => (
-                  <div
+                  <LiquidGlassCard
                     key={i}
-                    className="flex items-start gap-4 rounded-xl bg-white p-4 shadow transition-shadow hover:shadow-md dark:bg-gray-800/50">
-                    <div className="rounded-full bg-primary/10 p-3">{feature.icon}</div>
+                    className="flex items-start gap-4 p-4"
+                    interactive>
+                    <LiquidGlassIconContainer size="sm" color="primary">
+                      {feature.icon}
+                    </LiquidGlassIconContainer>
                     <div>
-                      <h4 className="text-lg font-semibold text-foreground transition-colors group-hover:text-blue-500 dark:group-hover:text-blue-300">
+                      <h4 className="text-lg font-semibold text-foreground/90">
                         {feature.title}
                       </h4>
-                      {feature.description && <p className="text-base text-foreground/70">{feature.description}</p>}
+                      {feature.description && <p className="text-base text-foreground/60">{feature.description}</p>}
                     </div>
-                  </div>
+                  </LiquidGlassCard>
                 ))}
               </div>
 
               <div className="mt-10 flex flex-col items-center gap-4 sm:flex-row sm:justify-center">
                 <Link href="/extension">
                   <Button
-                    className="rounded-xl bg-gradient-to-r from-blue-500 to-indigo-500 px-10 py-4 text-base font-medium"
+                    className={cn(glassBaseStyles, 'rounded-2xl bg-gradient-to-r from-blue-500/80 to-indigo-500/80 px-10 py-4 text-base font-medium text-white hover:from-blue-500/90 hover:to-indigo-500/90')}
                     size="lg">
                     {t('multiPost.cta')}
                   </Button>
@@ -396,28 +399,34 @@ export default async function HomePage() {
               </div>
             </div>
             <div className="relative mt-8 md:mt-0">
-              <div className="relative z-10 aspect-video overflow-hidden rounded-2xl shadow-2xl">
+              <LiquidGlassCard className="relative z-10 aspect-video overflow-hidden p-2">
                 <Image
                   src="https://2someone-web-static.s3.bitiful.net/2025/05/ea3bb50afe710d57a968c1ac5f4d055f.png"
                   alt={t('images.multiPlatformPublishing')}
+                  className="rounded-2xl"
                 />
-              </div>
-              <div className="absolute -bottom-6 -right-6 -z-0 size-32 rounded-2xl bg-blue-100 dark:bg-blue-900/30"></div>
-              <div className="absolute -left-6 -top-6 -z-0 size-32 rounded-2xl bg-indigo-100 dark:bg-indigo-900/30"></div>
+              </LiquidGlassCard>
+              {/* Decorative glass shapes */}
+              <div className={cn(glassBaseStyles, 'absolute -bottom-6 -right-6 -z-0 size-32 rounded-2xl')} />
+              <div className={cn(glassBaseStyles, 'absolute -left-6 -top-6 -z-0 size-32 rounded-2xl')} />
             </div>
           </div>
         </div>
       </section>
 
-      {/* 草稿工具功能 Section */}
-      <section className="relative overflow-hidden bg-default-50 py-24">
-        {/* 背景装饰 */}
-        <div className="absolute left-0 top-1/4 size-72 rounded-full bg-gradient-to-br from-purple-300/20 to-blue-300/20 blur-3xl"></div>
-        <div className="absolute bottom-1/4 right-0 size-80 rounded-full bg-gradient-to-br from-amber-300/20 to-orange-300/20 blur-3xl"></div>
+      {/* 草稿工具功能 Section - Liquid Glass */}
+      <section className="relative overflow-hidden py-24">
+        {/* Glass background */}
+        <div className="absolute inset-0 bg-gradient-to-br from-purple-100 via-white to-amber-100 dark:from-purple-950 dark:via-background dark:to-amber-950" />
+        {/* 背景装饰 orbs */}
+        <div className="pointer-events-none absolute inset-0 overflow-hidden">
+          <div className="absolute left-0 top-1/4 size-96 rounded-full bg-purple-400/30 blur-3xl dark:bg-purple-500/20" />
+          <div className="absolute bottom-1/4 right-0 size-96 rounded-full bg-amber-400/30 blur-3xl dark:bg-amber-500/20" />
+        </div>
 
         <div className="container relative z-10 mx-auto px-4">
           <div className="mx-auto mb-16 max-w-3xl text-center">
-            <span className="mb-2 inline-block rounded-full bg-purple-100 px-4 py-1.5 text-sm font-medium text-purple-600 dark:bg-purple-900/30 dark:text-purple-300">
+            <span className={cn(glassBaseStyles, 'mb-2 inline-block rounded-full px-4 py-1.5 text-sm font-medium text-purple-600 dark:text-purple-300')}>
               {t('sectionLabels.powerfulTools')}
             </span>
             <h2 className="mb-6 bg-gradient-to-r from-purple-500 to-blue-500 bg-clip-text text-4xl font-bold text-transparent md:text-5xl">
@@ -430,140 +439,103 @@ export default async function HomePage() {
             {t('draftTools.description')}
           </p>
 
-          <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-4">
-            {/* Webreader */}
-            <Card className="group overflow-hidden border-none shadow-lg transition-shadow duration-300 hover:shadow-xl">
-              <div className="h-3 bg-gradient-to-r from-blue-400 to-teal-400"></div>
-              <CardBody className="p-8">
-                <div className="mb-4 flex items-center">
-                  <div className="mr-4 rounded-xl bg-blue-100 p-3 transition-transform duration-300 group-hover:scale-110 dark:bg-blue-900/30">
-                    <Icon
-                      icon="lucide:globe"
-                      className="size-6 text-blue-500"
-                    />
-                  </div>
-                  <h3 className="text-xl font-semibold text-blue-500 sm:text-2xl">{t('draftTools.webreader.title')}</h3>
+          <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
+            {/* Webreader - Liquid Glass */}
+            <LiquidGlassMotionCard className="group overflow-hidden">
+              <div className="h-2 bg-gradient-to-r from-blue-400 to-teal-400" />
+              <div className="p-6">
+                <div className="mb-4 flex items-center gap-3">
+                  <LiquidGlassIconContainer size="sm" color="primary">
+                    <GlobeIcon className="size-5 text-blue-500 dark:text-blue-400" />
+                  </LiquidGlassIconContainer>
+                  <h3 className="text-lg font-semibold text-blue-500 dark:text-blue-400">{t('draftTools.webreader.title')}</h3>
                 </div>
-                <p className="mb-6 text-lg leading-relaxed text-foreground/80">
+                <p className="mb-4 text-base leading-relaxed text-foreground/70">
                   {t('draftTools.webreader.description')}
                 </p>
-                <ul className="space-y-3">
+                <ul className="space-y-2">
                   {webreaderFeatures.map((feature, i) => (
                     <li
                       key={i}
-                      className="flex items-center gap-3 rounded-lg py-2 pl-2 transition-colors hover:bg-blue-50 dark:hover:bg-blue-900/10">
-                      <Icon
-                        icon="lucide:check-circle"
-                        className="size-5 shrink-0 text-blue-500"
-                      />
-                      <span className="text-lg">{feature}</span>
+                      className="flex items-center gap-2 rounded-lg py-1.5 text-sm text-foreground/80">
+                      <CheckCircle className="size-4 shrink-0 text-blue-500" />
+                      <span>{feature}</span>
                     </li>
                   ))}
                 </ul>
-              </CardBody>
-            </Card>
+              </div>
+            </LiquidGlassMotionCard>
 
-            {/* Search Engine */}
-            <Card className="group overflow-hidden border-none shadow-lg transition-shadow duration-300 hover:shadow-xl">
-              <div className="h-3 bg-gradient-to-r from-amber-400 to-orange-400"></div>
-              <CardBody className="p-8">
-                <div className="mb-4 flex items-center">
-                  <div className="mr-4 rounded-xl bg-amber-100 p-3 transition-transform duration-300 group-hover:scale-110 dark:bg-amber-900/30">
-                    <Icon
-                      icon="lucide:search"
-                      className="size-6 text-amber-500"
-                    />
-                  </div>
-                  <h3 className="text-xl font-semibold text-amber-500 sm:text-2xl">{t('draftTools.search.title')}</h3>
+            {/* Search Engine - Liquid Glass */}
+            <LiquidGlassMotionCard className="group overflow-hidden">
+              <div className="h-2 bg-gradient-to-r from-amber-400 to-orange-400" />
+              <div className="p-6">
+                <div className="mb-4 flex items-center gap-3">
+                  <LiquidGlassIconContainer size="sm" color="warning">
+                    <SearchIcon className="size-5 text-amber-500 dark:text-amber-400" />
+                  </LiquidGlassIconContainer>
+                  <h3 className="text-lg font-semibold text-amber-500 dark:text-amber-400">{t('draftTools.search.title')}</h3>
                 </div>
-                <p className="mb-6 text-lg leading-relaxed text-foreground/80">{t('draftTools.search.description')}</p>
-                <ul className="space-y-3">
+                <p className="mb-4 text-base leading-relaxed text-foreground/70">{t('draftTools.search.description')}</p>
+                <ul className="space-y-2">
                   {searchFeatures.map((feature, i) => (
                     <li
                       key={i}
-                      className="flex items-center gap-3 rounded-lg py-2 pl-2 transition-colors hover:bg-amber-50 dark:hover:bg-amber-900/10">
-                      <Icon
-                        icon="lucide:check-circle"
-                        className="size-5 shrink-0 text-amber-500"
-                      />
-                      <span className="text-lg">{feature}</span>
+                      className="flex items-center gap-2 rounded-lg py-1.5 text-sm text-foreground/80">
+                      <CheckCircle className="size-4 shrink-0 text-amber-500" />
+                      <span>{feature}</span>
                     </li>
                   ))}
                 </ul>
-              </CardBody>
-            </Card>
+              </div>
+            </LiquidGlassMotionCard>
 
-            {/* Social Media API */}
-            <Card className="group overflow-hidden border-none shadow-lg transition-shadow duration-300 hover:shadow-xl">
-              <div className="h-3 bg-gradient-to-r from-purple-400 to-pink-400"></div>
-              <CardBody className="p-8">
-                <div className="mb-4 flex items-center">
-                  <div className="mr-4 rounded-xl bg-purple-100 p-3 transition-transform duration-300 group-hover:scale-110 dark:bg-purple-900/30">
-                    <Icon
-                      icon="lucide:share-2"
-                      className="size-6 text-purple-500"
-                    />
-                  </div>
-                  <h3 className="text-xl font-semibold text-purple-500 sm:text-2xl">{t('draftTools.socialMedia.title')}</h3>
+            {/* Social Media API - Liquid Glass */}
+            <LiquidGlassMotionCard className="group overflow-hidden">
+              <div className="h-2 bg-gradient-to-r from-purple-400 to-pink-400" />
+              <div className="p-6">
+                <div className="mb-4 flex items-center gap-3">
+                  <LiquidGlassIconContainer size="sm" color="secondary">
+                    <Share2Icon className="size-5 text-purple-500 dark:text-purple-400" />
+                  </LiquidGlassIconContainer>
+                  <h3 className="text-lg font-semibold text-purple-500 dark:text-purple-400">{t('draftTools.socialMedia.title')}</h3>
                 </div>
-                <p className="mb-6 text-lg leading-relaxed text-foreground/80">
+                <p className="mb-4 text-base leading-relaxed text-foreground/70">
                   {t('draftTools.socialMedia.description')}
                 </p>
-                <ul className="space-y-3">
+                <ul className="space-y-2">
                   {socialMediaAPIFeatures.map((feature, i) => (
                     <li
                       key={i}
-                      className="flex items-center gap-3 rounded-lg py-2 pl-2 transition-colors hover:bg-purple-50 dark:hover:bg-purple-900/10">
-                      <Icon
-                        icon="lucide:check-circle"
-                        className="size-5 shrink-0 text-purple-500"
-                      />
-                      <span className="text-lg">{feature}</span>
+                      className="flex items-center gap-2 rounded-lg py-1.5 text-sm text-foreground/80">
+                      <CheckCircle className="size-4 shrink-0 text-purple-500" />
+                      <span>{feature}</span>
                     </li>
                   ))}
                 </ul>
-              </CardBody>
-            </Card>
-
-            {/* TODO: 视频转录功能暂时隐藏，待功能完善后重新启用 */}
-            {/* Video Transcription */}
-            {/* <Card className="group overflow-hidden border-none shadow-lg transition-shadow duration-300 hover:shadow-xl">
-              <div className="h-3 bg-gradient-to-r from-rose-400 to-red-400"></div>
-              <CardBody className="p-8">
-                <div className="mb-4 flex items-center">
-                  <div className="mr-4 rounded-xl bg-rose-100 p-3 transition-transform duration-300 group-hover:scale-110 dark:bg-rose-900/30">
-                    <VideoIcon className="size-6 text-rose-500" />
-                  </div>
-                  <h3 className="text-xl font-semibold text-rose-500 sm:text-2xl">{t('draftTools.videoTranscribe.title')}</h3>
-                </div>
-                <p className="mb-6 text-lg leading-relaxed text-foreground/80">
-                  {t('draftTools.videoTranscribe.description')}
-                </p>
-                <ul className="space-y-3">
-                  {videoTranscribeFeatures.map((feature, i) => (
-                    <li
-                      key={i}
-                      className="flex items-center gap-3 rounded-lg py-2 pl-2 transition-colors hover:bg-rose-50 dark:hover:bg-rose-900/10">
-                      <Icon
-                        icon="lucide:check-circle"
-                        className="size-5 shrink-0 text-rose-500"
-                      />
-                      <span className="text-lg">{feature}</span>
-                    </li>
-                  ))}
-                </ul>
-              </CardBody>
-            </Card> */}
+              </div>
+            </LiquidGlassMotionCard>
           </div>
         </div>
       </section>
 
-      <section className="bg-gradient-to-r from-primary via-blue-500 to-secondary py-24 text-white">
-        <div className="container mx-auto px-4">
+      {/* CTA Section - Liquid Glass on gradient */}
+      <section className="relative overflow-hidden bg-gradient-to-r from-primary via-blue-500 to-secondary py-24 text-white">
+        {/* Glass overlay for depth */}
+        <div className="pointer-events-none absolute inset-0 overflow-hidden">
+          <div className="absolute -left-32 -top-32 size-96 rounded-full bg-white/10 blur-3xl" />
+          <div className="absolute -bottom-32 -right-32 size-96 rounded-full bg-white/10 blur-3xl" />
+        </div>
+        <div className="container relative z-10 mx-auto px-4">
           <div className="mx-auto max-w-4xl text-center">
             <h2 className="mb-8 text-3xl font-bold sm:text-4xl md:text-5xl">{t('finalCta.title')}</h2>
             <p className="mx-auto mb-10 max-w-2xl text-base text-white/90 sm:text-lg md:text-xl">{t('finalCta.description')}</p>
-            <div className="mx-auto mb-10 max-w-2xl rounded-xl bg-white/10 p-8 shadow-lg dark:bg-gray-800/30">
+            {/* GitHub card - Liquid Glass */}
+            <div className={cn(
+              glassBaseStyles,
+              'mx-auto mb-10 max-w-2xl rounded-3xl p-8',
+              'bg-white/15 border-white/20'
+            )}>
               <div className="mb-4 flex items-center justify-center">
                 <Icon
                   icon="mdi:github"
@@ -597,7 +569,7 @@ export default async function HomePage() {
               <Link href="/extension">
                 <Button
                   size="lg"
-                  className="rounded-xl bg-white px-10 py-7 text-lg font-medium text-primary hover:bg-white/90">
+                  className={cn(glassBaseStyles, 'rounded-2xl bg-white/90 px-10 py-7 text-lg font-medium text-primary hover:bg-white border-white/50')}>
                   {t('finalCta.install')}
                 </Button>
               </Link>
@@ -606,7 +578,7 @@ export default async function HomePage() {
                 target="_blank">
                 <Button
                   size="lg"
-                  className="rounded-xl border-2 border-white bg-transparent px-10 py-7 text-lg font-medium text-white hover:bg-white/10"
+                  className={cn(glassBaseStyles, 'rounded-2xl bg-white/10 px-10 py-7 text-lg font-medium text-white hover:bg-white/20 border-white/30')}
                   startContent={
                     <Icon
                       icon="mdi:github"
@@ -644,7 +616,7 @@ export default async function HomePage() {
   );
 }
 
-// BentoGridItem 组件定义
+// BentoGridItem 组件定义 - Liquid Glass 风格
 interface BentoGridItemProps {
   area: string;
   icon: React.ReactNode;
@@ -655,30 +627,21 @@ interface BentoGridItemProps {
 function BentoGridItem({ area, icon, title, description }: BentoGridItemProps) {
   return (
     <li className={`min-h-56 list-none ${area}`}>
-      <div className="relative h-full rounded-2xl border border-foreground/10 bg-background p-2 shadow-lg md:rounded-3xl md:p-3">
-        <GlowingEffect
-          blur={0}
-          borderWidth={3}
-          spread={80}
-          glow={true}
-          disabled={false}
-          proximity={64}
-          inactiveZone={0.01}
-        />
-        <div className="border-0.75 relative flex h-full flex-col justify-between gap-6 overflow-hidden rounded-xl p-6 dark:shadow-[0px_0px_27px_0px_#2D2D2D] md:p-6">
-          <div className="relative flex flex-1 flex-col justify-between gap-3">
-            <div className="w-fit rounded-lg border border-blue-200 p-2 dark:border-blue-900">{icon}</div>
-            <div className="space-y-3">
-              <h3 className="text-balance pt-0.5 font-sans text-xl/[1.375rem] font-semibold text-black dark:text-white md:text-2xl/[1.875rem]">
-                {title}
-              </h3>
-              <h2 className="font-sans text-sm/[1.125rem] text-black dark:text-neutral-400 md:text-base/[1.375rem]">
-                {description}
-              </h2>
-            </div>
+      <LiquidGlassMotionCard className="h-full p-6 md:p-8">
+        <div className="flex h-full flex-col justify-between gap-4">
+          <LiquidGlassIconContainer size="sm" color="primary">
+            {icon}
+          </LiquidGlassIconContainer>
+          <div className="space-y-3">
+            <h3 className="text-balance pt-0.5 text-xl font-semibold text-foreground/90 md:text-2xl">
+              {title}
+            </h3>
+            <p className="text-sm text-foreground/60 md:text-base">
+              {description}
+            </p>
           </div>
         </div>
-      </div>
+      </LiquidGlassMotionCard>
     </li>
   );
 }
