@@ -11,8 +11,11 @@ export const ImageGenerationStatus = {
 export const ImageSize = {
   AUTO: 'auto',
   SQUARE: '1024x1024',
+  SQUARE_1080: '1080x1080',
   LANDSCAPE: '1536x1024',
+  LANDSCAPE_1920: '1920x1080',
   PORTRAIT: '1024x1536',
+  PORTRAIT_1080: '1080x1920',
 } as const;
 
 export const Composition = {
@@ -83,7 +86,15 @@ export interface ImageGenerationResultItem {
 export const ImageGenerationSchema = z.object({
   prompt: z.string().min(3, { message: 'Prompt is required' }),
   number: z.number().min(1),
-  size: z.enum([ImageSize.AUTO, ImageSize.SQUARE, ImageSize.LANDSCAPE, ImageSize.PORTRAIT]),
+  size: z.enum([
+    ImageSize.AUTO,
+    ImageSize.SQUARE,
+    ImageSize.SQUARE_1080,
+    ImageSize.LANDSCAPE,
+    ImageSize.LANDSCAPE_1920,
+    ImageSize.PORTRAIT,
+    ImageSize.PORTRAIT_1080,
+  ]),
   quality: z.string().default('auto'),
   composition: z.string().optional(),
   color: z.string().optional(),
@@ -119,6 +130,7 @@ export interface ImageGenerationLog {
   error: string | null;
   response: unknown;
   url: string | null;
+  previewUrl: string | null;
   fileHostingId: string | null;
   createdAt: Date;
   updatedAt: Date;

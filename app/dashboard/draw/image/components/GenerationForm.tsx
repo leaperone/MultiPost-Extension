@@ -1,6 +1,6 @@
 'use client';
 
-import { Button, Textarea, Select, SelectItem, Input } from '@heroui/react';
+import { Button, Textarea, Select, SelectItem } from '@heroui/react';
 import { ImageIcon } from 'lucide-react';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Controller, useForm } from 'react-hook-form';
@@ -127,24 +127,6 @@ export function GenerationForm({ onSubmit, loading, extraPrompt, initPrompt }: G
 
       {/* 生成参数设置 */}
       <div className="flex flex-wrap justify-between gap-2">
-        <Controller
-          name="number"
-          control={form.control}
-          render={({ field }) => (
-            <Input
-              type="number"
-              label={t('generation_page.number.label')}
-              size="sm"
-              className="w-[140px]"
-              min="1"
-              max="9"
-              value={field.value.toString()}
-              onChange={(e) => field.onChange(parseInt(e.target.value) || 1)}
-              disabled={loading}
-            />
-          )}
-        />
-
         <Select
           label={t('generation_page.size.label')}
           size="sm"
@@ -157,8 +139,11 @@ export function GenerationForm({ onSubmit, loading, extraPrompt, initPrompt }: G
           disabled={loading}>
           <SelectItem key={ImageSize.AUTO}>{t('generation_page.size.auto')}</SelectItem>
           <SelectItem key={ImageSize.SQUARE}>{t('generation_page.size.square')}</SelectItem>
+          <SelectItem key={ImageSize.SQUARE_1080}>1080x1080</SelectItem>
           <SelectItem key={ImageSize.LANDSCAPE}>{t('generation_page.size.landscape')}</SelectItem>
+          <SelectItem key={ImageSize.LANDSCAPE_1920}>1920x1080</SelectItem>
           <SelectItem key={ImageSize.PORTRAIT}>{t('generation_page.size.portrait')}</SelectItem>
+          <SelectItem key={ImageSize.PORTRAIT_1080}>1080x1920</SelectItem>
         </Select>
 
         <Select

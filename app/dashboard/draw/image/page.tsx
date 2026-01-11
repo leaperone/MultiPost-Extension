@@ -19,6 +19,33 @@ import { toast } from 'sonner';
 
 const Viewer = dynamic(() => import('react-viewer'), { ssr: false });
 
+/**
+ * 获取 ImageGenerationLog 的预览 URL
+ * 优先级: previewUrl > fileHosting.previewUrl > null
+ */
+function getLogPreviewUrl(log: ImageGenerationLog): string | null {
+  if (log.previewUrl) return log.previewUrl;
+  if (log.fileHosting?.previewUrl) return log.fileHosting.previewUrl;
+  return null;
+}
+
+/**
+ * 获取 ImageGenerationLog 的下载 URL (原始 URL)
+ * 优先级: url > fileHosting.previewUrl > null
+ */
+function getLogDownloadUrl(log: ImageGenerationLog): string | null {
+  if (log.url) return log.url;
+  if (log.fileHosting?.previewUrl) return log.fileHosting.previewUrl;
+  return null;
+}
+
+/**
+ * 检查 log 是否有有效的图片 URL
+ */
+function hasValidImageUrl(log: ImageGenerationLog): boolean {
+  return !!(log.previewUrl || log.fileHosting?.previewUrl);
+}
+
 interface TaskStatus {
   status: string;
   images?: string[];
@@ -29,6 +56,7 @@ function ImageGenerationSection() {
   const { t } = useTranslation('images');
   const [loading, setLoading] = useState(false);
   const [taskId, setTaskId] = useState<string | null>(null);
+  const [leaperOneId, setLeaperOneId] = useState<string | null>(null);
   const [taskStatus, setTaskStatus] = useState<TaskStatus | null>(null);
   const [viewerVisible, setViewerVisible] = useState(false);
   const [activeIndex, setActiveIndex] = useState(0);
@@ -41,6 +69,7 @@ function ImageGenerationSection() {
         throw new Error(response.error || t('generation_flow.toasts.submit_failed'));
       }
       setTaskId(response.data.id);
+      setLeaperOneId(response.data.leaperOneId);
       setTaskStatus(null); // 重置状态
       if (response.message) {
         toast.success(response.message);
@@ -105,13 +134,14 @@ function ImageGenerationSection() {
             />
           </div>
         )}
-        {taskId && (
+        {taskId && leaperOneId && (
           <div className="mx-auto w-full max-w-7xl space-y-4 px-6 py-8">
             {!taskStatus ||
             taskStatus.status === ImageGenerationStatus.PENDING ||
             taskStatus.status === ImageGenerationStatus.PROCESSING ? (
               <ResultWaiter
                 taskId={taskId}
+                leaperOneId={leaperOneId}
                 onError={handleError}
                 onStatusChange={handleStatusChange}
               />
@@ -217,11 +247,11 @@ function GallerySection() {
     return images
       .filter((image) => image.status === ImageGenerationStatus.COMPLETED && !!image.ImageGenerationLog?.length)
       .flatMap((image) =>
-        image.ImageGenerationLog.filter((log: ImageGenerationLog) => log.fileHosting?.previewUrl).map(
+        image.ImageGenerationLog.filter((log: ImageGenerationLog) => hasValidImageUrl(log)).map(
           (log: ImageGenerationLog, index: number) => ({
-            src: log.fileHosting!.previewUrl!,
+            src: getLogPreviewUrl(log)!,
             alt: `${image.prompt} - ${index + 1}`,
-            downloadUrl: log.fileHosting!.previewUrl!,
+            downloadUrl: getLogDownloadUrl(log)!,
             description: `${dateFormatter.format(new Date(image.createdAt))}\n${image.prompt}`,
           }),
         ),
@@ -264,7 +294,7 @@ function GallerySection() {
     for (let i = 0; i < imageIndex; i++) {
       if (doneImages[i]?.ImageGenerationLog) {
         actualIndex += doneImages[i].ImageGenerationLog.filter(
-          (log: ImageGenerationLog) => log.fileHosting?.previewUrl,
+          (log: ImageGenerationLog) => hasValidImageUrl(log),
         ).length;
       }
     }
@@ -353,14 +383,14 @@ function GallerySection() {
               className="relative overflow-hidden rounded-lg bg-default-50">
               {image.status === ImageGenerationStatus.COMPLETED && image.ImageGenerationLog?.length ? (
                 <div className="space-y-2">
-                  {image.ImageGenerationLog.filter((log: ImageGenerationLog) => log.fileHosting?.previewUrl)
+                  {image.ImageGenerationLog.filter((log: ImageGenerationLog) => hasValidImageUrl(log))
                     .slice(0, 1)
                     .map((log: ImageGenerationLog, logIndex: number) => (
                       <div
                         key={logIndex}
                         className="group relative aspect-square overflow-hidden">
                         <img
-                          src={log.fileHosting!.previewUrl!}
+                          src={getLogPreviewUrl(log)!}
                           alt={image.prompt}
                           className="size-full cursor-pointer object-cover"
                         />
@@ -387,7 +417,7 @@ function GallerySection() {
                             <div className="flex items-center justify-between">
                               <span className="text-xs text-white/80">
                                 {image.ImageGenerationLog?.filter(
-                                  (log: ImageGenerationLog) => log.fileHosting?.previewUrl,
+                                  (log: ImageGenerationLog) => hasValidImageUrl(log),
                                 ).length || 0}{' '}
                                 images
                               </span>
@@ -396,7 +426,7 @@ function GallerySection() {
                                 size="sm"
                                 variant="flat"
                                 className="bg-white/10 backdrop-blur-xs"
-                                onPress={() => handleDownload(log.fileHosting!.previewUrl!)}>
+                                onPress={() => handleDownload(getLogDownloadUrl(log)!)}>
                                 <Download className="size-4 text-white" />
                               </Button>
                             </div>

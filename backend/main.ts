@@ -5,7 +5,6 @@ import { Hono } from 'https://deno.land/x/hono@v4.3.7/mod.ts';
 import type { Context, Next } from 'https://deno.land/x/hono@v4.3.7/mod.ts';
 import { cron } from 'https://deno.land/x/deno_cron@v1.0.0/cron.ts';
 import { CheckPublishStatusWorker } from './check_publish_task_worker.ts';
-import { ImageGenerationWorker } from './process_image_generation_worker.ts';
 import { MinimumConsumptionWorker } from './minimum_consumption_worker.ts';
 
 const multipostDb = new PrismaClient();
@@ -15,12 +14,6 @@ const multipostDb = new PrismaClient();
  */
 async function startWorkerServer() {
   // Initialize all workers
-  const imageGenerationWorker = new ImageGenerationWorker(
-    Deno.env.get('DIFY_API_URL') || '',
-    Deno.env.get('DIFY_IMAGE_GEN_KEY') || '',
-    multipostDb,
-  );
-
   const publishTaskWorker = new PublishTaskWorker(multipostDb);
   const refreshAccountWorker = new RefreshAccountWorker(multipostDb);
   const checkPublishStatusWorker = new CheckPublishStatusWorker(multipostDb);
@@ -39,28 +32,6 @@ async function startWorkerServer() {
       return c.text('', 200);
     }
     await next();
-  });
-
-  // POST /worker/process_image_generation
-  app.post('/worker/process_image_generation', async (c: Context) => {
-    try {
-      const body = await c.req.json();
-      const { taskId } = body;
-
-      if (!taskId) {
-        return c.json({ error: 'taskId is required' }, 400);
-      }
-
-      // Process the task asynchronously
-      imageGenerationWorker.processImageGeneration(taskId).catch((error) => {
-        console.error(`Background image generation processing failed:`, error);
-      });
-
-      return c.json({ message: 'Image generation processing started', taskId }, 202);
-    } catch (error) {
-      console.error('Error handling request:', error);
-      return c.json({ error: 'Internal Server Error' }, 500);
-    }
   });
 
   // GET /health

@@ -1,16 +1,21 @@
 'use server';
 
-import {  multipostDb } from '@/lib/db';
+import { multipostDb } from '@/lib/db';
 import { ImageGenerationStatus, ImageGenerationSchema, getPrompt } from '@/actions/draw/image/types';
 import { auth } from '@/auth';
+import {
+  createImageGeneration as createLeaperOneTask,
+  convertImageSize,
+  getGenerationStatus,
+} from '@/lib/leaperone';
 // import { preCheckCredit } from '@/actions/credit';
 // import { PRICING } from '@/actions/credit/types';
 
 /**
  * 创建新的图片生成任务
- * @description 验证用户权限，检查积分，处理提示词，创建数据库记录
+ * @description 验证用户权限，检查积分，处理提示词，调用 LeaperOne API 创建任务
  * @param {ImageGenerationSchema} task - 图片生成任务参数
- * @returns {Promise<{success: boolean, data?: {id: string}, error?: string}>}
+ * @returns {Promise<{success: boolean, data?: {id: string, leaperOneId: string}, error?: string}>}
  */
 export async function newImageGeneration(task: ImageGenerationSchema) {
   try {
@@ -43,9 +48,6 @@ export async function newImageGeneration(task: ImageGenerationSchema) {
 
     // 使用 getPrompt 拼接 composition、color、style 的提示词
     let extraPrompt = validatedTask.prompt;
-    if (validatedTask.size) {
-      extraPrompt = `size: ${validatedTask.size}\n${extraPrompt}`;
-    }
     if (validatedTask.composition) {
       const compositionPrompt = getPrompt('composition', validatedTask.composition);
       if (compositionPrompt) extraPrompt = `${compositionPrompt}\n${extraPrompt}`;
@@ -59,7 +61,18 @@ export async function newImageGeneration(task: ImageGenerationSchema) {
       if (stylePrompt) extraPrompt = `${stylePrompt}\n${extraPrompt}`;
     }
 
-    // 创建数据库记录
+    // 转换尺寸格式
+    const leaperOneSize = convertImageSize(validatedTask.size);
+
+    // 调用 LeaperOne API 创建生成任务
+    const leaperOneId = await createLeaperOneTask({
+      prompt: extraPrompt,
+      size: leaperOneSize,
+      number: validatedTask.number,
+      referenceImages: validatedTask.images,
+    });
+
+    // 创建数据库记录，保存 leaperOneId 到 workflowId 字段
     const newTask = await multipostDb.imageGeneration.create({
       data: {
         userId: session.user.id,
@@ -68,15 +81,16 @@ export async function newImageGeneration(task: ImageGenerationSchema) {
         images: validatedTask.images || [],
         number: validatedTask.number,
         size: validatedTask.size.toString(),
-        status: ImageGenerationStatus.PENDING,
+        status: ImageGenerationStatus.PROCESSING,
+        workflowId: leaperOneId,
       },
     });
 
-    await triggerImageGeneration(newTask.id);
+    console.log(`Created image generation task ${newTask.id} with LeaperOne ID ${leaperOneId}`);
 
     return {
       success: true,
-      data: { id: newTask.id },
+      data: { id: newTask.id, leaperOneId },
       message: 'Task created successfully',
     };
   } catch (error) {
@@ -123,56 +137,6 @@ export async function listAllImages() {
     return {
       success: false,
       error: error instanceof Error ? error.message : 'Unknown error',
-    };
-  }
-}
-
-export async function triggerImageGeneration(taskId: string) {
-  const task = await multipostDb.imageGeneration.findUnique({
-    where: {
-      id: taskId,
-    },
-  });
-  if (!task) {
-    return {
-      success: false,
-      error: 'Task not found',
-    };
-  }
-
-  // 调用backend worker处理任务
-  const backendUrl = process.env.DENO_URL || 'http://localhost:9000';
-
-  try {
-    const response = await fetch(`${backendUrl}/worker/process_image_generation`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        taskId: taskId,
-      }),
-    });
-
-    if (!response.ok) {
-      console.error('Backend worker request failed:', response.status, response.statusText);
-      return {
-        success: false,
-        error: 'Backend worker request failed',
-      };
-    } else {
-      const result = await response.json();
-      console.log('Backend worker response:', result);
-      return {
-        success: true,
-        data: result,
-      };
-    }
-  } catch (fetchError) {
-    console.error('Failed to call backend worker:', fetchError);
-    return {
-      success: false,
-      error: fetchError instanceof Error ? fetchError.message : 'Unknown error',
     };
   }
 }
@@ -241,23 +205,168 @@ export async function updateImageGeneration(id: string) {
       };
     }
 
-    // 重新触发图片生成任务
-    const triggerResult = await triggerImageGeneration(result.id);
-
-    if (!triggerResult.success) {
-      return {
-        success: false,
-        error: triggerResult.error || 'Failed to trigger image generation',
-      };
-    }
-
     return {
       success: true,
       data: result,
-      message: 'Task updated successfully',
+      message: 'Task is still processing',
     };
   } catch (error) {
     console.error('updateImageGeneration error:', error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Unknown error',
+    };
+  }
+}
+
+/**
+ * 查询 LeaperOne 图片生成状态
+ * @param leaperOneId - LeaperOne 任务 ID
+ */
+export async function checkLeaperOneStatus(leaperOneId: string) {
+  try {
+    const session = await auth();
+    if (!session?.user?.id) {
+      return { success: false, error: 'Unauthorized' };
+    }
+
+    // 验证任务属于当前用户
+    const task = await multipostDb.imageGeneration.findFirst({
+      where: {
+        workflowId: leaperOneId,
+        userId: session.user.id,
+      },
+    });
+
+    if (!task) {
+      return { success: false, error: 'Task not found' };
+    }
+
+    // 查询 LeaperOne 状态
+    const status = await getGenerationStatus(leaperOneId);
+
+    return {
+      success: true,
+      data: {
+        taskId: task.id,
+        leaperOneId,
+        status: status.status,
+        images: status.images,
+        error: status.error,
+      },
+    };
+  } catch (error) {
+    console.error('checkLeaperOneStatus error:', error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Unknown error',
+    };
+  }
+}
+
+/**
+ * 完成图片生成任务
+ * @param taskId - 数据库任务 ID
+ * @param images - 生成的图片列表
+ */
+export async function completeImageGeneration(
+  taskId: string,
+  images: Array<{ id?: string; url?: string }>,
+) {
+  try {
+    const session = await auth();
+    if (!session?.user?.id) {
+      return { success: false, error: 'Unauthorized' };
+    }
+
+    // 验证任务属于当前用户
+    const task = await multipostDb.imageGeneration.findFirst({
+      where: {
+        id: taskId,
+        userId: session.user.id,
+      },
+    });
+
+    if (!task) {
+      return { success: false, error: 'Task not found' };
+    }
+
+    // 保存图片 URL 到 ImageGenerationLog
+    for (const image of images) {
+      if (!image.url) continue;
+
+      // LeaperOne 图片预览 URL：原始 URL + !style=imagePreview
+      const previewUrl = `${image.url}!style=imagePreview`;
+
+      await multipostDb.imageGenerationLog.create({
+        data: {
+          userId: session.user.id,
+          imageGenerationId: taskId,
+          url: image.url,
+          previewUrl,
+          response: { source: 'leaperone', imageId: image.id },
+        },
+      });
+    }
+
+    // 更新任务状态为完成
+    await multipostDb.imageGeneration.update({
+      where: { id: taskId },
+      data: { status: ImageGenerationStatus.COMPLETED },
+    });
+
+    return {
+      success: true,
+      data: { taskId },
+    };
+  } catch (error) {
+    console.error('completeImageGeneration error:', error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Unknown error',
+    };
+  }
+}
+
+/**
+ * 标记图片生成任务失败
+ * @param taskId - 数据库任务 ID
+ * @param errorMessage - 错误信息
+ */
+export async function failImageGeneration(taskId: string, errorMessage: string) {
+  try {
+    const session = await auth();
+    if (!session?.user?.id) {
+      return { success: false, error: 'Unauthorized' };
+    }
+
+    // 验证任务属于当前用户
+    const task = await multipostDb.imageGeneration.findFirst({
+      where: {
+        id: taskId,
+        userId: session.user.id,
+      },
+    });
+
+    if (!task) {
+      return { success: false, error: 'Task not found' };
+    }
+
+    // 更新任务状态为失败
+    await multipostDb.imageGeneration.update({
+      where: { id: taskId },
+      data: {
+        status: ImageGenerationStatus.FAILED,
+        message: errorMessage,
+      },
+    });
+
+    return {
+      success: true,
+      data: { taskId },
+    };
+  } catch (error) {
+    console.error('failImageGeneration error:', error);
     return {
       success: false,
       error: error instanceof Error ? error.message : 'Unknown error',

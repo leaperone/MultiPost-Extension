@@ -406,6 +406,7 @@ model ImageGenerationLog {
   error             String?
   response          Json?
   url               String?
+  previewUrl        String?
   fileHostingId     String?
   createdAt         DateTime @default(now())
   updatedAt         DateTime @updatedAt

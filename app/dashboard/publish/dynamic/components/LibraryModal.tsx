@@ -75,10 +75,11 @@ export default function LibraryModal({ onSelectImage, existingFiles = [], isOpen
         if (imagesRes.success && imagesRes.data) {
           processedImages.push(
             ...imagesRes.data.map((item: ImageGeneration) => {
+              // 优先使用 log.previewUrl（LeaperOne），其次使用 fileHosting.previewUrl
               const images =
-                item.ImageGenerationLog?.filter((log: ImageGenerationLog) => log.fileHosting?.previewUrl).map(
-                  (log: ImageGenerationLog) => log.fileHosting!.previewUrl!,
-                ) || [];
+                item.ImageGenerationLog?.filter(
+                  (log: ImageGenerationLog) => log.previewUrl || log.fileHosting?.previewUrl,
+                ).map((log: ImageGenerationLog) => log.previewUrl || log.fileHosting!.previewUrl!) || [];
 
               return {
                 id: item.id,

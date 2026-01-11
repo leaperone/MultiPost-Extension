@@ -40,6 +40,7 @@ export function ImageGenerateModal({
 
   const [step, setStep] = useState<Step>('form');
   const [generationId, setGenerationId] = useState<string | null>(null);
+  const [leaperOneId, setLeaperOneId] = useState<string | null>(null);
   const [taskStatus, setTaskStatus] = useState<TaskStatus | null>(null);
   const [viewerVisible, setViewerVisible] = useState(false);
   const [activeIndex, setActiveIndex] = useState(0);
@@ -67,11 +68,11 @@ export function ImageGenerateModal({
 
     try {
       const createResponse = await newImageGeneration(data);
-      if (!createResponse.success || !createResponse.data?.id) {
+      if (!createResponse.success || !createResponse.data?.id || !createResponse.data?.leaperOneId) {
         throw new Error(createResponse.error || t('aiImage.toast.createTaskFailed'));
       }
-      const newGenerationId = createResponse.data.id;
-      setGenerationId(newGenerationId);
+      setGenerationId(createResponse.data.id);
+      setLeaperOneId(createResponse.data.leaperOneId);
     } catch (error) {
       setStep('form');
       toast.error(t('aiImage.toast.submitFailed'), {
@@ -97,6 +98,7 @@ export function ImageGenerateModal({
   const handleStartOver = () => {
     setTaskStatus(null);
     setGenerationId(null);
+    setLeaperOneId(null);
     setStep('form');
   };
 
@@ -185,9 +187,10 @@ export function ImageGenerateModal({
             </div>
           )}
 
-          {step === 'generating' && generationId && (
+          {step === 'generating' && generationId && leaperOneId && (
             <ResultWaiter
               taskId={generationId}
+              leaperOneId={leaperOneId}
               onError={handleError}
               onStatusChange={handleStatusChange}
             />

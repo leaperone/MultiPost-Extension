@@ -1,129 +1,117 @@
 'use client';
 
-import { Card, CardBody, Button } from '@heroui/react';
-import { useEffect, useState } from 'react';
-import { getImageGeneration, updateImageGeneration } from '@/actions/draw/image';
+import { Card, CardBody } from '@heroui/react';
+import { useEffect, useState, useRef } from 'react';
+import { checkLeaperOneStatus, completeImageGeneration, failImageGeneration } from '@/actions/draw/image';
 import { ImageGenerationStatus } from '@/actions/draw/image/types';
 import { useTranslation } from '@/i18n/client';
-import { toast } from 'sonner';
 
 interface ResultWaiterProps {
   taskId: string;
+  leaperOneId: string;
   onError: (error: string) => void;
   onStatusChange: (status: { status: string; images?: string[]; error?: string }) => void;
 }
 
-export function ResultWaiter({ taskId, onError, onStatusChange }: ResultWaiterProps) {
+export function ResultWaiter({ taskId, leaperOneId, onError, onStatusChange }: ResultWaiterProps) {
   const { t } = useTranslation('images');
-  const [canManualUpdate, setCanManualUpdate] = useState(false);
-  const [manualCooldown, setManualCooldown] = useState(0);
   const [waitingTime, setWaitingTime] = useState(0);
+  const isPollingRef = useRef(false);
+  const hasCompletedRef = useRef(false);
 
-  // 当 taskId 变化时重置状态
+  // 使用 ref 存储回调函数，避免依赖变化导致 useEffect 重复执行
+  const onErrorRef = useRef(onError);
+  const onStatusChangeRef = useRef(onStatusChange);
+  onErrorRef.current = onError;
+  onStatusChangeRef.current = onStatusChange;
+
+  // 轮询 LeaperOne 状态
   useEffect(() => {
-    setCanManualUpdate(false);
-    setManualCooldown(0);
-    setWaitingTime(0);
-  }, [taskId]);
+    hasCompletedRef.current = false;
+    isPollingRef.current = false;
 
-  useEffect(() => {
-    let timeoutId: NodeJS.Timeout;
+    const pollStatus = async () => {
+      if (isPollingRef.current || hasCompletedRef.current) return;
+      isPollingRef.current = true;
 
-    const checkResult = async () => {
       try {
-        const response = await getImageGeneration(taskId);
+        const response = await checkLeaperOneStatus(leaperOneId);
 
-        if (!response.success || !response.data) {
-          throw new Error(response.error || t('result_waiter.unknown_error'));
+        if (!response.success) {
+          console.error('Check status failed:', response.error);
+          return;
         }
 
-        const task = response.data;
+        const { status, images, error } = response.data!;
 
-        if (task.status === ImageGenerationStatus.PENDING || task.status === ImageGenerationStatus.PROCESSING) {
-          onStatusChange({
-            status: task.status,
+        if (status === 'pending' || status === 'processing') {
+          onStatusChangeRef.current({ status: ImageGenerationStatus.PROCESSING });
+        } else if (status === 'completed' && images) {
+          hasCompletedRef.current = true;
+
+          // 提取预览 URL（使用 !style=imagePreview 后缀）
+          const previewUrls = images
+            .map((img) => (img.url ? `${img.url}!style=imagePreview` : null))
+            .filter((url): url is string => Boolean(url));
+
+          // 保存到数据库
+          await completeImageGeneration(taskId, images);
+
+          onStatusChangeRef.current({
+            status: ImageGenerationStatus.COMPLETED,
+            images: previewUrls,
           });
-        }
+          return;
+        } else if (status === 'failed') {
+          hasCompletedRef.current = true;
+          const errorMessage = error || 'Unknown error';
 
-        if (task.status === ImageGenerationStatus.COMPLETED && task.ImageGenerationLog) {
-          const images = task.ImageGenerationLog.filter((log) => log.fileHosting?.previewUrl).map(
-            (log) => log.fileHosting!.previewUrl!,
-          );
+          // 标记任务失败
+          await failImageGeneration(taskId, errorMessage);
 
-          if (images.length > 0) {
-            onStatusChange({
-              status: ImageGenerationStatus.COMPLETED,
-              images,
-            });
-          }
-        }
-
-        if (task.status === ImageGenerationStatus.FAILED) {
-          const errorMessage = task.message || t('result_waiter.unknown_error');
-          onStatusChange({
+          onStatusChangeRef.current({
             status: ImageGenerationStatus.FAILED,
             error: errorMessage,
           });
-          onError(errorMessage);
+          onErrorRef.current(errorMessage);
           return;
         }
-
-        // 如果状态是完成，就不再继续查询
-        if (task.status === ImageGenerationStatus.COMPLETED) {
-          return;
-        }
-
-        // 如果还在处理中，则继续查询
-        timeoutId = setTimeout(checkResult, 10000);
-      } catch (error) {
-        const errorMessage = error instanceof Error ? error.message : t('result_waiter.unknown_error');
-        onStatusChange({
-          status: ImageGenerationStatus.FAILED,
-          error: errorMessage,
-        });
-        onError(errorMessage);
+      } catch (err) {
+        console.error('Poll status error:', err);
+      } finally {
+        isPollingRef.current = false;
       }
     };
 
-    checkResult(); // 立即执行一次
+    // 立即执行一次
+    pollStatus();
+
+    // 每 5 秒轮询一次
+    const intervalId = setInterval(() => {
+      if (!hasCompletedRef.current) {
+        pollStatus();
+      }
+    }, 5000);
 
     return () => {
-      if (timeoutId) clearTimeout(timeoutId);
+      clearInterval(intervalId);
     };
-  }, [taskId, onError, onStatusChange, t]);
+  }, [leaperOneId, taskId]);
 
-  // 计时器：用于判断等待时间
+  // 计时器：显示等待时间
   useEffect(() => {
     setWaitingTime(0);
     const timer = setInterval(() => {
       setWaitingTime((prev) => prev + 1);
     }, 1000);
     return () => clearInterval(timer);
-  }, []);
+  }, [taskId]);
 
-  // 超过3分钟允许手动刷新
-  useEffect(() => {
-    if (waitingTime >= 180 && manualCooldown === 0) {
-      setCanManualUpdate(true);
-    }
-  }, [waitingTime, manualCooldown]);
-
-  // 30秒冷却倒计时
-  useEffect(() => {
-    if (manualCooldown > 0) {
-      const timer = setInterval(() => {
-        setManualCooldown((prev) => {
-          if (prev <= 1) {
-            setCanManualUpdate(waitingTime >= 180);
-            clearInterval(timer);
-            return 0;
-          }
-          return prev - 1;
-        });
-      }, 1000);
-      return () => clearInterval(timer);
-    }
-  }, [manualCooldown, waitingTime]);
+  const formatTime = (seconds: number) => {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return mins > 0 ? `${mins}m ${secs}s` : `${secs}s`;
+  };
 
   return (
     <Card className="mx-auto w-full max-w-3xl">
@@ -138,39 +126,7 @@ export function ResultWaiter({ taskId, onError, onStatusChange }: ResultWaiterPr
           <div className="flex flex-col gap-2">
             <p className="text-default-600">{t('result_waiter.processing')}</p>
             <p className="text-default-400">{t('result_waiter.processing_description')}</p>
-            {canManualUpdate && (
-              <Button
-                color="primary"
-                variant="bordered"
-                disabled={manualCooldown > 0}
-                onPress={async () => {
-                  setCanManualUpdate(false);
-                  setManualCooldown(30);
-                  try {
-                    toast.loading(t('result_waiter.manual_update_toast'));
-                    const response = await updateImageGeneration(taskId);
-                    toast.dismiss();
-
-                    if (response.success) {
-                      if (response.message) {
-                        toast.success(response.message);
-                      }
-                      // 重新开始检查结果
-                      setWaitingTime(0);
-                    } else {
-                      toast.error(response.error || t('result_waiter.manual_update_failed'));
-                    }
-                  } catch (e) {
-                    toast.dismiss();
-                    toast.error(t('result_waiter.manual_update_failed'));
-                  }
-                }}
-                className="mt-2 w-fit self-start">
-                {manualCooldown > 0
-                  ? `${t('result_waiter.manual_update_cooldown', { seconds: manualCooldown })}`
-                  : t('result_waiter.manual_update')}
-              </Button>
-            )}
+            <p className="text-xs text-default-300">{formatTime(waitingTime)}</p>
           </div>
         </div>
       </CardBody>
