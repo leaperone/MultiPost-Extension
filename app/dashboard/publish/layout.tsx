@@ -90,7 +90,7 @@ export default function PublishLayout({ children }: { children: React.ReactNode 
             )}
           </LiquidGlassTabs>
 
-          <Link href="https://docs.multipost.app/docs/user-guide/contact-us" target="_blank">
+          <Link href="/docs/user-guide/contact-us" target="_blank">
             <LiquidGlassButton size="sm" variant="default">
               <MessageSquareIcon className="mr-2 size-4" />
               {t('contactUs')}

@@ -1,4 +1,10 @@
 {
+  "announcement": {
+    "videoTranscribe": {
+      "text": "New Feature: Video Transcription - Extract text from Douyin & TikTok videos",
+      "cta": "Try Now"
+    }
+  },
   "footer": {
     "slogan": "Simplify your social media workflow",
     "copyright": "© 2024 LEAPERone Inc. All rights reserved",

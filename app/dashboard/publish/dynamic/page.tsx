@@ -775,7 +775,7 @@ export default function DynamicPage() {
               <div className="mt-4 flex w-full items-center justify-between gap-2">
                 <div className="flex items-center gap-2">
                   <Link
-                    href="https://docs.multipost.app/docs/user-guide/contact-us"
+                    href="/docs/user-guide/contact-us"
                     target="_blank">
                     <LiquidGlassButton
                       size="sm"

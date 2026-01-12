@@ -492,7 +492,7 @@ export default function OnInstallPage() {
                   </Button>
 
                   <Link
-                    href="https://docs.multipost.app/docs/user-guide/contact-us"
+                    href="/docs/user-guide/contact-us"
                     target="_blank">
                     <Button
                       variant="flat"

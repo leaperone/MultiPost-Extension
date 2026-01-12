@@ -1,5 +1,5 @@
 import { Button, Link, Image } from '@heroui/react';
-import { Sparkles, Box, Settings, Send, SendIcon, FileTypeIcon, CheckCircle, GlobeIcon, SearchIcon, Share2Icon } from 'lucide-react';
+import { Sparkles, Box, Settings, Send, SendIcon, FileTypeIcon, CheckCircle, GlobeIcon, SearchIcon, Share2Icon, VideoIcon } from 'lucide-react';
 import { Icon } from '@iconify/react';
 import { cn } from '@/lib/utils';
 import { BackgroundLines } from '@/components/background-lines';
@@ -10,6 +10,7 @@ import { auth } from '@/auth';
 import SocialShareNotifications from '@/components/HomePage/SocialShareNotifications';
 import { LiquidGlassMotionCard, LiquidGlassCard, LiquidGlassIconContainer, glassBaseStyles } from '@/components/ui/liquid-glass';
 import { SocialProof } from '@/components/HomePage/SocialProof';
+import { FeatureAnnouncementBanner } from '@/components/HomePage/FeatureAnnouncementBanner';
 import packageJson from '../../../package.json';
 
 export const metadata = {
@@ -23,7 +24,16 @@ interface TranslationFunction {
   (key: string, options: { returnObjects: boolean }): string | Record<string, unknown>;
 }
 
-function HeroSection({ t, className }: { t: TranslationFunction; className?: string }) {
+interface HeroSectionProps {
+  t: TranslationFunction;
+  className?: string;
+  announcement?: {
+    text: string;
+    cta: string;
+  };
+}
+
+function HeroSection({ t, className, announcement }: HeroSectionProps) {
   const description = t('hero.description');
 
   const features = [
@@ -73,6 +83,13 @@ function HeroSection({ t, className }: { t: TranslationFunction; className?: str
     <BackgroundLines className={cn('relative w-full min-h-screen', className)}>
       <div className="z-40 m-auto flex min-h-screen w-[90%] flex-col items-center justify-center py-20">
         <div className="flex w-full flex-col items-center">
+          {/* TODO: Remove FeatureAnnouncementBanner after 2026-03 */}
+          {announcement && (
+            <div className="mb-6">
+              <FeatureAnnouncementBanner text={announcement.text} cta={announcement.cta} />
+            </div>
+          )}
+
           {/* 特性文本展示 - 修改样式 */}
           <div className="flex flex-wrap items-center justify-center gap-x-3 gap-y-2 p-4 text-2xl font-bold sm:text-3xl md:text-4xl lg:text-5xl">
             {features.map((feature, index) => (
@@ -209,6 +226,7 @@ export default async function HomePage() {
   const webreaderFeatures = t('draftTools.webreader.features', { returnObjects: true }) as string[];
   const searchFeatures = t('draftTools.search.features', { returnObjects: true }) as string[];
   const socialMediaAPIFeatures = t('draftTools.socialMedia.features', { returnObjects: true }) as string[];
+  const videoTranscribeFeatures = t('draftTools.videoTranscribe.features', { returnObjects: true }) as string[];
 
   // JSON-LD 结构化数据
   const jsonLd = {
@@ -285,7 +303,14 @@ export default async function HomePage() {
 
       <SocialShareNotifications />
       <div className="relative w-full">
-        <HeroSection t={t} />
+        {/* TODO: Remove announcement prop after 2026-03 */}
+        <HeroSection
+          t={t}
+          announcement={{
+            text: t('announcement.videoTranscribe.text'),
+            cta: t('announcement.videoTranscribe.cta'),
+          }}
+        />
       </div>
 
       {/* MultiPost Bento Grid Section - Liquid Glass */}
@@ -509,6 +534,32 @@ export default async function HomePage() {
                       key={i}
                       className="flex items-center gap-2 rounded-lg py-1.5 text-sm text-foreground/80">
                       <CheckCircle className="size-4 shrink-0 text-purple-500" />
+                      <span>{feature}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </LiquidGlassMotionCard>
+
+            {/* Video Transcription - Liquid Glass */}
+            <LiquidGlassMotionCard className="group overflow-hidden">
+              <div className="h-2 bg-gradient-to-r from-rose-400 to-red-400" />
+              <div className="p-6">
+                <div className="mb-4 flex items-center gap-3">
+                  <LiquidGlassIconContainer size="sm" color="danger">
+                    <VideoIcon className="size-5 text-rose-500 dark:text-rose-400" />
+                  </LiquidGlassIconContainer>
+                  <h3 className="text-lg font-semibold text-rose-500 dark:text-rose-400">{t('draftTools.videoTranscribe.title')}</h3>
+                </div>
+                <p className="mb-4 text-base leading-relaxed text-foreground/70">
+                  {t('draftTools.videoTranscribe.description')}
+                </p>
+                <ul className="space-y-2">
+                  {videoTranscribeFeatures.map((feature, i) => (
+                    <li
+                      key={i}
+                      className="flex items-center gap-2 rounded-lg py-1.5 text-sm text-foreground/80">
+                      <CheckCircle className="size-4 shrink-0 text-rose-500" />
                       <span>{feature}</span>
                     </li>
                   ))}

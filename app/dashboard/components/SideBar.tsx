@@ -10,6 +10,7 @@ import {
   Settings,
   FileTextIcon,
   CalendarIcon,
+  VideoIcon,
 } from 'lucide-react';
 
 import {
@@ -123,12 +124,11 @@ function getMenuGroups(t: TranslationFunction): MenuGroup[] {
           url: '/dashboard/grid',
           icon: GridIcon,
         },
-        // TODO: 视频转录功能暂时隐藏，待功能完善后重新启用
-        // {
-        //   title: t('sidebar.menu.videoTranscribe'),
-        //   url: '/dashboard/video-transcribe',
-        //   icon: VideoIcon,
-        // },
+        {
+          title: t('sidebar.menu.videoTranscribe'),
+          url: '/dashboard/video-transcribe',
+          icon: VideoIcon,
+        },
       ],
     },
     {
@@ -136,7 +136,7 @@ function getMenuGroups(t: TranslationFunction): MenuGroup[] {
       items: [
         {
           title: 'MultiGet (Beta)',
-          url: 'https://docs.multipost.app/docs/user-guide/multiget',
+          url: '/docs/user-guide/multiget',
           icon: ListIcon,
           isExternal: true,
         },
@@ -150,7 +150,7 @@ function getFooterItems(t: TranslationFunction): MenuItem[] {
   return [
     {
       title: t('sidebar.menu.docs'),
-      url: 'https://docs.multipost.app',
+      url: '/docs',
       icon: BookIcon,
       isExternal: true,
     },

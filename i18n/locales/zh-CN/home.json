@@ -1,4 +1,10 @@
 {
+  "announcement": {
+    "videoTranscribe": {
+      "text": "新功能上线：视频文案提取 - 一键提取抖音、TikTok 视频文案",
+      "cta": "立即体验"
+    }
+  },
   "footer": {
     "slogan": "简化你的社交媒体工作流程",
     "copyright": "© 2024 LEAPERone Inc. 保留所有权利",

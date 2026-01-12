@@ -14,6 +14,7 @@ import {
   PuzzleIcon,
   SparklesIcon,
   BookOpenIcon,
+  VideoIcon,
 } from 'lucide-react';
 import {
   LiquidGlassMotionCard,
@@ -96,14 +97,13 @@ export default function DashboardPage() {
       icon: <PaletteIcon className="size-10 text-pink-500 dark:text-pink-400 sm:size-14" />,
       iconColor: 'danger' as const,
     },
-    // TODO: 视频转录功能暂时隐藏，待功能完善后重新启用
-    // {
-    //   href: '/dashboard/video-transcribe',
-    //   title: t('welcome.videoTranscribe.title'),
-    //   description: t('welcome.videoTranscribe.description'),
-    //   icon: <VideoIcon className="size-10 text-amber-500 dark:text-amber-400 sm:size-14" />,
-    //   iconColor: 'warning' as const,
-    // },
+    {
+      href: '/dashboard/video-transcribe',
+      title: t('welcome.videoTranscribe.title'),
+      description: t('welcome.videoTranscribe.description'),
+      icon: <VideoIcon className="size-10 text-amber-500 dark:text-amber-400 sm:size-14" />,
+      iconColor: 'warning' as const,
+    },
   ];
 
   return (
@@ -167,7 +167,7 @@ export default function DashboardPage() {
             {/* Action Buttons */}
             <div className="flex flex-wrap items-center gap-3">
               <LiquidGlassButton
-                onClick={() => window.open('https://docs.multipost.app/docs/user-guide/contact-us', '_blank')}
+                onClick={() => window.open('/docs/user-guide/contact-us', '_blank')}
                 className="flex items-center gap-2">
                 <MessageSquareIcon className="size-4" />
                 <span className="hidden sm:inline">{t('welcome.contact_us')}</span>

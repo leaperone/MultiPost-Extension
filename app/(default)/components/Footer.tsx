@@ -22,7 +22,7 @@ export default function Footer() {
       { name: '2SOMEren', href: 'https://2some.ren' },
     ],
     support: [
-      { name: t('footer.navigation.support.documentation'), href: 'https://docs.multipost.app' },
+      { name: t('footer.navigation.support.documentation'), href: '/docs' },
       { name: t('footer.navigation.support.status'), href: 'https://monitor.leaper.one' },
     ],
     contact: [
