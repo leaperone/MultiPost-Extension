@@ -18,9 +18,10 @@ import { motion, HTMLMotionProps, useReducedMotion } from 'framer-motion';
 // Base glass styles
 const glassBaseStyles = cn(
   'backdrop-blur-xl backdrop-saturate-150',
-  'border border-white/20 dark:border-white/10',
-  'shadow-[0_8px_32px_rgba(0,0,0,0.08),inset_0_1px_0_rgba(255,255,255,0.4)]',
-  'dark:shadow-[0_8px_32px_rgba(0,0,0,0.3),inset_0_1px_0_rgba(255,255,255,0.1)]',
+  'bg-white/60 dark:bg-white/10',
+  'border border-white/50 dark:border-white/20',
+  'shadow-[0_8px_32px_rgba(0,0,0,0.06),inset_0_1px_0_rgba(255,255,255,0.6)]',
+  'dark:shadow-[0_8px_32px_rgba(0,0,0,0.2),inset_0_1px_0_rgba(255,255,255,0.1)]',
 );
 
 // ============================================
@@ -36,9 +37,9 @@ interface LiquidGlassCardProps extends React.HTMLAttributes<HTMLDivElement> {
 const LiquidGlassCard = React.forwardRef<HTMLDivElement, LiquidGlassCardProps>(
   ({ className, variant = 'default', interactive = false, as: Component = 'div', children, ...props }, ref) => {
     const variantStyles = {
-      default: 'bg-white/15 dark:bg-black/30',
-      elevated: 'bg-white/20 dark:bg-black/40 shadow-xl',
-      flat: 'bg-white/10 dark:bg-black/20 shadow-none',
+      default: '',
+      elevated: 'shadow-xl',
+      flat: 'shadow-none bg-white/40 dark:bg-white/5',
     };
 
     return (
@@ -198,9 +199,9 @@ interface LiquidGlassMotionCardProps extends HTMLMotionProps<'div'> {
 const LiquidGlassMotionCard = React.forwardRef<HTMLDivElement, LiquidGlassMotionCardProps>(
   ({ className, variant = 'default', interactive = true, children, ...props }, ref) => {
     const variantStyles = {
-      default: 'bg-white/15 dark:bg-black/30',
-      elevated: 'bg-white/20 dark:bg-black/40',
-      flat: 'bg-white/10 dark:bg-black/20',
+      default: '',
+      elevated: 'shadow-xl',
+      flat: 'shadow-none bg-white/40 dark:bg-white/5',
     };
 
     return (

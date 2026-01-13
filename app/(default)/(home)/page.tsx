@@ -1,5 +1,5 @@
 import { Button, Link, Image } from '@heroui/react';
-import { Sparkles, Box, Settings, Send, SendIcon, FileTypeIcon, CheckCircle, GlobeIcon, SearchIcon, Share2Icon, VideoIcon } from 'lucide-react';
+import { Sparkles, Box, Settings, Send, CheckCircle, Share2Icon, VideoIcon } from 'lucide-react';
 import { Icon } from '@iconify/react';
 import { cn } from '@/lib/utils';
 import { BackgroundLines } from '@/components/background-lines';
@@ -223,8 +223,6 @@ export default async function HomePage() {
 
   // 统一数据获取
   const multiPostFeatures = t('multiPost.features', { returnObjects: true }) as FeatureItem[];
-  const webreaderFeatures = t('draftTools.webreader.features', { returnObjects: true }) as string[];
-  const searchFeatures = t('draftTools.search.features', { returnObjects: true }) as string[];
   const socialMediaAPIFeatures = t('draftTools.socialMedia.features', { returnObjects: true }) as string[];
   const videoTranscribeFeatures = t('draftTools.videoTranscribe.features', { returnObjects: true }) as string[];
 
@@ -274,25 +272,6 @@ export default async function HomePage() {
     ],
   };
 
-  // 统一功能点数组
-  const unifiedFeatures = [
-    {
-      icon: <FileTypeIcon className="size-5 text-primary" />,
-      title: multiPostFeatures[0]?.title,
-      description: multiPostFeatures[0]?.description,
-    },
-    {
-      icon: <SendIcon className="size-5 text-primary" />,
-      title: multiPostFeatures[2]?.title,
-      description: multiPostFeatures[2]?.description,
-    },
-    {
-      icon: <Sparkles className="size-5 text-primary" />,
-      title: multiPostFeatures[1]?.title,
-      description: multiPostFeatures[1]?.description,
-    },
-  ];
-
   return (
     <>
       {/* JSON-LD 结构化数据 */}
@@ -300,6 +279,9 @@ export default async function HomePage() {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
+
+      {/* 统一固定背景 */}
+      <div className="fixed inset-0 -z-10 bg-gradient-to-br from-blue-50 via-white to-indigo-50 dark:from-gray-950 dark:via-background dark:to-slate-950" />
 
       <SocialShareNotifications />
       <div className="relative w-full">
@@ -313,15 +295,8 @@ export default async function HomePage() {
         />
       </div>
 
-      {/* MultiPost Bento Grid Section - Liquid Glass */}
+      {/* 核心功能展示 Section */}
       <section className="relative z-10 overflow-hidden py-24">
-        {/* Glass background with gradient */}
-        <div className="absolute inset-0 bg-gradient-to-br from-blue-100 via-white to-purple-100 dark:from-blue-950 dark:via-background dark:to-purple-950" />
-        {/* Decorative orbs */}
-        <div className="pointer-events-none absolute inset-0 overflow-hidden">
-          <div className="absolute -left-32 top-1/4 size-96 rounded-full bg-blue-400/30 blur-3xl dark:bg-blue-500/20" />
-          <div className="absolute -right-32 bottom-1/4 size-96 rounded-full bg-purple-400/30 blur-3xl dark:bg-purple-500/20" />
-        </div>
         <div className="container relative z-10 mx-auto px-4">
           <div className="mx-auto mb-16 max-w-3xl text-center">
             <span className={cn(glassBaseStyles, 'mb-3 inline-block rounded-full px-4 py-1.5 text-sm font-medium text-blue-600 dark:text-blue-300')}>
@@ -332,260 +307,134 @@ export default async function HomePage() {
             </h2>
             <p className="mx-auto max-w-2xl text-xl text-foreground/80">{t('multiPost.featuresDesc')}</p>
           </div>
-          <ul className="grid grid-cols-1 grid-rows-none gap-4 md:grid-cols-12 md:grid-rows-3 lg:gap-4 xl:max-h-[34rem] xl:grid-rows-2">
-            {/* Card 1: Multiple Content Formats */}
-            <BentoGridItem
-              area="md:[grid-area:1/1/2/7] xl:[grid-area:1/1/2/5]"
-              icon={<Box className="size-5 text-blue-500 dark:text-blue-300" />}
-              title={multiPostFeatures[0]?.title}
-              description={multiPostFeatures[0]?.description}
-            />
-            {/* Card 2: Platform-Specific Optimization */}
-            <BentoGridItem
-              area="md:[grid-area:1/7/2/13] xl:[grid-area:2/1/3/5]"
-              icon={<Settings className="size-5 text-blue-500 dark:text-blue-300" />}
-              title={multiPostFeatures[1]?.title}
-              description={multiPostFeatures[1]?.description}
-            />
-            {/* Card 3: One-Click Publishing */}
-            <BentoGridItem
-              area="md:[grid-area:2/1/3/7] xl:[grid-area:1/5/3/8]"
-              icon={<Send className="size-5 text-blue-500 dark:text-blue-300" />}
-              title={multiPostFeatures[2]?.title}
-              description={multiPostFeatures[2]?.description}
-            />
-            {/* Card 4: Web Content Extraction */}
-            <BentoGridItem
-              area="md:[grid-area:2/7/3/13] xl:[grid-area:1/8/2/13]"
-              icon={<GlobeIcon className="size-5 text-blue-500 dark:text-blue-300" />}
-              title={t('draftTools.webreader.title')}
-              description={(t('draftTools.webreader.features', { returnObjects: true }) as string[])[0]}
-            />
-            {/* Card 5: Search Engine Writing Assistant */}
-            <BentoGridItem
-              area="md:[grid-area:3/1/4/13] xl:[grid-area:2/8/3/13]"
-              icon={<SearchIcon className="size-5 text-blue-500 dark:text-blue-300" />}
-              title={t('draftTools.search.title')}
-              description={(t('draftTools.search.features', { returnObjects: true }) as string[])[0]}
-            />
-          </ul>
+
+          {/* 2x2 功能卡片网格 */}
+          <div className="mx-auto grid max-w-5xl gap-6 md:grid-cols-2">
+            <LiquidGlassMotionCard className="p-6">
+              <div className="flex items-start gap-4">
+                <LiquidGlassIconContainer size="sm" color="primary">
+                  <Box className="size-5 text-blue-500 dark:text-blue-400" />
+                </LiquidGlassIconContainer>
+                <div>
+                  <h3 className="mb-2 text-xl font-semibold text-foreground/90">{multiPostFeatures[0]?.title}</h3>
+                  <p className="text-foreground/70">{multiPostFeatures[0]?.description}</p>
+                </div>
+              </div>
+            </LiquidGlassMotionCard>
+
+            <LiquidGlassMotionCard className="p-6">
+              <div className="flex items-start gap-4">
+                <LiquidGlassIconContainer size="sm" color="primary">
+                  <Settings className="size-5 text-blue-500 dark:text-blue-400" />
+                </LiquidGlassIconContainer>
+                <div>
+                  <h3 className="mb-2 text-xl font-semibold text-foreground/90">{multiPostFeatures[1]?.title}</h3>
+                  <p className="text-foreground/70">{multiPostFeatures[1]?.description}</p>
+                </div>
+              </div>
+            </LiquidGlassMotionCard>
+
+            <LiquidGlassMotionCard className="p-6">
+              <div className="flex items-start gap-4">
+                <LiquidGlassIconContainer size="sm" color="primary">
+                  <Send className="size-5 text-blue-500 dark:text-blue-400" />
+                </LiquidGlassIconContainer>
+                <div>
+                  <h3 className="mb-2 text-xl font-semibold text-foreground/90">{multiPostFeatures[2]?.title}</h3>
+                  <p className="text-foreground/70">{multiPostFeatures[2]?.description}</p>
+                </div>
+              </div>
+            </LiquidGlassMotionCard>
+
+            <LiquidGlassMotionCard className="p-6">
+              <div className="flex items-start gap-4">
+                <LiquidGlassIconContainer size="sm" color="primary">
+                  <Share2Icon className="size-5 text-blue-500 dark:text-blue-400" />
+                </LiquidGlassIconContainer>
+                <div>
+                  <h3 className="mb-2 text-xl font-semibold text-foreground/90">{t('draftTools.socialMedia.title')}</h3>
+                  <p className="text-foreground/70">{socialMediaAPIFeatures[0]}</p>
+                </div>
+              </div>
+            </LiquidGlassMotionCard>
+          </div>
+
+          {/* CTA 按钮 */}
+          <div className="mt-12 flex justify-center">
+            <Link href="/extension">
+              <Button
+                size="lg"
+                color="primary"
+                className="px-10 py-7 text-lg font-medium">
+                {t('multiPost.cta')}
+              </Button>
+            </Link>
+          </div>
         </div>
       </section>
 
-      {/* 融合多平台发布功能和演示 Section - Liquid Glass */}
+      {/* 产品演示 Section */}
       <section className="relative py-16">
-        {/* Glass background */}
-        <div className="absolute inset-0 bg-gradient-to-br from-indigo-50 via-white to-blue-50 dark:from-indigo-950 dark:via-background dark:to-blue-950" />
-        {/* Glass background decorations */}
-        <div className="pointer-events-none absolute inset-0 overflow-hidden">
-          <div className="absolute -right-32 -top-32 size-96 rounded-full bg-blue-400/30 blur-3xl dark:bg-blue-500/20" />
-          <div className="absolute -bottom-32 -left-32 size-96 rounded-full bg-indigo-400/30 blur-3xl dark:bg-indigo-500/20" />
+        <div className="container relative z-10 mx-auto px-4">
+          <div className="mx-auto max-w-4xl">
+            <LiquidGlassCard className="overflow-hidden p-3">
+              <Image
+                src="https://2someone-web-static.s3.bitiful.net/2025/05/ea3bb50afe710d57a968c1ac5f4d055f.png"
+                alt={t('images.multiPlatformPublishing')}
+                className="rounded-2xl"
+              />
+            </LiquidGlassCard>
+          </div>
         </div>
+      </section>
 
+      {/* 视频转录功能 Section */}
+      <section className="relative overflow-hidden py-24">
         <div className="container relative z-10 mx-auto px-4">
           <div className="mx-auto mb-12 max-w-3xl text-center">
-            <span className={cn(glassBaseStyles, 'mb-3 inline-block rounded-full px-4 py-1.5 text-sm font-medium text-blue-600 dark:text-blue-300')}>
-              {t('sectionLabels.powerfulSimple')}
-            </span>
-            <h2 className="mb-4 bg-gradient-to-r from-blue-500 to-indigo-500 bg-clip-text text-4xl font-bold text-transparent md:text-5xl">
-              {t('multiPost.title')}
-            </h2>
-          </div>
-
-          <div className="grid items-center gap-8 md:grid-cols-2">
-            <div>
-              <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-2">
-                {unifiedFeatures.map((feature, i) => (
-                  <LiquidGlassCard
-                    key={i}
-                    className="flex items-start gap-4 p-4"
-                    interactive>
-                    <LiquidGlassIconContainer size="sm" color="primary">
-                      {feature.icon}
-                    </LiquidGlassIconContainer>
-                    <div>
-                      <h4 className="text-lg font-semibold text-foreground/90">
-                        {feature.title}
-                      </h4>
-                      {feature.description && <p className="text-base text-foreground/60">{feature.description}</p>}
-                    </div>
-                  </LiquidGlassCard>
-                ))}
-              </div>
-
-              <div className="mt-10 flex flex-col items-center gap-4 sm:flex-row sm:justify-center">
-                <Link href="/extension">
-                  <Button
-                    className={cn(glassBaseStyles, 'rounded-2xl bg-gradient-to-r from-blue-500/80 to-indigo-500/80 px-10 py-4 text-base font-medium text-white hover:from-blue-500/90 hover:to-indigo-500/90')}
-                    size="lg">
-                    {t('multiPost.cta')}
-                  </Button>
-                </Link>
-              </div>
-            </div>
-            <div className="relative mt-8 md:mt-0">
-              <LiquidGlassCard className="relative z-10 aspect-video overflow-hidden p-2">
-                <Image
-                  src="https://2someone-web-static.s3.bitiful.net/2025/05/ea3bb50afe710d57a968c1ac5f4d055f.png"
-                  alt={t('images.multiPlatformPublishing')}
-                  className="rounded-2xl"
-                />
-              </LiquidGlassCard>
-              {/* Decorative glass shapes */}
-              <div className={cn(glassBaseStyles, 'absolute -bottom-6 -right-6 -z-0 size-32 rounded-2xl')} />
-              <div className={cn(glassBaseStyles, 'absolute -left-6 -top-6 -z-0 size-32 rounded-2xl')} />
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* 草稿工具功能 Section - Liquid Glass */}
-      <section className="relative overflow-hidden py-24">
-        {/* Glass background */}
-        <div className="absolute inset-0 bg-gradient-to-br from-purple-100 via-white to-amber-100 dark:from-purple-950 dark:via-background dark:to-amber-950" />
-        {/* 背景装饰 orbs */}
-        <div className="pointer-events-none absolute inset-0 overflow-hidden">
-          <div className="absolute left-0 top-1/4 size-96 rounded-full bg-purple-400/30 blur-3xl dark:bg-purple-500/20" />
-          <div className="absolute bottom-1/4 right-0 size-96 rounded-full bg-amber-400/30 blur-3xl dark:bg-amber-500/20" />
-        </div>
-
-        <div className="container relative z-10 mx-auto px-4">
-          <div className="mx-auto mb-16 max-w-3xl text-center">
-            <span className={cn(glassBaseStyles, 'mb-2 inline-block rounded-full px-4 py-1.5 text-sm font-medium text-purple-600 dark:text-purple-300')}>
+            <span className={cn(glassBaseStyles, 'mb-3 inline-block rounded-full px-4 py-1.5 text-sm font-medium text-rose-600 dark:text-rose-300')}>
               {t('sectionLabels.powerfulTools')}
             </span>
-            <h2 className="mb-6 bg-gradient-to-r from-purple-500 to-blue-500 bg-clip-text text-4xl font-bold text-transparent md:text-5xl">
-              {t('draftTools.title')}
+            <h2 className="mb-6 bg-gradient-to-r from-rose-500 to-orange-500 bg-clip-text text-4xl font-bold text-transparent md:text-5xl">
+              {t('draftTools.videoTranscribe.title')}
             </h2>
-            <p className="mx-auto max-w-2xl text-xl text-foreground/80">{t('draftTools.subtitle')}</p>
+            <p className="mx-auto max-w-2xl text-xl text-foreground/80">{t('draftTools.videoTranscribe.description')}</p>
           </div>
 
-          <p className="mx-auto mb-12 max-w-3xl text-center text-lg leading-relaxed text-foreground/80">
-            {t('draftTools.description')}
-          </p>
+          {/* 视频转录功能特性 - 横向排列 */}
+          <div className="mx-auto grid max-w-4xl gap-6 md:grid-cols-3">
+            {videoTranscribeFeatures.map((feature, i) => (
+              <LiquidGlassCard key={i} className="p-5 text-center">
+                <CheckCircle className="mx-auto mb-3 size-8 text-rose-500" />
+                <p className="font-medium text-foreground/80">{feature}</p>
+              </LiquidGlassCard>
+            ))}
+          </div>
 
-          <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
-            {/* Webreader - Liquid Glass */}
-            <LiquidGlassMotionCard className="group overflow-hidden">
-              <div className="h-2 bg-gradient-to-r from-blue-400 to-teal-400" />
-              <div className="p-6">
-                <div className="mb-4 flex items-center gap-3">
-                  <LiquidGlassIconContainer size="sm" color="primary">
-                    <GlobeIcon className="size-5 text-blue-500 dark:text-blue-400" />
-                  </LiquidGlassIconContainer>
-                  <h3 className="text-lg font-semibold text-blue-500 dark:text-blue-400">{t('draftTools.webreader.title')}</h3>
-                </div>
-                <p className="mb-4 text-base leading-relaxed text-foreground/70">
-                  {t('draftTools.webreader.description')}
-                </p>
-                <ul className="space-y-2">
-                  {webreaderFeatures.map((feature, i) => (
-                    <li
-                      key={i}
-                      className="flex items-center gap-2 rounded-lg py-1.5 text-sm text-foreground/80">
-                      <CheckCircle className="size-4 shrink-0 text-blue-500" />
-                      <span>{feature}</span>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            </LiquidGlassMotionCard>
-
-            {/* Search Engine - Liquid Glass */}
-            <LiquidGlassMotionCard className="group overflow-hidden">
-              <div className="h-2 bg-gradient-to-r from-amber-400 to-orange-400" />
-              <div className="p-6">
-                <div className="mb-4 flex items-center gap-3">
-                  <LiquidGlassIconContainer size="sm" color="warning">
-                    <SearchIcon className="size-5 text-amber-500 dark:text-amber-400" />
-                  </LiquidGlassIconContainer>
-                  <h3 className="text-lg font-semibold text-amber-500 dark:text-amber-400">{t('draftTools.search.title')}</h3>
-                </div>
-                <p className="mb-4 text-base leading-relaxed text-foreground/70">{t('draftTools.search.description')}</p>
-                <ul className="space-y-2">
-                  {searchFeatures.map((feature, i) => (
-                    <li
-                      key={i}
-                      className="flex items-center gap-2 rounded-lg py-1.5 text-sm text-foreground/80">
-                      <CheckCircle className="size-4 shrink-0 text-amber-500" />
-                      <span>{feature}</span>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            </LiquidGlassMotionCard>
-
-            {/* Social Media API - Liquid Glass */}
-            <LiquidGlassMotionCard className="group overflow-hidden">
-              <div className="h-2 bg-gradient-to-r from-purple-400 to-pink-400" />
-              <div className="p-6">
-                <div className="mb-4 flex items-center gap-3">
-                  <LiquidGlassIconContainer size="sm" color="secondary">
-                    <Share2Icon className="size-5 text-purple-500 dark:text-purple-400" />
-                  </LiquidGlassIconContainer>
-                  <h3 className="text-lg font-semibold text-purple-500 dark:text-purple-400">{t('draftTools.socialMedia.title')}</h3>
-                </div>
-                <p className="mb-4 text-base leading-relaxed text-foreground/70">
-                  {t('draftTools.socialMedia.description')}
-                </p>
-                <ul className="space-y-2">
-                  {socialMediaAPIFeatures.map((feature, i) => (
-                    <li
-                      key={i}
-                      className="flex items-center gap-2 rounded-lg py-1.5 text-sm text-foreground/80">
-                      <CheckCircle className="size-4 shrink-0 text-purple-500" />
-                      <span>{feature}</span>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            </LiquidGlassMotionCard>
-
-            {/* Video Transcription - Liquid Glass */}
-            <LiquidGlassMotionCard className="group overflow-hidden">
-              <div className="h-2 bg-gradient-to-r from-rose-400 to-red-400" />
-              <div className="p-6">
-                <div className="mb-4 flex items-center gap-3">
-                  <LiquidGlassIconContainer size="sm" color="danger">
-                    <VideoIcon className="size-5 text-rose-500 dark:text-rose-400" />
-                  </LiquidGlassIconContainer>
-                  <h3 className="text-lg font-semibold text-rose-500 dark:text-rose-400">{t('draftTools.videoTranscribe.title')}</h3>
-                </div>
-                <p className="mb-4 text-base leading-relaxed text-foreground/70">
-                  {t('draftTools.videoTranscribe.description')}
-                </p>
-                <ul className="space-y-2">
-                  {videoTranscribeFeatures.map((feature, i) => (
-                    <li
-                      key={i}
-                      className="flex items-center gap-2 rounded-lg py-1.5 text-sm text-foreground/80">
-                      <CheckCircle className="size-4 shrink-0 text-rose-500" />
-                      <span>{feature}</span>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            </LiquidGlassMotionCard>
+          {/* CTA */}
+          <div className="mt-12 flex justify-center">
+            <Link href="/dashboard/video-transcribe">
+              <Button
+                size="lg"
+                variant="bordered"
+                className="px-8 py-6 text-base font-medium">
+                {t('announcement.videoTranscribe.cta')}
+              </Button>
+            </Link>
           </div>
         </div>
       </section>
 
       {/* CTA Section - Liquid Glass on gradient */}
-      <section className="relative overflow-hidden bg-gradient-to-r from-primary via-blue-500 to-secondary py-24 text-white">
-        {/* Glass overlay for depth */}
-        <div className="pointer-events-none absolute inset-0 overflow-hidden">
-          <div className="absolute -left-32 -top-32 size-96 rounded-full bg-white/10 blur-3xl" />
-          <div className="absolute -bottom-32 -right-32 size-96 rounded-full bg-white/10 blur-3xl" />
-        </div>
+      <section className="relative overflow-hidden py-24">
         <div className="container relative z-10 mx-auto px-4">
           <div className="mx-auto max-w-4xl text-center">
-            <h2 className="mb-8 text-3xl font-bold sm:text-4xl md:text-5xl">{t('finalCta.title')}</h2>
-            <p className="mx-auto mb-10 max-w-2xl text-base text-white/90 sm:text-lg md:text-xl">{t('finalCta.description')}</p>
+            <h2 className="mb-8 bg-gradient-to-r from-blue-500 to-indigo-500 bg-clip-text text-3xl font-bold text-transparent sm:text-4xl md:text-5xl">{t('finalCta.title')}</h2>
+            <p className="mx-auto mb-10 max-w-2xl text-base text-foreground/80 sm:text-lg md:text-xl">{t('finalCta.description')}</p>
             {/* GitHub card - Liquid Glass */}
             <div className={cn(
               glassBaseStyles,
-              'mx-auto mb-10 max-w-2xl rounded-3xl p-8',
-              'bg-white/15 border-white/20'
+              'mx-auto mb-10 max-w-2xl rounded-3xl p-8'
             )}>
               <div className="mb-4 flex items-center justify-center">
                 <Icon
@@ -614,13 +463,14 @@ export default async function HomePage() {
                   className="h-5"
                 />
               </div>
-              <p className="mb-6 text-white/80">{t('openSource.description')}</p>
+              <p className="mb-6 text-foreground/70">{t('openSource.description')}</p>
             </div>
             <div className="flex flex-col justify-center gap-6 sm:flex-row">
               <Link href="/extension">
                 <Button
                   size="lg"
-                  className={cn(glassBaseStyles, 'rounded-2xl bg-white/90 px-10 py-7 text-lg font-medium text-primary hover:bg-white border-white/50')}>
+                  color="primary"
+                  className="rounded-2xl px-10 py-7 text-lg font-medium">
                   {t('finalCta.install')}
                 </Button>
               </Link>
@@ -629,7 +479,8 @@ export default async function HomePage() {
                 target="_blank">
                 <Button
                   size="lg"
-                  className={cn(glassBaseStyles, 'rounded-2xl bg-white/10 px-10 py-7 text-lg font-medium text-white hover:bg-white/20 border-white/30')}
+                  variant="bordered"
+                  className="rounded-2xl px-10 py-7 text-lg font-medium"
                   startContent={
                     <Icon
                       icon="mdi:github"
@@ -667,32 +518,3 @@ export default async function HomePage() {
   );
 }
 
-// BentoGridItem 组件定义 - Liquid Glass 风格
-interface BentoGridItemProps {
-  area: string;
-  icon: React.ReactNode;
-  title: string;
-  description: React.ReactNode;
-}
-
-function BentoGridItem({ area, icon, title, description }: BentoGridItemProps) {
-  return (
-    <li className={`min-h-56 list-none ${area}`}>
-      <LiquidGlassMotionCard className="h-full p-6 md:p-8">
-        <div className="flex h-full flex-col justify-between gap-4">
-          <LiquidGlassIconContainer size="sm" color="primary">
-            {icon}
-          </LiquidGlassIconContainer>
-          <div className="space-y-3">
-            <h3 className="text-balance pt-0.5 text-xl font-semibold text-foreground/90 md:text-2xl">
-              {title}
-            </h3>
-            <p className="text-sm text-foreground/60 md:text-base">
-              {description}
-            </p>
-          </div>
-        </div>
-      </LiquidGlassMotionCard>
-    </li>
-  );
-}
