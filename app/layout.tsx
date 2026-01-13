@@ -114,6 +114,13 @@ export default async function RootLayout({
         </PostHogAnalyticsProvider>
       </body>
       {process.env.NODE_ENV === 'production' && <GoogleAnalytics gaId={'G-6JJ7JNT2GY'} />}
+      {process.env.NODE_ENV === 'production' && (
+        <Script
+          src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-2175078350453165"
+          crossOrigin="anonymous"
+          strategy="afterInteractive"
+        />
+      )}
       {process.env.NODE_ENV === 'development' && (
         <Script
           src="//unpkg.com/react-grab/dist/index.global.js"
