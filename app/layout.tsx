@@ -91,6 +91,9 @@ export const metadata = {
     ],
     apple: [{ url: '/apple-icon.png', sizes: '180x180', type: 'image/png' }],
   },
+  other: {
+    'google-adsense-account': 'ca-pub-2175078350453165',
+  },
 };
 
 export default async function RootLayout({
