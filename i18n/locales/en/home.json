@@ -183,5 +183,10 @@
   },
   "badges": {
     "magicBoxFeatured": "This project is featured on MagicBox.tools"
+  },
+  "socialProof": {
+    "activeUsers": "Active Users",
+    "contentPublished": "Content Published",
+    "satisfaction": "Satisfaction"
   }
 }

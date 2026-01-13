@@ -1,6 +1,7 @@
 'use client';
 
 import { Users, FileText, TrendingUp } from 'lucide-react';
+import { useTranslation } from '@/i18n/client';
 
 interface StatItemProps {
   icon: React.ReactNode;
@@ -25,23 +26,25 @@ function StatItem({ icon, value, label, trend }: StatItemProps) {
 }
 
 export function SocialProof() {
+  const { t } = useTranslation('home');
+
   return (
     <div className="mt-8 grid grid-cols-2 gap-4 md:grid-cols-3">
       <StatItem
         icon={<Users className="size-5 text-blue-500" />}
         value="5k+"
-        label="活跃用户"
+        label={t('socialProof.activeUsers')}
         trend="↑23%"
       />
       <StatItem
         icon={<FileText className="size-5 text-green-500" />}
         value="50k+"
-        label="内容发布"
+        label={t('socialProof.contentPublished')}
       />
       <StatItem
         icon={<TrendingUp className="size-5 text-orange-500" />}
         value="98%"
-        label="满意度"
+        label={t('socialProof.satisfaction')}
       />
     </div>
   );

@@ -174,5 +174,10 @@
   },
   "badges": {
     "magicBoxFeatured": "本项目在 MagicBox.tools 上展示"
+  },
+  "socialProof": {
+    "activeUsers": "活跃用户",
+    "contentPublished": "内容发布",
+    "satisfaction": "满意度"
   }
 }
