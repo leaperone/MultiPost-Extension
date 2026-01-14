@@ -42,8 +42,6 @@ This extension solves the pain points of content creators when publishing across
 - [Discord](https://discord.gg/GNsCX9zFwQ)
 - [点击加入腾讯频道【MultiPost】](https://pd.qq.com/s/ajj47bgjb) ，频道号：multipostapp
 - Email: [support@leaper.one](mailto:support@leaper.one)
-- Twitter: [@harry_is_fish](https://x.com/harry_is_fish)
-- [Bento.me](https://bento.me/harryisfish)
 - [GitHub Issues](https://github.com/leaperone/MultiPost-Extension/issues)
 - 腾讯频道
   - 微信扫一扫
