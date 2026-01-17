@@ -4,4 +4,4 @@
  */
 
 export const POSTHOG_KEY = "phc_szGHmzMPL2vkmxOkrB120T4pSqq5WJWZdALmf1KCzdi";
-export const POSTHOG_HOST = "https://us.i.posthog.com";
+export const POSTHOG_HOST = "https://ph.2some.ren";
