@@ -1,6 +1,6 @@
 {
   "name": "multipost",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "private": true,
   "scripts": {
     "preinstall": "npx only-allow pnpm",
@@ -11,10 +11,6 @@
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "prepare": "husky",
-    "release": "standard-version -t 'v-'",
-    "release:100": "pnpm run release -- --release-as major",
-    "release:010": "pnpm run release -- --release-as minor",
-    "release:001": "pnpm run release -- --release-as patch",
     "worker": "node worker/dist/main.js",
     "build:worker": "tsup",
     "dev:worker": "tsup --watch"
