@@ -235,18 +235,21 @@ export async function VideoKuaishou(data: SyncData) {
         }
       }
     }
-    // 等待内容更新
-    await new Promise((resolve) => setTimeout(resolve, 5000));
+  }
 
-    // 发布按钮逻辑
-    const divElements = document.querySelectorAll("div");
-    const publishButton = Array.from(divElements).find((el) => el.textContent === "发布") as HTMLElement;
+  // 等待内容更新
+  await new Promise((resolve) => setTimeout(resolve, 5000));
 
-    if (publishButton) {
-      console.log("找到发布按钮，准备点击");
+  // 发布按钮逻辑 - 只有在 autoPublish 为 true 时才自动点击发布
+  const divElements = document.querySelectorAll("div");
+  const publishButton = Array.from(divElements).find((el) => el.textContent === "发布") as HTMLElement;
+
+  if (publishButton) {
+    if (data.isAutoPublish) {
+      console.log("发布按钮已点击");
       publishButton.click();
-    } else {
-      console.error('未找到"发布"按钮');
     }
+  } else {
+    console.log('未找到"发布"按钮');
   }
 }
