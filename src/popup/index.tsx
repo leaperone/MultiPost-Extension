@@ -13,7 +13,7 @@ export function getShadowContainer() {
 
 export const getShadowHostId = () => "test-shadow";
 
-const BASE_URL = process.env.NODE_ENV === "development" ? "http://localhost:3000" : "https://multipost.app";
+const BASE_URL = "https://multipost.app";
 
 export const getStyle = () => {
   const style = document.createElement("style");

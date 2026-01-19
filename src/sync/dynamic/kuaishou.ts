@@ -2,7 +2,7 @@ import type { DynamicData, SyncData } from "../common";
 
 /**
  * 快手图文动态发布函数
- * @description 优先发布图文内容到快手平台
+ * @description 发布图文内容到快手平台
  * @param {SyncData} data - 同步数据，包含标题、内容、图片等信息
  */
 export async function DynamicKuaishou(data: SyncData) {
@@ -45,17 +45,13 @@ export async function DynamicKuaishou(data: SyncData) {
 
   // 模拟拖拽事件的函数
   function simulateDragAndDrop(element: HTMLElement, dataTransfer: DataTransfer) {
-    const events = [
-      new DragEvent("dragenter", { bubbles: true }),
-      new DragEvent("dragover", { bubbles: true }),
-      new DragEvent("drop", { bubbles: true, dataTransfer: dataTransfer }),
-    ];
-    events.forEach((event) => {
-      Object.defineProperty(event, "preventDefault", { value: () => {} });
-    });
-    events.forEach((event) => {
-      element.dispatchEvent(event);
-    });
+    const dragenterEvent = new DragEvent("dragenter", { bubbles: true });
+    const dragoverEvent = new DragEvent("dragover", { bubbles: true });
+    const dropEvent = new DragEvent("drop", { bubbles: true, dataTransfer: dataTransfer });
+
+    element.dispatchEvent(dragenterEvent);
+    element.dispatchEvent(dragoverEvent);
+    element.dispatchEvent(dropEvent);
   }
 
   // 等待文件输入元素
@@ -77,9 +73,6 @@ export async function DynamicKuaishou(data: SyncData) {
     console.log("try upload file", fileInfo);
     try {
       const response = await fetch(fileInfo.url);
-      if (!response.ok) {
-        throw new Error(`HTTP 错误! 状态: ${response.status}`);
-      }
       const arrayBuffer = await response.arrayBuffer();
       const file = new File([arrayBuffer], fileInfo.name, { type: fileInfo.type });
       dataTransfer.items.add(file);
