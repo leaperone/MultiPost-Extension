@@ -322,7 +322,7 @@ export default function LibraryModal({ onSelectImage, existingFiles = [], isOpen
               className="group relative aspect-square overflow-hidden"
               onPress={() => {
                 if (imageUrl) {
-                  fetch(imageUrl)
+                  fetch(`/api/proxy/image?url=${encodeURIComponent(imageUrl)}`)
                     .then((res) => res.blob())
                     .then(async (blob) => {
                       const file = new File([blob], 'image.png', { type: blob.type });

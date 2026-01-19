@@ -206,7 +206,7 @@ function GallerySection() {
   const handleDownload = async (url: string) => {
     try {
       toast.loading(t('gallery_page.download.loading'));
-      const response = await fetch(url);
+      const response = await fetch(`/api/proxy/image?url=${encodeURIComponent(url)}`);
       const blob = await response.blob();
       const downloadUrl = window.URL.createObjectURL(blob);
       const link = document.createElement('a');

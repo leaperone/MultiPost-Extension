@@ -133,7 +133,7 @@ export function ResultWaiter({ taskId, onError }: ResultWaiterProps) {
   const handleDownload = async (url: string) => {
     try {
       toast.loading('Downloading...');
-      const response = await fetch(url);
+      const response = await fetch(`/api/proxy/image?url=${encodeURIComponent(url)}`);
       const blob = await response.blob();
       const downloadUrl = window.URL.createObjectURL(blob);
       const link = document.createElement('a');
