@@ -1,43 +1,51 @@
 'use client';
 import { Tabs, Tab } from '@heroui/react';
 import { ImageIcon, PaletteIcon } from 'lucide-react';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
+import { useTranslation } from '@/i18n/client';
 
 export default function HeaderTabs() {
   const pathname = usePathname();
+  const router = useRouter();
+  const { t: tImages } = useTranslation('images');
+  const { t: tPoster } = useTranslation('poster');
   const baseUrl = '/dashboard/draw';
+
+  const handleSelectionChange = (key: React.Key) => {
+    router.push(key as string);
+  };
 
   return (
     <Tabs
       aria-label="Draw Options"
       color="primary"
-      variant="underlined"
+      variant="solid"
       selectedKey={pathname}
+      onSelectionChange={handleSelectionChange}
       classNames={{
-        tabList: 'gap-4 w-full relative rounded-xl p-2 bg-default-100',
-        cursor: 'bg-primary/20 shadow-md',
-        tab: 'max-w-fit px-4 h-10 hover:text-primary',
-        tabContent: 'group-data-[selected=true]:text-primary',
+        base: 'w-full',
+        tabList: 'w-full gap-2 p-1 bg-default-100 rounded-lg',
+        cursor: 'bg-background shadow-sm rounded-md',
+        tab: 'h-9 px-4',
+        tabContent: 'text-default-500 group-data-[selected=true]:text-foreground group-data-[selected=true]:font-medium',
       }}>
       <Tab
         key={`${baseUrl}/image`}
         title={
-          <div className="flex items-center space-x-2">
+          <div className="flex items-center gap-2">
             <ImageIcon className="size-4" />
-            <span>Image</span>
+            <span>{tImages('tab_title')}</span>
           </div>
         }
-        href={`${baseUrl}/image`}
       />
       <Tab
         key={`${baseUrl}/poster`}
         title={
-          <div className="flex items-center space-x-2">
+          <div className="flex items-center gap-2">
             <PaletteIcon className="size-4" />
-            <span>Poster</span>
+            <span>{tPoster('tab_title')}</span>
           </div>
         }
-        href={`${baseUrl}/poster`}
       />
     </Tabs>
   );

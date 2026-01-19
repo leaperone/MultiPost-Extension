@@ -127,12 +127,14 @@ function ImageGenerationSection() {
     <div className="container mx-auto px-4 py-6">
       <div className="mx-auto max-w-3xl">
         {!taskId && (
-          <div className="mt-8 rounded-lg border bg-white p-6 shadow-xs dark:border-gray-700 dark:bg-gray-900">
-            <GenerationForm
-              onSubmit={handleGenerate}
-              loading={loading}
-            />
-          </div>
+          <Card className="mx-auto w-full max-w-3xl">
+            <CardBody className="space-y-6">
+              <GenerationForm
+                onSubmit={handleGenerate}
+                loading={loading}
+              />
+            </CardBody>
+          </Card>
         )}
         {taskId && leaperOneId && (
           <div className="mx-auto w-full max-w-7xl space-y-4 px-6 py-8">

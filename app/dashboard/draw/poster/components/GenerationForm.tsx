@@ -16,7 +16,7 @@ import { ImageIcon } from 'lucide-react';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm, Controller } from 'react-hook-form';
 import { z } from 'zod';
-import { PosterGenerationSchema, ImageSize, Category } from '@/actions/draw/poster/types';
+import { PosterGenerationSchema, ImageSize, Category, SeedeTheme } from '@/actions/draw/poster/types';
 import { useTranslation } from '@/i18n/client';
 import { useEffect, useState } from 'react';
 import { getAvailableModels } from '@/actions/draw/poster';
@@ -65,6 +65,7 @@ export function GenerationForm({ onSubmit, loading, initialValues, extraPrompt }
       width: initialValues?.width || 1080,
       height: initialValues?.height || 1440,
       category: initialValues?.category || 'category.social_media_generator',
+      theme: initialValues?.theme || 'default',
     },
   });
 
@@ -111,55 +112,64 @@ export function GenerationForm({ onSubmit, loading, initialValues, extraPrompt }
     }
   };
 
+  const selectedCategory = form.watch('category');
+
   const handleCategoryChange = (category: string) => {
     form.setValue('category', category);
   };
 
   return (
-    <div className="space-y-4">
-      <div className="mb-4">
+    <div className="space-y-6">
+      {/* 类型选择 */}
+      <div>
+        <div className="mb-3 text-sm font-medium text-foreground">{t('generation_page.category')}</div>
         <div className="flex flex-wrap gap-2">
           {Category.map((item) => (
             <Button
               key={item.name}
-              variant={form.getValues('category') === item.name ? 'solid' : 'flat'}
-              color={form.getValues('category') === item.name ? 'primary' : 'default'}
-              className={form.getValues('category') === item.name ? 'font-medium' : ''}
+              size="sm"
+              variant={selectedCategory === item.name ? 'solid' : 'bordered'}
+              color={selectedCategory === item.name ? 'primary' : 'default'}
+              className={`transition-all ${selectedCategory === item.name ? 'font-medium shadow-sm' : 'border-default-200'}`}
               onPress={() => handleCategoryChange(item.name)}>
               {t(item.name)}
             </Button>
           ))}
         </div>
       </div>
-      {/* 提示词输入 */}
-      <Controller
-        name="prompt"
-        control={form.control}
-        render={({ field, fieldState }) => (
-          <Textarea
-            {...field}
-            isRequired
-            isClearable
-            label={'Prompt'}
-            minRows={5}
-            placeholder={t('generation_page.prompt_placeholder')}
-            disabled={loading}
-            isInvalid={!!fieldState.error}
-            errorMessage={fieldState.error?.message}
-          />
-        )}
-      />
 
-      {/* AI 优化按钮和结果展示（流式） */}
-      <div className="flex flex-col gap-2">
-        <div className="flex items-center gap-2">
+      {/* 提示词输入 */}
+      <div>
+        <Controller
+          name="prompt"
+          control={form.control}
+          render={({ field, fieldState }) => (
+            <Textarea
+              {...field}
+              isRequired
+              label={'Prompt'}
+              minRows={4}
+              placeholder={t('generation_page.prompt_placeholder')}
+              disabled={loading}
+              isInvalid={!!fieldState.error}
+              errorMessage={fieldState.error?.message}
+              classNames={{
+                inputWrapper: 'bg-default-50',
+              }}
+            />
+          )}
+        />
+
+        {/* AI 优化按钮和结果 */}
+        <div className="mt-2 flex flex-wrap items-center gap-2">
           <Button
-            color="secondary"
+            variant="flat"
             size="sm"
             isLoading={aiOptimizing}
             disabled={aiOptimizing || loading}
-            onPress={handleOptimizePrompt}>
-            {t('generation_page.ai_optimize_prompt')}
+            onPress={handleOptimizePrompt}
+            className="bg-default-100">
+            ✨ {t('generation_page.ai_optimize_prompt')}
           </Button>
           {optimizedPrompt && (
             <Button
@@ -171,138 +181,182 @@ export function GenerationForm({ onSubmit, loading, initialValues, extraPrompt }
             </Button>
           )}
         </div>
-        {/* AI 优化流式消息展示 */}
-        <div className="space-y-1 text-xs text-gray-700 dark:text-gray-200">
-          {(() => {
-            // 只保留最近 6 条消息
+        {aiMessages.length > 0 &&
+          (() => {
             const lastSix = aiMessages.slice(-6);
-            // 找到最后一条 AI 生成（assistant）的消息
             const lastAssistantMsg = [...lastSix].reverse().find((m) => m.role === 'assistant');
-            return lastAssistantMsg ? <div className="text-blue-600">{lastAssistantMsg.content}</div> : null;
+            return lastAssistantMsg ? (
+              <div className="mt-2 rounded-lg bg-default-100 p-3 text-sm text-foreground">
+                {lastAssistantMsg.content}
+              </div>
+            ) : null;
           })()}
-        </div>
       </div>
 
       {/* 生成参数设置 */}
-      <div className="flex flex-wrap justify-between gap-2">
-        <div className="flex w-[240px] items-end gap-2">
-          <Popover
-            placement="bottom"
-            isOpen={isPopoverOpen}
-            onOpenChange={setIsPopoverOpen}>
-            <PopoverTrigger>
-              <Button
-                size="lg"
-                variant="light"
-                className="mb-1 bg-default-100"
-                disabled={loading}>
-                <span className="text-sm">{`${form.getValues('width')} × ${form.getValues('height')}`}</span>
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent className="w-[280px] rounded-lg p-3 shadow-lg">
-              <div className="flex flex-col gap-3">
-                <Tabs
-                  aria-label={'size'}
-                  defaultSelectedKey={'social_media'}
-                  fullWidth
-                  size="sm"
-                  classNames={{
-                    tabList: 'w-full justify-start bg-default-50 p-0.5 rounded-md',
-                    tab: 'rounded-md data-[selected=true]:shadow-xs',
-                    panel: 'pt-3',
-                  }}>
-                  <Tab
-                    key="social_media"
-                    title={
-                      <div className="flex items-center gap-2 py-1">
-                        <span>{t('size.social_media.label')}</span>
-                      </div>
-                    }>
-                    <div className="grid grid-cols-1 gap-1.5">
-                      {ImageSize.filter((size) => size.category === 'size.social_media.label').map((size) => (
-                        <Button
-                          key={size.name}
-                          size="sm"
-                          variant="flat"
-                          className="w-full justify-between px-3 transition-colors hover:bg-default-100"
-                          onPress={() => setPresetSize(size)}>
-                          <span>{t(size.name)}</span>
-                          <span className="text-xs text-default-500">
-                            {size.width}×{size.height}
-                          </span>
-                        </Button>
-                      ))}
-                    </div>
-                  </Tab>
-                  <Tab
-                    key="ratio"
-                    title={
-                      <div className="flex items-center gap-2 py-1">
-                        <span>{t('size.ratio.label')}</span>
-                      </div>
-                    }>
-                    <div className="grid grid-cols-1 gap-1.5">
-                      {ImageSize.filter((size) => size.category === 'size.ratio.label').map((size) => (
-                        <Button
-                          key={size.name}
-                          size="sm"
-                          variant="flat"
-                          className="w-full justify-between px-3 transition-colors hover:bg-default-100"
-                          onPress={() => setPresetSize(size)}>
-                          <span>{t(size.name)}</span>
-                          <span className="text-xs text-default-500">
-                            {size.width}×{size.height}
-                          </span>
-                        </Button>
-                      ))}
-                    </div>
-                  </Tab>
-                </Tabs>
-                <div className="mt-1 flex flex-col gap-3">
-                  <div className="pl-1 text-xs font-medium text-default-500">{t('size.custom')}</div>
-                  <div className="flex items-center gap-2">
-                    <Controller
-                      name="width"
-                      control={form.control}
-                      render={({ field }) => (
-                        <Input
-                          type="number"
-                          size="sm"
-                          label={t('size.width')}
-                          value={field.value.toString()}
-                          onChange={(e) => field.onChange(parseInt(e.target.value) || 0)}
-                          disabled={loading}
-                          classNames={{
-                            inputWrapper: 'bg-default-50',
-                          }}
-                        />
-                      )}
-                    />
-                    <span className="mb-2 text-default-500">×</span>
-                    <Controller
-                      name="height"
-                      control={form.control}
-                      render={({ field }) => (
-                        <Input
-                          type="number"
-                          size="sm"
-                          label={t('size.height')}
-                          value={field.value.toString()}
-                          onChange={(e) => field.onChange(parseInt(e.target.value) || 0)}
-                          disabled={loading}
-                          classNames={{
-                            inputWrapper: 'bg-default-50',
-                          }}
-                        />
-                      )}
-                    />
+      <div className="grid grid-cols-2 gap-3">
+        {/* 尺寸选择 */}
+        <Popover
+          placement="bottom"
+          isOpen={isPopoverOpen}
+          onOpenChange={setIsPopoverOpen}>
+          <PopoverTrigger>
+            <Button
+              size="sm"
+              variant="bordered"
+              className="h-12 w-full justify-center border-default-200"
+              disabled={loading}>
+              <span className="text-sm">{`${form.getValues('width')} × ${form.getValues('height')}`}</span>
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent className="w-[300px] rounded-xl p-4 shadow-lg">
+            <div className="flex flex-col gap-4">
+              <Tabs
+                aria-label={'size'}
+                defaultSelectedKey={'social_media'}
+                fullWidth
+                size="sm"
+                classNames={{
+                  tabList: 'w-full bg-default-100 p-1 rounded-lg',
+                  tab: 'rounded-md',
+                  cursor: 'bg-background shadow-sm',
+                  panel: 'pt-4',
+                }}>
+                <Tab
+                  key="social_media"
+                  title={t('size.social_media.label')}>
+                  <div className="grid grid-cols-1 gap-2">
+                    {ImageSize.filter((size) => size.category === 'size.social_media.label').map((size) => (
+                      <Button
+                        key={size.name}
+                        size="sm"
+                        variant="light"
+                        className="w-full justify-between px-3 hover:bg-default-100"
+                        onPress={() => setPresetSize(size)}>
+                        <span>{t(size.name)}</span>
+                        <span className="text-xs text-default-400">
+                          {size.width}×{size.height}
+                        </span>
+                      </Button>
+                    ))}
                   </div>
+                </Tab>
+                <Tab
+                  key="ratio"
+                  title={t('size.ratio.label')}>
+                  <div className="grid grid-cols-1 gap-2">
+                    {ImageSize.filter((size) => size.category === 'size.ratio.label').map((size) => (
+                      <Button
+                        key={size.name}
+                        size="sm"
+                        variant="light"
+                        className="w-full justify-between px-3 hover:bg-default-100"
+                        onPress={() => setPresetSize(size)}>
+                        <span>{t(size.name)}</span>
+                        <span className="text-xs text-default-400">
+                          {size.width}×{size.height}
+                        </span>
+                      </Button>
+                    ))}
+                  </div>
+                </Tab>
+              </Tabs>
+              <div className="border-t border-default-100 pt-4">
+                <div className="mb-2 text-xs font-medium text-default-500">{t('size.custom')}</div>
+                <div className="flex items-center gap-2">
+                  <Controller
+                    name="width"
+                    control={form.control}
+                    render={({ field }) => (
+                      <Input
+                        type="number"
+                        size="sm"
+                        label={t('size.width')}
+                        value={field.value.toString()}
+                        onChange={(e) => field.onChange(parseInt(e.target.value) || 0)}
+                        disabled={loading}
+                      />
+                    )}
+                  />
+                  <span className="text-default-400">×</span>
+                  <Controller
+                    name="height"
+                    control={form.control}
+                    render={({ field }) => (
+                      <Input
+                        type="number"
+                        size="sm"
+                        label={t('size.height')}
+                        value={field.value.toString()}
+                        onChange={(e) => field.onChange(parseInt(e.target.value) || 0)}
+                        disabled={loading}
+                      />
+                    )}
+                  />
                 </div>
               </div>
-            </PopoverContent>
-          </Popover>
-        </div>
+            </div>
+          </PopoverContent>
+        </Popover>
 
+        {/* 配色选择 - 暂时注释 */}
+        {/* <Controller
+          name="theme"
+          control={form.control}
+          render={({ field }) => (
+            <Select
+              label={t('theme.label')}
+              size="sm"
+              selectedKeys={[field.value || 'default']}
+              onSelectionChange={(keys) => {
+                const key = Array.from(keys)[0] as string;
+                field.onChange(key);
+              }}
+              isDisabled={loading}
+              classNames={{
+                trigger: 'bg-background border-default-200',
+              }}
+              renderValue={() => {
+                const selected = SeedeTheme.find((theme) => theme.value === field.value);
+                if (!selected) return null;
+                return (
+                  <div className="flex items-center gap-2">
+                    <div className="flex gap-0.5">
+                      {selected.colors.slice(0, 4).map((color, index) => (
+                        <div
+                          key={index}
+                          className="size-3 rounded-full"
+                          style={{ backgroundColor: color }}
+                        />
+                      ))}
+                    </div>
+                    <span className="text-xs">{t(selected.label)}</span>
+                  </div>
+                );
+              }}>
+              {SeedeTheme.map((theme) => (
+                <SelectItem
+                  key={theme.value}
+                  textValue={t(theme.label)}>
+                  <div className="flex items-center gap-2">
+                    <div className="flex gap-0.5">
+                      {theme.colors.slice(0, 4).map((color, index) => (
+                        <div
+                          key={index}
+                          className="size-3 rounded-full"
+                          style={{ backgroundColor: color }}
+                        />
+                      ))}
+                    </div>
+                    <span>{t(theme.label)}</span>
+                  </div>
+                </SelectItem>
+              ))}
+            </Select>
+          )}
+        /> */}
+
+        {/* 模型选择 */}
         <Controller
           name="model"
           control={form.control}
@@ -310,13 +364,15 @@ export function GenerationForm({ onSubmit, loading, initialValues, extraPrompt }
             <Select
               label={t('generation_page.model.label')}
               size="sm"
-              className="w-[240px]"
               selectedKeys={[field.value]}
               onSelectionChange={(keys) => {
                 const key = Array.from(keys)[0] as string;
                 field.onChange(key);
               }}
-              isDisabled={loading || loadingModels}>
+              isDisabled={loading || loadingModels}
+              classNames={{
+                trigger: 'bg-background border-default-200',
+              }}>
               {models.map((model) => (
                 <SelectItem key={model}>{model}</SelectItem>
               ))}
@@ -325,13 +381,15 @@ export function GenerationForm({ onSubmit, loading, initialValues, extraPrompt }
         />
       </div>
 
+      {/* 生成按钮 */}
       <Button
         color="primary"
         size="lg"
         isLoading={loading}
         fullWidth
         onPress={() => form.handleSubmit(onSubmit)()}
-        startContent={!loading && <ImageIcon />}>
+        startContent={!loading && <ImageIcon className="size-5" />}
+        className="font-medium shadow-md">
         {loading ? t('generation_page.button.generating') : t('generation_page.button.generate')}
       </Button>
     </div>

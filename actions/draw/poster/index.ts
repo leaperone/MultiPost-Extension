@@ -1,7 +1,12 @@
 'use server';
 
 import { multipostDb } from '@/lib/db';
-import { PosterGenerationStatus, Category, type PosterGenerationSchema as PosterGenerationSchemaType } from './types';
+import {
+  PosterGenerationStatus,
+  Category,
+  SeedeTheme,
+  type PosterGenerationSchema as PosterGenerationSchemaType,
+} from './types';
 import { auth } from '@/auth';
 import { deductCredit } from '@/actions/credit';
 import { PRICING } from '@/actions/credit/types';
@@ -39,11 +44,17 @@ export async function generatePoster(data: PosterGenerationSchemaType) {
     //   throw new Error('Insufficient credits');
     // }
 
+    // Build prompt with theme suffix if not default
+    const selectedTheme = SeedeTheme.find((t) => t.value === data.theme);
+    const themePromptSuffix =
+      selectedTheme && selectedTheme.value !== 'default' ? ` @SeedeTheme(${JSON.stringify(selectedTheme)})` : '';
+    const finalPrompt = `${data.prompt}${themePromptSuffix}`;
+
     const result = await multipostDb.$transaction(async (tx) => {
       const created = await tx.posterGeneration.create({
         data: {
           userId: session.user.id as string,
-          prompt: data.prompt as string,
+          prompt: finalPrompt,
           status: PosterGenerationStatus.PENDING,
           width: data.width as number,
           height: data.height as number,
@@ -60,7 +71,7 @@ export async function generatePoster(data: PosterGenerationSchemaType) {
         },
         body: JSON.stringify({
           name: created.id,
-          prompt: data.prompt,
+          prompt: finalPrompt,
           size: {
             w: data.width,
             h: data.height,

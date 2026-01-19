@@ -1,11 +1,11 @@
 'use client';
 
-import { Button, Card, CardBody, Tabs, Tab, Image, Skeleton, Divider } from '@heroui/react';
+import { Card, CardBody, Tabs, Tab, Image, Skeleton, Divider, Button } from '@heroui/react';
 import { useEffect, useState, useMemo } from 'react';
 import { toast } from 'sonner';
 import { z } from 'zod';
 import { cn } from '@/lib/utils';
-import { Category, PosterGenerationSchema, PosterGenerationStatus } from '@/actions/draw/poster/types';
+import { PosterGenerationSchema, PosterGenerationStatus } from '@/actions/draw/poster/types';
 import {
   generatePoster,
   getPosterGeneration,
@@ -29,12 +29,11 @@ function PosterGenerationSection() {
   const [loading, setLoading] = useState(false);
   const [taskId, setTaskId] = useState<string | null>(null);
   const [formValues] = useState<z.infer<typeof PosterGenerationSchema> | null>(null);
-  const [category, setCategory] = useState<string>('category.social_media_generator');
 
   const handleGenerate = async (data: z.infer<typeof PosterGenerationSchema>) => {
     try {
       setLoading(true);
-      data.category = category || 'category.social_media_generator';
+      data.category = data.category || 'category.social_media_generator';
       const response = await generatePoster(data);
       if (!response.success || !response.data) {
         throw new Error(response.error);
@@ -70,25 +69,11 @@ function PosterGenerationSection() {
           id="generation-form"
           className="mx-auto mb-8 w-full max-w-3xl">
           <CardBody className="space-y-6">
-            <div className="flex flex-col gap-4">
-              <div className="flex flex-wrap gap-2">
-                {Category.map((item) => (
-                  <Button
-                    key={item.name}
-                    variant={category === item.name ? 'solid' : 'flat'}
-                    color={category === item.name ? 'primary' : 'default'}
-                    className={category === item.name ? 'font-medium' : ''}
-                    onPress={() => setCategory(item.name)}>
-                    {t(item.name)}
-                  </Button>
-                ))}
-              </div>
-              <GenerationForm
-                onSubmit={handleGenerate}
-                loading={loading}
-                initialValues={formValues}
-              />
-            </div>
+            <GenerationForm
+              onSubmit={handleGenerate}
+              loading={loading}
+              initialValues={formValues}
+            />
           </CardBody>
         </Card>
       )}

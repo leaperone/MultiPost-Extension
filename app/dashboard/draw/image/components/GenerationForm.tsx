@@ -72,36 +72,39 @@ export function GenerationForm({ onSubmit, loading, extraPrompt, initPrompt }: G
   };
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-6">
       {/* 提示词输入 */}
-      <Controller
-        name="prompt"
-        control={form.control}
-        render={({ field, fieldState }) => (
-          <Textarea
-            isRequired
-            label={'Prompt'}
-            minRows={5}
-            placeholder={t('generation_page.prompt_placeholder')}
-            // Spread the field props here. This includes value, onChange, onBlur, etc.
-            {...field}
-            disabled={loading}
-            isInvalid={!!fieldState.error}
-            errorMessage={fieldState.error?.message}
-          />
-        )}
-      />
+      <div>
+        <Controller
+          name="prompt"
+          control={form.control}
+          render={({ field, fieldState }) => (
+            <Textarea
+              isRequired
+              label={'Prompt'}
+              minRows={4}
+              placeholder={t('generation_page.prompt_placeholder')}
+              {...field}
+              disabled={loading}
+              isInvalid={!!fieldState.error}
+              errorMessage={fieldState.error?.message}
+              classNames={{
+                inputWrapper: 'bg-default-50',
+              }}
+            />
+          )}
+        />
 
-      {/* AI 优化按钮和结果展示（流式） */}
-      <div className="flex flex-col gap-2">
-        <div className="flex items-center gap-2">
+        {/* AI 优化按钮和结果 */}
+        <div className="mt-2 flex flex-wrap items-center gap-2">
           <Button
-            color="secondary"
+            variant="flat"
             size="sm"
             isLoading={aiOptimizing}
             disabled={aiOptimizing || loading}
-            onPress={handleOptimizePrompt}>
-            {t('generation_page.ai_optimize_prompt')}
+            onPress={handleOptimizePrompt}
+            className="bg-default-100">
+            ✨ {t('generation_page.ai_optimize_prompt')}
           </Button>
           {optimizedPrompt && (
             <Button
@@ -113,30 +116,32 @@ export function GenerationForm({ onSubmit, loading, extraPrompt, initPrompt }: G
             </Button>
           )}
         </div>
-        {/* AI 优化流式消息展示 */}
-        <div className="space-y-1 text-xs text-gray-700 dark:text-gray-200">
-          {(() => {
-            // 只保留最近 6 条消息
+        {aiMessages.length > 0 &&
+          (() => {
             const lastSix = aiMessages.slice(-6);
-            // 找到最后一条 AI 生成（assistant）的消息
             const lastAssistantMsg = [...lastSix].reverse().find((m) => m.role === 'assistant');
-            return lastAssistantMsg ? <div className="text-blue-600">{lastAssistantMsg.content}</div> : null;
+            return lastAssistantMsg ? (
+              <div className="mt-2 rounded-lg bg-default-100 p-3 text-sm text-foreground">
+                {lastAssistantMsg.content}
+              </div>
+            ) : null;
           })()}
-        </div>
       </div>
 
       {/* 生成参数设置 */}
-      <div className="flex flex-wrap justify-between gap-2">
+      <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
         <Select
           label={t('generation_page.size.label')}
           size="sm"
-          className="w-[140px]"
           defaultSelectedKeys={[form.getValues('size')]}
           onSelectionChange={(keys) => {
             const key = Array.from(keys)[0] as typeof ImageSize.AUTO;
             form.setValue('size', key);
           }}
-          disabled={loading}>
+          isDisabled={loading}
+          classNames={{
+            trigger: 'bg-background border-default-200',
+          }}>
           <SelectItem key={ImageSize.AUTO}>{t('generation_page.size.auto')}</SelectItem>
           <SelectItem key={ImageSize.SQUARE}>{t('generation_page.size.square')}</SelectItem>
           <SelectItem key={ImageSize.SQUARE_1080}>1080x1080</SelectItem>
@@ -149,13 +154,15 @@ export function GenerationForm({ onSubmit, loading, extraPrompt, initPrompt }: G
         <Select
           label={t('generation_page.style.label')}
           size="sm"
-          className="w-[140px]"
           defaultSelectedKeys={[form.getValues('style') || '']}
           onSelectionChange={(keys) => {
             const key = Array.from(keys)[0] as typeof Style.Anime;
             form.setValue('style', key || undefined);
           }}
-          disabled={loading}>
+          isDisabled={loading}
+          classNames={{
+            trigger: 'bg-background border-default-200',
+          }}>
           <SelectItem key="">{t('generation_page.style.none')}</SelectItem>
           <SelectItem key={Style.Anime}>{t('generation_page.style.anime')}</SelectItem>
           <SelectItem key={Style.Cartoon}>{t('generation_page.style.cartoon')}</SelectItem>
@@ -166,13 +173,15 @@ export function GenerationForm({ onSubmit, loading, extraPrompt, initPrompt }: G
         <Select
           label={t('generation_page.color.label')}
           size="sm"
-          className="w-[140px]"
           defaultSelectedKeys={[form.getValues('color') || '']}
           onSelectionChange={(keys) => {
             const key = Array.from(keys)[0] as typeof Color.Neutral;
             form.setValue('color', key || undefined);
           }}
-          disabled={loading}>
+          isDisabled={loading}
+          classNames={{
+            trigger: 'bg-background border-default-200',
+          }}>
           <SelectItem key="">{t('generation_page.color.none')}</SelectItem>
           <SelectItem key={Color.Neutral}>{t('generation_page.color.neutral')}</SelectItem>
           <SelectItem key={Color.Cold}>{t('generation_page.color.cold')}</SelectItem>
@@ -183,13 +192,15 @@ export function GenerationForm({ onSubmit, loading, extraPrompt, initPrompt }: G
         <Select
           label={t('generation_page.composition.label')}
           size="sm"
-          className="w-[140px]"
           defaultSelectedKeys={[form.getValues('composition') || '']}
           onSelectionChange={(keys) => {
             const key = Array.from(keys)[0] as typeof Composition.FullBody;
             form.setValue('composition', key || undefined);
           }}
-          disabled={loading}>
+          isDisabled={loading}
+          classNames={{
+            trigger: 'bg-background border-default-200',
+          }}>
           <SelectItem key="">{t('generation_page.composition.none')}</SelectItem>
           <SelectItem key={Composition.FullBody}>{t('generation_page.composition.full_body')}</SelectItem>
           <SelectItem key={Composition.HalfBody}>{t('generation_page.composition.half_body')}</SelectItem>
@@ -199,13 +210,15 @@ export function GenerationForm({ onSubmit, loading, extraPrompt, initPrompt }: G
         </Select>
       </div>
 
+      {/* 生成按钮 */}
       <Button
         color="primary"
         size="lg"
         isLoading={loading}
         fullWidth
         onPress={() => form.handleSubmit(onSubmit)()}
-        startContent={!loading && <ImageIcon />}>
+        startContent={!loading && <ImageIcon className="size-5" />}
+        className="font-medium shadow-md">
         {loading ? t('generation_page.button.generating') : t('generation_page.button.generate')}
       </Button>
     </div>

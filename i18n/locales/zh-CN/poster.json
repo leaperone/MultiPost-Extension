@@ -1,6 +1,7 @@
 {
   "posters_options": "海报选项",
   "generation": "生成海报",
+  "tab_title": "海报",
   "gallery": "海报库",
   "category": {
     "wechat_cover_generator": "微信公众号封面",
@@ -13,6 +14,18 @@
     "music_album_generator": "专辑封面",
     "signage_generator": "标识牌",
     "event_promotion_generator": "活动推广"
+  },
+  "theme": {
+    "label": "配色",
+    "default": "默认",
+    "black": "经典黑白",
+    "ocean": "海洋蓝",
+    "sunset": "夕阳橙",
+    "forest": "森林绿",
+    "lavender": "薰衣草紫",
+    "rose": "玫瑰粉",
+    "golden": "奢华金",
+    "midnight": "午夜蓝"
   },
   "template": {
     "label": "模板",

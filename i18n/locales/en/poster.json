@@ -1,6 +1,7 @@
 {
   "posters_options": "Poster Options",
   "generation": "Generate Poster",
+  "tab_title": "Poster",
   "gallery": "Poster Gallery",
   "category": {
     "wechat_cover_generator": "WeChat Cover",
@@ -13,6 +14,18 @@
     "music_album_generator": "Music Album Cover",
     "signage_generator": "Signage",
     "event_promotion_generator": "Event Promotion"
+  },
+  "theme": {
+    "label": "Theme",
+    "default": "Default",
+    "black": "Classic B&W",
+    "ocean": "Ocean Blue",
+    "sunset": "Sunset Orange",
+    "forest": "Forest Green",
+    "lavender": "Lavender Purple",
+    "rose": "Rose Pink",
+    "golden": "Golden Luxury",
+    "midnight": "Midnight Blue"
   },
   "template": {
     "label": "Template",
