@@ -39,6 +39,7 @@ const initState: DraftPublishState = {
     width: 1080,
     height: 1440,
     category: 'category.social_media_generator',
+    theme: 'default',
   },
 };
 
