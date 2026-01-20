@@ -531,9 +531,14 @@ export default function DynamicPage() {
     }
   };
 
+  // Drag counter refs to handle nested element drag events
+  const dragCounterRef = useRef(0);
+  const videoDragCounterRef = useRef(0);
+
   const handleDrop = (event: React.DragEvent<HTMLDivElement>) => {
     event.preventDefault();
     event.stopPropagation();
+    dragCounterRef.current = 0;
     setIsDraggingOver(false);
     handleMediaFiles(event.dataTransfer.files, 'image');
   };
@@ -546,18 +551,25 @@ export default function DynamicPage() {
   const handleDragEnter = (event: React.DragEvent<HTMLDivElement>) => {
     event.preventDefault();
     event.stopPropagation();
-    setIsDraggingOver(true);
+    dragCounterRef.current++;
+    if (dragCounterRef.current === 1) {
+      setIsDraggingOver(true);
+    }
   };
 
   const handleDragLeave = (event: React.DragEvent<HTMLDivElement>) => {
     event.preventDefault();
     event.stopPropagation();
-    setIsDraggingOver(false);
+    dragCounterRef.current--;
+    if (dragCounterRef.current === 0) {
+      setIsDraggingOver(false);
+    }
   };
 
   const handleVideoDrop = (event: React.DragEvent<HTMLDivElement>) => {
     event.preventDefault();
     event.stopPropagation();
+    videoDragCounterRef.current = 0;
     setIsVideoDraggingOver(false);
     handleMediaFiles(event.dataTransfer.files, 'video');
   };
@@ -570,13 +582,19 @@ export default function DynamicPage() {
   const handleVideoDragEnter = (event: React.DragEvent<HTMLDivElement>) => {
     event.preventDefault();
     event.stopPropagation();
-    setIsVideoDraggingOver(true);
+    videoDragCounterRef.current++;
+    if (videoDragCounterRef.current === 1) {
+      setIsVideoDraggingOver(true);
+    }
   };
 
   const handleVideoDragLeave = (event: React.DragEvent<HTMLDivElement>) => {
     event.preventDefault();
     event.stopPropagation();
-    setIsVideoDraggingOver(false);
+    videoDragCounterRef.current--;
+    if (videoDragCounterRef.current === 0) {
+      setIsVideoDraggingOver(false);
+    }
   };
 
   const handlePaste = useCallback((event: ClipboardEvent) => {

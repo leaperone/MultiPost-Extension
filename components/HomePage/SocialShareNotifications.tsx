@@ -53,7 +53,7 @@ function Notification({ platform }: NotificationProps) {
 
 export default function SocialShareNotifications() {
   return (
-    <div className="fixed right-4 top-20 z-50 hidden sm:block">
+    <div className="fixed right-4 top-20 z-50 hidden xl:block" style={{ willChange: 'transform' }}>
       <AnimatedList
         delay={2500}
         loop={true}

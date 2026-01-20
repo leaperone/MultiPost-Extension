@@ -188,5 +188,39 @@
     "activeUsers": "Active Users",
     "contentPublished": "Content Published",
     "satisfaction": "Satisfaction"
+  },
+  "homePublisher": {
+    "title": "Start Publishing Now",
+    "subtitle": "No login required. Install the browser extension and publish to multiple platforms with one click.",
+    "extensionRequired": {
+      "title": "Browser Extension Required",
+      "description": "The MultiPost browser extension is the core tool for publishing content to social media platforms.",
+      "checking": "Checking extension status...",
+      "chromeStore": "Chrome Web Store",
+      "edgeStore": "Edge Add-ons",
+      "recheck": "Check Again",
+      "features": {
+        "multiPlatform": "Publish to 10+ platforms",
+        "oneClick": "One-click publishing",
+        "secure": "Secure & Privacy-first"
+      }
+    },
+    "quickPublish": {
+      "contentPlaceholder": "What's on your mind? Write something to share...",
+      "selectPlatforms": "Select Platforms",
+      "publishButton": "Publish to All Platforms",
+      "autoPublish": "Auto Publish",
+      "uploadImage": "Upload Image",
+      "clearAll": "Clear All",
+      "loadingPlatforms": "Loading platforms...",
+      "noPlatforms": "No platforms found. Please check your extension.",
+      "tips": "Tip: You can paste images directly, or drag and drop to upload.",
+      "contactTip": "If you find a platform not publishing correctly, please",
+      "contactUs": "contact us"
+    },
+    "loginRequired": {
+      "title": "Login Required",
+      "description": "Please sign in to use the Library and AI Generate features"
+    }
   }
 }

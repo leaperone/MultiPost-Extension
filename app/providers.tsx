@@ -14,7 +14,7 @@ export async function Providers({ children }: { children: React.ReactNode }) {
   return (
     <SessionProvider session={session}>
       <HeroUIProvider>
-        <ToastProvider />
+        <ToastProvider placement="bottom-right" />
         <DeploymentErrorHandler />
         <LocaleProvider value={locale as Locales}>
           <NextThemesProvider

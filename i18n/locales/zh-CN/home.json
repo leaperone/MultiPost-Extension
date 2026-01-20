@@ -179,5 +179,39 @@
     "activeUsers": "活跃用户",
     "contentPublished": "内容发布",
     "satisfaction": "满意度"
+  },
+  "homePublisher": {
+    "title": "立即开始发布",
+    "subtitle": "无需登录。安装浏览器扩展，一键发布到多个平台。",
+    "extensionRequired": {
+      "title": "需要安装浏览器扩展",
+      "description": "MultiPost 浏览器扩展是发布内容到社交媒体平台的核心工具。",
+      "checking": "正在检测扩展状态...",
+      "chromeStore": "Chrome 应用商店",
+      "edgeStore": "Edge 扩展商店",
+      "recheck": "重新检测",
+      "features": {
+        "multiPlatform": "支持 10+ 平台发布",
+        "oneClick": "一键同步发布",
+        "secure": "安全隐私保护"
+      }
+    },
+    "quickPublish": {
+      "contentPlaceholder": "写点什么吧...",
+      "selectPlatforms": "选择发布平台",
+      "publishButton": "发布到所有平台",
+      "autoPublish": "自动发布",
+      "uploadImage": "上传图片",
+      "clearAll": "全部清空",
+      "loadingPlatforms": "正在加载平台...",
+      "noPlatforms": "未找到平台，请检查扩展是否正常运行。",
+      "tips": "提示：可直接粘贴图片，或拖拽上传。",
+      "contactTip": "如果发现平台无法正常发布，请",
+      "contactUs": "联系我们"
+    },
+    "loginRequired": {
+      "title": "需要登录",
+      "description": "请先登录后才能使用素材库和 AI 生成功能"
+    }
   }
 }

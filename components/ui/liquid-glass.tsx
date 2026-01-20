@@ -20,8 +20,8 @@ const glassBaseStyles = cn(
   'backdrop-blur-xl backdrop-saturate-150',
   'bg-white/60 dark:bg-white/10',
   'border border-white/50 dark:border-white/20',
-  'shadow-[0_8px_32px_rgba(0,0,0,0.06),inset_0_1px_0_rgba(255,255,255,0.6)]',
-  'dark:shadow-[0_8px_32px_rgba(0,0,0,0.2),inset_0_1px_0_rgba(255,255,255,0.1)]',
+  'shadow-[0_8px_32px_rgba(0,0,0,0.06)]',
+  'dark:shadow-[0_8px_32px_rgba(0,0,0,0.2)]',
 );
 
 // ============================================
