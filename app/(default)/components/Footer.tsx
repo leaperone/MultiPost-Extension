@@ -25,6 +25,9 @@ export default function Footer() {
       { name: t('footer.navigation.support.documentation'), href: '/docs' },
       { name: t('footer.navigation.support.status'), href: 'https://monitor.leaper.one' },
     ],
+    aboutUs: [
+      { name: t('footer.navigation.aboutUs.team'), href: '/about' },
+    ],
     contact: [
       { name: t('footer.navigation.contact.discord'), href: 'https://discord.gg/GNsCX9zFwQ' },
       {
@@ -133,8 +136,11 @@ export default function Footer() {
               <div className="mt-10 md:mt-0">{renderList({ title: 'Support', items: footerNavigation.support })}</div>
             </div>
             <div className="md:grid md:grid-cols-2 md:gap-8">
-              <div>{renderList({ title: 'Contact', items: footerNavigation.contact })}</div>
-              <div className="mt-10 md:mt-0">{renderList({ title: 'Legal', items: footerNavigation.legal })}</div>
+              <div>{renderList({ title: 'aboutUs', items: footerNavigation.aboutUs })}</div>
+              <div className="mt-10 md:mt-0">{renderList({ title: 'Contact', items: footerNavigation.contact })}</div>
+            </div>
+            <div className="md:grid md:grid-cols-2 md:gap-8">
+              <div>{renderList({ title: 'Legal', items: footerNavigation.legal })}</div>
             </div>
           </div>
         </div>

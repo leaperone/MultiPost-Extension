@@ -19,80 +19,102 @@ interface PageProps {
 const texts = {
   en: {
     title: 'MultiPost Blog',
-    description: 'Latest articles and updates from MultiPost',
-    noBlogsMessage: 'No blog posts yet',
+    subtitle: 'Tips, tutorials, and insights for content creators',
+    description: 'Learn how to maximize your social media reach with multi-platform publishing strategies, tool comparisons, and creator success stories.',
+    noBlogsMessage: 'New articles coming soon. Stay tuned!',
     by: 'By',
     on: 'on',
+    readMore: 'Read article',
   },
   'zh-Hans': {
     title: 'MultiPost 博客',
-    description: 'MultiPost 的最新文章和更新',
-    noBlogsMessage: '暂时还没有博客文章',
+    subtitle: '内容创作者的效率指南',
+    description: '多平台发布技巧、工具对比评测、创作者成长策略，助你提升内容影响力。',
+    noBlogsMessage: '精彩内容即将上线，敬请期待！',
     by: '作者',
     on: '发布于',
+    readMore: '阅读全文',
   },
   'zh-Hant': {
     title: 'MultiPost 部落格',
-    description: 'MultiPost 的最新文章和更新',
-    noBlogsMessage: '暫時還沒有部落格文章',
+    subtitle: '內容創作者的效率指南',
+    description: '多平台發布技巧、工具對比評測、創作者成長策略，助你提升內容影響力。',
+    noBlogsMessage: '精彩內容即將上線，敬請期待！',
     by: '作者',
     on: '發布於',
+    readMore: '閱讀全文',
   },
   ja: {
     title: 'MultiPost ブログ',
-    description: 'MultiPostからの最新記事と更新',
-    noBlogsMessage: 'まだブログ記事がありません',
+    subtitle: 'コンテンツクリエイターのための効率ガイド',
+    description: 'マルチプラットフォーム配信のコツ、ツール比較、クリエイター成功事例をお届けします。',
+    noBlogsMessage: '新しい記事を準備中です。お楽しみに！',
     by: '著者',
     on: '投稿日',
+    readMore: '続きを読む',
   },
   fr: {
     title: 'Blog MultiPost',
-    description: 'Derniers articles et mises à jour de MultiPost',
-    noBlogsMessage: 'Aucun article de blog pour le moment',
+    subtitle: 'Guide d\'efficacité pour les créateurs de contenu',
+    description: 'Conseils de publication multiplateforme, comparaisons d\'outils et stratégies de croissance pour les créateurs.',
+    noBlogsMessage: 'De nouveaux articles arrivent bientôt. Restez connecté !',
     by: 'Par',
     on: 'le',
+    readMore: 'Lire l\'article',
   },
   es: {
     title: 'Blog de MultiPost',
-    description: 'Últimos artículos y actualizaciones de MultiPost',
-    noBlogsMessage: 'Aún no hay publicaciones en el blog',
+    subtitle: 'Guía de eficiencia para creadores de contenido',
+    description: 'Consejos de publicación multiplataforma, comparaciones de herramientas y estrategias de crecimiento para creadores.',
+    noBlogsMessage: '¡Nuevos artículos próximamente. Mantente atento!',
     by: 'Por',
     on: 'el',
+    readMore: 'Leer artículo',
   },
   pt: {
     title: 'Blog MultiPost',
-    description: 'Últimos artigos e atualizações do MultiPost',
-    noBlogsMessage: 'Ainda não há postagens no blog',
+    subtitle: 'Guia de eficiência para criadores de conteúdo',
+    description: 'Dicas de publicação multiplataforma, comparações de ferramentas e estratégias de crescimento para criadores.',
+    noBlogsMessage: 'Novos artigos em breve. Fique ligado!',
     by: 'Por',
     on: 'em',
+    readMore: 'Ler artigo',
   },
   ko: {
     title: 'MultiPost 블로그',
-    description: 'MultiPost의 최신 기사 및 업데이트',
-    noBlogsMessage: '아직 블로그 글이 없습니다',
+    subtitle: '콘텐츠 크리에이터를 위한 효율 가이드',
+    description: '멀티플랫폼 게시 팁, 도구 비교, 크리에이터 성장 전략을 제공합니다.',
+    noBlogsMessage: '새로운 글이 곧 올라옵니다. 기대해 주세요!',
     by: '작성자',
     on: '작성일',
+    readMore: '더 읽기',
   },
   ms: {
     title: 'Blog MultiPost',
-    description: 'Artikel dan kemas kini terkini dari MultiPost',
-    noBlogsMessage: 'Belum ada catatan blog lagi',
+    subtitle: 'Panduan kecekapan untuk pencipta kandungan',
+    description: 'Tips penerbitan berbilang platform, perbandingan alat, dan strategi pertumbuhan untuk pencipta.',
+    noBlogsMessage: 'Artikel baharu akan datang tidak lama lagi. Nantikan!',
     by: 'Oleh',
     on: 'pada',
+    readMore: 'Baca artikel',
   },
   id: {
     title: 'Blog MultiPost',
-    description: 'Artikel dan pembaruan terbaru dari MultiPost',
-    noBlogsMessage: 'Belum ada postingan blog',
+    subtitle: 'Panduan efisiensi untuk kreator konten',
+    description: 'Tips publikasi multi-platform, perbandingan alat, dan strategi pertumbuhan untuk kreator.',
+    noBlogsMessage: 'Artikel baru segera hadir. Nantikan!',
     by: 'Oleh',
     on: 'pada',
+    readMore: 'Baca artikel',
   },
   ru: {
     title: 'Блог MultiPost',
-    description: 'Последние статьи и обновления от MultiPost',
-    noBlogsMessage: 'Пока нет записей в блоге',
+    subtitle: 'Руководство по эффективности для создателей контента',
+    description: 'Советы по мультиплатформенной публикации, сравнения инструментов и стратегии роста для создателей.',
+    noBlogsMessage: 'Новые статьи скоро появятся. Следите за обновлениями!',
     by: 'Автор',
     on: 'опубликовано',
+    readMore: 'Читать статью',
   },
 } as const;
 
@@ -128,14 +150,28 @@ function BlogHomePage({ lang }: { lang: string }) {
   const t = texts[typedLang] || texts.en;
 
   return (
-    <main className="flex flex-1 flex-col px-6 py-8">
+    <main className="flex flex-1 flex-col px-6 py-12">
       <div className="mx-auto w-full max-w-6xl">
-        <nav className="mb-8 flex flex-wrap gap-2">
+        {/* Hero Section */}
+        <header className="mb-12 text-center">
+          <h1 className="mb-3 text-4xl font-bold tracking-tight text-fd-foreground md:text-5xl">
+            {t.title}
+          </h1>
+          <p className="mb-4 text-xl text-fd-muted-foreground">
+            {t.subtitle}
+          </p>
+          <p className="mx-auto max-w-2xl text-fd-muted-foreground">
+            {t.description}
+          </p>
+        </header>
+
+        {/* Language Selector */}
+        <nav className="mb-10 flex flex-wrap justify-center gap-2">
           {languages.map((item) => (
             <Link
               key={item.code}
               href={`/blog/${item.code}`}
-              className={`rounded-md px-3 py-1 text-sm transition-colors ${
+              className={`rounded-full px-4 py-1.5 text-sm font-medium transition-colors ${
                 lang === item.code
                   ? 'bg-fd-primary text-fd-primary-foreground'
                   : 'bg-fd-secondary text-fd-secondary-foreground hover:bg-fd-accent'
@@ -145,63 +181,63 @@ function BlogHomePage({ lang }: { lang: string }) {
             </Link>
           ))}
         </nav>
+
+        {/* Blog List */}
         {blogs.length === 0 ? (
-          <p className="text-fd-muted-foreground">{t.noBlogsMessage}</p>
+          <div className="py-16 text-center">
+            <p className="text-lg text-fd-muted-foreground">{t.noBlogsMessage}</p>
+          </div>
         ) : (
-          <div className="grid gap-8 md:grid-cols-2 md:gap-12">
+          <div className="grid gap-8 md:grid-cols-2 lg:gap-10">
             {blogs.map((blog) => (
               <Link
                 key={blog.url}
                 href={blog.url}
-                className="block space-y-3 border-b border-fd-border pb-8 last:border-b-0"
+                className="group block rounded-xl border border-fd-border p-6 transition-all hover:border-fd-primary/50 hover:shadow-lg"
               >
-                <article className="space-y-3">
-                  <h2 className="text-2xl font-semibold text-fd-foreground transition-colors hover:text-fd-primary">
+                <article className="space-y-4">
+                  <h2 className="text-xl font-semibold text-fd-foreground transition-colors group-hover:text-fd-primary">
                     {blog.data.title ||
                       (lang === 'zh-Hans' ? '无标题' : 'Untitled')}
                   </h2>
 
-                  {(blog.data.author || blog.data.date) && (
-                    <div className="flex items-center gap-4 text-sm text-fd-muted-foreground">
-                      {blog.data.author && (
-                        <span className="flex items-center gap-1">
-                          {t.by} {blog.data.author}
-                        </span>
-                      )}
-                      {blog.data.date && (
-                        <span className="flex items-center gap-1">
-                          {t.on} {blog.data.date.toLocaleDateString()}
-                        </span>
-                      )}
-                    </div>
-                  )}
-
                   {blog.data.description && (
-                    <p className="leading-relaxed text-fd-muted-foreground">
+                    <p className="line-clamp-2 text-fd-muted-foreground">
                       {blog.data.description}
                     </p>
                   )}
 
                   {blog.data.keywords && (
-                    <div className="mt-3 flex flex-wrap gap-2">
+                    <div className="flex flex-wrap gap-2">
                       {blog.data.keywords
                         .split(',')
-                        .slice(0, 5)
+                        .slice(0, 3)
                         .map((keyword: string, index: number) => (
                           <span
                             key={index}
-                            className="rounded-md bg-fd-secondary px-2 py-1 text-xs text-fd-secondary-foreground"
+                            className="rounded-full bg-fd-secondary px-2.5 py-0.5 text-xs text-fd-secondary-foreground"
                           >
                             {keyword.trim()}
                           </span>
                         ))}
-                      {blog.data.keywords.split(',').length > 5 && (
-                        <span className="px-2 py-1 text-xs text-fd-muted-foreground">
-                          +{blog.data.keywords.split(',').length - 5}
-                        </span>
-                      )}
                     </div>
                   )}
+
+                  <div className="flex items-center justify-between pt-2">
+                    {(blog.data.author || blog.data.date) && (
+                      <div className="flex items-center gap-3 text-sm text-fd-muted-foreground">
+                        {blog.data.date && (
+                          <span>{blog.data.date.toLocaleDateString()}</span>
+                        )}
+                        {blog.data.author && (
+                          <span>· {blog.data.author}</span>
+                        )}
+                      </div>
+                    )}
+                    <span className="text-sm font-medium text-fd-primary opacity-0 transition-opacity group-hover:opacity-100">
+                      {t.readMore} →
+                    </span>
+                  </div>
                 </article>
               </Link>
             ))}

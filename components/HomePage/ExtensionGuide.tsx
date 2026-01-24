@@ -1,16 +1,25 @@
 'use client';
 
 import { Button, Spinner } from '@heroui/react';
-import { RefreshCwIcon, PuzzleIcon } from 'lucide-react';
+import { RefreshCwIcon, ArrowRightIcon, CheckIcon } from 'lucide-react';
 import { Icon } from '@iconify/react';
 import { useTranslation } from '@/i18n/client';
-import { LiquidGlassCard, LiquidGlassIconContainer } from '@/components/ui/liquid-glass';
-import { cn } from '@/lib/utils';
+import { LiquidGlassCard } from '@/components/ui/liquid-glass';
+import { motion } from 'framer-motion';
 
 interface ExtensionGuideProps {
   isLoading?: boolean;
   onRecheck?: () => void;
 }
+
+// Core platform icons - only show the most recognizable ones
+const platformIcons = [
+  { icon: 'arcticons:xiaohongshu-rednote', name: '小红书', color: '#FF2442' },
+  { icon: 'ri:weibo-fill', name: '微博', color: '#E6162D' },
+  { icon: 'logos:twitter', name: 'X/Twitter' },
+  { icon: 'ri:bilibili-fill', name: 'B站', color: '#00A1D6' },
+  { icon: 'logos:linkedin-icon', name: 'LinkedIn' },
+];
 
 export function ExtensionGuide({ isLoading, onRecheck }: ExtensionGuideProps) {
   const { t } = useTranslation('home');
@@ -27,91 +36,115 @@ export function ExtensionGuide({ isLoading, onRecheck }: ExtensionGuideProps) {
   }
 
   return (
-    <LiquidGlassCard className="mx-auto max-w-2xl p-8">
-      <div className="flex flex-col items-center text-center">
-        {/* Icon */}
-        <LiquidGlassIconContainer
-          size="lg"
-          color="warning"
-          className="mb-6">
-          <PuzzleIcon className="size-10" />
-        </LiquidGlassIconContainer>
+    <div className="mx-auto max-w-2xl text-center">
+      {/* Hero Title - Pain point question */}
+      <motion.h1
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5 }}
+        className="mb-4 text-3xl font-bold tracking-tight text-foreground sm:text-4xl md:text-5xl">
+        {t('homePublisher.hero.title')}
+      </motion.h1>
 
-        {/* Title & Description */}
-        <h3 className="mb-3 text-2xl font-semibold text-foreground/90">
-          {t('homePublisher.extensionRequired.title')}
-        </h3>
-        <p className="mb-8 max-w-md text-foreground/60">
-          {t('homePublisher.extensionRequired.description')}
-        </p>
+      {/* Subtitle - Solution */}
+      <motion.p
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5, delay: 0.1 }}
+        className="mx-auto mb-8 max-w-lg text-lg text-foreground/70">
+        {t('homePublisher.hero.subtitle')}
+      </motion.p>
 
-        {/* Install Buttons */}
-        <div className="mb-6 flex flex-col gap-4 sm:flex-row">
-          <Button
-            as="a"
-            href="https://chromewebstore.google.com/detail/multipost/dhohkaclnjgcikfoaacfgijgjgceofih"
-            target="_blank"
-            rel="noopener noreferrer"
-            size="lg"
-            color="primary"
-            className="min-w-[200px]"
-            startContent={
-              <Icon
-                icon="logos:chrome"
-                className="size-5"
-              />
-            }>
-            {t('homePublisher.extensionRequired.chromeStore')}
-          </Button>
-          <Button
-            as="a"
-            href="https://microsoftedge.microsoft.com/addons/detail/multipost/ckoiphiceimehjkolnfffgbmihoppgjg"
-            target="_blank"
-            rel="noopener noreferrer"
-            size="lg"
-            variant="bordered"
-            className="min-w-[200px]"
-            startContent={
-              <Icon
-                icon="logos:microsoft-edge"
-                className="size-5"
-              />
-            }>
-            {t('homePublisher.extensionRequired.edgeStore')}
-          </Button>
+      {/* Platform Icons - Compact */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5, delay: 0.2 }}
+        className="mb-8 flex items-center justify-center gap-3">
+        {platformIcons.map((platform, i) => (
+          <div
+            key={i}
+            className="flex size-10 items-center justify-center rounded-xl bg-white/10 transition-transform hover:scale-110 dark:bg-white/5"
+            title={platform.name}>
+            <Icon
+              icon={platform.icon}
+              className="size-5"
+              style={platform.color ? { color: platform.color } : undefined}
+            />
+          </div>
+        ))}
+        <div className="flex size-10 items-center justify-center rounded-xl bg-white/10 text-sm font-medium text-foreground/60 dark:bg-white/5">
+          +8
         </div>
+      </motion.div>
 
-        {/* Recheck Button */}
-        {onRecheck && (
+      {/* CTA Buttons */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5, delay: 0.3 }}
+        className="mb-6 flex flex-col items-center gap-3 sm:flex-row sm:justify-center">
+        <Button
+          as="a"
+          href="https://chromewebstore.google.com/detail/multipost/dhohkaclnjgcikfoaacfgijgjgceofih"
+          target="_blank"
+          rel="noopener noreferrer"
+          size="lg"
+          color="primary"
+          className="min-w-[200px]"
+          endContent={<ArrowRightIcon className="size-4" />}
+          startContent={<Icon icon="logos:chrome" className="size-5" />}>
+          {t('homePublisher.extensionRequired.chromeStore')}
+        </Button>
+        <Button
+          as="a"
+          href="https://microsoftedge.microsoft.com/addons/detail/multipost/ckoiphiceimehjkolnfffgbmihoppgjg"
+          target="_blank"
+          rel="noopener noreferrer"
+          size="lg"
+          variant="bordered"
+          className="min-w-[200px]"
+          startContent={<Icon icon="logos:microsoft-edge" className="size-5" />}>
+          {t('homePublisher.extensionRequired.edgeStore')}
+        </Button>
+      </motion.div>
+
+      {/* Trust Indicators */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5, delay: 0.4 }}
+        className="mb-4 flex flex-wrap items-center justify-center gap-4 text-sm text-foreground/60">
+        <span className="flex items-center gap-1.5">
+          <CheckIcon className="size-4 text-green-500" />
+          {t('hero.trust.free')}
+        </span>
+        <span className="flex items-center gap-1.5">
+          <CheckIcon className="size-4 text-green-500" />
+          {t('hero.trust.opensource')}
+        </span>
+        <span className="flex items-center gap-1.5">
+          <CheckIcon className="size-4 text-green-500" />
+          {t('hero.trust.no_password')}
+        </span>
+      </motion.div>
+
+      {/* Recheck Button */}
+      {onRecheck && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.5, delay: 0.5 }}>
           <Button
             variant="light"
             size="sm"
             onPress={onRecheck}
             startContent={<RefreshCwIcon className="size-4" />}
-            className="text-foreground/60">
+            className="text-foreground/50 hover:text-foreground/70">
             {t('homePublisher.extensionRequired.recheck')}
           </Button>
-        )}
-
-        {/* Features List */}
-        <div className="mt-8 grid w-full gap-4 sm:grid-cols-3">
-          {[
-            { icon: '📤', text: t('homePublisher.extensionRequired.features.multiPlatform') },
-            { icon: '🚀', text: t('homePublisher.extensionRequired.features.oneClick') },
-            { icon: '🔒', text: t('homePublisher.extensionRequired.features.secure') },
-          ].map((feature, i) => (
-            <div
-              key={i}
-              className={cn(
-                'flex items-center gap-3 rounded-xl p-3',
-                'bg-white/5 dark:bg-white/5',
-              )}>
-              <span className="text-2xl">{feature.icon}</span>
-              <span className="text-sm text-foreground/70">{feature.text}</span>
-            </div>
-          ))}
-        </div>
-      </div>
-    </LiquidGlassCard>
+        </motion.div>
+      )}
+    </div>
   );
 }

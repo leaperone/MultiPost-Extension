@@ -14,26 +14,25 @@ export default function LanguageSwitcher() {
   };
 
   return (
-    <>
-      <Dropdown>
-        <DropdownTrigger>
-          <Button
-            isIconOnly
-            variant="light"
-            aria-label="Select language">
-            <LanguagesIcon />
-          </Button>
-        </DropdownTrigger>
-        <DropdownMenu
-          aria-label="Language selection"
-          onAction={handleLocaleChange}
-          defaultSelectedKeys={i18n.resolvedLanguage ? [i18n.resolvedLanguage] : []}
-          selectionMode="single">
-          {languages.map((language) => (
-            <DropdownItem key={language.value}>{language.label}</DropdownItem>
-          ))}
-        </DropdownMenu>
-      </Dropdown>
-    </>
+    <Dropdown>
+      <DropdownTrigger>
+        <Button
+          isIconOnly
+          variant="light"
+          size="sm"
+          aria-label="Select language">
+          <LanguagesIcon />
+        </Button>
+      </DropdownTrigger>
+      <DropdownMenu
+        aria-label="Language selection"
+        onAction={handleLocaleChange}
+        selectedKeys={i18n.resolvedLanguage ? [i18n.resolvedLanguage] : []}
+        selectionMode="single">
+        {languages.map((language) => (
+          <DropdownItem key={language.value}>{language.label}</DropdownItem>
+        ))}
+      </DropdownMenu>
+    </Dropdown>
   );
 }

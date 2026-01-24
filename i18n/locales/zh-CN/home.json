@@ -160,7 +160,9 @@
     "trust": {
       "free": "永久免费",
       "no_card": "无需信用卡",
-      "quick_start": "1分钟开始"
+      "quick_start": "1分钟开始",
+      "opensource": "开源透明",
+      "no_password": "无需授权密码"
     }
   },
   "sectionLabels": {
@@ -183,13 +185,36 @@
   "homePublisher": {
     "title": "立即开始发布",
     "subtitle": "无需登录。安装浏览器扩展，一键发布到多个平台。",
+    "hero": {
+      "title": "在微博发完，小红书还要再发一遍？",
+      "subtitle": "MultiPost 帮你一键同步到 10+ 平台，开源免费，无需授权账号密码。",
+      "supportedPlatforms": "支持主流社交媒体平台",
+      "benefits": {
+        "efficiency": {
+          "title": "节省 90% 时间",
+          "desc": "一键发布到所有平台，告别逐个复制粘贴"
+        },
+        "reach": {
+          "title": "覆盖全球用户",
+          "desc": "同时触达国内外 10+ 主流社交平台"
+        },
+        "privacy": {
+          "title": "隐私安全",
+          "desc": "开源透明，数据本地处理，无需授权账号密码"
+        }
+      },
+      "cta": {
+        "title": "免费安装，立即开始",
+        "desc": "安装浏览器扩展后即可使用完整功能，永久免费，无需注册"
+      }
+    },
     "extensionRequired": {
       "title": "需要安装浏览器扩展",
       "description": "MultiPost 浏览器扩展是发布内容到社交媒体平台的核心工具。",
       "checking": "正在检测扩展状态...",
       "chromeStore": "Chrome 应用商店",
       "edgeStore": "Edge 扩展商店",
-      "recheck": "重新检测",
+      "recheck": "已安装？点击检测",
       "features": {
         "multiPlatform": "支持 10+ 平台发布",
         "oneClick": "一键同步发布",

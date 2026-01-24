@@ -58,9 +58,10 @@ public/tracker/
 worker/dist
 
 # Planning files (claude code)
-task_plan.md
-findings.md
-progress.md
+.planning/
+
+# Claude local config
+.claude/*.local.md
 
 # fumadocs-mdx generated files
 .source/

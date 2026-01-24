@@ -33,6 +33,17 @@ export default function ActivityList() {
     return <div className="text-red-500">{error}</div>;
   }
 
+  if (tasks.length === 0) {
+    return (
+      <div className="py-12 text-center">
+        <h2 className="mb-4 text-xl font-semibold">暂无活动</h2>
+        <p className="text-muted-foreground">
+          目前没有进行中的活动，请稍后再来查看。您也可以关注我们的官方渠道获取最新活动通知。
+        </p>
+      </div>
+    );
+  }
+
   return (
     <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3">
       {tasks.map((task: ClientPromotionTask) => (

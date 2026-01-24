@@ -169,7 +169,9 @@
     "trust": {
       "free": "Forever Free",
       "no_card": "No Credit Card",
-      "quick_start": "1-Min Setup"
+      "quick_start": "1-Min Setup",
+      "opensource": "Open Source",
+      "no_password": "No Password Needed"
     }
   },
   "sectionLabels": {
@@ -192,13 +194,36 @@
   "homePublisher": {
     "title": "Start Publishing Now",
     "subtitle": "No login required. Install the browser extension and publish to multiple platforms with one click.",
+    "hero": {
+      "title": "Tired of posting the same content on every platform?",
+      "subtitle": "MultiPost syncs to 10+ platforms in one click. Open source, free forever, no passwords needed.",
+      "supportedPlatforms": "Works with all major social platforms",
+      "benefits": {
+        "efficiency": {
+          "title": "Save 90% Time",
+          "desc": "Publish to all platforms at once, no more repetitive work"
+        },
+        "reach": {
+          "title": "Maximize Reach",
+          "desc": "Connect with audiences across 10+ global platforms"
+        },
+        "privacy": {
+          "title": "Privacy First",
+          "desc": "Open source, local processing, no password required"
+        }
+      },
+      "cta": {
+        "title": "Install Free, Start Now",
+        "desc": "Get full access after installing the extension. Forever free, no signup needed"
+      }
+    },
     "extensionRequired": {
       "title": "Browser Extension Required",
       "description": "The MultiPost browser extension is the core tool for publishing content to social media platforms.",
       "checking": "Checking extension status...",
       "chromeStore": "Chrome Web Store",
       "edgeStore": "Edge Add-ons",
-      "recheck": "Check Again",
+      "recheck": "Installed? Click to detect",
       "features": {
         "multiPlatform": "Publish to 10+ platforms",
         "oneClick": "One-click publishing",

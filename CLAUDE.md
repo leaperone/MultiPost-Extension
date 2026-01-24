@@ -334,3 +334,23 @@ TikHub provides APIs for extracting video/audio from social media platforms (Dou
 - **Don't run `pnpm build`** during development, just use lint to check
 - Uses **next-safe-action** for type-safe server actions
 - Custom authentication implementation (session-based, not NextAuth)
+
+## CI error check
+The CI is run in `https://github.com/leaperone/leaperone-releases/actions/workflows/deploy-twssomeren.yml`. You can check the CI status and logs by clicking the "Actions" tab. If error, check the logs and fix the issue.
+
+## planning-with-files & ralph-Loop 使用说明
+当用户输入 `planning with files` 字样的命令的时候，一定要触发 planning-with-files plugin
+运行 planning-with-files 的结果(findings.md progress.md task_plan.md)都放到 ./.plainning/<the-goal>/* 下，计划完成后，必须生成一条 ralph-loop 的启动指令：
+模板：
+```bash
+/ralph-loop:ralph-loop "@.planning/*  <引用 plan 后，你来给出prompt，明确目标>" --completion-promise "<FLAG>" --max-iterations 10
+```
+- 重构类任务: `/ralph-loop:ralph-loop "@.planning/* 重构缓存层，确保所有测试通过" --max-iterations 10`
+- 添加功能: `/ralph-loop:ralph-loop "@.planning/* 实现用户头像上传功能，包括前端组件和 API 接口" --completion-promise "功能完成" --max-iterations 10`
+- 修复 bug: `/ralph-loop:ralph-loop "@.planning/* 修复登录页面的表单验证问题" --max-iterations 10 --completion-promise "修复完成"`
+- 测试相关: `/ralph-loop:ralph-loop "@.planning/* 为 actions/ 目录下的所有 server actions 添加单元测试" --completion-promise "TESTS COMPLETE" --max-iterations 10`
+
+| 参数 | 说明 |
+|------|------|
+| `--max-iterations <n>` | 最大迭代次数，防止无限循环 |
+| `--completion-promise <text>` | 完成标识，Claude 输出这个文本时停止 |

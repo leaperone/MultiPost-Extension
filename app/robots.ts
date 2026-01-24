@@ -8,17 +8,17 @@ export default function robots(): MetadataRoute.Robots {
       {
         userAgent: '*',
         allow: '/',
-        disallow: ['/dashboard/', '/admin/', '/api/', '/auth/'],
+        disallow: ['/dashboard/', '/admin/', '/api/', '/auth/', '/blog', '/docs', '/on-install'],
       },
       {
         userAgent: 'Googlebot',
         allow: '/',
-        disallow: ['/dashboard/', '/admin/', '/api/', '/auth/'],
+        disallow: ['/dashboard/', '/admin/', '/api/', '/auth/', '/blog', '/docs', '/on-install'],
       },
       {
         userAgent: 'Baiduspider',
         allow: '/',
-        disallow: ['/dashboard/', '/admin/', '/api/', '/auth/'],
+        disallow: ['/dashboard/', '/admin/', '/api/', '/auth/', '/blog', '/docs', '/on-install'],
       },
     ],
     sitemap: `${baseUrl}/sitemap.xml`,
