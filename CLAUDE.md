@@ -343,7 +343,7 @@ The CI is run in `https://github.com/leaperone/leaperone-releases/actions/workfl
 运行 planning-with-files 的结果(findings.md progress.md task_plan.md)都放到 ./.plainning/<the-goal>/* 下，计划完成后，必须生成一条 ralph-loop 的启动指令：
 模板：
 ```bash
-/ralph-loop:ralph-loop "@.planning/*  <引用 plan 后，你来给出prompt，明确目标>" --completion-promise "<FLAG>" --max-iterations 10
+/ralph-loop:ralph-loop "@.planning/<the-goal>/*  <引用 plan 后，你来给出prompt，明确目标>" --completion-promise "<FLAG>" --max-iterations 10
 ```
 - 重构类任务: `/ralph-loop:ralph-loop "@.planning/* 重构缓存层，确保所有测试通过" --max-iterations 10`
 - 添加功能: `/ralph-loop:ralph-loop "@.planning/* 实现用户头像上传功能，包括前端组件和 API 接口" --completion-promise "功能完成" --max-iterations 10`
@@ -352,5 +352,69 @@ The CI is run in `https://github.com/leaperone/leaperone-releases/actions/workfl
 
 | 参数 | 说明 |
 |------|------|
-| `--max-iterations <n>` | 最大迭代次数，防止无限循环 |
+| `--max-iterations <n>` | 最大迭代次数，防止无限循环, default 10 |
 | `--completion-promise <text>` | 完成标识，Claude 输出这个文本时停止 |
+
+---
+## Marketing Skills 目录
+
+Doc ref: https://github.com/coreyhaines31/marketingskills
+
+当用户有营销增长的问题的时候，推荐使用以下工具。
+
+### 🛠️ 开发类
+
+| 技能 | 用途 | 调用方式 |
+|------|------|----------|
+| `planning-with-files` | Manus 风格的文件规划，用于复杂任务 | `/planning-with-files` |
+
+### 📝 文案/内容类
+
+| 技能 | 用途 | 调用方式 |
+|------|------|----------|
+| `copywriting` | 写营销文案（首页、落地页等） | `/copywriting` |
+| `copy-editing` | 编辑和改进现有文案 | `/copy-editing` |
+| `humanizer` | 去除 AI 写作痕迹 | `/humanizer` |
+| `social-content` | 社交媒体内容创作 | `/social-content` |
+| `email-sequence` | 邮件营销序列设计 | `/email-sequence` |
+
+### 📈 CRO（转化率优化）类
+
+| 技能 | 用途 | 调用方式 |
+|------|------|----------|
+| `page-cro` | 页面转化率优化 | `/page-cro` |
+| `form-cro` | 表单优化（非注册表单） | `/form-cro` |
+| `signup-flow-cro` | 注册流程优化 | `/signup-flow-cro` |
+| `onboarding-cro` | 用户激活和引导优化 | `/onboarding-cro` |
+| `popup-cro` | 弹窗/模态框转化优化 | `/popup-cro` |
+| `paywall-upgrade-cro` | 付费墙和升级页面优化 | `/paywall-upgrade-cro` |
+
+### 🚀 营销策略类
+
+| 技能 | 用途 | 调用方式 |
+|------|------|----------|
+| `marketing-ideas` | 140+ 营销点子 | `/marketing-ideas` |
+| `marketing-psychology` | 70+ 营销心理学模型 | `/marketing-psychology` |
+| `launch-strategy` | 产品发布策略 | `/launch-strategy` |
+| `pricing-strategy` | 定价和打包策略 | `/pricing-strategy` |
+| `referral-program` | 推荐计划设计 | `/referral-program` |
+| `paid-ads` | 付费广告投放 | `/paid-ads` |
+| `free-tool-strategy` | 免费工具营销策略 | `/free-tool-strategy` |
+| `ab-test-setup` | A/B 测试设计 | `/ab-test-setup` |
+| `competitor-alternatives` | 竞品对比页面 | `/competitor-alternatives` |
+
+### 🔍 SEO 类
+
+| 技能 | 用途 | 调用方式 |
+|------|------|----------|
+| `seo-audit` | SEO 审计和诊断 | `/seo-audit` |
+| `programmatic-seo` | 程序化 SEO 页面 | `/programmatic-seo` |
+| `schema-markup` | 结构化数据标记 | `/schema-markup` |
+| `analytics-tracking` | GA4/GTM 追踪设置 | `/analytics-tracking` |
+| `audit-website` | 网站全面审计 | `/audit-website` |
+
+### 🎨 设计类
+
+| 技能 | 用途 | 调用方式 |
+|------|------|----------|
+| `web-design-guidelines` | Web 界面设计规范检查 | `/web-design-guidelines` |

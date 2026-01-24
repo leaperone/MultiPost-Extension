@@ -1,8 +1,8 @@
 import { Metadata } from 'next';
 
 export const metadata: Metadata = {
-  title: 'Terms of Service | MultiPost',
-  description: 'Terms of service for MultiPost - Multi-platform social media publishing tool',
+  title: 'Terms of Service - MultiPost User Agreement',
+  description: 'Read the MultiPost terms of service covering account management, content guidelines, paid services, intellectual property, and user responsibilities for our multi-platform publishing tool.',
 };
 
 export default function TermsOfService() {

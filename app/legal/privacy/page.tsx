@@ -1,8 +1,8 @@
 import { Metadata } from 'next';
 
 export const metadata: Metadata = {
-  title: 'Privacy Policy | MultiPost',
-  description: 'Privacy policy for MultiPost - Multi-platform social media publishing tool',
+  title: 'Privacy Policy - How MultiPost Protects Your Data',
+  description: 'Learn how MultiPost collects, uses, and protects your personal information. Our privacy policy covers data security, browser extension permissions, payment processing, and your privacy rights.',
 };
 
 export default function PrivacyPolicy() {

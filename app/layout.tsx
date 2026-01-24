@@ -97,6 +97,38 @@ export const metadata = {
   },
 };
 
+// Organization schema for SEO
+const organizationSchema = {
+  '@context': 'https://schema.org',
+  '@type': 'Organization',
+  name: 'MultiPost',
+  url: 'https://multipost.app',
+  logo: 'https://multipost.app/og-image.png',
+  sameAs: [
+    'https://github.com/leaperone',
+    'https://x.com/harry_is_fish',
+    'https://discord.gg/GNsCX9zFwQ',
+  ],
+  contactPoint: {
+    '@type': 'ContactPoint',
+    email: 'support@leaper.one',
+    contactType: 'customer service',
+  },
+};
+
+// WebSite schema for sitelinks search box
+const websiteSchema = {
+  '@context': 'https://schema.org',
+  '@type': 'WebSite',
+  name: 'MultiPost',
+  url: 'https://multipost.app',
+  potentialAction: {
+    '@type': 'SearchAction',
+    target: 'https://multipost.app/docs?q={search_term_string}',
+    'query-input': 'required name=search_term_string',
+  },
+};
+
 export default async function RootLayout({
   children,
 }: Readonly<{
@@ -108,6 +140,16 @@ export default async function RootLayout({
       lang={locale}
       className="dark"
       style={{ colorScheme: 'dark' }}>
+      <head>
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationSchema) }}
+        />
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(websiteSchema) }}
+        />
+      </head>
       <body className={inter.className}>
         <PostHogAnalyticsProvider>
           <Providers>

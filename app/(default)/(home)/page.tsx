@@ -10,9 +10,9 @@ import { HomePublisher } from '@/components/HomePage/HomePublisher';
 import packageJson from '../../../package.json';
 
 export const metadata = {
-  title: 'MultiPost - Open Source Social Media Publishing Tool',
+  title: 'MultiPost - Open Source Multi-Platform Social Media Publishing Tool',
   description:
-    'MultiPost is an open-source browser extension that helps you publish content to multiple social media platforms with one click. It supports various content formats including short videos and blog posts, offering web content extraction, search engine interfaces, and social media data analysis features to enhance your social media presence.',
+    'MultiPost is a free, open-source browser extension for one-click multi-platform publishing. Publish to Weibo, Xiaohongshu, Twitter, LinkedIn and 10+ platforms simultaneously. Save 80% of your publishing time with AI-powered content optimization.',
 };
 
 interface FeatureItem {
@@ -73,6 +73,9 @@ export default async function HomePage() {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
+
+      {/* H1 - SEO 标题（视觉隐藏但对搜索引擎可见） */}
+      <h1 className="sr-only">MultiPost - 开源多平台社交媒体一键发布工具</h1>
 
       {/* 首页发布组件 - 放在最上面，使用 dashboard/publish 风格布局 */}
       <HomePublisher />

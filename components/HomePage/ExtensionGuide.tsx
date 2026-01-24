@@ -4,7 +4,6 @@ import { Button, Spinner } from '@heroui/react';
 import { RefreshCwIcon, ArrowRightIcon, CheckIcon } from 'lucide-react';
 import { Icon } from '@iconify/react';
 import { useTranslation } from '@/i18n/client';
-import { LiquidGlassCard } from '@/components/ui/liquid-glass';
 import { motion } from 'framer-motion';
 
 interface ExtensionGuideProps {
@@ -23,17 +22,6 @@ const platformIcons = [
 
 export function ExtensionGuide({ isLoading, onRecheck }: ExtensionGuideProps) {
   const { t } = useTranslation('home');
-
-  if (isLoading) {
-    return (
-      <LiquidGlassCard className="mx-auto max-w-2xl p-8">
-        <div className="flex flex-col items-center justify-center gap-4">
-          <Spinner size="lg" />
-          <p className="text-foreground/60">{t('homePublisher.extensionRequired.checking')}</p>
-        </div>
-      </LiquidGlassCard>
-    );
-  }
 
   return (
     <div className="mx-auto max-w-2xl text-center">
@@ -129,7 +117,7 @@ export function ExtensionGuide({ isLoading, onRecheck }: ExtensionGuideProps) {
         </span>
       </motion.div>
 
-      {/* Recheck Button */}
+      {/* Recheck Button - with loading state */}
       {onRecheck && (
         <motion.div
           initial={{ opacity: 0 }}
@@ -139,9 +127,13 @@ export function ExtensionGuide({ isLoading, onRecheck }: ExtensionGuideProps) {
             variant="light"
             size="sm"
             onPress={onRecheck}
-            startContent={<RefreshCwIcon className="size-4" />}
+            isLoading={isLoading}
+            isDisabled={isLoading}
+            startContent={!isLoading ? <RefreshCwIcon className="size-4" /> : undefined}
             className="text-foreground/50 hover:text-foreground/70">
-            {t('homePublisher.extensionRequired.recheck')}
+            {isLoading
+              ? t('homePublisher.extensionRequired.checking')
+              : t('homePublisher.extensionRequired.recheck')}
           </Button>
         </motion.div>
       )}

@@ -3,8 +3,8 @@ import { Button, Link } from '@heroui/react';
 import { Github, Mail, Users, Heart, Code, Zap } from 'lucide-react';
 
 export const metadata: Metadata = {
-  title: 'About Us | MultiPost',
-  description: 'Learn about MultiPost - an open-source multi-platform social media publishing tool built by the community, for the community.',
+  title: 'About MultiPost - Open Source Social Media Publishing Tool',
+  description: 'Learn about MultiPost, an open-source multi-platform social media publishing tool by LEAPERone. Discover our mission, values, team, and how we help content creators save 80% of publishing time.',
 };
 
 export default function AboutPage() {

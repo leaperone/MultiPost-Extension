@@ -10,8 +10,8 @@ import { createTranslation } from '@/i18n/server';
 import { SigninBenefits } from './SigninBenefits';
 
 export const metadata: Metadata = {
-  title: 'Sign In | MultiPost',
-  description: 'MultiPost Sign In',
+  title: 'Sign In to MultiPost - Free Account Registration',
+  description: 'Sign in to MultiPost with GitHub, Google, or email. Get free credits on signup and start publishing to multiple social media platforms with one click.',
 };
 
 export default async function RootLayout({

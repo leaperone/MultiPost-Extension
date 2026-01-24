@@ -32,7 +32,7 @@ export default function Footer() {
       { name: t('footer.navigation.contact.discord'), href: 'https://discord.gg/GNsCX9zFwQ' },
       {
         name: t('footer.navigation.contact.qqGroup'),
-        href: 'http://qm.qq.com/cgi-bin/qm/qr?_wv=1027&k=c5BjhD8JxNAuwjKh6qvCoROU301PppYU&authKey=NfKianfDwngrwJyVQbefIQET9vUQs46xb0PfOYUm6KzdeCjPd5YbvlRoO8trJUUZ&noverify=0&group_code=921137242',
+        href: 'https://qm.qq.com/cgi-bin/qm/qr?_wv=1027&k=c5BjhD8JxNAuwjKh6qvCoROU301PppYU&authKey=NfKianfDwngrwJyVQbefIQET9vUQs46xb0PfOYUm6KzdeCjPd5YbvlRoO8trJUUZ&noverify=0&group_code=921137242',
       },
       { name: t('footer.navigation.contact.email'), href: 'mailto:support@leaper.one' },
     ],
@@ -73,7 +73,7 @@ export default function Footer() {
       },
       {
         name: 'QQ Group',
-        href: 'http://qm.qq.com/cgi-bin/qm/qr?_wv=1027&k=c5BjhD8JxNAuwjKh6qvCoROU301PppYU&authKey=NfKianfDwngrwJyVQbefIQET9vUQs46xb0PfOYUm6KzdeCjPd5YbvlRoO8trJUUZ&noverify=0&group_code=921137242',
+        href: 'https://qm.qq.com/cgi-bin/qm/qr?_wv=1027&k=c5BjhD8JxNAuwjKh6qvCoROU301PppYU&authKey=NfKianfDwngrwJyVQbefIQET9vUQs46xb0PfOYUm6KzdeCjPd5YbvlRoO8trJUUZ&noverify=0&group_code=921137242',
         icon: (props: SocialIconProps) => (
           <Icon
             {...props}
@@ -117,10 +117,13 @@ export default function Footer() {
                 <Link
                   key={item.name}
                   href={item.href}
-                  target="_blank">
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label={`Visit our ${item.name} page`}>
                   <Button
                     size="sm"
-                    isIconOnly>
+                    isIconOnly
+                    aria-label={item.name}>
                     <item.icon
                       aria-hidden="true"
                       className="size-5"

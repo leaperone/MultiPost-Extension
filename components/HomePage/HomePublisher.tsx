@@ -1270,10 +1270,8 @@ export function HomePublisher() {
 
         {/* Content */}
         <div className="mx-auto max-w-2xl">
-          {isLoading ? (
-            <ExtensionGuide isLoading />
-          ) : !isInstalled ? (
-            <ExtensionGuide onRecheck={recheck} />
+          {!isInstalled ? (
+            <ExtensionGuide isLoading={isLoading} onRecheck={recheck} />
           ) : (
             <AnimatePresence mode="wait">
               <motion.div

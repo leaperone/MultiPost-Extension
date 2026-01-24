@@ -10,8 +10,8 @@ import { TimezoneProvider } from './components/TimezoneProvider';
 import { ToastProvider } from '@heroui/react';
 
 export const metadata: Metadata = {
-  title: 'Dashboard | MultiPost',
-  description: 'MultiPost Dashboard',
+  title: 'Dashboard - Manage Your Social Media Publishing',
+  description: 'Access your MultiPost dashboard to publish content, manage drafts, generate images, and track your social media presence across multiple platforms.',
 };
 
 export default async function DashboardLayout({
