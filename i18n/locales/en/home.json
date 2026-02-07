@@ -54,21 +54,21 @@
     "features": [
       {
         "title": "Multiple Content Formats",
-        "description": "Support for publishing text, images, videos, and links"
+        "description": "Text, images, videos in one place—no more switching between apps"
       },
       {
         "title": "Platform-Specific Optimization",
-        "description": "Automatically optimize content to meet the requirements of each platform"
+        "description": "Auto-adapts to each platform—character limits, hashtags, image sizes handled automatically"
       },
       {
         "title": "One-Click Publishing",
-        "description": "Simultaneously publish content to all connected social media platforms"
+        "description": "Publish to 10+ platforms at once—what took 30 minutes now takes 30 seconds"
       }
     ],
     "cta": "Install Extension to Get Started",
     "featuresBadge": "MultiPost Features",
     "featuresTitle": "Build Your Social Media Pipeline",
-    "featuresDesc": "MultiPost provides a variety of features to build your social media pipeline. You can"
+    "featuresDesc": "Let creators focus on creating. We handle the publishing."
   },
   "combinedSection": {
     "title": "Powerful & Simple",
@@ -119,7 +119,7 @@
   "openSource": {
     "badge": "Open Source",
     "title": "Built by the community, for the community",
-    "description": "MultiPost is permanently open source and free. Join us in building the future of social media management.",
+    "description": "MultiPost is 100% open source, free forever. Full code transparency—audit it yourself or contribute.",
     "cta": "View on GitHub"
   },
   "faq": {
@@ -144,13 +144,13 @@
     ]
   },
   "finalCta": {
-    "title": "Start publishing smarter today",
-    "description": "Join our growing community of content creators and developers",
+    "title": "Stop repeating yourself. Start today.",
+    "description": "Join content creators worldwide who publish smarter, not harder",
     "install": "Install Extension",
     "github": "Star on GitHub"
   },
   "hero": {
-    "description": "Build flexible social media pipeline",
+    "description": "Write once, publish everywhere",
     "buttons": {
       "post": "Start Posting",
       "start_free": "Start Free",
@@ -196,12 +196,12 @@
     "subtitle": "No login required. Install the browser extension and publish to multiple platforms with one click.",
     "hero": {
       "title": "Tired of posting the same content on every platform?",
-      "subtitle": "MultiPost syncs to 10+ platforms in one click. Open source, free forever, no passwords needed.",
+      "subtitle": "MultiPost publishes to Weibo, Twitter, LinkedIn, Instagram & 10+ more platforms in one click. 100% open source, free forever.",
       "supportedPlatforms": "Works with all major social platforms",
       "benefits": {
         "efficiency": {
-          "title": "Save 90% Time",
-          "desc": "Publish to all platforms at once, no more repetitive work"
+          "title": "Save Hours Every Week",
+          "desc": "One click publishes to 10+ platforms. No more copy-paste marathons"
         },
         "reach": {
           "title": "Maximize Reach",
@@ -209,12 +209,12 @@
         },
         "privacy": {
           "title": "Privacy First",
-          "desc": "Open source, local processing, no password required"
+          "desc": "100% open source code. Data stays in YOUR browser. We never see your passwords"
         }
       },
       "cta": {
-        "title": "Install Free, Start Now",
-        "desc": "Get full access after installing the extension. Forever free, no signup needed"
+        "title": "Install Free, Start in 30 Seconds",
+        "desc": "No payment. No signup forms. Install and you're ready to go"
       }
     },
     "extensionRequired": {

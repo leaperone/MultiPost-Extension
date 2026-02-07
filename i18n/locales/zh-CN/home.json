@@ -54,21 +54,21 @@
     "features": [
       {
         "title": "多种内容格式",
-        "description": "支持发布文本、图片、视频和链接等多种内容格式"
+        "description": "文字、图片、视频一站发布——无需在多个 App 间来回切换"
       },
       {
         "title": "平台特性适配",
-        "description": "自动优化内容以符合各平台特性要求"
+        "description": "自动适配格式——微博字数限制、小红书话题标签都帮你搞定"
       },
       {
         "title": "一键发布",
-        "description": "同时将内容发布到所有已连接的社交媒体平台"
+        "description": "10+ 平台同时发布——原来 30 分钟的活，现在 30 秒搞定"
       }
     ],
     "cta": "安装扩展开始体验",
     "featuresBadge": "MultiPost 功能",
     "featuresTitle": "构建你的社交媒体流水线",
-    "featuresDesc": "MultiPost 提供丰富功能，助你高效构建社交媒体内容发布流程。"
+    "featuresDesc": "让内容创作者专注于创作，发布的事情交给我们。"
   },
   "combinedSection": {
     "title": "强大而简单",
@@ -110,7 +110,7 @@
   "openSource": {
     "badge": "开源",
     "title": "由社区构建，为社区服务",
-    "description": "MultiPost 永久开源免费。加入我们，共同构建社交媒体管理的未来。",
+    "description": "MultiPost 100% 开源，永久免费。代码完全公开，欢迎审查和贡献。",
     "cta": "在 GitHub 上查看"
   },
   "faq": {
@@ -135,13 +135,13 @@
     ]
   },
   "finalCta": {
-    "title": "今天就开始更智能的发布",
-    "description": "加入我们不断增长的内容创作者和开发者社区",
+    "title": "告别重复发布，从今天开始",
+    "description": "和全球内容创作者一起，用更聪明的方式发布内容",
     "install": "安装扩展",
     "github": "在 GitHub 上点星"
   },
   "hero": {
-    "description": "打造自媒体柔性流水线",
+    "description": "一次编辑，全平台同步发布",
     "buttons": {
       "post": "开始发布",
       "start_free": "免费开始",
@@ -187,12 +187,12 @@
     "subtitle": "无需登录。安装浏览器扩展，一键发布到多个平台。",
     "hero": {
       "title": "在微博发完，小红书还要再发一遍？",
-      "subtitle": "MultiPost 帮你一键同步到 10+ 平台，开源免费，无需授权账号密码。",
+      "subtitle": "MultiPost 一键同步到微博、小红书、抖音、Twitter 等 10+ 平台。100% 开源免费，无需授权密码。",
       "supportedPlatforms": "支持主流社交媒体平台",
       "benefits": {
         "efficiency": {
-          "title": "节省 90% 时间",
-          "desc": "一键发布到所有平台，告别逐个复制粘贴"
+          "title": "大幅节省时间",
+          "desc": "一键发 10+ 平台，告别复制粘贴的重复劳动"
         },
         "reach": {
           "title": "覆盖全球用户",
@@ -200,12 +200,12 @@
         },
         "privacy": {
           "title": "隐私安全",
-          "desc": "开源透明，数据本地处理，无需授权账号密码"
+          "desc": "代码 100% 公开，数据只存你自己浏览器，不存任何密码"
         }
       },
       "cta": {
-        "title": "免费安装，立即开始",
-        "desc": "安装浏览器扩展后即可使用完整功能，永久免费，无需注册"
+        "title": "免费安装，30 秒上手",
+        "desc": "不花一分钱，不填任何表单，装好立刻用"
       }
     },
     "extensionRequired": {
