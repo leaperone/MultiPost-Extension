@@ -65,3 +65,4 @@ worker/dist
 
 # fumadocs-mdx generated files
 .source/
+.planning

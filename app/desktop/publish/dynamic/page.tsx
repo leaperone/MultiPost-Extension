@@ -1,18 +1,17 @@
 'use client';
 
-import { useCallback, useState } from 'react';
+import { useState } from 'react';
 import {
   Avatar,
   Button,
   Card,
   CardBody,
   Checkbox,
-  CheckboxGroup,
   Chip,
   Spinner,
   Textarea,
 } from '@heroui/react';
-import { ImagePlus, Send, Trash2, X } from 'lucide-react';
+import { ImagePlus, Send, X } from 'lucide-react';
 import {
   Account,
   DynamicData,
@@ -21,7 +20,14 @@ import {
   useDesktopAccounts,
   useDesktopPlatforms,
   useIsDesktop,
+  createAndShowPublishGroup,
 } from '@/lib/desktop-bridge';
+
+// 图片信息，包含原始路径和预览 URL
+interface ImageItem {
+  path: string; // 原始文件路径，用于发布
+  previewUrl: string; // 预览 URL（data URL），用于显示
+}
 
 /**
  * 动态发布页面
@@ -30,7 +36,7 @@ import {
  * - 编辑文字内容
  * - 上传图片
  * - 选择目标平台和账号
- * - 发起发布
+ * - 发起发布 (使用 Publish Group)
  */
 export default function DynamicPublishPage() {
   const isDesktop = useIsDesktop();
@@ -38,7 +44,7 @@ export default function DynamicPublishPage() {
   const { platforms, loading: platformsLoading } = useDesktopPlatforms();
 
   const [content, setContent] = useState('');
-  const [images, setImages] = useState<string[]>([]);
+  const [images, setImages] = useState<ImageItem[]>([]);
   const [selectedAccounts, setSelectedAccounts] = useState<string[]>([]);
   const [isPublishing, setIsPublishing] = useState(false);
   const [isSelectingFiles, setIsSelectingFiles] = useState(false);
@@ -72,7 +78,20 @@ export default function DynamicPublishPage() {
         multiple: true,
       });
       if (files.length > 0) {
-        setImages((prev) => [...prev, ...files]);
+        // 将文件路径转换为预览 URL
+        const newImages: ImageItem[] = await Promise.all(
+          files.map(async (filePath) => {
+            try {
+              const dataUrl = await bridge.app.readFileAsDataURL(filePath);
+              return { path: filePath, previewUrl: dataUrl };
+            } catch (error) {
+              console.error('Failed to read file:', filePath, error);
+              // 降级处理：使用 file:// 协议（可能不工作，但保持兼容）
+              return { path: filePath, previewUrl: `file://${filePath}` };
+            }
+          })
+        );
+        setImages((prev) => [...prev, ...newImages]);
       }
     } catch (error) {
       console.error('Failed to select images:', error);
@@ -86,19 +105,16 @@ export default function DynamicPublishPage() {
     setImages((prev) => prev.filter((_, i) => i !== index));
   };
 
-  // 发布
+  // 发布 - 使用 Publish Group
   const handlePublish = async () => {
     if (!content.trim() && images.length === 0) return;
     if (selectedAccounts.length === 0) return;
-
-    const bridge = getDesktopBridge();
-    if (!bridge) return;
 
     setIsPublishing(true);
     try {
       const data: DynamicData = {
         content: content.trim(),
-        images,
+        images: images.map((img) => img.path), // 发布时使用原始文件路径
       };
 
       const targets = selectedAccounts.map((accountId) => {
@@ -106,19 +122,23 @@ export default function DynamicPublishPage() {
         return {
           accountId,
           platform: account?.platform || '',
-          displayName: account?.displayName || account?.username,
+          displayName: account?.displayName || account?.username || account?.platform || '',
         };
       });
 
-      await bridge.publish.startInExecutor({
+      // 使用 Publish Group API 创建发布组
+      const groupId = await createAndShowPublishGroup({
         contentType: 'DYNAMIC',
         targets,
         data,
-        autoSubmit: false,
       });
 
-      // 导航到执行器页面
-      bridge.navigation.navigateTo('/desktop/executor');
+      if (groupId) {
+        console.log('[DynamicPublishPage] Publish group created:', groupId);
+        // Group 创建成功后会自动切换到 Group tab，无需额外导航
+      } else {
+        console.error('[DynamicPublishPage] Failed to create publish group');
+      }
     } catch (error) {
       console.error('Failed to publish:', error);
     } finally {
@@ -181,11 +201,11 @@ export default function DynamicPublishPage() {
           <div className="flex flex-wrap gap-2">
             {images.map((image, index) => (
               <div
-                key={index}
+                key={image.path}
                 className="relative group">
                 <div className="w-20 h-20 rounded-lg overflow-hidden bg-muted">
                   <img
-                    src={`file://${image}`}
+                    src={image.previewUrl}
                     alt={`Image ${index + 1}`}
                     className="w-full h-full object-cover"
                   />

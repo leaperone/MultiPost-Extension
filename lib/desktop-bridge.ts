@@ -264,6 +264,12 @@ interface AppAPI {
   openExternal(url: string): Promise<void>
   selectFile(options?: FileSelectOptions): Promise<string[]>
   selectDirectory(): Promise<string | null>
+  /**
+   * 读取文件内容为 Base64 字符串
+   * @param filePath 文件的绝对路径
+   * @returns Base64 编码的文件内容（包含 data URL 前缀，如 data:image/png;base64,xxx）
+   */
+  readFileAsDataURL(filePath: string): Promise<string>
 }
 
 interface LayoutAPI {
@@ -639,4 +645,104 @@ export function usePublishProgress(
   useDesktopEvent<{ error: string }>('publish:error', (event) => {
     onError?.(event.error)
   })
+}
+
+// ============================================================================
+// Publish Group Types & API
+// ============================================================================
+
+export type PublishGroupStatus = "preparing" | "publishing" | "completed" | "failed"
+export type PublishTargetStatus = "pending" | "filling" | "ready" | "success" | "failed"
+
+export interface GroupTab {
+  id: string
+  groupId: string
+  platform: PlatformType
+  displayName: string
+  status: PublishTargetStatus
+  isActive: boolean
+}
+
+export interface PublishGroup {
+  id: string
+  name: string
+  contentType: ContentType
+  data: PublishData
+  status: PublishGroupStatus
+  targets: Array<{
+    accountId: string
+    platform: PlatformType
+    displayName: string
+    status: PublishTargetStatus
+  }>
+  activeAccountId: string | null
+  createdAt: number
+}
+
+export interface PublishGroupCreateParams {
+  contentType: ContentType
+  targets: Array<{
+    accountId: string
+    platform: PlatformType
+    displayName: string
+  }>
+  data: PublishData
+}
+
+interface PublishGroupAPI {
+  create(params: PublishGroupCreateParams): Promise<string>
+  show(groupId: string): Promise<void>
+  switchTab(groupId: string, accountId: string): Promise<void>
+  close(groupId: string): Promise<void>
+  getTabs(groupId: string): Promise<GroupTab[]>
+  get(groupId: string): Promise<PublishGroup | null>
+  fill(groupId: string): Promise<void>
+  submitAll(groupId: string): Promise<void>
+  getActiveGroupId(): Promise<string | null>
+}
+
+/**
+ * 获取 Publish Group API
+ */
+export function getPublishGroupAPI(): PublishGroupAPI | null {
+  const bridge = window.multipost as any
+  if (!bridge?.publishGroup) {
+    return null
+  }
+  return bridge.publishGroup as PublishGroupAPI
+}
+
+/**
+ * Hook: 使用 Publish Group API
+ */
+export function usePublishGroup(): PublishGroupAPI | null {
+  const [api, setApi] = useState<PublishGroupAPI | null>(null)
+
+  useEffect(() => {
+    setApi(getPublishGroupAPI())
+  }, [])
+
+  return api
+}
+
+/**
+ * 创建发布 Group 并打开
+ */
+export async function createAndShowPublishGroup(
+  params: PublishGroupCreateParams
+): Promise<string | null> {
+  const api = getPublishGroupAPI()
+  if (!api) {
+    console.warn("[Desktop Bridge] PublishGroup API not available")
+    return null
+  }
+
+  try {
+    const groupId = await api.create(params)
+    console.log("[Desktop Bridge] Created publish group:", groupId)
+    return groupId
+  } catch (error) {
+    console.error("[Desktop Bridge] Failed to create publish group:", error)
+    return null
+  }
 }
