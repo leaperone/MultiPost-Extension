@@ -236,21 +236,10 @@ export const getPlatformInfos = async (type: string) => {
   return platforms.filter((platform: PlatformInfo) => platform.type === type);
 };
 
-export const getAccountInfos = async (): Promise<Record<string, AccountInfo>> => {
-  const response = await sendRequest<void, { accountInfo: Record<string, AccountInfo> }>(
-    'MUTLIPOST_EXTENSION_GET_ACCOUNT_INFOS',
-  );
-  return response.accountInfo;
-};
-
 export const linkExtensionClient = async (apiKey: string, timeout: number = 30000) => {
   return sendRequest<{ apiKey: string }, { confirm: boolean }>(
     'MUTLIPOST_EXTENSION_LINK_EXTENSION',
     { apiKey },
     timeout,
   );
-};
-
-export const requestRefreshAccountInfo = async (isFocused: boolean = false) => {
-  return sendRequest<{ isFocused: boolean }, void>('MUTLIPOST_EXTENSION_REFRESH_ACCOUNT_INFOS', { isFocused });
 };

@@ -1,4 +1,5 @@
-import { Checkbox, Image, Link } from '@heroui/react';
+import { Checkbox, Image } from '@heroui/react';
+import Link from 'next/link';
 import type { PlatformInfo } from '@/lib/extension';
 import { Icon } from '@iconify/react';
 import ExtraInfoConfig from './ExtraInfoConfig';
@@ -18,8 +19,6 @@ export default function PlatformCheckbox({
   onChange,
   onExtraConfigChange,
 }: PlatformCheckboxProps) {
-  const profileUrl = platformInfo.accountInfo?.profileUrl || platformInfo.homeUrl;
-
   return (
     <div className="flex items-center rounded-lg p-2 transition-colors hover:bg-default-100">
       <div className="flex flex-1 items-center gap-2">
@@ -48,34 +47,12 @@ export default function PlatformCheckbox({
             )
           )}
 
-          <div className="flex items-center gap-2">
-            <Link
-              href={platformInfo.homeUrl}
-              isExternal
-              className="text-foreground transition-colors hover:text-primary">
-              <span className="truncate text-sm font-medium">{platformInfo.platformName}</span>
-            </Link>
-
-            {platformInfo.accountInfo && (
-              <div className="flex items-center gap-1">
-                {platformInfo.accountInfo.avatarUrl && (
-                  <Image
-                    src={platformInfo.accountInfo.avatarUrl}
-                    alt={`${platformInfo.platformName} avatar`}
-                    width={18}
-                    height={18}
-                    className="rounded-full"
-                  />
-                )}
-                <Link
-                  href={profileUrl}
-                  isExternal
-                  className="flex max-w-[120px] items-center gap-1 truncate text-xs text-default-600 hover:text-primary">
-                  {platformInfo.accountInfo.username}
-                </Link>
-              </div>
-            )}
-          </div>
+          <Link
+            href={platformInfo.homeUrl}
+            target="_blank"
+            className="text-foreground transition-colors hover:text-primary">
+            <span className="truncate text-sm font-medium">{platformInfo.platformName}</span>
+          </Link>
         </div>
       </div>
 

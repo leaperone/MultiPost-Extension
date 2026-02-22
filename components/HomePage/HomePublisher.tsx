@@ -69,7 +69,7 @@ import {
 } from '@/components/ui/liquid-glass';
 
 import type { PlatformInfo, FileData } from '@/lib/extension';
-import { funcPublish, getPlatformInfos, requestRefreshAccountInfo, funcGetPermission } from '@/lib/extension';
+import { funcPublish, getPlatformInfos, funcGetPermission } from '@/lib/extension';
 import { usePlatformStore } from '@/store/publish.store';
 import {
   trackPublishInitiated,
@@ -331,7 +331,6 @@ export function HomePublisher() {
       setIsLoadingPlatforms(true);
       try {
         await funcGetPermission().catch(() => {});
-        await requestRefreshAccountInfo().catch(() => {});
         const typeMap: Record<PublishType, string> = {
           dynamic: 'DYNAMIC',
           video: 'VIDEO',
