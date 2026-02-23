@@ -85,7 +85,7 @@ function createWebStrategy(): PublishStrategy {
       const data: SyncData = {
         platforms: platforms.filter((p) => selectedPlatformNames.includes(p.name)),
         data: {
-          title,
+          title: title ?? '',
           content,
           images: images as FileData[],
           videos: videos as FileData[],
