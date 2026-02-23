@@ -1,0 +1,58 @@
+{
+  "trigger": "反馈",
+  "modal": {
+    "title": "发送反馈",
+    "category": {
+      "label": "分类",
+      "placeholder": "请选择分类",
+      "bug": "问题反馈",
+      "suggestion": "功能建议",
+      "account": "账号问题",
+      "other": "其他"
+    },
+    "titleField": {
+      "label": "标题",
+      "placeholder": "简要描述您的反馈",
+      "counter": "{{count}}/{{max}}"
+    },
+    "content": {
+      "label": "详细描述",
+      "placeholder": "请详细描述您遇到的问题或建议...",
+      "counter": "{{count}}/{{max}}"
+    },
+    "contact": {
+      "label": "联系方式（可选）",
+      "methodPlaceholder": "联系方式",
+      "valuePlaceholder": "您的联系方式",
+      "methods": {
+        "phone": "手机号",
+        "email": "邮箱",
+        "bilibili": "B站",
+        "douyin": "抖音",
+        "custom": "其他"
+      }
+    },
+    "screenshot": {
+      "label": "截图",
+      "captured": "已捕获页面截图",
+      "remove": "移除截图"
+    },
+    "submit": "提交",
+    "cancel": "取消",
+    "submitting": "提交中..."
+  },
+  "toast": {
+    "success": {
+      "title": "反馈已发送",
+      "description": "感谢您的反馈！我们会尽快处理。"
+    },
+    "error": {
+      "title": "提交失败",
+      "description": "发送反馈失败，请稍后重试。"
+    },
+    "screenshotFailed": {
+      "title": "截图失败",
+      "description": "截图捕获失败，但您仍可以提交反馈。"
+    }
+  }
+}

@@ -1,0 +1,58 @@
+{
+  "trigger": "Feedback",
+  "modal": {
+    "title": "Send Feedback",
+    "category": {
+      "label": "Category",
+      "placeholder": "Select a category",
+      "bug": "Bug Report",
+      "suggestion": "Suggestion",
+      "account": "Account Issue",
+      "other": "Other"
+    },
+    "titleField": {
+      "label": "Title",
+      "placeholder": "Brief summary of your feedback",
+      "counter": "{{count}}/{{max}}"
+    },
+    "content": {
+      "label": "Description",
+      "placeholder": "Please describe in detail...",
+      "counter": "{{count}}/{{max}}"
+    },
+    "contact": {
+      "label": "Contact (optional)",
+      "methodPlaceholder": "Contact method",
+      "valuePlaceholder": "Your contact info",
+      "methods": {
+        "phone": "Phone",
+        "email": "Email",
+        "bilibili": "Bilibili",
+        "douyin": "Douyin",
+        "custom": "Other"
+      }
+    },
+    "screenshot": {
+      "label": "Screenshot",
+      "captured": "Page screenshot captured",
+      "remove": "Remove screenshot"
+    },
+    "submit": "Submit",
+    "cancel": "Cancel",
+    "submitting": "Submitting..."
+  },
+  "toast": {
+    "success": {
+      "title": "Feedback Sent",
+      "description": "Thank you for your feedback! We will review it soon."
+    },
+    "error": {
+      "title": "Submit Failed",
+      "description": "Failed to send feedback. Please try again later."
+    },
+    "screenshotFailed": {
+      "title": "Screenshot Failed",
+      "description": "Failed to capture screenshot, but you can still submit feedback."
+    }
+  }
+}

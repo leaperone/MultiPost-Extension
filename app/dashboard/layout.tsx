@@ -8,6 +8,7 @@ import { Metadata } from 'next';
 // import { ThemeSwitcher } from '@/components/ThemeSwitcher';
 import { TimezoneProvider } from './components/TimezoneProvider';
 import { ToastProvider } from '@heroui/react';
+import { FeedbackButton } from '@/components/Feedback/FeedbackButton';
 
 export const metadata: Metadata = {
   title: 'Dashboard - Manage Your Social Media Publishing',
@@ -40,6 +41,7 @@ export default async function DashboardLayout({
         <DashboardSidebar />
         <TimezoneProvider />
         <main className="flex-1 overflow-hidden">{children}</main>
+        <FeedbackButton />
       </SidebarProvider>
     </div>
   );
