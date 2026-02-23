@@ -3,6 +3,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import { z } from 'zod';
 import { Button, Tabs, Tab, Skeleton, Divider, Card, CardBody, Image } from '@heroui/react';
+import NextImage from 'next/image';
 import { GenerationForm } from './components/GenerationForm';
 import { ResultWaiter } from './components/ResultWaiter';
 import {
@@ -391,10 +392,13 @@ function GallerySection() {
                       <div
                         key={logIndex}
                         className="group relative aspect-square overflow-hidden">
-                        <img
+                        <NextImage
                           src={getLogPreviewUrl(log)!}
                           alt={image.prompt}
                           className="size-full cursor-pointer object-cover"
+                          width={200}
+                          height={200}
+                          unoptimized
                         />
                         <div className="absolute inset-0 z-10 opacity-0 transition-opacity duration-200 group-hover:opacity-100">
                           <div className="absolute inset-0 bg-black/60" />

@@ -382,16 +382,21 @@ export function HomePublisher() {
     }
   }, [videos]);
 
-  // Save selected platforms to store
-  useEffect(() => {
+  // Sync selected platforms to the corresponding store
+  const syncPlatformsToStore = (platforms: string[]) => {
     if (publishType === 'dynamic') {
-      setDynamicPlatforms(selectedPlatforms);
+      setDynamicPlatforms(platforms);
     } else if (publishType === 'video') {
-      setVideoPlatforms(selectedPlatforms);
+      setVideoPlatforms(platforms);
     } else {
-      setPodcastPlatforms(selectedPlatforms);
+      setPodcastPlatforms(platforms);
     }
-  }, [selectedPlatforms, publishType, setDynamicPlatforms, setVideoPlatforms, setPodcastPlatforms]);
+  };
+
+  const updateSelectedPlatforms = (platforms: string[]) => {
+    setSelectedPlatforms(platforms);
+    syncPlatformsToStore(platforms);
+  };
 
   const handlePublishSuccess = () => {
     confetti({
@@ -436,6 +441,7 @@ export function HomePublisher() {
       if (newSelected.length > 0) {
         trackPlatformSelected(newSelected, publishType);
       }
+      syncPlatformsToStore(newSelected);
       return newSelected;
     });
   };

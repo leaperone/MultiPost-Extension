@@ -129,8 +129,9 @@ export function CreateDialog({ isOpen, onOpenChange, onSuccess }: CreateDialogPr
                 </div>
               ) : (
                 <div className="flex flex-col gap-2">
-                  <label className="text-sm font-medium">{t('create_dialog.name_label')}</label>
+                  <label htmlFor="api-key-name" className="text-sm font-medium">{t('create_dialog.name_label')}</label>
                   <Input
+                    id="api-key-name"
                     value={name}
                     onValueChange={setName}
                     placeholder={t('create_dialog.name_placeholder')}

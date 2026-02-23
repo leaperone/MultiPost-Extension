@@ -328,7 +328,7 @@ export default function ClientPublishModal({
             {/* Client Selection */}
             <div>
               <div className="mb-2 flex items-center justify-between">
-                <label className="text-sm font-medium">{t('publish.client.label')}</label>
+                <span className="text-sm font-medium">{t('publish.client.label')}</span>
                 <span className="text-xs text-default-500">
                   {t('publish.client.helpText')}{' '}
                   <a
@@ -363,7 +363,7 @@ export default function ClientPublishModal({
 
             {clientDetail && platforms.length > 0 && (
               <div>
-                <label className="mb-2 block text-sm font-medium">{t('publish.platform.label')}</label>
+                <span className="mb-2 block text-sm font-medium">{t('publish.platform.label')}</span>
                 <Card>
                   <CardBody>
                     <div className="grid grid-cols-1 gap-2 md:grid-cols-2">
@@ -386,7 +386,7 @@ export default function ClientPublishModal({
 
             {/* Schedule Options */}
             <div>
-              <label className="mb-2 block text-sm font-medium">{t('publish.schedule.label')}</label>
+              <span className="mb-2 block text-sm font-medium">{t('publish.schedule.label')}</span>
               <div className="space-y-3">
                 <Checkbox
                   isSelected={scheduleEnabled}

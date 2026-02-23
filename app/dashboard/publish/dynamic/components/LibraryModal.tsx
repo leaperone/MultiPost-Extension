@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import Image from 'next/image';
 import { Modal, ModalContent, ModalHeader, ModalBody, Tabs, Tab, Card, addToast, Spinner } from '@heroui/react';
 import { listAllImages } from '@/actions/draw/image';
 import { listAllPosters } from '@/actions/draw/poster';
@@ -358,10 +359,13 @@ export default function LibraryModal({ onSelectImage, existingFiles = [], isOpen
                     });
                 }
               }}>
-              <img
+              <Image
                 src={imageUrl || '/placeholder.png'}
                 alt={item.prompt}
                 className="absolute inset-0 size-full object-cover transition-transform group-hover:scale-105"
+                width={200}
+                height={200}
+                unoptimized
               />
               <div className="absolute inset-x-0 bottom-0 bg-black/50 p-2 text-white opacity-0 transition-opacity group-hover:opacity-100">
                 <p className="line-clamp-2 text-xs">{item.prompt}</p>

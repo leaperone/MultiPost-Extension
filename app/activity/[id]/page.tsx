@@ -8,6 +8,7 @@ import { multipostDb } from '@/lib/db';
 import type { ClientPromotionTask } from '@/app/api/promotion/types';
 import { PromotionTaskType, PromotionTaskTypeLabelMap } from '@/app/api/promotion/types';
 import { ExternalLink } from 'lucide-react';
+import type { Metadata } from 'next';
 
 interface Props {
   params: Promise<{
@@ -45,6 +46,22 @@ async function getTaskDetail(id: string): Promise<ClientPromotionTask> {
     ...task,
     reward: task.reward.toString(),
   };
+}
+
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
+  const { id } = await params;
+  try {
+    const task = await getTaskDetail(id);
+    return {
+      title: `${task.title} - MultiPost`,
+      description: task.description?.slice(0, 160) || 'View activity details on MultiPost.',
+    };
+  } catch {
+    return {
+      title: 'Activity - MultiPost',
+      description: 'View activity details on MultiPost.',
+    };
+  }
 }
 
 export default async function ActivityDetailPage({ params }: Props) {

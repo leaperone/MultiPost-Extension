@@ -29,36 +29,40 @@ interface MenuGroup {
   items: MenuItem[];
 }
 
-const menuGroups: MenuGroup[] = [
-  {
-    label: '基础',
-    items: [{ id: 'home', title: '首页', icon: Home, path: '/desktop' }],
-  },
-  {
-    label: '立即发布',
-    items: [
-      { id: 'publish-dynamic', title: '动态', icon: Image, path: '/desktop/publish/dynamic' },
-      { id: 'publish-video', title: '视频', icon: Video, path: '/desktop/publish/video' },
-      { id: 'publish-article', title: '文章', icon: FileText, path: '/desktop/publish/article' },
-    ],
-  },
-  {
-    label: '内容管理',
-    items: [
-      { id: 'drafts', title: '草稿箱', icon: FileEdit, path: '/desktop/drafts' },
-      { id: 'history', title: '发布历史', icon: History, path: '/desktop/history' },
-    ],
-  },
-  {
-    label: '账号',
-    items: [{ id: 'accounts', title: '账号管理', icon: Users, path: '/desktop/accounts' }],
-  },
-];
+function getMenuGroups(basePath: string): MenuGroup[] {
+  return [
+    {
+      label: '基础',
+      items: [{ id: 'home', title: '首页', icon: Home, path: basePath }],
+    },
+    {
+      label: '立即发布',
+      items: [
+        { id: 'publish-dynamic', title: '动态', icon: Image, path: `${basePath}/publish/dynamic` },
+        { id: 'publish-video', title: '视频', icon: Video, path: `${basePath}/publish/video` },
+        { id: 'publish-article', title: '文章', icon: FileText, path: `${basePath}/publish/article` },
+      ],
+    },
+    {
+      label: '内容管理',
+      items: [
+        { id: 'drafts', title: '草稿箱', icon: FileEdit, path: `${basePath}/drafts` },
+        { id: 'history', title: '发布历史', icon: History, path: `${basePath}/history` },
+      ],
+    },
+    {
+      label: '账号',
+      items: [{ id: 'accounts', title: '账号管理', icon: Users, path: `${basePath}/accounts` }],
+    },
+  ];
+}
 
-const footerItems: MenuItem[] = [
-  { id: 'about', title: '关于', icon: Info, path: '/desktop/about' },
-  { id: 'settings', title: '设置', icon: Settings, path: '/desktop/settings' },
-];
+function getFooterItems(basePath: string): MenuItem[] {
+  return [
+    { id: 'about', title: '关于', icon: Info, path: `${basePath}/about` },
+    { id: 'settings', title: '设置', icon: Settings, path: `${basePath}/settings` },
+  ];
+}
 
 function MenuButton({
   item,
@@ -97,12 +101,14 @@ function MenuButton({
   );
 }
 
-export function DesktopSidebar() {
+export function DesktopSidebar({ basePath = '/desktop' }: { basePath?: string }) {
   const pathname = usePathname();
+  const menuGroups = getMenuGroups(basePath);
+  const footerItems = getFooterItems(basePath);
 
   const isActive = (path: string) => {
-    if (path === '/desktop') {
-      return pathname === '/desktop';
+    if (path === basePath) {
+      return pathname === basePath;
     }
     return pathname.startsWith(path);
   };
@@ -111,7 +117,7 @@ export function DesktopSidebar() {
     <aside className="flex h-dvh w-64 flex-col border-r bg-card flex-shrink-0">
       {/* Logo */}
       <div className="flex h-14 items-center border-b px-4">
-        <Link href="/desktop" className="flex items-center gap-2">
+        <Link href={basePath} className="flex items-center gap-2">
           <span className="font-semibold bg-gradient-to-br from-blue-300 to-pink-600 dark:from-blue-400 dark:to-pink-400 bg-clip-text text-transparent text-lg">
             MultiPost
           </span>
@@ -132,12 +138,9 @@ export function DesktopSidebar() {
             </div>
           </div>
         ))}
-
-        {/* 执行器（如果有打开的执行器） */}
-        {/* TODO: 从 Desktop Bridge 获取执行器状态 */}
       </nav>
 
-      {/* Footer - 添加底部安全区域 */}
+      {/* Footer */}
       <div className="flex-shrink-0 border-t p-4 pb-6 space-y-1">
         {footerItems.map((item) => (
           <MenuButton key={item.id} item={item} isActive={isActive(item.path)} />

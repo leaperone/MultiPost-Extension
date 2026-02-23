@@ -1,4 +1,5 @@
 import { Metadata } from 'next';
+import Image from 'next/image';
 import { Button, Link } from '@heroui/react';
 import { Github, Mail, Users, Heart, Code, Zap } from 'lucide-react';
 
@@ -101,23 +102,29 @@ export default function AboutPage() {
             MultiPost 浏览器扩展是一个开源项目，采用开源许可证发布。我们欢迎任何形式的贡献：无论是提交 Bug 报告、功能建议，还是直接贡献代码。
           </p>
           <div className="flex flex-wrap gap-3">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
+            <Image
               src="https://img.shields.io/github/stars/leaper-one/MultiPost-Extension?style=flat&logo=github&color=yellow"
               alt="GitHub Stars"
               className="h-5"
+              width={100}
+              height={20}
+              unoptimized
             />
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
+            <Image
               src="https://img.shields.io/github/forks/leaper-one/MultiPost-Extension?style=flat&logo=github&color=blue"
               alt="GitHub Forks"
               className="h-5"
+              width={100}
+              height={20}
+              unoptimized
             />
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
+            <Image
               src="https://img.shields.io/github/issues/leaper-one/MultiPost-Extension?style=flat&logo=github&color=green"
               alt="GitHub Issues"
               className="h-5"
+              width={100}
+              height={20}
+              unoptimized
             />
           </div>
         </div>

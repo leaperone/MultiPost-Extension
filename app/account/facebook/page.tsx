@@ -1,7 +1,14 @@
+import type { Metadata } from 'next';
 import { fetchFacebookPagesFromSession } from '@/actions/social-media-accounts/facebook-pages';
 import { redirect } from 'next/navigation';
 import { Fragment } from 'react';
 import FacebookPagesSelector from './selector';
+
+export const metadata: Metadata = {
+  title: 'Facebook Account - MultiPost',
+  description: 'Connect and manage your Facebook account with MultiPost.',
+  robots: { index: false },
+};
 
 interface FacebookSelectablePage {
   id: string;

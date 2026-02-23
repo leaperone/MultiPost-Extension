@@ -1,4 +1,5 @@
 import { Button, Link, Image } from '@heroui/react';
+import NextImage from 'next/image';
 import { Box, Settings, Send, CheckCircle, Share2Icon } from 'lucide-react';
 import { Icon } from '@iconify/react';
 import { cn } from '@/lib/utils';
@@ -99,23 +100,29 @@ export default async function HomePage() {
                 <h3 className="text-xl font-semibold sm:text-2xl">MultiPost-Extension</h3>
               </div>
               <div className="mb-6 flex flex-wrap items-center justify-center gap-3">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
+                <NextImage
                   src="https://img.shields.io/github/stars/leaper-one/MultiPost-Extension?style=flat&logo=github&color=yellow"
                   alt="GitHub Stars"
                   className="h-5"
+                  width={100}
+                  height={20}
+                  unoptimized
                 />
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
+                <NextImage
                   src="https://img.shields.io/github/forks/leaper-one/MultiPost-Extension?style=flat&logo=github&color=blue"
                   alt="GitHub Forks"
                   className="h-5"
+                  width={100}
+                  height={20}
+                  unoptimized
                 />
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
+                <NextImage
                   src="https://img.shields.io/github/issues/leaper-one/MultiPost-Extension?style=flat&logo=github&color=green"
                   alt="GitHub Issues"
                   className="h-5"
+                  width={100}
+                  height={20}
+                  unoptimized
                 />
               </div>
               <p className="mb-6 text-foreground/70">{t('openSource.description')}</p>

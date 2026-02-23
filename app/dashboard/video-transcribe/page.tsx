@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
+import Image from 'next/image';
 import {
   Button,
   Input,
@@ -220,11 +221,13 @@ function CreateTaskForm({ onTaskCreated }: { onTaskCreated: () => void }) {
             <div className="flex flex-col gap-4 sm:flex-row">
               {videoInfo.coverUrl && (
                 <div className="relative mx-auto size-24 shrink-0 overflow-hidden rounded-lg bg-default-200 sm:mx-0">
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img
+                  <Image
                     src={videoInfo.coverUrl}
                     alt={t('videoTranscribe.create.coverAlt')}
                     className="size-full object-cover"
+                    width={96}
+                    height={96}
+                    unoptimized
                   />
                 </div>
               )}

@@ -1,7 +1,15 @@
+import type { Metadata } from 'next';
 import Link from 'next/link';
 import { Card, CardBody, Button } from '@heroui/react';
 import { Home, RefreshCcw, AlertCircle } from 'lucide-react';
 import { createTranslation } from '@/i18n/server';
+
+export const metadata: Metadata = {
+  title: 'Authentication Error - MultiPost',
+  description: 'An error occurred during authentication.',
+  robots: { index: false },
+};
+
 
 enum Error {
   Configuration = 'Configuration',
