@@ -7,9 +7,11 @@ import { LocaleProvider } from '@/i18n/locale-provider';
 import { Locales } from '@/i18n/settings';
 import { ToastProvider } from '@heroui/toast';
 import { DeploymentErrorHandler } from '@/components/DeploymentErrorHandler';
+import { isDesktopRequest } from '@/lib/desktop-detect';
 
 export async function Providers({ children }: { children: React.ReactNode }) {
-  const session = await auth();
+  const isDesktop = await isDesktopRequest();
+  const session = isDesktop ? null : await auth();
   const locale = await getLocale();
   return (
     <SessionProvider session={session}>

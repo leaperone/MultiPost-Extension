@@ -12,50 +12,47 @@ import {
   Spinner,
   Textarea,
 } from '@heroui/react';
-import { Film, ImagePlus, Send, Upload, X } from 'lucide-react';
+import { ImagePlus, Send, X } from 'lucide-react';
 import {
   Account,
+  ArticleData,
   getDesktopBridge,
   PlatformInfo,
   useDesktopAccounts,
   useDesktopPlatforms,
   useIsDesktop,
-  VideoData,
 } from '@/lib/desktop-bridge';
 
 /**
- * 视频发布页面
+ * 文章发布页面
  *
  * 功能:
- * - 选择视频文件
- * - 编辑标题、描述、标签
- * - 设置封面
+ * - Markdown 编辑
+ * - 封面设置
  * - 选择目标平台和账号
  * - 发起发布
  */
-export default function VideoPublishPage() {
+export default function ArticlePublishPage() {
   const isDesktop = useIsDesktop();
   const { accounts, loading: accountsLoading } = useDesktopAccounts();
   const { platforms, loading: platformsLoading } = useDesktopPlatforms();
 
   const [title, setTitle] = useState('');
-  const [description, setDescription] = useState('');
-  const [tags, setTags] = useState('');
-  const [videoPath, setVideoPath] = useState<string | null>(null);
+  const [digest, setDigest] = useState('');
+  const [content, setContent] = useState('');
   const [coverPath, setCoverPath] = useState<string | null>(null);
   const [selectedAccounts, setSelectedAccounts] = useState<string[]>([]);
   const [isPublishing, setIsPublishing] = useState(false);
-  const [isSelectingVideo, setIsSelectingVideo] = useState(false);
   const [isSelectingCover, setIsSelectingCover] = useState(false);
 
-  // 只显示支持视频的平台
-  const videoAccounts = accounts.filter((account) => {
+  // 只显示支持文章的平台
+  const articleAccounts = accounts.filter((account) => {
     const platform = platforms.find((p) => p.id === account.platform);
-    return platform?.supportedContentTypes.includes('VIDEO');
+    return platform?.supportedContentTypes.includes('ARTICLE');
   });
 
   // 按平台分组账号
-  const accountsByPlatform = videoAccounts.reduce(
+  const accountsByPlatform = articleAccounts.reduce(
     (acc, account) => {
       if (!acc[account.platform]) {
         acc[account.platform] = [];
@@ -69,27 +66,6 @@ export default function VideoPublishPage() {
   // 获取平台信息
   const getPlatformInfo = (platformId: string): PlatformInfo | undefined => {
     return platforms.find((p) => p.id === platformId);
-  };
-
-  // 选择视频
-  const handleSelectVideo = async () => {
-    const bridge = getDesktopBridge();
-    if (!bridge) return;
-
-    setIsSelectingVideo(true);
-    try {
-      const files = await bridge.app.selectFile({
-        filters: [{ name: 'Videos', extensions: ['mp4', 'mov', 'avi', 'mkv', 'webm'] }],
-        multiple: false,
-      });
-      if (files.length > 0) {
-        setVideoPath(files[0]);
-      }
-    } catch (error) {
-      console.error('Failed to select video:', error);
-    } finally {
-      setIsSelectingVideo(false);
-    }
   };
 
   // 选择封面
@@ -115,7 +91,7 @@ export default function VideoPublishPage() {
 
   // 发布
   const handlePublish = async () => {
-    if (!videoPath || !title.trim()) return;
+    if (!title.trim() || !content.trim()) return;
     if (selectedAccounts.length === 0) return;
 
     const bridge = getDesktopBridge();
@@ -123,15 +99,12 @@ export default function VideoPublishPage() {
 
     setIsPublishing(true);
     try {
-      const data: VideoData = {
+      const data: ArticleData = {
         title: title.trim(),
-        content: description.trim(),
-        video: videoPath,
-        tags: tags
-          .split(/[,，]/)
-          .map((t) => t.trim())
-          .filter(Boolean),
-        cover: coverPath || undefined,
+        digest: digest.trim() || content.substring(0, 200),
+        cover: coverPath || '',
+        htmlContent: '', // TODO: Convert markdown to HTML
+        markdownContent: content.trim(),
       };
 
       const targets = selectedAccounts.map((accountId) => {
@@ -144,13 +117,13 @@ export default function VideoPublishPage() {
       });
 
       await bridge.publish.startInExecutor({
-        contentType: 'VIDEO',
+        contentType: 'ARTICLE',
         targets,
         data,
         autoSubmit: false,
       });
 
-      bridge.navigation.navigateTo('/desktop/executor');
+      bridge.navigation.navigateTo('/dashboard/desktop/executor');
     } catch (error) {
       console.error('Failed to publish:', error);
     } finally {
@@ -193,87 +166,31 @@ export default function VideoPublishPage() {
 
   return (
     <div className="p-6 space-y-6">
-      {/* 视频选择区 */}
+      {/* 文章编辑区 */}
       <div className="space-y-4">
-        <h2 className="text-lg font-semibold">选择视频</h2>
-
-        {videoPath ? (
-          <Card className="shadow-none border">
-            <CardBody>
-              <div className="flex items-center gap-4">
-                <div className="w-32 h-20 rounded-lg bg-muted flex items-center justify-center">
-                  <Film className="size-8 text-muted-foreground" />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="font-medium truncate">{videoPath.split('/').pop()}</p>
-                  <p className="text-sm text-muted-foreground truncate">{videoPath}</p>
-                </div>
-                <Button
-                  isIconOnly
-                  variant="light"
-                  color="danger"
-                  onPress={() => setVideoPath(null)}>
-                  <X className="size-4" />
-                </Button>
-              </div>
-            </CardBody>
-          </Card>
-        ) : (
-          <Card
-            isPressable
-            className="shadow-none border border-dashed cursor-pointer hover:bg-muted/50"
-            onPress={handleSelectVideo}>
-            <CardBody className="py-12">
-              <div className="flex flex-col items-center gap-2">
-                {isSelectingVideo ? (
-                  <Spinner size="lg" />
-                ) : (
-                  <>
-                    <Upload className="size-8 text-muted-foreground" />
-                    <p className="text-muted-foreground">点击选择视频文件</p>
-                    <p className="text-xs text-muted-foreground">支持 MP4, MOV, AVI, MKV, WebM</p>
-                  </>
-                )}
-              </div>
-            </CardBody>
-          </Card>
-        )}
-      </div>
-
-      {/* 视频信息编辑区 */}
-      <div className="space-y-4">
-        <h2 className="text-lg font-semibold">视频信息</h2>
+        <h2 className="text-lg font-semibold">发布文章</h2>
 
         <Input
           label="标题"
-          placeholder="输入视频标题"
+          placeholder="输入文章标题"
           value={title}
           onValueChange={setTitle}
           isRequired
         />
 
-        <Textarea
-          label="描述"
-          placeholder="输入视频描述"
-          value={description}
-          onValueChange={setDescription}
-          minRows={3}
-        />
-
         <Input
-          label="标签"
-          placeholder="输入标签，用逗号分隔"
-          value={tags}
-          onValueChange={setTags}
-          description="多个标签用逗号分隔"
+          label="摘要"
+          placeholder="输入文章摘要（可选，默认取正文前 200 字）"
+          value={digest}
+          onValueChange={setDigest}
         />
 
         {/* 封面设置 */}
         <div className="space-y-2">
-          <label className="text-sm font-medium">封面</label>
+          <label className="text-sm font-medium">封面图片</label>
           {coverPath ? (
             <div className="flex items-center gap-4">
-              <div className="w-32 h-20 rounded-lg overflow-hidden bg-muted">
+              <div className="w-40 h-24 rounded-lg overflow-hidden bg-muted">
                 <img
                   src={`file://${coverPath}`}
                   alt="Cover"
@@ -300,6 +217,18 @@ export default function VideoPublishPage() {
             </Button>
           )}
         </div>
+
+        <Textarea
+          label="正文"
+          placeholder="输入文章正文（支持 Markdown）"
+          value={content}
+          onValueChange={setContent}
+          minRows={12}
+          isRequired
+          classNames={{
+            input: 'font-mono text-sm',
+          }}
+        />
       </div>
 
       {/* 账号选择区 */}
@@ -310,16 +239,16 @@ export default function VideoPublishPage() {
           <div className="flex items-center justify-center py-8">
             <Spinner size="lg" />
           </div>
-        ) : videoAccounts.length === 0 ? (
+        ) : articleAccounts.length === 0 ? (
           <Card className="shadow-none border">
             <CardBody className="py-8 text-center">
-              <p className="text-muted-foreground">没有支持视频发布的账号</p>
+              <p className="text-muted-foreground">没有支持文章发布的账号</p>
               <Button
                 className="mt-4"
                 variant="flat"
                 onPress={() => {
                   const bridge = getDesktopBridge();
-                  bridge?.navigation.navigateTo('/desktop/accounts');
+                  bridge?.navigation.navigateTo('/dashboard/desktop/accounts');
                 }}>
                 去添加账号
               </Button>
@@ -402,7 +331,7 @@ export default function VideoPublishPage() {
           size="lg"
           startContent={isPublishing ? <Spinner size="sm" /> : <Send className="size-4" />}
           isDisabled={
-            isPublishing || selectedAccounts.length === 0 || !videoPath || !title.trim()
+            isPublishing || selectedAccounts.length === 0 || !title.trim() || !content.trim()
           }
           onPress={handlePublish}>
           {isPublishing ? '发布中...' : '发布'}

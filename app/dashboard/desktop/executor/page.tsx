@@ -99,7 +99,7 @@ export default function DesktopExecutorPage() {
   const handleGoHome = () => {
     const bridge = getDesktopBridge();
     if (bridge) {
-      bridge.navigation.navigateTo('/desktop');
+      bridge.navigation.navigateTo('/dashboard');
     }
   };
 

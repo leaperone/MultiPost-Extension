@@ -249,7 +249,7 @@ export default function DynamicPublishPage() {
                 variant="flat"
                 onPress={() => {
                   const bridge = getDesktopBridge();
-                  bridge?.navigation.navigateTo('/desktop/accounts');
+                  bridge?.navigation.navigateTo('/dashboard/desktop/accounts');
                 }}>
                 去添加账号
               </Button>

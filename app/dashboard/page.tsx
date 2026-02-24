@@ -3,8 +3,10 @@
 import { Button, Link, Skeleton } from '@heroui/react';
 import { Suspense } from 'react';
 import { motion } from 'framer-motion';
+import dynamic from 'next/dynamic';
 
 import { useTranslation } from '@/i18n/client';
+import { useIsDesktop } from '@/lib/desktop-bridge';
 import {
   SendIcon,
   FileTextIcon,
@@ -21,6 +23,9 @@ import {
   LiquidGlassButton,
   LiquidGlassIconContainer,
 } from '@/components/ui/liquid-glass';
+
+// 懒加载 Desktop 首页内容
+const DesktopHomeContent = dynamic(() => import('@/components/desktop/home-content'), { ssr: false });
 
 interface DashboardCardProps {
   href: string;
@@ -65,6 +70,16 @@ function DashboardCard({ href, title, description, icon, iconColor = 'default', 
 }
 
 export default function DashboardPage() {
+  const isDesktop = useIsDesktop();
+
+  if (isDesktop) {
+    return <DesktopHomeContent />;
+  }
+
+  return <WebDashboardContent />;
+}
+
+function WebDashboardContent() {
   const { t } = useTranslation('dashboard');
 
   const cards = [
@@ -107,20 +122,16 @@ export default function DashboardPage() {
   ];
 
   return (
-    <div className="relative h-full overflow-y-auto">
-      {/* Fixed Background */}
+    <div className="relative h-full">
+      {/* Background layers (absolute, contained within content area) */}
       <div
-        className="fixed inset-0 bg-cover bg-center bg-no-repeat"
+        className="absolute inset-0 bg-cover bg-center bg-no-repeat"
         style={{
           backgroundImage: "url('https://i.ibb.co/xtN61cRf/Comfy-UI-Output-4-1.png')",
         }}
       />
-
-      {/* Fixed Semi-transparent overlay */}
-      <div className="fixed inset-0 bg-white/60 backdrop-blur-xs dark:bg-black/60" />
-
-      {/* Fixed Animated gradient orbs */}
-      <div className="pointer-events-none fixed inset-0 overflow-hidden">
+      <div className="absolute inset-0 bg-white/60 backdrop-blur-xs dark:bg-black/60" />
+      <div className="pointer-events-none absolute inset-0 overflow-hidden">
         <motion.div
           className="absolute -left-32 -top-32 size-96 rounded-full bg-blue-400/20 blur-3xl dark:bg-blue-600/10"
           animate={{
@@ -147,8 +158,9 @@ export default function DashboardPage() {
         />
       </div>
 
-      {/* Content */}
-      <div className="relative z-10 mx-auto max-w-7xl p-4 sm:p-6 lg:p-8">
+      {/* Scrollable Content */}
+      <div className="relative z-10 h-full overflow-y-auto">
+        <div className="mx-auto max-w-7xl p-4 sm:p-6 lg:p-8">
         {/* Header Section */}
         <motion.div
           className="mb-8 sm:mb-12"
@@ -206,8 +218,9 @@ export default function DashboardPage() {
           </div>
         </Suspense>
 
-        {/* Bottom Spacer */}
-        <div className="h-8" />
+          {/* Bottom Spacer */}
+          <div className="h-8" />
+        </div>
       </div>
     </div>
   );

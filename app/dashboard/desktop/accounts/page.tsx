@@ -287,10 +287,12 @@ export default function DesktopAccountsPage() {
                       <CardBody>
                         <div className="flex items-center justify-between">
                           <div className="flex items-center gap-3">
+                            {/* TODO: avatar URL from platforms like bilibili (i0.hdslb.com) is blocked by CDN anti-hotlink, need to proxy through our own image proxy service */}
                             <Avatar
                               src={account.avatar}
                               name={account.displayName || account.username}
                               size="md"
+                              imgProps={{ referrerPolicy: 'no-referrer' }}
                             />
                             <div>
                               <div className="flex items-center gap-2">

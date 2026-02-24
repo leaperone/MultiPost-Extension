@@ -71,10 +71,10 @@ export default function DesktopDraftsPage() {
 
     // 根据内容类型跳转到对应的发布页面
     const pathMap: Record<ContentType, string> = {
-      DYNAMIC: '/desktop/publish/dynamic',
-      VIDEO: '/desktop/publish/video',
-      ARTICLE: '/desktop/publish/article',
-      PODCAST: '/desktop/publish/dynamic', // Podcast 暂时用 dynamic
+      DYNAMIC: '/dashboard/desktop/publish/dynamic',
+      VIDEO: '/dashboard/desktop/publish/video',
+      ARTICLE: '/dashboard/desktop/publish/article',
+      PODCAST: '/dashboard/desktop/publish/dynamic', // Podcast 暂时用 dynamic
     };
 
     // TODO: 传递草稿 ID 到发布页面
@@ -113,10 +113,10 @@ export default function DesktopDraftsPage() {
     if (!bridge) return;
 
     const pathMap: Record<ContentType, string> = {
-      DYNAMIC: '/desktop/publish/dynamic',
-      VIDEO: '/desktop/publish/video',
-      ARTICLE: '/desktop/publish/article',
-      PODCAST: '/desktop/publish/dynamic',
+      DYNAMIC: '/dashboard/desktop/publish/dynamic',
+      VIDEO: '/dashboard/desktop/publish/video',
+      ARTICLE: '/dashboard/desktop/publish/article',
+      PODCAST: '/dashboard/desktop/publish/dynamic',
     };
 
     bridge.navigation.navigateTo(pathMap[contentType]);
