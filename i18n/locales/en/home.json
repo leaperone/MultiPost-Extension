@@ -40,10 +40,14 @@
   },
   "navigation": {
     "dashboard": "Dashboard",
+    "features": "Features",
     "publish": "Publish",
+    "publishDesc": "Publish content to multiple social media platforms at once",
     "draw": "Draw",
+    "drawDesc": "Generate images and posters with AI",
     "docs": "Docs",
     "blog": "Blog",
+    "download": "Download",
     "openMenu": "Open menu",
     "closeMenu": "Close menu"
   },
@@ -147,6 +151,7 @@
     "title": "Stop repeating yourself. Start today.",
     "description": "Join content creators worldwide who publish smarter, not harder",
     "install": "Install Extension",
+    "desktop": "Desktop App",
     "github": "Star on GitHub"
   },
   "hero": {

@@ -40,10 +40,14 @@
   },
   "navigation": {
     "dashboard": "仪表盘",
+    "features": "功能",
     "publish": "发布",
+    "publishDesc": "一键发布内容到多个社交媒体平台",
     "draw": "绘图",
+    "drawDesc": "使用 AI 生成图片和海报",
     "docs": "文档",
     "blog": "博客",
+    "download": "下载",
     "openMenu": "打开菜单",
     "closeMenu": "关闭菜单"
   },
@@ -138,6 +142,7 @@
     "title": "告别重复发布，从今天开始",
     "description": "和全球内容创作者一起，用更聪明的方式发布内容",
     "install": "安装扩展",
+    "desktop": "桌面客户端",
     "github": "在 GitHub 上点星"
   },
   "hero": {

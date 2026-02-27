@@ -1,0 +1,19 @@
+{
+  "pageTitle": "Download MultiPost",
+  "pageDescription": "Get MultiPost tools to publish content across 44+ social media platforms.",
+  "extensionTitle": "Browser Extension",
+  "extensionDescription": "Install the browser extension to publish content from your browser. Works with Chrome and Edge.",
+  "chromeStore": "Chrome Web Store",
+  "edgeStore": "Edge Add-ons",
+  "desktopTitle": "Desktop App",
+  "desktopButton": "Desktop App",
+  "description": "Native desktop app for multi-platform content publishing. Supports 44+ social media platforms with local automation.",
+  "dmg": "DMG",
+  "zip": "ZIP",
+  "exe": "Setup",
+  "macNote": "macOS (Apple Silicon / Intel)",
+  "moreFormats": "Looking for Linux or other formats? Check all releases on GitHub.",
+  "allReleases": "View all releases on GitHub",
+  "betaNotice": "This software is currently in public beta. We are committed to long-term updates and improvements. If you encounter any issues, please let us know through our feedback channels.",
+  "feedback": "Submit Feedback"
+}

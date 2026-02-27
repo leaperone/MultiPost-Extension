@@ -1,0 +1,19 @@
+{
+  "pageTitle": "下载 MultiPost",
+  "pageDescription": "获取 MultiPost 工具，一键发布内容到 44+ 社交媒体平台。",
+  "extensionTitle": "浏览器扩展",
+  "extensionDescription": "安装浏览器扩展，直接在浏览器中发布内容到多个平台。支持 Chrome 和 Edge。",
+  "chromeStore": "Chrome 应用商店",
+  "edgeStore": "Edge 扩展商店",
+  "desktopTitle": "桌面客户端",
+  "desktopButton": "桌面客户端",
+  "description": "原生桌面应用，支持 44+ 社交媒体平台的本地自动化发布。",
+  "dmg": "DMG",
+  "zip": "ZIP",
+  "exe": "安装包",
+  "macNote": "macOS（Apple Silicon / Intel）",
+  "moreFormats": "需要 Linux 或其他格式？请前往 GitHub 查看所有版本。",
+  "allReleases": "在 GitHub 上查看所有版本",
+  "betaNotice": "本软件目前正在公开测试中，我们将持续更新和改进。如遇到任何问题，请通过反馈渠道告诉我们。",
+  "feedback": "提交反馈"
+}

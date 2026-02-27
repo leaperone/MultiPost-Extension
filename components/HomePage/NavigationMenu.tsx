@@ -12,7 +12,7 @@ import {
   navigationMenuTriggerStyle,
 } from '@/components/ui/navigation-menu';
 import Link from 'next/link';
-import { LayoutDashboard, SendIcon, BookOpenIcon, PaletteIcon, FolderIcon } from 'lucide-react';
+import { LayoutDashboard, SendIcon, BookOpenIcon, PaletteIcon, FolderIcon, DownloadIcon, LayoutGridIcon } from 'lucide-react';
 import { useTranslation } from '@/i18n/client';
 
 export function HomePageNavigationMenu() {
@@ -32,25 +32,22 @@ export function HomePageNavigationMenu() {
             </NavigationMenuLink>
           </Link>
         </NavigationMenuItem>
+        <MenuItem
+          title={t('navigation.features')}
+          icon={LayoutGridIcon}
+          items={[
+            { title: t('navigation.publish'), icon: SendIcon, href: '/dashboard/publish', description: t('navigation.publishDesc') },
+            { title: t('navigation.draw'), icon: PaletteIcon, href: '/dashboard/draw', description: t('navigation.drawDesc') },
+          ]}
+        />
         <NavigationMenuItem>
           <Link
-            href="/dashboard/publish"
+            href="/install"
             legacyBehavior
             passHref>
             <NavigationMenuLink className={cn(navigationMenuTriggerStyle(), 'group')}>
-              <SendIcon className="mr-2 size-4 transition-transform" />
-              {t('navigation.publish')}
-            </NavigationMenuLink>
-          </Link>
-        </NavigationMenuItem>
-        <NavigationMenuItem>
-          <Link
-            href="/dashboard/draw"
-            legacyBehavior
-            passHref>
-            <NavigationMenuLink className={cn(navigationMenuTriggerStyle(), 'group')}>
-              <PaletteIcon className="mr-2 size-4 transition-transform" />
-              {t('navigation.draw')}
+              <DownloadIcon className="mr-2 size-4 transition-transform" />
+              {t('navigation.download')}
             </NavigationMenuLink>
           </Link>
         </NavigationMenuItem>
@@ -76,16 +73,6 @@ export function HomePageNavigationMenu() {
             </NavigationMenuLink>
           </Link>
         </NavigationMenuItem>
-        {/* <MenuItem
-          title="Features"
-          icon={MenuIcon}
-          items={dashboardItems}
-        />
-        <MenuItem
-          title="More"
-          icon={MoreHorizontal}
-          items={moreItems}
-        /> */}
       </NavigationMenuList>
     </NavigationMenu>
   );

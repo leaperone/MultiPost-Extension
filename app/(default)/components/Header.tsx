@@ -113,6 +113,15 @@ export default function Header() {
         </NavbarMenuItem>
         <NavbarMenuItem>
           <Link
+            className="w-full"
+            color="foreground"
+            href="/install"
+            size="lg">
+            {t('navigation.download')}
+          </Link>
+        </NavbarMenuItem>
+        <NavbarMenuItem>
+          <Link
             href="https://github.com/leaperone/MultiPost-Extension"
             target="_blank">
             <Button

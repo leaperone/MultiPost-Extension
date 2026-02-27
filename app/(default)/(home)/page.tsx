@@ -1,6 +1,6 @@
 import { Button, Link, Image } from '@heroui/react';
 import NextImage from 'next/image';
-import { Box, Settings, Send, CheckCircle, Share2Icon } from 'lucide-react';
+import { Box, Settings, Send, CheckCircle, Share2Icon, MonitorIcon } from 'lucide-react';
 import { Icon } from '@iconify/react';
 import { cn } from '@/lib/utils';
 
@@ -134,6 +134,15 @@ export default async function HomePage() {
                   color="primary"
                   className="rounded-2xl px-10 py-7 text-lg font-medium">
                   {t('finalCta.install')}
+                </Button>
+              </Link>
+              <Link href="/install">
+                <Button
+                  size="lg"
+                  variant="bordered"
+                  className="rounded-2xl px-10 py-7 text-lg font-medium"
+                  startContent={<MonitorIcon className="size-5" />}>
+                  {t('finalCta.desktop')}
                 </Button>
               </Link>
               <Link
