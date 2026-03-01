@@ -46,7 +46,7 @@
   "pnpm": {
     "overrides": {
       "msgpackr": ">=1.10.1",
-      "rollup": ">=3.29.5",
+      "rollup": ">=4.59.0",
       "base-x": ">=3.0.11",
       "cross-spawn": ">=7.0.5",
       "content-security-policy-parser": ">=0.5.3",
@@ -57,10 +57,15 @@
       "webpack": ">=5.94.0",
       "path-to-regexp": ">=8.0.0",
       "glob": ">=11.0.0",
-      "svelte": ">=4.2.19",
+      "svelte": ">=5.53.5",
       "nanoid": ">=3.3.8",
       "js-yaml": ">=4.1.1",
       "esbuild": ">=0.25.0",
+      "minimatch": ">=10.2.3",
+      "ajv": ">=8.18.0",
+      "devalue": ">=5.6.3",
+      "@isaacs/brace-expansion": ">=5.0.1",
+      "lodash": ">=4.17.23",
       "@babel/runtime": ">=7.26.10",
       "@babel/helpers": ">=7.26.10"
     }
