@@ -1,12 +1,13 @@
 import React, { Suspense } from 'react';
 import { signIn } from '@/auth';
-import { Button, Input, Card, CardBody, Divider } from '@heroui/react';
+import { Input, Card, CardBody, Divider } from '@heroui/react';
 import { createTranslation } from '@/i18n/server';
 import { PasskeyAuthButton } from './PasskeyAuthButton';
 import { SubmitButton } from './SubmitButton';
 import { SigninAnalytics } from './SigninAnalytics';
 import { AlertCircle } from 'lucide-react';
 import { redirect } from 'next/navigation';
+import { DevSigninForm } from './DevSigninForm';
 
 // 定义错误类型
 enum SignInError {
@@ -105,23 +106,7 @@ const SigninPage = async (props: { searchParams: Promise<{ redirect?: string; er
       {process.env.NODE_ENV === 'development' && (
         <>
           <Divider />
-          <form
-            data-signin-method="http-email"
-            action={async (formData: FormData) => {
-              'use server';
-              await signIn('http-email', {
-                email: formData.get('email'),
-                redirectTo,
-              });
-            }}
-            className="flex w-full flex-row gap-2">
-            <Input
-              type="email"
-              name="email"
-              placeholder="Email"
-            />
-            <Button type="submit">Dev In</Button>
-          </form>
+          <DevSigninForm />
         </>
       )}
     </div>
