@@ -54,7 +54,7 @@ export default function PublishPage() {
       {
         key: 'article',
         title: t('publishPage.publishTypes.article.title'),
-        href: 'https://md.multipost.app',
+        href: '/dashboard/md',
         description: t('publishPage.publishTypes.article.description'),
         icon: <FileTextIcon className="size-10 sm:size-14" />,
         color: 'success' as const,

@@ -91,12 +91,11 @@ function WebDashboardContent() {
       iconColor: 'primary' as const,
     },
     {
-      href: 'https://md.multipost.app',
+      href: '/dashboard/md',
       title: t('welcome.markdown.title'),
       description: t('welcome.markdown.description'),
       icon: <BookOpenIcon className="size-10 text-purple-500 dark:text-purple-400 sm:size-14" />,
       iconColor: 'secondary' as const,
-      external: true,
     },
     {
       href: '/dashboard/drafts',

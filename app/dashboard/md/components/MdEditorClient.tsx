@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { cn, Modal, ModalContent, ModalHeader, ModalBody, ModalFooter, Button } from '@heroui/react'
-import { Construction } from 'lucide-react'
+import { Construction, ExternalLinkIcon } from 'lucide-react'
 import { useTranslation } from '@/i18n/client'
 import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from '@/components/ui/resizable'
 import { prepareWorker } from '@/lib/markdown-engine/worker-client'
@@ -95,6 +95,15 @@ export default function MdEditorClient() {
           <ModalBody>
             <p className="text-default-600">{t('betaNotice.description')}</p>
             <p className="text-sm text-default-500">{t('betaNotice.feedbackHint')}</p>
+            <a
+              href="https://md.multipost.app"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-1 text-sm text-primary underline"
+            >
+              {t('betaNotice.oldVersion')}
+              <ExternalLinkIcon className="size-3" />
+            </a>
           </ModalBody>
           <ModalFooter>
             <Button color="primary" onPress={() => setBetaNoticeOpen(false)}>

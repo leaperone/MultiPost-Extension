@@ -773,7 +773,7 @@ export function HomePublisher() {
     { key: 'dynamic' as const, icon: <MessageCircleHeartIcon className="size-5" /> },
     { key: 'video' as const, icon: <VideoIcon className="size-5" /> },
     { key: 'podcast' as const, icon: <PodcastIcon className="size-5" /> },
-    { key: 'article' as const, href: 'https://md.multipost.app', icon: <FileTextIcon className="size-5" />, external: true },
+    { key: 'article' as const, href: '/dashboard/md', icon: <FileTextIcon className="size-5" /> },
   ];
 
   // Content Step for Dynamic - 完全模仿 dashboard/publish/dynamic/page.tsx

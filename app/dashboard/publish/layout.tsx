@@ -62,10 +62,9 @@ export default function PublishLayout({ children }: { children: React.ReactNode 
       icon: <PodcastIcon className="size-5" />,
     },
     {
-      key: 'https://md.multipost.app',
-      href: 'https://md.multipost.app',
+      key: '/dashboard/md',
+      href: '/dashboard/md',
       icon: <FileTextIcon className="size-5" />,
-      external: true,
     },
   ];
 
