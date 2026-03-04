@@ -7,6 +7,12 @@
   "clientPublish": "Client Publish",
   "directPublish": "Publish",
   "loading": "Loading drafts...",
+  "betaNotice": {
+    "title": "Beta Testing",
+    "description": "This page is currently under active development and testing. If you encounter any issues or have suggestions, we'd love to hear from you!",
+    "feedbackHint": "You can submit feedback via the widget in the bottom-right corner of the screen.",
+    "confirm": "Got it"
+  },
   "tabs": {
     "drafts": "Drafts",
     "mediaLibrary": "Library",

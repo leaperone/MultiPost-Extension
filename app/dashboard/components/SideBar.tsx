@@ -1,6 +1,7 @@
  
 import {
   BookIcon,
+  FileCode2Icon,
   GridIcon,
   Home,
   LayoutDashboardIcon,
@@ -8,7 +9,6 @@ import {
   PaletteIcon,
   SendIcon,
   Settings,
-  FileTextIcon,
   CalendarIcon,
   VideoIcon,
 } from 'lucide-react';
@@ -105,11 +105,6 @@ function getMenuGroups(t: TranslationFunction): MenuGroup[] {
           icon: SendIcon,
         },
         {
-          title: t('sidebar.menu.drafts'),
-          url: '/dashboard/drafts',
-          icon: FileTextIcon,
-        },
-        {
           title: t('sidebar.menu.schedule'),
           url: '/dashboard/schedule',
           icon: CalendarIcon,
@@ -118,6 +113,11 @@ function getMenuGroups(t: TranslationFunction): MenuGroup[] {
           title: t('sidebar.menu.draw'),
           url: '/dashboard/draw',
           icon: PaletteIcon,
+        },
+        {
+          title: t('sidebar.menu.markdown'),
+          url: '/dashboard/md',
+          icon: FileCode2Icon,
         },
         {
           title: t('sidebar.menu.grid'),

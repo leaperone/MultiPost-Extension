@@ -1,0 +1,94 @@
+/*
+  Josh's Custom CSS Reset (Scoped for #mp-md)
+  https://www.joshwcomeau.com/css/custom-css-reset/
+*/
+
+#mp-md *,
+#mp-md *::before,
+#mp-md *::after {
+  box-sizing: border-box;
+}
+
+#mp-md * {
+  margin: 0;
+}
+
+#mp-md {
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  text-autospace: normal;
+  font-family: sans-serif;
+  text-align: left;
+}
+
+#mp-md img,
+#mp-md picture,
+#mp-md video,
+#mp-md canvas,
+#mp-md svg {
+  display: block;
+  max-width: 100%;
+}
+
+#mp-md input,
+#mp-md button,
+#mp-md textarea,
+#mp-md select {
+  font: inherit;
+}
+
+#mp-md p,
+#mp-md h1,
+#mp-md h2,
+#mp-md h3,
+#mp-md h4,
+#mp-md h5,
+#mp-md h6 {
+  overflow-wrap: break-word;
+}
+
+#mp-md figure.figure-table {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+#mp-md figure.figure-table table {
+  margin: 0;
+}
+
+/* ========================================
+   Print Styles - 打印/导出 PDF 分页优化
+   ======================================== */
+@media print {
+  #mp-md {
+    padding: 4em;
+  }
+
+  /* 防止块级元素被分页切割 */
+  #mp-md p,
+  #mp-md li,
+  #mp-md blockquote,
+  #mp-md pre,
+  #mp-md img,
+  #mp-md figure,
+  #mp-md table,
+  #mp-md tr,
+  #mp-md dl,
+  #mp-md details,
+  #mp-md .markdown-alert,
+  #mp-md .math-display {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+
+  /* 标题后不分页，保持与内容连贯 */
+  #mp-md h1,
+  #mp-md h2,
+  #mp-md h3,
+  #mp-md h4,
+  #mp-md h5,
+  #mp-md h6 {
+    break-after: avoid;
+    page-break-after: avoid;
+  }
+}

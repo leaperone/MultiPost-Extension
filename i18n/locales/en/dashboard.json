@@ -46,7 +46,8 @@
       "recharge": "Recharge",
       "drafts": "Drafts (Beta)",
       "schedule": "Schedule (Beta)",
-      "videoTranscribe": "Video Transcribe (Beta)"
+      "videoTranscribe": "Video Transcribe (Beta)",
+      "markdown": "Markdown"
     },
     "collapse": "Collapse Sidebar"
   },

@@ -46,7 +46,8 @@
       "recharge": "充值",
       "drafts": "草稿 (Beta)",
       "schedule": "计划 (Beta)",
-      "videoTranscribe": "视频转录 (Beta)"
+      "videoTranscribe": "视频转录 (Beta)",
+      "markdown": "Markdown 排版"
     },
     "collapse": "收起侧边栏"
   },

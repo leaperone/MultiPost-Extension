@@ -7,6 +7,12 @@
   "clientPublish": "Client 发布",
   "directPublish": "发布",
   "loading": "正在加载草稿...",
+  "betaNotice": {
+    "title": "测试中",
+    "description": "此页面正在开发和测试中，如遇到任何问题或有建议，欢迎帮助反馈！",
+    "feedbackHint": "您可以通过屏幕右下角的反馈入口提交反馈。",
+    "confirm": "知道了"
+  },
   "tabs": {
     "drafts": "草稿",
     "mediaLibrary": "素材库",
