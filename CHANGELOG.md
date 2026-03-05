@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [1.1.7](https://github.com/leaperone/MultiPost/compare/v1.1.6...v1.1.7) (2026-03-05)
+
+
+### Bug Fixes
+
+* remove external tab branch in publish layout after link migration ([f35f902](https://github.com/leaperone/MultiPost/commit/f35f90232cb14794b900f3a466a7c922349c4890))
+
 ### [1.1.6](https://github.com/leaperone/MultiPost/compare/v1.1.5...v1.1.6) (2026-03-05)
 
 
