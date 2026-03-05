@@ -76,17 +76,11 @@ export default function PublishLayout({ children }: { children: React.ReactNode 
       <div className="sticky top-0 z-20 px-6 pb-4 pt-6 sm:px-8 lg:px-10">
         <div className="flex w-full flex-row items-center justify-between gap-4">
           <LiquidGlassTabs>
-            {tabs.map((tab) =>
-              tab.external ? (
-                <a key={tab.key} href={tab.href} target="_blank" rel="noopener noreferrer">
-                  <LiquidGlassTab isActive={false}>{tab.icon}</LiquidGlassTab>
-                </a>
-              ) : (
-                <Link key={tab.key} href={tab.href}>
-                  <LiquidGlassTab isActive={pathname === tab.key}>{tab.icon}</LiquidGlassTab>
-                </Link>
-              ),
-            )}
+            {tabs.map((tab) => (
+              <Link key={tab.key} href={tab.href}>
+                <LiquidGlassTab isActive={pathname === tab.key}>{tab.icon}</LiquidGlassTab>
+              </Link>
+            ))}
           </LiquidGlassTabs>
 
           <Link href="/docs/user-guide/contact-us" target="_blank">
