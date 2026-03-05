@@ -1250,10 +1250,10 @@ export function HomePublisher() {
         <div className="mx-auto mb-6 flex max-w-2xl flex-row items-center justify-between gap-4">
           <LiquidGlassTabs>
             {tabs.map((tab) =>
-              tab.external ? (
-                <a key={tab.key} href={tab.href} target="_blank" rel="noopener noreferrer">
+              tab.href ? (
+                <Link key={tab.key} href={tab.href}>
                   <LiquidGlassTab isActive={false}>{tab.icon}</LiquidGlassTab>
-                </a>
+                </Link>
               ) : (
                 <LiquidGlassTab
                   key={tab.key}
