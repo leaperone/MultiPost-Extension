@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [1.1.8](https://github.com/leaperone/MultiPost/compare/v1.1.7...v1.1.8) (2026-03-05)
+
+
+### Bug Fixes
+
+* remove external tab branch in HomePublisher after link migration ([9b20d14](https://github.com/leaperone/MultiPost/commit/9b20d143952c09163a12051b323eac705d491f50))
+
 ### [1.1.7](https://github.com/leaperone/MultiPost/compare/v1.1.6...v1.1.7) (2026-03-05)
 
 
