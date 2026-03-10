@@ -33,6 +33,7 @@ yarn-error.log*
 .env
 .env*.local
 .env*.docker
+docker/.env*
 
 .envx/
 

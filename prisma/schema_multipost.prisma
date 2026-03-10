@@ -14,7 +14,7 @@ generator denoclient {
 generator workerclient {
   provider      = "prisma-client"
   output        = "../worker/video-stt-worker/src/prisma/client_multipost_deno"
-  binaryTargets = ["native", "darwin-arm64", "debian-openssl-1.1.x", "debian-openssl-3.0.x"]
+  binaryTargets = ["native", "darwin-arm64", "debian-openssl-1.1.x", "debian-openssl-3.0.x", "linux-arm64-openssl-3.0.x"]
   runtime       = "deno"
 }
 

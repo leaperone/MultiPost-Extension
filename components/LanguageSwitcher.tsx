@@ -1,5 +1,6 @@
 'use client';
 import React from 'react';
+import { useRouter } from 'next/navigation';
 import { Dropdown, DropdownTrigger, DropdownMenu, DropdownItem, Button } from '@heroui/react';
 import { switchLocaleAction } from '@/i18n/switch-locale';
 import { useTranslation } from '@/i18n/client';
@@ -8,9 +9,11 @@ import { LanguagesIcon } from 'lucide-react';
 
 export default function LanguageSwitcher() {
   const { i18n } = useTranslation('home');
+  const router = useRouter();
 
-  const handleLocaleChange = (key: React.Key) => {
-    switchLocaleAction(key as string);
+  const handleLocaleChange = async (key: React.Key) => {
+    await switchLocaleAction(key as string);
+    router.refresh();
   };
 
   return (

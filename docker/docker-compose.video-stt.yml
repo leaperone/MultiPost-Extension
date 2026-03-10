@@ -1,0 +1,17 @@
+services:
+  video-stt-worker:
+    image: multipost-video-stt-worker:latest
+    build:
+      context: ..
+      dockerfile: ./docker/Dockerfile.video-stt
+      target: video-stt-worker
+    environment:
+      - MULTIPOST_DATABASE_URL=${MULTIPOST_DATABASE_URL}
+      - STT_API_URL=${STT_API_URL}
+      - STT_API_KEY=${STT_API_KEY}
+    restart: always
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
