@@ -7,8 +7,8 @@ services:
       target: video-stt-worker
     environment:
       - MULTIPOST_DATABASE_URL=${MULTIPOST_DATABASE_URL}
-      - STT_API_URL=${STT_API_URL}
-      - STT_API_KEY=${STT_API_KEY}
+      - LEAPERONE_API_BASE_URL=${LEAPERONE_API_BASE_URL}
+      - LEAPERONE_API_KEY=${LEAPERONE_API_KEY}
     restart: always
     logging:
       driver: json-file
