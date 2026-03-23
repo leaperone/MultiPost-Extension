@@ -2,12 +2,13 @@ import type { Config } from './types.ts';
 
 /**
  * Get configuration from environment variables
- * Note: Video extraction (TikHub) config removed - now handled on web side
+ * Uses LEAPERONE_API_BASE_URL + LEAPERONE_API_KEY for STT
  */
 export function getConfig(): Config {
+  const baseUrl = (Deno.env.get('LEAPERONE_API_BASE_URL') || 'https://api.leaper.one/v1').replace(/\/$/, '');
   return {
-    sttApiUrl: Deno.env.get('STT_API_URL') || 'https://borgcloud.org/api/v1/audio/transcriptions',
-    sttApiKey: Deno.env.get('STT_API_KEY') || Deno.env.get('BORGCLOUD_API_KEY') || '',
+    sttApiUrl: `${baseUrl}/audio/transcriptions`,
+    sttApiKey: Deno.env.get('LEAPERONE_API_KEY') || '',
 
     tempDir: './tmp',
     maxFileSize: 524288000, // 500MB
@@ -18,11 +19,7 @@ export function getConfig(): Config {
  * Validate configuration
  */
 export function validateConfig(config: Config): void {
-  if (!config.sttApiUrl) {
-    throw new Error('STT_API_URL is required');
-  }
-
   if (!config.sttApiKey) {
-    throw new Error('STT_API_KEY is required');
+    throw new Error('LEAPERONE_API_KEY is required');
   }
 }
