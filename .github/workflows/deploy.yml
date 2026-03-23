@@ -1,18 +1,9 @@
-name: Trigger Deploy And Pr Check
+name: Trigger MultiPost Deploy
 
 on:
   push:
     tags:
       - 'v*'
-  pull_request:
-    branches:
-      - main
-      - master
-      - release-candidate
-    types:
-      - opened
-      - synchronize
-      - reopened
   workflow_dispatch:
     inputs:
       ref:
@@ -32,15 +23,34 @@ jobs:
   trigger:
     runs-on: ubuntu-latest
     steps:
-      - name: Get first line of commit message
-        id: commit
+      - name: Resolve deploy payload
+        id: payload
         run: |
-          # 限制输入消息的长度为72个字符
-          input_message=$(echo "${{ inputs.message }}" | cut -c 1-72)
-          commit_message=$(echo "${{ github.event.head_commit.message }}" | cut -c 1-72)
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            DEPLOY_REF="${{ inputs.ref }}"
+            INPUT_MESSAGE="${{ inputs.message }}"
+            INPUT_AUTHOR="${{ inputs.author }}"
+          else
+            DEPLOY_REF="${{ github.ref_name }}"
+            INPUT_MESSAGE=""
+            INPUT_AUTHOR=""
+          fi
+
+          commit_message=$(printf '%s' "${{ github.event.head_commit.message || '' }}" | sed -n '1p' | cut -c 1-72)
+          input_message=$(printf '%s' "$INPUT_MESSAGE" | sed -n '1p' | cut -c 1-72)
           message="${commit_message:-$input_message}"
-          first_line=$(echo "$message" | sed -n '1p' | sed 's/["\]/\\&/g')
-          echo "first_line=${first_line}" >> $GITHUB_OUTPUT
+
+          if [ -z "$message" ]; then
+            message='Triggered production deploy'
+          fi
+
+          author=$(printf '%s' "${INPUT_AUTHOR:-${{ github.actor }}}" | sed -n '1p')
+          escaped_message=$(printf '%s' "$message" | sed 's/["\\]/\\&/g')
+          escaped_author=$(printf '%s' "$author" | sed 's/["\\]/\\&/g')
+
+          echo "deploy_ref=$DEPLOY_REF" >> "$GITHUB_OUTPUT"
+          echo "message=$escaped_message" >> "$GITHUB_OUTPUT"
+          echo "author=$escaped_author" >> "$GITHUB_OUTPUT"
 
       - name: Repository Dispatch
         uses: peter-evans/repository-dispatch@v3
@@ -49,7 +59,9 @@ jobs:
           repository: leaperone/leaperone-releases
           event-type: deploy-multipost
           client-payload: '{
-            "ref": "${{ github.ref_name }}",
-            "message": "${{ steps.commit.outputs.first_line }}",
-            "author": "${{ github.actor || inputs.author }}"
+            "ref": "${{ steps.payload.outputs.deploy_ref }}",
+            "env": "production",
+            "targets": "hk,pve",
+            "message": "${{ steps.payload.outputs.message }}",
+            "author": "${{ steps.payload.outputs.author }}"
           }'
