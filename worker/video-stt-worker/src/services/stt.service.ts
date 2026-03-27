@@ -27,23 +27,35 @@ export class STTService {
     logger.debug('Language:', language || 'auto-detect');
 
     try {
-      // Ensure temp directory exists
-      await Deno.mkdir(this.tempDir, { recursive: true });
-      logger.debug(`Temp directory ensured: ${this.tempDir}`);
-
       // Check if the URL already points to an audio file
-      const isAudioFile = /\.(mp3|wav|ogg|aac|m4a|flac|webm)(\?|$)/i.test(mediaUrl);
+      const isAudioFile = /\.(mp3|wav|ogg|aac|m4a|flac|webm|opus)(\?|$)/i.test(mediaUrl);
 
-      let audioFile: string;
+      let result: STTResponse;
 
       if (isAudioFile) {
-        // Already an audio file, download directly without ffmpeg
-        logger.emoji('⬇️', 'Step 1/2: Downloading audio file (skipping ffmpeg)...');
-        logger.startTimer('download');
-        audioFile = await this.downloadFile(mediaUrl, 'audio.mp3');
-        logger.endTimer('download');
+        // Audio file: try file_uri first (no download needed), fallback to download+upload
+        try {
+          logger.emoji('🤖', 'Sending audio URL directly to STT API (file_uri)...');
+          logger.startTimer('stt-api');
+          result = await this.transcribeByUrl(mediaUrl, language);
+          logger.endTimer('stt-api');
+        } catch (urlError) {
+          logger.warn('⚠️ file_uri failed, falling back to download+upload:', getErrorMessage(urlError));
+          await Deno.mkdir(this.tempDir, { recursive: true });
+          logger.emoji('⬇️', 'Fallback Step 1/2: Downloading audio file...');
+          logger.startTimer('download');
+          const audioFile = await this.downloadFile(mediaUrl, 'audio.mp3');
+          logger.endTimer('download');
+          logger.emoji('🤖', 'Fallback Step 2/2: Uploading audio to STT API...');
+          logger.startTimer('stt-api');
+          result = await this.transcribeAudio(audioFile, language);
+          logger.endTimer('stt-api');
+          await this.cleanup(audioFile);
+        }
       } else {
-        // Video file: download + extract audio with ffmpeg
+        // Video file: download + extract audio with ffmpeg + upload
+        await Deno.mkdir(this.tempDir, { recursive: true });
+
         logger.emoji('⬇️', 'Step 1/3: Downloading media file...');
         logger.startTimer('download');
         const videoFile = await this.downloadFile(mediaUrl, 'video.mp4');
@@ -51,23 +63,18 @@ export class STTService {
 
         logger.emoji('🎵', 'Step 2/3: Extracting audio with ffmpeg...');
         logger.startTimer('ffmpeg');
-        audioFile = await this.extractAudio(videoFile);
+        const audioFile = await this.extractAudio(videoFile);
         logger.endTimer('ffmpeg');
 
-        // Clean up video file early
         await this.cleanup(videoFile);
+
+        logger.emoji('🤖', 'Step 3/3: Sending audio to STT API...');
+        logger.startTimer('stt-api');
+        result = await this.transcribeAudio(audioFile, language);
+        logger.endTimer('stt-api');
+
+        await this.cleanup(audioFile);
       }
-
-      // Transcribe audio
-      const stepNum = isAudioFile ? '2/2' : '3/3';
-      logger.emoji('🤖', `Step ${stepNum}: Sending audio to STT API...`);
-      logger.startTimer('stt-api');
-      const result = await this.transcribeAudio(audioFile, language);
-      logger.endTimer('stt-api');
-
-      // Cleanup audio file
-      logger.emoji('🧹', 'Cleaning up temporary files...');
-      await this.cleanup(audioFile);
 
       logger.endTimer(timerLabel);
       logger.success('✅ Transcription completed successfully!');
@@ -173,6 +180,81 @@ export class STTService {
     }
 
     return audioFile;
+  }
+
+  /**
+   * Transcribe audio by URL using file_uri (no download needed)
+   */
+  private async transcribeByUrl(
+    audioUrl: string,
+    language?: string,
+  ): Promise<STTResponse> {
+    logger.debug(`STT API URL: ${this.config.sttApiUrl}`);
+    logger.debug(`Audio URL: ${audioUrl}`);
+
+    const maxRetries = 5;
+    const baseDelayMs = 30000;
+    const retryableStatuses = [503, 429, 502, 504];
+    let lastError: Error | null = null;
+
+    for (let attempt = 1; attempt <= maxRetries; attempt++) {
+      try {
+        const formData = new FormData();
+        formData.append('file_uri', audioUrl);
+        formData.append('response_format', 'verbose_json');
+        formData.append('timestamp_granularities', 'segment');
+        if (language) formData.append('language', language);
+
+        if (attempt > 1) {
+          logger.emoji('🔄', `Retry attempt ${attempt}/${maxRetries}...`);
+        }
+
+        const requestStart = performance.now();
+        const response = await fetch(this.config.sttApiUrl, {
+          method: 'POST',
+          headers: { 'Authorization': `Bearer ${this.config.sttApiKey}` },
+          body: formData,
+        });
+        const requestDuration = performance.now() - requestStart;
+        logger.debug(`STT API response: ${response.status} (${(requestDuration / 1000).toFixed(2)}s)`);
+
+        if (!response.ok) {
+          const errorText = await response.text();
+          logger.error(`STT API error: ${errorText}`);
+          if (retryableStatuses.includes(response.status) && attempt < maxRetries) {
+            const delayMs = baseDelayMs * Math.pow(2, attempt - 1);
+            logger.warn(`⏳ STT API returned ${response.status}, waiting ${Math.round(delayMs / 1000)}s...`);
+            await this.sleep(delayMs);
+            lastError = new Error(`STT API error: ${response.status} ${errorText}`);
+            continue;
+          }
+          throw new Error(`STT API error: ${response.status} ${errorText}`);
+        }
+
+        const data = await response.json();
+        logger.debug(`Text length: ${data.text?.length || 0}, Segments: ${data.segments?.length || 0}`);
+
+        if (attempt > 1) logger.success(`✅ STT API succeeded on attempt ${attempt}`);
+
+        return {
+          text: data.text || '',
+          language: data.language,
+          confidence: data.confidence,
+          segments: data.segments || [],
+        };
+      } catch (error) {
+        lastError = error instanceof Error ? error : new Error(String(error));
+        if (attempt >= maxRetries) throw lastError;
+        if (error instanceof TypeError && error.message.includes('fetch')) {
+          const delayMs = baseDelayMs * Math.pow(2, attempt - 1);
+          logger.warn(`⏳ Network error, waiting ${Math.round(delayMs / 1000)}s...`);
+          await this.sleep(delayMs);
+          continue;
+        }
+        throw lastError;
+      }
+    }
+    throw lastError || new Error('STT API failed');
   }
 
   /**
