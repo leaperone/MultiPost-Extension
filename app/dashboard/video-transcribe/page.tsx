@@ -103,7 +103,8 @@ function CreateTaskForm({ onTaskCreated }: { onTaskCreated: () => void }) {
         setVideoInfo(result.data);
         toast.success(t('videoTranscribe.toast.extractSuccess'));
       } else {
-        toast.error(result.msg || t('videoTranscribe.toast.extractFailed'));
+        const msg = typeof result.msg === 'string' ? result.msg : t('videoTranscribe.toast.extractFailed');
+        toast.error(msg);
       }
     } catch (error) {
       console.error('Extract video error:', error);
