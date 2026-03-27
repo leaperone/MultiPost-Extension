@@ -63,28 +63,10 @@ interface TranscriptionTask {
 }
 
 /**
- * Extract URL from share text (e.g., "7.92 复制打开抖音... https://v.douyin.com/xxx/ ...")
- * Supports: Douyin, TikTok
+ * Clean up input text for video extraction.
+ * LEAPERone API supports share text directly, so we only need basic trimming.
  */
-function extractUrlFromText(text: string): string {
-  // Match Douyin and TikTok video URLs
-  const urlPatterns = [
-    // Douyin
-    /https?:\/\/v\.douyin\.com\/[^\s]+/i,
-    /https?:\/\/www\.douyin\.com\/[^\s]+/i,
-    // TikTok
-    /https?:\/\/(?:www\.)?tiktok\.com\/[^\s]+/i,
-    /https?:\/\/vm\.tiktok\.com\/[^\s]+/i,
-  ];
-
-  for (const pattern of urlPatterns) {
-    const match = text.match(pattern);
-    if (match) {
-      // Clean up the URL (remove trailing punctuation, emojis, etc.)
-      return match[0].replace(/[,，。.!！?？)\]】》>]+$/, '');
-    }
-  }
-
+function cleanInputText(text: string): string {
   return text.trim();
 }
 
@@ -108,7 +90,7 @@ function CreateTaskForm({ onTaskCreated }: { onTaskCreated: () => void }) {
     }
 
     // Extract URL from share text
-    const extractedUrl = extractUrlFromText(videoUrl);
+    const extractedUrl = cleanInputText(videoUrl);
 
     try {
       setExtracting(true);
@@ -138,7 +120,7 @@ function CreateTaskForm({ onTaskCreated }: { onTaskCreated: () => void }) {
     }
 
     // Use extracted URL for task creation
-    const extractedUrl = extractUrlFromText(videoUrl);
+    const extractedUrl = cleanInputText(videoUrl);
 
     try {
       setCreating(true);

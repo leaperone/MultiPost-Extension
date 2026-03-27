@@ -61,12 +61,12 @@
   "videoTranscribe": {
     "page": {
       "title": "Video Transcription",
-      "description": "Automatically transcribe Douyin and TikTok videos to text"
+      "description": "Automatically transcribe videos to text. Supports Douyin, TikTok, Bilibili, YouTube, Xiaohongshu and more"
     },
     "create": {
       "title": "Create Transcription Task",
-      "description": "Enter a video link to extract audio and transcribe to text (supports Douyin, TikTok)",
-      "placeholder": "Paste Douyin or TikTok video link",
+      "description": "Paste a video link or share text to extract audio and transcribe to text",
+      "placeholder": "Paste video link or share text (Douyin, TikTok, Bilibili, YouTube, Xiaohongshu...)",
       "extractBtn": "Extract",
       "createBtn": "Create Task",
       "resetBtn": "Reset",

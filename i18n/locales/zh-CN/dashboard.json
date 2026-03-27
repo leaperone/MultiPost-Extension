@@ -61,12 +61,12 @@
   "videoTranscribe": {
     "page": {
       "title": "视频转录",
-      "description": "将抖音、TikTok 视频自动转录为文字"
+      "description": "将视频自动转录为文字，支持抖音、TikTok、B站、YouTube、小红书等平台"
     },
     "create": {
       "title": "创建转录任务",
-      "description": "输入视频链接，自动提取音频并转录为文字（支持抖音、TikTok）",
-      "placeholder": "粘贴抖音或 TikTok 视频链接",
+      "description": "粘贴视频链接或分享文本，自动提取音频并转录为文字",
+      "placeholder": "粘贴视频链接或分享文本（支持抖音、TikTok、B站、YouTube、小红书等）",
       "extractBtn": "解析",
       "createBtn": "创建转录任务",
       "resetBtn": "重置",

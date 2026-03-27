@@ -1,79 +1,28 @@
 import { auth } from '@/auth';
 import { NextRequest } from 'next/server';
 import { z } from 'zod';
-import { fetchTikhub } from '@/lib/tikhub';
 import { successResp, errorResp, unauthResp } from '@/lib/request';
 
 const requestSchema = z.object({
   url: z.string().min(1, 'Video URL is required'),
 });
 
-// Platform-specific endpoints (more reliable)
-const PLATFORM_ENDPOINTS: Record<string, { endpoint: string; paramName: string }> = {
-  douyin: { endpoint: '/v1/douyin/app/v3/fetch_one_video_by_share_url', paramName: 'share_url' },
-  tiktok: { endpoint: '/v1/tiktok/app/v3/fetch_one_video_by_share_url', paramName: 'share_url' },
-};
+const LEAPERONE_API_BASE_URL = process.env.LEAPERONE_API_BASE_URL || 'https://api.leaper.one/v1';
+const LEAPERONE_API_KEY = process.env.LEAPERONE_API_KEY;
 
-// Response structure from TikHub API
-interface HybridVideoData {
-  // Common fields
-  aweme_id?: string;
-  id?: string;
-  video_id?: string;
-  desc?: string;
-  title?: string;
-  caption?: string;
-  duration?: number;
-  platform?: string;
-
-  // Video URLs
-  video?: {
-    play_addr?: { url_list?: string[] };
-    download_addr?: { url_list?: string[] };
-    cover?: { url_list?: string[] };
-    duration?: number;
-  };
-  video_url?: string;
-  download_url?: string;
-  play_url?: string;
-
-  // Audio/Music
-  music?: {
-    play_url?: { uri?: string; url_list?: string[] };
-    duration?: number;
-  };
-
-  // Cover image
-  cover?: { url_list?: string[] };
-  cover_url?: string;
-  thumbnail?: string;
-
-  // Author info
-  author?: {
-    uid?: string;
-    id?: string;
-    nickname?: string;
-    unique_id?: string;
-    sec_uid?: string;
-    username?: string;
-  };
-  user?: {
-    uid?: string;
-    id?: string;
-    nickname?: string;
-    unique_id?: string;
-    sec_uid?: string;
-    username?: string;
-  };
-}
-
-interface TikHubHybridResponse {
-  code: number;
+interface LeaperOneVideoResponse {
+  platform: string;
   data: {
-    aweme_detail?: HybridVideoData;
-    aweme_details?: HybridVideoData[];
-    data?: HybridVideoData;
-  } & HybridVideoData;
+    platform: string;
+    videoId: string;
+    title: string;
+    author: string;
+    authorId: string;
+    coverUrl: string;
+    duration: number;
+    videos: { url: string; quality: string; format: string; width: number; height: number; size: number }[];
+    audios: { url: string; format: string }[];
+  };
 }
 
 interface VideoExtractResult {
@@ -88,190 +37,59 @@ interface VideoExtractResult {
   duration: number;
 }
 
-/**
- * Detect platform from URL (only Douyin and TikTok are supported)
- */
-function detectPlatform(videoUrl: string): string {
-  const platformPatterns: Record<string, RegExp[]> = {
-    douyin: [/douyin\.com/, /iesdouyin\.com/],
-    tiktok: [/tiktok\.com/],
-  };
-
-  const lowerUrl = videoUrl.toLowerCase();
-  for (const [platform, patterns] of Object.entries(platformPatterns)) {
-    if (patterns.some((pattern) => pattern.test(lowerUrl))) {
-      return platform;
-    }
-  }
-  return 'unknown';
-}
-
-/**
- * Extract video download URL from hybrid response
- */
-function extractVideoUrl(data: HybridVideoData | undefined): string {
-  if (!data) return '';
-
-  // Try multiple possible URL locations
-  // 1. Direct URL fields
-  if (data.download_url) return data.download_url;
-  if (data.video_url) return data.video_url;
-  if (data.play_url) return data.play_url;
-
-  // 2. Nested video object (Douyin/TikTok format)
-  const downloadUrls = data.video?.download_addr?.url_list;
-  if (downloadUrls && downloadUrls.length > 0) {
-    return downloadUrls[0];
-  }
-  const playUrls = data.video?.play_addr?.url_list;
-  if (playUrls && playUrls.length > 0) {
-    return playUrls[0];
-  }
-
-  return '';
-}
-
-/**
- * Extract cover image URL from hybrid response
- */
-function extractCoverUrl(data: HybridVideoData | undefined): string {
-  if (!data) return '';
-
-  // Direct cover URL
-  if (data.cover_url) return data.cover_url;
-  if (data.thumbnail) return data.thumbnail;
-
-  // Nested cover object
-  if (data.cover?.url_list?.[0]) return data.cover.url_list[0];
-  if (data.video?.cover?.url_list?.[0]) return data.video.cover.url_list[0];
-
-  return '';
-}
-
-/**
- * Extract author info from hybrid response
- */
-function extractAuthor(data: HybridVideoData | undefined): { name: string; id: string } {
-  if (!data) return { name: '', id: '' };
-
-  const author = data.author || data.user;
-  if (author) {
-    return {
-      name: author.nickname || author.username || '',
-      id: author.sec_uid || author.uid || author.id || author.unique_id || '',
-    };
-  }
-
-  return { name: '', id: '' };
-}
-
-/**
- * Extract title/description from hybrid response
- */
-function extractTitle(data: HybridVideoData | undefined): string {
-  if (!data) return '';
-  return data.desc || data.title || data.caption || '';
-}
-
-/**
- * Extract audio URL from hybrid response
- * Prefer music.play_url (pure audio MP3, typically only a few MB) over full video download
- */
-function extractAudioUrl(data: HybridVideoData | undefined): string {
-  if (!data) return '';
-
-  // Prefer music.play_url (pure audio MP3)
-  const musicUrls = data.music?.play_url?.url_list;
-  if (musicUrls && musicUrls.length > 0) {
-    return musicUrls[0];
-  }
-  // music.play_url sometimes has the full URL in uri field
-  const musicUri = data.music?.play_url?.uri;
-  if (musicUri && musicUri.startsWith('http')) {
-    return musicUri;
-  }
-
-  // Fallback: use video download URL
-  return extractVideoUrl(data);
-}
-
-/**
- * Extract video ID from hybrid response
- */
-function extractVideoId(data: HybridVideoData | undefined): string {
-  if (!data) return '';
-  return data.aweme_id || data.id || data.video_id || '';
-}
-
 export async function GET(req: NextRequest) {
   try {
-    // 验证用户登录
     const session = await auth();
     if (!session?.user?.id) {
       return unauthResp();
     }
 
-    // 获取并验证查询参数
     const searchParams = Object.fromEntries(req.nextUrl.searchParams);
     const params = requestSchema.parse({ url: searchParams.url });
 
-    // 检测平台并选择对应的 API 端点
-    const detectedPlatform = detectPlatform(params.url);
-    const platformConfig = PLATFORM_ENDPOINTS[detectedPlatform];
+    if (!LEAPERONE_API_KEY) {
+      throw new Error('LEAPERONE_API_KEY is not configured');
+    }
 
     console.log(`[Video Extract] URL: ${params.url}`);
-    console.log(`[Video Extract] Detected platform: ${detectedPlatform}`);
 
-    // 只支持抖音和 TikTok
-    if (!platformConfig) {
-      throw new Error('目前仅支持抖音和 TikTok 视频链接');
+    const response = await fetch(
+      `${LEAPERONE_API_BASE_URL}/social-media/video/extract?url=${encodeURIComponent(params.url)}`,
+      {
+        headers: {
+          Authorization: `Bearer ${LEAPERONE_API_KEY}`,
+        },
+      },
+    );
+
+    if (!response.ok) {
+      const text = await response.text();
+      console.error(`[Video Extract] API error: ${response.status} ${text}`);
+      throw new Error('视频解析失败，请检查链接是否有效或该平台是否支持');
     }
 
-    // 使用平台特定的端点
-    const query = new URLSearchParams({
-      [platformConfig.paramName]: params.url,
-    });
-    console.log(`[Video Extract] Using platform endpoint: ${platformConfig.endpoint}`);
-    const response = (await fetchTikhub('GET', `${platformConfig.endpoint}?${query}`)) as TikHubHybridResponse;
+    const apiResult: LeaperOneVideoResponse = await response.json();
+    const data = apiResult.data;
 
-    // 解析响应数据 - 支持多种嵌套格式
-    // 抖音 v3 API 返回 aweme_details (数组)，其他可能返回 aweme_detail (单个) 或 data
-    const awemeDetails = response.data?.aweme_details;
-    const videoData = awemeDetails?.[0] || response.data?.aweme_detail || response.data?.data || response.data;
-
-    // 检查视频是否被过滤（删除、私密等）
-    const filterList = (response.data as { filter_list?: { reason: number }[] })?.filter_list;
-    if (filterList && filterList.length > 0 && !awemeDetails?.length) {
-      console.error('[Video Extract] Video filtered:', JSON.stringify(filterList));
-      throw new Error('视频不可用，可能已被删除、设为私密或有访问限制');
+    if (!data || !data.videos || data.videos.length === 0) {
+      throw new Error('无法获取视频信息，请检查链接是否有效');
     }
 
-    const videoDownloadUrl = extractVideoUrl(videoData);
-
-    if (!videoDownloadUrl) {
-      console.error('[Video Extract] No video URL found in response:', JSON.stringify(response.data).substring(0, 500));
-      throw new Error('无法获取视频下载链接，请检查链接是否有效或该平台是否支持');
-    }
-
-    // 提取时长 - 可能在多个位置，单位可能是毫秒或秒
-    let duration = videoData?.duration || videoData?.video?.duration || videoData?.music?.duration || 0;
-    // 如果时长大于 10000，认为是毫秒，需要转换为秒
-    if (duration > 10000) {
-      duration = Math.floor(duration / 1000);
-    }
-
-    const author = extractAuthor(videoData);
+    // audioUrl: prefer audios[0], fallback to lowest quality video
+    const audioUrl = data.audios?.[0]?.url || data.videos[data.videos.length - 1]?.url || '';
+    // videoUrl: highest quality video (first in array)
+    const videoUrl = data.videos[0]?.url || '';
 
     const result: VideoExtractResult = {
-      videoId: extractVideoId(videoData),
-      platform: videoData?.platform || detectedPlatform,
-      title: extractTitle(videoData),
-      author: author.name,
-      authorId: author.id,
-      audioUrl: extractAudioUrl(videoData),
-      videoUrl: videoDownloadUrl,
-      coverUrl: extractCoverUrl(videoData),
-      duration,
+      videoId: data.videoId || '',
+      platform: data.platform || apiResult.platform || '',
+      title: data.title || '',
+      author: data.author || '',
+      authorId: data.authorId || '',
+      audioUrl,
+      videoUrl,
+      coverUrl: data.coverUrl || '',
+      duration: data.duration || 0,
     };
 
     console.log(`[Video Extract] Success: platform=${result.platform}, duration=${result.duration}s`);
