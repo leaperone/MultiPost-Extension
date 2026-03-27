@@ -65,7 +65,15 @@ export async function GET(req: NextRequest) {
     if (!response.ok) {
       const text = await response.text();
       console.error(`[Video Extract] API error: ${response.status} ${text}`);
-      throw new Error('视频解析失败，请检查链接是否有效或该平台是否支持');
+      // Try to extract error message from JSON response
+      let errorMsg = '视频解析失败，请检查链接是否有效或该平台是否支持';
+      try {
+        const errorJson = JSON.parse(text);
+        if (errorJson.error) errorMsg = errorJson.error;
+      } catch {
+        // not JSON, use default message
+      }
+      throw new Error(errorMsg);
     }
 
     const apiResult: LeaperOneVideoResponse = await response.json();
