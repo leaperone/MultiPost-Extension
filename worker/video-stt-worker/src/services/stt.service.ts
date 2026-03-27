@@ -31,27 +31,43 @@ export class STTService {
       await Deno.mkdir(this.tempDir, { recursive: true });
       logger.debug(`Temp directory ensured: ${this.tempDir}`);
 
-      // Step 1: Download media file
-      logger.emoji('⬇️', 'Step 1/3: Downloading media file...');
-      logger.startTimer('download');
-      const videoFile = await this.downloadFile(mediaUrl, 'video.mp4');
-      logger.endTimer('download');
+      // Check if the URL already points to an audio file
+      const isAudioFile = /\.(mp3|wav|ogg|aac|m4a|flac|webm)(\?|$)/i.test(mediaUrl);
 
-      // Step 2: Extract audio using ffmpeg
-      logger.emoji('🎵', 'Step 2/3: Extracting audio with ffmpeg...');
-      logger.startTimer('ffmpeg');
-      const audioFile = await this.extractAudio(videoFile);
-      logger.endTimer('ffmpeg');
+      let audioFile: string;
 
-      // Step 3: Transcribe audio
-      logger.emoji('🤖', 'Step 3/3: Sending audio to STT API...');
+      if (isAudioFile) {
+        // Already an audio file, download directly without ffmpeg
+        logger.emoji('⬇️', 'Step 1/2: Downloading audio file (skipping ffmpeg)...');
+        logger.startTimer('download');
+        audioFile = await this.downloadFile(mediaUrl, 'audio.mp3');
+        logger.endTimer('download');
+      } else {
+        // Video file: download + extract audio with ffmpeg
+        logger.emoji('⬇️', 'Step 1/3: Downloading media file...');
+        logger.startTimer('download');
+        const videoFile = await this.downloadFile(mediaUrl, 'video.mp4');
+        logger.endTimer('download');
+
+        logger.emoji('🎵', 'Step 2/3: Extracting audio with ffmpeg...');
+        logger.startTimer('ffmpeg');
+        audioFile = await this.extractAudio(videoFile);
+        logger.endTimer('ffmpeg');
+
+        // Clean up video file early
+        await this.cleanup(videoFile);
+      }
+
+      // Transcribe audio
+      const stepNum = isAudioFile ? '2/2' : '3/3';
+      logger.emoji('🤖', `Step ${stepNum}: Sending audio to STT API...`);
       logger.startTimer('stt-api');
       const result = await this.transcribeAudio(audioFile, language);
       logger.endTimer('stt-api');
 
-      // Cleanup temp files
+      // Cleanup audio file
       logger.emoji('🧹', 'Cleaning up temporary files...');
-      await this.cleanup(videoFile, audioFile);
+      await this.cleanup(audioFile);
 
       logger.endTimer(timerLabel);
       logger.success('✅ Transcription completed successfully!');

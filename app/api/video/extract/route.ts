@@ -174,6 +174,28 @@ function extractTitle(data: HybridVideoData | undefined): string {
 }
 
 /**
+ * Extract audio URL from hybrid response
+ * Prefer music.play_url (pure audio MP3, typically only a few MB) over full video download
+ */
+function extractAudioUrl(data: HybridVideoData | undefined): string {
+  if (!data) return '';
+
+  // Prefer music.play_url (pure audio MP3)
+  const musicUrls = data.music?.play_url?.url_list;
+  if (musicUrls && musicUrls.length > 0) {
+    return musicUrls[0];
+  }
+  // music.play_url sometimes has the full URL in uri field
+  const musicUri = data.music?.play_url?.uri;
+  if (musicUri && musicUri.startsWith('http')) {
+    return musicUri;
+  }
+
+  // Fallback: use video download URL
+  return extractVideoUrl(data);
+}
+
+/**
  * Extract video ID from hybrid response
  */
 function extractVideoId(data: HybridVideoData | undefined): string {
@@ -246,7 +268,7 @@ export async function GET(req: NextRequest) {
       title: extractTitle(videoData),
       author: author.name,
       authorId: author.id,
-      audioUrl: videoDownloadUrl,
+      audioUrl: extractAudioUrl(videoData),
       videoUrl: videoDownloadUrl,
       coverUrl: extractCoverUrl(videoData),
       duration,
