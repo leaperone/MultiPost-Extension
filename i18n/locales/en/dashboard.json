@@ -70,6 +70,7 @@
       "extractBtn": "Extract",
       "createBtn": "Create Task",
       "resetBtn": "Reset",
+      "startBtn": "Start",
       "coverAlt": "Video cover"
     },
     "toast": {

@@ -70,6 +70,7 @@
       "extractBtn": "解析",
       "createBtn": "创建转录任务",
       "resetBtn": "重置",
+      "startBtn": "开始转录",
       "coverAlt": "视频封面"
     },
     "toast": {

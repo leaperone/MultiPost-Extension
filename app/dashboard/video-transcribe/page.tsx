@@ -7,10 +7,7 @@ import {
   Input,
   Card,
   CardBody,
-  CardHeader,
   Chip,
-  Textarea,
-  Divider,
   Modal,
   Progress,
   Skeleton,
@@ -23,7 +20,6 @@ import {
 import { toast } from 'sonner';
 import {
   Video,
-  Plus,
   RefreshCw,
   Trash2,
   Copy,
@@ -31,9 +27,7 @@ import {
   CheckCircle,
   XCircle,
   Loader2,
-  FileText,
   Search,
-  User,
 } from 'lucide-react';
 import {
   createVideoTranscription,
@@ -83,14 +77,14 @@ function CreateTaskForm({ onTaskCreated }: { onTaskCreated: () => void }) {
     return t('videoTranscribe.format.duration', { mins, secs });
   };
 
-  const handleExtract = async () => {
-    if (!videoUrl.trim()) {
+  const handleExtract = async (inputUrl?: string) => {
+    const url = (inputUrl || videoUrl).trim();
+    if (!url) {
       toast.error(t('videoTranscribe.toast.enterUrl'));
       return;
     }
 
-    // Extract URL from share text
-    const extractedUrl = cleanInputText(videoUrl);
+    const extractedUrl = cleanInputText(url);
 
     try {
       setExtracting(true);
@@ -162,107 +156,81 @@ function CreateTaskForm({ onTaskCreated }: { onTaskCreated: () => void }) {
 
   return (
     <Card className="border shadow-none">
-      <CardHeader className="flex gap-3">
-        <Video className="size-5" />
-        <div className="flex flex-col">
-          <p className="text-md font-semibold">{t('videoTranscribe.create.title')}</p>
-          <p className="text-small text-muted-foreground">
-            {t('videoTranscribe.create.description')}
-          </p>
-        </div>
-      </CardHeader>
-      <Divider />
       <CardBody className="gap-4">
-        <div className="flex flex-col gap-2 sm:flex-row">
-          <Input
-            placeholder={t('videoTranscribe.create.placeholder')}
-            value={videoUrl}
-            onChange={(e) => {
-              setVideoUrl(e.target.value);
-              if (videoInfo) setVideoInfo(null);
-            }}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter' && videoUrl.trim() && !extracting && !creating) {
-                handleExtract();
-              }
-            }}
-            disabled={extracting || creating}
-            variant="bordered"
-            classNames={{
-              inputWrapper: 'border',
-            }}
-          />
-          <Button
-            color="primary"
-            variant="flat"
-            isLoading={extracting}
-            onPress={handleExtract}
-            isDisabled={!videoUrl.trim() || creating}
-            startContent={!extracting && <Search className="size-4" />}
-            className="w-full shrink-0 sm:w-auto">
-            {t('videoTranscribe.create.extractBtn')}
-          </Button>
-        </div>
-
-        <div className="flex flex-wrap gap-1.5">
-          {['抖音', 'TikTok', 'B站', 'YouTube', '小红书', '快手', 'Instagram', 'Twitter'].map((p) => (
-            <Chip key={p} size="sm" variant="flat" className="text-xs">{p}</Chip>
-          ))}
-        </div>
-
-        {videoInfo && (
-          <div className="rounded-lg border bg-default-50 p-4">
-            <div className="flex flex-col gap-4 sm:flex-row">
-              {videoInfo.coverUrl && (
-                <div className="relative mx-auto w-40 shrink-0 overflow-hidden rounded-lg bg-default-200 sm:mx-0" style={{ aspectRatio: '9/16' }}>
-                  <Image
-                    src={videoInfo.coverUrl}
-                    alt={t('videoTranscribe.create.coverAlt')}
-                    className="size-full object-cover"
-                    fill
-                    unoptimized
-                  />
-                </div>
-              )}
-              <div className="min-w-0 flex-1 space-y-2">
-                {videoInfo.title && (
-                  <p className="line-clamp-2 text-sm font-medium">{videoInfo.title}</p>
-                )}
-                <div className="flex flex-wrap gap-3 text-xs text-muted-foreground">
-                  {videoInfo.author && (
-                    <span className="flex items-center gap-1">
-                      <User className="size-3" />
-                      {videoInfo.author}
-                    </span>
-                  )}
-                  {videoInfo.platform && (
-                    <Chip size="sm" variant="flat">
-                      {videoInfo.platform}
-                    </Chip>
-                  )}
-                  {videoInfo.duration > 0 && (
-                    <span className="flex items-center gap-1">
-                      <Clock className="size-3" />
-                      {formatDuration(videoInfo.duration)}
-                    </span>
-                  )}
-                </div>
-              </div>
-            </div>
-
-            <div className="mt-4 flex gap-2">
+        {!videoInfo ? (
+          <>
+            <div className="flex flex-col gap-2 sm:flex-row">
+              <Input
+                placeholder={t('videoTranscribe.create.placeholder')}
+                value={videoUrl}
+                onChange={(e) => {
+                  setVideoUrl(e.target.value);
+                  if (videoInfo) setVideoInfo(null);
+                }}
+                onPaste={(e) => {
+                  const text = e.clipboardData.getData('text').trim();
+                  if (text) {
+                    setVideoUrl(text);
+                    setTimeout(() => handleExtract(text), 0);
+                  }
+                }}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' && videoUrl.trim() && !extracting) {
+                    handleExtract();
+                  }
+                }}
+                disabled={extracting}
+                variant="bordered"
+                classNames={{
+                  inputWrapper: 'border',
+                }}
+              />
               <Button
                 color="primary"
-                isLoading={creating}
-                onPress={handleCreate}
-                startContent={!creating && <Plus className="size-4" />}
-                className="flex-1">
-                {t('videoTranscribe.create.createBtn')}
-              </Button>
-              <Button
                 variant="flat"
-                onPress={handleReset}
-                isDisabled={creating}>
+                isLoading={extracting}
+                onPress={() => handleExtract()}
+                isDisabled={!videoUrl.trim()}
+                startContent={!extracting && <Search className="size-4" />}
+                className="w-full shrink-0 sm:w-auto">
+                {t('videoTranscribe.create.extractBtn')}
+              </Button>
+            </div>
+            <div className="flex flex-wrap gap-1.5">
+              {['抖音', 'TikTok', 'B站', 'YouTube', '小红书', '快手', 'Instagram', 'Twitter'].map((p) => (
+                <Chip key={p} size="sm" variant="flat" className="text-xs">{p}</Chip>
+              ))}
+            </div>
+          </>
+        ) : (
+          <div className="flex items-center gap-3 rounded-lg border bg-default-50 p-3">
+            {videoInfo.coverUrl && (
+              <div className="relative size-12 shrink-0 overflow-hidden rounded bg-default-200">
+                <Image
+                  src={videoInfo.coverUrl}
+                  alt=""
+                  className="size-full object-cover"
+                  width={48}
+                  height={48}
+                  unoptimized
+                />
+              </div>
+            )}
+            <div className="min-w-0 flex-1">
+              <p className="truncate text-sm font-medium">{videoInfo.title}</p>
+              <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                {videoInfo.author && <span>{videoInfo.author}</span>}
+                {videoInfo.platform && (
+                  <Chip size="sm" variant="flat" className="text-xs">{videoInfo.platform}</Chip>
+                )}
+                {videoInfo.duration > 0 && <span>{formatDuration(videoInfo.duration)}</span>}
+              </div>
+            </div>
+            <div className="flex shrink-0 gap-2">
+              <Button color="primary" size="sm" isLoading={creating} onPress={handleCreate}>
+                {t('videoTranscribe.create.startBtn')}
+              </Button>
+              <Button size="sm" variant="flat" onPress={handleReset} isDisabled={creating}>
                 {t('videoTranscribe.create.resetBtn')}
               </Button>
             </div>
@@ -331,24 +299,8 @@ function TaskCard({
 
   const metadata = task.metadata as { title?: string; author?: string } | null;
 
-  // Status-based left border color
-  const getStatusBorderClass = () => {
-    switch (task.status) {
-      case VideoTranscriptionStatus.PENDING:
-        return 'border-l-4 border-l-warning';
-      case VideoTranscriptionStatus.PROCESSING:
-        return 'border-l-4 border-l-primary';
-      case VideoTranscriptionStatus.COMPLETED:
-        return 'border-l-4 border-l-success';
-      case VideoTranscriptionStatus.FAILED:
-        return 'border-l-4 border-l-danger';
-      default:
-        return '';
-    }
-  };
-
   return (
-    <Card className={`border shadow-none transition-colors hover:bg-default-50 ${getStatusBorderClass()}`}>
+    <Card className="border shadow-none">
       <CardBody className="gap-3">
         <div className="flex items-start justify-between">
           <div className="min-w-0 flex-1">
@@ -421,13 +373,9 @@ function TaskCard({
         {task.status === VideoTranscriptionStatus.COMPLETED && task.transcript && (
           <div className="space-y-2">
             <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <FileText className="size-4" />
-                <span className="text-sm font-medium">{t('videoTranscribe.task.result')}</span>
-                <span className="text-xs text-muted-foreground">
-                  ({t('videoTranscribe.task.charCount', { count: task.transcript.length })})
-                </span>
-              </div>
+              <span className="text-xs text-muted-foreground">
+                {t('videoTranscribe.task.charCount', { count: task.transcript.length })}
+              </span>
               <div className="flex gap-1">
                 <Button
                   size="sm"
@@ -444,16 +392,9 @@ function TaskCard({
                 </Button>
               </div>
             </div>
-            <Textarea
-              isReadOnly
-              value={task.transcript}
-              minRows={expanded ? 10 : 3}
-              maxRows={expanded ? 30 : 3}
-              variant="bordered"
-              classNames={{
-                inputWrapper: 'border',
-              }}
-            />
+            <p className={`whitespace-pre-line text-sm ${expanded ? '' : 'line-clamp-5'}`}>
+              {task.transcript}
+            </p>
           </div>
         )}
       </CardBody>
@@ -706,11 +647,9 @@ export default function VideoTranscribePage() {
   return (
     <div className="h-full overflow-auto">
       <div className="container mx-auto max-w-4xl space-y-6 px-4 py-6">
-        <div>
-          <h1 className="text-2xl font-bold">{t('videoTranscribe.page.title')}</h1>
-          <p className="text-muted-foreground">
-            {t('videoTranscribe.page.description')}
-          </p>
+        <div className="flex items-baseline justify-between">
+          <h1 className="text-xl font-bold">{t('videoTranscribe.page.title')}</h1>
+          <p className="text-sm text-muted-foreground">{t('videoTranscribe.page.description')}</p>
         </div>
 
         <CreateTaskForm onTaskCreated={handleTaskCreated} />
