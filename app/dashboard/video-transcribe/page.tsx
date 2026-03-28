@@ -181,6 +181,11 @@ function CreateTaskForm({ onTaskCreated }: { onTaskCreated: () => void }) {
               setVideoUrl(e.target.value);
               if (videoInfo) setVideoInfo(null);
             }}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' && videoUrl.trim() && !extracting && !creating) {
+                handleExtract();
+              }
+            }}
             disabled={extracting || creating}
             variant="bordered"
             classNames={{
@@ -199,17 +204,22 @@ function CreateTaskForm({ onTaskCreated }: { onTaskCreated: () => void }) {
           </Button>
         </div>
 
+        <div className="flex flex-wrap gap-1.5">
+          {['抖音', 'TikTok', 'B站', 'YouTube', '小红书', '快手', 'Instagram', 'Twitter'].map((p) => (
+            <Chip key={p} size="sm" variant="flat" className="text-xs">{p}</Chip>
+          ))}
+        </div>
+
         {videoInfo && (
           <div className="rounded-lg border bg-default-50 p-4">
             <div className="flex flex-col gap-4 sm:flex-row">
               {videoInfo.coverUrl && (
-                <div className="relative mx-auto size-24 shrink-0 overflow-hidden rounded-lg bg-default-200 sm:mx-0">
+                <div className="relative mx-auto w-40 shrink-0 overflow-hidden rounded-lg bg-default-200 sm:mx-0" style={{ aspectRatio: '9/16' }}>
                   <Image
                     src={videoInfo.coverUrl}
                     alt={t('videoTranscribe.create.coverAlt')}
                     className="size-full object-cover"
-                    width={96}
-                    height={96}
+                    fill
                     unoptimized
                   />
                 </div>
@@ -404,7 +414,7 @@ function TaskCard({
 
         {task.status === VideoTranscriptionStatus.FAILED && task.error && (
           <div className="rounded-lg bg-danger-50 p-3 dark:bg-danger-900/20">
-            <p className="text-sm text-danger">{task.error}</p>
+            <p className="line-clamp-2 text-sm text-danger">{task.error}</p>
           </div>
         )}
 

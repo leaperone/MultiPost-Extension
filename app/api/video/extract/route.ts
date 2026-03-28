@@ -62,17 +62,24 @@ export async function GET(req: NextRequest) {
       },
     );
 
-    const apiResult = await response.json();
+    const responseText = await response.text();
+    let apiResult: LeaperOneVideoResponse;
+    try {
+      apiResult = JSON.parse(responseText);
+    } catch {
+      console.error(`[Video Extract] Non-JSON response: ${response.status} ${responseText.substring(0, 200)}`);
+      throw new Error(`视频解析服务暂时不可用 (${response.status})`);
+    }
 
     if (!response.ok) {
-      const errorMsg = typeof apiResult?.error === 'string'
-        ? apiResult.error
-        : JSON.stringify(apiResult?.error || response.statusText);
+      const errorMsg = typeof (apiResult as any)?.error === 'string'
+        ? (apiResult as any).error
+        : JSON.stringify((apiResult as any)?.error || response.statusText);
       console.error(`[Video Extract] API error: ${response.status} ${errorMsg}`);
       throw new Error(errorMsg);
     }
 
-    const data = (apiResult as LeaperOneVideoResponse).data;
+    const data = apiResult.data;
 
     if (!data || !data.videos || data.videos.length === 0) {
       throw new Error('无法获取视频信息，请检查链接是否有效');
