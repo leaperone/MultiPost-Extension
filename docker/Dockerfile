@@ -51,15 +51,15 @@ RUN apk update --no-cache && \
 COPY --from=builder /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/ca-certificates.crt
 COPY --from=builder /usr/share/zoneinfo/Asia/Shanghai /usr/share/zoneinfo/Asia/Shanghai
 
-COPY --from=builder /app/public ./public
-COPY --from=builder /app/.next/standalone ./
-COPY --from=builder /app/.next/static ./.next/static
+COPY --from=builder /app/apps/web/public ./public
+COPY --from=builder /app/apps/web/.next/standalone ./
+COPY --from=builder /app/apps/web/.next/static ./.next/static
 EXPOSE 3000
-CMD [ "node", "server.js" ]
+CMD [ "node", "apps/web/server.js" ]
 
 FROM denoland/deno:latest as backend-cache
 WORKDIR /app
-COPY --from=deps /app/backend/ .
+COPY --from=deps /app/apps/backend/ .
 RUN deno cache main.ts
 
 FROM denoland/deno:latest as backend
@@ -70,7 +70,7 @@ CMD ["deno", "run", "-A", "main.ts"]
 
 FROM denoland/deno:latest as video-stt-worker-cache
 WORKDIR /app
-COPY --from=deps /app/worker/video-stt-worker/ .
+COPY --from=deps /app/apps/video-stt-worker/ .
 RUN deno cache src/main.ts
 
 FROM denoland/deno:latest as video-stt-worker

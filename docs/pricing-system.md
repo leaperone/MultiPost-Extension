@@ -7,7 +7,7 @@ MultiPost uses a credit-based pricing system for all AI and generation features.
 ## Pricing Configuration
 
 ### Location
-All pricing constants are defined in `actions/credit/types.ts`:
+All pricing constants are defined in `apps/web/actions/credit/types.ts`:
 
 ```typescript
 export const PRICING = {
@@ -29,28 +29,28 @@ export const PRICING = {
 
 ### Image Generation
 - **Price**: $0.04 per image
-- **Implementation**: 
-  - `app/dashboard/draw/image/action.ts` - UI action
-  - `worker/image.ts` - Background processing
+- **Implementation**:
+  - `apps/web/app/dashboard/draw/image/action.ts` - UI action
+  - `apps/web/lib/image.ts` - Background processing
 - **Calculation**: `PRICING.IMAGE_GENERATION × number_of_images`
 - **Pre-check**: `preCheckCredit(userId, totalCost)`
 - **Deduction**: `deductCreditWorker(userId, 'IMAGE_GENERATION', totalCost)`
 
 ### Poster Generation
 - **Price**: $0.04 per poster
-- **Implementation**: `app/dashboard/draw/poster/action.ts`
+- **Implementation**: `apps/web/app/dashboard/draw/poster/action.ts`
 - **Pre-check**: `preCheckCredit(session.user.id, PRICING.POSTER_GENERATION.toNumber())`
 - **Deduction**: After successful completion in `updatePosterGeneration()`
 
 ### AI Text Generation (DeepSeek)
 - **Input Tokens**: $0.00000027 per token
 - **Output Tokens**: $0.0000011 per token
-- **Implementation**: `app/api/draft/ai/creation/route.ts`
+- **Implementation**: `apps/web/app/api/draft/ai/creation/route.ts`
 - **Usage**: AI content creation for drafts
 
 ### Audio Transcription
 - **Price**: $0.000034 per second
-- **Implementation**: `app/api/internal/audio/transcriptions/route.ts`
+- **Implementation**: `apps/web/app/api/internal/audio/transcriptions/route.ts`
 - **Calculation**: `PRICING.AUDIO_TRANSCRIPTION.mul(durationSeconds)`
 
 ### File Hosting
@@ -87,17 +87,17 @@ All pricing calculations use the `USAGE_TYPE_MAP` for categorization:
 ## Key Implementation Files
 
 ### Core Credit System
-- `actions/credit/types.ts` - All pricing constants and type definitions
-- `actions/credit/index.ts` - Main credit operations (deduct, add, batch)
-- `actions/credit/worker.ts` - Credit deduction for worker processes
-- `actions/credit/recharge.ts` - Stripe/Alipay recharge functionality
+- `apps/web/actions/credit/types.ts` - All pricing constants and type definitions
+- `apps/web/actions/credit/index.ts` - Main credit operations (deduct, add, batch)
+- `apps/web/actions/credit/worker.ts` - Credit deduction for worker processes
+- `apps/web/actions/credit/recharge.ts` - Stripe/Alipay recharge functionality
 
 ### Feature-Specific Implementations
-- `app/dashboard/draw/image/action.ts` - Image generation pricing
-- `worker/image.ts` - Image generation worker pricing
-- `app/dashboard/draw/poster/action.ts` - Poster generation pricing
-- `app/api/draft/ai/creation/route.ts` - LLM usage (DeepSeek)
-- `app/api/internal/audio/transcriptions/route.ts` - Audio transcription pricing
+- `apps/web/app/dashboard/draw/image/action.ts` - Image generation pricing
+- `apps/web/lib/image.ts` - Image generation worker pricing
+- `apps/web/app/dashboard/draw/poster/action.ts` - Poster generation pricing
+- `apps/web/app/api/draft/ai/creation/route.ts` - LLM usage (DeepSeek)
+- `apps/web/app/api/internal/audio/transcriptions/route.ts` - Audio transcription pricing
 
 ### Database Schema
 - `creditUsage` table logs all credit deductions
@@ -115,14 +115,14 @@ All pricing calculations use the `USAGE_TYPE_MAP` for categorization:
 ## Development Guidelines
 
 ### Adding New Pricing Features
-1. Define pricing constant in `actions/credit/types.ts`
+1. Define pricing constant in `apps/web/actions/credit/types.ts`
 2. Add usage type to `USAGE_TYPE_MAP`
 3. Implement pre-check using `preCheckCredit()`
 4. Implement deduction using `deductCredit()` or `deductCreditWorker()`
 5. Add proper error handling for insufficient credits
 
 ### Testing Pricing Changes
-1. Update pricing constants in `actions/credit/types.ts`
+1. Update pricing constants in `apps/web/actions/credit/types.ts`
 2. Test with different credit scenarios (free/paid/insufficient)
 3. Verify usage tracking in `creditUsage` table
 4. Test recharge functionality with payment providers

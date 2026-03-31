@@ -1,0 +1,172 @@
+{
+  "posters_options": "海报选项",
+  "generation": "生成海报",
+  "tab_title": "海报",
+  "gallery": "海报库",
+  "category": {
+    "wechat_cover_generator": "微信公众号封面",
+    "social_media_generator": "社交媒体图文",
+    "poster_generator": "活动海报",
+    "infographic_generator": "知识卡片",
+    "ai_flyer_generator": "传单",
+    "menu_generator": "餐饮菜单",
+    "invitation_generator": "邀请函",
+    "music_album_generator": "专辑封面",
+    "signage_generator": "标识牌",
+    "event_promotion_generator": "活动推广"
+  },
+  "theme": {
+    "label": "配色",
+    "default": "默认",
+    "black": "经典黑白",
+    "ocean": "海洋蓝",
+    "sunset": "夕阳橙",
+    "forest": "森林绿",
+    "lavender": "薰衣草紫",
+    "rose": "玫瑰粉",
+    "golden": "奢华金",
+    "midnight": "午夜蓝"
+  },
+  "template": {
+    "label": "模板",
+    "no_templates": "没有找到模板",
+    "use_template": "使用模板"
+  },
+  "size": {
+    "label": "尺寸",
+    "width": "宽度",
+    "height": "高度",
+    "custom": "自定义尺寸",
+    "social_media": {
+      "label": "社交平台",
+      "instagram_poster": "Instagram 海报",
+      "rednote_poster": "Rednote 海报"
+    },
+    "ratio": {
+      "label": "尺寸比例",
+      "1010": "1:1",
+      "1609": "16:9",
+      "4030": "4:3"
+    }
+  },
+  "reference_image": {
+    "label": "参考图片",
+    "url_placeholder": "输入图片 URL 或上传...",
+    "upload": "上传",
+    "upload_failed": "上传参考图片失败",
+    "file_too_large": "文件大小不能超过 5MB",
+    "deepseek_warning": "Deepseek 模型不支持图片输入，切换其他模型即可使用参考图片功能。",
+    "tags": {
+      "all": "全部",
+      "layout": "布局",
+      "style": "风格",
+      "color": "颜色",
+      "texture": "质感",
+      "copy": "文案",
+      "font": "字体"
+    }
+  },
+  "material": {
+    "label": "素材图片",
+    "add": "添加",
+    "upload_failed": "上传素材失败",
+    "file_too_large": "文件大小不能超过 5MB"
+  },
+  "document": {
+    "label": "文档引用",
+    "add": "导入文档",
+    "upload_success": "文档导入成功",
+    "upload_failed": "文档导入失败"
+  },
+  "export": {
+    "options": "导出选项",
+    "format": "格式",
+    "quality": "质量",
+    "dpr": "分辨率",
+    "html": "导出 HTML",
+    "success": "导出成功",
+    "failed": "导出失败",
+    "timeout": "导出超时，请重试",
+    "canvas_not_found": "无法找到画布",
+    "comm_error": "无法与画布通信"
+  },
+  "generation_page": {
+    "ai_optimize_prompt": "AI 提示词",
+    "fill_to_input": "应用",
+    "category": "选择模板类型",
+    "prompt_placeholder": "描述您想要生成的海报内容...",
+    "size": {
+      "label": "尺寸",
+      "square": "方形 (1:1)",
+      "portrait": "竖向 (3:4)",
+      "landscape": "横向 (4:3)"
+    },
+    "model": {
+      "label": "模型",
+      "loading": "加载中..."
+    },
+    "format": {
+      "label": "格式"
+    },
+    "button": {
+      "generate": "生成海报",
+      "generating": "生成中..."
+    }
+  },
+  "result_waiter": {
+    "loading": "加载中...",
+    "task_submitted": "任务已提交",
+    "submit_failed": "提交失败",
+    "unknown_error": "未知错误",
+    "pending": "等待生成...",
+    "processing": "正在生成中...",
+    "processing_description": "海报生成需要2-3分钟，请耐心等待，稍后可以在海报库中查看结果",
+    "failed": "生成失败",
+    "generated_image": "生成的海报",
+    "download": "下载",
+    "exporting": "导出中...",
+    "manual_update": "手动刷新",
+    "manual_update_cooldown": "{{seconds}}秒后可再次刷新",
+    "manual_update_toast": "手动刷新中...",
+    "manual_update_failed": "手动刷新失败",
+    "edit": "编辑",
+    "step_generation": "AI 设计生成中...",
+    "step_rendering": "渲染图片中...",
+    "step_pending": "排队中",
+    "step_generation_label": "AI 设计",
+    "step_rendering_label": "渲染",
+    "step_completed_label": "完成",
+    "status_title_pending": "任务已提交，等待处理",
+    "status_title_generation": "AI 正在设计你的海报",
+    "status_title_rendering": "正在渲染最终图片",
+    "elapsed_time": "已等待",
+    "your_prompt": "你的描述",
+    "expected_time": "通常需要 30 秒到 2 分钟",
+    "go_to_gallery": "返回海报库"
+  },
+  "active_tasks": {
+    "title": "进行中的任务",
+    "view": "查看",
+    "close": "关闭"
+  },
+  "gallery_page": {
+    "title": "我的海报",
+    "new_image": "创建新海报",
+    "tabs": {
+      "all": "全部",
+      "done": "已完成",
+      "pending": "等待中",
+      "processing": "处理中",
+      "failed": "失败"
+    },
+    "empty": {
+      "title": "暂无海报",
+      "action": "创建第一张海报"
+    },
+    "get_image_failed": "获取海报失败",
+    "download": {
+      "loading": "下载中...",
+      "failed": "下载失败"
+    }
+  }
+}

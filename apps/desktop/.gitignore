@@ -1,0 +1,22 @@
+# Common
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Planning with files
+.planning/
+
+.claude/ralph-loop.local.md
+
+node_modules/
+dist/
+build/
+out/
+.DS_Store
+.idea/
+.vscode/
+.history/
+
+.nvmrc

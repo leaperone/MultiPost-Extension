@@ -2,6 +2,49 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+## Monorepo Structure
+
+This is a **pnpm workspace monorepo** containing all MultiPost projects:
+
+```
+.                              # Monorepo root / orchestrator
+├── apps/
+│   ├── web/                   # Web app (Next.js 16)
+│   ├── desktop/               # Electron desktop client
+│   ├── extension/             # Browser extension (git submodule, public repo)
+│   ├── backend/               # Deno worker: publish tasks, account refresh
+│   └── video-stt-worker/      # Deno worker: video speech-to-text
+├── packages/
+│   └── shared/                # @multipost/shared: shared types & platform definitions
+├── prisma/                    # Shared Prisma schema and generators
+├── pnpm-workspace.yaml        # Workspace config
+└── turbo.json                 # Turborepo task orchestration
+```
+
+**Key rules:**
+- Web code lives in `apps/web/`
+- `apps/extension/` is a **git submodule** pointing to `leaperone/MultiPost-Extension` (public)
+- `apps/backend/` and `apps/video-stt-worker/` are Deno-based worker apps inside the monorepo
+- `apps/desktop/` is the Electron app with its own `package.json`
+- `packages/shared/` exports `@multipost/shared` (types, platform constants)
+- root `tsconfig.json` is monorepo-level config; app-specific TS config lives in each app
+
+**Working with the monorepo:**
+```bash
+pnpm install                        # Install workspace dependencies
+pnpm dev                            # Start Web dev server via root orchestrator
+pnpm build                          # Build Web project via root orchestrator
+cd apps/web && pnpm lint            # Lint Web app directly
+cd apps/desktop && pnpm dev         # Start Desktop dev
+cd apps/desktop && pnpm build       # Build Desktop
+cd apps/backend && deno task dev    # Start backend worker
+cd apps/video-stt-worker && deno task dev  # Start video STT worker
+```
+
+**Desktop release** still publishes to `leaperone/MultiPost-Desktop-Release` (public repo) via `repository_dispatch`.
+
+---
+
 ## Important Communication Rules
 
 **🇨🇳 Always respond in Chinese (中文) when communicating with the user.** This is a Chinese-focused project and the development team prefers Chinese communication.
@@ -49,17 +92,11 @@ pnpm eslint:fix             # ESLint with auto-fix
 ### Testing
 This codebase currently has no test setup. When implementing tests, add appropriate npm scripts to package.json.
 
-### Worker Process
-```bash
-pnpm build:worker           # Build worker TypeScript
-pnpm dev:worker             # Build worker with watch mode
-pnpm worker                 # Run worker process
-```
 
 ### Development Database (Docker)
 ```bash
-docker compose -f docker/docker-compose.yml down --volume
-docker compose -f docker/docker-compose.yml up -d
+docker compose -f .devcontainer/dev-db/docker-compose.yml down --volumes postgres-multipost
+docker compose -f .devcontainer/dev-db/docker-compose.yml up -d postgres-multipost
 ```
 
 ### Release Management
@@ -72,31 +109,21 @@ pnpm release:001            # Patch version
 
 ## Architecture Overview
 
-**MultiPost** is a Next.js 15 social media publishing platform with browser extension integration.
+**MultiPost** is a Next.js 16 social media publishing platform with browser extension integration.
 
 ### Directory Structure
 
 ```
-app/                    # Next.js App Router pages and routes
-├── (default)/         # Route group for default pages (homepage, etc.)
-├── account/           # Account management pages
-├── activity/          # User activity pages
-├── admin/             # Admin dashboard and management
-├── api/               # API routes (REST endpoints)
-├── auth/              # Authentication pages
-├── dashboard/         # User dashboard with publish, draw, analytics
-├── legal/             # Legal pages (terms, privacy)
-├── signin/            # Sign in page
-└── signout/           # Sign out page
-
-actions/               # Server Actions (Next.js server-side functions)
-backend/               # Backend worker and job processing
-components/            # Reusable React components
-hooks/                 # Custom React hooks
-i18n/                  # Internationalization (i18n) files
-lib/                   # Library code and utilities
-prisma/                # Database schemas and migrations
-store/                 # Global state management (Zustand)
+apps/web/app/          # Next.js App Router pages and routes
+apps/web/actions/      # Server Actions
+apps/web/components/   # Reusable React components
+apps/web/hooks/        # Custom React hooks
+apps/web/i18n/         # Internationalization files
+apps/web/lib/          # Web libraries and utilities
+apps/web/store/        # Web global state (Zustand)
+apps/backend/          # Backend worker and job processing
+apps/video-stt-worker/ # Video speech-to-text worker
+prisma/                # Shared database schemas and generators
 ```
 
 ### Core Architecture
@@ -109,50 +136,50 @@ store/                 # Global state management (Zustand)
 
 ### Key Components
 
-#### Authentication (`auth.ts`)
+#### Authentication (`apps/web/auth.ts`)
 - Multi-provider auth (GitHub, Google, Passkey, Mailgun)
 - Automatic user credit allocation (0.5 for signup, 1.0 for GitHub)
 - Custom user session extensions
 
-#### Database (`lib/db.ts`, `prisma/`)
+#### Database (`apps/web/lib/db.ts`, `prisma/`)
 - Custom Prisma client (`client_multipost`) with singleton pattern
 - Schema includes Users, Credits, Social Media Accounts, Extensions, Drafts, Image/Poster Generation
 - Migration scripts for deployment
 
-#### State Management (`store/`)
+#### State Management (`apps/web/store/`)
 - `draft.store.ts`: Draft creation and publishing platform selection
 - `publish.store.ts`: Publishing workflow management
 - `chat.history.store.ts`: AI chat history persistence
 
-#### Credit System (`actions/credit/`)
+#### Credit System (`apps/web/actions/credit/`)
 - Real-time credit tracking and deduction
 - Integration with Stripe and Alipay for recharging
 - Usage analytics and admin management
-- Centralized pricing configuration in `actions/credit/types.ts`
+- Centralized pricing configuration in `apps/web/actions/credit/types.ts`
 
-#### Extension Integration (`lib/extension/`, `app/api/extension/`)
+#### Extension Integration (`apps/web/lib/extension/`, `apps/web/app/api/extension/`)
 - Browser extension client management
 - Task queuing and execution
 - Real-time communication via API endpoints
 
-#### Content Publishing (`app/dashboard/publish/`)
+#### Content Publishing (`apps/web/app/dashboard/publish/`)
 - Multi-platform publishing (supports various social media platforms)
 - Draft management with AI-assisted content creation
 - Image generation and media library integration
 
-#### Analytics (`app/dashboard/analytics/`)
+#### Analytics (`apps/web/app/dashboard/analytics/`)
 - Web analytics tracking with custom event collection
 - Geographic and device analytics
 - Real-time visitor tracking
 
 ### Internationalization
-- `i18n/`: Full i18n support with English and Chinese locales
+- `apps/web/i18n/`: Full i18n support with English and Chinese locales
 - Client/server-side translation switching
 - Localized UI components throughout
 
 ### API Structure
-- `app/api/`: REST endpoints for extension, analytics, authentication
-- `actions/`: Server actions for database operations
+- `apps/web/app/api/`: REST endpoints for extension, analytics, authentication
+- `apps/web/actions/`: Server actions for database operations
 - Type-safe API contracts with Zod validation
 
 ### Development Patterns
@@ -268,22 +295,22 @@ addToast({
 
 ## Pricing System
 
-### Current Pricing (defined in `actions/credit/types.ts`)
+### Current Pricing (defined in `apps/web/actions/credit/types.ts`)
 
 **Image Generation**: $0.04 per image
-- Implementation: `app/dashboard/draw/image/action.ts`, `worker/image.ts`
+- Implementation: `apps/web/app/dashboard/draw/image/action.ts`, `apps/web/lib/image.ts`
 - Formula: `PRICING.IMAGE_GENERATION × number_of_images`
 
 **Poster Generation**: $0.04 per poster
-- Implementation: `app/dashboard/draw/poster/action.ts`
+- Implementation: `apps/web/app/dashboard/draw/poster/action.ts`
 
 **AI Text Generation (DeepSeek)**:
 - Input: $0.00000027 per token
 - Output: $0.0000011 per token
-- Implementation: `app/api/draft/ai/creation/route.ts`
+- Implementation: `apps/web/app/api/draft/ai/creation/route.ts`
 
 **Audio Transcription**: $0.000034 per second
-- Implementation: `app/api/internal/audio/transcriptions/route.ts`
+- Implementation: `apps/web/app/api/internal/audio/transcriptions/route.ts`
 
 **File Hosting**: $0.04 per GB transfer
 
@@ -294,10 +321,10 @@ addToast({
 - **Tracking**: All usage logged in `creditUsage` table with usage types
 
 ### Key Pricing Files
-- `actions/credit/types.ts` - All pricing constants and types
-- `actions/credit/index.ts` - Credit operations (deduct, add, batch)
-- `actions/credit/worker.ts` - Worker process credit deduction
-- `actions/credit/recharge.ts` - Stripe/Alipay recharge functionality
+- `apps/web/actions/credit/types.ts` - All pricing constants and types
+- `apps/web/actions/credit/index.ts` - Credit operations (deduct, add, batch)
+- `apps/web/actions/credit/worker.ts` - Worker process credit deduction
+- `apps/web/actions/credit/recharge.ts` - Stripe/Alipay recharge functionality
 
 ## PostHog Analytics
 
@@ -321,8 +348,8 @@ TikHub provides APIs for extracting video/audio from social media platforms (Dou
   - `refresh_project_oas` - Refresh OAS from server
 
 **Current usage in project**:
-- `lib/tikhub.ts` - TikHub API client wrapper
-- `app/api/video/extract/route.ts` - Video extraction endpoint using TikHub
+- `apps/web/lib/tikhub.ts` - TikHub API client wrapper
+- `apps/web/app/api/video/extract/route.ts` - Video extraction endpoint using TikHub
 
 ## Important Notes
 

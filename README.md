@@ -1,66 +1,76 @@
 # MultiPost
 
-## How to Use
+Multi-platform social media content publishing SaaS. This monorepo contains the web app, desktop client, browser extension, backend workers, and shared packages.
 
-### 配置
+## Project Structure
 
-必读[配置教程](https://juejin.cn/post/7359203560166768650)
+| App | Path | Tech Stack | Description |
+|-----|------|------------|-------------|
+| **Web** | `apps/web/` | Next.js 16 + React 19 + Prisma + PostgreSQL | SaaS web application |
+| **Desktop** | `apps/desktop/` | Electron 34 + Vite 6 + React 19 | Desktop client (44+ platform adapters) |
+| **Extension** | `apps/extension/` | Plasmo + React 18 | Browser extension (git submodule) |
+| **Backend Worker** | `apps/backend/` | Deno + Prisma | Publish tasks, account refresh |
+| **Video STT Worker** | `apps/video-stt-worker/` | Deno + Prisma | Video speech-to-text |
+| **Shared** | `packages/shared/` | TypeScript | Shared types & platform definitions |
 
-- 如何使用 czg 生成标准的 git commit message
-- 如何使用 standard-version [生成 changelog 和 tag](https://juejin.cn/post/7359203560166768650#heading-40)
-
-### Install dependencies
-
-```bash
-pnpm i
-sh prisma/generate.sh
-```
-
-### Run the development server
+## Quick Start
 
 ```bash
+# Install all dependencies
+pnpm install
+
+# Start Web dev server
 pnpm dev
 
-or
+# Start Desktop dev
+cd apps/desktop && pnpm dev
 
-NODE_ENV=development pnpm dev
+# Start Backend worker
+cd apps/backend && deno task dev
+
+# Start Video STT worker
+cd apps/video-stt-worker && deno task dev
 ```
 
-### Setup pnpm (optional)
-
-If you are using `pnpm`, you need to add the following code to your `.npmrc` file:
+## Build
 
 ```bash
-public-hoist-pattern[]=*@nextui-org/*
+# Build Web
+pnpm build
+
+# Build Desktop
+cd apps/desktop && pnpm build
+
+# Platform-specific Desktop builds
+cd apps/desktop && pnpm build:mac
+cd apps/desktop && pnpm build:win
+cd apps/desktop && pnpm build:linux
 ```
 
-After modifying the `.npmrc` file, you need to run `pnpm install` again to ensure that the dependencies are installed correctly.
-
-## 项目结构
+## Database Setup
 
 ```bash
-src/
-├── app/ # 页面和路由，API Route
-├── components/ # 组件
-├── actions/ # 服务端 actions
-├── prisma/ # prisma 配置, prisma 起初始化脚本
-├── types/ # 类型定义
-├── hooks/ # 自定义 hooks
-├── stores/ # 全局状态管理
-├── lib/ # 库, 自定义函数
-├── utils/ # 工具函数
-├── scripts/ # 脚本
-├── public/ # 静态资源
+# Start dev database (Docker)
+docker compose -f .devcontainer/dev-db/docker-compose.yml up -d postgres-multipost
 
+# Generate Prisma client & deploy migrations
+make dev
 ```
 
-## Dev Database
+## Git Submodule
+
+The browser extension (`apps/extension/`) is a git submodule linked to the public repo [`leaperone/MultiPost-Extension`](https://github.com/leaperone/MultiPost-Extension).
 
 ```bash
-docker compose -f docker/docker-compose.yml down --volume
-docker compose -f docker/docker-compose.yml up -d
+# After cloning, init submodule
+git submodule update --init --recursive
 ```
+
+## Release
+
+- **Web**: Deployed via CI (tag or manual trigger on `leaperone/leaperone-releases`)
+- **Desktop**: Tag `v*` on main triggers build on [`leaperone/MultiPost-Desktop-Release`](https://github.com/leaperone/MultiPost-Desktop-Release), publishing to GitHub Releases + S3
 
 ## License
 
-Licensed under the [MIT license](https://github.com/nextui-org/next-app-template/blob/main/LICENSE).
+Licensed under the [MIT license](LICENSE).

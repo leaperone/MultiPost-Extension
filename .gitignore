@@ -1,7 +1,10 @@
 # See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
 
 # dependencies
-/node_modules
+node_modules
+
+# turbo
+.turbo/
 /.pnp
 .pnp.js
 .yarn/install-state.gz
@@ -10,7 +13,7 @@
 /coverage
 
 # next.js
-/.next/
+.next/
 /out/
 
 # production
@@ -65,5 +68,12 @@ worker/dist
 .claude/*.local.md
 
 # fumadocs-mdx generated files
-.source/
+**/.source/
 .planning
+
+# Monorepo: apps generated artifacts
+apps/backend/prisma/
+apps/video-stt-worker/src/prisma/
+apps/desktop/node_modules/
+apps/desktop/out/
+apps/desktop/dist/

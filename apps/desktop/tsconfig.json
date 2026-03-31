@@ -1,0 +1,21 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    "strict": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "noEmit": true,
+    "declaration": true
+  },
+  "include": ["src/shared/**/*"],
+  "references": [
+    { "path": "./src/main/tsconfig.json" },
+    { "path": "./src/preload/tsconfig.json" },
+    { "path": "./src/renderer/tsconfig.json" }
+  ]
+}

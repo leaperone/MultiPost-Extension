@@ -1,0 +1,55 @@
+appId: com.multipost.desktop
+productName: MultiPost
+directories:
+  buildResources: resources
+  output: dist
+files:
+  - '!**/.vscode/*'
+  - '!src/*'
+  - '!electron.vite.config.*'
+  - '!{.eslintignore,.eslintrc.cjs,.prettierignore,.prettierrc.yaml,dev-app-update.yml,CHANGELOG.md,README.md}'
+  - '!{.env,.env.*,.npmrc,pnpm-lock.yaml}'
+  - '!{tsconfig.json,tsconfig.node.json,tsconfig.web.json}'
+asarUnpack:
+  - resources/**
+afterSign: scripts/notarize.js
+mac:
+  type: distribution
+  identity: Developer ID Application
+  entitlements: resources/entitlements.mac.plist
+  entitlementsInherit: resources/entitlements.mac.plist
+  hardenedRuntime: true
+  gatekeeperAssess: false
+  notarize: false
+  target:
+    - dmg
+    - zip
+  extendInfo:
+    - NSCameraUsageDescription: Application requests access to the device's camera.
+    - NSMicrophoneUsageDescription: Application requests access to the device's microphone.
+    - NSDocumentsFolderUsageDescription: Application requests access to the user's Documents folder.
+    - NSDownloadsFolderUsageDescription: Application requests access to the user's Downloads folder.
+  icon: resources/icon.icns
+dmg:
+  artifactName: ${name}-${version}-${arch}.${ext}
+linux:
+  target:
+    - AppImage
+    - snap
+    - deb
+  maintainer: MultiPost Team
+  category: Utility
+  icon: resources/icon.png
+appImage:
+  artifactName: ${name}-${version}.${ext}
+win:
+  icon: resources/icon.png
+nsis:
+  artifactName: ${name}-${version}-setup.${ext}
+  shortcutName: ${productName}
+  uninstallDisplayName: ${productName}
+  createDesktopShortcut: always
+publish:
+  provider: github
+  owner: leaperone
+  repo: MultiPost-Desktop-Release

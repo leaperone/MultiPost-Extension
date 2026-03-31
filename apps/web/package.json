@@ -1,0 +1,11 @@
+{
+  "name": "multipost-web",
+  "version": "1.1.9-build.2",
+  "private": true,
+  "scripts": {
+    "dev": "../../node_modules/.bin/next dev -H 0.0.0.0 --webpack",
+    "build": "../../node_modules/.bin/next build --webpack",
+    "start": "../../node_modules/.bin/next start",
+    "lint": "../../node_modules/.bin/eslint ."
+  }
+}

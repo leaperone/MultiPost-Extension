@@ -1,1 +1,6 @@
-public/md-themes/**
+**/public/md-themes/**
+apps/desktop/**
+apps/extension/**
+apps/backend/**
+apps/video-stt-worker/**
+packages/**

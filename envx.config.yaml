@@ -3,8 +3,8 @@ export: false
 files:
   - .env
   - .env.local
-  - ./backend/.env
-  - ./worker/video-stt-worker/.env
+  - ./apps/backend/.env
+  - ./apps/video-stt-worker/.env
 env:
   MULTIPOST_DATABASE_URL:
   APP_URL:

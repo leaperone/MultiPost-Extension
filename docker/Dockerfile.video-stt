@@ -13,7 +13,7 @@ RUN sh prisma/generate.sh
 
 FROM denoland/deno:latest AS video-stt-worker-cache
 WORKDIR /app
-COPY --from=deps /app/worker/video-stt-worker/ .
+COPY --from=deps /app/apps/video-stt-worker/ .
 RUN deno cache src/main.ts
 
 FROM denoland/deno:latest AS video-stt-worker

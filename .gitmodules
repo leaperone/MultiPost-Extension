@@ -1,0 +1,3 @@
+[submodule "apps/extension"]
+	path = apps/extension
+	url = https://github.com/leaperone/MultiPost-Extension.git

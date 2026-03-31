@@ -3,7 +3,20 @@ import nextVitals from 'eslint-config-next/core-web-vitals';
 
 const eslintConfig = defineConfig([
   ...nextVitals,
-  globalIgnores(['.next/**', 'out/**', 'build/**', 'next-env.d.ts', 'backend/**', 'worker/**', 'scripts/**']),
+  globalIgnores([
+    // Monorepo: each app/package has its own toolchain
+    'apps/desktop/**',
+    'apps/extension/**',
+    'apps/backend/**',
+    'apps/video-stt-worker/**',
+    'packages/**',
+    // Build outputs
+    '.next/**',
+    'out/**',
+    'build/**',
+    'node_modules/**',
+    'next-env.d.ts',
+  ]),
   {
     rules: {
       '@next/next/no-img-element': 'warn',
