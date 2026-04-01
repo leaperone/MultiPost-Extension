@@ -2,3 +2,7 @@ node_modules
 .next
 prisma/client*
 .env*
+
+# Exclude apps not needed in Docker build
+apps/desktop
+apps/extension
