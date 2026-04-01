@@ -1,9 +1,13 @@
-name: Trigger MultiPost Deploy
+name: Trigger Deploy Worker
 
 on:
   push:
     tags:
-      - 'v*'
+      - 'worker-v*'
+    paths:
+      - 'apps/video-stt-worker/**'
+      - 'docker/**'
+      - 'pnpm-lock.yaml'
   workflow_dispatch:
     inputs:
       ref:
@@ -41,7 +45,7 @@ jobs:
           message="${commit_message:-$input_message}"
 
           if [ -z "$message" ]; then
-            message='Triggered production deploy'
+            message='Triggered worker deploy'
           fi
 
           author=$(printf '%s' "${INPUT_AUTHOR:-${{ github.actor }}}" | sed -n '1p')
@@ -53,7 +57,7 @@ jobs:
           echo "author=$escaped_author" >> "$GITHUB_OUTPUT"
 
       - name: Repository Dispatch
-        uses: peter-evans/repository-dispatch@v3
+        uses: peter-evans/repository-dispatch@v4
         with:
           token: ${{ secrets.ACCESS_TOKEN }}
           repository: leaperone/leaperone-releases
@@ -61,7 +65,8 @@ jobs:
           client-payload: '{
             "ref": "${{ steps.payload.outputs.deploy_ref }}",
             "env": "production",
-            "targets": "hk,pve",
+            "targets": "pve",
+            "build_targets": "video-stt-worker",
             "message": "${{ steps.payload.outputs.message }}",
             "author": "${{ steps.payload.outputs.author }}"
           }'
