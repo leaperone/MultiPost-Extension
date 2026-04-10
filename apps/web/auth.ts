@@ -29,7 +29,7 @@ declare module 'next-auth' {
 
 function getProviders() {
   const providers = [
-    Github,
+    Github({ issuer: 'https://github.com/login/oauth' }),
     Passkey,
     Google,
     Mailgun({
