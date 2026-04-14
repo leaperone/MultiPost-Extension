@@ -2,6 +2,7 @@
   "name": "multipost",
   "version": "1.1.9-build.2",
   "private": true,
+  "packageManager": "pnpm@10.32.1",
   "scripts": {
     "preinstall": "npx only-allow pnpm",
     "dev": "pnpm --filter multipost-web dev",
