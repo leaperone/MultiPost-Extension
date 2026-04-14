@@ -72,6 +72,7 @@ export const useMdDraftStore = create(
       ...initState,
 
       loadDrafts: async () => {
+        if (get().isLoading) return;
         set({ isLoading: true });
         try {
           const result = await getDynamicDrafts();
@@ -97,6 +98,10 @@ export const useMdDraftStore = create(
               }
             } else if (drafts.length > 0) {
               await get().loadDraft(drafts[0].id);
+            }
+
+            if (drafts.length === 0) {
+              await get().createDraft();
             }
           }
         } finally {
