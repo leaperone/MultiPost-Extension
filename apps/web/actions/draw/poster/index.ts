@@ -202,6 +202,24 @@ export async function getIframeUrl(id: string) {
       throw new Error('Poster generation not found');
     }
 
+    const now = new Date();
+    const TOKEN_REFRESH_BUFFER = 7 * 24 * 60 * 60 * 1000; // 7 days before expiry
+
+    if (
+      result.seedeToken &&
+      result.seedeTokenExpiresAt &&
+      result.seedeTokenExpiresAt.getTime() - now.getTime() > TOKEN_REFRESH_BUFFER
+    ) {
+      return {
+        success: true,
+        data: {
+          error: result.error,
+          status: result.status,
+          url: `https://seede.ai/design-embed/${result.projectId}?token=${result.seedeToken}&whiteLabel=true`,
+        },
+      };
+    }
+
     const response = await fetch(`https://api.seede.ai/api/token/generate`, {
       method: 'POST',
       headers: {
@@ -219,6 +237,12 @@ export async function getIframeUrl(id: string) {
     if (!responseData.success) {
       throw new Error(responseData.error);
     }
+
+    const expiresAt = new Date(now.getTime() + 60 * 24 * 60 * 60 * 1000);
+    await multipostDb.posterGeneration.update({
+      where: { id },
+      data: { seedeToken: responseData.token, seedeTokenExpiresAt: expiresAt },
+    });
 
     return {
       success: true,

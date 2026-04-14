@@ -429,10 +429,12 @@ model PosterGeneration {
   projectId     String?
   urls          Json?
   error         String?
-  lastImageUrl  String?
-  fileHostingId String?
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  lastImageUrl        String?
+  fileHostingId       String?
+  seedeToken          String?
+  seedeTokenExpiresAt DateTime?
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
 
   user        User         @relation(fields: [userId], references: [id], onDelete: Cascade)
   fileHosting FileHosting? @relation(fields: [fileHostingId], references: [id], onDelete: Cascade)
