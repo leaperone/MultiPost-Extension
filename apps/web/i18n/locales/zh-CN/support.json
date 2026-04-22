@@ -1,0 +1,98 @@
+{
+  "bubble": {
+    "label": "反馈"
+  },
+  "home": {
+    "greeting": "Hi, 有什么可以帮你？",
+    "greetingHint": "查看常见问题或发起新对话",
+    "newConversation": "发起新对话",
+    "loginFirst": "登录后发起对话",
+    "faq": "常见问题",
+    "history": "历史对话",
+    "title": "帮助与支持"
+  },
+  "new": {
+    "title": "发起新对话",
+    "subjectLabel": "标题",
+    "subjectPlaceholder": "简短描述你的问题",
+    "categoryLabel": "分类",
+    "priorityLabel": "优先级",
+    "contentLabel": "详细描述",
+    "contentPlaceholder": "请详细描述你遇到的问题...",
+    "includeScreenshot": "附带页面截图",
+    "uploadImage": "上传图片",
+    "submit": "提交",
+    "submitting": "提交中...",
+    "submitted": "工单已提交",
+    "submittedHint": "我们会尽快回复",
+    "submitFailed": "提交失败",
+    "retryHint": "请稍后重试",
+    "fillRequired": "请填写标题和描述",
+    "submitTicket": "提交工单"
+  },
+  "list": {
+    "empty": "还没有对话",
+    "emptyHint": "在下方发起新对话",
+    "newConversation": "新对话",
+    "agentPrefix": "客服: ",
+    "loadMore": "加载更多"
+  },
+  "detail": {
+    "title": "对话详情",
+    "conversation": "对话",
+    "notFound": "对话不存在",
+    "replyPlaceholder": "输入消息...",
+    "replyNotice": "客服回复后，将通过站内提示通知您",
+    "sendFailed": "发送失败",
+    "sendFailedRetry": "发送失败，请重试",
+    "imageOnly": "仅支持图片文件",
+    "imageFailed": "图片处理失败",
+    "attachment": "附件",
+    "preview": "预览",
+    "enterMessage": "请输入消息内容"
+  },
+  "satisfaction": {
+    "prompt": "请为本次服务评分：",
+    "selectRating": "请选择评分",
+    "commentPlaceholder": "补充评价（可选，最多 500 字）",
+    "submit": "提交评价",
+    "thankYou": "感谢您的评价",
+    "failed": "评价失败",
+    "failedRetry": "评价失败，请重试"
+  },
+  "role": {
+    "user": "我",
+    "agent": "客服",
+    "ai": "AI 助手"
+  },
+  "status": {
+    "open": "待处理",
+    "pending": "等待中",
+    "in_progress": "处理中",
+    "resolved": "已解决",
+    "closed": "已关闭"
+  },
+  "category": {
+    "bug": "Bug 反馈",
+    "suggestion": "功能建议",
+    "account": "账号问题",
+    "other": "其他"
+  },
+  "priority": {
+    "low": "低",
+    "normal": "普通",
+    "high": "高",
+    "urgent": "紧急"
+  },
+  "faq": {
+    "installExtension": "如何安装浏览器扩展？",
+    "publishMultiple": "如何发布到多个平台？",
+    "creditsUsage": "积分充值与使用"
+  },
+  "time": {
+    "justNow": "刚刚",
+    "minutesAgo": "{{count}} 分钟前",
+    "hoursAgo": "{{count}} 小时前",
+    "daysAgo": "{{count}} 天前"
+  }
+}

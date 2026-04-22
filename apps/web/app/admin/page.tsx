@@ -7,7 +7,7 @@
 
 import React from 'react';
 import { Button } from '@heroui/react';
-import { CreditCardIcon, UserIcon } from 'lucide-react';
+import { CreditCardIcon, HeadphonesIcon, UserIcon } from 'lucide-react';
 import { Link } from '@heroui/react';
 import { createTranslation } from '@/i18n/server';
 
@@ -53,6 +53,15 @@ export default async function AdminPage() {
           href="/admin/activity"
           className="w-full">
           <Button className="h-24 w-full text-lg">{t('sidebar.activity_management')}</Button>
+        </Link>
+        <Link
+          href="/admin/support"
+          className="w-full">
+          <Button
+            className="h-24 w-full text-lg"
+            startContent={<HeadphonesIcon className="size-6" />}>
+            Support Tickets
+          </Button>
         </Link>
       </div>
     </div>

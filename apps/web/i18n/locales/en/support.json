@@ -1,0 +1,98 @@
+{
+  "bubble": {
+    "label": "Support"
+  },
+  "home": {
+    "greeting": "Hi, how can we help?",
+    "greetingHint": "Check FAQs or start a conversation",
+    "newConversation": "Start a conversation",
+    "loginFirst": "Sign in to start a conversation",
+    "faq": "FAQ",
+    "history": "Past conversations",
+    "title": "Help & Support"
+  },
+  "new": {
+    "title": "New Conversation",
+    "subjectLabel": "Title",
+    "subjectPlaceholder": "Briefly describe your issue",
+    "categoryLabel": "Category",
+    "priorityLabel": "Priority",
+    "contentLabel": "Description",
+    "contentPlaceholder": "Please describe in detail...",
+    "includeScreenshot": "Include page screenshot",
+    "uploadImage": "Upload image",
+    "submit": "Submit",
+    "submitting": "Submitting...",
+    "submitted": "Ticket submitted",
+    "submittedHint": "We will reply as soon as possible",
+    "submitFailed": "Submit failed",
+    "retryHint": "Please try again later",
+    "fillRequired": "Please fill in the title and description",
+    "submitTicket": "Submit ticket"
+  },
+  "list": {
+    "empty": "No conversations yet",
+    "emptyHint": "Start a conversation below",
+    "newConversation": "New conversation",
+    "agentPrefix": "Support: ",
+    "loadMore": "Load more"
+  },
+  "detail": {
+    "title": "Conversation Details",
+    "conversation": "Conversation",
+    "notFound": "Conversation not found",
+    "replyPlaceholder": "Type a message...",
+    "replyNotice": "You will be notified when there is a new reply",
+    "sendFailed": "Failed to send",
+    "sendFailedRetry": "Failed to send, please try again",
+    "imageOnly": "Only image files are supported",
+    "imageFailed": "Image processing failed",
+    "attachment": "Attachment",
+    "preview": "Preview",
+    "enterMessage": "Please enter a message"
+  },
+  "satisfaction": {
+    "prompt": "Rate this service:",
+    "selectRating": "Please select a rating",
+    "commentPlaceholder": "Additional comments (optional, max 500 chars)",
+    "submit": "Submit rating",
+    "thankYou": "Thank you for your feedback",
+    "failed": "Rating failed",
+    "failedRetry": "Rating failed, please try again"
+  },
+  "role": {
+    "user": "You",
+    "agent": "Support",
+    "ai": "AI Assistant"
+  },
+  "status": {
+    "open": "Open",
+    "pending": "Pending",
+    "in_progress": "In Progress",
+    "resolved": "Resolved",
+    "closed": "Closed"
+  },
+  "category": {
+    "bug": "Bug Report",
+    "suggestion": "Suggestion",
+    "account": "Account Issue",
+    "other": "Other"
+  },
+  "priority": {
+    "low": "Low",
+    "normal": "Normal",
+    "high": "High",
+    "urgent": "Urgent"
+  },
+  "faq": {
+    "installExtension": "How to install the browser extension?",
+    "publishMultiple": "How to publish to multiple platforms?",
+    "creditsUsage": "Credits recharge & usage"
+  },
+  "time": {
+    "justNow": "just now",
+    "minutesAgo": "{{count}} min ago",
+    "hoursAgo": "{{count}} hr ago",
+    "daysAgo": "{{count}} days ago"
+  }
+}

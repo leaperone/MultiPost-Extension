@@ -7,7 +7,7 @@ import { headers } from 'next/headers';
 import { Metadata } from 'next';
 import { TimezoneProvider } from './components/TimezoneProvider';
 import { ToastProvider } from '@heroui/react';
-import { FeedbackButton } from '@/components/Feedback/FeedbackButton';
+import SupportBubble from '@/components/Support/SupportBubble';
 import { isDesktopRequest } from '@/lib/desktop-detect';
 import { DesktopSidebar } from '@/components/desktop/sidebar';
 import { DesktopPathSync } from '@/components/desktop/path-sync';
@@ -40,7 +40,7 @@ export default async function DashboardLayout({
           <DesktopSidebar basePath="/dashboard" />
           <DesktopPathSync />
           <main className="flex-1 overflow-auto">{children}</main>
-          <FeedbackButton />
+          <SupportBubble />
         </SidebarProvider>
       </div>
     );
@@ -68,7 +68,7 @@ export default async function DashboardLayout({
         <DashboardSidebar />
         <TimezoneProvider />
         <main className="flex-1 overflow-hidden [transform:translateZ(0)]">{children}</main>
-        <FeedbackButton />
+        <SupportBubble />
       </SidebarProvider>
     </div>
   );

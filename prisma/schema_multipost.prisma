@@ -54,8 +54,10 @@ model User {
   Draft               Draft[]
   PublishTask         PublishTask[]
   PublishTaskLog      PublishTaskLog[]
-  ImageGenerationLog  ImageGenerationLog[]
-  VideoTranscription  VideoTranscription[]
+  ImageGenerationLog      ImageGenerationLog[]
+  VideoTranscription      VideoTranscription[]
+  SupportConversation     SupportConversation[]
+  SupportMessage          SupportMessage[]
 }
 
 model Account {
@@ -557,4 +559,56 @@ model VideoTranscription {
   @@index([userId])
   @@index([status])
   @@index([createdAt])
+}
+
+// Support ticket system — status: open, pending, in_progress, resolved, closed
+// category: bug, suggestion, account, other — priority: low, normal, high, urgent
+// lastMessageRole: user, ai, agent
+model SupportConversation {
+  id                 String    @id @default(cuid())
+  userId             String
+  status             String    @default("open")
+  category           String    @default("other")
+  subject            String?
+  priority           String    @default("normal")
+  satisfactionRating Int?
+  satisfactionComment String?
+  metadata           Json?
+  assignedTo         String?
+  pageUrl            String?
+  lastMessageContent String?
+  lastMessageAt      DateTime?
+  lastMessageRole    String?
+  hasUnreadReply     Boolean   @default(false)
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
+  resolvedAt         DateTime?
+  closedAt           DateTime?
+  firstResponseAt    DateTime?
+
+  user     User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  messages SupportMessage[]
+
+  @@index([userId])
+  @@index([status])
+  @@index([category])
+  @@index([assignedTo])
+  @@index([createdAt])
+  @@index([userId, status])
+}
+
+model SupportMessage {
+  id             String   @id @default(cuid())
+  conversationId String
+  role           String   // user, ai, agent
+  senderUserId   String?
+  content        String   @db.Text
+  attachments    Json?
+  isInternal     Boolean  @default(false)
+  createdAt      DateTime @default(now())
+
+  conversation SupportConversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  sender       User?               @relation(fields: [senderUserId], references: [id], onDelete: SetNull)
+
+  @@index([conversationId, createdAt])
 }
