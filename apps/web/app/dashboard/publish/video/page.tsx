@@ -37,6 +37,7 @@ import PlatformCheckbox from '../components/PlatformCheckbox';
 import { funcPublish, getPlatformInfos } from '@/lib/extension';
 import type { PlatformInfo } from '@/lib/extension';
 import { useTranslation } from '@/i18n/client';
+import { useHydration } from '@/hooks/useHydration';
 import { usePlatformStore } from '@/store/publish.store';
 import { getPlatformExtraConfigList } from '../action';
 import { Icon } from '@iconify/react';
@@ -147,7 +148,8 @@ export default function VideoPage() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const coverInputRef = useRef<HTMLInputElement>(null);
   const { videoPlatforms, setVideoPlatforms, clearVideoPlatforms } = usePlatformStore();
-  const [selectedPlatforms, setSelectedPlatforms] = useState<string[]>([]);
+  const isHydrated = useHydration();
+  const selectedPlatforms = isHydrated ? videoPlatforms : [];
   const [platforms, setPlatforms] = useState<PlatformInfo[]>([]);
   const [tags, setTags] = useState<string[]>([]);
   const [scheduleEnabled, setScheduleEnabled] = useState<boolean>(false);
@@ -185,12 +187,6 @@ export default function VideoPage() {
       setCurrentStep(stepId);
     }
   };
-
-  useEffect(() => {
-    if (videoPlatforms.length > 0) {
-      setSelectedPlatforms(videoPlatforms);
-    }
-  }, [videoPlatforms]);
 
   useEffect(() => {
     async function fetchPlatforms() {
@@ -297,27 +293,23 @@ export default function VideoPage() {
     }
     setTitle('');
     setContent('');
-    setSelectedPlatforms([]);
     clearVideoPlatforms();
   };
 
   const handlePlatformChange = (platform: string, isSelected: boolean) => {
-    setSelectedPlatforms((prev) => {
-      const newSelected = isSelected ? [...prev, platform] : prev.filter((p) => p !== platform);
-      setVideoPlatforms(newSelected);
+    const current = usePlatformStore.getState().videoPlatforms;
+    const newSelected = isSelected ? [...current, platform] : current.filter((p) => p !== platform);
+    setVideoPlatforms(newSelected);
 
-      if (newSelected.length > 0) {
-        trackPlatformSelected(newSelected, 'video');
-      }
+    const hasScheduleSupport = newSelected.some((p) => scheduleSupportedPlatforms.includes(p));
+    if (!hasScheduleSupport) {
+      setScheduleEnabled(false);
+      setScheduledDateTime(null);
+    }
 
-      const hasScheduleSupport = newSelected.some((p) => scheduleSupportedPlatforms.includes(p));
-      if (!hasScheduleSupport) {
-        setScheduleEnabled(false);
-        setScheduledDateTime(null);
-      }
-
-      return newSelected;
-    });
+    if (newSelected.length > 0) {
+      trackPlatformSelected(newSelected, 'video');
+    }
   };
 
   const handleCoverFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -646,7 +638,7 @@ export default function VideoPage() {
                     size="sm"
                     variant="light"
                     color="danger"
-                    onPress={() => setSelectedPlatforms([])}>
+                    onPress={clearVideoPlatforms}>
                     <Eraser className="size-4" />
                   </Button>
                 )}

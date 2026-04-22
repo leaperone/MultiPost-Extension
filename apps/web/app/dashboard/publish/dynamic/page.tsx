@@ -68,6 +68,7 @@ import type { PlatformInfo } from '@/lib/extension';
 
 import { funcPublish, getPlatformInfos } from '@/lib/extension';
 import PlatformCheckbox from '../components/PlatformCheckbox';
+import { useHydration } from '@/hooks/useHydration';
 import { usePlatformStore } from '@/store/publish.store';
 import { getPlatformExtraConfigList } from '../action';
 import LibraryModal from './components/LibraryModal';
@@ -228,7 +229,8 @@ export default function DynamicPage() {
   const [title, setTitle] = useState<string>('');
   const [content, setContent] = useState<string>('');
   const { dynamicPlatforms, setDynamicPlatforms, clearDynamicPlatforms } = usePlatformStore();
-  const [selectedPlatforms, setSelectedPlatforms] = useState<string[]>([]);
+  const isHydrated = useHydration();
+  const selectedPlatforms = isHydrated ? dynamicPlatforms : [];
   const [autoPublish, setAutoPublish] = useState<boolean>(false);
   const [viewerVisible, setViewerVisible] = useState(false);
   const [currentImage, setCurrentImage] = useState(0);
@@ -244,12 +246,6 @@ export default function DynamicPage() {
   const [isLibraryModalOpen, setLibraryModalOpen] = useState(false);
   const [showDraftAd, setShowDraftAd] = useState(true);
   const [isAiModalOpen, setIsAiModalOpen] = useState(false);
-
-  useEffect(() => {
-    if (dynamicPlatforms.length > 0) {
-      setSelectedPlatforms(dynamicPlatforms);
-    }
-  }, []);
 
   useEffect(() => {
     if (images.some((i) => !i.id)) {
@@ -377,7 +373,6 @@ export default function DynamicPage() {
     setVideos([]);
     setTitle('');
     setContent('');
-    setSelectedPlatforms([]);
     clearDynamicPlatforms();
     setAutoPublish(false);
   };
@@ -398,18 +393,13 @@ export default function DynamicPage() {
   };
 
   const handlePlatformChange = (platform: string, isSelected: boolean) => {
-    setSelectedPlatforms((prev) => {
-      const newSelected = isSelected ? [...prev, platform] : prev.filter((p) => p !== platform);
-      if (newSelected.length > 0) {
-        trackPlatformSelected(newSelected, 'dynamic');
-      }
-      return newSelected;
-    });
+    const current = usePlatformStore.getState().dynamicPlatforms;
+    const newSelected = isSelected ? [...current, platform] : current.filter((p) => p !== platform);
+    setDynamicPlatforms(newSelected);
+    if (newSelected.length > 0) {
+      trackPlatformSelected(newSelected, 'dynamic');
+    }
   };
-
-  useEffect(() => {
-    setDynamicPlatforms(selectedPlatforms);
-  }, [selectedPlatforms, setDynamicPlatforms]);
 
   const handlePublish = async () => {
     if (!content) {
@@ -981,7 +971,7 @@ export default function DynamicPage() {
                     size="sm"
                     variant="light"
                     color="danger"
-                    onPress={() => setSelectedPlatforms([])}>
+                    onPress={clearDynamicPlatforms}>
                     <Eraser className="size-4" />
                   </Button>
                 )}

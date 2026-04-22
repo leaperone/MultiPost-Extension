@@ -26,6 +26,7 @@ import type { FileData, SyncData } from '@/lib/extension';
 
 import { funcPublish, getPlatformInfos } from '@/lib/extension';
 import PlatformCheckbox from '../components/PlatformCheckbox';
+import { useHydration } from '@/hooks/useHydration';
 import { usePlatformStore } from '@/store/publish.store';
 import { getPlatformExtraConfigList } from '../action';
 import { useRouter } from 'next/navigation';
@@ -82,7 +83,8 @@ export default function PodcastPage() {
   const [description, setDescription] = useState<string>('');
   const audioInputRef = useRef<HTMLInputElement>(null);
   const { podcastPlatforms, setPodcastPlatforms, clearPodcastPlatforms } = usePlatformStore();
-  const [selectedPlatforms, setSelectedPlatforms] = useState<string[]>([]);
+  const isHydrated = useHydration();
+  const selectedPlatforms = isHydrated ? podcastPlatforms : [];
   const [autoPublish, setAutoPublish] = useState<boolean>(false);
   const [platforms, setPlatforms] = useState<PlatformInfo[]>([]);
   const [isDraggingOver, setIsDraggingOver] = useState(false);
@@ -112,12 +114,6 @@ export default function PodcastPage() {
       setCurrentStep(stepId);
     }
   };
-
-  useEffect(() => {
-    if (podcastPlatforms.length > 0) {
-      setSelectedPlatforms(podcastPlatforms);
-    }
-  }, []);
 
   useEffect(() => {
     if (process.env.NODE_ENV === 'development') {
@@ -208,20 +204,14 @@ export default function PodcastPage() {
   };
 
   const handlePlatformChange = (platform: string, isSelected: boolean) => {
-    setSelectedPlatforms((prev) => {
-      const newSelected = isSelected ? [...prev, platform] : prev.filter((p) => p !== platform);
+    const current = usePlatformStore.getState().podcastPlatforms;
+    const newSelected = isSelected ? [...current, platform] : current.filter((p) => p !== platform);
+    setPodcastPlatforms(newSelected);
 
-      if (newSelected.length > 0) {
-        trackPlatformSelected(newSelected, 'podcast');
-      }
-
-      return newSelected;
-    });
+    if (newSelected.length > 0) {
+      trackPlatformSelected(newSelected, 'podcast');
+    }
   };
-
-  useEffect(() => {
-    setPodcastPlatforms(selectedPlatforms);
-  }, [selectedPlatforms, setPodcastPlatforms]);
 
   const handlePublish = async () => {
     if (!audio) {
@@ -291,7 +281,6 @@ export default function PodcastPage() {
     setAudio(null);
     setTitle('');
     setDescription('');
-    setSelectedPlatforms([]);
     clearPodcastPlatforms();
     setAutoPublish(false);
   };
@@ -470,7 +459,7 @@ export default function PodcastPage() {
                     size="sm"
                     variant="light"
                     color="danger"
-                    onPress={() => setSelectedPlatforms([])}>
+                    onPress={clearPodcastPlatforms}>
                     <Eraser className="size-4" />
                   </Button>
                 )}

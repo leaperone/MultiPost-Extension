@@ -77,3 +77,6 @@ apps/video-stt-worker/src/prisma/
 apps/desktop/node_modules/
 apps/desktop/out/
 apps/desktop/dist/
+
+# oh-my-codex local telemetry (prompt/output previews, absolute paths, thread IDs)
+.omx/
