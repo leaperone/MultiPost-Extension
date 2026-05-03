@@ -88,15 +88,35 @@ export async function DynamicToutiao(data: SyncData) {
             fileInput.dispatchEvent(new Event("input", { bubbles: true }));
           }
 
-          // 等待上传完成
-          await new Promise((resolve) => setTimeout(resolve, 5000));
+          // 等待上传完成：轮询 confirm 按钮变为可点击（未 disabled），最多 60s
+          const confirmSelector = 'button[data-e2e="imageUploadConfirm-btn"]';
+          let confirmButton: HTMLButtonElement | null = null;
+          const uploadDeadline = Date.now() + 60000;
+          while (Date.now() < uploadDeadline) {
+            const btn = document.querySelector(confirmSelector) as HTMLButtonElement | null;
+            if (btn && !btn.disabled && !btn.getAttribute("disabled")) {
+              confirmButton = btn;
+              break;
+            }
+            await new Promise((resolve) => setTimeout(resolve, 500));
+          }
+          if (!confirmButton) {
+            console.warn("[MultiPost/toutiao] 图片上传等待超时，未检测到可点击的确认按钮");
+            return;
+          }
 
           // 点击确认按钮
-          const confirmButton = document.querySelector('button[data-e2e="imageUploadConfirm-btn"]');
-          if (confirmButton) {
-            confirmButton.dispatchEvent(new Event("click", { bubbles: true }));
-            await new Promise((resolve) => setTimeout(resolve, 2000));
+          confirmButton.dispatchEvent(new Event("click", { bubbles: true }));
+
+          // 等确认弹窗消失 + 编辑器里出现图片缩略图，最多 30s
+          const insertDeadline = Date.now() + 30000;
+          while (Date.now() < insertDeadline) {
+            const dialogGone = !document.querySelector(confirmSelector);
+            const thumb = document.querySelector(".image-remove-btn, .byte-upload-image, .syl-image");
+            if (dialogGone && thumb) break;
+            await new Promise((resolve) => setTimeout(resolve, 500));
           }
+          await new Promise((resolve) => setTimeout(resolve, 1000));
         }
       }
     }
