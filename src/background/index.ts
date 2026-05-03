@@ -60,12 +60,48 @@ chrome.tabs.onRemoved.addListener((tabId) => {
 // Message Handler || 消息处理器 || START
 let currentSyncData: SyncData | null = null;
 let currentPublishPopup: chrome.windows.Window | null = null;
+
+// 防止同一发布请求短时间内被多次触发（如 NEW_TASK 被 multipost.app 网页或 React StrictMode 重复 dispatch）
+const _recentPublishKeys = new Map<string, number>();
+const _PUBLISH_DEDUP_WINDOW_MS = 60_000;
+
+function _publishKey(data: SyncData): string {
+  try {
+    const platforms = (data.platforms || [])
+      .map((p) => p?.name || "")
+      .sort()
+      .join(",");
+    const inner: any = data.data || {};
+    const content = (inner.content || inner.title || "").slice(0, 256);
+    const imgs = Array.isArray(inner.images) ? inner.images.length : 0;
+    return `${platforms}|${imgs}|${content}`;
+  } catch {
+    return JSON.stringify(data).slice(0, 512);
+  }
+}
+
+function _shouldDedupePublish(data: SyncData): boolean {
+  const key = _publishKey(data);
+  const now = Date.now();
+  // 清理过期 key
+  for (const [k, t] of _recentPublishKeys.entries()) {
+    if (now - t > _PUBLISH_DEDUP_WINDOW_MS) _recentPublishKeys.delete(k);
+  }
+  if (_recentPublishKeys.has(key)) return true;
+  _recentPublishKeys.set(key, now);
+  return false;
+}
+
 const defaultMessageHandler = (request, _sender, sendResponse) => {
   if (request.action === "MULTIPOST_EXTENSION_CHECK_SERVICE_STATUS") {
     sendResponse({ extensionId: chrome.runtime.id });
   }
   if (request.action === "MULTIPOST_EXTENSION_PUBLISH") {
     const data = request.data as SyncData;
+    if (_shouldDedupePublish(data)) {
+      console.log("[MultiPost] skip duplicate PUBLISH request");
+      return;
+    }
     currentSyncData = data;
     (async () => {
       currentPublishPopup = await chrome.windows.create({
