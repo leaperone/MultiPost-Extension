@@ -76,8 +76,26 @@ export async function DynamicToutiao(data: SyncData) {
               continue;
             }
 
-            const response = await fetch(image.url);
-            const arrayBuffer = await response.arrayBuffer();
+            let arrayBuffer: ArrayBuffer | null = null;
+            try {
+              const direct = await fetch(image.url);
+              if (!direct.ok) throw new Error(`HTTP ${direct.status}`);
+              arrayBuffer = await direct.arrayBuffer();
+            } catch (e) {
+              console.warn("[MultiPost/toutiao] 直连 fetch 失败，回退 background 代取:", e);
+              const resp = await chrome.runtime.sendMessage({
+                action: "MULTIPOST_FETCH_IMAGE",
+                url: image.url,
+              });
+              if (!resp || !resp.ok || !resp.base64) {
+                console.error("[MultiPost/toutiao] background fetch 也失败:", resp);
+                continue;
+              }
+              const bin = atob(resp.base64);
+              const bytes = new Uint8Array(bin.length);
+              for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+              arrayBuffer = bytes.buffer;
+            }
             const file = new File([arrayBuffer], image.name, { type: image.type });
             dataTransfer.items.add(file);
           }

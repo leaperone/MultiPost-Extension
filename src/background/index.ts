@@ -138,6 +138,30 @@ const defaultMessageHandler = (request, _sender, sendResponse) => {
   if (request.action === "MULTIPOST_EXTENSION_PUBLISH_REQUEST_SYNC_DATA") {
     sendResponse({ syncData: currentSyncData });
   }
+  if (request.action === "MULTIPOST_FETCH_IMAGE") {
+    const url = request.url as string;
+    (async () => {
+      try {
+        const r = await fetch(url);
+        if (!r.ok) {
+          sendResponse({ ok: false, error: `HTTP ${r.status}` });
+          return;
+        }
+        const buf = await r.arrayBuffer();
+        let bin = "";
+        const bytes = new Uint8Array(buf);
+        const chunk = 0x8000;
+        for (let i = 0; i < bytes.length; i += chunk) {
+          bin += String.fromCharCode.apply(null, Array.from(bytes.subarray(i, i + chunk)) as unknown as number[]);
+        }
+        const b64 = btoa(bin);
+        sendResponse({ ok: true, base64: b64, contentType: r.headers.get("content-type") || "" });
+      } catch (e) {
+        sendResponse({ ok: false, error: String(e) });
+      }
+    })();
+    return true;
+  }
   if (request.action === "MULTIPOST_EXTENSION_PUBLISH_NOW") {
     const data = request.data as SyncData;
     if (Array.isArray(data.platforms) && data.platforms.length > 0) {
