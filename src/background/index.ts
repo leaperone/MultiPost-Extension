@@ -162,6 +162,24 @@ const defaultMessageHandler = (request, _sender, sendResponse) => {
     })();
     return true;
   }
+  if (request.action === "MULTIPOST_REPORT_LINK") {
+    const platform = request.platform as string;
+    const link = request.link as string;
+    (async () => {
+      try {
+        const r = await fetch("http://127.0.0.1:8765/report", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ platform, link }),
+        });
+        const txt = await r.text();
+        sendResponse({ ok: r.ok, status: r.status, body: txt });
+      } catch (e) {
+        sendResponse({ ok: false, error: String(e) });
+      }
+    })();
+    return true;
+  }
   if (request.action === "MULTIPOST_EXTENSION_PUBLISH_NOW") {
     const data = request.data as SyncData;
     if (Array.isArray(data.platforms) && data.platforms.length > 0) {

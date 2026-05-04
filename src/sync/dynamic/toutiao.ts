@@ -144,6 +144,30 @@ export async function DynamicToutiao(data: SyncData) {
     if (publishButton) {
       if (data.isAutoPublish) {
         publishButton.dispatchEvent(new Event("click", { bubbles: true }));
+
+        const startUrl = location.href;
+        const deadline = Date.now() + 45000;
+        let finalUrl: string | null = null;
+        while (Date.now() < deadline) {
+          await new Promise((r) => setTimeout(r, 1000));
+          const cur = location.href;
+          // 头条发布成功后跳转到 /publish?edit_id=xxx（可再次编辑）
+          if (cur !== startUrl && cur.includes("edit_id=")) {
+            finalUrl = cur;
+            break;
+          }
+        }
+        const reportUrl = finalUrl || location.href;
+        try {
+          chrome.runtime.sendMessage({
+            action: "MULTIPOST_REPORT_LINK",
+            platform: "DYNAMIC_TOUTIAO",
+            link: reportUrl,
+          });
+          console.log("[MultiPost/toutiao] reported link:", reportUrl);
+        } catch (e) {
+          console.warn("[MultiPost/toutiao] report failed:", e);
+        }
       }
     }
   } catch (error) {
