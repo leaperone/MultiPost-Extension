@@ -44,11 +44,22 @@ export async function DynamicRednote(data: SyncData) {
 
     for (const fileInfo of images) {
       try {
-        const response = await fetch(fileInfo.url);
-        if (!response.ok) {
-          throw new Error(`HTTP 错误! 状态: ${response.status}`);
+        let blob: Blob;
+        try {
+          const response = await fetch(fileInfo.url);
+          if (!response.ok) throw new Error(`HTTP ${response.status}`);
+          blob = await response.blob();
+        } catch (err) {
+          console.warn("[rednote] direct fetch failed, fallback to background:", err);
+          const resp: any = await new Promise((resolve) => {
+            chrome.runtime.sendMessage({ action: "MULTIPOST_FETCH_IMAGE", url: fileInfo.url }, (r) => resolve(r));
+          });
+          if (!resp || !resp.ok) throw new Error(`background fetch failed: ${resp?.error || "unknown"}`);
+          const bin = atob(resp.base64);
+          const arr = new Uint8Array(bin.length);
+          for (let i = 0; i < bin.length; i++) arr[i] = bin.charCodeAt(i);
+          blob = new Blob([arr], { type: fileInfo.type });
         }
-        const blob = await response.blob();
         const file = new File([blob], fileInfo.name, { type: fileInfo.type });
         dataTransfer.items.add(file);
       } catch (error) {
