@@ -82,6 +82,10 @@ export default function VideoPage() {
   const [scheduleEnabled, setScheduleEnabled] = useState<boolean>(false);
   const [scheduledDateTime, setScheduledDateTime] = useState<CalendarDateTime | null>(null);
   const [isDraggingOver, setIsDraggingOver] = useState(false);
+  const resetScheduleState = () => {
+    setScheduleEnabled(false);
+    setScheduledDateTime(null);
+  };
 
   const scheduleSupportedPlatforms = ['VIDEO_DOUYIN', 'VIDEO_REDNOTE', 'VIDEO_WEIXINCHANNEL', 'VIDEO_KUAISHOU'];
 
@@ -231,7 +235,12 @@ export default function VideoPage() {
     setDescription('');
     setCategory('');
     setOriginal(false);
+    handleClearPlatforms();
+  };
+
+  const handleClearPlatforms = () => {
     clearVideoPlatforms();
+    resetScheduleState();
   };
 
   const handlePlatformChange = (platform: string, isSelected: boolean) => {
@@ -241,8 +250,7 @@ export default function VideoPage() {
 
     const hasScheduleSupport = newSelected.some((p) => scheduleSupportedPlatforms.includes(p));
     if (!hasScheduleSupport) {
-      setScheduleEnabled(false);
-      setScheduledDateTime(null);
+      resetScheduleState();
     }
 
     if (newSelected.length > 0) {
@@ -711,7 +719,7 @@ export default function VideoPage() {
                     size="sm"
                     variant="light"
                     color="danger"
-                    onPress={clearVideoPlatforms}>
+                    onPress={handleClearPlatforms}>
                     <Eraser className="size-4" />
                   </Button>
                 )}
