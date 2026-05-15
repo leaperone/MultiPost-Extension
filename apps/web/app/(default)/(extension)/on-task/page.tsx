@@ -1,8 +1,8 @@
 'use client';
 
 import { useSearchParams } from 'next/navigation';
-import { useEffect, useState } from 'react';
-import { getDraftData, getTaskData, updateTaskStatus } from './action';
+import { useEffect, useRef, useState } from 'react';
+import { claimTask, getDraftData, getTaskData, updateTaskStatus } from './action';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { FileData, funcPublish } from '@/lib/extension';
@@ -20,6 +20,10 @@ export default function OnTaskPage() {
   const [error, setError] = useState<string | null>(null);
   const [countdown, setCountdown] = useState<number | null>(null);
   const [isTaskProcessing, setIsTaskProcessing] = useState(false);
+  // Guards against the data-fetching effect re-running and re-triggering the
+  // publish flow. The effect depends on values (like the i18n `t` function)
+  // whose reference changes after async resource loads.
+  const hasStartedRef = useRef(false);
 
   // 格式化倒计时显示
   const formatCountdown = (seconds: number) => {
@@ -33,7 +37,18 @@ export default function OnTaskPage() {
       return;
     }
 
-    await updateTaskStatus(taskId, 'ACTIVE');
+    // Client-side lock: a single page must only ever start publishing once.
+    if (hasStartedRef.current) {
+      return;
+    }
+    hasStartedRef.current = true;
+
+    // Server-side atomic claim: only the caller that flips PENDING -> ACTIVE
+    // proceeds, so the task can never be published twice.
+    const claimed = await claimTask(taskId);
+    if (!claimed) {
+      return;
+    }
 
     if (task.taskType === TaskType.PUBLISH_POST) {
       const result = await funcPublish(task.taskData as PublishPostData);
@@ -123,7 +138,7 @@ export default function OnTaskPage() {
 
     fetchTaskData();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [taskId, t]);
+  }, [taskId]);
 
   if (loading) {
     return (

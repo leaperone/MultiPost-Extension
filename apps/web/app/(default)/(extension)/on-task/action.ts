@@ -37,6 +37,26 @@ export async function updateTaskStatus(taskId: string, status: string) {
   }
 }
 
+/**
+ * Atomically claims a pending task by flipping its status PENDING -> ACTIVE.
+ * Only the single caller that performs the transition gets `true`; concurrent
+ * callers (e.g. an effect that re-ran, or another page) get `false` and must
+ * not proceed with publishing. This is the server-side guard against the
+ * same task being published more than once.
+ */
+export async function claimTask(taskId: string): Promise<boolean> {
+  try {
+    const result = await prisma.extensionTask.updateMany({
+      where: { id: taskId, status: 'PENDING' },
+      data: { status: 'ACTIVE' },
+    });
+    return result.count === 1;
+  } catch (error) {
+    console.error('Error claiming task:', error);
+    return false;
+  }
+}
+
 export async function getDraftData(draftId: string) {
   try {
     const draft = await prisma.draft.findUnique({
