@@ -8,6 +8,7 @@ dotenvConfig({ path: path.join(monorepoRoot, '.env') });
 
 import { PrismaPlugin } from '@prisma/nextjs-monorepo-workaround-plugin';
 import { withPostHogConfig } from '@posthog/nextjs-config';
+import { withSentryConfig } from '@sentry/nextjs';
 import { createMDX } from 'fumadocs-mdx/next';
 
 const withMDX = createMDX();
@@ -16,6 +17,7 @@ const withMDX = createMDX();
 const nextConfig = {
   output: 'standalone',
   outputFileTracingRoot: path.join(import.meta.dirname, '../../'),
+  productionBrowserSourceMaps: true,
   images: {
     remotePatterns: [
       { protocol: 'https', hostname: 'nextui.org' },
@@ -85,24 +87,35 @@ const nextConfig = {
   ],
 };
 
-const configWithPostHog = withPostHogConfig(nextConfig, {
+const posthogOptions = {
   personalApiKey: process.env.POSTHOG_API_KEY,
   envId: process.env.POSTHOG_MULTIPOST_ENV_ID,
   host: process.env.NEXT_PUBLIC_POSTHOG_HOST,
   sourcemaps: {
     enabled: process.env.NODE_ENV === 'production' && !!process.env.POSTHOG_API_KEY,
     project: 'multipost',
-    deleteAfterUpload: true,
+    deleteAfterUpload: false,
   },
-});
+};
 
-// Ensure standalone output is preserved after plugin wrappers
-const finalConfig = withMDX({
-  ...configWithPostHog,
-  output: 'standalone',
-});
+const sentryOptions = {
+  org: process.env.SENTRY_ORG,
+  project: process.env.SENTRY_PROJECT || 'multipost-web',
+  authToken: process.env.SENTRY_AUTH_TOKEN,
+  sentryUrl: process.env.SENTRY_URL || 'https://sentry.leaper.one',
+  silent: !process.env.CI,
+  widenClientFileUpload: false,
+  // CI 是 release 的唯一拥有者；构建时只需把 release 名注入到 bundle，不要在这里 new/finalize
+  release: {
+    name: process.env.SENTRY_RELEASE,
+    create: false,
+    finalize: false,
+    setCommits: false,
+  },
+  sourcemaps: {
+    disable: true,
+    deleteSourcemapsAfterUpload: false,
+  },
+};
 
-// Remove turbopack field to fix Next.js 15.2.x warning
-delete finalConfig.turbopack;
-
-export default finalConfig;
+export default withSentryConfig(withPostHogConfig(withMDX(nextConfig), posthogOptions), sentryOptions);

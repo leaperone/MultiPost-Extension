@@ -1,13 +1,14 @@
 'use client';
 
 import { Button } from '@heroui/react';
+import * as Sentry from '@sentry/nextjs';
 import { HomeIcon, RefreshCwIcon } from 'lucide-react';
 import Link from 'next/link';
 import { useEffect } from 'react';
 
 export default function Error({ error, reset }: { error: Error & { digest?: string }; reset: () => void }) {
   useEffect(() => {
-    console.error(error);
+    Sentry.captureException(error);
   }, [error]);
 
   return (

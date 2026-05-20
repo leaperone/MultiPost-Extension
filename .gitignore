@@ -80,3 +80,4 @@ apps/desktop/dist/
 
 # oh-my-codex local telemetry (prompt/output previews, absolute paths, thread IDs)
 .omx/
+.plans/

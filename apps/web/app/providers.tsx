@@ -8,6 +8,7 @@ import { Locales } from '@/i18n/settings';
 import { ToastProvider } from '@heroui/toast';
 import { DeploymentErrorHandler } from '@/components/DeploymentErrorHandler';
 import { isDesktopRequest } from '@/lib/desktop-detect';
+import { SentryUserBinder } from './sentry-user-provider';
 
 export async function Providers({ children }: { children: React.ReactNode }) {
   const isDesktop = await isDesktopRequest();
@@ -15,6 +16,7 @@ export async function Providers({ children }: { children: React.ReactNode }) {
   const locale = await getLocale();
   return (
     <SessionProvider session={session}>
+      <SentryUserBinder />
       <HeroUIProvider>
         <ToastProvider placement="bottom-right" />
         <DeploymentErrorHandler />
