@@ -67,6 +67,10 @@ const defaultMessageHandler = (request, _sender, sendResponse) => {
   if (request.action === "MULTIPOST_EXTENSION_PUBLISH") {
     const data = request.data as SyncData;
     currentSyncData = data;
+    // ACK immediately so the caller's sendRequest promise resolves instead of
+    // hitting its 30s timeout. The popup is opened fire-and-forget; the real
+    // publish result is delivered later via MULTIPOST_EXTENSION_PUBLISH_NOW.
+    sendResponse({ queued: true });
     (async () => {
       currentPublishPopup = await chrome.windows.create({
         url: chrome.runtime.getURL("tabs/publish.html"),
