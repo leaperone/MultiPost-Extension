@@ -1,7 +1,7 @@
 import type { DynamicData, SyncData } from "../common";
 
 export async function DynamicZhihu(data: SyncData) {
-  const { title, content, images } = data.data as DynamicData;
+  const { title, content, images, tags } = data.data as DynamicData;
 
   function waitForElement(selector: string, timeout = 10000): Promise<Element> {
     return new Promise((resolve, reject) => {
@@ -75,7 +75,8 @@ export async function DynamicZhihu(data: SyncData) {
       cancelable: true,
       clipboardData: new DataTransfer(),
     });
-    pasteEvent.clipboardData?.setData("text/plain", content || "");
+    const tagSuffix = tags?.length ? ` ${tags.map((t) => `#${t}#`).join(" ")}` : "";
+    pasteEvent.clipboardData?.setData("text/plain", `${content || ""}${tagSuffix}`);
     editorElement.dispatchEvent(pasteEvent);
     await new Promise((resolve) => setTimeout(resolve, 1000));
 

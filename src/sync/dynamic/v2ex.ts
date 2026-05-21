@@ -31,7 +31,9 @@ export async function DynamicV2EX(data: SyncData) {
   }
 
   try {
-    const { content, title } = data.data as DynamicData;
+    const { content, title, tags } = data.data as DynamicData;
+    const tagSuffix = tags?.length ? `\n\n${tags.map((t) => `#${t}`).join(" ")}` : "";
+    const finalContent = `${content || ""}${tagSuffix}`;
 
     // 等待标题输入框出现
     const titleInput = (await waitForElement("#topic_title")) as HTMLTextAreaElement;
@@ -46,7 +48,7 @@ export async function DynamicV2EX(data: SyncData) {
 
     window.postMessage({
       type: "V2EX_DYNAMIC_UPLOAD",
-      content,
+      content: finalContent,
     });
 
     // 发布内容

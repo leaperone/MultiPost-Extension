@@ -32,7 +32,7 @@ export async function DynamicMaimai(data: SyncData) {
   }
 
   try {
-    const { title, content, images, videos } = data.data as DynamicData;
+    const { title, content, images, videos, tags } = data.data as DynamicData;
 
     // 等待页面加载
     await waitForElement("div[contenteditable]");
@@ -55,7 +55,8 @@ export async function DynamicMaimai(data: SyncData) {
       return;
     }
 
-    const htmlContent = (content || "").replace(/\n/g, "<br>");
+    const tagSuffix = tags?.length ? ` ${tags.map((t) => `#${t}`).join(" ")}` : "";
+    const htmlContent = `${(content || "").replace(/\n/g, "<br>")}${tagSuffix}`;
     editor.innerHTML = htmlContent;
     editor.dispatchEvent(new Event("input", { bubbles: true }));
     editor.dispatchEvent(new Event("change", { bubbles: true }));

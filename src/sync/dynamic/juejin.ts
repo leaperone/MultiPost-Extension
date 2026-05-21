@@ -32,7 +32,7 @@ export async function DynamicJuejin(data: SyncData) {
   }
 
   try {
-    const { content, images } = data.data as DynamicData;
+    const { content, images, tags } = data.data as DynamicData;
 
     // 等待页面加载
     await waitForElement("div[contenteditable='true']");
@@ -46,7 +46,8 @@ export async function DynamicJuejin(data: SyncData) {
         cancelable: true,
         clipboardData: new DataTransfer(),
       });
-      pasteEvent.clipboardData?.setData("text/plain", content || "");
+      const tagSuffix = tags?.length ? ` ${tags.map((t) => `#${t}`).join(" ")}` : "";
+      pasteEvent.clipboardData?.setData("text/plain", `${content || ""}${tagSuffix}`);
       textarea.dispatchEvent(pasteEvent);
       textarea.dispatchEvent(new Event("input", { bubbles: true }));
       textarea.dispatchEvent(new Event("change", { bubbles: true }));

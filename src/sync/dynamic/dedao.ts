@@ -45,8 +45,9 @@ export async function DynamicDedao(data: SyncData) {
       editor.innerHTML = "";
       editor.focus();
 
-      // 如果有标题，将标题和内容拼接
-      const fullContent = dynamicData.title ? `${dynamicData.title}\n\n${dynamicData.content}` : dynamicData.content;
+      // 拼接标题、正文、tags(得到没有 hashtag 语义,直接以普通文本附在末尾)
+      const tagSuffix = dynamicData.tags?.length ? ` ${dynamicData.tags.map((t) => `#${t}`).join(" ")}` : "";
+      const fullContent = `${dynamicData.title ? `${dynamicData.title}\n\n` : ""}${dynamicData.content || ""}${tagSuffix}`;
 
       // 使用 ClipboardEvent 来粘贴内容
       const clipboardEvent = new ClipboardEvent("paste", {

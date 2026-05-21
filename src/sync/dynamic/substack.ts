@@ -2,7 +2,7 @@ import type { DynamicData, FileData, SyncData } from "../common";
 
 // Substack Notes - 支持图片和视频
 export async function DynamicSubstack(data: SyncData) {
-  const { title, content, images, videos } = data.data as DynamicData;
+  const { title, content, images, videos, tags } = data.data as DynamicData;
 
   function waitForElement(selector: string, timeout = 10000): Promise<Element> {
     return new Promise((resolve, reject) => {
@@ -66,8 +66,9 @@ export async function DynamicSubstack(data: SyncData) {
       cancelable: true,
       clipboardData: new DataTransfer(),
     });
-    const textContent = title ? `${title}\n${content}` : content;
-    pasteEvent.clipboardData.setData("text/plain", textContent || "");
+    const tagSuffix = tags?.length ? ` ${tags.map((t) => `#${t}`).join(" ")}` : "";
+    const textContent = `${title ? `${title}\n` : ""}${content || ""}${tagSuffix}`;
+    pasteEvent.clipboardData.setData("text/plain", textContent);
     editor.dispatchEvent(pasteEvent);
     console.debug("已填入内容");
 
