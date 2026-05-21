@@ -142,9 +142,9 @@ export async function Article51CTO(data: SyncData) {
       formData.append("title", articleData.title || "");
       formData.append("content", articleData.htmlContent || "");
       formData.append("pid", "");
-      formData.append("cate_id", "");
+      formData.append("cate_id", String(articleData.category ?? ""));
       formData.append("custom_id", "");
-      formData.append("tag", "");
+      formData.append("tag", articleData.tags?.join(",") || "");
       formData.append("abstract", articleData.digest || "");
       formData.append("banner_type", "0");
       formData.append("blog_type", "1");

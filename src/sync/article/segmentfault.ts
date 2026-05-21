@@ -56,7 +56,7 @@ export async function ArticleSegmentfault(data: SyncData) {
         },
         body: JSON.stringify({
           title: articleData.title,
-          tags: [],
+          tags: articleData.tags ?? [],
           text: textContent,
           object_id: "",
           type: "article",
