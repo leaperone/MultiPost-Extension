@@ -163,32 +163,46 @@ export async function ArticleBilibili(data: SyncData) {
     return doc.body.innerHTML;
   }
 
+  // 上传封面到 BFS,返回可填入 banner_url 的 URL。失败时返回空串。
+  async function uploadBanner(cover?: FileData): Promise<string> {
+    if (!cover?.url) return "";
+    const uploaded = await uploadSingleImage(cover);
+    return uploaded || "";
+  }
+
   // 发布文章
   async function publishArticle(articleData: ArticleData): Promise<string | null> {
     const processedContent = await processContent(articleData.htmlContent, articleData.images || []);
+    const bannerUrl = await uploadBanner(articleData.cover);
 
     const formData = new FormData();
     formData.append("title", articleData.title?.slice(0, 40) || "");
     formData.append("content", processedContent || "");
     formData.append("summary", articleData.digest || "");
-    formData.append("banner_url", "");
+    formData.append("banner_url", bannerUrl);
 
     const parser = new DOMParser();
     const doc = parser.parseFromString(articleData.htmlContent || "", "text/html");
     const wordCount = doc.documentElement.textContent?.length || 0;
 
+    // B 站专栏分类（category）和分区 ID（tid）允许用户在 SyncData 中指定。
+    // 若未指定保持 0，B 站会让用户在草稿页二次选择。
+    const tidValue = String(articleData.category ?? 0);
+    const tagsValue = (articleData.tags ?? []).join(",");
+
     formData.append("words", wordCount.toString());
     formData.append("category", "0");
     formData.append("list_id", "0");
-    formData.append("tid", "0");
-    formData.append("reprint", "0");
-    formData.append("tags", "");
+    formData.append("tid", tidValue);
+    // reprint=1 转载,reprint=0 原创(默认按原创发,与下方 original 字段保持一致)
+    formData.append("reprint", articleData.original === false ? "1" : "0");
+    formData.append("tags", tagsValue);
     formData.append("image_urls", "");
     formData.append("origin_image_urls", "");
-    formData.append("dynamic_intro", "");
+    formData.append("dynamic_intro", articleData.digest || "");
     formData.append("media_id", "0");
     formData.append("spoiler", "0");
-    formData.append("original", "0");
+    formData.append("original", articleData.original === false ? "0" : "1");
     formData.append("top_video_bvid", "");
     formData.append("csrf", getBiliJct());
 

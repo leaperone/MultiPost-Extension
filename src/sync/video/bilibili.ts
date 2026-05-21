@@ -132,7 +132,12 @@ export async function VideoBilibili(data: SyncData) {
   }
 
   try {
-    const { content, video, title, tags, cover } = data.data as VideoData;
+    const { content, video, title, tags, cover, description, original } = data.data as VideoData;
+
+    // 视频简介优先使用 description（独立字段），未提供时回退到 content
+    const videoDescription = description ?? content;
+    // 原创声明:用户未明确指定时默认为原创(B 站投稿默认勾选)
+    const isOriginal = original !== false;
 
     // 处理视频上传
     if (video) {
@@ -175,8 +180,19 @@ export async function VideoBilibili(data: SyncData) {
     // 等待简介编辑器出现并输入内容
     const editor = (await waitForElement('div.ql-editor[contenteditable="true"]')) as HTMLDivElement;
     if (editor) {
-      editor.innerHTML = content || "";
-      console.log("简介已输入:", content);
+      editor.innerHTML = videoDescription || "";
+      console.log("简介已输入:", videoDescription);
+    }
+
+    // 原创声明开关:B 站投稿页默认勾选,如用户明确传 original=false 则取消
+    if (!isOriginal) {
+      const originalCheckbox = document.querySelector(
+        "div.original-input-wrp input[type='checkbox']",
+      ) as HTMLInputElement | null;
+      if (originalCheckbox?.checked) {
+        originalCheckbox.click();
+        console.log("已取消原创声明");
+      }
     }
 
     await new Promise((resolve) => setTimeout(resolve, 3000));
