@@ -23,7 +23,7 @@ export async function VideoSohu(data: SyncData): Promise<void> {
       return;
     }
 
-    const { content, video, title } = data.data as VideoData;
+    const { content, video, title, description } = data.data as VideoData;
     console.log("📝 视频数据:", {
       title: title?.substring(0, 50),
       contentLength: content?.length,
@@ -416,7 +416,7 @@ export async function VideoSohu(data: SyncData): Promise<void> {
     // 步骤2: 填写描述
     if (content) {
       console.log("📝 填写描述:", `${content.substring(0, 100)}...`);
-      await uploader.fillDescription(content);
+      await uploader.fillDescription(description ?? content);
     }
 
     // 步骤3: 上传视频

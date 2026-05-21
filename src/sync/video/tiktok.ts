@@ -107,6 +107,7 @@ export async function VideoTiktok(data: SyncData) {
       title,
       tags = [],
       cover,
+      description,
     } = data.data as VideoData & { cover?: { url: string; name: string; type: string } };
 
     // 处理视频上传
@@ -129,7 +130,7 @@ export async function VideoTiktok(data: SyncData) {
     if (editor) {
       // 使用 ClipboardEvent 来模拟粘贴操作
       const fullContent = `${title || ""}
-${content}
+${description || content}
 ${tags.map((tag) => `#${tag}`).join(" ")}`;
 
       const pasteEvent = new ClipboardEvent("paste", {

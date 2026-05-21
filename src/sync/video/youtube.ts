@@ -153,7 +153,7 @@ export async function VideoYoutube(data: SyncData) {
           cancelable: true,
           clipboardData: new DataTransfer(),
         });
-        descPasteEvent.clipboardData!.setData("text/plain", videoData.content || "");
+        descPasteEvent.clipboardData!.setData("text/plain", videoData.description || videoData.content || "");
         descriptionInput.dispatchEvent(descPasteEvent);
         await new Promise((resolve) => setTimeout(resolve, 1000));
         descriptionInput.blur();
