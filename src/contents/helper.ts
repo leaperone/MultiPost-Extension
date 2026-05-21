@@ -1,7 +1,6 @@
 import type { PlasmoCSConfig } from "plasmo";
-import { handleBilibiliImageUpload, registerBilibiliBridgeHandlers } from "./helper/bilibili";
+import { handleBilibiliImageUpload } from "./helper/bilibili";
 import { handleBlueskyImageUpload, handleBlueskyVideoUpload } from "./helper/bluesky";
-import { installBridge } from "./helper/bridge";
 import { handleXiaoheiheImageUpload, handleXiaoheiheVideoUpload } from "./helper/xiaoheihe";
 
 export const config: PlasmoCSConfig = {
@@ -58,7 +57,3 @@ function handleMessage(event: MessageEvent) {
 
 // 添加事件监听器
 window.addEventListener("message", handleMessage);
-
-// 启用统一的 MP_BRIDGE 协议（新平台一律走它）
-installBridge();
-registerBilibiliBridgeHandlers();

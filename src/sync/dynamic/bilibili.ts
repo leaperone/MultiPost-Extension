@@ -89,14 +89,15 @@ export async function DynamicBilibili(data: SyncData) {
       titleInput.dispatchEvent(new Event("change", { bubbles: true }));
     }
 
+    // 不管这次有没有图，都要先清掉编辑器里残留的图片，
+    // 否则上一次的草稿会跟着发出去（B 站动态编辑器会持久化未发布的图）。
+    const uploadModule = document.querySelector("div.bili-dyn-publishing__image-upload") as HTMLDivElement | null;
+    if (uploadModule) uploadModule.style.display = "block";
+    await cleanUploadedImages();
+
     // 图片上传：唤起 B 站自带上传 UI，再把 File 通过 postMessage 交给 MAIN world helper
-    // （helper 调 input.files + 触发 change，让 B 站 SDK 自己上传。后续可迁移到 MP_BRIDGE）
+    // （helper 调 input.files + 触发 change，让 B 站 SDK 自己上传）
     if (images && images.length > 0) {
-      const uploadModule = document.querySelector("div.bili-dyn-publishing__image-upload") as HTMLDivElement | null;
-      if (uploadModule) uploadModule.style.display = "block";
-
-      await cleanUploadedImages();
-
       const imageData: File[] = [];
       for (const file of images) {
         const blob = await (await fetch(file.url)).blob();
