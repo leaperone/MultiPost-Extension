@@ -35,7 +35,10 @@ export default function CodeMirrorEditor() {
       exts.push(
         EditorView.domEventHandlers({
           scroll(event) {
-            const target = event.target as HTMLElement
+            const target = event.target as HTMLElement | null
+            if (!target) {
+              return
+            }
             const { scrollTop, scrollHeight, clientHeight } = target
             const maxScroll = scrollHeight - clientHeight
             if (maxScroll > 0) {
