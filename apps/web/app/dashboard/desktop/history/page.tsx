@@ -24,6 +24,7 @@ import {
   ExternalLink,
   FileText,
   Image,
+  MegaphoneIcon,
   MoreHorizontal,
   RefreshCw,
   Trash2,
@@ -37,6 +38,11 @@ import {
   useDesktopHistory,
   useIsDesktop,
 } from '@/lib/desktop-bridge';
+import { useTranslation } from '@/i18n/client';
+import PublishErrorReportDialog, {
+  type PublishErrorReportContext,
+} from '@/components/feedback/PublishErrorReportDialog';
+import { FEEDBACK_SOURCES } from '@/actions/feedback/types';
 
 const contentTypeConfig: Record<ContentType, { label: string; icon: React.ReactNode }> = {
   DYNAMIC: { label: '动态', icon: <Image className="size-4" /> },
@@ -57,6 +63,7 @@ type StatusFilter = 'all' | 'success' | 'failed' | 'pending';
  * - 删除记录
  */
 export default function DesktopHistoryPage() {
+  const { t } = useTranslation('feedback');
   const isDesktop = useIsDesktop();
   const { history, loading, refresh } = useDesktopHistory();
   const { isOpen: isDeleteOpen, onOpen: onDeleteOpen, onClose: onDeleteClose } = useDisclosure();
@@ -65,6 +72,7 @@ export default function DesktopHistoryPage() {
   const [recordToView, setRecordToView] = useState<PublishHistory | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');
+  const [reportContext, setReportContext] = useState<PublishErrorReportContext | null>(null);
 
   // 过滤记录
   const filteredHistory =
@@ -300,6 +308,15 @@ export default function DesktopHistoryPage() {
                                 handleOpenLink(record.platformPostUrl);
                               }
                               break;
+                            case 'report':
+                              setReportContext({
+                                platform: record.platform,
+                                taskId: record.id,
+                                status: record.status,
+                                errorMessage: record.errorMessage ?? undefined,
+                                source: FEEDBACK_SOURCES.DESKTOP_HISTORY,
+                              });
+                              break;
                             case 'delete':
                               confirmDelete(record);
                               break;
@@ -315,6 +332,11 @@ export default function DesktopHistoryPage() {
                           className={record.platformPostUrl ? '' : 'hidden'}
                           startContent={<ExternalLink className="size-4" />}>
                           打开链接
+                        </DropdownItem>
+                        <DropdownItem
+                          key="report"
+                          startContent={<MegaphoneIcon className="size-4" />}>
+                          {t('entry.dropdown')}
                         </DropdownItem>
                         <DropdownItem
                           key="delete"
@@ -414,6 +436,15 @@ export default function DesktopHistoryPage() {
           </ModalFooter>
         </ModalContent>
       </Modal>
+
+      {/* 上报问题 Dialog */}
+      {reportContext && (
+        <PublishErrorReportDialog
+          isOpen={Boolean(reportContext)}
+          onClose={() => setReportContext(null)}
+          context={reportContext}
+        />
+      )}
 
       {/* 删除确认 Modal */}
       <Modal

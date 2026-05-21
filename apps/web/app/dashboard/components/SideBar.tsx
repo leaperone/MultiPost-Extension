@@ -29,6 +29,7 @@ import {
 import { SidebarThemeSwitcher } from '../../../components/ThemeSwitcher';
 import MultiPostLogo from './Logo';
 import DashboardSiderBarTrigger from './Trigger';
+import SidebarFeedbackTrigger from './SidebarFeedbackTrigger';
 import { Tooltip } from '@heroui/react';
 import { createTranslation } from '@/i18n/server';
 
@@ -164,6 +165,7 @@ function getFooterItems(t: TranslationFunction): MenuItem[] {
 
 export async function DashboardSidebar() {
   const { t } = await createTranslation('dashboard');
+  const { t: tFeedback } = await createTranslation('feedback');
   const menuGroups = getMenuGroups(t);
   const footerItems = getFooterItems(t);
 
@@ -194,6 +196,9 @@ export async function DashboardSidebar() {
         <SidebarMenu>
           <SidebarMenuItem>
             <SidebarThemeSwitcher />
+          </SidebarMenuItem>
+          <SidebarMenuItem>
+            <SidebarFeedbackTrigger label={tFeedback('entry.sidebar')} />
           </SidebarMenuItem>
           {footerItems.map((item) => (
             <SidebarMenuItem key={item.title}>

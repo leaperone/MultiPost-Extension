@@ -33,6 +33,7 @@ import {
 import { SidebarThemeSwitcher } from '@/components/ThemeSwitcher';
 import MultiPostLogo from '@/app/dashboard/components/Logo';
 import DashboardSiderBarTrigger from '@/app/dashboard/components/Trigger';
+import SidebarFeedbackTrigger from '@/app/dashboard/components/SidebarFeedbackTrigger';
 import { Tooltip } from '@heroui/react';
 
 interface MenuItem {
@@ -151,6 +152,9 @@ export function DesktopSidebar({ basePath = '/dashboard' }: { basePath?: string 
         <SidebarMenu>
           <SidebarMenuItem>
             <SidebarThemeSwitcher />
+          </SidebarMenuItem>
+          <SidebarMenuItem>
+            <SidebarFeedbackTrigger />
           </SidebarMenuItem>
           {footerItems.map((item) => (
             <SidebarMenuItem key={item.id}>

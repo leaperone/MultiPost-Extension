@@ -1,0 +1,53 @@
+{
+  "modal": {
+    "title": "Report a platform issue",
+    "intro": "MultiPost relies on adapters tied to each platform's UI. When a platform ships a redesign, publishing can break. Tell us what you saw and we'll prioritize the fix. If you can help maintain the adapter, contributions are very welcome.",
+    "platformLabel": "Platform",
+    "platformPlaceholder": "Select a platform",
+    "errorTypeLabel": "Issue type",
+    "errorTypePlaceholder": "Select an issue type",
+    "descriptionLabel": "Describe what happened",
+    "descriptionPlaceholder": "What you tried, what went wrong, how often it happens, and what you'd like us to fix.",
+    "screenshotLabel": "Screenshot (optional)",
+    "screenshotHint": "PNG / JPEG / WebP, up to 4MB",
+    "screenshotRemove": "Remove",
+    "contextLabel": "Attached task context",
+    "contextTaskId": "Task ID",
+    "contextLogId": "Log ID",
+    "contextStatus": "Status",
+    "contextError": "Error message",
+    "submit": "Submit feedback",
+    "submitting": "Submitting…",
+    "cancel": "Cancel",
+    "contributeHint": "Interested in maintaining the extension or desktop adapters? Read the",
+    "contributeLink": "community contribution guide",
+    "anonymousNote": "We attach your account info so we can follow up. It is not made public."
+  },
+  "errorType": {
+    "cannotPublish": "Cannot publish",
+    "contentMissing": "Content missing or rendered wrong",
+    "accountIssue": "Account or login issue",
+    "other": "Other"
+  },
+  "toast": {
+    "successTitle": "Feedback received",
+    "successDescription": "Thanks for the report. We'll take a look as soon as possible.",
+    "failureTitle": "Submit failed",
+    "failureDescription": "Please retry later or reach out through in-app support.",
+    "uploadFailureTitle": "Screenshot upload failed",
+    "uploadFailureDescription": "The screenshot did not upload, but your description will still be submitted."
+  },
+  "validation": {
+    "descriptionRequired": "Please describe the issue",
+    "platformRequired": "Please select a platform",
+    "errorTypeRequired": "Please select an issue type",
+    "screenshotTooLarge": "Screenshot is larger than 4MB",
+    "screenshotInvalidType": "Only PNG / JPEG / WebP images are supported"
+  },
+  "entry": {
+    "rowButton": "Report issue",
+    "rowTooltip": "Report a publish failure on this platform",
+    "sidebar": "Report platform issue",
+    "dropdown": "Report issue"
+  }
+}

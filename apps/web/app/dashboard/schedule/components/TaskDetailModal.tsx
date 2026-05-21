@@ -25,10 +25,16 @@ import {
   XIcon,
   RefreshCwIcon,
   InfoIcon,
+  MegaphoneIcon,
 } from 'lucide-react';
 import { useState, useEffect, useMemo } from 'react';
 import { cancelPublishTask, restartPublishTask, getSocialMediaAccountByPlatformId } from '../actions';
 import { useTranslation } from '@/i18n/client';
+import { Tooltip } from '@heroui/react';
+import PublishErrorReportDialog, {
+  type PublishErrorReportContext,
+} from '@/components/feedback/PublishErrorReportDialog';
+import { FEEDBACK_SOURCES } from '@/actions/feedback/types';
 
 interface PublishTaskLog {
   id: string;
@@ -85,6 +91,8 @@ export default function TaskDetailModal({ isOpen, onClose, task }: TaskDetailMod
   const [restartError, setRestartError] = useState<string | null>(null);
   const [accountCache, setAccountCache] = useState<Record<string, SocialMediaAccount | null>>({});
   const [accountDisplayNames, setAccountDisplayNames] = useState<Record<string, string>>({});
+  const [reportContext, setReportContext] = useState<PublishErrorReportContext | null>(null);
+  const { t: tFeedback } = useTranslation('feedback');
 
   // 获取所有需要查询的账号信息
   const uniqueAccounts = useMemo(() => {
@@ -205,6 +213,7 @@ export default function TaskDetailModal({ isOpen, onClose, task }: TaskDetailMod
   };
 
   return (
+    <>
     <Modal
       isOpen={isOpen}
       onClose={onClose}
@@ -346,6 +355,27 @@ export default function TaskDetailModal({ isOpen, onClose, task }: TaskDetailMod
                                     }>
                                     {t(`statusLabels.${log.status}`)}
                                   </Chip>
+                                  {log.status === 'failed' && (
+                                    <Tooltip content={tFeedback('entry.rowTooltip')}>
+                                      <Button
+                                        isIconOnly
+                                        size="sm"
+                                        variant="light"
+                                        aria-label={tFeedback('entry.rowButton')}
+                                        onPress={() =>
+                                          setReportContext({
+                                            platform: log.platform,
+                                            taskId: task.id,
+                                            logId: log.id,
+                                            status: log.status,
+                                            errorMessage: log.error ?? log.message ?? undefined,
+                                            source: FEEDBACK_SOURCES.PUBLISH_TASK_LOG,
+                                          })
+                                        }>
+                                        <MegaphoneIcon className="size-4" />
+                                      </Button>
+                                    </Tooltip>
+                                  )}
                                 </div>
 
                                 <div className="space-y-1 text-xs text-default-500">
@@ -428,5 +458,13 @@ export default function TaskDetailModal({ isOpen, onClose, task }: TaskDetailMod
         )}
       </ModalContent>
     </Modal>
+    {reportContext && (
+      <PublishErrorReportDialog
+        isOpen={Boolean(reportContext)}
+        onClose={() => setReportContext(null)}
+        context={reportContext}
+      />
+    )}
+    </>
   );
 }

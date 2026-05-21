@@ -1,0 +1,53 @@
+{
+  "modal": {
+    "title": "上报平台问题",
+    "intro": "MultiPost 依赖各平台页面结构维护适配器。一旦平台改版，发布就可能失效。把你遇到的问题告诉我们，我们会优先排查；如果你愿意参与维护，也欢迎来贡献代码。",
+    "platformLabel": "平台",
+    "platformPlaceholder": "请选择平台",
+    "errorTypeLabel": "问题类型",
+    "errorTypePlaceholder": "请选择问题类型",
+    "descriptionLabel": "详细描述",
+    "descriptionPlaceholder": "请描述你的操作步骤、错误现象、出现频率，以及你希望我们怎样修复。",
+    "screenshotLabel": "截图（可选）",
+    "screenshotHint": "支持 PNG/JPEG/WebP，单张不超过 4MB",
+    "screenshotRemove": "移除",
+    "contextLabel": "已附带任务上下文",
+    "contextTaskId": "任务 ID",
+    "contextLogId": "日志 ID",
+    "contextStatus": "状态",
+    "contextError": "错误信息",
+    "submit": "提交反馈",
+    "submitting": "提交中…",
+    "cancel": "取消",
+    "contributeHint": "想参与扩展或桌面端适配器开发？查看",
+    "contributeLink": "社区贡献指南",
+    "anonymousNote": "我们会附带你的账号信息以便回访，不会公开。"
+  },
+  "errorType": {
+    "cannotPublish": "无法发布",
+    "contentMissing": "内容缺失或显示异常",
+    "accountIssue": "账号或登录异常",
+    "other": "其他"
+  },
+  "toast": {
+    "successTitle": "已收到反馈",
+    "successDescription": "感谢你的上报，我们会尽快处理。",
+    "failureTitle": "提交失败",
+    "failureDescription": "请稍后重试，或通过站内客服联系我们。",
+    "uploadFailureTitle": "截图上传失败",
+    "uploadFailureDescription": "截图未能上传，描述仍可正常提交。"
+  },
+  "validation": {
+    "descriptionRequired": "请填写问题描述",
+    "platformRequired": "请选择平台",
+    "errorTypeRequired": "请选择问题类型",
+    "screenshotTooLarge": "截图大小超过 4MB",
+    "screenshotInvalidType": "仅支持 PNG / JPEG / WebP 图片"
+  },
+  "entry": {
+    "rowButton": "上报问题",
+    "rowTooltip": "上报该平台的发布失败",
+    "sidebar": "反馈平台失效",
+    "dropdown": "上报问题"
+  }
+}
