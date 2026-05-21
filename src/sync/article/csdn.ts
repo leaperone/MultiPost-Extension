@@ -191,15 +191,24 @@ export async function ArticleCSDN(data: SyncData) {
       hmac: "9znpamsyl2c7cdrr9sas0le9vbc3r6ba",
     });
 
+    // 消费用户字段:tags 用逗号拼接,original=false 时改成转载
+    const tagsValue = articleData.tags?.length ? articleData.tags.join(",") : "经验分享";
+    const articleType = articleData.original === false ? "repost" : "original";
+    const scheduledTime = articleData.scheduledPublishTime ? Math.floor(articleData.scheduledPublishTime / 1000) : 0;
+    const categoryValue =
+      typeof articleData.category === "string" || typeof articleData.category === "number"
+        ? String(articleData.category)
+        : "";
+
     const requestBody = {
       article_id: "",
       title: articleData.title?.slice(0, 100),
       description: articleData.digest?.slice(0, 256),
       content: articleData.htmlContent,
       markdowncontent: "",
-      tags: "经验分享",
-      categories: "",
-      type: "original",
+      tags: tagsValue,
+      categories: categoryValue,
+      type: articleType,
       status: 2,
       read_type: "public",
       reason: "",
@@ -211,7 +220,7 @@ export async function ArticleCSDN(data: SyncData) {
       editor_type: 0,
       plan: [],
       vote_id: 0,
-      scheduled_time: 0,
+      scheduled_time: scheduledTime,
       level: "1",
       cover_type: 1,
       cover_images: [coverUrl || ""],

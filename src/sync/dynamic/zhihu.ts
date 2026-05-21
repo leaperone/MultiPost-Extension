@@ -50,9 +50,10 @@ export async function DynamicZhihu(data: SyncData) {
     postButton.click();
     await new Promise((resolve) => setTimeout(resolve, 1000));
 
-    // 等待并填写标题
-    await waitForElement('textarea[placeholder="添加标题(选填)"]');
-    const titleInput = document.querySelector('textarea[placeholder="添加标题(选填)"]') as HTMLTextAreaElement;
+    // 等待并填写标题。优先使用 name="title" 属性(更稳定),回退到旧的 placeholder 匹配
+    await waitForElement('textarea[name="title"], textarea[placeholder*="标题"]');
+    const titleInput = (document.querySelector('textarea[name="title"]') ||
+      document.querySelector('textarea[placeholder*="标题"]')) as HTMLTextAreaElement | null;
     console.debug("titleInput", titleInput);
     if (titleInput && title) {
       titleInput.value = title;
