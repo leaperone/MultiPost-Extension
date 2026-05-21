@@ -193,10 +193,17 @@ export interface PublishResult {
 
 export const funcPublish = async (
   data: SyncData | PublishPostData | SchedulePublishPostData,
-  timeout: number = 30000,
+  timeout: number = 8000,
 ): Promise<PublishResult> => {
   if (process.env.NODE_ENV === 'development') {
     console.log('funcPublish', data);
+  }
+  // Fast-fail when the extension is not installed: avoids burning the publish
+  // timeout on a request that has no listener, which previously produced 100%
+  // `Request timeout after 30000ms` failures in analytics.
+  const serviceRunning = await checkServiceStatus(2000);
+  if (!serviceRunning) {
+    return { success: false, error: 'extension_not_installed' };
   }
   try {
     await sendRequest<SyncData | PublishPostData | SchedulePublishPostData, void>(
