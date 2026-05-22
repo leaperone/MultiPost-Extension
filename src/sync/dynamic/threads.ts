@@ -2,7 +2,7 @@ import type { DynamicData, SyncData } from "../common";
 
 // 只支持图文，不支持视频
 export async function DynamicThreads(data: SyncData) {
-  const { title, content, images, videos } = data.data as DynamicData;
+  const { title, content, images, videos, tags } = data.data as DynamicData;
 
   function waitForElement(selector: string, timeout = 10000): Promise<Element> {
     return new Promise((resolve, reject) => {
@@ -31,16 +31,34 @@ export async function DynamicThreads(data: SyncData) {
       }, timeout);
     });
   }
+  // Threads 的入口图标是 svg[aria-label],按 UI 语言不同走不同字符串
+  function findCreateIcon(): HTMLElement | null {
+    const labels = ["创建", "建立", "Create", "新貼文", "New post"];
+    for (const label of labels) {
+      const svg = document.querySelector(`svg[aria-label="${label}"]`);
+      if (svg) return svg.closest("a, div, button") as HTMLElement | null;
+    }
+    return null;
+  }
+
   try {
-    // 等待并点击占位元素
-    const placeholder = (await waitForElement(
-      'div[aria-label="文本栏为空白。请输入内容，撰写新帖子。"]',
-    )) as HTMLElement;
-    placeholder.click();
-    await new Promise((resolve) => setTimeout(resolve, 2000));
-    const dialog = document.querySelector("div[role='dialog']");
-    // 查找并填写帖子内容
-    const editor = dialog.querySelector('div[aria-label="文本栏为空白。请输入内容，撰写新帖子。"]') as HTMLElement;
+    // 等待并点击占位元素(可能是占位帖编辑区,也可能是顶部 Create 图标)
+    const composeIcon = findCreateIcon();
+    if (composeIcon) {
+      composeIcon.click();
+      await new Promise((resolve) => setTimeout(resolve, 2000));
+    } else {
+      const placeholder = (await waitForElement(
+        'div[aria-label="文本栏为空白。请输入内容，撰写新帖子。"], div[contenteditable="true"][aria-placeholder]',
+      )) as HTMLElement;
+      placeholder.click();
+      await new Promise((resolve) => setTimeout(resolve, 2000));
+    }
+    const dialog = document.querySelector("div[role='dialog']") || document.body;
+    // 查找并填写帖子内容,优先用 contenteditable 通用选择器,再回退到旧的中文 aria-label
+    const editor = (dialog.querySelector('div[contenteditable="true"][aria-placeholder]') ||
+      dialog.querySelector('div[contenteditable="true"]') ||
+      dialog.querySelector('div[aria-label="文本栏为空白。请输入内容，撰写新帖子。"]')) as HTMLElement;
     editor.click();
     if (!editor) {
       throw new Error("未找到编辑器元素");
@@ -51,7 +69,8 @@ export async function DynamicThreads(data: SyncData) {
       cancelable: true,
       clipboardData: new DataTransfer(),
     });
-    pasteEvent.clipboardData.setData("text/plain", `${title}\n${content}` || "");
+    const tagSuffix = tags?.length ? ` ${tags.map((t) => `#${t}`).join(" ")}` : "";
+    pasteEvent.clipboardData.setData("text/plain", `${title ? `${title}\n` : ""}${content || ""}${tagSuffix}`);
     editor.dispatchEvent(pasteEvent);
 
     console.debug("成功填入Threads内容");

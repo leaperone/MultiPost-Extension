@@ -2,7 +2,7 @@ import type { DynamicData, SyncData } from "../common";
 
 // 只支持图文，不支持视频
 export async function DynamicXueqiu(data: SyncData) {
-  const { title, content, images } = data.data as DynamicData;
+  const { title, content, images, tags } = data.data as DynamicData;
 
   function waitForElement(selector: string, timeout = 10000): Promise<Element> {
     return new Promise((resolve, reject) => {
@@ -84,7 +84,8 @@ export async function DynamicXueqiu(data: SyncData) {
     const inputElement = (await waitForElement(
       'div[class="medium-editor-element"][contenteditable="true"]',
     )) as HTMLDivElement;
-    const fullContent = `${title}\n${content}`;
+    const tagSuffix = tags?.length ? ` ${tags.map((t) => `$${t}`).join(" ")}` : "";
+    const fullContent = `${title}\n${content}${tagSuffix}`;
 
     // 使用粘贴事件输入内容
     const pasteEvent = new ClipboardEvent("paste", {

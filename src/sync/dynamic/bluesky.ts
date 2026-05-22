@@ -35,7 +35,18 @@ export async function DynamicBluesky(data: SyncData) {
 
     await new Promise((resolve) => setTimeout(resolve, 3000));
 
-    const newPostButton = document.querySelector('button[data-testid="composeFAB"]') as HTMLButtonElement;
+    // 撰写按钮:优先 data-testid(最稳定),回退到多语言 aria-label 兜底
+    const composeLabels = ["撰写新帖文", "新帖文", "撰寫新貼文", "Compose new post", "New post"];
+    let newPostButton = document.querySelector('button[data-testid="composeFAB"]') as HTMLButtonElement | null;
+    if (!newPostButton) {
+      for (const label of composeLabels) {
+        const btn = document.querySelector(`button[aria-label="${label}"]`) as HTMLButtonElement | null;
+        if (btn) {
+          newPostButton = btn;
+          break;
+        }
+      }
+    }
     if (newPostButton) {
       newPostButton.click();
     } else {

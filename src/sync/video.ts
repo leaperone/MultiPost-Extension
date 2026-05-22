@@ -8,6 +8,7 @@ import { VideoDayu } from "./video/dayu";
 import { VideoDewu } from "./video/dewu";
 import { VideoDouyin } from "./video/douyin";
 import { VideoEastmoney } from "./video/eastmoney";
+import { VideoIqiyi } from "./video/iqiyi";
 import { VideoKuaishou } from "./video/kuaishou";
 import { VideoNetease } from "./video/netease";
 import { VideoOkjike } from "./video/okjike";
@@ -15,6 +16,7 @@ import { VideoPinduoduo } from "./video/pinduoduo";
 import { VideoQiE } from "./video/qie";
 import { VideoRednote } from "./video/rednote";
 import { VideoSohu } from "./video/sohu";
+import { VideoTencentVideo } from "./video/tencentvideo";
 import { VideoTiktok } from "./video/tiktok";
 import { VideoToutiaohao } from "./video/toutiaohao";
 import { VideoVivoVideo } from "./video/vivovideo";
@@ -23,6 +25,7 @@ import { VideoWeiXinChannel } from "./video/weixinchannel";
 import { VideoXiaoheihe } from "./video/xiaoheihe";
 import { VideoYiche } from "./video/yiche";
 import { VideoYidian } from "./video/yidian";
+import { VideoYouku } from "./video/youku";
 import { VideoYoutube } from "./video/youtube";
 import { VideoZhihu } from "./video/zhihu";
 
@@ -314,5 +317,38 @@ export const VideoInfoMap: Record<string, PlatformInfo> = {
     injectFunction: VideoVivoVideo,
     tags: ["CN"],
     accountKey: "vivovideo",
+  },
+  VIDEO_IQIYI: {
+    type: "VIDEO",
+    name: "VIDEO_IQIYI",
+    homeUrl: "https://mp.iqiyi.com/",
+    faviconUrl: "https://www.iqiyi.com/favicon.ico",
+    platformName: chrome.i18n.getMessage("platformIqiyi"),
+    injectUrl: "https://mp.iqiyi.com/sns/publishv2/video",
+    injectFunction: VideoIqiyi,
+    tags: ["CN"],
+    accountKey: "iqiyi",
+  },
+  VIDEO_YOUKU: {
+    type: "VIDEO",
+    name: "VIDEO_YOUKU",
+    homeUrl: "https://mp.youku.com/",
+    faviconUrl: "https://www.youku.com/favicon.ico",
+    platformName: chrome.i18n.getMessage("platformYouku"),
+    injectUrl: "https://mp.youku.com/v2/manage/upload",
+    injectFunction: VideoYouku,
+    tags: ["CN"],
+    accountKey: "youku",
+  },
+  VIDEO_TENCENTVIDEO: {
+    type: "VIDEO",
+    name: "VIDEO_TENCENTVIDEO",
+    homeUrl: "https://v.qq.com/",
+    faviconUrl: "https://v.qq.com/favicon.ico",
+    platformName: chrome.i18n.getMessage("platformTencentVideo"),
+    injectUrl: "https://cm.v.qq.com/upload",
+    injectFunction: VideoTencentVideo,
+    tags: ["CN"],
+    accountKey: "tencentvideo",
   },
 };

@@ -27,12 +27,17 @@ export interface DynamicData {
   content: string;
   images: FileData[];
   videos: FileData[];
+  tags?: string[];
+  scheduledPublishTime?: number;
 }
 
 export interface PodcastData {
   title: string;
   description: string;
   audio: FileData;
+  cover?: FileData;
+  tags?: string[];
+  category?: string | number;
 }
 
 export interface FileData {
@@ -49,6 +54,11 @@ export interface ArticleData {
   htmlContent: string;
   markdownContent: string;
   images?: FileData[]; // 发布时可不提供该字段
+  tags?: string[];
+  category?: string | number; // 平台分类 ID 或名称
+  original?: boolean; // 原创声明
+  allowComment?: boolean;
+  scheduledPublishTime?: number;
 }
 
 export interface VideoData {
@@ -58,8 +68,13 @@ export interface VideoData {
   tags?: string[];
   cover?: FileData;
   verticalCover?: FileData;
+  horizontalCover?: FileData;
   videoFile?: File; // 原始 File 对象，用于避免 blob URL 问题
   scheduledPublishTime?: number;
+  category?: string | number; // 平台分区 ID（如 B 站 tid，YouTube category）
+  original?: boolean; // 原创声明
+  collectionId?: string | number; // 合集/系列 ID（如 B 站 list_id）
+  description?: string; // 描述（独立于 content/简介）
 }
 
 export interface PlatformInfo {

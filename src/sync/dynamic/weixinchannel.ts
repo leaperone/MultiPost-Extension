@@ -184,7 +184,9 @@ export async function DynamicWeiXinChannel(data: SyncData) {
   }
 
   try {
-    const { content, images, title } = data.data as DynamicData;
+    const { content, images, title, tags } = data.data as DynamicData;
+    const tagSuffix = tags?.length ? ` ${tags.map((t) => `#${t}`).join(" ")}` : "";
+    const finalContent = `${content || ""}${tagSuffix}`;
 
     await new Promise((resolve) => setTimeout(resolve, 2000));
 
@@ -203,7 +205,7 @@ export async function DynamicWeiXinChannel(data: SyncData) {
       await new Promise((resolve) => setTimeout(resolve, 300));
 
       // 直接设置innerHTML
-      editorElement.innerHTML = content || "";
+      editorElement.innerHTML = finalContent;
 
       // 触发完整的事件序列
       const events = [
@@ -220,7 +222,7 @@ export async function DynamicWeiXinChannel(data: SyncData) {
       ];
 
       // 设置粘贴事件的数据
-      (events[1] as ClipboardEvent).clipboardData?.setData("text/plain", content || "");
+      (events[1] as ClipboardEvent).clipboardData?.setData("text/plain", finalContent);
 
       for (const event of events) {
         editorElement.dispatchEvent(event);

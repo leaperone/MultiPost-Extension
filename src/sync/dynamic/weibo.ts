@@ -123,8 +123,10 @@ export async function DynamicWeibo(data: SyncData) {
       throw new Error("未找到微博输入框");
     }
 
-    // 组合标题和内容
-    const fullContent = `${title}\n${content}`;
+    // 组合标题、正文、tags(#tag# 是微博话题写法)
+    const { tags } = data.data as DynamicData;
+    const tagSuffix = tags?.length ? ` ${tags.map((t) => `#${t}#`).join(" ")}` : "";
+    const fullContent = `${title}\n${content}${tagSuffix}`;
 
     // 填写内容
     inputElement.value = fullContent;

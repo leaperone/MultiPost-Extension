@@ -173,7 +173,8 @@ export async function DynamicWeixin(data: SyncData) {
     formData.append("fileid0", "");
     formData.append("digest0", "");
     formData.append("auto_gen_digest0", "1");
-    formData.append("content0", content);
+    const tagSuffix = dynamicData.tags?.length ? ` ${dynamicData.tags.map((t) => `#${t}`).join(" ")}` : "";
+    formData.append("content0", `${content}${tagSuffix}`);
     formData.append("sourceurl0", "");
     formData.append("need_open_comment0", "1");
     formData.append("only_fans_can_comment0", "0");

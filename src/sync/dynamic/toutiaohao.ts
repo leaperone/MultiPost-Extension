@@ -31,7 +31,7 @@ export async function DynamicToutiaohao(data: SyncData) {
   }
 
   try {
-    const { content, images } = data.data as DynamicData;
+    const { content, images, tags } = data.data as DynamicData;
 
     // 等待编辑器出现并输入内容
     await waitForElement('div[contenteditable="true"]');
@@ -44,7 +44,8 @@ export async function DynamicToutiaohao(data: SyncData) {
       return;
     }
 
-    editor.innerText = content || "";
+    const tagSuffix = tags?.length ? ` ${tags.map((t) => `#${t}#`).join(" ")}` : "";
+    editor.innerText = `${content || ""}${tagSuffix}`;
     editor.focus();
     editor.dispatchEvent(new Event("input", { bubbles: true }));
     await new Promise((resolve) => setTimeout(resolve, 3000));

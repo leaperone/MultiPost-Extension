@@ -1,7 +1,7 @@
 import type { SyncData, VideoData } from "../common";
 
 export async function VideoOkjike(data: SyncData) {
-  const { title, content, video } = data.data as VideoData;
+  const { title, content, video, description } = data.data as VideoData;
 
   // 辅助函数：等待元素出现
   function waitForElement(selector: string, timeout = 10000): Promise<Element> {
@@ -36,8 +36,9 @@ export async function VideoOkjike(data: SyncData) {
   async function fillContent() {
     const textarea = (await waitForElement('textarea[placeholder="分享你的想法..."]')) as HTMLTextAreaElement;
     if (textarea) {
-      // 如果有标题，将标题和内容拼接
-      const fullContent = title ? `${title}\n\n${content}` : content;
+      // 如果有标题，将标题和内容拼接(优先 description 字段)
+      const body = description || content;
+      const fullContent = title ? `${title}\n\n${body}` : body;
       textarea.value = fullContent;
       textarea.dispatchEvent(new Event("input", { bubbles: true }));
       await new Promise((resolve) => setTimeout(resolve, 500));

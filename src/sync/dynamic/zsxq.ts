@@ -29,9 +29,10 @@ export async function DynamicZSXQ(data: SyncData) {
     });
   }
 
-  const { title, content, images } = data.data as DynamicData;
+  const { title, content, images, tags } = data.data as DynamicData;
 
-  const postContent = title ? `${title}\n${content}` : content;
+  const tagSuffix = tags?.length ? ` ${tags.map((t) => `#${t}#`).join(" ")}` : "";
+  const postContent = `${title ? `${title}\n` : ""}${content || ""}${tagSuffix}`;
 
   try {
     // 等待帖子头部元素

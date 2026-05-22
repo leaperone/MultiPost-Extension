@@ -45,7 +45,7 @@ export async function VideoZhihu(data: SyncData) {
   }
 
   try {
-    const { content, video, title } = data.data as VideoData;
+    const { content, video, title, description } = data.data as VideoData;
     // 处理视频上传
     if (video) {
       const response = await fetch(video.url);
@@ -71,8 +71,8 @@ export async function VideoZhihu(data: SyncData) {
       'textarea[placeholder="填写视频简介，让更多人找到你的视频"]',
     )) as HTMLTextAreaElement;
     if (contentEditor) {
-      // 直接设置文本内容
-      contentEditor.value = content;
+      // 直接设置文本内容(优先使用 description 字段,回退到 content)
+      contentEditor.value = description || content;
 
       // 触发必要的事件以确保内容更新被识别
       contentEditor.dispatchEvent(new Event("input", { bubbles: true }));

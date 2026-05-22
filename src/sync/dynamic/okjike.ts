@@ -7,7 +7,7 @@ interface OkjikeConfig {
 
 // 优先发布图文
 export async function DynamicOkjike(data: SyncData) {
-  const { title, content, images } = data.data as DynamicData;
+  const { title, content, images, tags } = data.data as DynamicData;
   // 辅助函数：等待元素出现
   function waitForElement(selector: string, timeout = 10000): Promise<Element> {
     return new Promise((resolve, reject) => {
@@ -86,7 +86,8 @@ export async function DynamicOkjike(data: SyncData) {
   // 填写内容
   async function fillContent() {
     const inputElement = (await waitForElement('div[contenteditable="true"][role="textbox"]')) as HTMLDivElement;
-    const fullContent = `${title}\n${content}`;
+    const tagSuffix = tags?.length ? ` ${tags.map((t) => `#${t}`).join(" ")}` : "";
+    const fullContent = `${title}\n${content}${tagSuffix}`;
     const pasteEvent = new ClipboardEvent("paste", {
       bubbles: true,
       cancelable: true,

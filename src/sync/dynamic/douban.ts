@@ -79,7 +79,8 @@ export async function DynamicDouban(data: SyncData) {
     console.debug("contentEditor", contentEditor);
 
     if (contentEditor) {
-      const content = dynamicData.content || "";
+      const tagSuffix = dynamicData.tags?.length ? ` ${dynamicData.tags.map((t) => `#${t}#`).join(" ")}` : "";
+      const content = `${dynamicData.content || ""}${tagSuffix}`;
 
       // 使用粘贴事件填写内容
       const pasteEvent = new ClipboardEvent("paste", {

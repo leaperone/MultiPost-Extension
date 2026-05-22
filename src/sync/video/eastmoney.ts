@@ -67,7 +67,7 @@ export async function VideoEastmoney(data: SyncData) {
   }
 
   try {
-    const { content, video, title } = data.data as VideoData;
+    const { content, video, title, description } = data.data as VideoData;
     // 处理视频上传
     if (video) {
       const response = await fetch(video.url);
@@ -84,7 +84,8 @@ export async function VideoEastmoney(data: SyncData) {
 
     await new Promise((resolve) => setTimeout(resolve, 5000));
 
-    const contentToInsert = title ? `${title}\n${content}` : content;
+    const body = description || content;
+    const contentToInsert = title ? `${title}\n${body}` : body;
 
     // 等待简介编辑器出现并输入内容
     const editor = (await waitForElement('textarea[id="videoArtTitle"]')) as HTMLDivElement;

@@ -1,18 +1,24 @@
 import { Article51CTO } from "./article/51cto";
+import { ArticleAutohome } from "./article/autohome";
 import { ArticleBaijiahao } from "./article/baijiahao";
 import { ArticleBilibili } from "./article/bilibili";
 import { ArticleCSDN } from "./article/csdn";
 import { ArticleDouban } from "./article/douban";
 import { ArticleEastmoney } from "./article/eastmoney";
+import { ArticleInfoQ } from "./article/infoq";
 import { ArticleJianshu } from "./article/jianshu";
 import { ArticleJuejin } from "./article/juejin";
+import { ArticleMedium } from "./article/medium";
+import { ArticleOSChina } from "./article/oschina";
 import { ArticleSegmentfault } from "./article/segmentfault";
+import { ArticleSMZDM } from "./article/smzdm";
 import { ArticleSSPai } from "./article/sspai";
 import { ArticleSubstack } from "./article/substack";
 import { ArticleToutiao } from "./article/toutiao";
 import { ArticleWeibo } from "./article/weibo";
 import { ArticleWeixin } from "./article/weixin";
 import { ArticleWordpress } from "./article/wordpress";
+import { ArticleWoshipm } from "./article/woshipm";
 import { ArticleXueqiu } from "./article/xueqiu";
 import { ArticleZhihu } from "./article/zhihu";
 import type { PlatformInfo } from "./common";
@@ -204,5 +210,71 @@ export const ArticleInfoMap: Record<string, PlatformInfo> = {
     injectFunction: ArticleSubstack,
     tags: ["International"],
     accountKey: "substack",
+  },
+  ARTICLE_MEDIUM: {
+    type: "ARTICLE",
+    name: "ARTICLE_MEDIUM",
+    homeUrl: "https://medium.com/",
+    faviconUrl: "https://medium.com/favicon.ico",
+    platformName: chrome.i18n.getMessage("platformMedium"),
+    injectUrl: "https://medium.com/new-story",
+    injectFunction: ArticleMedium,
+    tags: ["International"],
+    accountKey: "medium",
+  },
+  ARTICLE_OSCHINA: {
+    type: "ARTICLE",
+    name: "ARTICLE_OSCHINA",
+    homeUrl: "https://www.oschina.net/",
+    faviconUrl: "https://www.oschina.net/favicon.ico",
+    platformName: chrome.i18n.getMessage("platformOSChina"),
+    injectUrl: "https://my.oschina.net/new/blog",
+    injectFunction: ArticleOSChina,
+    tags: ["CN"],
+    accountKey: "oschina",
+  },
+  ARTICLE_INFOQ: {
+    type: "ARTICLE",
+    name: "ARTICLE_INFOQ",
+    homeUrl: "https://www.infoq.cn/",
+    faviconUrl: "https://static001.geekbang.org/infoq/favicon.ico",
+    platformName: chrome.i18n.getMessage("platformInfoQ"),
+    injectUrl: "https://xie.infoq.cn/",
+    injectFunction: ArticleInfoQ,
+    tags: ["CN"],
+    accountKey: "infoq",
+  },
+  ARTICLE_SMZDM: {
+    type: "ARTICLE",
+    name: "ARTICLE_SMZDM",
+    homeUrl: "https://www.smzdm.com/",
+    faviconUrl: "https://www.smzdm.com/favicon.ico",
+    platformName: chrome.i18n.getMessage("platformSMZDM"),
+    injectUrl: "https://zhiyou.smzdm.com/user/article/post",
+    injectFunction: ArticleSMZDM,
+    tags: ["CN"],
+    accountKey: "smzdm",
+  },
+  ARTICLE_WOSHIPM: {
+    type: "ARTICLE",
+    name: "ARTICLE_WOSHIPM",
+    homeUrl: "https://www.woshipm.com/",
+    faviconUrl: "https://www.woshipm.com/favicon.ico",
+    platformName: chrome.i18n.getMessage("platformWoshipm"),
+    injectUrl: "https://www.woshipm.com/wp-admin/post-new.php",
+    injectFunction: ArticleWoshipm,
+    tags: ["CN"],
+    accountKey: "woshipm",
+  },
+  ARTICLE_AUTOHOME: {
+    type: "ARTICLE",
+    name: "ARTICLE_AUTOHOME",
+    homeUrl: "https://www.autohome.com.cn/",
+    faviconUrl: "https://www.autohome.com.cn/favicon.ico",
+    platformName: chrome.i18n.getMessage("platformAutohome"),
+    injectUrl: "https://chejiahao.autohome.com.cn/article/post.html",
+    injectFunction: ArticleAutohome,
+    tags: ["CN"],
+    accountKey: "autohome",
   },
 };
