@@ -32,6 +32,35 @@ export async function DynamicLinkedin(data: SyncData) {
     });
   }
 
+  // 与 waitForElement 相同,但在指定 root（如 Shadow DOM 的 shadowRoot）内查找
+  function waitForElementInRoot(selector: string, root: Document | ShadowRoot, timeout = 10000): Promise<Element> {
+    return new Promise((resolve, reject) => {
+      const existing = root.querySelector(selector);
+      if (existing) {
+        resolve(existing);
+        return;
+      }
+
+      const observer = new MutationObserver(() => {
+        const element = root.querySelector(selector);
+        if (element) {
+          resolve(element);
+          observer.disconnect();
+        }
+      });
+
+      observer.observe(root, {
+        childList: true,
+        subtree: true,
+      });
+
+      setTimeout(() => {
+        observer.disconnect();
+        reject(new Error(`元素未找到 "${selector}" 在 ${timeout}ms 内`));
+      }, timeout);
+    });
+  }
+
   try {
     const { title, content, images, videos } = data.data as DynamicData;
 
@@ -40,8 +69,8 @@ export async function DynamicLinkedin(data: SyncData) {
     await waitForElement("div[componentkey='draft-text-replaceable-component'], div.share-box-feed-entry__top-bar");
     await new Promise((resolve) => setTimeout(resolve, 500));
 
-    const triggerButton = (document.querySelector("div[componentkey='draft-text-replaceable-component'] button") ||
-      document.querySelector("div.share-box-feed-entry__top-bar > button")) as HTMLButtonElement | null;
+    const triggerButton = (document.querySelector("div[componentkey='draft-text-replaceable-component']") ||
+      document.querySelector("div.share-box-feed-entry__top-bar > button")) as HTMLElement | null;
     console.debug("triggerButton", triggerButton);
     if (!triggerButton) {
       console.debug("未找到触发按钮");
@@ -49,12 +78,18 @@ export async function DynamicLinkedin(data: SyncData) {
     }
     triggerButton.click();
 
+    // LinkedIn 改版后把发布框放进了 div#interop-outlet 的 Shadow DOM,
+    // 编辑器/发布按钮都在 shadowRoot 内,主 document 查不到。
+    // 取 shadowRoot 作为查询根;旧版无 shadow DOM 时回退到 document。
+    const outlet = (await waitForElement("div#interop-outlet", 5000).catch(() => null)) as HTMLElement | null;
+    const root: Document | ShadowRoot = outlet?.shadowRoot ?? document;
+
     // 等待编辑器出现
-    await waitForElement('div.ql-editor[contenteditable="true"]');
+    await waitForElementInRoot('div.ql-editor[contenteditable="true"]', root);
     await new Promise((resolve) => setTimeout(resolve, 500));
 
     // 编辑器:不依赖 data-placeholder 文案,直接取 contenteditable 的 ql-editor
-    const editor = document.querySelector('div.ql-editor[contenteditable="true"]') as HTMLDivElement | null;
+    const editor = root.querySelector('div.ql-editor[contenteditable="true"]') as HTMLDivElement | null;
 
     console.debug("qlEditor", editor);
     if (!editor) {
@@ -106,7 +141,7 @@ export async function DynamicLinkedin(data: SyncData) {
     await new Promise((resolve) => setTimeout(resolve, 5000));
 
     // 处理发布按钮
-    const sendButton = document.querySelector("button.share-actions__primary-action") as HTMLButtonElement;
+    const sendButton = root.querySelector("button.share-actions__primary-action") as HTMLButtonElement;
     console.debug("sendButton", sendButton);
     if (sendButton) {
       if (data.isAutoPublish) {

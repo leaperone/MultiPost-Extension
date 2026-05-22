@@ -114,7 +114,7 @@ export async function DynamicFacebook(data: SyncData) {
     const mediaFiles = [...(images || []), ...(videos || [])];
     if (mediaFiles.length > 0) {
       const fileInputs = document.querySelectorAll(
-        'input[type="file"][accept="image/*,image/heif,image/heic,video/*,video/mp4,video/x-m4v,video/x-matroska,.mkv"]',
+        'input[type="file"][accept^="image/*,image/heif,image/heic,video/*,video/mp4,video/x-m4v,video/x-matroska,.mkv"]',
       );
       console.debug("fileInputs", fileInputs);
 
