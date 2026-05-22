@@ -31,7 +31,7 @@ export async function VideoXiaoheihe(data: SyncData) {
   }
 
   try {
-    const { content, video, title } = data.data as VideoData;
+    const { content, video, title, description } = data.data as VideoData;
 
     await new Promise((resolve) => setTimeout(resolve, 3000));
     const titleEditorSelector = "div.hb-cpt__editor-title .ProseMirror.hb-editor";
@@ -76,7 +76,7 @@ export async function VideoXiaoheihe(data: SyncData) {
       cancelable: true,
       clipboardData: new DataTransfer(),
     });
-    contentPasteEvent.clipboardData!.setData("text/plain", content || "");
+    contentPasteEvent.clipboardData!.setData("text/plain", description || content || "");
     contentEditor.dispatchEvent(contentPasteEvent);
 
     if (video) {

@@ -1,7 +1,7 @@
 import type { DynamicData, SyncData } from "../common";
 
 export async function DynamicX(data: SyncData) {
-  const { title, content, images, videos } = data.data as DynamicData;
+  const { title, content, images, videos, tags } = data.data as DynamicData;
   // 辅助函数：等待元素出现
   function waitForElement(selector: string, timeout = 10000): Promise<Element> {
     return new Promise((resolve, reject) => {
@@ -46,8 +46,9 @@ export async function DynamicX(data: SyncData) {
     // 聚焦编辑器
     (editor as HTMLElement).focus();
 
-    // 使用 ClipboardEvent 粘贴文本
-    const combinedText = title ? `${title}\n${content || ""}` : content || "";
+    // 使用 ClipboardEvent 粘贴文本(X 上 tag 直接用空格隔开的 #tag,无尾巴)
+    const tagSuffix = tags?.length ? ` ${tags.map((t) => `#${t}`).join(" ")}` : "";
+    const combinedText = `${title ? `${title}\n` : ""}${content || ""}${tagSuffix}`;
     const pasteEvent = new ClipboardEvent("paste", {
       bubbles: true,
       cancelable: true,

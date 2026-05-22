@@ -2,7 +2,7 @@ import type { DynamicData, SyncData } from "../common";
 
 // 优先发布图文
 export async function DynamicDouyin(data: SyncData) {
-  const { title, content, images } = data.data as DynamicData;
+  const { title, content, images, tags } = data.data as DynamicData;
   // 辅助函数：等待元素出现
   function waitForElement(selector: string, timeout = 10000): Promise<Element> {
     return new Promise((resolve, reject) => {
@@ -103,6 +103,21 @@ export async function DynamicDouyin(data: SyncData) {
 
     pasteEvent.clipboardData.setData("text/plain", content || "");
     contentEditor.dispatchEvent(pasteEvent);
+
+    // 抖音话题限制 4 个,以 #tag 方式追加到末尾
+    if (tags?.length) {
+      for (const tag of tags.slice(0, 4)) {
+        contentEditor.focus();
+        const tagPaste = new ClipboardEvent("paste", {
+          bubbles: true,
+          cancelable: true,
+          clipboardData: new DataTransfer(),
+        });
+        tagPaste.clipboardData?.setData("text/plain", ` #${tag}`);
+        contentEditor.dispatchEvent(tagPaste);
+        await new Promise((resolve) => setTimeout(resolve, 600));
+      }
+    }
   }
 
   await new Promise((resolve) => setTimeout(resolve, 5000));

@@ -31,7 +31,7 @@ export async function VideoBluesky(data: SyncData) {
   }
 
   try {
-    const { content, video, title } = data.data as VideoData;
+    const { content, video, title, description } = data.data as VideoData;
 
     await new Promise((resolve) => setTimeout(resolve, 3000));
 
@@ -47,7 +47,8 @@ export async function VideoBluesky(data: SyncData) {
 
     const contentInput = (await waitForElement('div[contenteditable="true"]')) as HTMLDivElement;
     contentInput.focus();
-    contentInput.textContent = title ? `${title}\n${content}` : content;
+    const body = description || content || "";
+    contentInput.textContent = title ? `${title}\n${body}` : body;
     contentInput.dispatchEvent(new Event("input", { bubbles: true }));
     contentInput.dispatchEvent(new Event("change", { bubbles: true }));
     console.log("内容已输入:", content);

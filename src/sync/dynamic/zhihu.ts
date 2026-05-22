@@ -1,7 +1,7 @@
 import type { DynamicData, SyncData } from "../common";
 
 export async function DynamicZhihu(data: SyncData) {
-  const { title, content, images } = data.data as DynamicData;
+  const { title, content, images, tags } = data.data as DynamicData;
 
   function waitForElement(selector: string, timeout = 10000): Promise<Element> {
     return new Promise((resolve, reject) => {
@@ -50,9 +50,10 @@ export async function DynamicZhihu(data: SyncData) {
     postButton.click();
     await new Promise((resolve) => setTimeout(resolve, 1000));
 
-    // 等待并填写标题
-    await waitForElement('textarea[placeholder="添加标题(选填)"]');
-    const titleInput = document.querySelector('textarea[placeholder="添加标题(选填)"]') as HTMLTextAreaElement;
+    // 等待并填写标题。优先使用 name="title" 属性(更稳定),回退到旧的 placeholder 匹配
+    await waitForElement('textarea[name="title"], textarea[placeholder*="标题"]');
+    const titleInput = (document.querySelector('textarea[name="title"]') ||
+      document.querySelector('textarea[placeholder*="标题"]')) as HTMLTextAreaElement | null;
     console.debug("titleInput", titleInput);
     if (titleInput && title) {
       titleInput.value = title;
@@ -74,7 +75,8 @@ export async function DynamicZhihu(data: SyncData) {
       cancelable: true,
       clipboardData: new DataTransfer(),
     });
-    pasteEvent.clipboardData?.setData("text/plain", content || "");
+    const tagSuffix = tags?.length ? ` ${tags.map((t) => `#${t}#`).join(" ")}` : "";
+    pasteEvent.clipboardData?.setData("text/plain", `${content || ""}${tagSuffix}`);
     editorElement.dispatchEvent(pasteEvent);
     await new Promise((resolve) => setTimeout(resolve, 1000));
 

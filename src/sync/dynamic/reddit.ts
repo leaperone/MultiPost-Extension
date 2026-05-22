@@ -32,7 +32,7 @@ export async function DynamicReddit(data: SyncData) {
   }
 
   try {
-    const { title, content, images, videos } = data.data as DynamicData;
+    const { title, content, images, videos, tags } = data.data as DynamicData;
 
     // 等待页面加载
     await waitForElement("faceplate-textarea-input");
@@ -109,7 +109,8 @@ export async function DynamicReddit(data: SyncData) {
         cancelable: true,
         clipboardData: new DataTransfer(),
       });
-      pasteEvent.clipboardData?.setData("text/plain", content || "");
+      const tagSuffix = tags?.length ? ` ${tags.map((t) => `#${t}`).join(" ")}` : "";
+      pasteEvent.clipboardData?.setData("text/plain", `${content || ""}${tagSuffix}`);
       editor.dispatchEvent(pasteEvent);
       editor.dispatchEvent(new Event("input", { bubbles: true }));
       editor.dispatchEvent(new Event("change", { bubbles: true }));

@@ -31,7 +31,7 @@ export async function DynamicToutiao(data: SyncData) {
   }
 
   try {
-    const { content, images, title } = data.data as DynamicData;
+    const { content, images, title, tags } = data.data as DynamicData;
 
     // 等待编辑器出现
     const editor = (await waitForElement('div[contenteditable="true"]')) as HTMLElement;
@@ -39,7 +39,8 @@ export async function DynamicToutiao(data: SyncData) {
 
     if (editor) {
       // 更新编辑器内容，将标题和内容合并
-      const combinedContent = title ? `${title}\n\n${content || ""}` : content || "";
+      const tagSuffix = tags?.length ? ` ${tags.map((t) => `#${t}#`).join(" ")}` : "";
+      const combinedContent = `${title ? `${title}\n\n` : ""}${content || ""}${tagSuffix}`;
       editor.innerText = combinedContent;
       editor.focus();
       editor.dispatchEvent(new Event("input", { bubbles: true }));

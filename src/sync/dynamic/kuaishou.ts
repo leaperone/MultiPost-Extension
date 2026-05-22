@@ -6,7 +6,7 @@ import type { DynamicData, SyncData } from "../common";
  * @param {SyncData} data - 同步数据，包含标题、内容、图片等信息
  */
 export async function DynamicKuaishou(data: SyncData) {
-  const { title, content, images } = data.data as DynamicData;
+  const { title, content, images, tags } = data.data as DynamicData;
 
   // 检查图片数量
   if (!images || images.length === 0) {
@@ -106,8 +106,14 @@ export async function DynamicKuaishou(data: SyncData) {
   if (descriptionInput) {
     descriptionInput.focus();
 
-    // 拼接标题和内容，如果有标题则用 \n 分隔
-    const textContent = title ? `${title}\n${content}` : content;
+    // 拼接标题、内容、tags(快手话题 #tag,限 4 个)
+    const tagSuffix = tags?.length
+      ? ` ${tags
+          .slice(0, 4)
+          .map((t) => `#${t}`)
+          .join(" ")}`
+      : "";
+    const textContent = `${title ? `${title}\n` : ""}${content || ""}${tagSuffix}`;
 
     // 使用 ClipboardEvent 粘贴内容
     const pasteEvent = new ClipboardEvent("paste", {

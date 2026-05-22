@@ -18,7 +18,7 @@ export async function handleBilibiliImageUpload(event: MessageEvent) {
   }
 
   const dataTransfer = new DataTransfer();
-  files.forEach((file) => dataTransfer.items.add(file));
+  files.forEach((file: File) => dataTransfer.items.add(file));
   uploadInput.files = dataTransfer.files;
 
   const addButton = document.querySelector(".bili-pics-uploader__add");

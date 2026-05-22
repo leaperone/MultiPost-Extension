@@ -1055,5 +1055,57 @@
   "platformSubstack": {
     "message": "Substack",
     "description": "Substack 平台名称"
+  },
+  "platformXimalaya": {
+    "message": "喜马拉雅",
+    "description": "喜马拉雅 平台名称"
+  },
+  "platformXiaoyuzhou": {
+    "message": "小宇宙",
+    "description": "小宇宙 平台名称"
+  },
+  "platformQingting": {
+    "message": "蜻蜓 FM",
+    "description": "蜻蜓 FM 平台名称"
+  },
+  "platformNeteasePodcast": {
+    "message": "网易云音乐播客",
+    "description": "网易云音乐播客 平台名称"
+  },
+  "platformMedium": {
+    "message": "Medium",
+    "description": "Medium 平台名称"
+  },
+  "platformOSChina": {
+    "message": "开源中国",
+    "description": "开源中国 平台名称"
+  },
+  "platformInfoQ": {
+    "message": "InfoQ",
+    "description": "InfoQ 平台名称"
+  },
+  "platformSMZDM": {
+    "message": "什么值得买",
+    "description": "什么值得买 平台名称"
+  },
+  "platformWoshipm": {
+    "message": "人人都是产品经理",
+    "description": "人人都是产品经理 平台名称"
+  },
+  "platformAutohome": {
+    "message": "汽车之家",
+    "description": "汽车之家 平台名称"
+  },
+  "platformIqiyi": {
+    "message": "爱奇艺",
+    "description": "爱奇艺 平台名称"
+  },
+  "platformYouku": {
+    "message": "优酷",
+    "description": "优酷 平台名称"
+  },
+  "platformTencentVideo": {
+    "message": "腾讯视频",
+    "description": "腾讯视频 平台名称"
   }
 }

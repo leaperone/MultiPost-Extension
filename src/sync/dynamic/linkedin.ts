@@ -35,11 +35,13 @@ export async function DynamicLinkedin(data: SyncData) {
   try {
     const { title, content, images, videos } = data.data as DynamicData;
 
-    // 等待页面加载并点击发帖触发按钮
-    await waitForElement("div.share-box-feed-entry__top-bar");
+    // 触发按钮:LinkedIn 改版后 share-box 可能被 web component 包了一层,
+    // 优先尝试 componentkey 属性(更稳定),回退到旧的 share-box-feed-entry 类名
+    await waitForElement("div[componentkey='draft-text-replaceable-component'], div.share-box-feed-entry__top-bar");
     await new Promise((resolve) => setTimeout(resolve, 500));
 
-    const triggerButton = document.querySelector("div.share-box-feed-entry__top-bar > button") as HTMLButtonElement;
+    const triggerButton = (document.querySelector("div[componentkey='draft-text-replaceable-component'] button") ||
+      document.querySelector("div.share-box-feed-entry__top-bar > button")) as HTMLButtonElement | null;
     console.debug("triggerButton", triggerButton);
     if (!triggerButton) {
       console.debug("未找到触发按钮");
@@ -51,17 +53,8 @@ export async function DynamicLinkedin(data: SyncData) {
     await waitForElement('div.ql-editor[contenteditable="true"]');
     await new Promise((resolve) => setTimeout(resolve, 500));
 
-    // 查找正确的编辑器
-    const editor =
-      (document.querySelector(
-        'div.ql-editor[contenteditable="true"][data-placeholder="What do you want to talk about?"]',
-      ) as HTMLDivElement) ||
-      (document.querySelector(
-        'div.ql-editor[contenteditable="true"][data-placeholder="您想讨论什么话题？"]',
-      ) as HTMLDivElement) ||
-      (document.querySelector(
-        'div.ql-editor[contenteditable="true"][data-placeholder="分享您的意见想法⋯⋯"]',
-      ) as HTMLDivElement);
+    // 编辑器:不依赖 data-placeholder 文案,直接取 contenteditable 的 ql-editor
+    const editor = document.querySelector('div.ql-editor[contenteditable="true"]') as HTMLDivElement | null;
 
     console.debug("qlEditor", editor);
     if (!editor) {

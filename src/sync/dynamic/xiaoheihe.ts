@@ -1,7 +1,7 @@
 import type { DynamicData, SyncData } from "../common";
 
 export async function DynamicXiaoheihe(data: SyncData) {
-  const { title, content, images } = data.data as DynamicData;
+  const { title, content, images, tags } = data.data as DynamicData;
   // 辅助函数：等待元素出现
   function waitForElement(selector: string, timeout = 10000): Promise<Element> {
     return new Promise((resolve, reject) => {
@@ -74,7 +74,8 @@ export async function DynamicXiaoheihe(data: SyncData) {
       cancelable: true,
       clipboardData: new DataTransfer(),
     });
-    contentPasteEvent.clipboardData!.setData("text/plain", content || "");
+    const tagSuffix = tags?.length ? ` ${tags.map((t) => `#${t}`).join(" ")}` : "";
+    contentPasteEvent.clipboardData!.setData("text/plain", `${content || ""}${tagSuffix}`);
     contentEditor.dispatchEvent(contentPasteEvent);
 
     // 处理媒体上传（图片和视频）

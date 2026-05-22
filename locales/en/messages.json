@@ -1081,5 +1081,57 @@
   "platformSubstack": {
     "message": "Substack",
     "description": "Substack platform name"
+  },
+  "platformXimalaya": {
+    "message": "Ximalaya",
+    "description": "Ximalaya platform name"
+  },
+  "platformXiaoyuzhou": {
+    "message": "Xiaoyuzhou",
+    "description": "Xiaoyuzhou platform name"
+  },
+  "platformQingting": {
+    "message": "Qingting FM",
+    "description": "Qingting FM platform name"
+  },
+  "platformNeteasePodcast": {
+    "message": "NetEase Cloud Music Podcast",
+    "description": "NetEase Cloud Music Podcast platform name"
+  },
+  "platformMedium": {
+    "message": "Medium",
+    "description": "Medium platform name"
+  },
+  "platformOSChina": {
+    "message": "OSChina",
+    "description": "OSChina platform name"
+  },
+  "platformInfoQ": {
+    "message": "InfoQ",
+    "description": "InfoQ platform name"
+  },
+  "platformSMZDM": {
+    "message": "SMZDM",
+    "description": "SMZDM platform name"
+  },
+  "platformWoshipm": {
+    "message": "Woshipm",
+    "description": "Woshipm platform name"
+  },
+  "platformAutohome": {
+    "message": "Autohome",
+    "description": "Autohome platform name"
+  },
+  "platformIqiyi": {
+    "message": "iQiyi",
+    "description": "iQiyi platform name"
+  },
+  "platformYouku": {
+    "message": "Youku",
+    "description": "Youku platform name"
+  },
+  "platformTencentVideo": {
+    "message": "Tencent Video",
+    "description": "Tencent Video platform name"
   }
 }

@@ -31,7 +31,7 @@ export async function DynamicBaijiahao(data: SyncData) {
   }
 
   try {
-    const { content, images, title } = data.data as DynamicData;
+    const { content, images, title, tags } = data.data as DynamicData;
 
     // 等待编辑器出现并输入内容
     await waitForElement("textarea#content");
@@ -40,7 +40,8 @@ export async function DynamicBaijiahao(data: SyncData) {
     // 更新编辑器内容
     const editor = document.querySelector("textarea#content") as HTMLTextAreaElement;
     if (editor) {
-      const combinedContent = title ? `${title}\n\n${content || ""}` : content || "";
+      const tagSuffix = tags?.length ? ` ${tags.map((t) => `#${t}`).join(" ")}` : "";
+      const combinedContent = `${title ? `${title}\n\n` : ""}${content || ""}${tagSuffix}`;
       editor.value = combinedContent;
       editor.dispatchEvent(new Event("input", { bubbles: true }));
       editor.dispatchEvent(new Event("change", { bubbles: true }));
