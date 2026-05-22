@@ -22,8 +22,6 @@ const RechargeStatus: Record<string, RechargeStatusT> = {
   SUCCESS: 'success',
 } as const;
 
-export const dollarToYuan = 7.5;
-
 interface RechargeResponse {
   success: boolean;
   result?: string;
