@@ -52,4 +52,6 @@ export interface VideoExtractResult {
   videoUrl: string;
   coverUrl: string;
   duration: number;
+  transcript?: string;
+  taskId?: string;
 }

@@ -114,6 +114,14 @@ function CreateTaskForm({ onTaskCreated }: { onTaskCreated: () => void }) {
       return;
     }
 
+    if (videoInfo.taskId) {
+      toast.success(t('videoTranscribe.toast.createSuccess'));
+      setVideoUrl('');
+      setVideoInfo(null);
+      onTaskCreated();
+      return;
+    }
+
     // Use extracted URL for task creation
     const extractedUrl = cleanInputText(videoUrl);
 
@@ -220,6 +228,11 @@ function CreateTaskForm({ onTaskCreated }: { onTaskCreated: () => void }) {
               <p className="truncate text-sm font-medium">{videoInfo.title}</p>
               <div className="flex items-center gap-2 text-xs text-muted-foreground">
                 {videoInfo.author && <span>{videoInfo.author}</span>}
+                {videoInfo.transcript && (
+                  <Chip size="sm" color="success" variant="flat" className="text-xs">
+                    已获取 AI 字幕
+                  </Chip>
+                )}
                 {videoInfo.platform && (
                   <Chip size="sm" variant="flat" className="text-xs">{videoInfo.platform}</Chip>
                 )}
