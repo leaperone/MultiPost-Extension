@@ -40,6 +40,9 @@ This extension solves the pain points of content creators when publishing across
 
 ## Contact Us
 - [Discord](https://discord.gg/GNsCX9zFwQ)
+- 微信群
+  - 微信扫一扫加入 MultiPost 微信群
+    <img src="docs/multipost-wechat-group.jpg" width="350" alt="MultiPost WeChat Group QR Code" />
 - [点击加入腾讯频道【MultiPost】](https://pd.qq.com/s/ajj47bgjb) ，频道号：multipostapp
 - Email: [support@leaper.one](mailto:support@leaper.one)
 - [GitHub Issues](https://github.com/leaperone/MultiPost-Extension/issues)

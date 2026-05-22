@@ -93,6 +93,9 @@ pnpm build
 
 ## 联系我们
 
+- 微信群
+  - 微信扫一扫加入 MultiPost 微信群
+    <img src="multipost-wechat-group.jpg" width="350" alt="MultiPost 微信群二维码" />
 - QQ群：[921137242](http://qm.qq.com/cgi-bin/qm/qr?_wv=1027&k=c5BjhD8JxNAuwjKh6qvCoROU301PppYU&authKey=NfKianfDwngrwJyVQbefIQET9vUQs46xb0PfOYUm6KzdeCjPd5YbvlRoO8trJUUZ&noverify=0&group_code=921137242)
 - 邮箱：support@leaper.one
 - GitHub Issues：https://github.com/MultiPost-Extension/MultiPost-Extension/issues
