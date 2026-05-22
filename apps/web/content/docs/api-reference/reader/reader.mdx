@@ -22,9 +22,9 @@ POST https://api.multipost.app/v1/reader
 | 字段 | 类型 | 必填 | 说明 |
 |---|---|---|---|
 | url | string | ✓ |  |
-| targetSelector | string \| array<string> |  | 只会抓取该列表内的元素选择器，如 .class, #id |
-| removeSelector | string \| array<string> |  | 用于排除页眉、页脚等 |
-| waitForSelector | string \| array<string> |  | 在该元素出现后才返回 |
+| targetSelector | string \| `array<string>` |  | 只会抓取该列表内的元素选择器，如 .class, #id |
+| removeSelector | string \| `array<string>` |  | 用于排除页眉、页脚等 |
+| waitForSelector | string \| `array<string>` |  | 在该元素出现后才返回 |
 | viewport | object |  | 用于响应式 |
 | returnFormat | enum(markdown, html, text) |  | 默认Markdown |
 
