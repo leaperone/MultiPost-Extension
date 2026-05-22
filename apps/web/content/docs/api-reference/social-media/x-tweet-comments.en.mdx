@@ -1,0 +1,167 @@
+---
+title: X · Get tweet comments
+description: GET /v1/social/x/tweet/comments
+---
+
+> Requires Bearer token authentication.
+
+## Endpoint
+
+```http
+GET https://api.multipost.app/v1/social/x/tweet/comments
+```
+
+## Query parameters
+
+| Field | Type | Required | Description |
+|---|---|---|---|
+| tweet_id | number |  | 例如：https://x.com/elonmusk/status/1908013951113195741 中的 1908013951113195741。 _e.g._ `1908013951113195800` |
+| cursor | string |  |  |
+
+## Request example
+
+```bash
+curl -X GET 'https://api.multipost.app/v1/social/x/tweet/comments' \
+  -H "Authorization: Bearer YOUR_API_KEY"
+```
+
+## Response
+
+**200**
+
+```json
+{
+  "success": true,
+  "data": {
+    "likes": 502068,
+    "display_text": "Free Le Pen!",
+    "created_at": "Fri Apr 04 04:29:09 +0000 2025",
+    "status": "active",
+    "text": "Free Le Pen! https://t.co/mtx3ndQ10r",
+    "retweets": 107400,
+    "bookmarks": 15053,
+    "quotes": 5501,
+    "replies": 26348,
+    "lang": "en",
+    "source": "<a href=\"http://twitter.com/download/iphone\" rel=\"nofollow\">Twitter for iPhone</a>",
+    "views": "53725643",
+    "conversation_id": "1908013951113195741",
+    "author": {
+      "rest_id": "44196397",
+      "name": "Elon Musk",
+      "screen_name": "elonmusk",
+      "image": "https://pbs.twimg.com/profile_images/1893803697185910784/Na5lOWi5_normal.jpg",
+      "blue_verified": true,
+      "sub_count": 219199222
+    },
+    "media": {
+      "photo": [
+        {
+          "media_url_https": "https://pbs.twimg.com/media/Gnqgk1zWIAACgvO.jpg",
+          "id": "1908013946922999808"
+        }
+      ]
+    },
+    "id": "1908013951113195741",
+    "thread": [
+      {
+        "likes": 5483,
+        "created_at": "Fri Apr 04 05:07:55 +0000 2025",
+        "status": "active",
+        "text": "@elonmusk “They get her on a minor charge that she probably knew nothing about” \n\nSHE STOLE 3 MILLION EUROS SHE’S A CORRUPT CRIMINAL",
+        "retweets": 147,
+        "bookmarks": 72,
+        "quotes": 4,
+        "display_text": "“They get her on a minor charge that she probably knew nothing about” \n\nSHE STOLE 3 MILLION EUROS SHE’S A CORRUPT CRIMINAL",
+        "replies": 180,
+        "lang": "en",
+        "views": "208032",
+        "conversation_id": "1908013951113195741",
+        "id": "1908023706611245502",
+        "author": {
+          "rest_id": "1126991699815882753",
+          "name": "Slazac 🇪🇺 🇺🇦 🇹🇼 🌐",
+          "screen_name": "TrueSlazac",
+          "image": "https://pbs.twimg.com/profile_images/1907237909561839616/3AHtNqsD_normal.jpg",
+          "blue_verified": true,
+          "sub_count": 41605
+        },
+        "media": {
+          "photo": [
+            {
+              "media_url_https": "https://pbs.twimg.com/media/Gnqgk1zWIAACgvO.jpg",
+              "id": "1908013946922999808"
+            }
+          ]
+        }
+      },
+      {
+        "likes": 4779,
+        "created_at": "Fri Apr 04 05:02:15 +0000 2025",
+        "status": "active",
+        "text": "@elonmusk I thought you were AGAINST fraud?\nOh never mind… EMBEZZLEMENT is good! \nCarry on, partisan hack.",
+        "retweets": 89,
+        "bookmarks": 15,
+        "quotes": 0,
+        "display_text": "I thought you were AGAINST fraud?\nOh never mind… EMBEZZLEMENT is good! \nCarry on, partisan hack.",
+        "replies": 11,
+        "lang": "en",
+        "views": "76460",
+        "conversation_id": "1908013951113195741",
+        "id": "1908022278488801699",
+        "author": {
+          "rest_id": "2604836674",
+          "name": "Metal Mark 🇺🇸",
+          "screen_name": "MarkMantis",
+          "image": "https://pbs.twimg.com/profile_images/1897535580776652800/NFGuS0Te_normal.jpg",
+          "blue_verified": true,
+          "sub_count": 14932
+        },
+        "media": {
+          "photo": [
+            {
+              "media_url_https": "https://pbs.twimg.com/media/Gnqgk1zWIAACgvO.jpg",
+              "id": "1908013946922999808"
+            }
+          ]
+        }
+      },
+      {
+        "likes": 3827,
+        "created_at": "Fri Apr 04 04:31:45 +0000 2025",
+        "status": "active",
+        "text": "@elonmusk Marine Le Pen’s party just won the most votes in France’s parliamentary elections.\n\nShe was the frontrunner for the 2027 Presidential race.. Now, suddenly, she’s banned from political office.\n\nHow does this happen in a democracy? Simple.. it isn’t one anymore.",
+        "retweets": 358,
+        "bookmarks": 42,
+        "quotes": 11,
+        "display_text": "Marine Le Pen’s party just won the most votes in France’s parliamentary elections.\n\nShe was the frontrunner for the 2027 Presidential race.. Now, suddenly, she’s banned from political office.\n\nHow does this happen in a democracy? Simple.. it isn’t one anymore.",
+        "replies": 171,
+        "lang": "en",
+        "views": "89420",
+        "conversation_id": "1908013951113195741",
+        "id": "1908014602262094144",
+        "author": {
+          "rest_id": "1359631662636806146",
+          "name": "Western Decline",
+          "screen_name": "WesternDecline_",
+          "image": "https://pbs.twimg.com/profile_images/1912361614579306496/bjqnkEz3_normal.jpg",
+          "blue_verified": true,
+          "sub_count": 39791
+        },
+        "media": {
+          "photo": [
+            {
+              "media_url_https": "https://pbs.twimg.com/media/Gnqgk1zWIAACgvO.jpg",
+              "id": "1908013946922999808"
+            }
+          ]
+        }
+      }
+    ],
+    "cursor": "ZAAAAPBVHBmmxobazeaJ1Po0-sa5qYbL0Po0yIDd0d-v0fo0roe03Yf1jv80xIGw3buv2vo02sXR1fa40fo0zsbRkaui0fo0jIez4aCN1Po0_Iaz-fbc1Po0gIW5of7K0Po0JQISFQQAAA"
+  },
+  "meta": {
+    "credits": 0.01
+  }
+}
+```

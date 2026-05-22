@@ -1,0 +1,9 @@
+{
+  "title": "Search & News",
+  "pages": [
+    "search",
+    "search-reasoning",
+    "news",
+    "trending"
+  ]
+}

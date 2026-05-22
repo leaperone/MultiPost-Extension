@@ -1,0 +1,39 @@
+---
+title: Authentication
+description: Using bearer tokens with the MultiPost API
+---
+
+Most MultiPost API endpoints require a Bearer token in the `Authorization` header. The few endpoints that do not require auth are marked explicitly on their pages.
+
+## Getting an API key
+
+Create a new key from [MultiPost Dashboard › Settings › API Keys](/dashboard/settings/api-keys). The full key is shown only once at creation, so copy and store it securely.
+
+## How to use the token
+
+Add the following header to every request:
+
+```http
+Authorization: Bearer YOUR_API_KEY
+```
+
+### curl
+
+```bash
+curl -X GET 'https://api.multipost.app/extension/clients' \
+  -H "Authorization: Bearer YOUR_API_KEY"
+```
+
+### fetch
+
+```ts
+await fetch('https://api.multipost.app/extension/clients', {
+  headers: { Authorization: `Bearer ${process.env.MULTIPOST_API_KEY}` },
+});
+```
+
+## Security tips
+
+- Never embed an API key in client-side code or commit it to a public repo.
+- Prefer environment variables and a server-side proxy for browser-facing flows.
+- If a key leaks, disable it from the dashboard and rotate immediately.

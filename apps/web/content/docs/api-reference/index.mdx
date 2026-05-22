@@ -1,36 +1,29 @@
 ---
-title: Overview
+title: 概览
+description: MultiPost API 总览
 ---
 
-<Callout title="API 文档">
-  请访问 <a href="https://api-docs.multipost.app/" target="_blank">API 文档</a> 获取最新的 API 接口信息。
-</Callout>
+MultiPost 提供了一组 REST API，允许第三方应用调用扩展能力来发布内容、采集网页、获取社交媒体数据等。本节文档由 OpenAPI 规范生成并随仓库同步。
 
-MultiPost 提供的丰富的 API 接口，允许开发者远程调用我们的扩展程序的接口，可以半自动、全自动发布内容到多个平台。
+## 基础信息
 
-目前，我们提供了 API 接口如下：
+- **生产环境地址：** `https://api.multipost.app`
+- **Speech To Text 独立域名：** `https://stt.multipost.app`
+- **鉴权方式：** 大多数端点要求在 HTTP 头中携带 Bearer Token，参见 [鉴权](./authentication)。
+- **响应格式：** JSON；除特殊说明外均为 `application/json`。
 
-## Extension API
-
-在你的 Web App 中，调用 MultiPost Extension 的接口，来实现发布、获取账号信息、获取平台信息等功能。
-
-## Restful API （Beta, Only for Version above 1.1.0）
-
-我们在 multipost.app 中，提供了 Restful API，允许开发者远程调用我们的扩展程序的接口，来实现扩展信息获取、发布任务创建等功能。目前支持远程调用、定时发布等功能。
-
-## Scraper API
-
-我们在 multipost.app 中，提供了 Scraper API，允许开发者远程调用我们的扩展程序的接口，来实现内容爬取、搜索等功能。
-
-## Social Media API
-
-我们在 multipost.app 中，提供了 Social Media API，允许开发者远程调用我们的扩展程序的接口，来实现社交媒体内容爬取、搜索等功能。
-
-## What is Next?
+## 模块
 
 <Cards>
-  <Card title="Learn more about Extension API" href="https://api-docs.multipost.app/" />
-  <Card title="Learn more about Restful API" href="https://api-docs.multipost.app/" />
-  <Card title="MultiPost" href="https://multipost.app" />
-  <Card title="User Guide" href="/docs/user-guide" />
+  <Card title="Extension API" href="./extension/clients" description="管理扩展客户端、创建发布任务、查询任务状态" />
+  <Card title="Reader API" href="./reader/reader" description="抓取网页内容，可选择直接返回正文或交由 LLM 处理" />
+  <Card title="Search & News" href="./search/search" description="搜索、推理搜索、新闻聚合与热门趋势" />
+  <Card title="Web Crawler" href="./crawl/crawl" description="提交网址批量采集页面内容" />
+  <Card title="Social Media" href="./social-media/x-profile" description="X / 小红书 等社交平台的资料、推文与评论查询" />
+  <Card title="Speech To Text" href="./stt/speech-to-text" description="MP3 音频转写为文字" />
+  <Card title="File Hosting" href="./file/create" description="文件上传与读取" />
 </Cards>
+
+## 反馈与变更
+
+文档由仓库内 `apps/web/content/docs/api-reference/` 下的 mdx 文件维护。如发现错漏，欢迎提交 PR。

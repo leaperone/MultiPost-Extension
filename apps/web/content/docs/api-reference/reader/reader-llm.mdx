@@ -1,0 +1,80 @@
+---
+title: Web Reader + LLM
+description: POST /v1/reader/llm
+---
+
+提供网址，返回可读的网页内容
+
+开发中
+
+基本功能和 `/v1/reader` 基本相同，但是不会返回相同的返回值，会将返回值和 prompt 提交到 AI 接口（目前只支持 DeepSeek V3），你可以自定义操作和返回值格式。
+
+该接口可用于信息提取。
+
+## 端点
+
+```http
+POST https://api.multipost.app/v1/reader/llm
+```
+
+## 请求体
+
+`application/json`
+
+| 字段 | 类型 | 必填 | 说明 |
+|---|---|---|---|
+| url | string | ✓ |  |
+| prompt | string |  |  |
+| targetSelector | string \| array<string> |  | 只会抓取该列表内的元素选择器，如 .class, #id |
+| removeSelector | string \| array<string> |  | 用于排除页眉、页脚等 |
+| waitForSelector | string \| array<string> |  | 在该元素出现后才返回 |
+| viewport | object |  | 用于响应式 |
+| returnFormat | enum(markdown, html, text) |  | 默认Markdown |
+
+## 请求示例
+
+```bash
+curl -X POST 'https://api.multipost.app/v1/reader/llm' \
+  -H "Content-Type: application/json" \
+  -d '{
+  "url": "string",
+  "prompt": "string",
+  "targetSelector": null,
+  "removeSelector": null,
+  "waitForSelector": null,
+  "viewport": {
+    "width": 0,
+    "height": 0
+  },
+  "returnFormat": "markdown"
+}'
+```
+
+## 响应
+
+**200**
+
+```json
+{
+  "code": 0,
+  "msg": "success",
+  "data": {
+    "result": "这个内容是 **Vercel** 团队编写的，具体来说是 Vercel 的 AI SDK 官方文档的一部分。Vercel 是一家提供云部署和开发工具的公司，以其对 Next.js 框架的支持而闻名。  \n\n从内容中可以明确看到：  \n1. 页面属于 `sdk.vercel.ai` 域名，这是 Vercel 官方的 AI SDK 文档网站。  \n2. 页脚标注了版权信息：“© 2025 Vercel, Inc.”。  \n3. 内容围绕 Vercel AI SDK 的功能（如 `generateText` 和 `streamText`）展开，并提供了代码示例和详细说明。  \n\n因此，这是 Vercel 官方团队为其开发者工具撰写的技术文档。",
+    "usage": {
+      "total": 0.0012832226,
+      "reader": 0.0012628,
+      "llm_input": 1.86516e-05,
+      "llm_output": 1.771e-06
+    }
+  }
+}
+```
+
+**500**
+
+```json
+{
+  "success": false,
+  "error": ""
+}
+```

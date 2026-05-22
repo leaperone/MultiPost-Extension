@@ -25,9 +25,12 @@ import {
   type PlatformInfo,
   type SyncData,
   type DynamicData,
+  type ArticleData,
+  type FileData,
 } from '@/lib/extension';
 import { useDraftStore } from '@/store/draft.store';
 import { useMdDraftStore } from '@/store/md-draft.store';
+import { renderMarkdown } from '@/lib/markdown-engine/worker-client';
 
 interface Platform extends PlatformInfo {
   selected: boolean;
@@ -83,7 +86,11 @@ export default function DirectPublishModal({
   const fetchPlatforms = async () => {
     setIsLoadingPlatforms(true);
     try {
-      const platformList = await getPlatformInfos('DYNAMIC');
+      const [dynamicPlatforms, articlePlatforms] = await Promise.all([
+        getPlatformInfos('DYNAMIC'),
+        getPlatformInfos('ARTICLE'),
+      ]);
+      const platformList = [...dynamicPlatforms, ...articlePlatforms];
       const platformsWithSelection = platformList.map((platform) => ({
         ...platform,
         selected: false,
@@ -136,41 +143,72 @@ export default function DirectPublishModal({
     try {
       // Save draft before publishing to ensure latest content is persisted
       await useMdDraftStore.getState().saveDraft();
-      const dynamicData: DynamicData = {
-        title: currentTitle,
-        content: currentContent,
-        images: currentFiles
-          .filter((f) => f.type.startsWith('image'))
-          .map((f) => ({
-            id: f.rid || '',
-            name: f.name,
-            url: f.url,
-            type: f.type,
-            size: f.size,
-            originUrl: f.url,
-          })),
-        videos: currentFiles
-          .filter((f) => f.type.startsWith('video'))
-          .map((f) => ({
-            id: f.rid || '',
-            name: f.name,
-            url: f.url,
-            type: f.type,
-            size: f.size,
-            originUrl: f.url,
-          })),
-      };
 
-      const syncData: SyncData = {
-        platforms: selectedPlatformsData.map((p) => ({
-          ...p,
-          extraConfig: p.extraConfig,
-        })),
-        isAutoPublish,
-        data: dynamicData,
-      };
+      const images: FileData[] = currentFiles
+        .filter((f) => f.type.startsWith('image'))
+        .map((f) => ({
+          id: f.rid || '',
+          name: f.name,
+          url: f.url,
+          type: f.type,
+          size: f.size,
+          originUrl: f.url,
+        }));
+      const videos: FileData[] = currentFiles
+        .filter((f) => f.type.startsWith('video'))
+        .map((f) => ({
+          id: f.rid || '',
+          name: f.name,
+          url: f.url,
+          type: f.type,
+          size: f.size,
+          originUrl: f.url,
+        }));
 
-      await funcPublish(syncData);
+      const dynamicPlatforms = selectedPlatformsData.filter((p) => p.type === 'DYNAMIC');
+      const articlePlatforms = selectedPlatformsData.filter((p) => p.type === 'ARTICLE');
+
+      const dispatches: Promise<unknown>[] = [];
+
+      if (dynamicPlatforms.length > 0) {
+        const dynamicData: DynamicData = {
+          title: currentTitle,
+          content: currentContent,
+          images,
+          videos,
+        };
+        const syncData: SyncData = {
+          platforms: dynamicPlatforms.map((p) => ({ ...p, extraConfig: p.extraConfig })),
+          isAutoPublish,
+          data: dynamicData,
+        };
+        dispatches.push(funcPublish(syncData));
+      }
+
+      if (articlePlatforms.length > 0) {
+        const { result: htmlContent } = await renderMarkdown({ markdown: currentContent });
+        const digest = currentContent
+          .replace(/[#>*_`~\-!\[\]()]/g, '')
+          .replace(/\s+/g, ' ')
+          .trim()
+          .slice(0, 200);
+        const articleData: ArticleData = {
+          title: currentTitle,
+          digest,
+          cover: images[0] ?? ({ name: '', url: '', type: '', size: 0 } as FileData),
+          htmlContent,
+          markdownContent: currentContent,
+          images,
+        };
+        const syncData: SyncData = {
+          platforms: articlePlatforms.map((p) => ({ ...p, extraConfig: p.extraConfig })),
+          isAutoPublish,
+          data: articleData,
+        };
+        dispatches.push(funcPublish(syncData));
+      }
+
+      await Promise.all(dispatches);
 
       toast.success(t('publish.toast.publishSuccess'));
       onSuccess?.();

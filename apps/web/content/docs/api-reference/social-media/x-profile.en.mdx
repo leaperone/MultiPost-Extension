@@ -1,0 +1,73 @@
+---
+title: X · Get user profile
+description: GET /v1/social/x/profile
+---
+
+> Requires Bearer token authentication.
+
+## Endpoint
+
+```http
+GET https://api.multipost.app/v1/social/x/profile
+```
+
+## Query parameters
+
+| Field | Type | Required | Description |
+|---|---|---|---|
+| rest_id | string |  | 用户ID（如果使用用户ID则会忽略用户名） _e.g._ `44196397` |
+| screen_name | string |  | 用户名/Screen Name _e.g._ `elonmusk` |
+
+## Request example
+
+```bash
+curl -X GET 'https://api.multipost.app/v1/social/x/profile' \
+  -H "Authorization: Bearer YOUR_API_KEY"
+```
+
+## Response
+
+**200**
+
+```json
+{
+  "success": true,
+  "data": {
+    "status": "active",
+    "profile": "elonmusk",
+    "rest_id": "44196397",
+    "blue_verified": true,
+    "affiliates": {
+      "label": {
+        "url": {
+          "url": "https://twitter.com/X",
+          "urlType": "DeepLink"
+        },
+        "badge": {
+          "url": "https://pbs.twimg.com/profile_images/1683899100922511378/5lY42eHs_bigger.jpg"
+        },
+        "description": "X",
+        "userLabelType": "BusinessLabel",
+        "userLabelDisplayType": "Badge"
+      }
+    },
+    "business_account": [],
+    "avatar": "https://pbs.twimg.com/profile_images/1893803697185910784/Na5lOWi5_normal.jpg",
+    "header_image": "https://pbs.twimg.com/profile_banners/44196397/1739948056",
+    "desc": "",
+    "name": "Elon Musk",
+    "protected": null,
+    "location": "",
+    "friends": 1108,
+    "sub_count": 219180655,
+    "statuses_count": 77068,
+    "media_count": 3781,
+    "pinned_tweet_ids_str": [],
+    "created_at": "Tue Jun 02 20:12:29 +0000 2009",
+    "id": "44196397"
+  },
+  "meta": {
+    "credits": 0.01
+  }
+}
+```

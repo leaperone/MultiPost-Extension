@@ -1,36 +1,29 @@
 ---
 title: Overview
+description: MultiPost API overview
 ---
 
-<Callout title="API Documentation">
-  Please visit <a href="https://api-docs.multipost.app/" target="_blank">API Documentation</a> for the latest API interface information.
-</Callout>
+MultiPost exposes a REST API that lets third-party apps drive the extension to publish content, crawl pages, query social-media data, and more. This section is generated from the OpenAPI spec checked into the repository.
 
-MultiPost provides rich API interfaces, allowing developers to remotely call our extension interfaces, enabling semi-automatic and fully automatic content publishing to multiple platforms.
+## At a glance
 
-Currently, we provide the following API interfaces:
+- **Production base URL:** `https://api.multipost.app`
+- **Speech-to-Text host (separate):** `https://stt.multipost.app`
+- **Authentication:** Most endpoints require a Bearer token in the `Authorization` header — see [Authentication](./authentication).
+- **Response format:** JSON. Endpoints return `application/json` unless noted otherwise.
 
-## Extension API
-
-In your Web App, call MultiPost Extension interfaces to implement publishing, get account information, get platform information and other functions.
-
-## Restful API (Beta, Only for Version above 1.1.0)
-
-We provide Restful API in multipost.app, allowing developers to remotely call our extension interfaces to implement extension information retrieval, publishing task creation and other functions. Currently supports remote calling, scheduled publishing and other functions.
-
-## Scraper API
-
-We provide Scraper API in multipost.app, allowing developers to remotely call our extension interfaces to implement content scraping, searching and other functions.
-
-## Social Media API
-
-We provide Social Media API in multipost.app, allowing developers to remotely call our extension interfaces to implement social media content scraping, searching and other functions.
-
-## What is Next?
+## Modules
 
 <Cards>
-  <Card title="Learn more about Extension API" href="https://api-docs.multipost.app/" />
-  <Card title="Learn more about Restful API" href="https://api-docs.multipost.app/" />
-  <Card title="MultiPost" href="https://multipost.app" />
-  <Card title="User Guide" href="/docs/user-guide" />
-</Cards> 
+  <Card title="Extension API" href="./extension/clients" description="Manage extension clients, create publish tasks, query task status" />
+  <Card title="Reader API" href="./reader/reader" description="Fetch web content directly or via an LLM" />
+  <Card title="Search & News" href="./search/search" description="Search, reasoning search, news and trending feeds" />
+  <Card title="Web Crawler" href="./crawl/crawl" description="Submit URLs for batch crawling" />
+  <Card title="Social Media" href="./social-media/x-profile" description="X / RedNote profiles, posts, replies, search" />
+  <Card title="Speech To Text" href="./stt/speech-to-text" description="Transcribe MP3 audio to text" />
+  <Card title="File Hosting" href="./file/create" description="Upload and fetch hosted files" />
+</Cards>
+
+## Feedback
+
+These pages live under `apps/web/content/docs/api-reference/` in the repo. PRs welcome for fixes.

@@ -1,0 +1,155 @@
+---
+title: X · Get user replies
+description: GET /v1/social/x/replies
+---
+
+从最新的开始
+
+> Requires Bearer token authentication.
+
+## Endpoint
+
+```http
+GET https://api.multipost.app/v1/social/x/replies
+```
+
+## Query parameters
+
+| Field | Type | Required | Description |
+|---|---|---|---|
+| screen_name | string |  | 用户名/Screen Name _e.g._ `elonmusk` |
+| cursor | string |  | 游标（用于翻页） |
+
+## Request example
+
+```bash
+curl -X GET 'https://api.multipost.app/v1/social/x/replies' \
+  -H "Authorization: Bearer YOUR_API_KEY"
+```
+
+## Response
+
+**200**
+
+```json
+{
+  "success": true,
+  "data": {
+    "timeline": [
+      {
+        "tweet_id": "1912315139866394916",
+        "bookmarks": 2568,
+        "created_at": "Wed Apr 16 01:20:33 +0000 2025",
+        "favorites": 155967,
+        "text": "🤣 https://t.co/VyFPd2T7ZT",
+        "lang": "qme",
+        "in_reply_to_status_id_str": null,
+        "views": "3352420",
+        "quotes": 260,
+        "replies": 444,
+        "retweets": 10342,
+        "conversation_id": "1912315139866394916",
+        "media": {
+          "photo": [
+            {
+              "media_url_https": "https://pbs.twimg.com/media/Gonoe38WEAACLWw.jpg",
+              "id": "1912315133906259968"
+            }
+          ]
+        },
+        "entities": {
+          "hashtags": [],
+          "symbols": [],
+          "timestamps": [],
+          "urls": [],
+          "user_mentions": []
+        },
+        "author": {
+          "rest_id": "294293982",
+          "name": "Rothmus 🏴",
+          "screen_name": "Rothmus",
+          "followers_count": 587440,
+          "favourites_count": 109237,
+          "avatar": "https://pbs.twimg.com/profile_images/1427434033290661891/hLTTZ5lt_normal.jpg",
+          "blue_verified": true
+        }
+      },
+      {
+        "tweet_id": "1912827969019564269",
+        "bookmarks": 9,
+        "created_at": "Thu Apr 17 11:18:21 +0000 2025",
+        "favorites": 1490,
+        "text": "@Rothmus 😂",
+        "lang": "qme",
+        "in_reply_to_status_id_str": "1912315139866394916",
+        "views": "17455",
+        "quotes": 6,
+        "replies": 116,
+        "retweets": 65,
+        "conversation_id": "1912315139866394916",
+        "media": [],
+        "entities": {
+          "hashtags": [],
+          "symbols": [],
+          "timestamps": [],
+          "urls": [],
+          "user_mentions": [
+            {
+              "id_str": "294293982",
+              "name": "Rothmus 🏴",
+              "screen_name": "Rothmus"
+            }
+          ]
+        },
+        "author": {
+          "rest_id": "44196397",
+          "name": "Elon Musk",
+          "screen_name": "elonmusk",
+          "followers_count": 219199641,
+          "favourites_count": 141367,
+          "avatar": "https://pbs.twimg.com/profile_images/1893803697185910784/Na5lOWi5_normal.jpg",
+          "blue_verified": true
+        }
+      }
+    ],
+    "next_cursor": "DAAHCgABGovFWno__-wLAAIAAAATMTkxMjUzNjI0MTkzMTAxMDIyNwgAAwAAAAIAAA",
+    "user": {
+      "status": "active",
+      "profile": "elonmusk",
+      "rest_id": "44196397",
+      "blue_verified": true,
+      "affiliates": {
+        "label": {
+          "url": {
+            "url": "https://twitter.com/X",
+            "urlType": "DeepLink"
+          },
+          "badge": {
+            "url": "https://pbs.twimg.com/profile_images/1683899100922511378/5lY42eHs_bigger.jpg"
+          },
+          "description": "X",
+          "userLabelType": "BusinessLabel",
+          "userLabelDisplayType": "Badge"
+        }
+      },
+      "business_account": [],
+      "avatar": "https://pbs.twimg.com/profile_images/1893803697185910784/Na5lOWi5_normal.jpg",
+      "header_image": "https://pbs.twimg.com/profile_banners/44196397/1739948056",
+      "desc": "",
+      "name": "Elon Musk",
+      "protected": null,
+      "location": "",
+      "friends": 1108,
+      "sub_count": 219199644,
+      "statuses_count": 77070,
+      "media_count": 3781,
+      "created_at": "Tue Jun 02 20:12:29 +0000 2009",
+      "pinned_tweet_ids_str": [],
+      "id": "44196397"
+    }
+  },
+  "meta": {
+    "credits": 0.01
+  }
+}
+```

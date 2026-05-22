@@ -1,0 +1,39 @@
+---
+title: 鉴权
+description: 在 MultiPost API 中使用 Bearer Token
+---
+
+除少数说明明确"无需鉴权"的端点外，MultiPost API 均要求在 HTTP 头中携带 Bearer Token。
+
+## 获取 API Key
+
+在 [MultiPost Dashboard › 设置 › API Keys](/dashboard/settings/api-keys) 页面创建一个新的 API Key 并妥善保存。Key 仅在创建时完整显示一次。
+
+## 使用方式
+
+在每个 API 请求中加入下面这条 HTTP 头：
+
+```http
+Authorization: Bearer YOUR_API_KEY
+```
+
+### curl 示例
+
+```bash
+curl -X GET 'https://api.multipost.app/extension/clients' \
+  -H "Authorization: Bearer YOUR_API_KEY"
+```
+
+### fetch 示例
+
+```ts
+await fetch('https://api.multipost.app/extension/clients', {
+  headers: { Authorization: `Bearer ${process.env.MULTIPOST_API_KEY}` },
+});
+```
+
+## 安全建议
+
+- 不要把 API Key 写在前端代码或公开仓库中。
+- 推荐通过环境变量或后端服务代理转发请求。
+- 一旦泄露应立即在控制台禁用并重新生成。

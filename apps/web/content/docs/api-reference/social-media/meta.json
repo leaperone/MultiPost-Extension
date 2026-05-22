@@ -1,0 +1,16 @@
+{
+  "title": "Social Media",
+  "pages": [
+    "x-profile",
+    "x-replies",
+    "x-tweets",
+    "x-tweet",
+    "x-tweet-comments",
+    "x-trending",
+    "x-followings",
+    "x-followers",
+    "x-search",
+    "rednote-note",
+    "rednote-profile"
+  ]
+}

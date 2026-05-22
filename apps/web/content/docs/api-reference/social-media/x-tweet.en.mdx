@@ -1,0 +1,84 @@
+---
+title: X · Get a tweet
+description: GET /v1/social/x/tweet
+---
+
+> Requires Bearer token authentication.
+
+## Endpoint
+
+```http
+GET https://api.multipost.app/v1/social/x/tweet
+```
+
+## Query parameters
+
+| Field | Type | Required | Description |
+|---|---|---|---|
+| tweet_id | number |  | 例如：https://x.com/elonmusk/status/1908013951113195741 中的 1908013951113195741。 _e.g._ `1908013951113195800` |
+
+## Request example
+
+```bash
+curl -X GET 'https://api.multipost.app/v1/social/x/tweet' \
+  -H "Authorization: Bearer YOUR_API_KEY"
+```
+
+## Response
+
+**200**
+
+```json
+{
+  "success": true,
+  "data": {
+    "likes": 5,
+    "created_at": "Fri Apr 18 05:13:41 +0000 2025",
+    "status": "active",
+    "text": "@hsn8086 能问出这个问题的，直接去漫展就可以了",
+    "display_text": "能问出这个问题的，直接去漫展就可以了",
+    "urls": [],
+    "retweets": 0,
+    "bookmarks": 0,
+    "quotes": 0,
+    "reply_to": "1913097004949078211",
+    "replies": 0,
+    "lang": "zh",
+    "in_reply_to_screen_name": "hsn8086",
+    "in_reply_to_status_id_str": "1913097004949078211",
+    "in_reply_to_user_id_str": "1433678976564662273",
+    "sensitive": null,
+    "views": "138",
+    "conversation_id": "1913097004949078211",
+    "entities": {
+      "user_mentions": [
+        {
+          "id_str": "1433678976564662273",
+          "name": "hsn",
+          "screen_name": "hsn8086",
+          "indices": [
+            0,
+            8
+          ]
+        }
+      ],
+      "urls": [],
+      "hashtags": [],
+      "symbols": []
+    },
+    "author": {
+      "rest_id": "883923629599113216",
+      "name": "Snoopy Jia",
+      "screen_name": "Jayson_______",
+      "image": "https://pbs.twimg.com/profile_images/1826537968267657218/soAbve8v_normal.jpg",
+      "blue_verified": false,
+      "sub_count": 13
+    },
+    "media": null,
+    "id": "1913098589150261679"
+  },
+  "meta": {
+    "credits": 0.01
+  }
+}
+```

@@ -1,0 +1,57 @@
+---
+title: X · Get trending
+description: GET /v1/social/x/trending
+---
+
+> Requires Bearer token authentication.
+
+## Endpoint
+
+```http
+GET https://api.multipost.app/v1/social/x/trending
+```
+
+## Query parameters
+
+| Field | Type | Required | Description |
+|---|---|---|---|
+| country | enum(China, India, Japan, Russia, Germany, Indonesia, Brazil, France, UnitedKingdom, Turkey, Italy, Mexico, SouthKorea, Canada, Spain, SaudiArabia, Egypt, Australia, Poland, Iran, Pakistan, Vietnam, Nigeria, Bangladesh, Netherlands, Argentina, Philippines, Malaysia, Colombia, UniteArabEmirates, Romania, Belgium, Switzerland, Singapore, Sweden, Norway, Austria, Kazakhstan, Algeria, Chile, Czechia, Peru, UnitedStates) |  |  _e.g._ `UnitedStates` |
+
+## Request example
+
+```bash
+curl -X GET 'https://api.multipost.app/v1/social/x/trending' \
+  -H "Authorization: Bearer YOUR_API_KEY"
+```
+
+## Response
+
+**200**
+
+```json
+{
+  "success": true,
+  "data": {
+    "trends": [
+      {
+        "name": "El Salvador",
+        "description": null,
+        "context": "Politics · Trending"
+      },
+      {
+        "name": "Harvard",
+        "description": "260K posts",
+        "context": "Politics · Trending"
+      },
+      {
+        "name": "#AEWDynamite",
+        "description": null,
+        "context": "Wrestling · Trending"
+      }
+    ]
+  },
+  "meta": {
+    "credits": 0.01
+  }
+}
+```

@@ -1,0 +1,77 @@
+---
+title: Speech To Text
+description: POST /
+---
+
+接受一个 MP3  格式的文件，返回语音识别结果。
+
+> PS:
+> 1. 请使用 https://stt.multipost.app 作为前置域名;
+> 2. 仅支持 .mp3 文件
+
+## Endpoint
+
+```http
+POST https://stt.multipost.app/
+```
+
+> **Note:** Speech To Text uses the dedicated host `https://stt.multipost.app` and only accepts `.mp3` files.
+
+## Request body
+
+`multipart/form-data`
+
+| Field | Type | Required | Description |
+|---|---|---|---|
+| file | string | ✓ |  |
+
+## Request example
+
+```bash
+curl -X POST 'https://stt.multipost.app/'
+```
+
+## Response
+
+**200**
+
+```json
+{
+  "success": false,
+  "data": {
+    "task": "string",
+    "language": "string",
+    "duration": 0,
+    "text": "string",
+    "segments": [
+      {
+        "id": 0,
+        "seek": 0,
+        "start": 0,
+        "end": 0,
+        "text": "string",
+        "tokens": [
+          0
+        ],
+        "temperature": 0,
+        "avg_logprob": 0,
+        "compression_ratio": 0,
+        "no_speech_prob": 0,
+        "language": "string"
+      }
+    ]
+  },
+  "meta": {
+    "credits": 0
+  }
+}
+```
+
+**500**
+
+```json
+{
+  "success": false,
+  "error": "转写服务暂时不可用，请稍后重试"
+}
+```

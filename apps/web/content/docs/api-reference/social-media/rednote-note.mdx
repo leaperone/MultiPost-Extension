@@ -1,0 +1,342 @@
+---
+title: 小红书 · 获取笔记详情
+description: GET /v1/social/rednote/note
+---
+
+在获取小红书相关信息时，您可通过以下两种参数实现：
+1. **note_id**：即笔记ID ，能从小红书分享链接里提取。
+2. **share_text**：指小红书分享链接（涵盖APP端及Web端分享链接） 。
+系统优先识别note_id参数。若该参数未提供，才会采用share_text参数。请您仅提供其中一个参数，若两个参数同时存在，系统将以note_id参数作为执行标准。
+
+> 需要 Bearer Token 鉴权。
+
+## 端点
+
+```http
+GET https://api.multipost.app/v1/social/rednote/note
+```
+
+## 查询参数
+
+| 字段 | 类型 | 必填 | 说明 |
+|---|---|---|---|
+| note_id | string |  | Note ID _e.g._ `665f95200000000006005624` |
+| share_text | string |  | 分享链接/Share link _e.g._ `https://xhslink.com/a/EZ4M9TwMA6c3` |
+
+## 请求示例
+
+```bash
+curl -X GET 'https://api.multipost.app/v1/social/rednote/note' \
+  -H "Authorization: Bearer YOUR_API_KEY"
+```
+
+## 响应
+
+**200**
+
+```json
+{
+  "code": 0,
+  "msg": "success",
+  "data": {
+    "code": 0,
+    "data": {
+      "data": [
+        {
+          "comment_list": [],
+          "track_id": "",
+          "model_type": "note",
+          "user": {
+            "id": "5f4a10070000000001006fc7",
+            "image": "https://sns-avatar-qc.xhscdn.com/avatar/5f4a1ce7a4cd6e00011f3a0e.jpg?imageView2/2/w/120/format/jpg",
+            "red_official_verified": false,
+            "userid": "5f4a10070000000001006fc7",
+            "level": {
+              "image": ""
+            },
+            "name": "若瑶",
+            "followed": false,
+            "red_id": "377121693",
+            "nickname": "若瑶",
+            "red_official_verify_type": 0,
+            "show_red_official_verify_icon": false,
+            "track_duration": 0
+          },
+          "note_list": [
+            {
+              "has_related_goods": false,
+              "type": "normal",
+              "enable_fls_bridge_cards": false,
+              "goods_info": {},
+              "red_envelope_note": false,
+              "has_music": false,
+              "privacy": {
+                "type": 0,
+                "show_tips": false,
+                "nick_names": ""
+              },
+              "need_product_review": false,
+              "enable_co_produce": true,
+              "co_produce_link": "xhsdiscover://post_new_note?source=%7B%22type%22%3A%22together_post%22%2C%22extraInfo%22%3A%7B%22subType%22%3A%22together_post_halfspace%22%2C%22track_id%22%3A%22665f95200000000006005624%22%7D%7D&page=%7B%22page_type%22%3A%22image_co_produce_album%22%7D",
+              "user": {
+                "red_id": "377121693",
+                "red_official_verify_type": 0,
+                "show_red_official_verify_icon": false,
+                "track_duration": 0,
+                "level": {
+                  "image": ""
+                },
+                "id": "5f4a10070000000001006fc7",
+                "image": "https://sns-avatar-qc.xhscdn.com/avatar/5f4a1ce7a4cd6e00011f3a0e.jpg?imageView2/2/w/120/format/jpg",
+                "nickname": "若瑶",
+                "red_official_verified": false,
+                "userid": "5f4a10070000000001006fc7",
+                "name": "若瑶",
+                "followed": false
+              },
+              "sticky": false,
+              "share_info": {
+                "function_entries": [
+                  {
+                    "type": "generate_image"
+                  },
+                  {
+                    "type": "copy_link"
+                  },
+                  {
+                    "type": "dislike"
+                  },
+                  {
+                    "type": "report"
+                  }
+                ],
+                "image": "http://sns-na-i2.xhscdn.com/1040g008313l16bjs38005nqa203g8ru76921580?imageView2/2/w/360/format/jpg/q/75",
+                "link": "https://www.xiaohongshu.com/discovery/item/665f95200000000006005624?ignoreEngage=true&share_from_user_hidden=true&xsec_source=app_share&type=normal&author_share=1",
+                "title": "墨镜极限三选一",
+                "is_star": false,
+                "show_wechat_tag": false,
+                "content": "miu的11w真的好火但是担心会不会镜片太小显脸大哈哈哈哈哈哈 ysl是一直想买但是担心太酷了不适合我的风格 #墨镜",
+                "block_private_msg": false,
+                "guide_audited": true
+              },
+              "widgets_groups": [
+                [
+                  "guos_test",
+                  "note_next_step",
+                  "second_jump_bar",
+                  "cooperate_binds",
+                  "note_collection",
+                  "rec_next_infos",
+                  "image_stickers",
+                  "image_filters",
+                  "product_review",
+                  "related_search",
+                  "cooperate_comment_component",
+                  "image_goods_cards",
+                  "ads_goods_cards",
+                  "ads_comment_component",
+                  "goods_card_v2",
+                  "image_template",
+                  "buyable_goods_card_v2",
+                  "ads_engage_bar",
+                  "challenge_card",
+                  "cooperate_engage_bar",
+                  "guide_post",
+                  "pgy_comment_component",
+                  "pgy_engage_bar",
+                  "bar_below_image",
+                  "aigc_collection",
+                  "co_produce",
+                  "widgets_ndb",
+                  "next_note_guide",
+                  "pgy_bbc_exp",
+                  "async_group",
+                  "super_activity",
+                  "widgets_enhance",
+                  "music_player",
+                  "soundtrack_player"
+                ],
+                [
+                  "guos_test",
+                  "vote_stickers",
+                  "bullet_comment_lead",
+                  "note_search_box",
+                  "interact_pk",
+                  "interact_vote",
+                  "guide_heuristic",
+                  "share_to_msg",
+                  "follow_guide",
+                  "note_share_prompt_v1",
+                  "sync_group",
+                  "group_share",
+                  "share_guide_bubble",
+                  "widgets_share",
+                  "guide_navigator"
+                ]
+              ],
+              "desc": "miu的11w真的好火但是担心会不会镜片太小显脸大哈哈哈哈哈哈\nysl是一直想买但是担心太酷了不适合我的风格\n#墨镜[话题]#",
+              "in_censor": false,
+              "long_press_share_info": {
+                "function_entries": [
+                  {
+                    "type": "image_download"
+                  }
+                ],
+                "guide_audited": false,
+                "content": "",
+                "title": "",
+                "is_star": false,
+                "block_private_msg": false,
+                "show_wechat_tag": false
+              },
+              "time": 1717540128,
+              "enable_brand_lottery": false,
+              "need_next_step": false,
+              "view_count": 0,
+              "widgets_context": "{\"origin_video_key\":\"\",\"flags\":{},\"author_id\":\"5f4a10070000000001006fc7\",\"author_name\":\"若瑶\",\"q_task_id\":\"\",\"video_rec_bar_info\":\"\"}",
+              "collected": false,
+              "seeded": false,
+              "media_save_config": {
+                "disable_save": false,
+                "disable_watermark": false,
+                "disable_weibo_cover": false
+              },
+              "title": "墨镜极限三选一！",
+              "images_list": [
+                {
+                  "height": 2556,
+                  "original": "http://sns-na-i2.xhscdn.com/1040g008313l16bjs38005nqa203g8ru76921580?imageView2/2/w/5000/h/5000/format/heif/q/56&redImage/frame/0&ap=1&sc=ORIGINAL",
+                  "url_multi_level": {
+                    "low": "http://sns-na-i2.xhscdn.com/1040g008313l16bjs38005nqa203g8ru76921580?imageView2/2/w/1440/format/heif/q/75&redImage/frame/0&ap=1&sc=DETAIL",
+                    "medium": "http://sns-na-i2.xhscdn.com/1040g008313l16bjs38005nqa203g8ru76921580?imageView2/2/w/1440/format/heif/q/75&redImage/frame/0&ap=1&sc=DETAIL",
+                    "high": "http://sns-na-i2.xhscdn.com/1040g008313l16bjs38005nqa203g8ru76921580?imageView2/2/w/1440/format/heif/q/75&redImage/frame/0&ap=1&sc=DETAIL"
+                  },
+                  "index": 0,
+                  "longitude": 0,
+                  "trace_id": "1040g008313l16bjs38005nqa203g8ru76921580",
+                  "need_load_original_image": false,
+                  "fileid": "1040g008313l16bjs38005nqa203g8ru76921580",
+                  "width": 1179,
+                  "url": "http://sns-na-i2.xhscdn.com/1040g008313l16bjs38005nqa203g8ru76921580?imageView2/2/w/1440/format/heif/q/45&redImage/frame/0&ap=1&sc=DETAIL",
+                  "latitude": 0,
+                  "scale_to_large": 4
+                },
+                {
+                  "fileid": "1040g008313l16bjs380g5nqa203g8ru73e683do",
+                  "height": 2556,
+                  "url": "http://sns-na-i2.xhscdn.com/1040g008313l16bjs380g5nqa203g8ru73e683do?imageView2/2/w/1440/format/heif/q/45&redImage/frame/0&ap=1&sc=DETAIL",
+                  "original": "http://sns-na-i2.xhscdn.com/1040g008313l16bjs380g5nqa203g8ru73e683do?imageView2/2/w/5000/h/5000/format/heif/q/56&redImage/frame/0&ap=1&sc=ORIGINAL",
+                  "url_multi_level": {
+                    "low": "http://sns-na-i2.xhscdn.com/1040g008313l16bjs380g5nqa203g8ru73e683do?imageView2/2/w/1440/format/heif/q/75&redImage/frame/0&ap=1&sc=DETAIL",
+                    "medium": "http://sns-na-i2.xhscdn.com/1040g008313l16bjs380g5nqa203g8ru73e683do?imageView2/2/w/1440/format/heif/q/75&redImage/frame/0&ap=1&sc=DETAIL",
+                    "high": "http://sns-na-i2.xhscdn.com/1040g008313l16bjs380g5nqa203g8ru73e683do?imageView2/2/w/1440/format/heif/q/75&redImage/frame/0&ap=1&sc=DETAIL"
+                  },
+                  "latitude": 0,
+                  "need_load_original_image": false,
+                  "width": 1179,
+                  "index": 0,
+                  "longitude": 0,
+                  "trace_id": "1040g008313l16bjs380g5nqa203g8ru73e683do",
+                  "scale_to_large": 4
+                },
+                {
+                  "original": "http://sns-na-i2.xhscdn.com/1040g008313l16bjs38105nqa203g8ru7tr96u6g?imageView2/2/w/5000/h/5000/format/heif/q/56&redImage/frame/0&ap=1&sc=ORIGINAL",
+                  "index": 0,
+                  "latitude": 0,
+                  "fileid": "1040g008313l16bjs38105nqa203g8ru7tr96u6g",
+                  "width": 1179,
+                  "url_multi_level": {
+                    "medium": "http://sns-na-i2.xhscdn.com/1040g008313l16bjs38105nqa203g8ru7tr96u6g?imageView2/2/w/1440/format/heif/q/75&redImage/frame/0&ap=1&sc=DETAIL",
+                    "high": "http://sns-na-i2.xhscdn.com/1040g008313l16bjs38105nqa203g8ru7tr96u6g?imageView2/2/w/1440/format/heif/q/75&redImage/frame/0&ap=1&sc=DETAIL",
+                    "low": "http://sns-na-i2.xhscdn.com/1040g008313l16bjs38105nqa203g8ru7tr96u6g?imageView2/2/w/1440/format/heif/q/75&redImage/frame/0&ap=1&sc=DETAIL"
+                  },
+                  "longitude": 0,
+                  "trace_id": "1040g008313l16bjs38105nqa203g8ru7tr96u6g",
+                  "need_load_original_image": false,
+                  "scale_to_large": 4,
+                  "height": 2556,
+                  "url": "http://sns-na-i2.xhscdn.com/1040g008313l16bjs38105nqa203g8ru7tr96u6g?imageView2/2/w/1440/format/heif/q/45&redImage/frame/0&ap=1&sc=DETAIL"
+                }
+              ],
+              "model_type": "note",
+              "ats": [],
+              "head_tags": [],
+              "cooperate_binds": [],
+              "use_water_color": false,
+              "countdown": 0,
+              "id": "665f95200000000006005624",
+              "last_update_time": 0,
+              "shared_count": 275,
+              "mini_program_info": {
+                "user_name": "gh_52be748ce5b7",
+                "title": "@若瑶 发了一篇笔记，快点来看吧！",
+                "desc": "miu的11w真的好火但是担心会不会镜片太小显脸大哈哈哈哈哈哈 ysl是一直想买但是担心太酷了不适合我的风格 #墨镜",
+                "webpage_url": "https://www.xiaohongshu.com/discovery/item/665f95200000000006005624?xsec_source=app_share",
+                "thumb": "http://sns-na-i2.xhscdn.com/1040g008313l16bjs38005nqa203g8ru76921580?imageView2/2/w/540/format/jpg/q/75",
+                "share_title": "@若瑶 发了一篇笔记，快点来看吧！"
+              },
+              "liked": false,
+              "liked_count": 1070,
+              "collected_count": 390,
+              "note_text_press_options": [
+                {
+                  "key": "copy",
+                  "extra": ""
+                }
+              ],
+              "seeded_count": 0,
+              "liked_users": [],
+              "has_co_produce": false,
+              "enable_fls_related_cards": false,
+              "topics": [
+                {
+                  "business_type": 0,
+                  "id": "53a2e3adb4c4d61b5e953b5b",
+                  "name": "墨镜",
+                  "image": "http://ci.xiaohongshu.com/fd75707a-37f8-45ad-b7a7-0feaf36e9cad@r_120w_120h.jpg",
+                  "link": "xhsdiscover://topic/v2/5a438d9a80008606617204a0?page_source=note_feed.click_new_big",
+                  "activity_online": false,
+                  "style": 0,
+                  "discuss_num": 0
+                }
+              ],
+              "share_code_flag": 0,
+              "api_upgrade": -1,
+              "text_language_code": "zh",
+              "hash_tag": [
+                {
+                  "id": "53a2e3adb4c4d61b5e953b5b",
+                  "name": "墨镜",
+                  "type": "topic",
+                  "record_unit": "",
+                  "tag_hint": "",
+                  "link": "xhsdiscover://rn/sns-discover/topic?id=5a438d9a80008606617204a0&page_source=note_feed.click_new_big&topic_name=%E5%A2%A8%E9%95%9C&source=normal&pre_source=explore",
+                  "record_emoji": "",
+                  "record_count": 0,
+                  "current_score": 0,
+                  "bizId": ""
+                }
+              ],
+              "qq_mini_program_info": {
+                "desc": "miu的11w真的好火但是担心会不会镜片太小显脸大哈哈哈哈哈哈 ysl是一直想买但是担心太酷了不适合我的风格 #墨镜",
+                "webpage_url": "https://www.xiaohongshu.com/discovery/item/665f95200000000006005624?xsec_source=app_share",
+                "thumb": "http://sns-na-i2.xhscdn.com/1040g008313l16bjs38005nqa203g8ru76921580?imageView2/2/w/540/format/jpg/q/75",
+                "share_title": "@若瑶 发了一篇超赞的笔记，快点来看！",
+                "user_name": "gh_66c53d495417",
+                "title": "@若瑶 发了一篇超赞的笔记，快点来看！"
+              },
+              "foot_tags": [],
+              "may_have_red_packet": false,
+              "comments_count": 227
+            }
+          ]
+        }
+      ]
+    },
+    "message": null,
+    "recordTime": "2025-04-27T16:00:50.916090753"
+  }
+}
+```
+
+**401**

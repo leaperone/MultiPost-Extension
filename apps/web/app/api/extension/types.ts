@@ -33,6 +33,8 @@ export const dynamicDataSchema = z.object({
   content: z.string(),
   images: z.array(fileDataSchema).optional(),
   videos: z.array(fileDataSchema).optional(),
+  tags: z.array(z.string()).optional(),
+  scheduledPublishTime: z.number().int().positive().optional(),
 });
 
 export const articleDataSchema = z.object({
@@ -42,20 +44,35 @@ export const articleDataSchema = z.object({
   markdownContent: z.string(),
   digest: z.string().optional(),
   images: z.array(fileDataSchema).optional(),
+  tags: z.array(z.string()).optional(),
+  category: z.union([z.string(), z.number()]).optional(),
+  original: z.boolean().optional(),
+  allowComment: z.boolean().optional(),
+  scheduledPublishTime: z.number().int().positive().optional(),
 });
 
 export const videoDataSchema = z.object({
   title: z.string(),
   content: z.string(),
   video: fileDataSchema,
+  cover: fileDataSchema.optional(),
+  verticalCover: fileDataSchema.optional(),
+  horizontalCover: fileDataSchema.optional(),
   tags: z.array(z.string()).optional(),
   scheduledPublishTime: z.number().int().positive().optional(),
+  category: z.union([z.string(), z.number()]).optional(),
+  original: z.boolean().optional(),
+  collectionId: z.union([z.string(), z.number()]).optional(),
+  description: z.string().optional(),
 });
 
 export const podcastDataSchema = z.object({
   title: z.string(),
   description: z.string(),
   audio: fileDataSchema,
+  cover: fileDataSchema.optional(),
+  tags: z.array(z.string()).optional(),
+  category: z.union([z.string(), z.number()]).optional(),
 });
 
 export const draftPostSchema = z.object({

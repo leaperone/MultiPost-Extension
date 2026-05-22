@@ -1,0 +1,46 @@
+---
+title: List all clients
+description: GET /extension/clients
+---
+
+> Requires Bearer token authentication.
+
+## Endpoint
+
+```http
+GET https://api.multipost.app/extension/clients
+```
+
+## Request example
+
+```bash
+curl -X GET 'https://api.multipost.app/extension/clients' \
+  -H "Authorization: Bearer YOUR_API_KEY"
+```
+
+## Response
+
+**200** — 成功获取客户端列表
+
+```json
+{
+  "success": true,
+  "data": [
+    {
+      "id": "cm97626yy000514gpzo6z9yuh",
+      "name": "New Client 2hew2IFF",
+      "createdAt": "2025-04-07T14:28:14.411Z",
+      "updatedAt": "2025-04-17T11:42:43.513Z"
+    }
+  ]
+}
+```
+
+**401** — 未授权
+
+```json
+{
+  "success": false,
+  "error": "KEY_EXPIRED"
+}
+```

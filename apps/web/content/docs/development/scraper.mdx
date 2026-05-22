@@ -96,12 +96,12 @@ export default async function scrapeCSDNContent(): Promise<ArticleData | undefin
 
   const articleData: ArticleData = {
     title: title.trim(),
-    author: author.trim(),
-    cover,
-    content: preprocess(content.trim()),
-    digest: digest.trim()
+    digest: digest.trim() || `by ${author.trim()}`,
+    cover: { name: '', url: cover, type: 'image/*' },
+    htmlContent: preprocess(content.trim()),
+    markdownContent: '', // 留给上层 markdown 转换器填充
   };
 
   return articleData;
-} 
+}
 ```

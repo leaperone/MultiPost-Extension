@@ -1,0 +1,31 @@
+---
+title: RedNote · Get user profile
+description: GET /v1/social/rednote/profile
+---
+
+> Requires Bearer token authentication.
+
+## Endpoint
+
+```http
+GET https://api.multipost.app/v1/social/rednote/profile
+```
+
+## Query parameters
+
+| Field | Type | Required | Description |
+|---|---|---|---|
+| user_id | string |  | User ID, can be obtained from the sharing link of Xiaohongshu website. _e.g._ `5f4a10070000000001006fc7` |
+
+## Request example
+
+```bash
+curl -X GET 'https://api.multipost.app/v1/social/rednote/profile' \
+  -H "Authorization: Bearer YOUR_API_KEY"
+```
+
+## Response
+
+**200**
+
+**401**

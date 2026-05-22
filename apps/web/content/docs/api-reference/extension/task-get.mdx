@@ -1,0 +1,52 @@
+---
+title: 获取任务详情
+description: GET /extension/task
+---
+
+> 需要 Bearer Token 鉴权。
+
+## 端点
+
+```http
+GET https://api.multipost.app/extension/task
+```
+
+## 查询参数
+
+| 字段 | 类型 | 必填 | 说明 |
+|---|---|---|---|
+| taskId | string | ✓ | 任务ID |
+
+## 请求示例
+
+```bash
+curl -X GET 'https://api.multipost.app/extension/task' \
+  -H "Authorization: Bearer YOUR_API_KEY"
+```
+
+## 响应
+
+**200** — 成功获取任务详情
+
+```json
+{
+  "success": false,
+  "data": {
+    "id": "string",
+    "taskType": "PUBLISH_POST",
+    "status": "PENDING",
+    "targetClientId": "string",
+    "createdAt": "string",
+    "updatedAt": "string"
+  }
+}
+```
+
+**401** — 未授权
+
+```json
+{
+  "success": false,
+  "error": "string"
+}
+```

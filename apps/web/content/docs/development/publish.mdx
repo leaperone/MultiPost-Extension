@@ -50,11 +50,12 @@ const funcPublish = async (data: SyncData) => {
 它的原理是使用了 `chrome.tabs` 和 `chrome.scripting` 的 API 来创建标签页和注入脚本。
 
 ```ts
-// 平台信息映射，因为定义的类型比较多，所以拆分成了多个文件 article.ts、dynamic.ts、video.ts
+// 平台信息映射，因为定义的类型比较多，所以拆分成了多个文件 article.ts、dynamic.ts、video.ts、podcast.ts
 export const infoMap: Record<string, PlatformInfo> = {
   ...DynamicInfoMap,
   ...ArticleInfoMap,
   ...VideoInfoMap,
+  ...PodcastInfoMap,
 };
 
 // 获取平台信息

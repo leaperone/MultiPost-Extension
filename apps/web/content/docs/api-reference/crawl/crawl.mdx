@@ -1,0 +1,94 @@
+---
+title: 页面采集
+description: POST /v2/crawl
+---
+
+提供网址，返回可读的网页内容
+
+欢迎体验：https://multipost.app/dashboard/scraper/web
+
+## 端点
+
+```http
+POST https://api.multipost.app/v2/crawl
+```
+
+## 请求体
+
+`application/json`
+
+| 字段 | 类型 | 必填 | 说明 |
+|---|---|---|---|
+| url | string | ✓ |  |
+| targetSelector | string \| array<string> |  | 只会抓取该列表内的元素选择器，如 .class, #id |
+| removeSelector | string \| array<string> |  | 用于排除页眉、页脚等 |
+| waitForSelector | string \| array<string> |  | 在该元素出现后才返回 |
+| viewport | object |  | 用于响应式 |
+| returnFormat | enum(markdown, html, text) |  | 默认Markdown |
+
+## 请求示例
+
+```bash
+curl -X POST 'https://api.multipost.app/v2/crawl' \
+  -H "Content-Type: application/json" \
+  -d '{
+  "url": "string",
+  "targetSelector": null,
+  "removeSelector": null,
+  "waitForSelector": null,
+  "viewport": {
+    "width": 0,
+    "height": 0
+  },
+  "returnFormat": "markdown"
+}'
+```
+
+## 响应
+
+**200**
+
+```json
+{
+  "success": true,
+  "data": {
+    "images": {
+      "Image 1: MultiPost Logo": "https://multipost.app/favicon.ico",
+      "Image 2: Demo Preview": "https://multipost.app/_next/image?url=https%3A%2F%2F2someone-web-static.s3.bitiful.net%2F2025%2F04%2F40e625c0dfdc264852fc23eb3829fc79.png&w=3840&q=75"
+    },
+    "links": {
+      "MultiPost": "https://multipost.app/",
+      "Dashboard": "https://multipost.app/dashboard",
+      "Publish": "https://multipost.app/dashboard/publish",
+      "Extension": "https://multipost.app/extension",
+      "Documentation": "https://docs.multipost.app/",
+      "About": "https://multipost.app/about",
+      "Sign In": "https://multipost.app/signin",
+      "Markdown Editor": "https://md.multipost.app/",
+      "View on GitHub": "https://github.com/leaperone/MultiPost-Extension",
+      "GitHub": "https://github.com/leaperone",
+      "Voite": "https://voite.2some.one/",
+      "2SOMEone": "https://2some.one/",
+      "2SOMEren": "https://2some.ren/",
+      "Privacy Policy": "https://multipost.app/legal/privacy",
+      "Terms of Service": "https://multipost.app/legal/terms"
+    },
+    "title": "Open Source Social Media Publishing Tool",
+    "description": "MultiPost is an open source browser extension that helps you publish content to multiple social media platforms with one click. Save time and boost your social media presence.",
+    "url": "https://multipost.app/",
+    "content": "MultiPost - Open Source Social Media Publishing Tool\n===============\n\nopen navigation menu\n\n[![Image 1: MultiPost Logo](https://multipost.app/favicon.ico) MultiPost](https://multipost.app/)\n\n*   [Dashboard](https://multipost.app/dashboard)\n*   [Publish](https://multipost.app/dashboard/publish)\n*   [Extension](https://multipost.app/extension)\n*   [Documentation](https://docs.multipost.app/)\n*   [About](https://multipost.app/about)\n\n*   English\n    \n*   [Sign In](https://multipost.app/signin)\n\nDraft\n\n✍️📝✨\n\n,\n\nPost\n\n📤🚀✨\n\nand\n\nAnalytics\n\n📊📈🔍\n\nPublish content to all your social media accounts simultaneously, monitor and analyze all your websites and accountsall platforms\n\n[Go to post](https://multipost.app/dashboard/publish)[Markdown Editor](https://md.multipost.app/)[Install Extension](https://multipost.app/extension)\n\nStreamline Your Social Media Workflow\n-------------------------------------\n\nSave time and maintain consistency across all your social media platforms with our powerful features\n\n### One-Click Publishing\n\nPost to multiple platforms simultaneously with a single click\n\n### No Extra Login\n\nUses your existing browser sessions - no additional authentication needed\n\n### Platform Optimization\n\nAutomatically formats content for each platform's requirements\n\nPowerful Analytics\n------------------\n\nComprehensive data analysis to help you make informed decisions\n\n### Web Trace\n\nWeb Trace is a powerful website tracking tool that helps you understand and analyze your website traffic.\n\n#### Real-time Statistics\n\nTrack real-time website visitor data\n\n#### Visitor Analysis\n\nUnderstand visitor sources, locations, and behavior patterns\n\n#### Performance Monitoring\n\nMonitor website loading speed and performance metrics\n\n### Social Media Analytics\n\nComprehensive social media data analysis to help optimize your content strategy\n\n#### Engagement Metrics\n\nTrack likes, comments, shares, and other engagement metrics\n\n#### Audience Insights\n\nUnderstand your follower demographics and behavior\n\n#### Content Performance\n\nAnalyze performance of different content types\n\nPowerful Yet Simple\n-------------------\n\nWrite once, publish everywhere\n\nPreview how your post will look on each platform\n\nSchedule posts for optimal timing\n\nTrack post performance across platforms\n\n[Install Extension](https://multipost.app/extension)\n\n![Image 2: Demo Preview](https://multipost.app/_next/image?url=https%3A%2F%2F2someone-web-static.s3.bitiful.net%2F2025%2F04%2F40e625c0dfdc264852fc23eb3829fc79.png&w=3840&q=75)\n\nBuilt by the Community, for the Community\n-----------------------------------------\n\nMultiPost is open source and free forever. Join us in building the future of social media management.\n\n[View on GitHub](https://github.com/leaperone/MultiPost-Extension)\n\nFrequently Asked Questions\n--------------------------\n\n### How does MultiPost work?\n\nMultiPost is a browser extension that uses your existing social media logins to publish content. No need for additional authentication or API keys.\n\n### Which platforms are supported?\n\nWe currently support Twitter, Facebook, LinkedIn, Instagram, and more. The list is growing with community contributions.\n\n### Is it really free?\n\nYes! MultiPost is completely free and open source. You can use all features without any restrictions.\n\n### How can I contribute?\n\nYou can contribute by starring the repository, reporting issues, submitting pull requests, or improving documentation.\n\nStart Publishing Smarter Today\n------------------------------\n\nJoin our growing community of content creators and developers\n\n[Install Extension](https://multipost.app/extension)[Star on GitHub](https://github.com/leaperone/MultiPost-Extension)\n\nStreamline Your Social Media Workflow\n\n[GitHub](https://github.com/leaperone \"GitHub\")\n\n### Services\n\n*   [Voite](https://voite.2some.one/)\n*   [MultiPost](https://multipost.app/)\n*   [2SOMEone](https://2some.one/)\n*   [2SOMEren](https://2some.ren/)\n\n### Legal\n\n*   [Privacy Policy](https://multipost.app/legal/privacy)\n*   [Terms of Service](https://multipost.app/legal/terms)\n\n* * *\n\n© 2024 LEAPERone Inc. All rights reserved."
+  },
+  "meta": {
+    "credits": 0.0001792
+  }
+}
+```
+
+**500**
+
+```json
+{
+  "success": false,
+  "error": ""
+}
+```

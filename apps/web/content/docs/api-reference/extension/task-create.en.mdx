@@ -1,0 +1,75 @@
+---
+title: Create a publish task
+description: POST /extension/task
+---
+
+> Requires Bearer token authentication.
+
+## Endpoint
+
+```http
+POST https://api.multipost.app/extension/task
+```
+
+## Request body
+
+`application/json`
+
+| Field | Type | Required | Description |
+|---|---|---|---|
+| targetClientId | string | ✓ |  |
+| taskType | enum(PUBLISH_POST, SCHEDULE_PUBLISH_POST) | ✓ |  |
+| taskData | PublishPost \| SchedulePublishPost \| DraftPost | ✓ |  |
+
+## Request example
+
+```bash
+curl -X POST 'https://api.multipost.app/extension/task' \
+  -H "Authorization: Bearer YOUR_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+  "targetClientId": "cmd5qsrfd00036hsmokswv5ye",
+  "taskType": "DRAFT_POST",
+  "taskData": {
+    "draftId": "cmd5r2t560001itqgy7n7o0tt",
+    "platforms": [
+      {
+        "name": "DYNAMIC_X"
+      }
+    ],
+    "timestamp": 27474647
+  }
+}'
+```
+
+## Response
+
+**200** — 成功创建任务
+
+```json
+{
+  "success": false,
+  "data": {
+    "taskId": "string",
+    "status": "PENDING"
+  }
+}
+```
+
+**400** — 无效的请求数据
+
+```json
+{
+  "success": false,
+  "error": "string"
+}
+```
+
+**401** — 未授权
+
+```json
+{
+  "success": false,
+  "error": "string"
+}
+```

@@ -1,0 +1,652 @@
+---
+title: X · 获取用户推文列表
+description: GET /v1/social/x/tweets
+---
+
+从最新的开始
+
+> 需要 Bearer Token 鉴权。
+
+## 端点
+
+```http
+GET https://api.multipost.app/v1/social/x/tweets
+```
+
+## 查询参数
+
+| 字段 | 类型 | 必填 | 说明 |
+|---|---|---|---|
+| rest_id | string |  | 用户ID（如果使用用户ID则会忽略用户名） _e.g._ `44196397` |
+| screen_name | string |  | 用户名/Screen Name _e.g._ `elonmusk` |
+| cursor | string |  | 游标（用于翻页） |
+
+## 请求示例
+
+```bash
+curl -X GET 'https://api.multipost.app/v1/social/x/tweets' \
+  -H "Authorization: Bearer YOUR_API_KEY"
+```
+
+## 响应
+
+**200**
+
+```json
+{
+  "success": true,
+  "data": {
+    "timeline": [
+      {
+        "tweet_id": "1912743010443419762",
+        "bookmarks": 0,
+        "created_at": "Thu Apr 17 05:40:45 +0000 2025",
+        "favorites": 0,
+        "text": "RT @xai: 🧠",
+        "lang": "art",
+        "source": "<a href=\"http://twitter.com/download/iphone\" rel=\"nofollow\">Twitter for iPhone</a>",
+        "views": "6",
+        "quotes": 0,
+        "entities": {
+          "hashtags": [],
+          "symbols": [],
+          "timestamps": [],
+          "urls": [],
+          "user_mentions": [
+            {
+              "id_str": "1661523610111193088",
+              "name": "xAI",
+              "screen_name": "xai"
+            }
+          ]
+        },
+        "replies": 0,
+        "retweets": 1036,
+        "conversation_id": "1912743010443419762",
+        "media": [],
+        "author": {
+          "rest_id": "44196397",
+          "name": "Elon Musk",
+          "screen_name": "elonmusk",
+          "avatar": "https://pbs.twimg.com/profile_images/1893803697185910784/Na5lOWi5_normal.jpg",
+          "blue_verified": true
+        },
+        "retweeted": {
+          "id": "1912670488608088187"
+        },
+        "retweeted_tweet": {
+          "tweet_id": "1912670488608088187",
+          "bookmarks": 235,
+          "created_at": "Thu Apr 17 00:52:34 +0000 2025",
+          "favorites": 5647,
+          "text": "🧠",
+          "lang": "art",
+          "views": "893321",
+          "quotes": 58,
+          "entities": {
+            "hashtags": [],
+            "symbols": [],
+            "timestamps": [],
+            "urls": [],
+            "user_mentions": []
+          },
+          "replies": 787,
+          "retweets": 1036,
+          "conversation_id": "1912670488608088187",
+          "author": {
+            "rest_id": "1661523610111193088",
+            "name": "xAI",
+            "screen_name": "xai",
+            "avatar": "https://pbs.twimg.com/profile_images/1769430779845611520/lIgjSJGU_normal.jpg",
+            "blue_verified": false
+          },
+          "media": []
+        }
+      },
+      {
+        "tweet_id": "1912742955602845737",
+        "bookmarks": 0,
+        "created_at": "Thu Apr 17 05:40:32 +0000 2025",
+        "favorites": 0,
+        "text": "RT @KanekoaTheGreat: 🚨BREAKING: DOJ &amp; DHS release Kilmer Abrego Garcia documents.\n\nHe was arrested in the company of known MS-13 gang membe…",
+        "lang": "en",
+        "source": "<a href=\"http://twitter.com/download/iphone\" rel=\"nofollow\">Twitter for iPhone</a>",
+        "views": "1",
+        "quotes": 0,
+        "entities": {
+          "hashtags": [],
+          "symbols": [],
+          "timestamps": [],
+          "urls": [],
+          "user_mentions": [
+            {
+              "id_str": "1085225533623783424",
+              "name": "KanekoaTheGreat",
+              "screen_name": "KanekoaTheGreat"
+            }
+          ]
+        },
+        "replies": 0,
+        "retweets": 4384,
+        "conversation_id": "1912742955602845737",
+        "media": [],
+        "author": {
+          "rest_id": "44196397",
+          "name": "Elon Musk",
+          "screen_name": "elonmusk",
+          "avatar": "https://pbs.twimg.com/profile_images/1893803697185910784/Na5lOWi5_normal.jpg",
+          "blue_verified": true
+        },
+        "retweeted": {
+          "id": "1912618609794593103"
+        },
+        "retweeted_tweet": {
+          "tweet_id": "1912618609794593103",
+          "bookmarks": 1664,
+          "created_at": "Wed Apr 16 21:26:25 +0000 2025",
+          "favorites": 14983,
+          "text": "🚨BREAKING: DOJ &amp; DHS release Kilmer Abrego Garcia documents.\n\nHe was arrested in the company of known MS-13 gang members carrying marijuana and cash.\n\nA credible source confirmed he's an active MS-13 member with the rank \"Chequeo\" and the nickname \"Chele.\"\n\nIn 2021, his wife https://t.co/mPwFG7g8hZ",
+          "lang": "en",
+          "views": "941283",
+          "quotes": 392,
+          "entities": {
+            "hashtags": [],
+            "media": [
+              {
+                "display_url": "pic.x.com/mPwFG7g8hZ",
+                "expanded_url": "https://x.com/KanekoaTheGreat/status/1912618609794593103/photo/1",
+                "id_str": "1912613141634248705",
+                "indices": [
+                  280,
+                  303
+                ],
+                "media_key": "3_1912613141634248705",
+                "media_url_https": "https://pbs.twimg.com/media/Gor3hNPacAEcyiu.jpg",
+                "type": "photo",
+                "url": "https://t.co/mPwFG7g8hZ",
+                "ext_media_availability": {
+                  "status": "Available"
+                },
+                "features": {
+                  "large": {
+                    "faces": []
+                  },
+                  "medium": {
+                    "faces": []
+                  },
+                  "small": {
+                    "faces": []
+                  },
+                  "orig": {
+                    "faces": []
+                  }
+                },
+                "sizes": {
+                  "large": {
+                    "h": 1452,
+                    "w": 984,
+                    "resize": "fit"
+                  },
+                  "medium": {
+                    "h": 1200,
+                    "w": 813,
+                    "resize": "fit"
+                  },
+                  "small": {
+                    "h": 680,
+                    "w": 461,
+                    "resize": "fit"
+                  },
+                  "thumb": {
+                    "h": 150,
+                    "w": 150,
+                    "resize": "crop"
+                  }
+                },
+                "original_info": {
+                  "height": 1452,
+                  "width": 984,
+                  "focus_rects": [
+                    {
+                      "x": 0,
+                      "y": 901,
+                      "w": 984,
+                      "h": 551
+                    },
+                    {
+                      "x": 0,
+                      "y": 468,
+                      "w": 984,
+                      "h": 984
+                    },
+                    {
+                      "x": 0,
+                      "y": 330,
+                      "w": 984,
+                      "h": 1122
+                    },
+                    {
+                      "x": 129,
+                      "y": 0,
+                      "w": 726,
+                      "h": 1452
+                    },
+                    {
+                      "x": 0,
+                      "y": 0,
+                      "w": 984,
+                      "h": 1452
+                    }
+                  ]
+                },
+                "media_results": {
+                  "result": {
+                    "media_key": "3_1912613141634248705"
+                  }
+                }
+              },
+              {
+                "display_url": "pic.x.com/mPwFG7g8hZ",
+                "expanded_url": "https://x.com/KanekoaTheGreat/status/1912618609794593103/photo/1",
+                "id_str": "1912613746910146560",
+                "indices": [
+                  280,
+                  303
+                ],
+                "media_key": "3_1912613746910146560",
+                "media_url_https": "https://pbs.twimg.com/media/Gor4EcEbsAASXnL.jpg",
+                "type": "photo",
+                "url": "https://t.co/mPwFG7g8hZ",
+                "ext_media_availability": {
+                  "status": "Available"
+                },
+                "features": {
+                  "large": {
+                    "faces": []
+                  },
+                  "medium": {
+                    "faces": []
+                  },
+                  "small": {
+                    "faces": []
+                  },
+                  "orig": {
+                    "faces": []
+                  }
+                },
+                "sizes": {
+                  "large": {
+                    "h": 571,
+                    "w": 939,
+                    "resize": "fit"
+                  },
+                  "medium": {
+                    "h": 571,
+                    "w": 939,
+                    "resize": "fit"
+                  },
+                  "small": {
+                    "h": 414,
+                    "w": 680,
+                    "resize": "fit"
+                  },
+                  "thumb": {
+                    "h": 150,
+                    "w": 150,
+                    "resize": "crop"
+                  }
+                },
+                "original_info": {
+                  "height": 571,
+                  "width": 939,
+                  "focus_rects": [
+                    {
+                      "x": 0,
+                      "y": 45,
+                      "w": 939,
+                      "h": 526
+                    },
+                    {
+                      "x": 184,
+                      "y": 0,
+                      "w": 571,
+                      "h": 571
+                    },
+                    {
+                      "x": 219,
+                      "y": 0,
+                      "w": 501,
+                      "h": 571
+                    },
+                    {
+                      "x": 326,
+                      "y": 0,
+                      "w": 286,
+                      "h": 571
+                    },
+                    {
+                      "x": 0,
+                      "y": 0,
+                      "w": 939,
+                      "h": 571
+                    }
+                  ]
+                },
+                "media_results": {
+                  "result": {
+                    "media_key": "3_1912613746910146560"
+                  }
+                }
+              },
+              {
+                "display_url": "pic.x.com/mPwFG7g8hZ",
+                "expanded_url": "https://x.com/KanekoaTheGreat/status/1912618609794593103/photo/1",
+                "id_str": "1912615687710978048",
+                "indices": [
+                  280,
+                  303
+                ],
+                "media_key": "3_1912615687710978048",
+                "media_url_https": "https://pbs.twimg.com/media/Gor51aHaMAAwsU6.png",
+                "type": "photo",
+                "url": "https://t.co/mPwFG7g8hZ",
+                "ext_media_availability": {
+                  "status": "Available"
+                },
+                "features": {
+                  "large": {
+                    "faces": []
+                  },
+                  "medium": {
+                    "faces": []
+                  },
+                  "small": {
+                    "faces": []
+                  },
+                  "orig": {
+                    "faces": []
+                  }
+                },
+                "sizes": {
+                  "large": {
+                    "h": 800,
+                    "w": 612,
+                    "resize": "fit"
+                  },
+                  "medium": {
+                    "h": 800,
+                    "w": 612,
+                    "resize": "fit"
+                  },
+                  "small": {
+                    "h": 680,
+                    "w": 520,
+                    "resize": "fit"
+                  },
+                  "thumb": {
+                    "h": 150,
+                    "w": 150,
+                    "resize": "crop"
+                  }
+                },
+                "original_info": {
+                  "height": 800,
+                  "width": 612,
+                  "focus_rects": [
+                    {
+                      "x": 0,
+                      "y": 0,
+                      "w": 612,
+                      "h": 343
+                    },
+                    {
+                      "x": 0,
+                      "y": 0,
+                      "w": 612,
+                      "h": 612
+                    },
+                    {
+                      "x": 0,
+                      "y": 0,
+                      "w": 612,
+                      "h": 698
+                    },
+                    {
+                      "x": 99,
+                      "y": 0,
+                      "w": 400,
+                      "h": 800
+                    },
+                    {
+                      "x": 0,
+                      "y": 0,
+                      "w": 612,
+                      "h": 800
+                    }
+                  ]
+                },
+                "media_results": {
+                  "result": {
+                    "media_key": "3_1912615687710978048"
+                  }
+                }
+              },
+              {
+                "display_url": "pic.x.com/mPwFG7g8hZ",
+                "expanded_url": "https://x.com/KanekoaTheGreat/status/1912618609794593103/photo/1",
+                "id_str": "1912616627373502464",
+                "indices": [
+                  280,
+                  303
+                ],
+                "media_key": "3_1912616627373502464",
+                "media_url_https": "https://pbs.twimg.com/media/Gor6sGoacAAmyfI.png",
+                "type": "photo",
+                "url": "https://t.co/mPwFG7g8hZ",
+                "ext_media_availability": {
+                  "status": "Available"
+                },
+                "features": {
+                  "large": {
+                    "faces": [
+                      {
+                        "x": 74,
+                        "y": 122,
+                        "h": 141,
+                        "w": 141
+                      }
+                    ]
+                  },
+                  "medium": {
+                    "faces": [
+                      {
+                        "x": 74,
+                        "y": 122,
+                        "h": 141,
+                        "w": 141
+                      }
+                    ]
+                  },
+                  "small": {
+                    "faces": [
+                      {
+                        "x": 74,
+                        "y": 122,
+                        "h": 141,
+                        "w": 141
+                      }
+                    ]
+                  },
+                  "orig": {
+                    "faces": [
+                      {
+                        "x": 74,
+                        "y": 122,
+                        "h": 141,
+                        "w": 141
+                      }
+                    ]
+                  }
+                },
+                "sizes": {
+                  "large": {
+                    "h": 335,
+                    "w": 370,
+                    "resize": "fit"
+                  },
+                  "medium": {
+                    "h": 335,
+                    "w": 370,
+                    "resize": "fit"
+                  },
+                  "small": {
+                    "h": 335,
+                    "w": 370,
+                    "resize": "fit"
+                  },
+                  "thumb": {
+                    "h": 150,
+                    "w": 150,
+                    "resize": "crop"
+                  }
+                },
+                "original_info": {
+                  "height": 335,
+                  "width": 370,
+                  "focus_rects": [
+                    {
+                      "x": 0,
+                      "y": 54,
+                      "w": 370,
+                      "h": 207
+                    },
+                    {
+                      "x": 35,
+                      "y": 0,
+                      "w": 335,
+                      "h": 335
+                    },
+                    {
+                      "x": 76,
+                      "y": 0,
+                      "w": 294,
+                      "h": 335
+                    },
+                    {
+                      "x": 147,
+                      "y": 0,
+                      "w": 168,
+                      "h": 335
+                    },
+                    {
+                      "x": 0,
+                      "y": 0,
+                      "w": 370,
+                      "h": 335
+                    }
+                  ]
+                },
+                "media_results": {
+                  "result": {
+                    "media_key": "3_1912616627373502464"
+                  }
+                }
+              }
+            ],
+            "symbols": [],
+            "timestamps": [],
+            "urls": [],
+            "user_mentions": []
+          },
+          "replies": 635,
+          "retweets": 4384,
+          "conversation_id": "1912618609794593103",
+          "author": {
+            "rest_id": "1085225533623783424",
+            "name": "KanekoaTheGreat",
+            "screen_name": "KanekoaTheGreat",
+            "avatar": "https://pbs.twimg.com/profile_images/1612188077333835776/qxjhM55m_normal.jpg",
+            "blue_verified": true
+          },
+          "media": {
+            "photo": [
+              {
+                "media_url_https": "https://pbs.twimg.com/media/Gor3hNPacAEcyiu.jpg",
+                "id": "1912613141634248705",
+                "sizes": {
+                  "h": 1200,
+                  "w": 813
+                }
+              },
+              {
+                "media_url_https": "https://pbs.twimg.com/media/Gor4EcEbsAASXnL.jpg",
+                "id": "1912613746910146560",
+                "sizes": {
+                  "h": 571,
+                  "w": 939
+                }
+              },
+              {
+                "media_url_https": "https://pbs.twimg.com/media/Gor51aHaMAAwsU6.png",
+                "id": "1912615687710978048",
+                "sizes": {
+                  "h": 800,
+                  "w": 612
+                }
+              },
+              {
+                "media_url_https": "https://pbs.twimg.com/media/Gor6sGoacAAmyfI.png",
+                "id": "1912616627373502464",
+                "sizes": {
+                  "h": 335,
+                  "w": 370
+                }
+              }
+            ]
+          }
+        }
+      }
+    ],
+    "next_cursor": "DAAHCgABGouT1gC__-sLAAIAAAATMTkxMjM0ODIwMjg0MzczODQ4NggAAwAAAAIAAA",
+    "prev_cursor": "DAAHCgABGouT1gDAJxELAAIAAAATMTkxMjc0MzAxMDQ0MzQxOTc2MggAAwAAAAEAAA",
+    "status": "ok",
+    "user": {
+      "status": "active",
+      "profile": "elonmusk",
+      "rest_id": "44196397",
+      "blue_verified": true,
+      "affiliates": {
+        "label": {
+          "url": {
+            "url": "https://twitter.com/X",
+            "urlType": "DeepLink"
+          },
+          "badge": {
+            "url": "https://pbs.twimg.com/profile_images/1683899100922511378/5lY42eHs_bigger.jpg"
+          },
+          "description": "X",
+          "userLabelType": "BusinessLabel",
+          "userLabelDisplayType": "Badge"
+        }
+      },
+      "business_account": [],
+      "avatar": "https://pbs.twimg.com/profile_images/1893803697185910784/Na5lOWi5_normal.jpg",
+      "header_image": "https://pbs.twimg.com/profile_banners/44196397/1739948056",
+      "desc": "",
+      "name": "Elon Musk",
+      "protected": null,
+      "location": "",
+      "friends": 1108,
+      "sub_count": 219181481,
+      "statuses_count": 77068,
+      "media_count": 3781,
+      "created_at": "Tue Jun 02 20:12:29 +0000 2009",
+      "pinned_tweet_ids_str": [],
+      "id": "44196397"
+    }
+  },
+  "meta": {
+    "credits": 0.01
+  }
+}
+```

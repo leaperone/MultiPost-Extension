@@ -34,6 +34,7 @@ import dynamic from 'next/dynamic';
 import Image from 'next/image';
 import type { FileData, SyncData } from '@/lib/extension';
 import PlatformCheckbox from '../components/PlatformCheckbox';
+import HeroTagInput from '../components/HeroTagInput';
 import { funcPublish, getPlatformInfos } from '@/lib/extension';
 import type { PlatformInfo } from '@/lib/extension';
 import { useTranslation } from '@/i18n/client';
@@ -55,88 +56,6 @@ const ReactPlayer = dynamic(() => import('react-player'), {
   ssr: false,
 });
 
-const HeroTagInput = React.forwardRef<
-  HTMLInputElement,
-  {
-    value: string[];
-    onChange: (value: string[]) => void;
-    placeholder?: string;
-    className?: string;
-  }
->(({ value, onChange, placeholder, className, ...props }, ref) => {
-  const { t } = useTranslation('publish');
-
-  const [inputValue, setInputValue] = React.useState('');
-
-  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'Enter' || e.key === ',') {
-      e.preventDefault();
-      addTag();
-    } else if (e.key === 'Backspace' && !inputValue && value.length > 0) {
-      onChange(value.slice(0, -1));
-    }
-  };
-
-  const addTag = () => {
-    const newTag = inputValue.trim();
-    if (newTag && !value.includes(newTag)) {
-      onChange([...value, newTag]);
-      setInputValue('');
-    }
-  };
-
-  const removeTag = (tagToRemove: string) => {
-    onChange(value.filter((tag) => tag !== tagToRemove));
-  };
-
-  return (
-    <div
-      className={cn(
-        'mt-4 flex min-h-10 w-full flex-wrap items-center gap-2 rounded-md bg-transparent px-0 py-2 text-sm',
-        className,
-      )}>
-      {value.map((tag) => (
-        <Chip
-          key={tag}
-          size="sm"
-          variant="flat"
-          color="primary"
-          onClose={() => removeTag(tag)}
-          className="text-sm">
-          {tag}
-        </Chip>
-      ))}
-      <div className="flex flex-1 items-center">
-        <Input
-          ref={ref}
-          type="text"
-          value={inputValue}
-          onChange={(e) => setInputValue(e.target.value)}
-          onKeyDown={handleKeyDown}
-          variant="underlined"
-          className="flex-1 px-0"
-          placeholder={value.length === 0 ? placeholder : ''}
-          classNames={{
-            input: 'text-foreground/90',
-          }}
-          {...props}
-        />
-        {inputValue.trim() && (
-          <Button
-            isIconOnly
-            variant="light"
-            size="sm"
-            onPress={addTag}
-            title={t('video.addTag', '添加标签')}>
-            <PlusIcon className="size-4" />
-          </Button>
-        )}
-      </div>
-    </div>
-  );
-});
-HeroTagInput.displayName = 'HeroTagInput';
-
 export default function VideoPage() {
   const { t } = useTranslation('publish');
   const router = useRouter();
@@ -152,6 +71,13 @@ export default function VideoPage() {
   const selectedPlatforms = isHydrated ? videoPlatforms : [];
   const [platforms, setPlatforms] = useState<PlatformInfo[]>([]);
   const [tags, setTags] = useState<string[]>([]);
+  const [description, setDescription] = useState<string>('');
+  const [category, setCategory] = useState<string>('');
+  const [original, setOriginal] = useState<boolean>(false);
+  const [horizontalCoverFile, setHorizontalCoverFile] = useState<FileData | null>(null);
+  const [verticalCoverFile, setVerticalCoverFile] = useState<FileData | null>(null);
+  const horizontalCoverInputRef = useRef<HTMLInputElement>(null);
+  const verticalCoverInputRef = useRef<HTMLInputElement>(null);
   const [scheduleEnabled, setScheduleEnabled] = useState<boolean>(false);
   const [scheduledDateTime, setScheduledDateTime] = useState<CalendarDateTime | null>(null);
   const [isDraggingOver, setIsDraggingOver] = useState(false);
@@ -291,8 +217,14 @@ export default function VideoPage() {
     if (coverInputRef.current) {
       coverInputRef.current.value = '';
     }
+    handleRemoveHorizontalCover();
+    handleRemoveVerticalCover();
     setTitle('');
     setContent('');
+    setTags([]);
+    setDescription('');
+    setCategory('');
+    setOriginal(false);
     clearVideoPlatforms();
   };
 
@@ -329,6 +261,29 @@ export default function VideoPage() {
     if (coverInputRef.current) {
       coverInputRef.current.value = '';
     }
+  };
+
+  const makeCoverChangeHandler =
+    (setter: (file: FileData | null) => void) => (event: React.ChangeEvent<HTMLInputElement>) => {
+      const selectedFile = event.target.files?.[0];
+      if (selectedFile && selectedFile.type.startsWith('image/')) {
+        setter({
+          name: selectedFile.name,
+          url: URL.createObjectURL(selectedFile),
+          type: selectedFile.type,
+          size: selectedFile.size,
+        });
+      }
+    };
+  const handleHorizontalCoverChange = makeCoverChangeHandler(setHorizontalCoverFile);
+  const handleVerticalCoverChange = makeCoverChangeHandler(setVerticalCoverFile);
+  const handleRemoveHorizontalCover = () => {
+    setHorizontalCoverFile(null);
+    if (horizontalCoverInputRef.current) horizontalCoverInputRef.current.value = '';
+  };
+  const handleRemoveVerticalCover = () => {
+    setVerticalCoverFile(null);
+    if (verticalCoverInputRef.current) verticalCoverInputRef.current.value = '';
   };
 
   const handlePublish = async () => {
@@ -380,8 +335,13 @@ export default function VideoPage() {
         content,
         video: videoFile,
         cover: coverFile || undefined,
+        horizontalCover: horizontalCoverFile || undefined,
+        verticalCover: verticalCoverFile || undefined,
         tags,
         scheduledPublishTime,
+        description: description || undefined,
+        category: category || undefined,
+        original,
       },
       isAutoPublish: false,
     };
@@ -615,6 +575,111 @@ export default function VideoPage() {
                     onChange={setTags}
                     placeholder={t('video.tags')}
                   />
+
+                  <Accordion
+                    isCompact
+                    variant="light"
+                    selectionMode="single">
+                    <AccordionItem
+                      key="advanced"
+                      title={t('video.advanced', '高级选项')}
+                      className="py-1">
+                      <div className="flex flex-col gap-3">
+                        <Textarea
+                          isClearable
+                          variant="underlined"
+                          placeholder={t('video.descriptionField', '描述（独立于正文，部分平台使用）')}
+                          value={description}
+                          onChange={(e) => setDescription(e.target.value)}
+                          onClear={() => setDescription('')}
+                          minRows={3}
+                          classNames={{ input: 'text-foreground/90' }}
+                        />
+                        <Input
+                          isClearable
+                          variant="underlined"
+                          placeholder={t('video.category', '分区/分类（平台 ID 或名称）')}
+                          value={category}
+                          onChange={(e) => setCategory(e.target.value)}
+                          onClear={() => setCategory('')}
+                          classNames={{ input: 'text-foreground/90' }}
+                        />
+                        <Checkbox
+                          isSelected={original}
+                          onValueChange={setOriginal}>
+                          {t('video.original', '声明为原创')}
+                        </Checkbox>
+
+                        <div className="flex flex-col gap-2">
+                          <p className="text-sm text-foreground/70">{t('video.horizontalCover', '横版封面')}</p>
+                          {!horizontalCoverFile ? (
+                            <>
+                              <input
+                                type="file"
+                                ref={horizontalCoverInputRef}
+                                accept="image/*"
+                                onChange={handleHorizontalCoverChange}
+                                className="hidden"
+                              />
+                              <Button
+                                variant="bordered"
+                                size="sm"
+                                onPress={() => horizontalCoverInputRef.current?.click()}>
+                                <ImageIcon className="mr-2 size-4" />
+                                {t('video.uploadHorizontalCover', '上传横版封面')}
+                              </Button>
+                            </>
+                          ) : (
+                            <div className="flex items-center justify-between gap-2 text-sm text-foreground/60">
+                              <span className="truncate">{horizontalCoverFile.name}</span>
+                              <Button
+                                isIconOnly
+                                size="sm"
+                                variant="light"
+                                color="danger"
+                                onPress={handleRemoveHorizontalCover}>
+                                <XIcon className="size-4" />
+                              </Button>
+                            </div>
+                          )}
+                        </div>
+
+                        <div className="flex flex-col gap-2">
+                          <p className="text-sm text-foreground/70">{t('video.verticalCover', '竖版封面')}</p>
+                          {!verticalCoverFile ? (
+                            <>
+                              <input
+                                type="file"
+                                ref={verticalCoverInputRef}
+                                accept="image/*"
+                                onChange={handleVerticalCoverChange}
+                                className="hidden"
+                              />
+                              <Button
+                                variant="bordered"
+                                size="sm"
+                                onPress={() => verticalCoverInputRef.current?.click()}>
+                                <ImageIcon className="mr-2 size-4" />
+                                {t('video.uploadVerticalCover', '上传竖版封面')}
+                              </Button>
+                            </>
+                          ) : (
+                            <div className="flex items-center justify-between gap-2 text-sm text-foreground/60">
+                              <span className="truncate">{verticalCoverFile.name}</span>
+                              <Button
+                                isIconOnly
+                                size="sm"
+                                variant="light"
+                                color="danger"
+                                onPress={handleRemoveVerticalCover}>
+                                <XIcon className="size-4" />
+                              </Button>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </AccordionItem>
+                  </Accordion>
                 </Card>
 
                 <Button

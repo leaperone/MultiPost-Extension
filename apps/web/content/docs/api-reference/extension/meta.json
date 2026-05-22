@@ -1,0 +1,10 @@
+{
+  "title": "Extension API",
+  "pages": [
+    "clients",
+    "client-get",
+    "client-update",
+    "task-create",
+    "task-get"
+  ]
+}

@@ -1,0 +1,75 @@
+---
+title: 创建发布任务
+description: POST /extension/task
+---
+
+> 需要 Bearer Token 鉴权。
+
+## 端点
+
+```http
+POST https://api.multipost.app/extension/task
+```
+
+## 请求体
+
+`application/json`
+
+| 字段 | 类型 | 必填 | 说明 |
+|---|---|---|---|
+| targetClientId | string | ✓ |  |
+| taskType | enum(PUBLISH_POST, SCHEDULE_PUBLISH_POST) | ✓ |  |
+| taskData | PublishPost \| SchedulePublishPost \| DraftPost | ✓ |  |
+
+## 请求示例
+
+```bash
+curl -X POST 'https://api.multipost.app/extension/task' \
+  -H "Authorization: Bearer YOUR_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+  "targetClientId": "cmd5qsrfd00036hsmokswv5ye",
+  "taskType": "DRAFT_POST",
+  "taskData": {
+    "draftId": "cmd5r2t560001itqgy7n7o0tt",
+    "platforms": [
+      {
+        "name": "DYNAMIC_X"
+      }
+    ],
+    "timestamp": 27474647
+  }
+}'
+```
+
+## 响应
+
+**200** — 成功创建任务
+
+```json
+{
+  "success": false,
+  "data": {
+    "taskId": "string",
+    "status": "PENDING"
+  }
+}
+```
+
+**400** — 无效的请求数据
+
+```json
+{
+  "success": false,
+  "error": "string"
+}
+```
+
+**401** — 未授权
+
+```json
+{
+  "success": false,
+  "error": "string"
+}
+```

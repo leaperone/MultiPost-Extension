@@ -1,0 +1,70 @@
+---
+title: Search
+description: POST /v1/search
+---
+
+提供搜索关键词，返回搜索结果
+
+欢迎体验：https://multipost.app/dashboard/scraper/search
+
+> Requires Bearer token authentication.
+
+## Endpoint
+
+```http
+POST https://api.multipost.app/v1/search
+```
+
+## Request body
+
+`application/json`
+
+| Field | Type | Required | Description |
+|---|---|---|---|
+| q | string | ✓ | 搜索关键词 |
+| num | integer |  | 数量越多消耗Credit越多 |
+| page | string |  |  |
+| site | string |  | 只搜索某网址或某域下面的内容 |
+| hl | string |  | 两位，如en、fr、ja、zh-cn |
+
+## Request example
+
+```bash
+curl -X POST 'https://api.multipost.app/v1/search' \
+  -H "Authorization: Bearer YOUR_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+  "q": "string",
+  "num": 0,
+  "page": "string",
+  "site": "string",
+  "hl": "string"
+}'
+```
+
+## Response
+
+**200**
+
+```json
+{
+  "success": true,
+  "data": [
+    {
+      "title": "Open Source Social Media Publishing Tool",
+      "url": "https://multipost.app/"
+    },
+    {
+      "title": "Vista® MultiPost Therapy Collar - Aspen Medical Products",
+      "url": "https://www.aspenmp.com/products/vistar-multipost-therapy-collar"
+    },
+    {
+      "title": "MultiPost - Chrome Web Store",
+      "url": "https://chromewebstore.google.com/detail/multipost/dhohkaclnjgcikfoaacfgijgjgceofih?hl=en"
+    }
+  ],
+  "meta": {
+    "credits": 0.0020004
+  }
+}
+```

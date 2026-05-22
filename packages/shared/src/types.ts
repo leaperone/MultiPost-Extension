@@ -49,6 +49,9 @@ export type PlatformType =
   | 'yidian'
   | 'pinduoduo'
   | 'vivovideo'
+  | 'iqiyi'
+  | 'youku'
+  | 'tencentvideo'
   // 文章平台
   | 'csdn'
   | 'jianshu'
@@ -56,6 +59,19 @@ export type PlatformType =
   | 'sspai'
   | '51cto'
   | 'wordpress'
+  | 'medium'
+  | 'oschina'
+  | 'infoq'
+  | 'smzdm'
+  | 'woshipm'
+  | 'autohome'
+  // 播客平台
+  | 'qqmusic'
+  | 'lizhi'
+  | 'ximalaya'
+  | 'xiaoyuzhou'
+  | 'qingting'
+  | 'neteasepodcast'
 
 export interface PlatformInfo {
   id: PlatformType
@@ -83,6 +99,8 @@ export interface DynamicData {
   content: string
   images: FileData[]
   videos: FileData[]
+  tags?: string[]
+  scheduledPublishTime?: number
 }
 
 export interface VideoData {
@@ -92,7 +110,12 @@ export interface VideoData {
   tags?: string[]
   cover?: FileData
   verticalCover?: FileData
+  horizontalCover?: FileData
   scheduledPublishTime?: number
+  category?: string | number
+  original?: boolean
+  collectionId?: string | number
+  description?: string
 }
 
 export interface ArticleData {
@@ -102,12 +125,20 @@ export interface ArticleData {
   htmlContent: string
   markdownContent: string
   images?: FileData[]
+  tags?: string[]
+  category?: string | number
+  original?: boolean
+  allowComment?: boolean
+  scheduledPublishTime?: number
 }
 
 export interface PodcastData {
   title: string
   description: string
   audio: FileData
+  cover?: FileData
+  tags?: string[]
+  category?: string | number
 }
 
 export type SyncContentData = DynamicData | VideoData | ArticleData | PodcastData

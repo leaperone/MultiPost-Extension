@@ -18,6 +18,8 @@ export interface DynamicData {
   content: string;
   images: FileData[];
   videos: FileData[];
+  tags?: string[];
+  scheduledPublishTime?: number;
 }
 
 export interface FileData {
@@ -37,6 +39,11 @@ export interface ArticleData {
   htmlContent: string;
   markdownContent: string;
   images?: FileData[];
+  tags?: string[];
+  category?: string | number;
+  original?: boolean;
+  allowComment?: boolean;
+  scheduledPublishTime?: number;
 }
 
 export interface VideoData {
@@ -44,14 +51,24 @@ export interface VideoData {
   content: string;
   video: FileData;
   cover?: FileData;
+  verticalCover?: FileData;
+  horizontalCover?: FileData;
   tags: string[];
   scheduledPublishTime?: number;
+  category?: string | number;
+  original?: boolean;
+  collectionId?: string | number;
+  description?: string;
+  videoFile?: File;
 }
 
 export interface PodcastData {
   title: string;
   description: string;
   audio: FileData;
+  cover?: FileData;
+  tags?: string[];
+  category?: string | number;
 }
 
 export interface PlatformInfo {

@@ -1,0 +1,61 @@
+---
+title: 更新客户端
+description: PUT /extension/client
+---
+
+> 需要 Bearer Token 鉴权。
+
+## 端点
+
+```http
+PUT https://api.multipost.app/extension/client
+```
+
+## 请求体
+
+`application/json`
+
+| 字段 | 类型 | 必填 | 说明 |
+|---|---|---|---|
+| clientId | string | ✓ |  |
+| name | string | ✓ |  |
+
+## 请求示例
+
+```bash
+curl -X PUT 'https://api.multipost.app/extension/client' \
+  -H "Authorization: Bearer YOUR_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+  "clientId": "string",
+  "name": "string"
+}'
+```
+
+## 响应
+
+**200** — 成功更新客户端信息
+
+```json
+{
+  "success": false,
+  "data": {
+    "id": "string",
+    "name": "string",
+    "createdAt": "string",
+    "updatedAt": "string",
+    "platformInfos": [
+      {}
+    ]
+  }
+}
+```
+
+**401** — 未授权
+
+```json
+{
+  "success": false,
+  "error": "string"
+}
+```

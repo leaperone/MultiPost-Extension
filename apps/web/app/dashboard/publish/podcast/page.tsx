@@ -15,6 +15,7 @@ import {
   SendHorizontal,
   Eraser,
   UploadIcon,
+  ImageIcon,
 } from 'lucide-react';
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { useTranslation } from '@/i18n/client';
@@ -26,6 +27,7 @@ import type { FileData, SyncData } from '@/lib/extension';
 
 import { funcPublish, getPlatformInfos } from '@/lib/extension';
 import PlatformCheckbox from '../components/PlatformCheckbox';
+import HeroTagInput from '../components/HeroTagInput';
 import { useHydration } from '@/hooks/useHydration';
 import { usePlatformStore } from '@/store/publish.store';
 import { getPlatformExtraConfigList } from '../action';
@@ -88,6 +90,27 @@ export default function PodcastPage() {
   const [autoPublish, setAutoPublish] = useState<boolean>(false);
   const [platforms, setPlatforms] = useState<PlatformInfo[]>([]);
   const [isDraggingOver, setIsDraggingOver] = useState(false);
+  const [coverFile, setCoverFile] = useState<FileData | null>(null);
+  const [tags, setTags] = useState<string[]>([]);
+  const [category, setCategory] = useState<string>('');
+  const coverInputRef = useRef<HTMLInputElement>(null);
+
+  const handleCoverFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const selectedFile = event.target.files?.[0];
+    if (selectedFile && selectedFile.type.startsWith('image/')) {
+      setCoverFile({
+        name: selectedFile.name,
+        url: URL.createObjectURL(selectedFile),
+        type: selectedFile.type,
+        size: selectedFile.size,
+      });
+    }
+  };
+
+  const handleRemoveCover = () => {
+    setCoverFile(null);
+    if (coverInputRef.current) coverInputRef.current.value = '';
+  };
 
   const steps = [
     {
@@ -254,6 +277,9 @@ export default function PodcastPage() {
         title,
         description,
         audio,
+        cover: coverFile || undefined,
+        tags,
+        category: category || undefined,
       },
       isAutoPublish: autoPublish,
     };
@@ -281,6 +307,9 @@ export default function PodcastPage() {
     setAudio(null);
     setTitle('');
     setDescription('');
+    handleRemoveCover();
+    setTags([]);
+    setCategory('');
     clearPodcastPlatforms();
     setAutoPublish(false);
   };
@@ -436,6 +465,57 @@ export default function PodcastPage() {
                       input: 'text-foreground/90',
                     }}
                   />
+
+                  <HeroTagInput
+                    value={tags}
+                    onChange={setTags}
+                    placeholder={t('podcast.tags', '添加标签（回车确认）')}
+                  />
+
+                  <div className="mt-4 flex flex-col gap-3">
+                    <Input
+                      isClearable
+                      variant="underlined"
+                      placeholder={t('podcast.category', '分类（平台 ID 或名称）')}
+                      value={category}
+                      onChange={(e) => setCategory(e.target.value)}
+                      onClear={() => setCategory('')}
+                      classNames={{ input: 'text-foreground/90' }}
+                    />
+                    <div className="flex flex-col gap-2">
+                      <p className="text-sm text-foreground/70">{t('podcast.cover', '封面')}</p>
+                      {!coverFile ? (
+                        <>
+                          <input
+                            type="file"
+                            ref={coverInputRef}
+                            accept="image/*"
+                            onChange={handleCoverFileChange}
+                            className="hidden"
+                          />
+                          <Button
+                            variant="bordered"
+                            size="sm"
+                            onPress={() => coverInputRef.current?.click()}>
+                            <ImageIcon className="mr-2 size-4" />
+                            {t('podcast.uploadCover', '上传封面')}
+                          </Button>
+                        </>
+                      ) : (
+                        <div className="flex items-center justify-between gap-2 text-sm text-foreground/60">
+                          <span className="truncate">{coverFile.name}</span>
+                          <Button
+                            isIconOnly
+                            size="sm"
+                            variant="light"
+                            color="danger"
+                            onPress={handleRemoveCover}>
+                            <XIcon className="size-4" />
+                          </Button>
+                        </div>
+                      )}
+                    </div>
+                  </div>
                 </Card>
 
                 <Button

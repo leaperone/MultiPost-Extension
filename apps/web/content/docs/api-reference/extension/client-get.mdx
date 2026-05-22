@@ -1,0 +1,73 @@
+---
+title: 获取单个客户端详情
+description: GET /extension/client
+---
+
+> 需要 Bearer Token 鉴权。
+
+## 端点
+
+```http
+GET https://api.multipost.app/extension/client
+```
+
+## 查询参数
+
+| 字段 | 类型 | 必填 | 说明 |
+|---|---|---|---|
+| clientId | string | ✓ | 客户端ID _e.g._ `cm97626yy000514gpzo6z9yuh` |
+
+## 请求示例
+
+```bash
+curl -X GET 'https://api.multipost.app/extension/client' \
+  -H "Authorization: Bearer YOUR_API_KEY"
+```
+
+## 响应
+
+**200** — 成功获取客户端详情
+
+```json
+{
+  "success": true,
+  "data": {
+    "id": "cm97626yy000514gpzo6z9yuh",
+    "name": "New Client 2hew2IFF",
+    "createdAt": "2025-04-07T14:28:14.411Z",
+    "updatedAt": "2025-04-17T11:42:43.513Z",
+    "platformInfos": [
+      {
+        "name": "DYNAMIC_BILIBILI",
+        "tags": [
+          "CN"
+        ],
+        "type": "DYNAMIC",
+        "homeUrl": "https://t.bilibili.com",
+        "injectUrl": "https://t.bilibili.com",
+        "accountKey": "bilibili",
+        "faviconUrl": "https://static.hdslb.com/images/favicon.ico",
+        "accountInfo": {
+          "provider": "bilibili",
+          "username": "maomao",
+          "accountId": 333333,
+          "avatarUrl": "https://i2.hdslb.com/bfs/face/noface.jpg",
+          "profileUrl": "https://space.bilibili.com/333333",
+          "description": ""
+        },
+        "iconifyIcon": "ant-design:bilibili-outlined",
+        "platformName": "哔哩哔哩"
+      }
+    ]
+  }
+}
+```
+
+**401** — 未授权
+
+```json
+{
+  "success": false,
+  "error": "string"
+}
+```

@@ -3,6 +3,22 @@
   "description": "How to use the API of MultiPost",
   "root": true,
   "pages": [
-    "index"
+    "---入门---",
+    "index",
+    "authentication",
+    "---Extension---",
+    "...extension",
+    "---Reader---",
+    "...reader",
+    "---Search---",
+    "...search",
+    "---Crawler---",
+    "...crawl",
+    "---Social Media---",
+    "...social-media",
+    "---Speech To Text---",
+    "...stt",
+    "---File Hosting---",
+    "...file"
   ]
 }

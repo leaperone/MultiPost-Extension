@@ -68,6 +68,7 @@ import type { PlatformInfo } from '@/lib/extension';
 
 import { funcPublish, getPlatformInfos } from '@/lib/extension';
 import PlatformCheckbox from '../components/PlatformCheckbox';
+import HeroTagInput from '../components/HeroTagInput';
 import { useHydration } from '@/hooks/useHydration';
 import { usePlatformStore } from '@/store/publish.store';
 import { getPlatformExtraConfigList } from '../action';
@@ -228,6 +229,7 @@ export default function DynamicPage() {
   const [videos, setVideos] = useState<FileData[]>([]);
   const [title, setTitle] = useState<string>('');
   const [content, setContent] = useState<string>('');
+  const [tags, setTags] = useState<string[]>([]);
   const { dynamicPlatforms, setDynamicPlatforms, clearDynamicPlatforms } = usePlatformStore();
   const isHydrated = useHydration();
   const selectedPlatforms = isHydrated ? dynamicPlatforms : [];
@@ -437,6 +439,7 @@ export default function DynamicPage() {
         content,
         images,
         videos,
+        tags,
       },
       isAutoPublish: autoPublish,
     };
@@ -790,6 +793,11 @@ export default function DynamicPage() {
                     input: 'text-foreground/90',
                     inputWrapper: '',
                   }}
+                />
+                <HeroTagInput
+                  value={tags}
+                  onChange={setTags}
+                  placeholder={t('dynamic.tags', '添加标签（回车确认）')}
                 />
               </div>
 

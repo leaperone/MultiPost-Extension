@@ -1,0 +1,46 @@
+---
+title: 创建文件上载请求
+description: POST /v1/file/create
+---
+
+> 需要 Bearer Token 鉴权。
+
+## 端点
+
+```http
+POST https://api.multipost.app/v1/file/create
+```
+
+## 请求体
+
+`application/json`
+
+| 字段 | 类型 | 必填 | 说明 |
+|---|---|---|---|
+| filename | string |  | 建议填写，带扩展名 |
+
+## 请求示例
+
+```bash
+curl -X POST 'https://api.multipost.app/v1/file/create' \
+  -H "Authorization: Bearer YOUR_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+  "filename": "string"
+}'
+```
+
+## 响应
+
+**200**
+
+```json
+{
+  "code": 0,
+  "msg": "string",
+  "data": {
+    "fileId": "string",
+    "url": "string"
+  }
+}
+```

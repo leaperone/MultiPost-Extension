@@ -1,0 +1,46 @@
+---
+title: Create file upload
+description: POST /v1/file/create
+---
+
+> Requires Bearer token authentication.
+
+## Endpoint
+
+```http
+POST https://api.multipost.app/v1/file/create
+```
+
+## Request body
+
+`application/json`
+
+| Field | Type | Required | Description |
+|---|---|---|---|
+| filename | string |  | 建议填写，带扩展名 |
+
+## Request example
+
+```bash
+curl -X POST 'https://api.multipost.app/v1/file/create' \
+  -H "Authorization: Bearer YOUR_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+  "filename": "string"
+}'
+```
+
+## Response
+
+**200**
+
+```json
+{
+  "code": 0,
+  "msg": "string",
+  "data": {
+    "fileId": "string",
+    "url": "string"
+  }
+}
+```

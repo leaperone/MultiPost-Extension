@@ -1,0 +1,29 @@
+---
+title: Search Reasoning
+description: POST /v1/search-reasoning
+---
+
+自带搜索的思考模型，请使用 OpenAI 对话模型的方式调用。
+
+> Requires Bearer token authentication.
+
+## Endpoint
+
+```http
+POST https://api.multipost.app/v1/search-reasoning
+```
+
+## Request example
+
+```bash
+curl -X POST 'https://api.multipost.app/v1/search-reasoning' \
+  -H "Authorization: Bearer YOUR_API_KEY"
+```
+
+## Response
+
+**200**
+
+```json
+{}
+```

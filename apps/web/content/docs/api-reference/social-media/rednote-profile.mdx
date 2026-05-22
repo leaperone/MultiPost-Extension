@@ -1,0 +1,31 @@
+---
+title: 小红书 · 获取用户资料
+description: GET /v1/social/rednote/profile
+---
+
+> 需要 Bearer Token 鉴权。
+
+## 端点
+
+```http
+GET https://api.multipost.app/v1/social/rednote/profile
+```
+
+## 查询参数
+
+| 字段 | 类型 | 必填 | 说明 |
+|---|---|---|---|
+| user_id | string |  | User ID, can be obtained from the sharing link of Xiaohongshu website. _e.g._ `5f4a10070000000001006fc7` |
+
+## 请求示例
+
+```bash
+curl -X GET 'https://api.multipost.app/v1/social/rednote/profile' \
+  -H "Authorization: Bearer YOUR_API_KEY"
+```
+
+## 响应
+
+**200**
+
+**401**

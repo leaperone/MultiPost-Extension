@@ -12,13 +12,13 @@ title: 类型定义
 export interface SyncData {
   platforms: SyncDataPlatform[];
   isAutoPublish: boolean;
-  data: DynamicData | ArticleData | VideoData;
+  data: DynamicData | ArticleData | VideoData | PodcastData;
 }
 
 export interface SyncDataPlatform {
   name: string;
-  injectUrl: string;
-  extraConfig:
+  injectUrl?: string;
+  extraConfig?:
     | {
         customInjectUrls?: string[]; // Beta 功能，用于自定义注入 URL
       }
@@ -28,47 +28,69 @@ export interface SyncDataPlatform {
 
 ### 发布数据的组织
 
-发布数据需要根据平台类型来组织，例如动态发布、文章发布、视频发布等。
+发布数据需要根据平台类型来组织，例如动态、文章、视频、播客等。
 
 例如当你要发布动态的时候，需要组织一个 `DynamicData` 类型的数据到 `SyncData` 的 `data` 字段中。
 
 ```typescript
-// DynamicData 是动态发布的数据，用于组织动态发布的数据
+// DynamicData 是动态发布的数据
 export interface DynamicData {
   title: string; // 标题
   content: string; // 内容
   images: FileData[]; // 图片
-  videos: FileData[]; // 视频，该字段目前仅用于某些允许同时发布图片和视频的平台，例如 Instagram、 X 等
+  videos: FileData[]; // 视频，仅用于允许图文/视频混发的平台，例如 Instagram、X 等
+  tags?: string[]; // 话题/标签，发布器会按平台习惯拼接为 #tag# 或 #tag
+  scheduledPublishTime?: number; // 定时发布的毫秒时间戳，需平台支持
 }
 
-// ArticleData 是文章发布的数据，用于组织文章发布的数据
-// 在发布的时候根据平台需要，使用 HTML 或者 Markdown 格式内容进行发布处理
+// ArticleData 是文章发布的数据
+// 发布器会根据平台需要使用 HTML 或 Markdown 进行处理
 export interface ArticleData {
   title: string; // 标题
-  content: string; // 内容 HTML
   digest: string; // 摘要
   cover: FileData; // 封面
-  images: FileData[]; // 图片
-  videos: FileData[]; // 视频
-  fileDatas: FileData[]; // 文件
-  originContent?: string; // 原始内容 HTML
-  markdownContent?: string; // 转换后的 markdown 内容
-  markdownOriginContent?: string; // 原始 markdown 内容
+  htmlContent: string; // 渲染后的 HTML 内容
+  markdownContent: string; // 原始 Markdown 内容
+  images?: FileData[]; // 图片
+  tags?: string[]; // 标签
+  category?: string | number; // 平台分类的 ID 或名称
+  original?: boolean; // 是否原创声明
+  allowComment?: boolean; // 是否允许评论
+  scheduledPublishTime?: number; // 定时发布毫秒时间戳
 }
 
-// VideoData 是视频发布的数据，用于组织视频发布的数据
+// VideoData 是视频发布的数据
 export interface VideoData {
   title: string; // 标题
-  content: string; // 内容 HTML
-  video: FileData; // 视频
+  content: string; // 简介 / 正文
+  video: FileData; // 视频文件
+  cover?: FileData; // 默认封面
+  verticalCover?: FileData; // 竖版封面（如适用）
+  horizontalCover?: FileData; // 横版封面（如适用）
+  tags?: string[]; // 标签
+  scheduledPublishTime?: number; // 定时发布毫秒时间戳
+  category?: string | number; // 平台分区 ID（如 B 站 tid、YouTube category）
+  original?: boolean; // 是否原创声明
+  collectionId?: string | number; // 合集/系列 ID（如 B 站 list_id）
+  description?: string; // 视频描述（独立于 content，部分平台优先消费）
 }
 
-// FileData 是文件数据，用于组织文件数据
+// PodcastData 是播客发布的数据
+export interface PodcastData {
+  title: string; // 标题
+  description: string; // 简介
+  audio: FileData; // 音频文件
+  cover?: FileData; // 封面
+  tags?: string[]; // 标签
+  category?: string | number; // 平台分类
+}
+
+// FileData 是文件数据
 export interface FileData {
   name: string; // 文件名
   url: string; // 文件链接，一般为 blob 链接，扩展的脚本允许从任意 blob 链接中下载文件
-  type: string; // 文件类型
-  size: number; // 文件大小
+  type?: string; // 文件类型
+  size?: number; // 文件大小
   originUrl?: string; // 文件原始链接，一般用于存储 https 来源的文件原 Url
 }
 ```
@@ -82,7 +104,7 @@ export interface FileData {
 ```typescript
 // PlatformInfo 是平台信息，用于组织平台信息
 export interface PlatformInfo {
-  type: 'DYNAMIC' | 'VIDEO' | 'ARTICLE'; // 平台类型
+  type: 'DYNAMIC' | 'VIDEO' | 'ARTICLE' | 'PODCAST'; // 平台类型
   name: string; // 平台名称
   homeUrl: string; // 平台首页
   faviconUrl?: string; // 平台图标

@@ -12,13 +12,13 @@ When you need to publish content, you need to organize data of type `SyncData`, 
 export interface SyncData {
   platforms: SyncDataPlatform[];
   isAutoPublish: boolean;
-  data: DynamicData | ArticleData | VideoData;
+  data: DynamicData | ArticleData | VideoData | PodcastData;
 }
 
 export interface SyncDataPlatform {
   name: string;
-  injectUrl: string;
-  extraConfig:
+  injectUrl?: string;
+  extraConfig?:
     | {
         customInjectUrls?: string[]; // Beta feature for custom injection URLs
       }
@@ -28,48 +28,70 @@ export interface SyncDataPlatform {
 
 ### Organization of Publishing Data
 
-Publishing data needs to be organized according to platform type, such as dynamic publishing, article publishing, video publishing, etc.
+Publishing data needs to be organized according to platform type — dynamic, article, video, podcast, etc.
 
-For example, when you want to publish dynamics, you need to organize data of type `DynamicData` into the `data` field of `SyncData`.
+For example, when you want to publish a dynamic post, you put a `DynamicData` value into the `data` field of `SyncData`.
 
 ```typescript
-// DynamicData is data for dynamic publishing, used to organize dynamic publishing data
+// DynamicData — payload for a dynamic post
 export interface DynamicData {
   title: string; // Title
   content: string; // Content
   images: FileData[]; // Images
-  videos: FileData[]; // Videos, this field is currently only used for certain platforms that allow simultaneous publishing of images and videos, such as Instagram, X, etc.
+  videos: FileData[]; // Videos — only used by platforms that allow image+video posts (Instagram, X, ...)
+  tags?: string[]; // Hashtags / topics; publishers turn these into #tag# or #tag per platform
+  scheduledPublishTime?: number; // Scheduled publish time in ms; requires platform support
 }
 
-// ArticleData is data for article publishing, used to organize article publishing data
-// When publishing, HTML or Markdown format content is used for publishing processing according to platform needs
+// ArticleData — payload for a long-form article
+// Publishers consume HTML or Markdown depending on what the destination accepts
 export interface ArticleData {
   title: string; // Title
-  content: string; // Content HTML
   digest: string; // Summary
-  cover: FileData; // Cover
-  images: FileData[]; // Images
-  videos: FileData[]; // Videos
-  fileDatas: FileData[]; // Files
-  originContent?: string; // Original content HTML
-  markdownContent?: string; // Converted markdown content
-  markdownOriginContent?: string; // Original markdown content
+  cover: FileData; // Cover image
+  htmlContent: string; // Rendered HTML
+  markdownContent: string; // Source Markdown
+  images?: FileData[]; // Images
+  tags?: string[]; // Tags
+  category?: string | number; // Platform category id or name
+  original?: boolean; // Mark as original work
+  allowComment?: boolean; // Allow comments
+  scheduledPublishTime?: number; // Scheduled publish time in ms
 }
 
-// VideoData is data for video publishing, used to organize video publishing data
+// VideoData — payload for a video post
 export interface VideoData {
   title: string; // Title
-  content: string; // Content HTML
-  video: FileData; // Video
+  content: string; // Body / description text
+  video: FileData; // Video file
+  cover?: FileData; // Default cover
+  verticalCover?: FileData; // Portrait cover when the platform supports it
+  horizontalCover?: FileData; // Landscape cover when the platform supports it
+  tags?: string[]; // Tags
+  scheduledPublishTime?: number; // Scheduled publish time in ms
+  category?: string | number; // Platform partition id (e.g. Bilibili tid, YouTube category)
+  original?: boolean; // Mark as original work
+  collectionId?: string | number; // Collection / series id (e.g. Bilibili list_id)
+  description?: string; // Description field (independent of `content`; preferred by some platforms)
 }
 
-// FileData is file data, used to organize file data
+// PodcastData — payload for a podcast episode
+export interface PodcastData {
+  title: string; // Title
+  description: string; // Show notes / description
+  audio: FileData; // Audio file
+  cover?: FileData; // Cover image
+  tags?: string[]; // Tags
+  category?: string | number; // Platform category
+}
+
+// FileData — basic file payload
 export interface FileData {
   name: string; // File name
-  url: string; // File link, usually a blob link, extension scripts allow downloading files from any blob link
-  type: string; // File type
-  size: number; // File size
-  originUrl?: string; // Original file link, usually used to store the original Url of files from https sources
+  url: string; // File link, usually a blob link; extension scripts can fetch from any blob link
+  type?: string; // MIME type
+  size?: number; // File size in bytes
+  originUrl?: string; // Original https URL, when known
 }
 ```
 
@@ -82,7 +104,7 @@ For ease of management, we define data of type `PlatformInfo` to organize platfo
 ```typescript
 // PlatformInfo is platform information, used to organize platform information
 export interface PlatformInfo {
-  type: 'DYNAMIC' | 'VIDEO' | 'ARTICLE'; // Platform type
+  type: 'DYNAMIC' | 'VIDEO' | 'ARTICLE' | 'PODCAST'; // Platform type
   name: string; // Platform name
   homeUrl: string; // Platform homepage
   faviconUrl?: string; // Platform icon

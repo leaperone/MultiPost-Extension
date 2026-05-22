@@ -1,0 +1,215 @@
+---
+title: X · 搜索
+description: GET /v1/social/x/search
+---
+
+> 需要 Bearer Token 鉴权。
+
+## 端点
+
+```http
+GET https://api.multipost.app/v1/social/x/search
+```
+
+## 查询参数
+
+| 字段 | 类型 | 必填 | 说明 |
+|---|---|---|---|
+| keyword | string | ✓ | 关键词 _e.g._ `elonmusk` |
+| search_type | enum(Top, Latest, Media, People, Lists) |  | 搜索类型，默认为「热门」 _e.g._ `Top` |
+| cursor | string |  | 游标 |
+
+## 请求示例
+
+```bash
+curl -X GET 'https://api.multipost.app/v1/social/x/search' \
+  -H "Authorization: Bearer YOUR_API_KEY"
+```
+
+## 响应
+
+**200**
+
+```json
+{
+  "success": true,
+  "data": {
+    "status": "ok",
+    "timeline": [
+      {
+        "type": "tweet",
+        "tweet_id": "1912350580539879493",
+        "screen_name": "moment_mirthful",
+        "bookmarks": 150,
+        "favorites": 4806,
+        "created_at": "Wed Apr 16 03:41:22 +0000 2025",
+        "text": "@elonmusk El Salvador President Nayib Bukele locked up all the criminals in his country and went from the most dangerous country in the Western Hemisphere to one of the safest.\n\nDon’t listen to the mainstream media, the people love President Bukele. https://t.co/YMTQHTszMp",
+        "lang": "en",
+        "source": "<a href=\"http://twitter.com/download/android\" rel=\"nofollow\">Twitter for Android</a>",
+        "quotes": 9,
+        "replies": 86,
+        "conversation_id": "1912349851133558960",
+        "retweets": 553,
+        "views": "72220",
+        "entities": {
+          "hashtags": [],
+          "media": [
+            {
+              "display_url": "pic.x.com/YMTQHTszMp",
+              "expanded_url": "https://x.com/moment_mirthful/status/1912350580539879493/video/1",
+              "id_str": "1912350520460689409",
+              "indices": [
+                250,
+                273
+              ],
+              "media_key": "7_1912350520460689409",
+              "media_url_https": "https://pbs.twimg.com/ext_tw_video_thumb/1912350520460689409/pu/img/q_RieNuTs28YPF4w.jpg",
+              "type": "video",
+              "url": "https://t.co/YMTQHTszMp",
+              "additional_media_info": {
+                "monetizable": false
+              },
+              "ext_media_availability": {
+                "status": "Available"
+              },
+              "sizes": {
+                "large": {
+                  "h": 720,
+                  "w": 1280,
+                  "resize": "fit"
+                },
+                "medium": {
+                  "h": 675,
+                  "w": 1200,
+                  "resize": "fit"
+                },
+                "small": {
+                  "h": 383,
+                  "w": 680,
+                  "resize": "fit"
+                },
+                "thumb": {
+                  "h": 150,
+                  "w": 150,
+                  "resize": "crop"
+                }
+              },
+              "original_info": {
+                "height": 720,
+                "width": 1280,
+                "focus_rects": []
+              },
+              "allow_download_status": {
+                "allow_download": true
+              },
+              "video_info": {
+                "aspect_ratio": [
+                  16,
+                  9
+                ],
+                "duration_millis": 48599,
+                "variants": [
+                  {
+                    "content_type": "application/x-mpegURL",
+                    "url": "https://video.twimg.com/ext_tw_video/1912350520460689409/pu/pl/kD9GXWkFNYQgpWMc.m3u8?tag=12&v=690"
+                  },
+                  {
+                    "bitrate": 256000,
+                    "content_type": "video/mp4",
+                    "url": "https://video.twimg.com/ext_tw_video/1912350520460689409/pu/vid/avc1/480x270/ur9xSviOdHMCLG4O.mp4?tag=12"
+                  },
+                  {
+                    "bitrate": 832000,
+                    "content_type": "video/mp4",
+                    "url": "https://video.twimg.com/ext_tw_video/1912350520460689409/pu/vid/avc1/640x360/AB0FMussTsMFcABQ.mp4?tag=12"
+                  },
+                  {
+                    "bitrate": 2176000,
+                    "content_type": "video/mp4",
+                    "url": "https://video.twimg.com/ext_tw_video/1912350520460689409/pu/vid/avc1/1280x720/O3wONE8z2oID5ZwE.mp4?tag=12"
+                  }
+                ]
+              },
+              "media_results": {
+                "result": {
+                  "media_key": "7_1912350520460689409"
+                }
+              }
+            }
+          ],
+          "symbols": [],
+          "timestamps": [],
+          "urls": [],
+          "user_mentions": [
+            {
+              "id_str": "44196397",
+              "name": "Elon Musk",
+              "screen_name": "elonmusk",
+              "indices": [
+                0,
+                9
+              ]
+            }
+          ]
+        },
+        "user_info": {
+          "screen_name": "moment_mirthful",
+          "name": "Mirthful Moments",
+          "description": "Anti woke Far right\nMAGA 🇺🇸🇺🇸\n@elonmusk @realdonaldtrump\nHere to make the Liberals cry\n\nSubscribe me to support financially in just 2$ per month",
+          "rest_id": "1704718821389729792",
+          "followers_count": 79673,
+          "favourites_count": 151803,
+          "avatar": "https://pbs.twimg.com/profile_images/1749340453970018304/DZOHx5gc_normal.jpg",
+          "verified": false,
+          "friends_count": 2223,
+          "location": "Florida, USA"
+        },
+        "media": {
+          "video": [
+            {
+              "media_url_https": "https://pbs.twimg.com/ext_tw_video_thumb/1912350520460689409/pu/img/q_RieNuTs28YPF4w.jpg",
+              "variants": [
+                {
+                  "content_type": "application/x-mpegURL",
+                  "url": "https://video.twimg.com/ext_tw_video/1912350520460689409/pu/pl/kD9GXWkFNYQgpWMc.m3u8?tag=12&v=690"
+                },
+                {
+                  "bitrate": 256000,
+                  "content_type": "video/mp4",
+                  "url": "https://video.twimg.com/ext_tw_video/1912350520460689409/pu/vid/avc1/480x270/ur9xSviOdHMCLG4O.mp4?tag=12"
+                },
+                {
+                  "bitrate": 832000,
+                  "content_type": "video/mp4",
+                  "url": "https://video.twimg.com/ext_tw_video/1912350520460689409/pu/vid/avc1/640x360/AB0FMussTsMFcABQ.mp4?tag=12"
+                },
+                {
+                  "bitrate": 2176000,
+                  "content_type": "video/mp4",
+                  "url": "https://video.twimg.com/ext_tw_video/1912350520460689409/pu/vid/avc1/1280x720/O3wONE8z2oID5ZwE.mp4?tag=12"
+                }
+              ],
+              "aspect_ratio": [
+                16,
+                9
+              ],
+              "duration": 48599,
+              "original_info": {
+                "height": 720,
+                "width": 1280,
+                "focus_rects": []
+              },
+              "id": "1912350520460689409"
+            }
+          ]
+        }
+      }
+    ],
+    "next_cursor": "DAACCgACGovGeNAAJxAKAAMai8Z4z__Y8AgABAAAAAILAAUAAADoRW1QQzZ3QUFBZlEvZ0dKTjB2R3AvQUFBQUJNYWlyTFl6UnB4d0JxTGtwRHRsbUdrR291Y1lGWmJ3Y1FhaXhYNHF0WWhQeHFLZFhpUGxtQ3pHb3NZSWw3V0FKZ2FpNnptU3h2Qnh4cUxvWXFxVndBakdvczcrT3dhY1FRYWkxWmRKbGRScEJxTHZweVJGN0VIR29tVE51L2JNYjhhaWdpNGp4ZHdSUnFMSkRqZWwxQUNHb2hXeWNGYm9JUWFpZ2lXUDVweHBocUxQMUZQVjlHWEdvWnNvYTJYc1F3YWk2VGgvSmN4SVE9PQgABgAAAAAIAAcAAAAADAAICgABGoZsoa2XsQwAAAA",
+    "prev_cursor": "DAACCgACGovGeNAAJxAKAAMai8Z4z__Y8AgABAAAAAELAAUAAADoRW1QQzZ3QUFBZlEvZ0dKTjB2R3AvQUFBQUJNYWlyTFl6UnB4d0JxTGtwRHRsbUdrR291Y1lGWmJ3Y1FhaXhYNHF0WWhQeHFLZFhpUGxtQ3pHb3NZSWw3V0FKZ2FpNnptU3h2Qnh4cUxvWXFxVndBakdvczcrT3dhY1FRYWkxWmRKbGRScEJxTHZweVJGN0VIR29tVE51L2JNYjhhaWdpNGp4ZHdSUnFMSkRqZWwxQUNHb2hXeWNGYm9JUWFpZ2lXUDVweHBocUxQMUZQVjlHWEdvWnNvYTJYc1F3YWk2VGgvSmN4SVE9PQgABgAAAAAIAAcAAAAADAAICgABGoZsoa2XsQwAAAA"
+  },
+  "meta": {
+    "credits": 0.01
+  }
+}
+```

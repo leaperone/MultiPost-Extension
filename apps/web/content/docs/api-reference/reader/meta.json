@@ -1,0 +1,7 @@
+{
+  "title": "Reader API",
+  "pages": [
+    "reader",
+    "reader-llm"
+  ]
+}

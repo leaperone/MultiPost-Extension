@@ -50,11 +50,12 @@ In the previous section, we saw that the `funcPublish` function calls the `creat
 The principle is to use the `chrome.tabs` and `chrome.scripting` APIs to create tabs and inject scripts.
 
 ```ts
-// Platform information mapping, because there are many defined types, it's split into multiple files: article.ts, dynamic.ts, video.ts
+// Platform information mapping. The definitions are split across article.ts, dynamic.ts, video.ts, podcast.ts.
 export const infoMap: Record<string, PlatformInfo> = {
   ...DynamicInfoMap,
   ...ArticleInfoMap,
   ...VideoInfoMap,
+  ...PodcastInfoMap,
 };
 
 // Get platform information

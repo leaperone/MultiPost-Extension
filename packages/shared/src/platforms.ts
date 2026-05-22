@@ -388,6 +388,36 @@ export const PLATFORMS: Record<string, PlatformInfo> = {
     loginUrl: 'https://kaixinkan.vivo.com.cn/',
     supportedContentTypes: ['VIDEO']
   },
+  iqiyi: {
+    id: 'iqiyi',
+    name: '爱奇艺',
+    icon: 'iqiyi',
+    iconifyIcon: 'simple-icons:iqiyi',
+    faviconUrl: 'https://mp.iqiyi.com/favicon.ico',
+    url: 'https://mp.iqiyi.com',
+    loginUrl: 'https://mp.iqiyi.com/',
+    supportedContentTypes: ['VIDEO']
+  },
+  youku: {
+    id: 'youku',
+    name: '优酷',
+    icon: 'youku',
+    iconifyIcon: 'simple-icons:youku',
+    faviconUrl: 'https://mp.youku.com/favicon.ico',
+    url: 'https://mp.youku.com',
+    loginUrl: 'https://mp.youku.com/',
+    supportedContentTypes: ['VIDEO']
+  },
+  tencentvideo: {
+    id: 'tencentvideo',
+    name: '腾讯视频',
+    icon: 'tencentvideo',
+    iconifyIcon: 'simple-icons:tencentqq',
+    faviconUrl: 'https://v.qq.com/favicon.ico',
+    url: 'https://v.qq.com',
+    loginUrl: 'https://v.qq.com/',
+    supportedContentTypes: ['VIDEO']
+  },
   csdn: {
     id: 'csdn',
     name: 'CSDN',
@@ -435,6 +465,118 @@ export const PLATFORMS: Record<string, PlatformInfo> = {
     url: 'https://wordpress.com',
     loginUrl: 'https://wordpress.com/log-in',
     supportedContentTypes: ['ARTICLE']
+  },
+  medium: {
+    id: 'medium',
+    name: 'Medium',
+    icon: 'medium',
+    iconifyIcon: 'simple-icons:medium',
+    faviconUrl: 'https://medium.com/favicon.ico',
+    url: 'https://medium.com',
+    loginUrl: 'https://medium.com/m/signin',
+    supportedContentTypes: ['ARTICLE']
+  },
+  oschina: {
+    id: 'oschina',
+    name: '开源中国',
+    icon: 'oschina',
+    faviconUrl: 'https://www.oschina.net/favicon.ico',
+    url: 'https://www.oschina.net',
+    loginUrl: 'https://www.oschina.net/home/login',
+    supportedContentTypes: ['ARTICLE']
+  },
+  infoq: {
+    id: 'infoq',
+    name: 'InfoQ',
+    icon: 'infoq',
+    faviconUrl: 'https://www.infoq.cn/favicon.ico',
+    url: 'https://www.infoq.cn',
+    loginUrl: 'https://www.infoq.cn/',
+    supportedContentTypes: ['ARTICLE']
+  },
+  smzdm: {
+    id: 'smzdm',
+    name: '什么值得买',
+    icon: 'smzdm',
+    faviconUrl: 'https://www.smzdm.com/favicon.ico',
+    url: 'https://www.smzdm.com',
+    loginUrl: 'https://zhiyou.smzdm.com/user/login',
+    supportedContentTypes: ['ARTICLE']
+  },
+  woshipm: {
+    id: 'woshipm',
+    name: '人人都是产品经理',
+    icon: 'woshipm',
+    faviconUrl: 'https://www.woshipm.com/favicon.ico',
+    url: 'https://www.woshipm.com',
+    loginUrl: 'https://www.woshipm.com/login',
+    supportedContentTypes: ['ARTICLE']
+  },
+  autohome: {
+    id: 'autohome',
+    name: '汽车之家',
+    icon: 'autohome',
+    faviconUrl: 'https://www.autohome.com.cn/favicon.ico',
+    url: 'https://www.autohome.com.cn',
+    loginUrl: 'https://www.autohome.com.cn/',
+    supportedContentTypes: ['ARTICLE']
+  },
+  qqmusic: {
+    id: 'qqmusic',
+    name: 'QQ音乐播客',
+    icon: 'qqmusic',
+    iconifyIcon: 'simple-icons:qqmusic',
+    faviconUrl: 'https://mp.tencentmusic.com/favicon.ico',
+    url: 'https://mp.tencentmusic.com/index',
+    loginUrl: 'https://mp.tencentmusic.com/',
+    supportedContentTypes: ['PODCAST']
+  },
+  lizhi: {
+    id: 'lizhi',
+    name: '荔枝播客',
+    icon: 'lizhi',
+    faviconUrl: 'https://nj.lizhi.fm/static/newsite/logo240.png',
+    url: 'https://nj.lizhi.fm/static/newsite/#/index',
+    loginUrl: 'https://nj.lizhi.fm/',
+    supportedContentTypes: ['PODCAST']
+  },
+  ximalaya: {
+    id: 'ximalaya',
+    name: '喜马拉雅',
+    icon: 'ximalaya',
+    iconifyIcon: 'simple-icons:himalaya',
+    faviconUrl: 'https://creator.ximalaya.com/favicon.ico',
+    url: 'https://creator.ximalaya.com',
+    loginUrl: 'https://passport.ximalaya.com/page/web/login',
+    supportedContentTypes: ['PODCAST']
+  },
+  xiaoyuzhou: {
+    id: 'xiaoyuzhou',
+    name: '小宇宙',
+    icon: 'xiaoyuzhou',
+    faviconUrl: 'https://podcaster.xiaoyuzhoufm.com/favicon.ico',
+    url: 'https://podcaster.xiaoyuzhoufm.com',
+    loginUrl: 'https://podcaster.xiaoyuzhoufm.com/',
+    supportedContentTypes: ['PODCAST']
+  },
+  qingting: {
+    id: 'qingting',
+    name: '蜻蜓FM',
+    icon: 'qingting',
+    faviconUrl: 'https://studio.qingting.fm/favicon.ico',
+    url: 'https://studio.qingting.fm',
+    loginUrl: 'https://studio.qingting.fm/',
+    supportedContentTypes: ['PODCAST']
+  },
+  neteasepodcast: {
+    id: 'neteasepodcast',
+    name: '网易云音乐播客',
+    icon: 'neteasepodcast',
+    iconifyIcon: 'simple-icons:neteasecloudmusic',
+    faviconUrl: 'https://podcast.music.163.com/favicon.ico',
+    url: 'https://podcast.music.163.com',
+    loginUrl: 'https://music.163.com/',
+    supportedContentTypes: ['PODCAST']
   }
 }
 

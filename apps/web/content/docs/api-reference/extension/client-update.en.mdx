@@ -1,0 +1,61 @@
+---
+title: Update a client
+description: PUT /extension/client
+---
+
+> Requires Bearer token authentication.
+
+## Endpoint
+
+```http
+PUT https://api.multipost.app/extension/client
+```
+
+## Request body
+
+`application/json`
+
+| Field | Type | Required | Description |
+|---|---|---|---|
+| clientId | string | ✓ |  |
+| name | string | ✓ |  |
+
+## Request example
+
+```bash
+curl -X PUT 'https://api.multipost.app/extension/client' \
+  -H "Authorization: Bearer YOUR_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+  "clientId": "string",
+  "name": "string"
+}'
+```
+
+## Response
+
+**200** — 成功更新客户端信息
+
+```json
+{
+  "success": false,
+  "data": {
+    "id": "string",
+    "name": "string",
+    "createdAt": "string",
+    "updatedAt": "string",
+    "platformInfos": [
+      {}
+    ]
+  }
+}
+```
+
+**401** — 未授权
+
+```json
+{
+  "success": false,
+  "error": "string"
+}
+```

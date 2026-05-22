@@ -1,0 +1,68 @@
+---
+title: X · Get followers
+description: GET /v1/social/x/followers
+---
+
+> Requires Bearer token authentication.
+
+## Endpoint
+
+```http
+GET https://api.multipost.app/v1/social/x/followers
+```
+
+## Query parameters
+
+| Field | Type | Required | Description |
+|---|---|---|---|
+| screen_name | string |  | 用户名/Screen Name _e.g._ `elonmusk` |
+| cursor | string |  | 游标（用于翻页） |
+
+## Request example
+
+```bash
+curl -X GET 'https://api.multipost.app/v1/social/x/followers' \
+  -H "Authorization: Bearer YOUR_API_KEY"
+```
+
+## Response
+
+**200**
+
+```json
+{
+  "success": true,
+  "data": {
+    "following": [
+      {
+        "user_id": "95092020",
+        "screen_name": "jordanbpeterson",
+        "description": "Best-Selling Author | Clinical Psychologist | #1 Education Podcast | Co-founder of @petersonacademy | Order my new book \"We Who Wrestle With God\" here:",
+        "profile_image": "https://pbs.twimg.com/profile_images/1407056014776614923/TKBC60e1_normal.jpg",
+        "statuses_count": 51536,
+        "followers_count": 6084457,
+        "friends_count": 1660,
+        "media_count": 7354,
+        "name": "Dr Jordan B Peterson"
+      },
+      {
+        "user_id": "39344374",
+        "screen_name": "DonaldJTrumpJr",
+        "description": "",
+        "profile_image": "https://pbs.twimg.com/profile_images/766652495858896897/LjrJJB9a_normal.jpg",
+        "statuses_count": 51229,
+        "followers_count": 14914908,
+        "friends_count": 2206,
+        "media_count": 3325,
+        "name": "Donald Trump Jr."
+      }
+    ],
+    "next_cursor": "1824916211099815290|1912796205495091128",
+    "status": "ok",
+    "more_users": true
+  },
+  "meta": {
+    "credits": 0.01
+  }
+}
+```
