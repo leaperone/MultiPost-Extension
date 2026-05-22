@@ -15,6 +15,7 @@ export {
   trackDraftCreated,
   trackPlatformSelected,
   trackPublishInitiated,
+  trackPublishDispatched,
   trackPublishSuccess,
   trackPublishFailed,
 } from "./events";

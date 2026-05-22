@@ -34,6 +34,7 @@ import { getPlatformExtraConfigList } from '../action';
 import { useRouter } from 'next/navigation';
 import {
   trackPublishInitiated,
+  trackPublishDispatched,
   trackPublishSuccess,
   trackPublishFailed,
   trackPlatformSelected,
@@ -283,6 +284,8 @@ export default function PodcastPage() {
       },
       isAutoPublish: autoPublish,
     };
+
+    trackPublishDispatched('podcast', selectedPlatforms);
 
     const result = await funcPublish(data);
     if (!result.success) {

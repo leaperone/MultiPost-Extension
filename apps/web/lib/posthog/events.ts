@@ -302,6 +302,32 @@ export const trackPublishSuccess = (
 };
 
 /**
+ * 追踪发布已派发事件
+ * @description 浏览器扩展是 fire-and-forget 模式：postMessage 发出后扩展会另开 popup 让用户继续操作，
+ *              老 tab 上的 funcPublish 拿不到真正的成功/失败响应，30s 后必然 timeout。
+ *              这条事件代表"已成功派发给扩展"，是当前可观测的真实终态。
+ *              真正的 publish_success / publish_failed 需要扩展端补 sendResponse 后才能复活。
+ */
+export const trackPublishDispatched = (
+  publishType: PublishType,
+  platforms: string[],
+) => {
+  if (typeof window === "undefined") {
+    return;
+  }
+
+  import("posthog-js").then((module) => {
+    const posthog = module.default;
+    posthog.capture("publish_dispatched", {
+      publish_type: publishType,
+      platforms,
+      platform_count: platforms.length,
+      timestamp: Date.now(),
+    });
+  });
+};
+
+/**
  * 追踪发布失败事件
  * @param publishType - 发布类型
  * @param platforms - 发布平台列表
@@ -313,6 +339,11 @@ export const trackPublishFailed = (
   error?: string,
 ) => {
   if (typeof window === "undefined") {
+    return;
+  }
+
+  // 扩展 fire-and-forget 模式下 30s timeout 不是真失败，跳过上报避免污染失败率指标
+  if (error && error.startsWith("Request timeout after")) {
     return;
   }
 

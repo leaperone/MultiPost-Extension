@@ -77,6 +77,7 @@ import { FileData } from '@/lib/extension';
 import { ImageGenerateModal } from './components/ImageGenerateModal';
 import {
   trackPublishInitiated,
+  trackPublishDispatched,
   trackPublishSuccess,
   trackPublishFailed,
   trackPlatformSelected,
@@ -443,6 +444,8 @@ export default function DynamicPage() {
       },
       isAutoPublish: autoPublish,
     };
+
+    trackPublishDispatched('dynamic', selectedPlatforms);
 
     const result = await funcPublish(data);
     if (!result.success) {

@@ -67,6 +67,7 @@ import { funcPublish, getPlatformInfos, funcGetPermission } from '@/lib/extensio
 import { usePlatformStore } from '@/store/publish.store';
 import {
   trackPublishInitiated,
+  trackPublishDispatched,
   trackPublishSuccess,
   trackPublishFailed,
   trackPlatformSelected,
@@ -497,6 +498,8 @@ export function HomePublisher() {
     }
 
     try {
+      trackPublishDispatched(publishType, selectedPlatforms);
+
       const result = await funcPublish(data);
       if (!result.success) {
         trackPublishFailed(publishType, selectedPlatforms, result.error);

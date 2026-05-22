@@ -47,6 +47,7 @@ import { useRouter } from 'next/navigation';
 import { CalendarDateTime, now, getLocalTimeZone } from '@internationalized/date';
 import {
   trackPublishInitiated,
+  trackPublishDispatched,
   trackPublishSuccess,
   trackPublishFailed,
   trackPlatformSelected,
@@ -345,6 +346,8 @@ export default function VideoPage() {
       },
       isAutoPublish: false,
     };
+
+    trackPublishDispatched('video', selectedPlatforms);
 
     const result = await funcPublish(data);
     if (!result.success) {
