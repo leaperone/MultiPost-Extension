@@ -6,7 +6,6 @@ import { auth } from '@/auth';
 import { getPresignedDownloadUrl, headObject } from '@/lib/bitiful';
 
 import {
-  ERROR_TYPES,
   reportPublishErrorSchema,
   type ReportPublishErrorInput,
   type ReportPublishErrorResult,
@@ -143,5 +142,3 @@ export async function reportPublishError(
     };
   }
 }
-
-export { ERROR_TYPES };
