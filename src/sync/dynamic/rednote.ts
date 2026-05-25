@@ -44,11 +44,22 @@ export async function DynamicRednote(data: SyncData) {
 
     for (const fileInfo of images) {
       try {
-        const response = await fetch(fileInfo.url);
-        if (!response.ok) {
-          throw new Error(`HTTP 错误! 状态: ${response.status}`);
+        let blob: Blob;
+        try {
+          const response = await fetch(fileInfo.url);
+          if (!response.ok) throw new Error(`HTTP ${response.status}`);
+          blob = await response.blob();
+        } catch (err) {
+          console.warn("[rednote] direct fetch failed, fallback to background:", err);
+          const resp: any = await new Promise((resolve) => {
+            chrome.runtime.sendMessage({ action: "MULTIPOST_FETCH_IMAGE", url: fileInfo.url }, (r) => resolve(r));
+          });
+          if (!resp || !resp.ok) throw new Error(`background fetch failed: ${resp?.error || "unknown"}`);
+          const bin = atob(resp.base64);
+          const arr = new Uint8Array(bin.length);
+          for (let i = 0; i < bin.length; i++) arr[i] = bin.charCodeAt(i);
+          blob = new Blob([arr], { type: fileInfo.type });
         }
-        const blob = await response.blob();
         const file = new File([blob], fileInfo.name, { type: fileInfo.type });
         dataTransfer.items.add(file);
       } catch (error) {
@@ -59,7 +70,20 @@ export async function DynamicRednote(data: SyncData) {
     if (dataTransfer.files.length > 0) {
       fileInput.files = dataTransfer.files;
       fileInput.dispatchEvent(new Event("change", { bubbles: true }));
-      await new Promise((resolve) => setTimeout(resolve, 2000)); // 等待文件处理
+      // 轮询：等待页面出现与图片数量匹配的缩略图，最多 60s
+      const expectedCount = dataTransfer.files.length;
+      const uploadDeadline = Date.now() + 60000;
+      while (Date.now() < uploadDeadline) {
+        await new Promise((resolve) => setTimeout(resolve, 1000));
+        // 小红书上传后会渲染 .img-preview / .upload-img / img.preview-img 等节点
+        const thumbs = document.querySelectorAll(
+          ".img-preview, .upload-img img, .preview-img, .upload-content img, .img-container img",
+        );
+        if (thumbs.length >= expectedCount) {
+          console.log(`[rednote] ${thumbs.length} 张图片已渲染缩略图`);
+          break;
+        }
+      }
       console.log("文件上传操作完成");
     } else {
       console.error("没有成功添加任何文件");
@@ -88,7 +112,8 @@ export async function DynamicRednote(data: SyncData) {
 
     // 上传文件
     await uploadImages();
-    await new Promise((resolve) => setTimeout(resolve, 5000)); // 等待图片上传完成
+    // uploadImages 内部已轮询缩略图渲染；此处再缓 1s 让发布按钮变可点
+    await new Promise((resolve) => setTimeout(resolve, 1000));
 
     // 填写标题
     const titleInput = (await waitForElement('input[type="text"]')) as HTMLInputElement;
@@ -132,7 +157,33 @@ export async function DynamicRednote(data: SyncData) {
 
         console.log("点击发布按钮");
         publishButton.click();
-        await new Promise((resolve) => setTimeout(resolve, 10000));
+
+        // 小红书点击发布后 URL 会变化（可能是 /publish/success?... 或 /publish/update?id=...）
+        // 等任意 URL 变化即视为发布动作完成；最多等 30s
+        const startUrl = location.href;
+        const deadline = Date.now() + 30000;
+        let finalUrl: string | null = null;
+        while (Date.now() < deadline) {
+          await new Promise((r) => setTimeout(r, 1000));
+          const cur = location.href;
+          if (cur !== startUrl) {
+            finalUrl = cur;
+            break;
+          }
+        }
+        const reportUrl = finalUrl || location.href;
+        try {
+          chrome.runtime.sendMessage({
+            action: "MULTIPOST_REPORT_LINK",
+            platform: "DYNAMIC_REDNOTE",
+            link: reportUrl,
+          });
+          console.log("[MultiPost/rednote] reported link:", reportUrl);
+        } catch (e) {
+          console.warn("[MultiPost/rednote] report failed:", e);
+        }
+        // 给 background 一点时间完成 fetch，再跳管理页
+        await new Promise((resolve) => setTimeout(resolve, 1500));
         window.location.href = "https://creator.xiaohongshu.com/new/note-manager";
       }
     }

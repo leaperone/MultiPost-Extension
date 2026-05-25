@@ -3,6 +3,10 @@ import { getPlatformInfos } from "~sync/common";
 
 const storage = new Storage({ area: "local" });
 
+// 已处理过的 NEW_TASK URL（内存去重，防止同一任务多次被 ping 返回重复打开 tab）
+const _handledTaskUrls = new Set<string>();
+const _HANDLED_URLS_MAX = 500;
+
 const host = process.env.NODE_ENV === "development" ? "http://localhost:3000" : "https://multipost.app";
 
 export const ping = async (withPlatforms = false) => {
@@ -44,7 +48,18 @@ export const ping = async (withPlatforms = false) => {
     } else if (!body.success && body.error === "CLIENT_NOT_FOUND") {
       await storage.remove("extensionClientId");
     } else if (body.success && body.data.action === "NEW_TASK") {
-      chrome.tabs.create({ url: body.data.url });
+      const taskUrl = body.data.url as string;
+      if (_handledTaskUrls.has(taskUrl)) {
+        console.log("[MultiPost] skip duplicate NEW_TASK:", taskUrl);
+      } else {
+        _handledTaskUrls.add(taskUrl);
+        if (_handledTaskUrls.size > _HANDLED_URLS_MAX) {
+          const iter = _handledTaskUrls.values();
+          const first = iter.next().value;
+          if (first) _handledTaskUrls.delete(first);
+        }
+        chrome.tabs.create({ url: taskUrl });
+      }
     } else if (body.success && body.data.action === "NEW_CLIENT") {
       await storage.set("extensionClientId", body.data.clientId);
     }
