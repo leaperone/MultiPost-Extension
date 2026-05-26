@@ -5,6 +5,12 @@
   "main": "./out/main/index.js",
   "author": "MultiPost Team",
   "license": "MIT",
+  "homepage": "https://multipost.app",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/leaperone/MultiPost.git",
+    "directory": "apps/desktop"
+  },
   "scripts": {
     "dev": "electron-vite dev",
     "build": "electron-vite build",
