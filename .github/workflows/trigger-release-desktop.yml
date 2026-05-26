@@ -11,7 +11,7 @@ jobs:
     steps:
       - name: Extract version from tag
         id: version
-        run: echo "version=${GITHUB_REF#refs/tags/desktop-v}" >> $GITHUB_OUTPUT
+        run: echo "version=${GITHUB_REF#refs/tags/desktop-}" >> $GITHUB_OUTPUT
 
       - name: Trigger release build
         uses: peter-evans/repository-dispatch@v4
