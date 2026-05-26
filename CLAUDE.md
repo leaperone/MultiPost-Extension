@@ -41,7 +41,13 @@ cd apps/backend && deno task dev    # Start backend worker
 cd apps/video-stt-worker && deno task dev  # Start video STT worker
 ```
 
-**Desktop release** still publishes to `leaperone/MultiPost-Desktop-Release` (public repo) via `repository_dispatch`.
+**Desktop release** (changed 2026-05-26):
+1. Bump `apps/desktop/package.json` `version` and commit.
+2. Tag `desktop-v0.1.x` on monorepo `main` and push.
+3. `.github/workflows/trigger-release-desktop.yml` extracts `v0.1.x` and dispatches `leaperone/MultiPost-Desktop-Release`.
+4. The Release repo's `build-on-tag.yml` checks this monorepo out at `desktop-v0.1.x`, runs `pnpm install` at root, then `cd apps/desktop && pnpm build:mac/win/linux --publish always`. Artifacts go to GitHub Releases + S3.
+
+> The old standalone `leaperone/MultiPost-Desktop` repo is **archived**; do not push there. From v0.1.8 onward, releases are cut exclusively from this monorepo.
 
 ---
 
