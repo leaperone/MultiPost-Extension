@@ -216,7 +216,16 @@ export function GenerationForm({ onSubmit, loading, extraPrompt, initPrompt }: G
         size="lg"
         isLoading={loading}
         fullWidth
-        onPress={() => form.handleSubmit(onSubmit)()}
+        onPress={() => {
+          // Catch the form-submit promise — react-hook-form sometimes propagates
+          // ZodError / runtime errors from the resolver here, which otherwise become
+          // unhandled rejections that pollute Sentry (issue #253).
+          form
+            .handleSubmit(onSubmit)()
+            .catch((error: unknown) => {
+              console.warn('GenerationForm submit failed:', error);
+            });
+        }}
         startContent={!loading && <ImageIcon className="size-5" />}
         className="font-medium shadow-md">
         {loading ? t('generation_page.button.generating') : t('generation_page.button.generate')}

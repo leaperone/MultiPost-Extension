@@ -27,14 +27,16 @@ export function useTranslation(ns: string) {
   const translator = useTransAlias(ns);
   const { i18n } = translator;
 
-  // Run content is being rendered on server side
+  // Always call the hook unconditionally — issue #256 root cause was conditional
+  // invocation, which changes hook count across renders and crashes the page.
+  // The effect itself guards against unnecessary changeLanguage calls.
+  useCustomTranslationImplem(i18n, lng);
+
+  // Server-side imperative path: do it synchronously so SSR output uses the right locale.
   if (runsOnServerSide && lng && i18n.resolvedLanguage !== lng) {
     i18n.changeLanguage(lng);
-  } else {
-    // Use our custom implementation when running on client side
-    // eslint-disable-next-line react-hooks/rules-of-hooks
-    useCustomTranslationImplem(i18n, lng);
   }
+
   return translator;
 }
 
