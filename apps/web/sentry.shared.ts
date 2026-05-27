@@ -34,6 +34,11 @@ export function createSentryOptions({ runtime }: SentryRuntimeOptions) {
     // and release: undefined would overwrite that injected value.
     tracesSampleRate: getTracesSampleRate(),
     sendDefaultPii: false,
+    // issue #259: silence only extension-*probe* timeouts (env check). User-initiated
+    // actions (PUBLISH, LINK_EXTENSION, OPEN_OPTIONS) keep reporting so real failures stay visible.
+    ignoreErrors: [
+      /^Extension request timeout: action=MUTLIPOST_EXTENSION_(CHECK_SERVICE_STATUS|PLATFORMS|REQUEST_TRUST_DOMAIN) timeout=\d+ms$/,
+    ],
     beforeSend,
     beforeSendTransaction,
     beforeSendSpan,

@@ -117,28 +117,33 @@ export default function VideoPage() {
 
   useEffect(() => {
     async function fetchPlatforms() {
-      const [platformData, extraConfigList] = await Promise.all([
-        getPlatformInfos('VIDEO'),
-        getPlatformExtraConfigList(),
-      ]);
+      try {
+        const [platformData, extraConfigList] = await Promise.all([
+          getPlatformInfos('VIDEO'),
+          getPlatformExtraConfigList(),
+        ]);
 
-      if (extraConfigList.success && extraConfigList.data) {
-        const extraConfigMap = extraConfigList.data.reduce(
-          (acc, item) => {
-            acc[item.platform] = item.data;
-            return acc;
-          },
-          {} as Record<string, unknown>,
-        );
+        if (extraConfigList.success && extraConfigList.data) {
+          const extraConfigMap = extraConfigList.data.reduce(
+            (acc, item) => {
+              acc[item.platform] = item.data;
+              return acc;
+            },
+            {} as Record<string, unknown>,
+          );
 
-        const platformsWithExtra = platformData.map((platform) => ({
-          ...platform,
-          extraConfig: extraConfigMap[platform.name],
-        }));
+          const platformsWithExtra = platformData.map((platform) => ({
+            ...platform,
+            extraConfig: extraConfigMap[platform.name],
+          }));
 
-        setPlatforms(platformsWithExtra);
-      } else {
-        setPlatforms(platformData);
+          setPlatforms(platformsWithExtra);
+        } else {
+          setPlatforms(platformData);
+        }
+      } catch (error) {
+        console.warn('fetchPlatforms (video) failed:', error);
+        setPlatforms([]);
       }
     }
     fetchPlatforms();

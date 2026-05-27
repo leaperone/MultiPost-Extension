@@ -342,8 +342,15 @@ export const trackPublishFailed = (
     return;
   }
 
-  // 扩展 fire-and-forget 模式下 30s timeout 不是真失败，跳过上报避免污染失败率指标
-  if (error && error.startsWith("Request timeout after")) {
+  // 扩展 fire-and-forget 模式下 timeout 不是真失败，跳过上报避免污染失败率指标。
+  // 兼容两种错误消息格式：
+  //   - 老格式 "Request timeout after Nms"（已部署的旧前端 bundle 可能还在用）
+  //   - 新格式 "Extension request timeout: action=... timeout=Nms"（issue #259 后）
+  if (
+    error &&
+    (error.startsWith("Request timeout after") ||
+      error.startsWith("Extension request timeout: action="))
+  ) {
     return;
   }
 

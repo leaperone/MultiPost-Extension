@@ -148,28 +148,33 @@ export default function PodcastPage() {
 
   useEffect(() => {
     async function fetchPlatforms() {
-      const [platformData, extraConfigList] = await Promise.all([
-        getPlatformInfos('PODCAST'),
-        getPlatformExtraConfigList(),
-      ]);
+      try {
+        const [platformData, extraConfigList] = await Promise.all([
+          getPlatformInfos('PODCAST'),
+          getPlatformExtraConfigList(),
+        ]);
 
-      if (extraConfigList.success && extraConfigList.data) {
-        const extraConfigMap = extraConfigList.data.reduce(
-          (acc, item) => {
-            acc[item.platform] = item.data;
-            return acc;
-          },
-          {} as Record<string, unknown>,
-        );
+        if (extraConfigList.success && extraConfigList.data) {
+          const extraConfigMap = extraConfigList.data.reduce(
+            (acc, item) => {
+              acc[item.platform] = item.data;
+              return acc;
+            },
+            {} as Record<string, unknown>,
+          );
 
-        const platformsWithExtra = platformData.map((platform) => ({
-          ...platform,
-          extraConfig: extraConfigMap[platform.name],
-        })) satisfies PlatformInfo[];
+          const platformsWithExtra = platformData.map((platform) => ({
+            ...platform,
+            extraConfig: extraConfigMap[platform.name],
+          })) satisfies PlatformInfo[];
 
-        setPlatforms(platformsWithExtra);
-      } else {
-        setPlatforms(platformData);
+          setPlatforms(platformsWithExtra);
+        } else {
+          setPlatforms(platformData);
+        }
+      } catch (error) {
+        console.warn('fetchPlatforms (podcast) failed:', error);
+        setPlatforms([]);
       }
     }
     fetchPlatforms();

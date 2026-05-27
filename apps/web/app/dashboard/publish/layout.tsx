@@ -35,7 +35,9 @@ export default function PublishLayout({ children }: { children: React.ReactNode 
         router.push('/extension');
         return;
       }
-      funcGetPermission().then(() => {});
+      // Only timeouts reject here (resolves on any extension response, denied or not);
+      // catch silences the unhandled rejection — Sentry already filters the matching timeout.
+      funcGetPermission().catch(() => {});
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);

@@ -336,28 +336,33 @@ export default function DynamicPage() {
 
   useEffect(() => {
     async function fetchPlatforms() {
-      const [platformData, extraConfigList] = await Promise.all([
-        getPlatformInfos('DYNAMIC'),
-        getPlatformExtraConfigList(),
-      ]);
+      try {
+        const [platformData, extraConfigList] = await Promise.all([
+          getPlatformInfos('DYNAMIC'),
+          getPlatformExtraConfigList(),
+        ]);
 
-      if (extraConfigList.success && extraConfigList.data) {
-        const extraConfigMap = extraConfigList.data.reduce(
-          (acc, item) => {
-            acc[item.platform] = item.data;
-            return acc;
-          },
-          {} as Record<string, unknown>,
-        );
+        if (extraConfigList.success && extraConfigList.data) {
+          const extraConfigMap = extraConfigList.data.reduce(
+            (acc, item) => {
+              acc[item.platform] = item.data;
+              return acc;
+            },
+            {} as Record<string, unknown>,
+          );
 
-        const platformsWithExtra = platformData.map((platform) => ({
-          ...platform,
-          extraConfig: extraConfigMap[platform.name],
-        })) satisfies PlatformInfo[];
+          const platformsWithExtra = platformData.map((platform) => ({
+            ...platform,
+            extraConfig: extraConfigMap[platform.name],
+          })) satisfies PlatformInfo[];
 
-        setPlatforms(platformsWithExtra);
-      } else {
-        setPlatforms(platformData);
+          setPlatforms(platformsWithExtra);
+        } else {
+          setPlatforms(platformData);
+        }
+      } catch (error) {
+        console.warn('fetchPlatforms (dynamic) failed:', error);
+        setPlatforms([]);
       }
     }
     fetchPlatforms();

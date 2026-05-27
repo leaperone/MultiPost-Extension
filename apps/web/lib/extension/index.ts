@@ -138,7 +138,7 @@ export async function sendRequest<D, R>(action: string, data?: D, timeout: numbe
     if (timeout > 0) {
       timeoutId = setTimeout(() => {
         cleanup();
-        reject(new Error(`Request timeout after ${timeout}ms`));
+        reject(new Error(`Extension request timeout: action=${action} timeout=${timeout}ms`));
       }, timeout);
     }
 
@@ -180,7 +180,8 @@ export async function checkServiceStatus(timeout: number = 5000): Promise<boolea
     await sendRequest<void, void>('MUTLIPOST_EXTENSION_CHECK_SERVICE_STATUS', undefined, timeout);
     return true;
   } catch (error) {
-    console.error('Service check failed:', error);
+    // Extension absence is a predictable user state, not an error worth uploading to Sentry.
+    console.debug('Service check failed:', error instanceof Error ? error.message : error);
     return false;
   }
 }
@@ -237,7 +238,16 @@ export const funcPublish = async (
 };
 
 export const funcGetPlatformInfos = async (): Promise<PlatformInfo[]> => {
-  return sendRequest<void, PlatformInfo[]>('MUTLIPOST_EXTENSION_PLATFORMS');
+  // Fast-fail when the extension is missing: avoid the default 10s timeout that
+  // previously produced `Request timeout after 10000ms` Sentry noise (issue #259).
+  const serviceRunning = await checkServiceStatus(2000);
+  if (!serviceRunning) return [];
+  try {
+    return await sendRequest<void, PlatformInfo[]>('MUTLIPOST_EXTENSION_PLATFORMS', undefined, 5000);
+  } catch (error) {
+    console.warn('funcGetPlatformInfos failed:', error instanceof Error ? error.message : error);
+    return [];
+  }
 };
 
 interface PermissionResponse {
