@@ -528,6 +528,10 @@
     "message": "Reddit",
     "description": "Reddit 平台名称"
   },
+  "platformPinterest": {
+    "message": "Pinterest",
+    "description": "Pinterest 平台名称"
+  },
   "platformWeiXinVideo": {
     "message": "微信视频号",
     "description": "微信视频号平台名称"
@@ -985,6 +989,10 @@
   },
   "platformLizhi": {
     "message": "荔枝"
+  },
+  "platformSpotify": {
+    "message": "Spotify",
+    "description": "Spotify 平台名称"
   },
   "refreshAccountsTitle": {
     "message": "刷新账号",

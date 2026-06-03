@@ -521,6 +521,10 @@
     "message": "Reddit",
     "description": "Platform name for Reddit"
   },
+  "platformPinterest": {
+    "message": "Pinterest",
+    "description": "Platform name for Pinterest"
+  },
   "platformWeiXinVideo": {
     "message": "WeiXinVideo",
     "description": "Platform name for WeiXinVideo"
@@ -1011,6 +1015,10 @@
   },
   "platformLizhi": {
     "message": "LiZhi"
+  },
+  "platformSpotify": {
+    "message": "Spotify",
+    "description": "Spotify platform name"
   },
   "refreshAccountsTitle": {
     "message": "Refresh Accounts",
