@@ -3,12 +3,12 @@ import React from 'react';
 import { useRouter } from 'next/navigation';
 import { Dropdown, DropdownTrigger, DropdownMenu, DropdownItem, Button } from '@heroui/react';
 import { switchLocaleAction } from '@/i18n/switch-locale';
-import { useTranslation } from '@/i18n/client';
+import { useLocale } from '@/i18n/locale-provider';
 import { languages } from '@/i18n/settings';
 import { LanguagesIcon } from 'lucide-react';
 
 export default function LanguageSwitcher() {
-  const { i18n } = useTranslation('home');
+  const locale = useLocale();
   const router = useRouter();
 
   const handleLocaleChange = async (key: React.Key) => {
@@ -30,7 +30,7 @@ export default function LanguageSwitcher() {
       <DropdownMenu
         aria-label="Language selection"
         onAction={handleLocaleChange}
-        selectedKeys={i18n.resolvedLanguage ? [i18n.resolvedLanguage] : []}
+        selectedKeys={[locale]}
         selectionMode="single">
         {languages.map((language) => (
           <DropdownItem key={language.value}>{language.label}</DropdownItem>

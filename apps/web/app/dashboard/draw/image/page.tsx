@@ -16,6 +16,7 @@ import { listAllImages, newImageGeneration } from '@/actions/draw/image';
 import { ImageIcon, Download, Calendar, Maximize2 } from 'lucide-react';
 import dynamic from 'next/dynamic';
 import { useTranslation } from '@/i18n/client';
+import { useLocale } from '@/i18n/locale-provider';
 import { toast } from 'sonner';
 
 const Viewer = dynamic(() => import('react-viewer'), { ssr: false });
@@ -219,10 +220,11 @@ function ImageGenerationSection() {
 }
 
 function GallerySection() {
-  const { t, i18n } = useTranslation('images');
+  const { t } = useTranslation('images');
+  const locale = useLocale();
   const dateFormatter = useMemo(
     () =>
-      new Intl.DateTimeFormat(i18n.language, {
+      new Intl.DateTimeFormat(locale, {
         year: 'numeric',
         month: 'long',
         day: 'numeric',
@@ -230,7 +232,7 @@ function GallerySection() {
         minute: '2-digit',
         hour12: false,
       }),
-    [i18n.language],
+    [locale],
   );
   const STATUS_TABS = [
     { key: 'all', label: t('gallery_page.tabs.all') },

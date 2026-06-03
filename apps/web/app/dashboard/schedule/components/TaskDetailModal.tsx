@@ -30,6 +30,7 @@ import {
 import { useState, useEffect, useMemo } from 'react';
 import { cancelPublishTask, restartPublishTask, getSocialMediaAccountByPlatformId } from '../actions';
 import { useTranslation } from '@/i18n/client';
+import { useLocale } from '@/i18n/locale-provider';
 import { Tooltip } from '@heroui/react';
 import PublishErrorReportDialog, {
   type PublishErrorReportContext,
@@ -83,8 +84,9 @@ const statusConfig = {
 };
 
 export default function TaskDetailModal({ isOpen, onClose, task }: TaskDetailModalProps) {
-  const { t, i18n } = useTranslation('schedule');
-  const dateLocale = i18n.language === 'zh-CN' ? zhCN : enUS;
+  const { t } = useTranslation('schedule');
+  const locale = useLocale();
+  const dateLocale = locale === 'zh-CN' ? zhCN : enUS;
   const [isCancelling, setIsCancelling] = useState(false);
   const [isRestarting, setIsRestarting] = useState(false);
   const [cancelError, setCancelError] = useState<string | null>(null);

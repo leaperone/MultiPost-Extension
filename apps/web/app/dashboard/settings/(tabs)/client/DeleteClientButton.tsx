@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { Button, Modal, ModalBody, ModalFooter, ModalHeader, useDisclosure, ModalContent } from '@heroui/react';
 import { Loader2, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
-import { useTranslation } from 'react-i18next';
+import { useTranslation } from '@/i18n/client';
 import { deleteClient } from './actions';
 
 interface DeleteClientButtonProps {

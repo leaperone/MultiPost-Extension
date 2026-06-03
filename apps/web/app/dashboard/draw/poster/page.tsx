@@ -15,6 +15,7 @@ import {
 import { GenerationForm } from './components/GenerationForm';
 import { useSearchParams } from 'next/navigation';
 import { useTranslation } from '@/i18n/client';
+import { useLocale } from '@/i18n/locale-provider';
 import { ImageIcon, Download, Calendar, Maximize2, RefreshCcw, Pencil, X, Clock, Eye } from 'lucide-react';
 import Link from 'next/link';
 import dynamic from 'next/dynamic';
@@ -349,10 +350,11 @@ interface PosterGeneration {
 }
 
 function GallerySection() {
-  const { t, i18n } = useTranslation('poster');
+  const { t } = useTranslation('poster');
+  const locale = useLocale();
   const dateFormatter = useMemo(
     () =>
-      new Intl.DateTimeFormat(i18n.language, {
+      new Intl.DateTimeFormat(locale, {
         year: 'numeric',
         month: 'long',
         day: 'numeric',
@@ -360,7 +362,7 @@ function GallerySection() {
         minute: '2-digit',
         hour12: false,
       }),
-    [i18n.language],
+    [locale],
   );
   const STATUS_TABS = [
     { key: 'all', label: t('gallery_page.tabs.all') },
@@ -401,7 +403,7 @@ function GallerySection() {
       });
   }, [posters, dateFormatter]);
 
-  const fetchPosters = async (status: string) => {
+  const fetchPosters = useCallback(async (status: string) => {
     try {
       setLoading(true);
       const response = await getPosterGenerations(status);
@@ -429,11 +431,11 @@ function GallerySection() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [t]);
 
   useEffect(() => {
     fetchPosters(selectedStatus);
-  }, [selectedStatus]);
+  }, [fetchPosters, selectedStatus]);
 
   const handleImageClick = (index: number) => {
     let actualIndex = 0;
