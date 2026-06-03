@@ -5,7 +5,7 @@
  * @date 2024-01-01
  */
 
-import type { SyncData, VideoData } from "../common";
+import type { FileData, SyncData, VideoData } from "../common";
 
 /**
  * 微信视频号视频发布处理函数
@@ -252,6 +252,30 @@ export async function VideoWeiXinChannel(data: SyncData) {
    * 上传视频封面
    * @param cover 封面图片信息
    */
+  // 按视频宽高比挑选封面(注入函数无法 import 共享工具,内联实现):横版优先横封面、竖版优先竖封面,回退 cover
+  async function pickCoverByAspect(
+    videoFile: FileData | undefined,
+    coverImg?: FileData,
+    horizontalCoverImg?: FileData,
+    verticalCoverImg?: FileData,
+  ): Promise<FileData | undefined> {
+    if (!horizontalCoverImg && !verticalCoverImg) return coverImg;
+    let isLandscape = false;
+    if (videoFile?.url) {
+      const dims = await new Promise<{ width: number; height: number } | null>((resolve) => {
+        const probe = document.createElement("video");
+        probe.preload = "metadata";
+        probe.onloadedmetadata = () => resolve({ width: probe.videoWidth, height: probe.videoHeight });
+        probe.onerror = () => resolve(null);
+        probe.src = videoFile.url;
+      });
+      if (dims) isLandscape = dims.width > dims.height;
+    }
+    return isLandscape
+      ? horizontalCoverImg || coverImg || verticalCoverImg
+      : verticalCoverImg || coverImg || horizontalCoverImg;
+  }
+
   async function uploadCover(cover: { url: string; name: string; type?: string }): Promise<void> {
     try {
       console.debug("tryCover", cover);
@@ -330,7 +354,16 @@ export async function VideoWeiXinChannel(data: SyncData) {
   }
 
   try {
-    const { content, video, title, tags = [], cover, scheduledPublishTime } = data.data as VideoData;
+    const {
+      content,
+      video,
+      title,
+      tags = [],
+      cover,
+      horizontalCover,
+      verticalCover,
+      scheduledPublishTime,
+    } = data.data as VideoData;
 
     // 处理视频上传
     if (video) {
@@ -398,8 +431,9 @@ export async function VideoWeiXinChannel(data: SyncData) {
       }
     }
 
-    if (cover) {
-      await uploadCover(cover);
+    const chosenCover = await pickCoverByAspect(video, cover, horizontalCover, verticalCover);
+    if (chosenCover) {
+      await uploadCover(chosenCover);
     }
 
     // 处理原创声明
