@@ -701,6 +701,12 @@
     "message": "Yidian",
     "description": "Platform name for Yidian"
   },
+  "platformDingduanhao": {
+    "message": "Dingduanhao"
+  },
+  "platformKuaichuanhao": {
+    "message": "Kuaichuanhao"
+  },
   "platformPinduoduo": {
     "message": "Pinduoduo",
     "description": "Platform name for Pinduoduo"
