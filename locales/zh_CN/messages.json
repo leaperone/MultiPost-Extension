@@ -1102,6 +1102,15 @@
     "message": "汽车之家",
     "description": "汽车之家 平台名称"
   },
+  "platformJianpian": {
+    "message": "美篇"
+  },
+  "platformTonghuashun": {
+    "message": "同花顺"
+  },
+  "platformDongchedi": {
+    "message": "懂车号"
+  },
   "platformIqiyi": {
     "message": "爱奇艺",
     "description": "爱奇艺 平台名称"
