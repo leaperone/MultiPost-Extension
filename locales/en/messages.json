@@ -685,6 +685,14 @@
     "message": "Sohu",
     "description": "Platform name for Sohu"
   },
+  "platformAliyun": {
+    "message": "Aliyun",
+    "description": "Platform name for Aliyun"
+  },
+  "platformTencentyun": {
+    "message": "Tencent Cloud",
+    "description": "Platform name for Tencent Cloud"
+  },
   "platformNetease": {
     "message": "NetEase",
     "description": "Platform name for NetEase"

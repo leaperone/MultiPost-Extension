@@ -663,6 +663,14 @@
     "message": "搜狐号",
     "description": "搜狐号平台名称"
   },
+  "platformAliyun": {
+    "message": "阿里云",
+    "description": "阿里云平台名称"
+  },
+  "platformTencentyun": {
+    "message": "腾讯云",
+    "description": "腾讯云平台名称"
+  },
   "platformNetease": {
     "message": "网易号",
     "description": "网易号平台名称"

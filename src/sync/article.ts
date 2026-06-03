@@ -1,4 +1,5 @@
 import { Article51CTO } from "./article/51cto";
+import { ArticleAliyun } from "./article/aliyun";
 import { ArticleAutohome } from "./article/autohome";
 import { ArticleBaijiahao } from "./article/baijiahao";
 import { ArticleBilibili } from "./article/bilibili";
@@ -18,14 +19,17 @@ import { ArticleOSChina } from "./article/oschina";
 import { ArticleQQ } from "./article/qq";
 import { ArticleSegmentfault } from "./article/segmentfault";
 import { ArticleSMZDM } from "./article/smzdm";
+import { ArticleSohu } from "./article/sohu";
 import { ArticleSSPai } from "./article/sspai";
 import { ArticleSubstack } from "./article/substack";
+import { ArticleTencentyun } from "./article/tencentyun";
 import { ArticleTonghuashun } from "./article/tonghuashun";
 import { ArticleToutiao } from "./article/toutiao";
 import { ArticleWeibo } from "./article/weibo";
 import { ArticleWeixin } from "./article/weixin";
 import { ArticleWordpress } from "./article/wordpress";
 import { ArticleWoshipm } from "./article/woshipm";
+import { ArticleXArticle } from "./article/xarticle";
 import { ArticleXueqiu } from "./article/xueqiu";
 import { ArticleYidianzixun } from "./article/yidianzixun";
 import { ArticleZhihu } from "./article/zhihu";
@@ -87,6 +91,30 @@ export const ArticleInfoMap: Record<string, PlatformInfo> = {
     injectFunction: ArticleSegmentfault,
     tags: ["CN"],
     accountKey: "segmentfault",
+  },
+  // experimental(待线上验证):Aliyun ARTICLE DOM 路径
+  ARTICLE_ALIYUN: {
+    type: "ARTICLE",
+    name: "ARTICLE_ALIYUN",
+    homeUrl: "https://developer.aliyun.com/",
+    faviconUrl: "https://img.alicdn.com/tfs/TB1_ZXuNcfpK1RjSZFOXXa6nFXa-32-32.ico",
+    platformName: chrome.i18n.getMessage("platformAliyun"),
+    injectUrl: "https://developer.aliyun.com/article/new",
+    injectFunction: ArticleAliyun,
+    tags: ["CN"],
+    accountKey: "aliyun",
+  },
+  // experimental(待线上验证):TencentYun ARTICLE DOM 路径
+  ARTICLE_TENCENTYUN: {
+    type: "ARTICLE",
+    name: "ARTICLE_TENCENTYUN",
+    homeUrl: "https://cloud.tencent.com/developer",
+    faviconUrl: "https://cloud.tencent.com/favicon.ico",
+    platformName: chrome.i18n.getMessage("platformTencentyun"),
+    injectUrl: "https://cloud.tencent.com/developer/article/write-new",
+    injectFunction: ArticleTencentyun,
+    tags: ["CN"],
+    accountKey: "tencentyun",
   },
   ARTICLE_BAIJIAHAO: {
     type: "ARTICLE",
@@ -358,6 +386,18 @@ export const ArticleInfoMap: Record<string, PlatformInfo> = {
     tags: ["CN"],
     accountKey: "netease",
   },
+  // experimental(待线上验证):Sohu ARTICLE DOM fallback 路径
+  ARTICLE_SOHU: {
+    type: "ARTICLE",
+    name: "ARTICLE_SOHU",
+    homeUrl: "https://mp.sohu.com/",
+    faviconUrl: "https://statics.itc.cn/mp-new/icon/1.1/favicon.ico",
+    platformName: chrome.i18n.getMessage("platformSohu"),
+    injectUrl: "https://mp.sohu.com/mpfe/v4/contentManagement/news/addarticle",
+    injectFunction: ArticleSohu,
+    tags: ["CN"],
+    accountKey: "sohu",
+  },
   // experimental(待线上验证):Dingduanhao ARTICLE DOM 路径
   ARTICLE_DINGDUANHAO: {
     type: "ARTICLE",
@@ -393,5 +433,17 @@ export const ArticleInfoMap: Record<string, PlatformInfo> = {
     injectFunction: ArticleYidianzixun,
     tags: ["CN"],
     accountKey: "yidian",
+  },
+  // experimental(待线上验证):X Article DOM 路径
+  ARTICLE_XARTICLE: {
+    type: "ARTICLE",
+    name: "ARTICLE_XARTICLE",
+    homeUrl: "https://x.com/compose/articles",
+    faviconUrl: "https://picx.zhimg.com/80/v2-fe30eaa8ebd8c0e49febff8c9bd0d5e4_1440w.png",
+    platformName: chrome.i18n.getMessage("platformX"),
+    injectUrl: "https://x.com/compose/articles",
+    injectFunction: ArticleXArticle,
+    tags: ["International"],
+    accountKey: "x",
   },
 };
