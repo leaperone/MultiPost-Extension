@@ -60,7 +60,7 @@ export async function ArticleWeibo(data: SyncData) {
   }
 
   // 上传图片
-  async function uploadImage(fileInfo: FileData): Promise<string | null> {
+  async function uploadImage(fileInfo: FileData): Promise<{ pid: string; width: number; height: number } | null> {
     console.debug("uploadImage", fileInfo);
 
     const uploadUrl = new URL("https://picupload.weibo.com/interface/pic_upload.php");
@@ -90,8 +90,9 @@ export async function ArticleWeibo(data: SyncData) {
       const result = await response.json();
       console.debug("Image upload result:", result);
 
-      if (result?.data?.pics?.pic_1?.pid) {
-        return `https://wx2.sinaimg.cn/large/${result.data.pics.pic_1.pid}.jpg`;
+      const pic = result?.data?.pics?.pic_1;
+      if (pic?.pid) {
+        return { pid: pic.pid, width: Number(pic.width) || 0, height: Number(pic.height) || 0 };
       }
       return null;
     } catch (error) {
@@ -122,10 +123,27 @@ export async function ArticleWeibo(data: SyncData) {
         const fileInfo = imageFiles.find((f) => f.url === src);
 
         if (fileInfo) {
-          const newUrl = await uploadImage(fileInfo);
-          if (newUrl) {
-            img.setAttribute("src", newUrl);
-            console.debug("newUrl", newUrl);
+          const uploaded = await uploadImage(fileInfo);
+          if (uploaded) {
+            const { pid, width, height } = uploaded;
+            // 包成微博图文标准的 figure+srcset 结构以提升多分辨率渲染;src 仍为 large,srcset 失效也不影响展示
+            const figure = doc.createElement("figure");
+            figure.className = "image";
+            const newImg = doc.createElement("img");
+            newImg.setAttribute("src", `https://wx2.sinaimg.cn/large/${pid}.jpg`);
+            newImg.setAttribute("alt", "图片");
+            newImg.setAttribute(
+              "srcset",
+              `https://wx2.sinaimg.cn/bmiddle/${pid}.jpg 440w, https://wx2.sinaimg.cn/mw690/${pid}.jpg 690w, https://wx2.sinaimg.cn/mw1024/${pid}.jpg 1024w, https://wx2.sinaimg.cn/large/${pid}.jpg 2048w`,
+            );
+            newImg.setAttribute("sizes", "100vw");
+            if (width && height) {
+              newImg.setAttribute("aspect", (width / height).toString());
+              newImg.setAttribute("width", width.toString());
+            }
+            figure.appendChild(newImg);
+            img.replaceWith(figure);
+            console.debug("newUrl", `https://wx2.sinaimg.cn/large/${pid}.jpg`);
           }
         }
       }
@@ -300,41 +318,43 @@ export async function ArticleWeibo(data: SyncData) {
         // 处理文章内容中的图片
         articleData.htmlContent = await processContent(articleData.htmlContent, articleData.images || [], updateTip);
 
-        // 处理封面图片
-        updateTip("正在上传封面...");
+        // 处理封面图片(可选):无封面时此前会整篇不发布,现修复为封面缺省也照常发布
+        let coverUrl: string | null = null;
         if (articleData.cover) {
+          updateTip("正在上传封面...");
           const croppedCover = await cropImage(articleData.cover, 16 / 9);
-          const coverUrl = await uploadImage(croppedCover);
-
-          if (!coverUrl) {
+          const uploaded = await uploadImage(croppedCover);
+          if (uploaded) {
+            coverUrl = `https://wx2.sinaimg.cn/large/${uploaded.pid}.jpg`;
+          } else {
             console.debug("封面上传失败");
           }
-
-          // 创建并保存草稿
-          const draftId = await createAndSaveDraft(articleData, coverUrl, updateTip);
-
-          if (draftId) {
-            updateTip("草稿发布成功，请预览...");
-
-            if (!data.isAutoPublish) {
-              const draftUrl = "https://card.weibo.com/article/v3/editor";
-              console.debug("draftUrl", draftUrl);
-              window.location.href = draftUrl;
-            }
-            return true;
-          }
-          updateTip("尝试 DOM 发布...");
-          // 这里可以添加DOM发布的逻辑
-          updateTip("请继续操作...");
-          return false;
         }
+
+        // 创建并保存草稿(无论是否有封面)
+        const draftId = await createAndSaveDraft(articleData, coverUrl, updateTip);
+
+        if (draftId) {
+          updateTip("草稿发布成功，请预览...");
+
+          if (!data.isAutoPublish) {
+            const draftUrl = "https://card.weibo.com/article/v3/editor";
+            console.debug("draftUrl", draftUrl);
+            window.location.href = draftUrl;
+          }
+          return true;
+        }
+
+        // TODO(待线上验证): 草稿 API 失败时的 DOM 兜底发布尚未实现;参考  weibo.js b13
+        updateTip("草稿创建失败，请手动操作");
+        return false;
       } catch (error) {
         console.error("发布文章失败:", error);
         return false;
       }
     }
 
-    publishToWeibo();
+    await publishToWeibo();
 
     // 3秒后移除提示
     setTimeout(() => {
