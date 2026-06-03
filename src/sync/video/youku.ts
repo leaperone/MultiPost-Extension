@@ -23,6 +23,33 @@ export async function VideoYouku(data: SyncData) {
     });
   }
 
+  async function publishIfAutoEnabled(): Promise<void> {
+    if (data.isAutoPublish !== true) return;
+
+    // 轮询期间重新查询按钮，避免页面重渲染后持有失效节点；视频处理较慢，最多约 60s
+    const findPublishButton = () =>
+      Array.from(document.querySelectorAll("button")).find((button) => button.textContent?.includes("发布"));
+
+    let publishButton = findPublishButton();
+    for (let i = 0; i < 60; i++) {
+      publishButton = findPublishButton();
+      if (publishButton && publishButton.getAttribute("aria-disabled") !== "true") break;
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+    }
+
+    if (!publishButton) {
+      console.debug('未找到"发布"按钮');
+      return;
+    }
+    if (publishButton.getAttribute("aria-disabled") === "true") {
+      console.debug("发布按钮仍不可用，跳过自动发布");
+      return;
+    }
+
+    console.debug("sendButton clicked");
+    publishButton.dispatchEvent(new Event("click", { bubbles: true }));
+  }
+
   try {
     const { title, content, video, tags, cover, description } = data.data as VideoData;
     if (!video) {
@@ -95,6 +122,8 @@ export async function VideoYouku(data: SyncData) {
         cropBtn?.click();
       }
     }
+
+    await publishIfAutoEnabled();
   } catch (error) {
     console.error("优酷视频发布失败:", error);
   }

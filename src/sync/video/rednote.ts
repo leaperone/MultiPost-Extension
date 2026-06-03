@@ -240,21 +240,26 @@ export async function VideoRednote(data: SyncData) {
   if (scheduledPublishTime) {
     await new Promise((resolve) => setTimeout(resolve, 2000));
     await setScheduledPublishTime(scheduledPublishTime);
-    // 处理发布按钮
-    const buttons = document.querySelectorAll("button");
-    const publishButton = Array.from(buttons).find((button) => button.textContent?.includes("发布"));
+  }
 
-    if (publishButton) {
-      // 等待按钮可用
-      while (publishButton.getAttribute("aria-disabled") === "true") {
-        await new Promise((resolve) => setTimeout(resolve, 1000));
-      }
+  if (data.isAutoPublish === true) {
+    // 轮询期间重新查询按钮，避免页面重渲染后持有失效节点；视频处理较慢，最多约 60s
+    const findPublishButton = () =>
+      Array.from(document.querySelectorAll("button")).find((button) => button.textContent?.includes("发布"));
 
-      if (publishButton) {
-        publishButton.dispatchEvent(new Event("click", { bubbles: true }));
-        await new Promise((resolve) => setTimeout(resolve, 10000));
-        window.location.href = "https://creator.xiaohongshu.com/new/note-manager";
-      }
+    let publishButton = findPublishButton();
+    for (let i = 0; i < 60; i++) {
+      publishButton = findPublishButton();
+      if (publishButton && publishButton.getAttribute("aria-disabled") !== "true") break;
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+    }
+
+    if (publishButton && publishButton.getAttribute("aria-disabled") !== "true") {
+      publishButton.dispatchEvent(new Event("click", { bubbles: true }));
+      await new Promise((resolve) => setTimeout(resolve, 10000));
+      window.location.href = "https://creator.xiaohongshu.com/new/note-manager";
+    } else {
+      console.debug("小红书：发布按钮仍不可用，跳过自动发布");
     }
   }
 }

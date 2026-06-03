@@ -441,15 +441,16 @@ export async function VideoWeiXinChannel(data: SyncData) {
       }
     }
 
+    const wujieApp = document.querySelector("wujie-app");
+    const root = wujieApp?.shadowRoot || document;
+
     // 处理定时发布
     if (scheduledPublishTime) {
       await new Promise((resolve) => setTimeout(resolve, 2000));
-
-      const wujieApp = document.querySelector("wujie-app");
-      const root = wujieApp?.shadowRoot || document;
-
       await setScheduledPublishTime(scheduledPublishTime, root);
-      // 等待内容填写完成
+    }
+
+    if (data.isAutoPublish === true) {
       await new Promise((resolve) => setTimeout(resolve, 5000));
 
       // 处理发布按钮 - 支持shadow DOM查询

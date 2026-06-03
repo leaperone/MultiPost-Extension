@@ -196,8 +196,10 @@ export async function VideoDouyin(data: SyncData) {
           console.log("定时发布时间已设置:", publishTimeInput.value);
         }
       }
+    }
+
+    if (data.isAutoPublish === true) {
       await new Promise((resolve) => setTimeout(resolve, 3000));
-      // 处理自动发布
       const buttons = document.querySelectorAll("button");
       const publishButton = Array.from(buttons).find((button) => button.textContent === "发布");
 
