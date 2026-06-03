@@ -9,6 +9,7 @@ import { ArticleInfoQ } from "./article/infoq";
 import { ArticleJianshu } from "./article/jianshu";
 import { ArticleJuejin } from "./article/juejin";
 import { ArticleMedium } from "./article/medium";
+import { ArticleNetease } from "./article/netease";
 import { ArticleOSChina } from "./article/oschina";
 import { ArticleSegmentfault } from "./article/segmentfault";
 import { ArticleSMZDM } from "./article/smzdm";
@@ -276,5 +277,17 @@ export const ArticleInfoMap: Record<string, PlatformInfo> = {
     injectFunction: ArticleAutohome,
     tags: ["CN"],
     accountKey: "autohome",
+  },
+  // experimental(待线上验证):163 DOM 路径,正文图片 CDN 重传需后续 API 化
+  ARTICLE_NETEASE: {
+    type: "ARTICLE",
+    name: "ARTICLE_NETEASE",
+    homeUrl: "https://mp.163.com/",
+    faviconUrl: "https://static.ws.126.net/163/f2e/news/yxybd_pc/resource/static/share-icon.png",
+    platformName: chrome.i18n.getMessage("platformNetease"),
+    injectUrl: "https://mp.163.com/#/article-publish",
+    injectFunction: ArticleNetease,
+    tags: ["CN"],
+    accountKey: "netease",
   },
 };
