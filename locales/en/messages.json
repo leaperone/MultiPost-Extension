@@ -1128,6 +1128,15 @@
     "message": "Autohome",
     "description": "Autohome platform name"
   },
+  "platformJianpian": {
+    "message": "Jianpian"
+  },
+  "platformTonghuashun": {
+    "message": "Tonghuashun"
+  },
+  "platformDongchedi": {
+    "message": "Dongchedi"
+  },
   "platformIqiyi": {
     "message": "iQiyi",
     "description": "iQiyi platform name"

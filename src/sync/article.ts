@@ -4,9 +4,11 @@ import { ArticleBaijiahao } from "./article/baijiahao";
 import { ArticleBilibili } from "./article/bilibili";
 import { ArticleCSDN } from "./article/csdn";
 import { ArticleDingduanhao } from "./article/dingduanhao";
+import { ArticleDongchedi } from "./article/dongchedi";
 import { ArticleDouban } from "./article/douban";
 import { ArticleEastmoney } from "./article/eastmoney";
 import { ArticleInfoQ } from "./article/infoq";
+import { ArticleJianpian } from "./article/jianpian";
 import { ArticleJianshu } from "./article/jianshu";
 import { ArticleJuejin } from "./article/juejin";
 import { ArticleKuaichuanhao } from "./article/kuaichuanhao";
@@ -18,6 +20,7 @@ import { ArticleSegmentfault } from "./article/segmentfault";
 import { ArticleSMZDM } from "./article/smzdm";
 import { ArticleSSPai } from "./article/sspai";
 import { ArticleSubstack } from "./article/substack";
+import { ArticleTonghuashun } from "./article/tonghuashun";
 import { ArticleToutiao } from "./article/toutiao";
 import { ArticleWeibo } from "./article/weibo";
 import { ArticleWeixin } from "./article/weixin";
@@ -26,6 +29,7 @@ import { ArticleWoshipm } from "./article/woshipm";
 import { ArticleXueqiu } from "./article/xueqiu";
 import { ArticleYidianzixun } from "./article/yidianzixun";
 import { ArticleZhihu } from "./article/zhihu";
+import { ArticleZsxq } from "./article/zsxq";
 import type { PlatformInfo } from "./common";
 
 export const ArticleInfoMap: Record<string, PlatformInfo> = {
@@ -293,6 +297,54 @@ export const ArticleInfoMap: Record<string, PlatformInfo> = {
     injectFunction: ArticleAutohome,
     tags: ["CN"],
     accountKey: "autohome",
+  },
+  // experimental(待线上验证):基于 aibeike 1.6.5 的 Jianpian ARTICLE DOM 路径
+  ARTICLE_JIANPIAN: {
+    type: "ARTICLE",
+    name: "ARTICLE_JIANPIAN",
+    homeUrl: "https://www.jianpian.cn/",
+    faviconUrl: "https://ss2.meipian.me/editor-v3/webcdn/logo.ico",
+    platformName: chrome.i18n.getMessage("platformJianpian"),
+    injectUrl: "https://www.jianpian.cn/p/edit",
+    injectFunction: ArticleJianpian,
+    tags: ["CN"],
+    accountKey: "jianpian",
+  },
+  // experimental(待线上验证):基于 aibeike 1.6.5 的 Tonghuashun ARTICLE DOM 路径
+  ARTICLE_TONGHUASHUN: {
+    type: "ARTICLE",
+    name: "ARTICLE_TONGHUASHUN",
+    homeUrl: "https://t.10jqka.com.cn/",
+    faviconUrl: "https://t.10jqka.com.cn/circle/images/favicon.ico",
+    platformName: chrome.i18n.getMessage("platformTonghuashun"),
+    injectUrl: "https://t.10jqka.com.cn/newcircle/creation/postAll",
+    injectFunction: ArticleTonghuashun,
+    tags: ["CN"],
+    accountKey: "tonghuashun",
+  },
+  // experimental(待线上验证):基于 aibeike 1.6.5 的 Dongchedi ARTICLE DOM 路径
+  ARTICLE_DONGCHEDI: {
+    type: "ARTICLE",
+    name: "ARTICLE_DONGCHEDI",
+    homeUrl: "https://mp.dcdapp.com/",
+    faviconUrl: "https://p3-dcd.byteimg.com/obj/tos-cn-i-dcdx/4e214394e186b0a95bc9ab7fc5154770",
+    platformName: chrome.i18n.getMessage("platformDongchedi"),
+    injectUrl: "https://mp.dcdapp.com/profile_v2/publish/article",
+    injectFunction: ArticleDongchedi,
+    tags: ["CN"],
+    accountKey: "dongchedi",
+  },
+  // experimental(待线上验证):基于 aibeike 1.6.5 的 Zsxq ARTICLE DOM 路径
+  ARTICLE_ZSXQ: {
+    type: "ARTICLE",
+    name: "ARTICLE_ZSXQ",
+    homeUrl: "https://wx.zsxq.com/",
+    faviconUrl: "https://wx.zsxq.com/assets_dweb/images/favicon_32.ico",
+    platformName: chrome.i18n.getMessage("platformZSXQ"),
+    injectUrl: "https://wx.zsxq.com/",
+    injectFunction: ArticleZsxq,
+    tags: ["CN"],
+    accountKey: "zsxq",
   },
   // experimental(待线上验证):基于 aibeike 1.6.5 的 163 DOM 路径,正文图片 CDN 重传需后续 API 化
   ARTICLE_NETEASE: {
