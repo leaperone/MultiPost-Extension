@@ -3,6 +3,7 @@ import { PodcastLiZhi } from "./podcast/lizhi";
 import { PodcastNetease } from "./podcast/netease";
 import { PodcastQingting } from "./podcast/qingting";
 import { PodcastQQMusic } from "./podcast/qqmusic";
+import { PodcastSpotify } from "./podcast/spotify";
 import { PodcastXiaoyuzhou } from "./podcast/xiaoyuzhou";
 import { PodcastXimalaya } from "./podcast/ximalaya";
 
@@ -72,5 +73,16 @@ export const PodcastInfoMap: Record<string, PlatformInfo> = {
     injectFunction: PodcastNetease,
     tags: ["CN"],
     accountKey: "neteasepodcast",
+  },
+  PODCAST_SPOTIFY: {
+    type: "PODCAST",
+    name: "PODCAST_SPOTIFY",
+    homeUrl: "https://creators.spotify.com/",
+    faviconUrl: "https://cdnv2.ruguoapp.com/FoKl7osSH8MdbCtJ799pJwpUx3amv3.png",
+    platformName: chrome.i18n.getMessage("platformSpotify"),
+    injectUrl: "https://creators.spotify.com/pod/show",
+    injectFunction: PodcastSpotify,
+    tags: ["International"],
+    accountKey: "spotify",
   },
 };

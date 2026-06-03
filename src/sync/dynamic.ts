@@ -12,6 +12,7 @@ import { DynamicKuaishou } from "./dynamic/kuaishou";
 import { DynamicLinkedin } from "./dynamic/linkedin";
 import { DynamicMaimai } from "./dynamic/maimai";
 import { DynamicOkjike } from "./dynamic/okjike";
+import { DynamicPinterest } from "./dynamic/pinterest";
 import { DynamicReddit } from "./dynamic/reddit";
 import { DynamicRednote } from "./dynamic/rednote";
 import { DynamicSubstack } from "./dynamic/substack";
@@ -167,6 +168,17 @@ export const DynamicInfoMap: Record<string, PlatformInfo> = {
     injectFunction: DynamicReddit,
     tags: ["International"],
     accountKey: "reddit",
+  },
+  DYNAMIC_PINTEREST: {
+    type: "DYNAMIC",
+    name: "DYNAMIC_PINTEREST",
+    homeUrl: "https://www.pinterest.com/",
+    faviconUrl: "https://s.pinimg.com/webapp/favicon_48x48-7470a30d.png",
+    platformName: chrome.i18n.getMessage("platformPinterest"),
+    injectUrl: "https://www.pinterest.com/pin-creation-tool/",
+    injectFunction: DynamicPinterest,
+    tags: ["International"],
+    accountKey: "pinterest",
   },
   DYNAMIC_KUAISHOU: {
     type: "DYNAMIC",
