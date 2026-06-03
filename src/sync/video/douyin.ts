@@ -62,6 +62,30 @@ export async function VideoDouyin(data: SyncData) {
     console.log("视频上传事件已触发");
   }
 
+  // 按视频宽高比挑选封面(注入函数无法 import 共享工具,内联实现):横版优先横封面、竖版优先竖封面,回退 cover
+  async function pickCoverByAspect(
+    videoFile: FileData | undefined,
+    coverImg?: FileData,
+    horizontalCoverImg?: FileData,
+    verticalCoverImg?: FileData,
+  ): Promise<FileData | undefined> {
+    if (!horizontalCoverImg && !verticalCoverImg) return coverImg;
+    let isLandscape = false;
+    if (videoFile?.url) {
+      const dims = await new Promise<{ width: number; height: number } | null>((resolve) => {
+        const probe = document.createElement("video");
+        probe.preload = "metadata";
+        probe.onloadedmetadata = () => resolve({ width: probe.videoWidth, height: probe.videoHeight });
+        probe.onerror = () => resolve(null);
+        probe.src = videoFile.url;
+      });
+      if (dims) isLandscape = dims.width > dims.height;
+    }
+    return isLandscape
+      ? horizontalCoverImg || coverImg || verticalCoverImg
+      : verticalCoverImg || coverImg || horizontalCoverImg;
+  }
+
   async function uploadCover(cover: FileData): Promise<void> {
     console.log("尝试上传封面", cover);
     const coverUploadContainer = await waitForElement("div.content-upload-new");
@@ -111,7 +135,8 @@ export async function VideoDouyin(data: SyncData) {
   }
 
   try {
-    const { content, video, title, tags, cover, scheduledPublishTime } = data.data as VideoData;
+    const { content, video, title, tags, cover, horizontalCover, verticalCover, scheduledPublishTime } =
+      data.data as VideoData;
     // 处理视频上传
     if (video) {
       const response = await fetch(video.url);
@@ -170,10 +195,11 @@ export async function VideoDouyin(data: SyncData) {
       }
     }
 
-    // 处理封面上传
-    if (cover) {
+    // 处理封面上传:按视频宽高比挑选横/竖封面
+    const chosenCover = await pickCoverByAspect(video, cover, horizontalCover, verticalCover);
+    if (chosenCover) {
       await new Promise((resolve) => setTimeout(resolve, 2000));
-      await uploadCover(cover);
+      await uploadCover(chosenCover);
     }
 
     // 处理定时发布

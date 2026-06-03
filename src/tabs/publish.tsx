@@ -224,7 +224,7 @@ export default function Publish() {
 
   const processVideo = async (data: SyncData) => {
     setNotice(chrome.i18n.getMessage("processingContent"));
-    const { video, cover, verticalCover, scheduledPublishTime } = data.data as VideoData;
+    const { video, cover, verticalCover, horizontalCover, scheduledPublishTime } = data.data as VideoData;
 
     if (!video) {
       console.warn("视频数据不存在");
@@ -240,6 +240,11 @@ export default function Publish() {
     if (verticalCover) {
       processedVerticalCover = await processFile(verticalCover);
     }
+    // 此前漏处理 horizontalCover,导致横版封面以裸 URL 传入注入脚本无法使用
+    let processedHorizontalCover: FileData | null = null;
+    if (horizontalCover) {
+      processedHorizontalCover = await processFile(horizontalCover);
+    }
 
     return {
       ...data,
@@ -248,6 +253,7 @@ export default function Publish() {
         video: processedVideo,
         cover: processedCover || cover,
         verticalCover: processedVerticalCover || verticalCover,
+        horizontalCover: processedHorizontalCover || horizontalCover,
         scheduledPublishTime: scheduledPublishTime || 0,
       },
     };
