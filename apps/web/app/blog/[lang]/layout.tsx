@@ -1,4 +1,5 @@
 import { DocsLayout } from 'fumadocs-ui/layouts/docs';
+import { notFound } from 'next/navigation';
 import type { ReactNode } from 'react';
 import { blogSource } from '@/lib/blog-source';
 import { blogI18n } from '@/lib/blog-i18n';
@@ -37,9 +38,18 @@ export default async function BlogLangLayout({
 }) {
   const { lang } = await params;
 
+  if (!blogI18n.languages.includes(lang)) {
+    notFound();
+  }
+
+  const tree = blogSource.pageTree[lang];
+  if (!tree) {
+    notFound();
+  }
+
   return (
     <BlogRootProvider lang={lang}>
-      <DocsLayout tree={blogSource.pageTree[lang]} {...baseOptions(lang)}>
+      <DocsLayout tree={tree} {...baseOptions(lang)}>
         {children}
       </DocsLayout>
     </BlogRootProvider>
