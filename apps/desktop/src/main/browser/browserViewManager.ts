@@ -425,7 +425,8 @@ export class BrowserViewManager {
     // Create BrowserView with isolated session
     const view = new BrowserView({
       webPreferences: {
-        preload: join(__dirname, '../preload/index.js'),
+        // Security: third-party platform pages get NO app preload — do not expose
+        // window.api / window.electron (raw ipcRenderer) to untrusted remote content.
         session: ses,
         contextIsolation: true,
         nodeIntegration: false,
@@ -930,7 +931,8 @@ export class BrowserViewManager {
     // Create BrowserView with isolated session
     const view = new BrowserView({
       webPreferences: {
-        preload: join(__dirname, '../preload/index.js'),
+        // Security: third-party platform pages get NO app preload — do not expose
+        // window.api / window.electron (raw ipcRenderer) to untrusted remote content.
         session: ses,
         contextIsolation: true,
         nodeIntegration: false,
@@ -1287,7 +1289,8 @@ export class BrowserViewManager {
     // Create BrowserView
     const view = new BrowserView({
       webPreferences: {
-        preload: join(__dirname, '../preload/index.js'),
+        // Security: third-party platform pages get NO app preload — do not expose
+        // window.api / window.electron (raw ipcRenderer) to untrusted remote content.
         session: ses,
         contextIsolation: true,
         nodeIntegration: false,
@@ -1796,7 +1799,8 @@ export class BrowserViewManager {
       // Create BrowserView
       const view = new BrowserView({
         webPreferences: {
-          preload: join(__dirname, '../preload/index.js'),
+          // Security: third-party platform pages get NO app preload — do not expose
+          // window.api / window.electron (raw ipcRenderer) to untrusted remote content.
           session: ses,
           contextIsolation: true,
           nodeIntegration: false,
