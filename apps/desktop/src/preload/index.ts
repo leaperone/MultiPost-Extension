@@ -17,6 +17,7 @@ import type {
   TaskStatus,
   SyncContentType,
   SyncContentData,
+  PublishEventPayload,
   UpdateStatus,
   UpdateInfo,
   GroupTab,
@@ -137,7 +138,22 @@ const api = {
         contentType,
         data,
         autoSubmit
-      )
+      ),
+    onProgress: (callback: (payload: PublishEventPayload) => void) => {
+      const listener = (_: Electron.IpcRendererEvent, payload: PublishEventPayload) => callback(payload)
+      ipcRenderer.on('multipost:publish:progress', listener)
+      return () => ipcRenderer.removeListener('multipost:publish:progress', listener)
+    },
+    onComplete: (callback: (payload: PublishEventPayload) => void) => {
+      const listener = (_: Electron.IpcRendererEvent, payload: PublishEventPayload) => callback(payload)
+      ipcRenderer.on('multipost:publish:complete', listener)
+      return () => ipcRenderer.removeListener('multipost:publish:complete', listener)
+    },
+    onError: (callback: (payload: PublishEventPayload) => void) => {
+      const listener = (_: Electron.IpcRendererEvent, payload: PublishEventPayload) => callback(payload)
+      ipcRenderer.on('multipost:publish:error', listener)
+      return () => ipcRenderer.removeListener('multipost:publish:error', listener)
+    }
   },
 
   // Platform browser controls (simple mode)

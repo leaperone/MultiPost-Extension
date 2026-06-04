@@ -17,13 +17,71 @@ import {
   type TaskStatus,
   type SyncContentType,
   type SyncContentData,
-  type PublishTargetStatus
+  type PublishTargetStatus,
+  type PublishBridgeEnvelope,
+  type PublishStatusSnapshot,
+  type PublishTargetResult
 } from '../../shared/types'
 import { BrowserViewManager } from '../browser/browserViewManager'
 import { DatabaseService } from '../database'
 import type { KeepAliveService } from '../keepalive'
 
 type BrowserViewManagerGetter = () => BrowserViewManager | null
+
+function formatIpcError(error: unknown): string {
+  if (error instanceof Error) {
+    return error.message
+  }
+  if (typeof error === 'string') {
+    return error
+  }
+  try {
+    return JSON.stringify(error)
+  } catch {
+    return String(error)
+  }
+}
+
+function publishEnvelope<TData>(
+  code: number,
+  message: string,
+  data: TData,
+  results?: PublishTargetResult[]
+): PublishBridgeEnvelope<TData> {
+  return {
+    code,
+    message,
+    data,
+    success: code === 0,
+    error: code === 0 ? undefined : message,
+    results
+  }
+}
+
+function publishSuccess<TData>(
+  message: string,
+  data: TData,
+  results?: PublishTargetResult[]
+): PublishBridgeEnvelope<TData> {
+  return publishEnvelope(0, message, data, results)
+}
+
+function publishError<TData>(
+  error: unknown,
+  data: TData,
+  results?: PublishTargetResult[],
+  code = 1
+): PublishBridgeEnvelope<TData> {
+  return publishEnvelope(code, formatIpcError(error), data, results)
+}
+
+function snapshotHasFailure(snapshot: PublishStatusSnapshot): boolean {
+  return snapshot.targets.some((target) => target.status === 'failed')
+}
+
+function snapshotWasCancelled(snapshot: PublishStatusSnapshot): boolean {
+  return snapshot.status === 'cancelled' || snapshot.targets.some((target) => target.status === 'cancelled')
+}
 
 export function registerIpcHandlers(
   ipcMain: IpcMain,
@@ -287,17 +345,27 @@ export function registerIpcHandlers(
     ) => {
       const manager = getBrowserViewManager()
       if (!manager) throw new Error('BrowserViewManager not initialized')
+      const executor = manager.getExecutorView(accountId)
+      const taskId = executor
+        ? manager.beginExecutorPublishRun({
+            contentType,
+            targets: [{ accountId, platform: executor.platform }]
+          })
+        : undefined
 
       // Wait for page to load
       await new Promise((resolve) => setTimeout(resolve, 2000))
 
       // Fill content in executor view (now keyed by accountId)
-      const fillResult = await manager.fillExecutorContent(accountId, contentType, data, autoSubmit === true)
+      const fillResult = await manager.fillExecutorContent(accountId, contentType, data, autoSubmit === true, taskId)
 
       // Auto submit if enabled
       if (autoSubmit && !fillResult.skipAdapterSubmit) {
         await new Promise((resolve) => setTimeout(resolve, 1000))
-        await manager.submitExecutorContent(accountId, contentType)
+        await manager.submitExecutorContent(accountId, contentType, taskId)
+      }
+      if (taskId) {
+        manager.finishExecutorPublishRun(taskId)
       }
     }
   )
@@ -642,33 +710,94 @@ export function registerIpcHandlers(
       }
     ) => {
       const manager = getBrowserViewManager()
-      if (!manager) throw new Error('BrowserViewManager not initialized')
+      if (!manager) {
+        return publishError('BrowserViewManager not initialized', {
+          taskId: '',
+          status: 'failed',
+          targets: [],
+          updatedAt: Date.now()
+        } satisfies PublishStatusSnapshot)
+      }
 
       const { contentType, accountId, data, autoSubmit } = params
       const account = db.getAccount(accountId)
-      if (!account) throw new Error(`Account not found: ${accountId}`)
-
-      // Open executor for this account
-      await manager.openExecutorView(
-        accountId,
-        account.platform,
-        contentType,
-        account.sessionPartition
-      )
-
-      // Wait for page to load
-      await new Promise((resolve) => setTimeout(resolve, 2000))
-
-      // Fill content
-      const fillResult = await manager.fillExecutorContent(accountId, contentType, data, autoSubmit === true)
-
-      // Auto submit if enabled
-      if (autoSubmit && !fillResult.skipAdapterSubmit) {
-        await new Promise((resolve) => setTimeout(resolve, 1000))
-        await manager.submitExecutorContent(accountId, contentType)
+      if (!account) {
+        return publishError(`Account not found: ${accountId}`, {
+          taskId: '',
+          status: 'failed',
+          targets: [],
+          updatedAt: Date.now()
+        } satisfies PublishStatusSnapshot)
       }
 
-      return { success: true }
+      const taskId = manager.beginExecutorPublishRun({
+        contentType,
+        targets: [{ accountId, platform: account.platform }]
+      })
+
+      try {
+        // Open executor for this account
+        await manager.openExecutorView(
+          accountId,
+          account.platform,
+          contentType,
+          account.sessionPartition
+        )
+        if (manager.isPublishCancelled(taskId)) {
+          await manager.closeExecutorView(accountId)
+          const snapshot = manager.finishExecutorPublishRun(taskId)
+          return publishError('Publish cancelled', snapshot, snapshot.targets, 2)
+        }
+
+        // Wait for page to load
+        await new Promise((resolve) => setTimeout(resolve, 2000))
+        if (manager.isPublishCancelled(taskId)) {
+          await manager.closeExecutorView(accountId)
+          const snapshot = manager.finishExecutorPublishRun(taskId)
+          return publishError('Publish cancelled', snapshot, snapshot.targets, 2)
+        }
+
+        // Fill content
+        const fillResult = await manager.fillExecutorContent(
+          accountId,
+          contentType,
+          data,
+          autoSubmit === true,
+          taskId
+        )
+
+        // Auto submit if enabled
+        if (autoSubmit && !fillResult.skipAdapterSubmit) {
+          await new Promise((resolve) => setTimeout(resolve, 1000))
+          if (manager.isPublishCancelled(taskId)) {
+            await manager.closeExecutorView(accountId)
+            const snapshot = manager.finishExecutorPublishRun(taskId)
+            return publishError('Publish cancelled', snapshot, snapshot.targets, 2)
+          }
+          await manager.submitExecutorContent(accountId, contentType, taskId)
+        }
+
+        const snapshot = manager.finishExecutorPublishRun(taskId)
+        if (snapshotHasFailure(snapshot)) {
+          return publishError('Publish failed', snapshot, snapshot.targets)
+        }
+        if (snapshotWasCancelled(snapshot)) {
+          return publishError('Publish cancelled', snapshot, snapshot.targets, 2)
+        }
+        return publishSuccess(
+          snapshot.status === 'completed' ? 'Publish completed' : 'Publish prepared',
+          snapshot,
+          snapshot.targets
+        )
+      } catch (error) {
+        const snapshot = manager.finishExecutorPublishRun(taskId)
+        return publishError(
+          snapshotWasCancelled(snapshot) ? 'Publish cancelled' : error,
+          snapshot,
+          snapshot.targets,
+          snapshotWasCancelled(snapshot) ? 2 : 1
+        )
+      }
     }
   )
 
@@ -685,53 +814,117 @@ export function registerIpcHandlers(
       }
     ) => {
       const manager = getBrowserViewManager()
-      if (!manager) throw new Error('BrowserViewManager not initialized')
+      if (!manager) {
+        return publishError('BrowserViewManager not initialized', {
+          taskId: '',
+          status: 'failed',
+          targets: [],
+          updatedAt: Date.now()
+        } satisfies PublishStatusSnapshot)
+      }
 
       const { contentType, targets, data, autoSubmit } = params
+      const taskId = manager.beginExecutorPublishRun({ contentType, targets })
 
       for (const target of targets) {
-        const account = db.getAccount(target.accountId)
-        if (account) {
-          await manager.openExecutorView(
-            target.accountId,
-            target.platform,
-            contentType,
-            account.sessionPartition
-          )
-        } else {
-          // For default sessions (platforms without saved accounts)
-          await manager.openExecutorView(
-            target.accountId,
-            target.platform,
-            contentType,
-            `persist:${target.platform}-default`
-          )
+        if (manager.isPublishCancelled(taskId)) {
+          break
         }
 
-        // Wait for page to load
-        await new Promise((resolve) => setTimeout(resolve, 2000))
+        try {
+          const account = db.getAccount(target.accountId)
+          if (account) {
+            await manager.openExecutorView(
+              target.accountId,
+              target.platform,
+              contentType,
+              account.sessionPartition
+            )
+          } else {
+            // For default sessions (platforms without saved accounts)
+            await manager.openExecutorView(
+              target.accountId,
+              target.platform,
+              contentType,
+              `persist:${target.platform}-default`
+            )
+          }
+          if (manager.isPublishCancelled(taskId)) {
+            await manager.closeExecutorView(target.accountId)
+            break
+          }
 
-        // Fill content
-        const fillResult = await manager.fillExecutorContent(target.accountId, contentType, data, autoSubmit === true)
+          // Wait for page to load
+          await new Promise((resolve) => setTimeout(resolve, 2000))
+          if (manager.isPublishCancelled(taskId)) {
+            await manager.closeExecutorView(target.accountId)
+            break
+          }
 
-        // Auto submit if enabled
-        if (autoSubmit && !fillResult.skipAdapterSubmit) {
-          await new Promise((resolve) => setTimeout(resolve, 1000))
-          await manager.submitExecutorContent(target.accountId, contentType)
+          // Fill content
+          const fillResult = await manager.fillExecutorContent(
+            target.accountId,
+            contentType,
+            data,
+            autoSubmit === true,
+            taskId
+          )
+
+          // Auto submit if enabled
+          if (autoSubmit && !fillResult.skipAdapterSubmit) {
+            await new Promise((resolve) => setTimeout(resolve, 1000))
+            if (manager.isPublishCancelled(taskId)) {
+              await manager.closeExecutorView(target.accountId)
+              break
+            }
+            await manager.submitExecutorContent(target.accountId, contentType, taskId)
+          }
+        } catch (error) {
+          manager.markExecutorPublishTargetFailed(taskId, target.accountId, error)
+          if (manager.isPublishCancelled(taskId)) {
+            break
+          }
         }
       }
+
+      const snapshot = manager.finishExecutorPublishRun(taskId)
+      if (snapshotHasFailure(snapshot)) {
+        return publishError('One or more targets failed', snapshot, snapshot.targets)
+      }
+      if (snapshotWasCancelled(snapshot)) {
+        return publishError('Publish cancelled', snapshot, snapshot.targets, 2)
+      }
+      return publishSuccess(
+        snapshot.status === 'completed' ? 'Publish completed' : 'Publish prepared',
+        snapshot,
+        snapshot.targets
+      )
     }
   )
 
-  // Get publish status (placeholder - will be implemented with proper task tracking)
-  ipcMain.handle('multipost:publish:getStatus', async (_, _taskId: string) => {
-    // TODO: Implement proper task status tracking
-    return 'completed'
+  ipcMain.handle('multipost:publish:getStatus', async (_, taskId: string) => {
+    const manager = getBrowserViewManager()
+    if (!manager) {
+      return 'idle'
+    }
+    return manager.getWebPublishStatus(taskId)
   })
 
-  // Cancel publish (placeholder)
-  ipcMain.handle('multipost:publish:cancel', async (_, _taskId: string) => {
-    // TODO: Implement task cancellation
+  ipcMain.handle('multipost:publish:cancel', async (_, taskId: string) => {
+    const manager = getBrowserViewManager()
+    if (!manager) {
+      return publishError('BrowserViewManager not initialized', {
+        taskId,
+        status: 'idle',
+        targets: [],
+        updatedAt: Date.now()
+      } satisfies PublishStatusSnapshot)
+    }
+    const snapshot = await manager.cancelPublish(taskId)
+    if (snapshot.status === 'idle') {
+      return publishError(`Publish task not found: ${taskId}`, snapshot)
+    }
+    return publishSuccess('Publish cancelled', snapshot, snapshot.targets)
   })
 
   // Get login status with user info
@@ -905,6 +1098,7 @@ export function registerIpcHandlers(
         contentType: SyncContentType
         targets: Array<{ accountId: string; platform: PlatformType; displayName: string }>
         data: SyncContentData
+        autoPublish?: boolean
       }
     ) => {
       const manager = getBrowserViewManager()

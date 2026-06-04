@@ -21,12 +21,41 @@ import type {
   UpdateInfo,
   BrowserTab,
   GroupTab,
-  PublishGroup
+  PublishGroup,
+  PublishBridgeEnvelope,
+  PublishEventPayload,
+  PublishStatus,
+  PublishStatusSnapshot
 } from '../shared/types'
 
 // 事件监听器存储
 type EventCallback = (...args: unknown[]) => void
 const eventListeners: Map<string, Set<EventCallback>> = new Map()
+
+interface WebPublishResult {
+  success: boolean
+  platformPostId?: string
+  platformPostUrl?: string
+  error?: string
+}
+
+function assertPublishEnvelopeOk<T>(envelope: PublishBridgeEnvelope<T>): T {
+  if (envelope.code !== 0) {
+    throw new Error(envelope.error || envelope.message)
+  }
+  return envelope.data
+}
+
+function toWebPublishResult(
+  envelope: PublishBridgeEnvelope<PublishStatusSnapshot>
+): WebPublishResult {
+  const firstTarget = envelope.results?.[0] ?? envelope.data.targets[0]
+  return {
+    success: envelope.code === 0,
+    platformPostUrl: firstTarget?.postUrl,
+    error: envelope.code === 0 ? firstTarget?.error : envelope.error || envelope.message
+  }
+}
 
 // 内部事件处理
 function setupEventListeners() {
@@ -41,17 +70,17 @@ function setupEventListeners() {
   })
 
   // 发布进度事件
-  ipcRenderer.on('multipost:publish:progress', (_, data) => {
+  ipcRenderer.on('multipost:publish:progress', (_, data: PublishEventPayload) => {
     emitEvent('publish:progress', data)
   })
 
   // 发布完成事件
-  ipcRenderer.on('multipost:publish:complete', (_, data) => {
+  ipcRenderer.on('multipost:publish:complete', (_, data: PublishEventPayload) => {
     emitEvent('publish:complete', data)
   })
 
   // 发布错误事件
-  ipcRenderer.on('multipost:publish:error', (_, data) => {
+  ipcRenderer.on('multipost:publish:error', (_, data: PublishEventPayload) => {
     emitEvent('publish:error', data)
   })
 
@@ -202,22 +231,34 @@ const multipost = {
       accountId: string
       data: SyncContentData
       autoSubmit?: boolean
-    }): Promise<{ success: boolean; platformPostId?: string; platformPostUrl?: string; error?: string }> =>
-      ipcRenderer.invoke('multipost:publish:start', params),
+    }): Promise<WebPublishResult> =>
+      ipcRenderer
+        .invoke('multipost:publish:start', params)
+        .then((envelope: PublishBridgeEnvelope<PublishStatusSnapshot>) =>
+          toWebPublishResult(envelope)
+        ),
 
     startInExecutor: (params: {
       contentType: SyncContentType
       targets: Array<{ accountId: string; platform: PlatformType; displayName?: string }>
       data: SyncContentData
       autoSubmit?: boolean
-    }): Promise<void> => ipcRenderer.invoke('multipost:publish:startInExecutor', params),
+    }): Promise<void> =>
+      ipcRenderer
+        .invoke('multipost:publish:startInExecutor', params)
+        .then((envelope: PublishBridgeEnvelope<PublishStatusSnapshot>) => {
+          assertPublishEnvelopeOk(envelope)
+        }),
 
-    getStatus: (
-      taskId: string
-    ): Promise<'idle' | 'pending' | 'processing' | 'completed' | 'failed' | 'cancelled'> =>
+    getStatus: (taskId: string): Promise<PublishStatus> =>
       ipcRenderer.invoke('multipost:publish:getStatus', taskId),
 
-    cancel: (taskId: string): Promise<void> => ipcRenderer.invoke('multipost:publish:cancel', taskId)
+    cancel: (taskId: string): Promise<void> =>
+      ipcRenderer
+        .invoke('multipost:publish:cancel', taskId)
+        .then((envelope: PublishBridgeEnvelope<PublishStatusSnapshot>) => {
+          assertPublishEnvelopeOk(envelope)
+        })
   },
 
   // 草稿 API
@@ -328,12 +369,17 @@ const multipost = {
       contentType: SyncContentType
       targets: Array<{ accountId: string; platform: PlatformType; displayName: string }>
       data: SyncContentData
-    }): Promise<string> => ipcRenderer.invoke('multipost:publishGroup:create', params),
+      autoPublish?: boolean
+    }): Promise<string> =>
+      ipcRenderer.invoke('multipost:publishGroup:create', params),
 
     show: (groupId: string): Promise<void> =>
       ipcRenderer.invoke('multipost:publishGroup:show', groupId),
 
-    switchTab: (groupId: string, accountId: string): Promise<void> =>
+    switchTab: (
+      groupId: string,
+      accountId: string
+    ): Promise<void> =>
       ipcRenderer.invoke('multipost:publishGroup:switchTab', groupId, accountId),
 
     close: (groupId: string): Promise<void> =>

@@ -11,7 +11,12 @@ import {
   type GroupTab,
   type PublishGroupStatus,
   type PublishTargetStatus,
-  type PublishGroup
+  type PublishGroup,
+  type PublishEventPayload,
+  type PublishEventStatus,
+  type PublishStatus,
+  type PublishStatusSnapshot,
+  type PublishTargetResult
 } from '../../shared/types'
 import { PLATFORMS, PLATFORM_PUBLISH_URLS } from '../../shared/constants'
 import { getAdapter } from '../platforms'
@@ -66,6 +71,9 @@ interface PublishGroupView {
       displayName: string
       status: PublishTargetStatus
       isVisible: boolean
+      error?: string
+      postUrl?: string
+      extensionKey?: string
     }
   >
   activeAccountId: string | null
@@ -76,10 +84,32 @@ interface PublishGroupView {
 
 type GroupFillResults = Map<string, ExtensionFillResult>
 
+interface ExecutorPublishTargetState {
+  accountId: string
+  platform: PlatformType
+  contentType: SyncContentType
+  status: PublishTargetStatus
+  error?: string
+  postUrl?: string
+  extensionKey?: string
+}
+
+interface ExecutorPublishRun {
+  id: string
+  contentType: SyncContentType
+  status: PublishGroupStatus
+  targets: Map<string, ExecutorPublishTargetState>
+  createdAt: number
+  updatedAt: number
+  cancelled: boolean
+}
+
 // Layout constants
 const TABBAR_HEIGHT = 40
 const TOOLBAR_HEIGHT = 40
 const DEFAULT_SIDEBAR_WIDTH = 256 // 16rem expanded
+const PUBLISH_SNAPSHOT_LIMIT = 50
+const PUBLISH_SNAPSHOT_TTL_MS = 10 * 60 * 1000
 
 // Home tab constants - the home tab loads the main web app
 const HOME_TAB_ID = '__home__'
@@ -102,6 +132,11 @@ export class BrowserViewManager {
   private tabBarView: BrowserView | null = null
   // Publish Groups - 发布 Group 管理
   private publishGroups: Map<string, PublishGroupView> = new Map()
+  private executorPublishRuns: Map<string, ExecutorPublishRun> = new Map()
+  private publishStatusSnapshots: Map<string, PublishStatusSnapshot> = new Map()
+  private cancelledPublishIds: Set<string> = new Set()
+  private finalizedPublishRunIds: Set<string> = new Set()
+  private emittedPublishErrorKeys: Set<string> = new Set()
   private activeGroupId: string | null = null
   private groupCounter: number = 0 // 用于生成 Group 名称
   private fingerprintLegacyReloads = new WeakSet<Electron.WebContents>()
@@ -180,6 +215,526 @@ export class BrowserViewManager {
       webContents.once('did-fail-load', finish)
       webContents.reload()
     })
+  }
+
+  private formatPublishError(error: unknown): string {
+    if (error instanceof Error) {
+      return error.message
+    }
+    if (typeof error === 'string') {
+      return error
+    }
+    try {
+      return JSON.stringify(error)
+    } catch {
+      return String(error)
+    }
+  }
+
+  private sendPublishEvent(
+    channel: 'multipost:publish:progress' | 'multipost:publish:complete' | 'multipost:publish:error',
+    payload: PublishEventPayload
+  ): void {
+    const sent = new Set<number>()
+    const sendTo = (webContents: Electron.WebContents | undefined): void => {
+      if (!webContents || webContents.isDestroyed() || sent.has(webContents.id)) {
+        return
+      }
+      sent.add(webContents.id)
+      webContents.send(channel, payload)
+    }
+
+    sendTo(this.tabBarView?.webContents)
+    sendTo(this.homeView?.webContents)
+    sendTo(this.mainWindow.webContents)
+  }
+
+  private toWebPublishStatus(status: PublishTargetStatus): PublishEventStatus {
+    switch (status) {
+      case 'pending':
+        return 'pending'
+      case 'filling':
+      case 'ready':
+        return 'processing'
+      case 'success':
+        return 'completed'
+      case 'failed':
+        return 'failed'
+      case 'cancelled':
+        return 'cancelled'
+    }
+  }
+
+  private isTerminalTargetStatus(status: PublishTargetStatus): boolean {
+    return status === 'success' || status === 'failed' || status === 'cancelled'
+  }
+
+  private buildPublishEventPayload(params: {
+    groupId?: string
+    taskId?: string
+    contentType: SyncContentType
+    target: Pick<
+      PublishTargetResult,
+      'platform' | 'accountId' | 'status' | 'error' | 'postUrl' | 'extensionKey'
+    >
+  }): PublishEventPayload {
+    return {
+      groupId: params.groupId,
+      taskId: params.taskId,
+      platform: params.target.platform,
+      accountId: params.target.accountId,
+      contentType: params.contentType,
+      status: this.toWebPublishStatus(params.target.status),
+      error: params.target.error,
+      postUrl: params.target.postUrl,
+      extensionKey: params.target.extensionKey
+    }
+  }
+
+  private emitPublishErrorOnce(payload: PublishEventPayload): void {
+    const runId = payload.taskId ?? payload.groupId
+    const errorKey = `${runId ?? 'unknown'}:${payload.accountId}:error`
+    if (this.emittedPublishErrorKeys.has(errorKey)) {
+      return
+    }
+    this.emittedPublishErrorKeys.add(errorKey)
+    this.sendPublishEvent('multipost:publish:error', payload)
+  }
+
+  private emitPublishCompleteOnce(runId: string, payload: PublishEventPayload): void {
+    if (this.finalizedPublishRunIds.has(runId)) {
+      return
+    }
+    this.finalizedPublishRunIds.add(runId)
+    this.sendPublishEvent('multipost:publish:complete', payload)
+  }
+
+  private buildGroupTargetResult(
+    target: PublishGroupView['views'] extends Map<string, infer T> ? T : never
+  ): PublishTargetResult {
+    return {
+      platform: target.platform,
+      accountId: target.accountId,
+      status: target.status,
+      error: target.error,
+      postUrl: target.postUrl,
+      extensionKey: target.extensionKey
+    }
+  }
+
+  private buildGroupStatusSnapshot(group: PublishGroupView): PublishStatusSnapshot {
+    return {
+      taskId: group.id,
+      groupId: group.id,
+      contentType: group.contentType,
+      status: group.status,
+      targets: Array.from(group.views.values()).map((target) => this.buildGroupTargetResult(target)),
+      updatedAt: Date.now()
+    }
+  }
+
+  private buildExecutorStatusSnapshot(run: ExecutorPublishRun): PublishStatusSnapshot {
+    return {
+      taskId: run.id,
+      contentType: run.contentType,
+      status: run.status,
+      targets: Array.from(run.targets.values()).map((target) => ({
+        platform: target.platform,
+        accountId: target.accountId,
+        status: target.status,
+        error: target.error,
+        postUrl: target.postUrl,
+        extensionKey: target.extensionKey
+      })),
+      updatedAt: run.updatedAt
+    }
+  }
+
+  private rememberPublishSnapshot(snapshot: PublishStatusSnapshot): void {
+    this.prunePublishSnapshots()
+    if (this.publishStatusSnapshots.has(snapshot.taskId)) {
+      this.publishStatusSnapshots.delete(snapshot.taskId)
+    }
+    this.publishStatusSnapshots.set(snapshot.taskId, snapshot)
+    while (this.publishStatusSnapshots.size > PUBLISH_SNAPSHOT_LIMIT) {
+      const oldestKey = this.publishStatusSnapshots.keys().next().value
+      if (oldestKey === undefined) break
+      this.publishStatusSnapshots.delete(oldestKey)
+    }
+  }
+
+  private prunePublishSnapshots(): void {
+    const oldestKeptAt = Date.now() - PUBLISH_SNAPSHOT_TTL_MS
+    for (const [taskId, snapshot] of this.publishStatusSnapshots) {
+      if (snapshot.updatedAt < oldestKeptAt) {
+        this.publishStatusSnapshots.delete(taskId)
+      }
+    }
+  }
+
+  private clearRunMarkers(taskId: string): void {
+    this.cancelledPublishIds.delete(taskId)
+    this.finalizedPublishRunIds.delete(taskId)
+    for (const key of Array.from(this.emittedPublishErrorKeys)) {
+      if (key.startsWith(`${taskId}:`)) {
+        this.emittedPublishErrorKeys.delete(key)
+      }
+    }
+  }
+
+  private statusSnapshotToWebStatus(snapshot: PublishStatusSnapshot): PublishStatus {
+    if (snapshot.status === 'idle') {
+      return 'idle'
+    }
+    if (snapshot.status === 'cancelled') {
+      return 'cancelled'
+    }
+    if (snapshot.status === 'failed') {
+      return 'failed'
+    }
+    if (snapshot.status === 'completed') {
+      return 'completed'
+    }
+
+    const statuses = snapshot.targets.map((target) => target.status)
+    if (statuses.length === 0) {
+      return snapshot.status === 'preparing' ? 'pending' : 'processing'
+    }
+    if (statuses.some((status) => status === 'cancelled')) {
+      return 'cancelled'
+    }
+    if (statuses.some((status) => status === 'failed')) {
+      return 'failed'
+    }
+    if (statuses.every((status) => status === 'success')) {
+      return 'completed'
+    }
+    if (statuses.every((status) => status === 'pending')) {
+      return 'pending'
+    }
+    return 'processing'
+  }
+
+  private setGroupTargetStatus(
+    groupId: string,
+    accountId: string,
+    status: PublishTargetStatus,
+    details: { error?: string; postUrl?: string; extensionKey?: string } = {}
+  ): void {
+    const group = this.publishGroups.get(groupId)
+    if (!group) return
+
+    const target = group.views.get(accountId)
+    if (!target) return
+
+    const previousStatus = target.status
+    target.status = status
+    if (details.error !== undefined) target.error = details.error
+    if (details.postUrl !== undefined) target.postUrl = details.postUrl
+    if (details.extensionKey !== undefined) target.extensionKey = details.extensionKey
+
+    this.updateGroupStatus(groupId)
+    this.notifyGroupTabsChanged(groupId)
+    this.rememberPublishSnapshot(this.buildGroupStatusSnapshot(group))
+
+    if (previousStatus !== status) {
+      const payload = this.buildPublishEventPayload({
+        groupId,
+        contentType: group.contentType,
+        target
+      })
+      this.sendPublishEvent('multipost:publish:progress', payload)
+      if (status === 'failed') {
+        this.emitPublishErrorOnce(payload)
+      }
+    }
+  }
+
+  private emitGroupRunFinished(groupId: string): void {
+    const group = this.publishGroups.get(groupId)
+    if (!group) return
+
+    const targets = Array.from(group.views.values())
+    const snapshot = this.buildGroupStatusSnapshot(group)
+    this.rememberPublishSnapshot(snapshot)
+
+    if (targets.length === 0 || !targets.every((target) => target.status === 'success')) {
+      return
+    }
+
+    const target = targets[0]
+    this.emitPublishCompleteOnce(
+      groupId,
+      this.buildPublishEventPayload({
+        groupId,
+        contentType: group.contentType,
+        target
+      })
+    )
+  }
+
+  beginExecutorPublishRun(params: {
+    contentType: SyncContentType
+    targets: Array<{ accountId: string; platform: PlatformType }>
+  }): string {
+    const taskId = `executor-${uuidv4()}`
+    const targets = new Map<string, ExecutorPublishTargetState>()
+    for (const target of params.targets) {
+      targets.set(target.accountId, {
+        accountId: target.accountId,
+        platform: target.platform,
+        contentType: params.contentType,
+        status: 'pending'
+      })
+    }
+
+    const run: ExecutorPublishRun = {
+      id: taskId,
+      contentType: params.contentType,
+      status: 'preparing',
+      targets,
+      createdAt: Date.now(),
+      updatedAt: Date.now(),
+      cancelled: false
+    }
+    this.executorPublishRuns.set(taskId, run)
+    this.rememberPublishSnapshot(this.buildExecutorStatusSnapshot(run))
+
+    for (const target of run.targets.values()) {
+      this.sendPublishEvent('multipost:publish:progress', this.buildPublishEventPayload({
+        taskId,
+        contentType: target.contentType,
+        target
+      }))
+    }
+
+    return taskId
+  }
+
+  private updateExecutorRunStatus(run: ExecutorPublishRun): void {
+    const statuses = Array.from(run.targets.values()).map((target) => target.status)
+    if (run.cancelled || statuses.every((status) => status === 'cancelled')) {
+      run.status = 'cancelled'
+    } else if (statuses.some((status) => status === 'failed')) {
+      run.status = statuses.every((status) => this.isTerminalTargetStatus(status)) ? 'failed' : 'publishing'
+    } else if (statuses.every((status) => status === 'success')) {
+      run.status = 'completed'
+    } else if (statuses.some((status) => status === 'filling' || status === 'ready')) {
+      run.status = 'publishing'
+    } else {
+      run.status = 'preparing'
+    }
+    run.updatedAt = Date.now()
+    this.rememberPublishSnapshot(this.buildExecutorStatusSnapshot(run))
+  }
+
+  private setExecutorTargetStatus(
+    taskId: string | undefined,
+    accountId: string,
+    status: PublishTargetStatus,
+    details: { error?: string; postUrl?: string; extensionKey?: string } = {}
+  ): void {
+    if (!taskId) return
+    const run = this.executorPublishRuns.get(taskId)
+    const target = run?.targets.get(accountId)
+    if (!run || !target) return
+
+    const previousStatus = target.status
+    target.status = status
+    if (details.error !== undefined) target.error = details.error
+    if (details.postUrl !== undefined) target.postUrl = details.postUrl
+    if (details.extensionKey !== undefined) target.extensionKey = details.extensionKey
+    this.updateExecutorRunStatus(run)
+
+    if (previousStatus !== status) {
+      const payload = this.buildPublishEventPayload({
+        taskId,
+        contentType: target.contentType,
+        target
+      })
+      this.sendPublishEvent('multipost:publish:progress', payload)
+      if (status === 'failed') {
+        this.emitPublishErrorOnce(payload)
+      }
+    }
+  }
+
+  finishExecutorPublishRun(taskId: string): PublishStatusSnapshot {
+    const run = this.executorPublishRuns.get(taskId)
+    if (!run) {
+      return this.getPublishStatus(taskId)
+    }
+
+    this.updateExecutorRunStatus(run)
+    const snapshot = this.buildExecutorStatusSnapshot(run)
+    const targets = Array.from(run.targets.values())
+
+    if (snapshot.status === 'completed' && targets.length > 0) {
+      this.emitPublishCompleteOnce(
+        taskId,
+        this.buildPublishEventPayload({
+          taskId,
+          contentType: run.contentType,
+          target: targets[0]
+        })
+      )
+    }
+
+    this.rememberPublishSnapshot(snapshot)
+    this.executorPublishRuns.delete(taskId)
+    this.clearRunMarkers(taskId)
+    return snapshot
+  }
+
+  isPublishCancelled(taskId: string): boolean {
+    return (
+      this.cancelledPublishIds.has(taskId) ||
+      this.executorPublishRuns.get(taskId)?.cancelled === true ||
+      this.publishGroups.get(taskId)?.status === 'cancelled' ||
+      this.publishStatusSnapshots.get(taskId)?.status === 'cancelled'
+    )
+  }
+
+  private isExecutorPublishCancelled(taskId?: string): boolean {
+    return taskId !== undefined && (
+      this.cancelledPublishIds.has(taskId) ||
+      this.executorPublishRuns.get(taskId)?.cancelled === true
+    )
+  }
+
+  markExecutorPublishTargetFailed(taskId: string, accountId: string, error: unknown): void {
+    if (this.isPublishCancelled(taskId)) {
+      this.setExecutorTargetStatus(taskId, accountId, 'cancelled')
+      return
+    }
+    this.setExecutorTargetStatus(taskId, accountId, 'failed', {
+      error: this.formatPublishError(error)
+    })
+  }
+
+  getPublishStatus(taskId: string): PublishStatusSnapshot {
+    this.prunePublishSnapshots()
+
+    const group = this.publishGroups.get(taskId)
+    if (group) {
+      const snapshot = this.buildGroupStatusSnapshot(group)
+      this.rememberPublishSnapshot(snapshot)
+      return snapshot
+    }
+
+    const executorRun = this.executorPublishRuns.get(taskId)
+    if (executorRun) {
+      const snapshot = this.buildExecutorStatusSnapshot(executorRun)
+      this.rememberPublishSnapshot(snapshot)
+      return snapshot
+    }
+
+    return (
+      this.publishStatusSnapshots.get(taskId) ?? {
+        taskId,
+        status: 'idle',
+        targets: [],
+        updatedAt: Date.now()
+      }
+    )
+  }
+
+  getWebPublishStatus(taskId: string): PublishStatus {
+    return this.statusSnapshotToWebStatus(this.getPublishStatus(taskId))
+  }
+
+  async cancelPublish(taskId: string): Promise<PublishStatusSnapshot> {
+    const group = this.publishGroups.get(taskId)
+    if (group) {
+      return this.cancelPublishGroup(taskId, group)
+    }
+
+    const executorRun = this.executorPublishRuns.get(taskId)
+    if (executorRun) {
+      return this.cancelExecutorPublishRun(taskId, executorRun)
+    }
+
+    if (this.executorViews.has(taskId)) {
+      const executor = this.executorViews.get(taskId)!
+      await this.closeExecutorView(taskId)
+      const snapshot: PublishStatusSnapshot = {
+        taskId,
+        status: 'cancelled',
+        targets: [
+          {
+            platform: executor.platform,
+            accountId: executor.accountId,
+            status: 'cancelled'
+          }
+        ],
+        updatedAt: Date.now()
+      }
+      this.rememberPublishSnapshot(snapshot)
+      return snapshot
+    }
+
+    return this.getPublishStatus(taskId)
+  }
+
+  private async cancelPublishGroup(
+    groupId: string,
+    group: PublishGroupView
+  ): Promise<PublishStatusSnapshot> {
+    this.cancelledPublishIds.add(groupId)
+
+    for (const target of group.views.values()) {
+      if (target.status !== 'success' && target.status !== 'failed') {
+        this.setGroupTargetStatus(groupId, target.accountId, 'cancelled')
+      }
+    }
+
+    this.updateGroupStatus(groupId)
+    const snapshot = this.buildGroupStatusSnapshot(group)
+    this.rememberPublishSnapshot(snapshot)
+    this.emitGroupRunFinished(groupId)
+
+    for (const target of group.views.values()) {
+      if (target.isVisible) {
+        this.mainWindow.removeBrowserView(target.view)
+        target.isVisible = false
+      }
+      if (!target.view.webContents.isDestroyed()) {
+        target.view.webContents.close()
+      }
+    }
+
+    this.publishGroups.delete(groupId)
+    this.clearRunMarkers(groupId)
+    if (this.activeGroupId === groupId) {
+      this.activeGroupId = null
+      await this.switchToHome()
+    } else {
+      this.notifyTabsChanged()
+    }
+
+    return snapshot
+  }
+
+  private async cancelExecutorPublishRun(
+    taskId: string,
+    run: ExecutorPublishRun
+  ): Promise<PublishStatusSnapshot> {
+    this.cancelledPublishIds.add(taskId)
+    run.cancelled = true
+
+    for (const target of run.targets.values()) {
+      if (target.status !== 'success' && target.status !== 'failed') {
+        this.setExecutorTargetStatus(taskId, target.accountId, 'cancelled')
+      }
+    }
+
+    for (const target of run.targets.values()) {
+      await this.closeExecutorView(target.accountId)
+    }
+
+    const snapshot = this.finishExecutorPublishRun(taskId)
+    this.rememberPublishSnapshot(snapshot)
+    return snapshot
   }
 
   /**
@@ -1511,75 +2066,141 @@ export class BrowserViewManager {
     accountId: string,
     contentType: SyncContentType,
     data: SyncContentData,
-    isAutoPublish = false
+    isAutoPublish = false,
+    taskId?: string
   ): Promise<ExtensionFillResult> {
     const managed = this.executorViews.get(accountId)
     if (!managed) {
       throw new Error(`No executor view found for account: ${accountId}`)
     }
 
-    const normalizedData = this.normalizeContentData(data)
+    if (this.isExecutorPublishCancelled(taskId)) {
+      this.setExecutorTargetStatus(taskId, accountId, 'cancelled')
+      throw new Error('Publish cancelled')
+    }
 
-    const extensionInjectUrl = getExtensionInjectUrl(managed.platform, contentType)
-    if (extensionInjectUrl) {
-      await this.loadExactUrlIfNeeded(managed.view.webContents, extensionInjectUrl)
-    } else {
-      // Navigate to publish URL if not already there
-      const publishUrl = this.getPublishUrl(managed.platform, contentType)
-      const currentUrl = managed.view.webContents.getURL()
-      try {
-        const targetHostname = new URL(publishUrl).hostname
-        if (!currentUrl.includes(targetHostname)) {
+    this.setExecutorTargetStatus(taskId, accountId, 'filling')
+
+    try {
+      const normalizedData = this.normalizeContentData(data)
+
+      const extensionInjectUrl = getExtensionInjectUrl(managed.platform, contentType)
+      if (extensionInjectUrl) {
+        await this.loadExactUrlIfNeeded(managed.view.webContents, extensionInjectUrl)
+      } else {
+        // Navigate to publish URL if not already there
+        const publishUrl = this.getPublishUrl(managed.platform, contentType)
+        const currentUrl = managed.view.webContents.getURL()
+        try {
+          const targetHostname = new URL(publishUrl).hostname
+          if (!currentUrl.includes(targetHostname)) {
+            await managed.view.webContents.loadURL(publishUrl)
+            await this.waitForNavigationSettle()
+          }
+        } catch {
           await managed.view.webContents.loadURL(publishUrl)
           await this.waitForNavigationSettle()
         }
-      } catch {
-        await managed.view.webContents.loadURL(publishUrl)
-        await this.waitForNavigationSettle()
       }
-    }
 
-    const extensionResult = await executeExtensionFill(
-      managed.view.webContents,
-      managed.platform,
-      contentType,
-      normalizedData,
-      isAutoPublish
-    )
-    if (extensionResult.handled) {
-      if (!extensionResult.ok) {
-        throw new Error(extensionResult.error || '扩展发布脚本执行失败')
+      if (this.isExecutorPublishCancelled(taskId)) {
+        this.setExecutorTargetStatus(taskId, accountId, 'cancelled')
+        throw new Error('Publish cancelled')
       }
+
+      const extensionResult = await executeExtensionFill(
+        managed.view.webContents,
+        managed.platform,
+        contentType,
+        normalizedData,
+        isAutoPublish
+      )
+
+      if (this.isExecutorPublishCancelled(taskId)) {
+        this.setExecutorTargetStatus(taskId, accountId, 'cancelled')
+        throw new Error('Publish cancelled')
+      }
+
+      if (extensionResult.handled) {
+        if (!extensionResult.ok) {
+          throw new Error(extensionResult.error || '扩展发布脚本执行失败')
+        }
+        // TODO(future): plug in real publish confirmation once injectors report that the post went live.
+        this.setExecutorTargetStatus(taskId, accountId, 'ready', {
+          extensionKey: extensionResult.extensionKey
+        })
+        return extensionResult
+      }
+
+      const adapter = getAdapter(managed.platform)
+      if (!adapter) {
+        throw new Error(`No adapter found for platform: ${managed.platform}`)
+      }
+
+      const fillScript = adapter.getFillScript(contentType, normalizedData)
+      await managed.view.webContents.executeJavaScript(fillScript)
+      if (this.isExecutorPublishCancelled(taskId)) {
+        this.setExecutorTargetStatus(taskId, accountId, 'cancelled')
+        throw new Error('Publish cancelled')
+      }
+      this.setExecutorTargetStatus(taskId, accountId, 'ready')
       return extensionResult
+    } catch (error) {
+      if (this.isExecutorPublishCancelled(taskId)) {
+        this.setExecutorTargetStatus(taskId, accountId, 'cancelled')
+      } else {
+        this.setExecutorTargetStatus(taskId, accountId, 'failed', {
+          error: this.formatPublishError(error)
+        })
+      }
+      throw error
     }
-
-    const adapter = getAdapter(managed.platform)
-    if (!adapter) {
-      throw new Error(`No adapter found for platform: ${managed.platform}`)
-    }
-
-    const fillScript = adapter.getFillScript(contentType, normalizedData)
-    await managed.view.webContents.executeJavaScript(fillScript)
-    return extensionResult
   }
 
   /**
    * Submit content in an executor BrowserView
    */
-  async submitExecutorContent(accountId: string, contentType: SyncContentType): Promise<void> {
+  async submitExecutorContent(
+    accountId: string,
+    contentType: SyncContentType,
+    taskId?: string
+  ): Promise<void> {
     const managed = this.executorViews.get(accountId)
     if (!managed) {
       throw new Error(`No executor view found for account: ${accountId}`)
     }
 
-    const adapter = getAdapter(managed.platform)
-    if (!adapter) {
-      throw new Error(`No adapter found for platform: ${managed.platform}`)
+    if (this.isExecutorPublishCancelled(taskId)) {
+      this.setExecutorTargetStatus(taskId, accountId, 'cancelled')
+      throw new Error('Publish cancelled')
     }
 
-    const result = await adapter.submit(managed.view, contentType)
-    if (!result.success) {
-      throw new Error(result.error || '发布失败')
+    try {
+      const adapter = getAdapter(managed.platform)
+      if (!adapter) {
+        throw new Error(`No adapter found for platform: ${managed.platform}`)
+      }
+
+      const result = await adapter.submit(managed.view, contentType)
+      if (this.isExecutorPublishCancelled(taskId)) {
+        this.setExecutorTargetStatus(taskId, accountId, 'cancelled')
+        throw new Error('Publish cancelled')
+      }
+      if (!result.success) {
+        throw new Error(result.error || '发布失败')
+      }
+      this.setExecutorTargetStatus(taskId, accountId, 'success', {
+        postUrl: result.postUrl
+      })
+    } catch (error) {
+      if (this.isExecutorPublishCancelled(taskId)) {
+        this.setExecutorTargetStatus(taskId, accountId, 'cancelled')
+      } else {
+        this.setExecutorTargetStatus(taskId, accountId, 'failed', {
+          error: this.formatPublishError(error)
+        })
+      }
+      throw error
     }
   }
 
@@ -2089,6 +2710,8 @@ export class BrowserViewManager {
     const group = this.publishGroups.get(groupId)
     if (!group) return
 
+    this.rememberPublishSnapshot(this.buildGroupStatusSnapshot(group))
+
     // Remove all views
     for (const target of group.views.values()) {
       if (target.isVisible) {
@@ -2099,6 +2722,7 @@ export class BrowserViewManager {
 
     // Delete the group
     this.publishGroups.delete(groupId)
+    this.clearRunMarkers(groupId)
 
     // If this was the active group, switch to home
     if (this.activeGroupId === groupId) {
@@ -2169,7 +2793,10 @@ export class BrowserViewManager {
         accountId: t.accountId,
         platform: t.platform,
         displayName: t.displayName,
-        status: t.status
+        status: t.status,
+        error: t.error,
+        postUrl: t.postUrl,
+        extensionKey: t.extensionKey
       })),
       activeAccountId: group.activeAccountId,
       createdAt: group.createdAt
@@ -2190,7 +2817,10 @@ export class BrowserViewManager {
         accountId: t.accountId,
         platform: t.platform,
         displayName: t.displayName,
-        status: t.status
+        status: t.status,
+        error: t.error,
+        postUrl: t.postUrl,
+        extensionKey: t.extensionKey
       })),
       activeAccountId: group.activeAccountId,
       createdAt: group.createdAt
@@ -2274,15 +2904,31 @@ export class BrowserViewManager {
 
     for (const [accountId, target] of group.views) {
       try {
-        target.status = 'filling'
-        this.notifyGroupTabsChanged(groupId)
+        if (this.cancelledPublishIds.has(groupId)) {
+          if (target.status !== 'success' && target.status !== 'failed') {
+            this.setGroupTargetStatus(groupId, accountId, 'cancelled')
+          }
+          continue
+        }
+
+        this.setGroupTargetStatus(groupId, accountId, 'filling')
 
         // Wait for page to be ready
         await new Promise((resolve) => setTimeout(resolve, 1000))
 
+        if (this.cancelledPublishIds.has(groupId)) {
+          this.setGroupTargetStatus(groupId, accountId, 'cancelled')
+          continue
+        }
+
         const extensionInjectUrl = getExtensionInjectUrl(target.platform, group.contentType)
         if (extensionInjectUrl) {
           await this.loadExactUrlIfNeeded(target.view.webContents, extensionInjectUrl)
+        }
+
+        if (this.cancelledPublishIds.has(groupId)) {
+          this.setGroupTargetStatus(groupId, accountId, 'cancelled')
+          continue
         }
 
         const extensionResult = await executeExtensionFill(
@@ -2292,37 +2938,54 @@ export class BrowserViewManager {
           normalizedData,
           group.autoPublish
         )
+        if (this.cancelledPublishIds.has(groupId)) {
+          this.setGroupTargetStatus(groupId, accountId, 'cancelled')
+          continue
+        }
         if (extensionResult.handled) {
           fillResults.set(accountId, extensionResult)
           if (!extensionResult.ok) {
             throw new Error(extensionResult.error || '扩展发布脚本执行失败')
           }
-          // TODO(phase3): use injector-confirmed publish state before marking extension auto-publish as success.
-          target.status = 'ready'
+          // TODO(future): plug in real publish confirmation once injectors report that the post went live.
+          this.setGroupTargetStatus(groupId, accountId, 'ready', {
+            extensionKey: extensionResult.extensionKey
+          })
           console.log(`[BrowserViewManager] Filled content for ${target.displayName} via extension injector`)
-          this.notifyGroupTabsChanged(groupId)
-          this.updateGroupStatus(groupId)
           continue
         }
 
         const adapter = getAdapter(target.platform)
         if (!adapter) {
-          target.status = 'failed'
-          console.error(`No adapter found for platform: ${target.platform}`)
+          const error = `No adapter found for platform: ${target.platform}`
+          if (this.cancelledPublishIds.has(groupId)) {
+            this.setGroupTargetStatus(groupId, accountId, 'cancelled')
+          } else {
+            this.setGroupTargetStatus(groupId, accountId, 'failed', { error })
+          }
+          console.error(error)
           continue
         }
 
         const fillScript = adapter.getFillScript(group.contentType, normalizedData)
         await target.view.webContents.executeJavaScript(fillScript)
+        if (this.cancelledPublishIds.has(groupId)) {
+          this.setGroupTargetStatus(groupId, accountId, 'cancelled')
+          continue
+        }
 
-        target.status = 'ready'
+        this.setGroupTargetStatus(groupId, accountId, 'ready')
         console.log(`[BrowserViewManager] Filled content for ${target.displayName}`)
       } catch (error) {
-        target.status = 'failed'
+        if (this.cancelledPublishIds.has(groupId)) {
+          this.setGroupTargetStatus(groupId, accountId, 'cancelled')
+        } else {
+          this.setGroupTargetStatus(groupId, accountId, 'failed', {
+            error: this.formatPublishError(error)
+          })
+        }
         console.error(`Failed to fill content for ${accountId}:`, error)
       }
-
-      this.notifyGroupTabsChanged(groupId)
     }
 
     return fillResults
@@ -2334,7 +2997,7 @@ export class BrowserViewManager {
   async submitGroupTarget(
     groupId: string,
     accountId: string,
-    options: { skipAdapterSubmit?: boolean } = {}
+    options: { skipAdapterSubmit?: boolean; suppressFinishEvent?: boolean } = {}
   ): Promise<void> {
     const group = this.publishGroups.get(groupId)
     if (!group) {
@@ -2347,30 +3010,58 @@ export class BrowserViewManager {
     }
 
     if (options.skipAdapterSubmit) {
-      target.status = 'ready'
-      this.notifyGroupTabsChanged(groupId)
-      this.updateGroupStatus(groupId)
+      // TODO(future): plug in real publish confirmation once extension injectors report live-post success.
+      this.setGroupTargetStatus(groupId, accountId, 'ready')
       return
     }
 
     const adapter = getAdapter(target.platform)
     if (!adapter) {
-      throw new Error(`No adapter found for platform: ${target.platform}`)
+      const error = `No adapter found for platform: ${target.platform}`
+      this.setGroupTargetStatus(
+        groupId,
+        accountId,
+        this.cancelledPublishIds.has(groupId) ? 'cancelled' : 'failed',
+        this.cancelledPublishIds.has(groupId) ? {} : { error }
+      )
+      if (!options.suppressFinishEvent) {
+        this.emitGroupRunFinished(groupId)
+      }
+      throw new Error(error)
     }
 
     try {
+      if (this.cancelledPublishIds.has(groupId)) {
+        this.setGroupTargetStatus(groupId, accountId, 'cancelled')
+        throw new Error('Publish cancelled')
+      }
       const result = await adapter.submit(target.view, group.contentType)
+      if (this.cancelledPublishIds.has(groupId)) {
+        this.setGroupTargetStatus(groupId, accountId, 'cancelled')
+        throw new Error('Publish cancelled')
+      }
       if (result.success) {
-        target.status = 'success'
+        this.setGroupTargetStatus(groupId, accountId, 'success', {
+          postUrl: result.postUrl
+        })
       } else {
-        target.status = 'failed'
+        this.setGroupTargetStatus(groupId, accountId, 'failed', {
+          error: result.error || '发布失败'
+        })
       }
     } catch (error) {
-      target.status = 'failed'
+      if (this.cancelledPublishIds.has(groupId)) {
+        this.setGroupTargetStatus(groupId, accountId, 'cancelled')
+      } else {
+        this.setGroupTargetStatus(groupId, accountId, 'failed', {
+          error: this.formatPublishError(error)
+        })
+      }
       throw error
     } finally {
-      this.notifyGroupTabsChanged(groupId)
-      this.updateGroupStatus(groupId)
+      if (!options.suppressFinishEvent) {
+        this.emitGroupRunFinished(groupId)
+      }
     }
   }
 
@@ -2388,13 +3079,23 @@ export class BrowserViewManager {
 
     for (const accountId of group.views.keys()) {
       try {
+        if (this.cancelledPublishIds.has(groupId)) {
+          const target = group.views.get(accountId)
+          if (target && target.status !== 'success' && target.status !== 'failed') {
+            this.setGroupTargetStatus(groupId, accountId, 'cancelled')
+          }
+          continue
+        }
         await this.submitGroupTarget(groupId, accountId, {
-          skipAdapterSubmit: options.skipAdapterSubmitFor?.has(accountId) === true
+          skipAdapterSubmit: options.skipAdapterSubmitFor?.has(accountId) === true,
+          suppressFinishEvent: true
         })
       } catch (error) {
         console.error(`Failed to submit for ${accountId}:`, error)
       }
     }
+
+    this.emitGroupRunFinished(groupId)
   }
 
   /**
@@ -2406,12 +3107,20 @@ export class BrowserViewManager {
 
     const statuses = Array.from(group.views.values()).map((t) => t.status)
 
-    if (statuses.every((s) => s === 'success')) {
+    if (statuses.length === 0) {
+      group.status = 'cancelled'
+    } else if (statuses.every((s) => s === 'cancelled')) {
+      group.status = 'cancelled'
+    } else if (statuses.some((s) => s === 'cancelled') && statuses.every((s) => this.isTerminalTargetStatus(s))) {
+      group.status = 'cancelled'
+    } else if (statuses.every((s) => s === 'success')) {
       group.status = 'completed'
-    } else if (statuses.some((s) => s === 'failed')) {
+    } else if (statuses.some((s) => s === 'failed') && statuses.every((s) => this.isTerminalTargetStatus(s))) {
       group.status = 'failed'
     } else if (statuses.every((s) => s === 'ready' || s === 'success')) {
       group.status = 'preparing'
+    } else if (statuses.some((s) => s === 'filling')) {
+      group.status = 'publishing'
     }
   }
 
@@ -2429,9 +3138,7 @@ export class BrowserViewManager {
     const target = group.views.get(accountId)
     if (!target) return
 
-    target.status = status
-    this.notifyGroupTabsChanged(groupId)
-    this.updateGroupStatus(groupId)
+    this.setGroupTargetStatus(groupId, accountId, status)
   }
 
   // ========== Debug methods (dev only) ==========

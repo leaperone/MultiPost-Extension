@@ -288,6 +288,8 @@ export interface PublishResult {
   error?: string
 }
 
+export type PublishBridgeCode = 0 | number
+
 // IPC Channel types
 export interface IpcChannels {
   // Account management
@@ -341,10 +343,56 @@ export interface BrowserTab {
 // ========== Publish Group Types ==========
 
 // 发布 Group 整体状态
-export type PublishGroupStatus = 'preparing' | 'publishing' | 'completed' | 'failed'
+export type PublishGroupStatus = 'preparing' | 'publishing' | 'completed' | 'failed' | 'cancelled'
 
 // 单个发布目标状态
-export type PublishTargetStatus = 'pending' | 'filling' | 'ready' | 'success' | 'failed'
+export type PublishTargetStatus = 'pending' | 'filling' | 'ready' | 'success' | 'failed' | 'cancelled'
+
+// Web-facing publish status vocabulary used by apps/web/lib/desktop-bridge.ts
+export type PublishStatus = 'idle' | 'pending' | 'processing' | 'completed' | 'failed' | 'cancelled'
+
+export type PublishEventStatus = Exclude<PublishStatus, 'idle'>
+
+export interface PublishTargetResult {
+  platform: PlatformType
+  accountId: string
+  status: PublishTargetStatus
+  error?: string
+  postUrl?: string
+  extensionKey?: string
+}
+
+export interface PublishEventPayload {
+  groupId?: string
+  taskId?: string
+  platform: PlatformType
+  accountId: string
+  contentType: SyncContentType
+  status: PublishEventStatus
+  error?: string
+  postUrl?: string
+  extensionKey?: string
+}
+
+export type PublishLifecycleStatus = PublishGroupStatus | 'idle'
+
+export interface PublishStatusSnapshot {
+  taskId: string
+  groupId?: string
+  contentType?: SyncContentType
+  status: PublishLifecycleStatus
+  targets: PublishTargetResult[]
+  updatedAt: number
+}
+
+export interface PublishBridgeEnvelope<TData = unknown> {
+  code: PublishBridgeCode
+  message: string
+  data: TData
+  success: boolean
+  error?: string
+  results?: PublishTargetResult[]
+}
 
 // 发布 Group 内的单个 Tab
 export interface GroupTab {
@@ -379,6 +427,9 @@ export interface PublishGroup {
     platform: PlatformType
     displayName: string
     status: PublishTargetStatus
+    error?: string
+    postUrl?: string
+    extensionKey?: string
   }>
   activeAccountId: string | null
   createdAt: number
