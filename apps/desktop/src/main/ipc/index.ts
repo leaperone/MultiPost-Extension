@@ -4,19 +4,20 @@ import * as path from 'path'
 import { v4 as uuidv4 } from 'uuid'
 import { IPC_CHANNELS, PLATFORMS } from '../../shared/constants'
 import { getMimeType } from '../utils/mime'
-import type {
-  Account,
-  AccountGroup,
-  Draft,
-  PublishHistory,
-  PublishHistoryStatus,
-  ScheduledPublish,
-  PlatformType,
-  PublishTask,
-  TaskStatus,
-  SyncContentType,
-  SyncContentData,
-  PublishTargetStatus
+import {
+  createLocalFileUrl,
+  type Account,
+  type AccountGroup,
+  type Draft,
+  type PublishHistory,
+  type PublishHistoryStatus,
+  type ScheduledPublish,
+  type PlatformType,
+  type PublishTask,
+  type TaskStatus,
+  type SyncContentType,
+  type SyncContentData,
+  type PublishTargetStatus
 } from '../../shared/types'
 import { BrowserViewManager } from '../browser/browserViewManager'
 import { DatabaseService } from '../database'
@@ -463,7 +464,7 @@ export function registerIpcHandlers(
       return {
         name,
         path: filePath,
-        url: `local-file://${encodeURIComponent(filePath)}`,
+        url: createLocalFileUrl(filePath),
         type: mimeType,
         size: stats.size
       }

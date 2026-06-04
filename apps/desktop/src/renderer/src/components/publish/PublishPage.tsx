@@ -890,18 +890,19 @@ export function PublishPage({
               </span>
               {/* Cancel button - only show when publishing */}
               {isPublishing && onCancelPublish && (
-                <Button
-                  variant="flat"
-                  color="danger"
-                  size="sm"
-                  onPress={(e) => {
-                    e.stopPropagation()
-                    onCancelPublish()
-                  }}
-                  startContent={<StopCircle className="size-4" />}
-                >
-                  取消
-                </Button>
+                // Wrapper stops the DOM click from bubbling to the collapsible header's
+                // toggle (PressEvent has no stopPropagation); Button keeps onPress for cancel.
+                <span className="inline-flex" onClick={(e) => e.stopPropagation()}>
+                  <Button
+                    variant="flat"
+                    color="danger"
+                    size="sm"
+                    onPress={() => onCancelPublish()}
+                    startContent={<StopCircle className="size-4" />}
+                  >
+                    取消
+                  </Button>
+                </span>
               )}
             </div>
           </div>

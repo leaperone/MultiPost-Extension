@@ -1,22 +1,24 @@
 import { BrowserView, BrowserWindow, session, ipcMain, shell, dialog, net } from 'electron'
 import { join, basename, extname } from 'path'
-import * as fs from 'fs'
 import { v4 as uuidv4 } from 'uuid'
 import { is } from '@electron-toolkit/utils'
-import type {
-  PlatformType,
-  SyncContentType,
-  SyncContentData,
-  BrowserTab,
-  GroupTab,
-  PublishGroupStatus,
-  PublishTargetStatus,
-  PublishGroup
+import {
+  createLocalFileUrl,
+  type PlatformType,
+  type SyncContentType,
+  type SyncContentData,
+  type BrowserTab,
+  type GroupTab,
+  type PublishGroupStatus,
+  type PublishTargetStatus,
+  type PublishGroup
 } from '../../shared/types'
 import { PLATFORMS, PLATFORM_PUBLISH_URLS } from '../../shared/constants'
 import { getAdapter } from '../platforms'
 import { FingerprintService } from '../fingerprint'
 import { getMimeType } from '../utils/mime'
+import { getDesktopRequestHeaders, hardenSession, registerLocalFileProtocol } from './sessionHardening'
+import { DatabaseService } from '../database'
 
 interface ManagedBrowserView {
   view: BrowserView
@@ -95,6 +97,7 @@ export class BrowserViewManager {
   private publishGroups: Map<string, PublishGroupView> = new Map()
   private activeGroupId: string | null = null
   private groupCounter: number = 0 // 用于生成 Group 名称
+  private fingerprintLegacyReloads = new WeakSet<Electron.WebContents>()
 
   constructor(mainWindow: BrowserWindow) {
     this.mainWindow = mainWindow
@@ -107,6 +110,69 @@ export class BrowserViewManager {
     this.mainWindow.on('resize', updateBounds)
     this.mainWindow.on('maximize', updateBounds)
     this.mainWindow.on('unmaximize', updateBounds)
+  }
+
+  private getPlatformFingerprintKey(platform: PlatformType): string {
+    return `platform-default-${platform}`
+  }
+
+  private async applyFingerprintToView(view: BrowserView, profileKey: string): Promise<void> {
+    try {
+      console.log('[BrowserViewManager] Applying fingerprint:', profileKey)
+      await this.fingerprintService.applyFingerprintToWebContents(view.webContents, profileKey)
+      console.log('[BrowserViewManager] Fingerprint applied successfully:', profileKey)
+    } catch (error) {
+      console.warn('[BrowserViewManager] Fingerprint application failed:', error)
+    }
+  }
+
+  private async ensureFingerprintForView(
+    view: BrowserView,
+    profileKey: string,
+    opts: { reloadLoadedLegacy?: boolean } = {}
+  ): Promise<void> {
+    const webContents = view.webContents
+    const hadFingerprint = this.fingerprintService.hasFingerprintScript(webContents)
+    await this.applyFingerprintToView(view, profileKey)
+    const hasFingerprint = this.fingerprintService.hasFingerprintScript(webContents)
+
+    if (
+      opts.reloadLoadedLegacy &&
+      !hadFingerprint &&
+      hasFingerprint &&
+      !this.fingerprintLegacyReloads.has(webContents)
+    ) {
+      this.fingerprintLegacyReloads.add(webContents)
+      await this.reloadWebContentsForFingerprint(webContents)
+    }
+  }
+
+  private async reloadWebContentsForFingerprint(webContents: Electron.WebContents): Promise<void> {
+    if (webContents.isDestroyed()) {
+      return
+    }
+
+    const currentUrl = webContents.getURL()
+    if (!currentUrl || currentUrl === 'about:blank') {
+      return
+    }
+
+    await new Promise<void>((resolve) => {
+      let settled = false
+      const finish = (): void => {
+        if (settled) return
+        settled = true
+        clearTimeout(timeout)
+        webContents.removeListener('did-finish-load', finish)
+        webContents.removeListener('did-fail-load', finish)
+        resolve()
+      }
+
+      const timeout = setTimeout(finish, 15_000)
+      webContents.once('did-finish-load', finish)
+      webContents.once('did-fail-load', finish)
+      webContents.reload()
+    })
   }
 
   /**
@@ -298,7 +364,6 @@ export class BrowserViewManager {
 
     // 设置默认账号
     ipcMain.handle('multipost:account:setDefault', async (_, id: string) => {
-      const { DatabaseService } = await import('../database')
       const account = await DatabaseService.getInstance().getAccount(id)
       if (account) {
         await DatabaseService.getInstance().setDefaultAccount(id, account.platform)
@@ -340,7 +405,10 @@ export class BrowserViewManager {
       console.log('[BrowserViewManager] View exists, showing it')
       await this.showView(accountId)
       if (url) {
+        await this.ensureFingerprintForView(existing.view, accountId)
         await this.navigate(accountId, url)
+      } else {
+        await this.ensureFingerprintForView(existing.view, accountId, { reloadLoadedLegacy: true })
       }
       return existing.view
     }
@@ -348,11 +416,11 @@ export class BrowserViewManager {
     console.log('[BrowserViewManager] Creating new view')
     // Get session partition from account database for session isolation
     // This ensures login state is preserved across different features
-    const { DatabaseService } = await import('../database')
     const account = DatabaseService.getInstance().getAccount(accountId)
     const partition = account?.sessionPartition || `persist:account-${accountId}`
     console.log('[BrowserViewManager] Using session partition:', partition)
     const ses = session.fromPartition(partition)
+    hardenSession(ses)
 
     // Create BrowserView with isolated session
     const view = new BrowserView({
@@ -381,17 +449,8 @@ export class BrowserViewManager {
     view.setAutoResize({ width: false, height: false })
     console.log('[BrowserViewManager] View created with bounds offset y:', topOffset)
 
-    // Apply fingerprint before loading any content
-    // Must wait for CDP commands to complete before loading URL
-    // TODO: Temporarily disabled fingerprint injection
-    // try {
-    //   console.log('[BrowserViewManager] Applying fingerprint...')
-    //   await this.fingerprintService.applyFingerprintToWebContents(view.webContents, accountId)
-    //   console.log('[BrowserViewManager] Fingerprint applied successfully')
-    // } catch (err) {
-    //   console.warn('[BrowserViewManager] Fingerprint application failed:', err)
-    //   // Continue without fingerprint
-    // }
+    // Apply fingerprint before loading any content.
+    await this.ensureFingerprintForView(view, accountId)
 
     // Store the managed view
     const targetUrl = url || PLATFORMS[platform]?.url || 'about:blank'
@@ -609,10 +668,10 @@ export class BrowserViewManager {
     platform: PlatformType
   ): Promise<{ username: string; displayName?: string; avatar?: string } | null> {
     try {
-      const { DatabaseService } = await import('../database')
       const account = DatabaseService.getInstance().getAccount(accountId)
       const partition = account?.sessionPartition || `persist:account-${accountId}`
       const ses = session.fromPartition(partition)
+      hardenSession(ses)
 
       if (platform === 'bilibili') {
         const cookies = await ses.cookies.get({ domain: '.bilibili.com' })
@@ -621,7 +680,10 @@ export class BrowserViewManager {
 
         const cookieHeader = cookies.map((c) => `${c.name}=${c.value}`).join('; ')
         const response = await net.fetch('https://api.bilibili.com/x/web-interface/nav', {
-          headers: { Cookie: cookieHeader }
+          headers: getDesktopRequestHeaders({
+            Cookie: cookieHeader,
+            Referer: 'https://www.bilibili.com/'
+          })
         })
         const data = await response.json()
 
@@ -643,11 +705,11 @@ export class BrowserViewManager {
 
         const cookieHeader = cookies.map((c) => `${c.name}=${c.value}`).join('; ')
         const response = await net.fetch('https://edith.xiaohongshu.com/api/sns/web/v2/user/me', {
-          headers: {
+          headers: getDesktopRequestHeaders({
             Cookie: cookieHeader,
             Origin: 'https://www.xiaohongshu.com',
             Referer: 'https://www.xiaohongshu.com/'
-          }
+          })
         })
         const data = await response.json()
 
@@ -676,7 +738,6 @@ export class BrowserViewManager {
    */
   async getLoginStatus(accountId: string, platform: PlatformType): Promise<boolean> {
     // Get session partition from database
-    const { DatabaseService } = await import('../database')
     const account = DatabaseService.getInstance().getAccount(accountId)
 
     // Try both old and new partition formats
@@ -851,7 +912,12 @@ export class BrowserViewManager {
       // Navigate to appropriate URL for content type
       const targetUrl = url || this.getPublishUrl(platform, contentType)
       if (targetUrl) {
+        await this.ensureFingerprintForView(existing.view, this.getPlatformFingerprintKey(platform))
         await this.navigatePlatform(platform, targetUrl)
+      } else {
+        await this.ensureFingerprintForView(existing.view, this.getPlatformFingerprintKey(platform), {
+          reloadLoadedLegacy: true
+        })
       }
       return existing.view
     }
@@ -859,6 +925,7 @@ export class BrowserViewManager {
     // Create partition for session isolation (shared for the platform)
     const partition = `persist:${platform}-default`
     const ses = session.fromPartition(partition)
+    hardenSession(ses)
 
     // Create BrowserView with isolated session
     const view = new BrowserView({
@@ -882,6 +949,8 @@ export class BrowserViewManager {
     })
     // Disable auto-resize, we manage bounds manually via resize listener
     view.setAutoResize({ width: false, height: false })
+
+    await this.ensureFingerprintForView(view, this.getPlatformFingerprintKey(platform))
 
     // Store the managed view (not visible initially)
     this.platformViews.set(platform, {
@@ -1205,6 +1274,7 @@ export class BrowserViewManager {
     const existing = this.executorViews.get(accountId)
     if (existing) {
       await this.showExecutorView(accountId)
+      await this.ensureFingerprintForView(existing.view, accountId, { reloadLoadedLegacy: true })
       return existing.view
     }
 
@@ -1212,6 +1282,7 @@ export class BrowserViewManager {
     // Use account session partition if provided, otherwise fall back to executor-specific partition
     const partition = sessionPartition || `persist:executor-${accountId}`
     const ses = session.fromPartition(partition)
+    hardenSession(ses)
 
     // Create BrowserView
     const view = new BrowserView({
@@ -1238,8 +1309,7 @@ export class BrowserViewManager {
     view.setAutoResize({ width: false, height: false })
 
     // Apply fingerprint before loading any content
-    // TODO: Temporarily disabled fingerprint injection
-    // await this.fingerprintService.applyFingerprintToWebContents(view.webContents, accountId)
+    await this.ensureFingerprintForView(view, accountId)
 
     // Store the view keyed by accountId
     this.executorViews.set(accountId, {
@@ -1691,7 +1761,6 @@ export class BrowserViewManager {
       const { accountId, platform, displayName } = target
 
       // Get session partition from database
-      const { DatabaseService } = await import('../database')
       const account = DatabaseService.getInstance().getAccount(accountId)
 
       // Try multiple partition formats for backward compatibility
@@ -1721,9 +1790,8 @@ export class BrowserViewManager {
 
       console.log(`[BrowserViewManager] Account ${displayName} using partition: ${partition}`)
       const ses = session.fromPartition(partition)
-
-      // Register local-file:// protocol on this session (for image upload from local paths)
-      this.registerLocalFileProtocol(ses)
+      hardenSession(ses)
+      registerLocalFileProtocol(ses)
 
       // Create BrowserView
       const view = new BrowserView({
@@ -1744,6 +1812,8 @@ export class BrowserViewManager {
       })
       view.setAutoResize({ width: false, height: false })
 
+      await this.ensureFingerprintForView(view, accountId)
+
       // Store in group
       group.views.set(accountId, {
         view,
@@ -1760,7 +1830,7 @@ export class BrowserViewManager {
       // Navigate to publish URL
       const publishUrl = this.getPublishUrl(platform, contentType)
       console.log(`[BrowserViewManager] Loading ${displayName}: ${publishUrl}`)
-      view.webContents.loadURL(publishUrl)
+      await view.webContents.loadURL(publishUrl)
     }
 
     // Set first account as active
@@ -2048,46 +2118,6 @@ export class BrowserViewManager {
   }
 
   /**
-   * Register local-file:// protocol handler on a session (idempotent).
-   * This allows BrowserViews with custom partitions to fetch local files.
-   */
-  private registeredSessions = new Set<string>()
-  private registerLocalFileProtocol(ses: Electron.Session): void {
-    // Use partition string as key to avoid double-registering
-    const key = (ses as unknown as { storagePath?: string }).storagePath || String(ses)
-    if (this.registeredSessions.has(key)) return
-    this.registeredSessions.add(key)
-
-    try {
-      ses.protocol.handle('local-file', async (request) => {
-        const url = new URL(request.url)
-        const filePath = decodeURIComponent('/' + url.host + url.pathname)
-
-        if (!fs.existsSync(filePath)) {
-          return new Response('File not found', { status: 404 })
-        }
-        if (filePath.includes('..')) {
-          return new Response('Invalid path', { status: 403 })
-        }
-
-        try {
-          const buffer = await fs.promises.readFile(filePath)
-          const mimeType = getMimeType(filePath)
-          return new Response(buffer, {
-            headers: { 'Content-Type': mimeType }
-          })
-        } catch (error) {
-          console.error('[LocalFileProtocol] Failed to read file:', filePath, error)
-          return new Response('Failed to read file', { status: 500 })
-        }
-      })
-      console.log('[BrowserViewManager] Registered local-file:// protocol on session')
-    } catch {
-      // Already registered on this session - ignore
-    }
-  }
-
-  /**
    * Normalize content data: convert string file paths to FileData objects with local-file:// URLs.
    * Web side sends images/videos as string[] (file paths), but adapters expect FileData[].
    */
@@ -2105,7 +2135,7 @@ export class BrowserViewManager {
         // Standard scheme URL: local-file:// + path (Chromium treats first segment as host)
         // e.g. /tmp/photo.png -> local-file://tmp/photo.png (host=tmp, path=/photo.png)
         // The protocol handler reconstructs: '/' + host + pathname = /tmp/photo.png
-        return { url: `local-file://${item.startsWith('/') ? item.slice(1) : item}`, name, type }
+        return { url: createLocalFileUrl(item), name, type }
       }
       return { url: item.url, name: item.name, type: item.type || 'application/octet-stream' }
     }

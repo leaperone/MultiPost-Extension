@@ -5,13 +5,23 @@
 
 import type { WebContents } from 'electron'
 import type { FingerprintProfile } from '../../shared/types/fingerprint'
-import { generateFingerprintProfile } from './generator'
+import { generateFingerprintProfile, getRuntimeWebGLConfig } from './generator'
 import { generateInjectionScript } from './injector'
 import { DatabaseService } from '../database'
+import {
+  getDesktopLanguage,
+  getDesktopLanguages,
+  getDesktopNavigatorPlatform,
+  getDesktopUserAgent,
+  getDesktopUserAgentData
+} from '../browser/sessionHardening'
 
 export class FingerprintService {
   private static instance: FingerprintService
   private db: DatabaseService
+  private scriptIdentifiers = new WeakMap<WebContents, string>()
+  private scriptProfileKeys = new WeakMap<WebContents, string>()
+  private cleanupRegisteredWebContents = new WeakSet<WebContents>()
 
   private constructor() {
     this.db = DatabaseService.getInstance()
@@ -42,10 +52,23 @@ export class FingerprintService {
       ...profileData
     }
 
-    // Save to database
-    this.db.createFingerprintProfile(profile)
+    if (!this.isSyntheticProfileKey(accountId)) {
+      try {
+        this.db.createFingerprintProfile(profile)
+      } catch (error) {
+        console.warn('[FingerprintService] Failed to persist fingerprint profile:', error)
+      }
+    }
 
     return profile
+  }
+
+  private isSyntheticProfileKey(accountId: string): boolean {
+    return accountId.startsWith('platform-default-')
+  }
+
+  hasFingerprintScript(webContents: WebContents): boolean {
+    return this.scriptIdentifiers.has(webContents)
   }
 
   /**
@@ -54,9 +77,24 @@ export class FingerprintService {
    */
   async applyFingerprintToWebContents(webContents: WebContents, accountId: string): Promise<void> {
     console.log('[FingerprintService] Getting profile for:', accountId)
+    const existingProfileKey = this.scriptProfileKeys.get(webContents)
+    if (existingProfileKey === accountId && this.scriptIdentifiers.has(webContents)) {
+      console.log('[FingerprintService] Fingerprint already installed:', accountId)
+      return
+    }
+
     const profile = await this.getOrCreateProfile(accountId)
     console.log('[FingerprintService] Profile obtained')
-    const script = generateInjectionScript(profile)
+    const sessionUserAgent = webContents.session.getUserAgent() || getDesktopUserAgent()
+    const navigatorPlatform = getDesktopNavigatorPlatform(sessionUserAgent)
+    const script = generateInjectionScript(profile, {
+      userAgent: sessionUserAgent,
+      platform: navigatorPlatform,
+      language: getDesktopLanguage(),
+      languages: getDesktopLanguages(),
+      userAgentData: getDesktopUserAgentData(sessionUserAgent),
+      webgl: getRuntimeWebGLConfig(accountId, navigatorPlatform)
+    })
     console.log('[FingerprintService] Script generated, attaching debugger...')
 
     // Attach debugger to use CDP
@@ -78,25 +116,39 @@ export class FingerprintService {
       await webContents.debugger.sendCommand('Page.enable')
       console.log('[FingerprintService] Page domain enabled, sending script injection command...')
 
+      const previousIdentifier = this.scriptIdentifiers.get(webContents)
+      if (previousIdentifier) {
+        await webContents.debugger
+          .sendCommand('Page.removeScriptToEvaluateOnNewDocument', { identifier: previousIdentifier })
+          .catch(() => undefined)
+      }
+
       // Inject script to run on every new document
-      await webContents.debugger.sendCommand('Page.addScriptToEvaluateOnNewDocument', {
+      const result = (await webContents.debugger.sendCommand('Page.addScriptToEvaluateOnNewDocument', {
         source: script
-      })
+      })) as { identifier?: string }
+      if (result.identifier) {
+        this.scriptIdentifiers.set(webContents, result.identifier)
+        this.scriptProfileKeys.set(webContents, accountId)
+      }
       console.log('[FingerprintService] CDP command sent successfully')
     } catch (err) {
       console.error('[FingerprintService] Failed to inject fingerprint script:', err)
     }
 
-    // Detach debugger when webContents is destroyed
-    webContents.once('destroyed', () => {
-      try {
-        if (webContents.debugger.isAttached()) {
-          webContents.debugger.detach()
+    if (!this.cleanupRegisteredWebContents.has(webContents)) {
+      this.cleanupRegisteredWebContents.add(webContents)
+      // Detach debugger when webContents is destroyed
+      webContents.once('destroyed', () => {
+        try {
+          if (webContents.debugger.isAttached()) {
+            webContents.debugger.detach()
+          }
+        } catch {
+          // Ignore errors during cleanup
         }
-      } catch {
-        // Ignore errors during cleanup
-      }
-    })
+      })
+    }
   }
 
   /**

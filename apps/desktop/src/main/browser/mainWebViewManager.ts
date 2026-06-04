@@ -327,7 +327,7 @@ export class MainWebViewManager {
     ipcMain.handle('multipost:account:setDefault', async (_, id: string) => {
       // 转发到原有的账号管理处理器
       // 这里需要获取账号的 platform 信息
-      const { DatabaseService } = await import('../database')
+      const { DatabaseService } = await import('../database/index.js')
       const account = await DatabaseService.getInstance().getAccount(id)
       if (account) {
         await DatabaseService.getInstance().setDefaultAccount(id, account.platform)

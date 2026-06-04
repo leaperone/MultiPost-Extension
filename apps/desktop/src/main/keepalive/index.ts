@@ -2,6 +2,8 @@ import { BrowserView, session } from 'electron'
 import { PLATFORMS } from '../../shared/constants'
 import type { Account, PlatformType, KeepAliveAccountResult, KeepAliveStatus } from '../../shared/types'
 import { DatabaseService } from '../database'
+import { FingerprintService } from '../fingerprint'
+import { hardenSession } from '../browser/sessionHardening'
 
 interface KeepAliveOptions {
   intervalMs?: number
@@ -133,6 +135,7 @@ export class KeepAliveService {
     try {
       const partition = account.sessionPartition || `persist:account-${account.id}`
       const ses = session.fromPartition(partition)
+      hardenSession(ses)
 
       view = new BrowserView({
         webPreferences: {
@@ -142,6 +145,12 @@ export class KeepAliveService {
           sandbox: true
         }
       })
+
+      try {
+        await FingerprintService.getInstance().applyFingerprintToWebContents(view.webContents, account.id)
+      } catch (error) {
+        console.warn('[KeepAlive] Fingerprint application failed:', error)
+      }
 
       // Load platform URL with timeout
       await Promise.race([

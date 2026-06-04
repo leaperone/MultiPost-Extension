@@ -84,6 +84,15 @@ export interface FileData {
   size?: number // file size in bytes
 }
 
+export function createLocalFileUrl(filePath: string): string {
+  const normalizedPath = filePath.replace(/\\/g, '/')
+  const pathWithoutLeadingSlash = normalizedPath.startsWith('/')
+    ? normalizedPath.slice(1)
+    : normalizedPath
+  const encodedPath = pathWithoutLeadingSlash.split('/').map(encodeURIComponent).join('/')
+  return `local-file://${encodedPath}`
+}
+
 // 从本地文件路径创建 FileData
 export function createFileDataFromPath(
   filePath: string,
@@ -94,7 +103,7 @@ export function createFileDataFromPath(
   return {
     name: fileName,
     path: filePath,
-    url: `local-file://${encodeURIComponent(filePath)}`,
+    url: createLocalFileUrl(filePath),
     type: mimeType,
     size
   }
