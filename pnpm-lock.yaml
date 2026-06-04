@@ -758,6 +758,9 @@ importers:
       electron-vite:
         specifier: ^3.0.0
         version: 3.1.0(@swc/core@1.15.21)(vite@6.4.1(@types/node@22.13.11)(jiti@2.6.1)(less@4.6.4)(lightningcss@1.32.0)(sass@1.98.0)(terser@5.44.1)(yaml@2.7.0))
+      esbuild:
+        specifier: ^0.27.2
+        version: 0.27.2
       eslint:
         specifier: ^9.18.0
         version: 9.39.2(jiti@2.6.1)
