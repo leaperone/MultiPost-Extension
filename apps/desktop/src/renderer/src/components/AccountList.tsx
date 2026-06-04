@@ -22,7 +22,14 @@ const PLATFORM_ICONS: Record<string, string> = {
   douyin: '抖',
   bilibili: 'B',
   zhihu: '知',
-  wechat: '微'
+  wechat: '微',
+  qqmusic: 'Q',
+  lizhi: '荔',
+  ximalaya: '喜',
+  xiaoyuzhou: '宇',
+  qingting: '蜻',
+  neteasepodcast: '易',
+  spotify: 'S'
 }
 
 export function AccountList({

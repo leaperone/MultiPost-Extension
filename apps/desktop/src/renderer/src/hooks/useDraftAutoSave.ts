@@ -9,6 +9,7 @@ export interface DraftData {
   dynamic: { title: string; content: string }
   video: { title: string; description: string; tags: string }
   article: { title: string; digest: string; content: string }
+  podcast: { title: string; description: string; tags: string }
   selectedPlatforms: PlatformType[]
   savedAt: number
 }
@@ -163,7 +164,8 @@ export function useDraftAutoSave(
       data.dynamic.content.trim() ||
       data.video.title.trim() ||
       data.article.title.trim() ||
-      data.article.content.trim()
+      data.article.content.trim() ||
+      data.podcast.title.trim()
 
     if (!hasContent) return
 
@@ -257,6 +259,8 @@ function getTitleFromData(data: Omit<DraftData, 'savedAt'>): string {
       return data.video.title || '未命名视频'
     case 'ARTICLE':
       return data.article.title || '未命名文章'
+    case 'PODCAST':
+      return data.podcast.title || '未命名播客'
     default:
       return '未命名草稿'
   }
@@ -270,6 +274,8 @@ function getContentFromData(data: Omit<DraftData, 'savedAt'>): string {
       return data.video.description
     case 'ARTICLE':
       return data.article.content
+    case 'PODCAST':
+      return data.podcast.description
     default:
       return ''
   }
@@ -280,6 +286,7 @@ export function draftToEditorData(draft: Draft): Omit<DraftData, 'savedAt'> {
   const emptyDynamic = { title: '', content: '' }
   const emptyVideo = { title: '', description: '', tags: '' }
   const emptyArticle = { title: '', digest: '', content: '' }
+  const emptyPodcast = { title: '', description: '', tags: '' }
 
   switch (draft.contentType) {
     case 'DYNAMIC':
@@ -288,6 +295,7 @@ export function draftToEditorData(draft: Draft): Omit<DraftData, 'savedAt'> {
         dynamic: { title: draft.title, content: draft.content },
         video: emptyVideo,
         article: emptyArticle,
+        podcast: emptyPodcast,
         selectedPlatforms: draft.selectedPlatforms || []
       }
     case 'VIDEO':
@@ -300,6 +308,7 @@ export function draftToEditorData(draft: Draft): Omit<DraftData, 'savedAt'> {
           tags: draft.tags?.join(', ') || ''
         },
         article: emptyArticle,
+        podcast: emptyPodcast,
         selectedPlatforms: draft.selectedPlatforms || []
       }
     case 'ARTICLE':
@@ -312,6 +321,20 @@ export function draftToEditorData(draft: Draft): Omit<DraftData, 'savedAt'> {
           digest: '',
           content: draft.htmlContent || draft.content
         },
+        podcast: emptyPodcast,
+        selectedPlatforms: draft.selectedPlatforms || []
+      }
+    case 'PODCAST':
+      return {
+        contentType: 'PODCAST',
+        dynamic: emptyDynamic,
+        video: emptyVideo,
+        article: emptyArticle,
+        podcast: {
+          title: draft.title,
+          description: draft.content,
+          tags: draft.tags?.join(', ') || ''
+        },
         selectedPlatforms: draft.selectedPlatforms || []
       }
     default:
@@ -320,6 +343,7 @@ export function draftToEditorData(draft: Draft): Omit<DraftData, 'savedAt'> {
         dynamic: emptyDynamic,
         video: emptyVideo,
         article: emptyArticle,
+        podcast: emptyPodcast,
         selectedPlatforms: []
       }
   }

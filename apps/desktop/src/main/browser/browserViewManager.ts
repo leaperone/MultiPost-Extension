@@ -29,6 +29,10 @@ import {
   getExtensionInjectUrl,
   type ExtensionFillResult
 } from '../injectors'
+import {
+  getDesktopInjectorManifestEntry,
+  type DesktopInjectorManifestEntry
+} from '../injectors/manifest'
 
 interface ManagedBrowserView {
   view: BrowserView
@@ -137,6 +141,8 @@ export class BrowserViewManager {
   private cancelledPublishIds: Set<string> = new Set()
   private finalizedPublishRunIds: Set<string> = new Set()
   private emittedPublishErrorKeys: Set<string> = new Set()
+  private platformPublishPayloads: Map<string, SyncContentData> = new Map()
+  private executorPublishPayloads: Map<string, SyncContentData> = new Map()
   private activeGroupId: string | null = null
   private groupCounter: number = 0 // 用于生成 Group 名称
   private fingerprintLegacyReloads = new WeakSet<Electron.WebContents>()
@@ -229,6 +235,34 @@ export class BrowserViewManager {
     } catch {
       return String(error)
     }
+  }
+
+  private getPlatformPublishPayloadKey(platform: PlatformType, contentType: SyncContentType): string {
+    return `${platform}:${contentType}`
+  }
+
+  private getExecutorPublishPayloadKey(accountId: string, contentType: SyncContentType): string {
+    return `${accountId}:${contentType}`
+  }
+
+  private clearPublishPayloadsForPrefix(cache: Map<string, SyncContentData>, prefix: string): void {
+    for (const key of Array.from(cache.keys())) {
+      if (key.startsWith(prefix)) {
+        cache.delete(key)
+      }
+    }
+  }
+
+  private hasCookieForDomain(cookies: Electron.Cookie[], domain: string): boolean {
+    const normalizedDomain = domain.replace(/^\./, '').toLowerCase()
+    return cookies.some((cookie) => {
+      const cookieDomain = cookie.domain?.replace(/^\./, '').toLowerCase()
+      return cookieDomain === normalizedDomain || cookieDomain?.endsWith(`.${normalizedDomain}`) === true
+    })
+  }
+
+  private hasCookieForAnyDomain(cookies: Electron.Cookie[], domains: string[]): boolean {
+    return domains.some((domain) => this.hasCookieForDomain(cookies, domain))
   }
 
   private sendPublishEvent(
@@ -1349,6 +1383,27 @@ export class BrowserViewManager {
         return cookies.some((c) => c.name === 'z_c0' && c.domain?.includes('zhihu.com'))
       case 'zsxq':
         return cookies.some((c) => c.name === 'zsxq_access_token' && c.domain?.includes('zsxq.com'))
+      case 'qqmusic':
+        // TODO(verify-login): confirm QQ音乐播客 real-login cookie/storage signals.
+        return this.hasCookieForAnyDomain(cookies, ['tencentmusic.com'])
+      case 'lizhi':
+        // TODO(verify-login): confirm 荔枝播客 real-login cookie/storage signals.
+        return this.hasCookieForAnyDomain(cookies, ['lizhi.fm'])
+      case 'ximalaya':
+        // TODO(verify-login): confirm 喜马拉雅 real-login cookie/storage signals.
+        return this.hasCookieForAnyDomain(cookies, ['ximalaya.com'])
+      case 'xiaoyuzhou':
+        // TODO(verify-login): confirm 小宇宙播客 real-login cookie/storage signals.
+        return this.hasCookieForAnyDomain(cookies, ['xiaoyuzhoufm.com'])
+      case 'qingting':
+        // TODO(verify-login): confirm 蜻蜓FM real-login cookie/storage signals.
+        return this.hasCookieForAnyDomain(cookies, ['qingting.fm'])
+      case 'neteasepodcast':
+        // TODO(verify-login): confirm 网易云音乐播客 real-login cookie/storage signals.
+        return this.hasCookieForAnyDomain(cookies, ['music.163.com', '163.com'])
+      case 'spotify':
+        // TODO(verify-login): confirm Spotify for Creators real-login cookie/storage signals.
+        return this.hasCookieForAnyDomain(cookies, ['spotify.com'])
       default:
         return cookies.length > 0
     }
@@ -1489,6 +1544,8 @@ export class BrowserViewManager {
     const partition = `persist:${platform}-default`
     const ses = session.fromPartition(partition)
     hardenSession(ses)
+    // TODO(phase-capability): replace path-shaped local-file URLs with a per-session allowlist of user-selected files.
+    registerLocalFileProtocol(ses)
 
     // Create BrowserView with isolated session
     const view = new BrowserView({
@@ -1559,7 +1616,6 @@ export class BrowserViewManager {
   private normalizeNavigationUrl(url: string): string {
     try {
       const normalized = new URL(url)
-      normalized.hash = ''
       return normalized.toString()
     } catch {
       return url.trim()
@@ -1576,6 +1632,29 @@ export class BrowserViewManager {
     }
     await webContents.loadURL(targetUrl)
     await this.waitForNavigationSettle()
+  }
+
+  private async submitExtensionBackedContent(
+    webContents: Electron.WebContents,
+    entry: DesktopInjectorManifestEntry,
+    normalizedData: SyncContentData
+  ): Promise<ExtensionFillResult> {
+    await this.loadExactUrlIfNeeded(webContents, entry.injectUrl)
+
+    const extensionResult = await executeExtensionFill(
+      webContents,
+      entry.desktopPlatform,
+      entry.contentType,
+      normalizedData,
+      true
+    )
+    if (!extensionResult.handled) {
+      throw new Error(`No adapter found for platform: ${entry.desktopPlatform}`)
+    }
+    if (!extensionResult.ok) {
+      throw new Error(extensionResult.error || '扩展发布脚本执行失败')
+    }
+    return extensionResult
   }
 
   /**
@@ -1684,6 +1763,10 @@ export class BrowserViewManager {
     }
 
     const normalizedData = this.normalizeContentData(data)
+    this.platformPublishPayloads.set(
+      this.getPlatformPublishPayloadKey(platform, contentType),
+      normalizedData
+    )
 
     const extensionInjectUrl = getExtensionInjectUrl(platform, contentType)
     if (extensionInjectUrl) {
@@ -1741,6 +1824,17 @@ export class BrowserViewManager {
 
     const adapter = getAdapter(platform)
     if (!adapter) {
+      const entry = getDesktopInjectorManifestEntry(platform, contentType)
+      if (entry) {
+        const normalizedData = this.platformPublishPayloads.get(
+          this.getPlatformPublishPayloadKey(platform, contentType)
+        )
+        if (!normalizedData) {
+          throw new Error(`No filled content data found for extension submit: ${platform}`)
+        }
+        await this.submitExtensionBackedContent(managed.view.webContents, entry, normalizedData)
+        return
+      }
       throw new Error(`No adapter found for platform: ${platform}`)
     }
 
@@ -1761,6 +1855,7 @@ export class BrowserViewManager {
     this.mainWindow.removeBrowserView(managed.view)
     managed.view.webContents.close()
     this.platformViews.delete(platform)
+    this.clearPublishPayloadsForPrefix(this.platformPublishPayloads, `${platform}:`)
 
     if (this.activePlatformId === platform) {
       this.activePlatformId = null
@@ -1896,6 +1991,8 @@ export class BrowserViewManager {
     const partition = sessionPartition || `persist:executor-${accountId}`
     const ses = session.fromPartition(partition)
     hardenSession(ses)
+    // TODO(phase-capability): replace path-shaped local-file URLs with a per-session allowlist of user-selected files.
+    registerLocalFileProtocol(ses)
 
     // Create BrowserView
     const view = new BrowserView({
@@ -2022,6 +2119,7 @@ export class BrowserViewManager {
     this.mainWindow.removeBrowserView(managed.view)
     managed.view.webContents.close()
     this.executorViews.delete(accountId)
+    this.clearPublishPayloadsForPrefix(this.executorPublishPayloads, `${accountId}:`)
 
     if (this.activeExecutorId === accountId) {
       this.activeExecutorId = null
@@ -2083,6 +2181,10 @@ export class BrowserViewManager {
 
     try {
       const normalizedData = this.normalizeContentData(data)
+      this.executorPublishPayloads.set(
+        this.getExecutorPublishPayloadKey(accountId, contentType),
+        normalizedData
+      )
 
       const extensionInjectUrl = getExtensionInjectUrl(managed.platform, contentType)
       if (extensionInjectUrl) {
@@ -2178,6 +2280,28 @@ export class BrowserViewManager {
     try {
       const adapter = getAdapter(managed.platform)
       if (!adapter) {
+        const entry = getDesktopInjectorManifestEntry(managed.platform, contentType)
+        if (entry) {
+          const normalizedData = this.executorPublishPayloads.get(
+            this.getExecutorPublishPayloadKey(accountId, contentType)
+          )
+          if (!normalizedData) {
+            throw new Error(`No filled content data found for extension submit: ${managed.platform}`)
+          }
+          const extensionResult = await this.submitExtensionBackedContent(
+            managed.view.webContents,
+            entry,
+            normalizedData
+          )
+          if (this.isExecutorPublishCancelled(taskId)) {
+            this.setExecutorTargetStatus(taskId, accountId, 'cancelled')
+            throw new Error('Publish cancelled')
+          }
+          this.setExecutorTargetStatus(taskId, accountId, 'success', {
+            extensionKey: extensionResult.extensionKey
+          })
+          return
+        }
         throw new Error(`No adapter found for platform: ${managed.platform}`)
       }
 
@@ -2493,6 +2617,7 @@ export class BrowserViewManager {
       console.log(`[BrowserViewManager] Account ${displayName} using partition: ${partition}`)
       const ses = session.fromPartition(partition)
       hardenSession(ses)
+      // TODO(phase-capability): replace path-shaped local-file URLs with a per-session allowlist of user-selected files.
       registerLocalFileProtocol(ses)
 
       // Create BrowserView
@@ -2839,7 +2964,23 @@ export class BrowserViewManager {
    * Web side sends images/videos as string[] (file paths), but adapters expect FileData[].
    */
   private normalizeContentData(data: SyncContentData): SyncContentData {
-    function toFileData(item: string | { url: string; name: string; type?: string }): {
+    function getFallbackMimeType(ext: string, fallbackKind: 'image' | 'video' | 'audio' | 'file'): string {
+      if (!ext) {
+        return 'application/octet-stream'
+      }
+      if (fallbackKind === 'audio') {
+        return `audio/${ext === 'mp3' ? 'mpeg' : ext}`
+      }
+      if (fallbackKind === 'image') {
+        return `image/${ext}`
+      }
+      if (fallbackKind === 'video') {
+        return `video/${ext}`
+      }
+      return 'application/octet-stream'
+    }
+
+    function toFileData(item: string | { url: string; name: string; type?: string }, fallbackKind: 'image' | 'video' | 'audio' | 'file' = 'file'): {
       url: string
       name: string
       type: string
@@ -2848,7 +2989,7 @@ export class BrowserViewManager {
         // Convert file path to local-file:// URL
         const name = basename(item)
         const ext = extname(item).slice(1).toLowerCase()
-        const type = getMimeType(item) || `image/${ext}`
+        const type = getMimeType(item) || getFallbackMimeType(ext, fallbackKind)
         // Standard scheme URL: local-file:// + path (Chromium treats first segment as host)
         // e.g. /tmp/photo.png -> local-file://tmp/photo.png (host=tmp, path=/photo.png)
         // The protocol handler reconstructs: '/' + host + pathname = /tmp/photo.png
@@ -2860,31 +3001,31 @@ export class BrowserViewManager {
     const normalized = { ...data }
 
     if ('images' in normalized && Array.isArray(normalized.images)) {
-      normalized.images = normalized.images.map(toFileData)
+      normalized.images = normalized.images.map((item) => toFileData(item, 'image'))
     }
     if ('videos' in normalized && Array.isArray(normalized.videos)) {
-      normalized.videos = normalized.videos.map(toFileData)
+      normalized.videos = normalized.videos.map((item) => toFileData(item, 'video'))
     }
     if ('video' in normalized && normalized.video) {
-      normalized.video = typeof normalized.video === 'string' ? toFileData(normalized.video) : normalized.video
+      normalized.video = typeof normalized.video === 'string' ? toFileData(normalized.video, 'video') : normalized.video
     }
     if ('cover' in normalized && normalized.cover) {
-      normalized.cover = typeof normalized.cover === 'string' ? toFileData(normalized.cover) : normalized.cover
+      normalized.cover = typeof normalized.cover === 'string' ? toFileData(normalized.cover, 'image') : normalized.cover
     }
     if ('horizontalCover' in normalized && normalized.horizontalCover) {
       normalized.horizontalCover =
         typeof normalized.horizontalCover === 'string'
-          ? toFileData(normalized.horizontalCover)
+          ? toFileData(normalized.horizontalCover, 'image')
           : normalized.horizontalCover
     }
     if ('verticalCover' in normalized && normalized.verticalCover) {
       normalized.verticalCover =
         typeof normalized.verticalCover === 'string'
-          ? toFileData(normalized.verticalCover)
+          ? toFileData(normalized.verticalCover, 'image')
           : normalized.verticalCover
     }
     if ('audio' in normalized && normalized.audio) {
-      normalized.audio = typeof normalized.audio === 'string' ? toFileData(normalized.audio) : normalized.audio
+      normalized.audio = typeof normalized.audio === 'string' ? toFileData(normalized.audio, 'audio') : normalized.audio
     }
 
     return normalized
@@ -3015,26 +3156,33 @@ export class BrowserViewManager {
       return
     }
 
-    const adapter = getAdapter(target.platform)
-    if (!adapter) {
-      const error = `No adapter found for platform: ${target.platform}`
-      this.setGroupTargetStatus(
-        groupId,
-        accountId,
-        this.cancelledPublishIds.has(groupId) ? 'cancelled' : 'failed',
-        this.cancelledPublishIds.has(groupId) ? {} : { error }
-      )
-      if (!options.suppressFinishEvent) {
-        this.emitGroupRunFinished(groupId)
-      }
-      throw new Error(error)
-    }
-
     try {
       if (this.cancelledPublishIds.has(groupId)) {
         this.setGroupTargetStatus(groupId, accountId, 'cancelled')
         throw new Error('Publish cancelled')
       }
+
+      const adapter = getAdapter(target.platform)
+      if (!adapter) {
+        const entry = getDesktopInjectorManifestEntry(target.platform, group.contentType)
+        if (!entry) {
+          throw new Error(`No adapter found for platform: ${target.platform}`)
+        }
+        const extensionResult = await this.submitExtensionBackedContent(
+          target.view.webContents,
+          entry,
+          this.normalizeContentData(group.data)
+        )
+        if (this.cancelledPublishIds.has(groupId)) {
+          this.setGroupTargetStatus(groupId, accountId, 'cancelled')
+          throw new Error('Publish cancelled')
+        }
+        this.setGroupTargetStatus(groupId, accountId, 'success', {
+          extensionKey: extensionResult.extensionKey
+        })
+        return
+      }
+
       const result = await adapter.submit(target.view, group.contentType)
       if (this.cancelledPublishIds.has(groupId)) {
         this.setGroupTargetStatus(groupId, accountId, 'cancelled')

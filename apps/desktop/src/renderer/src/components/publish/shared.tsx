@@ -158,6 +158,19 @@ export const PLATFORM_CATEGORIES: PlatformCategory[] = [
     id: 'article',
     name: '文章平台',
     platforms: ['csdn', 'jianshu', 'segmentfault', 'sspai', '51cto', 'wordpress']
+  },
+  {
+    id: 'podcast',
+    name: '播客平台',
+    platforms: [
+      'qqmusic',
+      'lizhi',
+      'ximalaya',
+      'xiaoyuzhou',
+      'qingting',
+      'neteasepodcast',
+      'spotify'
+    ]
   }
 ]
 

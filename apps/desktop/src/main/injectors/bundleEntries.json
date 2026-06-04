@@ -414,6 +414,69 @@
     "accountKey": "qie"
   },
   {
+    "desktopPlatform": "qqmusic",
+    "contentType": "PODCAST",
+    "extensionKey": "PODCAST_QQMUSIC",
+    "source": "podcast/qqmusic.ts",
+    "exportName": "PodcastQQMusic",
+    "injectUrl": "https://mp.tencentmusic.com/index",
+    "accountKey": "qqmusic"
+  },
+  {
+    "desktopPlatform": "lizhi",
+    "contentType": "PODCAST",
+    "extensionKey": "PODCAST_LIZHI",
+    "source": "podcast/lizhi.ts",
+    "exportName": "PodcastLiZhi",
+    "injectUrl": "https://nj.lizhi.fm/static/newsite/#/index",
+    "accountKey": "lizhi"
+  },
+  {
+    "desktopPlatform": "ximalaya",
+    "contentType": "PODCAST",
+    "extensionKey": "PODCAST_XIMALAYA",
+    "source": "podcast/ximalaya.ts",
+    "exportName": "PodcastXimalaya",
+    "injectUrl": "https://creator.ximalaya.com/anchor/sound-album/sound/single-upload",
+    "accountKey": "ximalaya"
+  },
+  {
+    "desktopPlatform": "xiaoyuzhou",
+    "contentType": "PODCAST",
+    "extensionKey": "PODCAST_XIAOYUZHOU",
+    "source": "podcast/xiaoyuzhou.ts",
+    "exportName": "PodcastXiaoyuzhou",
+    "injectUrl": "https://podcaster.xiaoyuzhoufm.com/dashboard/episodes/new",
+    "accountKey": "xiaoyuzhou"
+  },
+  {
+    "desktopPlatform": "qingting",
+    "contentType": "PODCAST",
+    "extensionKey": "PODCAST_QINGTING",
+    "source": "podcast/qingting.ts",
+    "exportName": "PodcastQingting",
+    "injectUrl": "https://studio.qingting.fm/album",
+    "accountKey": "qingting"
+  },
+  {
+    "desktopPlatform": "neteasepodcast",
+    "contentType": "PODCAST",
+    "extensionKey": "PODCAST_NETEASE",
+    "source": "podcast/netease.ts",
+    "exportName": "PodcastNetease",
+    "injectUrl": "https://podcast.music.163.com/web/podcast/upload",
+    "accountKey": "neteasepodcast"
+  },
+  {
+    "desktopPlatform": "spotify",
+    "contentType": "PODCAST",
+    "extensionKey": "PODCAST_SPOTIFY",
+    "source": "podcast/spotify.ts",
+    "exportName": "PodcastSpotify",
+    "injectUrl": "https://creators.spotify.com/pod/show",
+    "accountKey": "spotify"
+  },
+  {
     "desktopPlatform": "reddit",
     "contentType": "DYNAMIC",
     "extensionKey": "DYNAMIC_REDDIT",

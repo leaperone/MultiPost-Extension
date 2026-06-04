@@ -1,6 +1,6 @@
 import { useState, useMemo, useRef, useCallback, useEffect } from 'react'
 import { Button, Card, Checkbox, Input, Textarea, Spinner, addToast } from '@heroui/react'
-import { CheckCircle, XCircle, Circle, Loader2, Upload, X, Video, Image, Eye, StopCircle, ChevronDown, ChevronUp, Save } from 'lucide-react'
+import { CheckCircle, XCircle, Circle, Loader2, Upload, X, Video, Image, Eye, StopCircle, ChevronDown, ChevronUp, Save, Music } from 'lucide-react'
 import { useDraftAutoSave } from '../../hooks/useDraftAutoSave'
 import type {
   PlatformType,
@@ -9,6 +9,7 @@ import type {
   DynamicData,
   VideoData,
   ArticleData,
+  PodcastData,
   FileData
 } from '../../../../shared/types'
 import { PLATFORMS, CONTENT_TYPE_LABELS } from '../../../../shared/constants'
@@ -33,7 +34,7 @@ export interface PlatformPublishState {
 const SUPPORTED_PLATFORMS: PlatformType[] = Object.keys(PLATFORMS) as PlatformType[]
 
 // Available content types
-const AVAILABLE_CONTENT_TYPES: SyncContentType[] = ['DYNAMIC', 'VIDEO', 'ARTICLE']
+const AVAILABLE_CONTENT_TYPES: SyncContentType[] = ['DYNAMIC', 'VIDEO', 'ARTICLE', 'PODCAST']
 
 // Platform categories for better organization
 interface PlatformCategory {
@@ -106,6 +107,19 @@ const PLATFORM_CATEGORIES: PlatformCategory[] = [
     id: 'article',
     name: '文章平台',
     platforms: ['csdn', 'jianshu', 'segmentfault', 'sspai', '51cto', 'wordpress']
+  },
+  {
+    id: 'podcast',
+    name: '播客平台',
+    platforms: [
+      'qqmusic',
+      'lizhi',
+      'ximalaya',
+      'xiaoyuzhou',
+      'qingting',
+      'neteasepodcast',
+      'spotify'
+    ]
   }
 ]
 
@@ -155,6 +169,15 @@ export function PublishPage({
   const [articleDigest, setArticleDigest] = useState('')
   const [articleContent, setArticleContent] = useState('')
 
+  // Podcast content state
+  const [podcastTitle, setPodcastTitle] = useState('')
+  const [podcastDescription, setPodcastDescription] = useState('')
+  const [podcastTags, setPodcastTags] = useState('')
+  const [podcastAudio, setPodcastAudio] = useState<FileData | null>(null)
+  const [podcastCover, setPodcastCover] = useState<FileData | null>(null)
+  const podcastAudioInputRef = useRef<HTMLInputElement>(null)
+  const podcastCoverInputRef = useRef<HTMLInputElement>(null)
+
   // Platform selection
   const [selectedPlatforms, setSelectedPlatforms] = useState<Set<PlatformType>>(new Set())
   const [autoSubmit, setAutoSubmit] = useState(false)
@@ -169,6 +192,7 @@ export function PublishPage({
       dynamic: { title: dynamicTitle, content: dynamicContent },
       video: { title: videoTitle, description: videoDescription, tags: videoTags },
       article: { title: articleTitle, digest: articleDigest, content: articleContent },
+      podcast: { title: podcastTitle, description: podcastDescription, tags: podcastTags },
       selectedPlatforms: Array.from(selectedPlatforms)
     }),
     [
@@ -181,6 +205,9 @@ export function PublishPage({
       articleTitle,
       articleDigest,
       articleContent,
+      podcastTitle,
+      podcastDescription,
+      podcastTags,
       selectedPlatforms
     ]
   )
@@ -210,6 +237,9 @@ export function PublishPage({
       setArticleTitle(draft.article.title)
       setArticleDigest(draft.article.digest)
       setArticleContent(draft.article.content)
+      setPodcastTitle(draft.podcast?.title || '')
+      setPodcastDescription(draft.podcast?.description || '')
+      setPodcastTags(draft.podcast?.tags || '')
       setSelectedPlatforms(new Set(draft.selectedPlatforms))
       addToast({
         title: '草稿已恢复',
@@ -420,6 +450,38 @@ export function PublishPage({
     }
   }, [videoCover])
 
+  const handleSelectPodcastAudio = useCallback(async () => {
+    const [filePath] = await window.api.app.selectFile({
+      filters: [{ name: 'Audio', extensions: ['mp3', 'wav', 'm4a', 'aac', 'ogg', 'flac'] }]
+    })
+    if (!filePath) return
+    const fileData = await window.api.app.getFileInfo(filePath)
+    setPodcastAudio(fileData)
+  }, [])
+
+  const handleSelectPodcastCover = useCallback(async () => {
+    const [filePath] = await window.api.app.selectFile({
+      filters: [{ name: 'Images', extensions: ['png', 'jpg', 'jpeg', 'webp'] }]
+    })
+    if (!filePath) return
+    const fileData = await window.api.app.getFileInfo(filePath)
+    setPodcastCover(fileData)
+  }, [])
+
+  const handleRemovePodcastAudio = useCallback(() => {
+    setPodcastAudio(null)
+    if (podcastAudioInputRef.current) {
+      podcastAudioInputRef.current.value = ''
+    }
+  }, [])
+
+  const handleRemovePodcastCover = useCallback(() => {
+    setPodcastCover(null)
+    if (podcastCoverInputRef.current) {
+      podcastCoverInputRef.current.value = ''
+    }
+  }, [])
+
   const handlePublish = () => {
     if (selectedPlatforms.size === 0) return
 
@@ -464,6 +526,21 @@ export function PublishPage({
         data = articleData
         break
       }
+      case 'PODCAST': {
+        if (!podcastTitle.trim() || !podcastAudio) return
+        const podcastData: PodcastData = {
+          title: podcastTitle.trim(),
+          description: podcastDescription.trim(),
+          audio: podcastAudio,
+          cover: podcastCover || undefined,
+          tags: podcastTags
+            .split(/[,，]/)
+            .map((t) => t.trim())
+            .filter(Boolean)
+        }
+        data = podcastData
+        break
+      }
       default:
         return
     }
@@ -481,10 +558,12 @@ export function PublishPage({
         return videoTitle.trim().length > 0 && videoFile !== null
       case 'ARTICLE':
         return articleTitle.trim().length > 0 && articleContent.trim().length > 0
+      case 'PODCAST':
+        return podcastTitle.trim().length > 0 && podcastAudio !== null
       default:
         return false
     }
-  }, [contentType, dynamicContent, videoTitle, videoFile, articleTitle, articleContent])
+  }, [contentType, dynamicContent, videoTitle, videoFile, articleTitle, articleContent, podcastTitle, podcastAudio])
 
   const canPublish = selectedPlatforms.size > 0 && isContentValid && !isPublishing
 
@@ -756,6 +835,130 @@ export function PublishPage({
                 onValueChange={setArticleContent}
                 minRows={12}
                 classNames={{ input: 'font-mono text-sm' }}
+                isDisabled={isPublishing}
+              />
+            </div>
+          </>
+        )}
+
+        {/* Podcast Content Form */}
+        {contentType === 'PODCAST' && (
+          <>
+            <div className="mb-5">
+              <label className="block mb-2 text-sm font-medium">音频文件</label>
+              <input
+                ref={podcastAudioInputRef}
+                type="file"
+                accept="audio/*,.mp3,.wav,.m4a,.aac,.ogg,.flac"
+                className="hidden"
+                disabled={isPublishing}
+              />
+              {!podcastAudio ? (
+                <div
+                  onClick={() => !isPublishing && handleSelectPodcastAudio()}
+                  className={`flex flex-col items-center justify-center p-8 border-2 border-dashed rounded-lg cursor-pointer transition-colors border-default-300 hover:border-primary/50 ${isPublishing ? 'opacity-60 cursor-not-allowed' : ''}`}
+                >
+                  <Upload className="size-10 text-muted-foreground mb-3" />
+                  <p className="text-sm text-muted-foreground mb-1">
+                    点击选择音频文件
+                  </p>
+                  <p className="text-xs text-muted-foreground">支持 MP3, WAV, M4A, AAC 等格式</p>
+                </div>
+              ) : (
+                <div className="relative border rounded-lg overflow-hidden">
+                  <div className="p-4">
+                    <audio src={podcastAudio.url} controls className="w-full" />
+                  </div>
+                  <div className="p-3 bg-muted/50 flex items-center justify-between">
+                    <div className="flex items-center gap-2 min-w-0">
+                      <Music className="size-4 text-muted-foreground flex-shrink-0" />
+                      <span className="text-sm truncate">{podcastAudio.name}</span>
+                      <span className="text-xs text-muted-foreground flex-shrink-0">
+                        {formatFileSize(podcastAudio.size || 0)}
+                      </span>
+                    </div>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      isIconOnly
+                      onPress={handleRemovePodcastAudio}
+                      isDisabled={isPublishing}
+                      className="flex-shrink-0"
+                    >
+                      <X className="size-4" />
+                    </Button>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            <div className="mb-5">
+              <label className="block mb-2 text-sm font-medium">
+                封面图片 <span className="text-muted-foreground font-normal">（可选）</span>
+              </label>
+              <input
+                ref={podcastCoverInputRef}
+                type="file"
+                accept="image/*"
+                className="hidden"
+                disabled={isPublishing}
+              />
+              {!podcastCover ? (
+                <div
+                  onClick={() => !isPublishing && handleSelectPodcastCover()}
+                  className={`flex items-center justify-center gap-2 p-4 border-2 border-dashed rounded-lg cursor-pointer transition-colors border-default-300 hover:border-primary/50 ${isPublishing ? 'opacity-60 cursor-not-allowed' : ''}`}
+                >
+                  <Image className="size-5 text-muted-foreground" />
+                  <span className="text-sm text-muted-foreground">点击上传封面图片</span>
+                </div>
+              ) : (
+                <div className="relative inline-block">
+                  <img
+                    src={podcastCover.url}
+                    alt="Cover"
+                    className="h-24 w-auto rounded-lg object-cover"
+                  />
+                  <Button
+                    variant="solid"
+                    size="sm"
+                    isIconOnly
+                    onPress={handleRemovePodcastCover}
+                    isDisabled={isPublishing}
+                    className="absolute -top-2 -right-2 size-6 min-w-0 rounded-full bg-danger"
+                  >
+                    <X className="size-3" />
+                  </Button>
+                </div>
+              )}
+            </div>
+
+            <div className="mb-5">
+              <Input
+                label="播客标题"
+                placeholder="输入播客标题..."
+                value={podcastTitle}
+                onValueChange={setPodcastTitle}
+                isDisabled={isPublishing}
+              />
+            </div>
+
+            <div className="mb-5">
+              <Textarea
+                label="播客描述"
+                placeholder="输入播客描述..."
+                value={podcastDescription}
+                onValueChange={setPodcastDescription}
+                minRows={4}
+                isDisabled={isPublishing}
+              />
+            </div>
+
+            <div className="mb-5">
+              <Input
+                label="标签（用逗号分隔）"
+                placeholder="标签1, 标签2, 标签3"
+                value={podcastTags}
+                onValueChange={setPodcastTags}
                 isDisabled={isPublishing}
               />
             </div>

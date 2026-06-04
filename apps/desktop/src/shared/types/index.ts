@@ -57,6 +57,14 @@ export type PlatformType =
   | 'sspai'
   | '51cto'
   | 'wordpress'
+  // 播客平台
+  | 'qqmusic'
+  | 'lizhi'
+  | 'ximalaya'
+  | 'xiaoyuzhou'
+  | 'qingting'
+  | 'neteasepodcast'
+  | 'spotify'
 
 export interface PlatformInfo {
   id: PlatformType
@@ -157,6 +165,9 @@ export interface PodcastData {
   title: string
   description: string
   audio: FileData
+  cover?: FileData
+  tags?: string[]
+  category?: string | number
 }
 
 // Union type for all content types

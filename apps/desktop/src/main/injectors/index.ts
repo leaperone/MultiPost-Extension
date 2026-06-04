@@ -3,6 +3,7 @@ import injectorBundles, { injectorGlobalName } from 'virtual:injector-bundles'
 import type {
   ArticleData,
   DynamicData,
+  PodcastData,
   PlatformType,
   SyncContentData,
   SyncContentType,
@@ -105,6 +106,14 @@ function prepareArticleData(data: SyncContentData): SyncContentData {
   }
 }
 
+function preparePodcastData(data: SyncContentData): SyncContentData {
+  const podcastData = data as PodcastData
+  return {
+    ...podcastData,
+    tags: podcastData.tags ?? []
+  }
+}
+
 function prepareDataForExtension(data: SyncContentData, contentType: SyncContentType): SyncContentData {
   if (contentType === 'DYNAMIC') {
     return prepareDynamicData(data)
@@ -114,6 +123,9 @@ function prepareDataForExtension(data: SyncContentData, contentType: SyncContent
   }
   if (contentType === 'ARTICLE') {
     return prepareArticleData(data)
+  }
+  if (contentType === 'PODCAST') {
+    return preparePodcastData(data)
   }
   return data
 }

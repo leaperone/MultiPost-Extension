@@ -455,6 +455,75 @@ export const PLATFORMS: Record<string, PlatformInfo> = {
     url: 'https://wordpress.com',
     loginUrl: 'https://wordpress.com/log-in',
     supportedContentTypes: ['ARTICLE']
+  },
+
+  // ========== 播客平台 ==========
+  qqmusic: {
+    id: 'qqmusic',
+    name: 'QQ音乐播客',
+    icon: 'qqmusic',
+    iconifyIcon: 'simple-icons:qqmusic',
+    faviconUrl: 'https://mp.tencentmusic.com/favicon.ico',
+    url: 'https://mp.tencentmusic.com/index',
+    loginUrl: 'https://mp.tencentmusic.com/',
+    supportedContentTypes: ['PODCAST']
+  },
+  lizhi: {
+    id: 'lizhi',
+    name: '荔枝播客',
+    icon: 'lizhi',
+    faviconUrl: 'https://nj.lizhi.fm/static/newsite/logo240.png',
+    url: 'https://nj.lizhi.fm/static/newsite/#/index',
+    loginUrl: 'https://nj.lizhi.fm/static/newsite/#/index',
+    supportedContentTypes: ['PODCAST']
+  },
+  ximalaya: {
+    id: 'ximalaya',
+    name: '喜马拉雅',
+    icon: 'ximalaya',
+    iconifyIcon: 'simple-icons:himalaya',
+    faviconUrl: 'https://www.ximalaya.com/favicon.ico',
+    url: 'https://creator.ximalaya.com',
+    loginUrl: 'https://passport.ximalaya.com/page/web/login',
+    supportedContentTypes: ['PODCAST']
+  },
+  xiaoyuzhou: {
+    id: 'xiaoyuzhou',
+    name: '小宇宙',
+    icon: 'xiaoyuzhou',
+    faviconUrl: 'https://www.xiaoyuzhoufm.com/favicon.ico',
+    url: 'https://podcaster.xiaoyuzhoufm.com',
+    loginUrl: 'https://podcaster.xiaoyuzhoufm.com/',
+    supportedContentTypes: ['PODCAST']
+  },
+  qingting: {
+    id: 'qingting',
+    name: '蜻蜓FM',
+    icon: 'qingting',
+    faviconUrl: 'https://www.qingting.fm/favicon.ico',
+    url: 'https://studio.qingting.fm',
+    loginUrl: 'https://studio.qingting.fm/',
+    supportedContentTypes: ['PODCAST']
+  },
+  neteasepodcast: {
+    id: 'neteasepodcast',
+    name: '网易云音乐播客',
+    icon: 'neteasepodcast',
+    iconifyIcon: 'simple-icons:neteasecloudmusic',
+    faviconUrl: 'https://s4.music.126.net/style/favicon.ico',
+    url: 'https://podcast.music.163.com',
+    loginUrl: 'https://music.163.com/',
+    supportedContentTypes: ['PODCAST']
+  },
+  spotify: {
+    id: 'spotify',
+    name: 'Spotify for Creators',
+    icon: 'spotify',
+    iconifyIcon: 'simple-icons:spotify',
+    faviconUrl: 'https://open.spotifycdn.com/cdn/images/favicon.0f31d2ea.ico',
+    url: 'https://creators.spotify.com',
+    loginUrl: 'https://accounts.spotify.com/login',
+    supportedContentTypes: ['PODCAST']
   }
 }
 
@@ -647,6 +716,29 @@ export const PLATFORM_PUBLISH_URLS: Record<string, Partial<Record<SyncContentTyp
   },
   wordpress: {
     ARTICLE: 'https://wordpress.com/wp-admin/new-post.php'
+  },
+
+  // ========== 播客平台 ==========
+  qqmusic: {
+    PODCAST: 'https://mp.tencentmusic.com/index'
+  },
+  lizhi: {
+    PODCAST: 'https://nj.lizhi.fm/static/newsite/#/index'
+  },
+  ximalaya: {
+    PODCAST: 'https://creator.ximalaya.com/anchor/sound-album/sound/single-upload'
+  },
+  xiaoyuzhou: {
+    PODCAST: 'https://podcaster.xiaoyuzhoufm.com/dashboard/episodes/new'
+  },
+  qingting: {
+    PODCAST: 'https://studio.qingting.fm/album'
+  },
+  neteasepodcast: {
+    PODCAST: 'https://podcast.music.163.com/web/podcast/upload'
+  },
+  spotify: {
+    PODCAST: 'https://creators.spotify.com/pod/show'
   }
 }
 
