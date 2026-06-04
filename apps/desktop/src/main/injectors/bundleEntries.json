@@ -1,0 +1,83 @@
+[
+  {
+    "desktopPlatform": "weibo",
+    "contentType": "DYNAMIC",
+    "extensionKey": "DYNAMIC_WEIBO",
+    "source": "dynamic/weibo.ts",
+    "exportName": "DynamicWeibo",
+    "injectUrl": "https://weibo.com",
+    "accountKey": "weibo"
+  },
+  {
+    "desktopPlatform": "weibo",
+    "contentType": "VIDEO",
+    "extensionKey": "VIDEO_WEIBO",
+    "source": "video/weibo.ts",
+    "exportName": "VideoWeibo",
+    "injectUrl": "https://weibo.com/upload/channel",
+    "accountKey": "weibo"
+  },
+  {
+    "desktopPlatform": "weibo",
+    "contentType": "ARTICLE",
+    "extensionKey": "ARTICLE_WEIBO",
+    "source": "article/weibo.ts",
+    "exportName": "ArticleWeibo",
+    "injectUrl": "https://card.weibo.com/article/v3/editor",
+    "accountKey": "weibo"
+  },
+  {
+    "desktopPlatform": "bilibili",
+    "contentType": "VIDEO",
+    "extensionKey": "VIDEO_BILIBILI",
+    "source": "video/bilibili.ts",
+    "exportName": "VideoBilibili",
+    "injectUrl": "https://member.bilibili.com/platform/upload/video/frame",
+    "accountKey": "bilibili"
+  },
+  {
+    "desktopPlatform": "zhihu",
+    "contentType": "DYNAMIC",
+    "extensionKey": "DYNAMIC_ZHIHU",
+    "source": "dynamic/zhihu.ts",
+    "exportName": "DynamicZhihu",
+    "injectUrl": "https://www.zhihu.com",
+    "accountKey": "zhihu"
+  },
+  {
+    "desktopPlatform": "zhihu",
+    "contentType": "VIDEO",
+    "extensionKey": "VIDEO_ZHIHU",
+    "source": "video/zhihu.ts",
+    "exportName": "VideoZhihu",
+    "injectUrl": "https://www.zhihu.com/zvideo/upload-video",
+    "accountKey": "zhihu"
+  },
+  {
+    "desktopPlatform": "zhihu",
+    "contentType": "ARTICLE",
+    "extensionKey": "ARTICLE_ZHIHU",
+    "source": "article/zhihu.ts",
+    "exportName": "ArticleZhihu",
+    "injectUrl": "https://zhuanlan.zhihu.com/write",
+    "accountKey": "zhihu"
+  },
+  {
+    "desktopPlatform": "douyin",
+    "contentType": "DYNAMIC",
+    "extensionKey": "DYNAMIC_DOUYIN",
+    "source": "dynamic/douyin.ts",
+    "exportName": "DynamicDouyin",
+    "injectUrl": "https://creator.douyin.com/creator-micro/content/upload?default-tab=3",
+    "accountKey": "douyin"
+  },
+  {
+    "desktopPlatform": "douyin",
+    "contentType": "VIDEO",
+    "extensionKey": "VIDEO_DOUYIN",
+    "source": "video/douyin.ts",
+    "exportName": "VideoDouyin",
+    "injectUrl": "https://creator.douyin.com/creator-micro/content/upload",
+    "accountKey": "douyin"
+  }
+]

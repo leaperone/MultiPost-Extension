@@ -1,4 +1,5 @@
 import type { WebContents } from 'electron'
+import injectorBundles, { injectorGlobalName } from 'virtual:injector-bundles'
 import type {
   ArticleData,
   DynamicData,
@@ -10,7 +11,6 @@ import type {
 import {
   getDesktopInjectorManifestEntry,
   type DesktopInjectorManifestEntry,
-  type ExtensionInjectFunction,
   type ExtensionSyncData
 } from './manifest'
 
@@ -118,19 +118,16 @@ function prepareDataForExtension(data: SyncContentData, contentType: SyncContent
   return data
 }
 
-function getRuntimePrelude(entry: DesktopInjectorManifestEntry): string {
-  if (entry.extensionKey === 'ARTICLE_WEIBO') {
-    return `
-      const WEIBO_DRAFT_SUCCESS_CODE = 100000;
-      const WEIBO_V3_EDITOR_URL = "https://card.weibo.com/article/v3/editor";
-    `
+function getInjectorBundle(entry: DesktopInjectorManifestEntry): string {
+  const bundle = injectorBundles[entry.extensionKey]
+  if (!bundle) {
+    throw new Error(`Missing desktop injector bundle for ${entry.extensionKey}`)
   }
-  return ''
+  return bundle
 }
 
 function buildExecutionScript(entry: DesktopInjectorManifestEntry, syncData: ExtensionSyncData): string {
-  const injectorCall = serializeInjector(entry.injectFn, syncData)
-  const runtimePrelude = getRuntimePrelude(entry)
+  const injectorCall = serializeInjector(getInjectorBundle(entry), syncData)
 
   return `
     (async () => {
@@ -153,7 +150,6 @@ function buildExecutionScript(entry: DesktopInjectorManifestEntry, syncData: Ext
       };
 
       try {
-        ${runtimePrelude}
         await ${injectorCall};
         if (__multipostErrors.length > 0) {
           return { ok: false, error: __multipostErrors.join("\\n") };
@@ -168,8 +164,27 @@ function buildExecutionScript(entry: DesktopInjectorManifestEntry, syncData: Ext
   `
 }
 
-export function serializeInjector(fn: ExtensionInjectFunction, syncData: ExtensionSyncData): string {
-  return '(' + fn.toString() + ')(' + safeJsonStringify(syncData) + ')'
+function getInjectorGlobalIdentifier(): string {
+  if (!/^[A-Za-z_$][\w$]*$/.test(injectorGlobalName)) {
+    throw new Error(`Invalid injector bundle global name: ${injectorGlobalName}`)
+  }
+  return injectorGlobalName
+}
+
+export function serializeInjector(iifeString: string, syncData: ExtensionSyncData): string {
+  const injectorGlobalIdentifier = getInjectorGlobalIdentifier()
+
+  return `
+    (() => {
+      ${iifeString}
+      const __multipostInjectorModule = ${injectorGlobalIdentifier};
+      const __multipostInjector = __multipostInjectorModule && __multipostInjectorModule.injector;
+      if (typeof __multipostInjector !== "function") {
+        throw new Error("Desktop injector bundle did not expose an injector function");
+      }
+      return __multipostInjector(${safeJsonStringify(syncData)});
+    })()
+  `
 }
 
 export function toExtensionSyncData(
@@ -213,9 +228,8 @@ export async function executeExtensionFill(
     injectUrl: entry.injectUrl,
     isAutoPublish
   })
-  const script = buildExecutionScript(entry, syncData)
-
   try {
+    const script = buildExecutionScript(entry, syncData)
     const result = (await webContents.executeJavaScript(script)) as InjectedExecutionResult
     return {
       handled: true,
