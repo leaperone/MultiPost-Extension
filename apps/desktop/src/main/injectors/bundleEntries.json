@@ -79,5 +79,149 @@
     "exportName": "VideoDouyin",
     "injectUrl": "https://creator.douyin.com/creator-micro/content/upload",
     "accountKey": "douyin"
+  },
+  {
+    "desktopPlatform": "wechat",
+    "contentType": "DYNAMIC",
+    "extensionKey": "DYNAMIC_WEIXIN",
+    "source": "dynamic/weixin.ts",
+    "exportName": "DynamicWeixin",
+    "injectUrl": "https://mp.weixin.qq.com/",
+    "accountKey": "weixin"
+  },
+  {
+    "desktopPlatform": "wechat",
+    "contentType": "ARTICLE",
+    "extensionKey": "ARTICLE_WEIXIN",
+    "source": "article/weixin.ts",
+    "exportName": "ArticleWeixin",
+    "injectUrl": "https://mp.weixin.qq.com/",
+    "accountKey": "weixin"
+  },
+  {
+    "desktopPlatform": "weixinchannel",
+    "contentType": "DYNAMIC",
+    "extensionKey": "DYNAMIC_WEIXINCHANNEL",
+    "source": "dynamic/weixinchannel.ts",
+    "exportName": "DynamicWeiXinChannel",
+    "injectUrl": "https://channels.weixin.qq.com/platform/post/finderNewLifeCreate",
+    "accountKey": "weixinchannel"
+  },
+  {
+    "desktopPlatform": "weixinchannel",
+    "contentType": "VIDEO",
+    "extensionKey": "VIDEO_WEIXINCHANNEL",
+    "source": "video/weixinchannel.ts",
+    "exportName": "VideoWeiXinChannel",
+    "injectUrl": "https://channels.weixin.qq.com/platform/post/create",
+    "accountKey": "weixinchannel"
+  },
+  {
+    "desktopPlatform": "xiaohongshu",
+    "contentType": "DYNAMIC",
+    "extensionKey": "DYNAMIC_REDNOTE",
+    "source": "dynamic/rednote.ts",
+    "exportName": "DynamicRednote",
+    "injectUrl": "https://creator.xiaohongshu.com/publish/publish?target=image",
+    "accountKey": "rednote"
+  },
+  {
+    "desktopPlatform": "xiaohongshu",
+    "contentType": "VIDEO",
+    "extensionKey": "VIDEO_REDNOTE",
+    "source": "video/rednote.ts",
+    "exportName": "VideoRednote",
+    "injectUrl": "https://creator.xiaohongshu.com/publish/publish?target=video",
+    "accountKey": "rednote"
+  },
+  {
+    "desktopPlatform": "kuaishou",
+    "contentType": "DYNAMIC",
+    "extensionKey": "DYNAMIC_KUAISHOU",
+    "source": "dynamic/kuaishou.ts",
+    "exportName": "DynamicKuaishou",
+    "injectUrl": "https://cp.kuaishou.com/article/publish/video",
+    "accountKey": "kuaishou"
+  },
+  {
+    "desktopPlatform": "kuaishou",
+    "contentType": "VIDEO",
+    "extensionKey": "VIDEO_KUAISHOU",
+    "source": "video/kuaishou.ts",
+    "exportName": "VideoKuaishou",
+    "injectUrl": "https://cp.kuaishou.com/article/publish/video",
+    "accountKey": "kuaishou"
+  },
+  {
+    "desktopPlatform": "toutiao",
+    "contentType": "DYNAMIC",
+    "extensionKey": "DYNAMIC_TOUTIAO",
+    "source": "dynamic/toutiao.ts",
+    "exportName": "DynamicToutiao",
+    "injectUrl": "https://mp.toutiao.com/profile_v4/weitoutiao/publish",
+    "accountKey": "toutiao"
+  },
+  {
+    "desktopPlatform": "toutiao",
+    "contentType": "ARTICLE",
+    "extensionKey": "ARTICLE_TOUTIAO",
+    "source": "article/toutiao.ts",
+    "exportName": "ArticleToutiao",
+    "injectUrl": "https://mp.toutiao.com/profile_v4/graphic/publish",
+    "accountKey": "toutiao"
+  },
+  {
+    "desktopPlatform": "baijiahao",
+    "contentType": "DYNAMIC",
+    "extensionKey": "DYNAMIC_BAIJIAHAO",
+    "source": "dynamic/baijiahao.ts",
+    "exportName": "DynamicBaijiahao",
+    "injectUrl": "https://baijiahao.baidu.com/builder/rc/edit?type=events",
+    "accountKey": "baijiahao"
+  },
+  {
+    "desktopPlatform": "baijiahao",
+    "contentType": "VIDEO",
+    "extensionKey": "VIDEO_BAIJIAHAO",
+    "source": "video/baijiahao.ts",
+    "exportName": "VideoBaijiahao",
+    "injectUrl": "https://baijiahao.baidu.com/builder/rc/edit?type=videoV2",
+    "accountKey": "baijiahao"
+  },
+  {
+    "desktopPlatform": "baijiahao",
+    "contentType": "ARTICLE",
+    "extensionKey": "ARTICLE_BAIJIAHAO",
+    "source": "article/baijiahao.ts",
+    "exportName": "ArticleBaijiahao",
+    "injectUrl": "https://baijiahao.baidu.com/builder/rc/edit?type=news",
+    "accountKey": "baijiahao"
+  },
+  {
+    "desktopPlatform": "toutiaohao",
+    "contentType": "DYNAMIC",
+    "extensionKey": "DYNAMIC_TOUTIAOHAO",
+    "source": "dynamic/toutiaohao.ts",
+    "exportName": "DynamicToutiaohao",
+    "injectUrl": "https://mp.toutiao.com/profile_v4/weitoutiao/publish",
+    "accountKey": "toutiaohao"
+  },
+  {
+    "desktopPlatform": "toutiaohao",
+    "contentType": "VIDEO",
+    "extensionKey": "VIDEO_TOUTIAOHAO",
+    "source": "video/toutiaohao.ts",
+    "exportName": "VideoToutiaohao",
+    "injectUrl": "https://mp.toutiao.com/profile_v4/xigua/upload-video",
+    "accountKey": "toutiaohao"
+  },
+  {
+    "desktopPlatform": "twitter",
+    "contentType": "DYNAMIC",
+    "extensionKey": "DYNAMIC_X",
+    "source": "dynamic/x.ts",
+    "exportName": "DynamicX",
+    "injectUrl": "https://x.com/home",
+    "accountKey": "x"
   }
 ]

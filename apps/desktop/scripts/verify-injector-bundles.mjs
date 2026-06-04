@@ -1,6 +1,6 @@
 import { buildDesktopInjectorBundleResult, INJECTOR_GLOBAL_NAME } from './injector-bundles.mjs'
 
-const EXPECTED_INJECTOR_COUNT = 9
+const EXPECTED_INJECTOR_COUNT = 25
 
 function fail(message) {
   console.error(`[verify:injectors] ${message}`)
