@@ -43,11 +43,12 @@ chrome.runtime.onInstalled.addListener((object) => {
 
 // Listen Message || 监听消息 || START
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
-  defaultMessageHandler(request, sender, sendResponse);
-  tabsManagerMessageHandler(request, sender, sendResponse);
-  trustDomainMessageHandler(request, sender, sendResponse);
-  linkExtensionMessageHandler(request, sender, sendResponse);
-  return true;
+  const handled =
+    defaultMessageHandler(request, sender, sendResponse) ||
+    tabsManagerMessageHandler(request, sender, sendResponse) ||
+    trustDomainMessageHandler(request, sender, sendResponse) ||
+    linkExtensionMessageHandler(request, sender, sendResponse);
+  return handled;
 });
 chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
   tabsManagerHandleTabUpdated(tabId, changeInfo, tab);
@@ -63,10 +64,12 @@ let currentPublishPopup: chrome.windows.Window | null = null;
 const defaultMessageHandler = (request, _sender, sendResponse) => {
   if (request.action === "MULTIPOST_EXTENSION_CHECK_SERVICE_STATUS") {
     sendResponse({ extensionId: chrome.runtime.id });
+    return true;
   }
   if (request.action === "MULTIPOST_EXTENSION_PUBLISH") {
     const data = request.data as SyncData;
     currentSyncData = data;
+    sendResponse({ status: "received", extensionId: chrome.runtime.id });
     (async () => {
       currentPublishPopup = await chrome.windows.create({
         url: chrome.runtime.getURL("tabs/publish.html"),
@@ -75,20 +78,32 @@ const defaultMessageHandler = (request, _sender, sendResponse) => {
         height: 600,
       });
     })();
+    return true;
   }
   if (request.action === "MULTIPOST_EXTENSION_PLATFORMS") {
-    getPlatformInfos().then((platforms) => {
-      sendResponse({ platforms });
-    });
+    getPlatformInfos()
+      .then((platforms) => {
+        sendResponse({ platforms });
+      })
+      .catch((error) => {
+        sendResponse({ error: String(error instanceof Error ? error.message : error) });
+      });
+    return true;
   }
   if (request.action === "MULTIPOST_EXTENSION_GET_ACCOUNT_INFOS") {
-    getAllAccountInfo().then((accountInfo) => {
-      sendResponse({ accountInfo });
-    });
+    getAllAccountInfo()
+      .then((accountInfo) => {
+        sendResponse({ accountInfo });
+      })
+      .catch((error) => {
+        sendResponse({ error: String(error instanceof Error ? error.message : error) });
+      });
+    return true;
   }
   if (request.action === "MULTIPOST_EXTENSION_OPEN_OPTIONS") {
     chrome.runtime.openOptionsPage();
     sendResponse({ extensionId: chrome.runtime.id });
+    return true;
   }
   if (request.action === "MULTIPOST_EXTENSION_REFRESH_ACCOUNT_INFOS") {
     chrome.windows.create({
@@ -98,9 +113,12 @@ const defaultMessageHandler = (request, _sender, sendResponse) => {
       height: 600,
       focused: request.data.isFocused || false,
     });
+    sendResponse({ status: "ok" });
+    return true;
   }
   if (request.action === "MULTIPOST_EXTENSION_PUBLISH_REQUEST_SYNC_DATA") {
     sendResponse({ syncData: currentSyncData });
+    return true;
   }
   if (request.action === "MULTIPOST_EXTENSION_PUBLISH_NOW") {
     const data = request.data as SyncData;
@@ -135,11 +153,18 @@ const defaultMessageHandler = (request, _sender, sendResponse) => {
             })),
           });
         } catch (error) {
+          // Do not sendResponse here: the publish popup's handlePublishComplete treats ANY
+          // callback response as "publish complete", so an error payload would be mis-read as success.
+          // Preserve original behavior (log only); success path above sends the tabs response.
           console.error("创建标签页或分组时出错:", error);
         }
       })();
     }
+    // Claim this action regardless of platform count, mirroring the original blanket return-true:
+    // the success path responds asynchronously; error/empty paths intentionally send no response.
+    return true;
   }
+  return false;
 };
 starter(1000 * 30);
 // Message Handler || 消息处理器 || END

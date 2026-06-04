@@ -66,9 +66,21 @@ function defaultHandler<T>(request: ExtensionExternalRequest<T>, event: MessageE
     action: getRightAction(request.action),
   };
 
-  chrome.runtime.sendMessage(newRequest).then((response) => {
-    event.source.postMessage(successResponse(request, response));
-  });
+  chrome.runtime
+    .sendMessage(newRequest)
+    .then((response) => {
+      event.source.postMessage(successResponse(request, response));
+    })
+    .catch((err) => {
+      event.source?.postMessage({
+        type: "response",
+        traceId: request.traceId,
+        action: request.action,
+        code: 500,
+        message: String(err?.message ?? err),
+        data: null,
+      });
+    });
 }
 
 function successResponse<T>(request: ExtensionExternalRequest<T>, data: T) {

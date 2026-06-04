@@ -52,7 +52,7 @@ export const ping = async (withPlatforms = false) => {
   return null;
 };
 
-export const linkExtensionMessageHandler = async (request, _sender, sendResponse) => {
+export const linkExtensionMessageHandler = (request, _sender, sendResponse) => {
   if (request.action === "MULTIPOST_EXTENSION_LINK_EXTENSION") {
     console.log("request", request);
     const params = {
@@ -61,14 +61,6 @@ export const linkExtensionMessageHandler = async (request, _sender, sendResponse
     };
 
     const encodedParams = btoa(JSON.stringify(params));
-
-    // 打开信任域名确认窗口
-    chrome.windows.create({
-      url: chrome.runtime.getURL(`tabs/link-extension.html#${encodedParams}`),
-      type: "popup",
-      width: 800,
-      height: 600,
-    });
 
     const linkExtensionListener = (message, _authSender, authSendResponse) => {
       if (message.type === "MULTIPOST_EXTENSION_LINK_EXTENSION_CONFIRM") {
@@ -79,7 +71,22 @@ export const linkExtensionMessageHandler = async (request, _sender, sendResponse
       }
     };
     chrome.runtime.onMessage.addListener(linkExtensionListener);
+
+    // 打开信任域名确认窗口
+    chrome.windows
+      .create({
+        url: chrome.runtime.getURL(`tabs/link-extension.html#${encodedParams}`),
+        type: "popup",
+        width: 800,
+        height: 600,
+      })
+      .catch((error) => {
+        chrome.runtime.onMessage.removeListener(linkExtensionListener);
+        sendResponse({ confirm: false, error: String(error instanceof Error ? error.message : error) });
+      });
+    return true;
   }
+  return false;
 };
 
 export const starter = (interval: number) => {
