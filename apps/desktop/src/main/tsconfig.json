@@ -11,11 +11,24 @@
     "isolatedModules": true,
     "noEmit": true,
     "outDir": "../../out/main",
-    "rootDir": "..",
+    "rootDir": "../../../",
     "baseUrl": ".",
     "paths": {
       "@main/*": ["./*"],
-      "@shared/*": ["../shared/*"]
+      "@shared/*": ["../shared/*"],
+      "@ext/sync/article/bilibili": ["./injectors/ext-shims/sync/article/bilibili.d.ts"],
+      "@ext/sync/article/weibo": ["./injectors/ext-shims/sync/article/weibo.d.ts"],
+      "@ext/sync/article/zhihu": ["./injectors/ext-shims/sync/article/zhihu.d.ts"],
+      "@ext/sync/dynamic/bilibili": ["./injectors/ext-shims/sync/dynamic/bilibili.d.ts"],
+      "@ext/sync/dynamic/douyin": ["./injectors/ext-shims/sync/dynamic/douyin.d.ts"],
+      "@ext/sync/dynamic/weibo": ["./injectors/ext-shims/sync/dynamic/weibo.d.ts"],
+      "@ext/sync/dynamic/zhihu": ["./injectors/ext-shims/sync/dynamic/zhihu.d.ts"],
+      "@ext/sync/video/bilibili": ["./injectors/ext-shims/sync/video/bilibili.d.ts"],
+      "@ext/sync/video/douyin": ["./injectors/ext-shims/sync/video/douyin.d.ts"],
+      "@ext/sync/video/weibo": ["./injectors/ext-shims/sync/video/weibo.d.ts"],
+      "@ext/sync/video/zhihu": ["./injectors/ext-shims/sync/video/zhihu.d.ts"],
+      "@ext/*": ["../../../extension/src/*"],
+      "~sync/*": ["../../../extension/src/sync/*"]
     }
   },
   "include": ["./**/*", "../shared/**/*"]

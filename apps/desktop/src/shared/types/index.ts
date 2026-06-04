@@ -115,6 +115,8 @@ export interface DynamicData {
   content: string
   images: FileData[]
   videos: FileData[]
+  tags?: string[]
+  scheduledPublishTime?: number
 }
 
 // Video content
@@ -124,8 +126,13 @@ export interface VideoData {
   video: FileData
   tags?: string[]
   cover?: FileData
+  horizontalCover?: FileData
   verticalCover?: FileData
   scheduledPublishTime?: number // timestamp in milliseconds
+  category?: string | number
+  original?: boolean
+  collectionId?: string | number
+  description?: string
 }
 
 // Article/Blog content
@@ -136,6 +143,13 @@ export interface ArticleData {
   htmlContent: string
   markdownContent: string
   images?: FileData[] // optional embedded images
+  horizontalCover?: FileData
+  verticalCover?: FileData
+  tags?: string[]
+  category?: string | number
+  original?: boolean
+  allowComment?: boolean
+  scheduledPublishTime?: number
 }
 
 // Podcast/Audio content
@@ -154,6 +168,7 @@ export interface SyncData {
   contentType: SyncContentType
   isAutoPublish: boolean
   data: SyncContentData
+  origin?: SyncContentData
 }
 
 export interface SyncDataPlatform {

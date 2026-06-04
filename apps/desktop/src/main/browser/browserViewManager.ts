@@ -19,6 +19,11 @@ import { FingerprintService } from '../fingerprint'
 import { getMimeType } from '../utils/mime'
 import { getDesktopRequestHeaders, hardenSession, registerLocalFileProtocol } from './sessionHardening'
 import { DatabaseService } from '../database'
+import {
+  executeExtensionFill,
+  getExtensionInjectUrl,
+  type ExtensionFillResult
+} from '../injectors'
 
 interface ManagedBrowserView {
   view: BrowserView
@@ -68,6 +73,8 @@ interface PublishGroupView {
   autoPublish: boolean
   autoCloseDelay: number // seconds
 }
+
+type GroupFillResults = Map<string, ExtensionFillResult>
 
 // Layout constants
 const TABBAR_HEIGHT = 40
@@ -980,6 +987,11 @@ export class BrowserViewManager {
    * Get the publish URL for a platform and content type
    */
   private getPublishUrl(platform: PlatformType, contentType?: SyncContentType): string {
+    const extensionInjectUrl = getExtensionInjectUrl(platform, contentType)
+    if (extensionInjectUrl) {
+      return extensionInjectUrl
+    }
+
     // If content type is specified, try to get specific URL
     if (contentType && PLATFORM_PUBLISH_URLS[platform]?.[contentType]) {
       return PLATFORM_PUBLISH_URLS[platform][contentType]!
@@ -987,6 +999,28 @@ export class BrowserViewManager {
     // Fall back to adapter's publishUrl or platform home URL
     const adapter = getAdapter(platform)
     return adapter?.publishUrl || PLATFORMS[platform]?.url || 'about:blank'
+  }
+
+  private normalizeNavigationUrl(url: string): string {
+    try {
+      const normalized = new URL(url)
+      normalized.hash = ''
+      return normalized.toString()
+    } catch {
+      return url.trim()
+    }
+  }
+
+  private async waitForNavigationSettle(): Promise<void> {
+    await new Promise((resolve) => setTimeout(resolve, 2000))
+  }
+
+  private async loadExactUrlIfNeeded(webContents: Electron.WebContents, targetUrl: string): Promise<void> {
+    if (this.normalizeNavigationUrl(webContents.getURL()) === this.normalizeNavigationUrl(targetUrl)) {
+      return
+    }
+    await webContents.loadURL(targetUrl)
+    await this.waitForNavigationSettle()
   }
 
   /**
@@ -1086,11 +1120,49 @@ export class BrowserViewManager {
   async fillPlatformContent(
     platform: PlatformType,
     contentType: SyncContentType,
-    data: SyncContentData
-  ): Promise<void> {
+    data: SyncContentData,
+    isAutoPublish = false
+  ): Promise<ExtensionFillResult> {
     const managed = this.platformViews.get(platform)
     if (!managed) {
       throw new Error(`No view found for platform: ${platform}`)
+    }
+
+    const normalizedData = this.normalizeContentData(data)
+
+    const extensionInjectUrl = getExtensionInjectUrl(platform, contentType)
+    if (extensionInjectUrl) {
+      await this.loadExactUrlIfNeeded(managed.view.webContents, extensionInjectUrl)
+    } else {
+      // Navigate to publish URL if not already there
+      const publishUrl = this.getPublishUrl(platform, contentType)
+      const currentUrl = managed.view.webContents.getURL()
+      try {
+        const targetHostname = new URL(publishUrl).hostname
+        if (!currentUrl.includes(targetHostname)) {
+          await managed.view.webContents.loadURL(publishUrl)
+          // Wait for page to load
+          await this.waitForNavigationSettle()
+        }
+      } catch {
+        // If URL parsing fails, just try to navigate
+        await managed.view.webContents.loadURL(publishUrl)
+        await this.waitForNavigationSettle()
+      }
+    }
+
+    const extensionResult = await executeExtensionFill(
+      managed.view.webContents,
+      platform,
+      contentType,
+      normalizedData,
+      isAutoPublish
+    )
+    if (extensionResult.handled) {
+      if (!extensionResult.ok) {
+        throw new Error(extensionResult.error || '扩展发布脚本执行失败')
+      }
+      return extensionResult
     }
 
     const adapter = getAdapter(platform)
@@ -1098,25 +1170,9 @@ export class BrowserViewManager {
       throw new Error(`No adapter found for platform: ${platform}`)
     }
 
-    // Navigate to publish URL if not already there
-    const publishUrl = this.getPublishUrl(platform, contentType)
-    const currentUrl = managed.view.webContents.getURL()
-    try {
-      const targetHostname = new URL(publishUrl).hostname
-      if (!currentUrl.includes(targetHostname)) {
-        await managed.view.webContents.loadURL(publishUrl)
-        // Wait for page to load
-        await new Promise((resolve) => setTimeout(resolve, 2000))
-      }
-    } catch {
-      // If URL parsing fails, just try to navigate
-      await managed.view.webContents.loadURL(publishUrl)
-      await new Promise((resolve) => setTimeout(resolve, 2000))
-    }
-
-    // Get fill script from adapter based on content type
-    const fillScript = adapter.getFillScript(contentType, data)
+    const fillScript = adapter.getFillScript(contentType, normalizedData)
     await managed.view.webContents.executeJavaScript(fillScript)
+    return extensionResult
   }
 
   /**
@@ -1454,11 +1510,47 @@ export class BrowserViewManager {
   async fillExecutorContent(
     accountId: string,
     contentType: SyncContentType,
-    data: SyncContentData
-  ): Promise<void> {
+    data: SyncContentData,
+    isAutoPublish = false
+  ): Promise<ExtensionFillResult> {
     const managed = this.executorViews.get(accountId)
     if (!managed) {
       throw new Error(`No executor view found for account: ${accountId}`)
+    }
+
+    const normalizedData = this.normalizeContentData(data)
+
+    const extensionInjectUrl = getExtensionInjectUrl(managed.platform, contentType)
+    if (extensionInjectUrl) {
+      await this.loadExactUrlIfNeeded(managed.view.webContents, extensionInjectUrl)
+    } else {
+      // Navigate to publish URL if not already there
+      const publishUrl = this.getPublishUrl(managed.platform, contentType)
+      const currentUrl = managed.view.webContents.getURL()
+      try {
+        const targetHostname = new URL(publishUrl).hostname
+        if (!currentUrl.includes(targetHostname)) {
+          await managed.view.webContents.loadURL(publishUrl)
+          await this.waitForNavigationSettle()
+        }
+      } catch {
+        await managed.view.webContents.loadURL(publishUrl)
+        await this.waitForNavigationSettle()
+      }
+    }
+
+    const extensionResult = await executeExtensionFill(
+      managed.view.webContents,
+      managed.platform,
+      contentType,
+      normalizedData,
+      isAutoPublish
+    )
+    if (extensionResult.handled) {
+      if (!extensionResult.ok) {
+        throw new Error(extensionResult.error || '扩展发布脚本执行失败')
+      }
+      return extensionResult
     }
 
     const adapter = getAdapter(managed.platform)
@@ -1466,23 +1558,9 @@ export class BrowserViewManager {
       throw new Error(`No adapter found for platform: ${managed.platform}`)
     }
 
-    // Navigate to publish URL if not already there
-    const publishUrl = this.getPublishUrl(managed.platform, contentType)
-    const currentUrl = managed.view.webContents.getURL()
-    try {
-      const targetHostname = new URL(publishUrl).hostname
-      if (!currentUrl.includes(targetHostname)) {
-        await managed.view.webContents.loadURL(publishUrl)
-        await new Promise((resolve) => setTimeout(resolve, 2000))
-      }
-    } catch {
-      await managed.view.webContents.loadURL(publishUrl)
-      await new Promise((resolve) => setTimeout(resolve, 2000))
-    }
-
-    // Get fill script from adapter based on content type
-    const fillScript = adapter.getFillScript(contentType, data)
+    const fillScript = adapter.getFillScript(contentType, normalizedData)
     await managed.view.webContents.executeJavaScript(fillScript)
+    return extensionResult
   }
 
   /**
@@ -1852,14 +1930,19 @@ export class BrowserViewManager {
     setTimeout(async () => {
       try {
         console.log(`[BrowserViewManager] Auto-filling content for group: ${groupName}`)
-        await this.fillGroupContent(groupId)
+        const fillResults = await this.fillGroupContent(groupId)
 
         // 自动发布：填充完成后自动提交
         if (group.autoPublish) {
-          const allReady = Array.from(group.views.values()).every((t) => t.status === 'ready')
+          const allReady = Array.from(group.views.values()).every((t) => t.status === 'ready' || t.status === 'success')
           if (allReady) {
+            const skipAdapterSubmitFor = new Set(
+              Array.from(fillResults.entries())
+                .filter(([, result]) => result.handled && result.ok && result.skipAdapterSubmit)
+                .map(([accountId]) => accountId)
+            )
             console.log(`[BrowserViewManager] Auto-publishing group: ${groupName}`)
-            await this.submitGroupAll(groupId)
+            await this.submitGroupAll(groupId, { skipAdapterSubmitFor })
             this.startAutoCloseCountdown(groupId)
           } else {
             console.log(`[BrowserViewManager] Not all targets ready, skipping auto-publish for group: ${groupName}`)
@@ -2158,16 +2241,32 @@ export class BrowserViewManager {
     if ('cover' in normalized && normalized.cover) {
       normalized.cover = typeof normalized.cover === 'string' ? toFileData(normalized.cover) : normalized.cover
     }
+    if ('horizontalCover' in normalized && normalized.horizontalCover) {
+      normalized.horizontalCover =
+        typeof normalized.horizontalCover === 'string'
+          ? toFileData(normalized.horizontalCover)
+          : normalized.horizontalCover
+    }
+    if ('verticalCover' in normalized && normalized.verticalCover) {
+      normalized.verticalCover =
+        typeof normalized.verticalCover === 'string'
+          ? toFileData(normalized.verticalCover)
+          : normalized.verticalCover
+    }
+    if ('audio' in normalized && normalized.audio) {
+      normalized.audio = typeof normalized.audio === 'string' ? toFileData(normalized.audio) : normalized.audio
+    }
 
     return normalized
   }
 
-  async fillGroupContent(groupId: string): Promise<void> {
+  async fillGroupContent(groupId: string): Promise<GroupFillResults> {
     const group = this.publishGroups.get(groupId)
     if (!group) {
       throw new Error(`Publish group not found: ${groupId}`)
     }
 
+    const fillResults: GroupFillResults = new Map()
     group.status = 'publishing'
 
     // Normalize data once (convert string paths to local-file:// URLs)
@@ -2178,6 +2277,34 @@ export class BrowserViewManager {
         target.status = 'filling'
         this.notifyGroupTabsChanged(groupId)
 
+        // Wait for page to be ready
+        await new Promise((resolve) => setTimeout(resolve, 1000))
+
+        const extensionInjectUrl = getExtensionInjectUrl(target.platform, group.contentType)
+        if (extensionInjectUrl) {
+          await this.loadExactUrlIfNeeded(target.view.webContents, extensionInjectUrl)
+        }
+
+        const extensionResult = await executeExtensionFill(
+          target.view.webContents,
+          target.platform,
+          group.contentType,
+          normalizedData,
+          group.autoPublish
+        )
+        if (extensionResult.handled) {
+          fillResults.set(accountId, extensionResult)
+          if (!extensionResult.ok) {
+            throw new Error(extensionResult.error || '扩展发布脚本执行失败')
+          }
+          // TODO(phase3): use injector-confirmed publish state before marking extension auto-publish as success.
+          target.status = 'ready'
+          console.log(`[BrowserViewManager] Filled content for ${target.displayName} via extension injector`)
+          this.notifyGroupTabsChanged(groupId)
+          this.updateGroupStatus(groupId)
+          continue
+        }
+
         const adapter = getAdapter(target.platform)
         if (!adapter) {
           target.status = 'failed'
@@ -2185,10 +2312,6 @@ export class BrowserViewManager {
           continue
         }
 
-        // Wait for page to be ready
-        await new Promise((resolve) => setTimeout(resolve, 1000))
-
-        // Execute fill script with normalized data
         const fillScript = adapter.getFillScript(group.contentType, normalizedData)
         await target.view.webContents.executeJavaScript(fillScript)
 
@@ -2201,12 +2324,18 @@ export class BrowserViewManager {
 
       this.notifyGroupTabsChanged(groupId)
     }
+
+    return fillResults
   }
 
   /**
    * Submit content for a single target in a publish group
    */
-  async submitGroupTarget(groupId: string, accountId: string): Promise<void> {
+  async submitGroupTarget(
+    groupId: string,
+    accountId: string,
+    options: { skipAdapterSubmit?: boolean } = {}
+  ): Promise<void> {
     const group = this.publishGroups.get(groupId)
     if (!group) {
       throw new Error(`Publish group not found: ${groupId}`)
@@ -2215,6 +2344,13 @@ export class BrowserViewManager {
     const target = group.views.get(accountId)
     if (!target) {
       throw new Error(`Target not found in group: ${accountId}`)
+    }
+
+    if (options.skipAdapterSubmit) {
+      target.status = 'ready'
+      this.notifyGroupTabsChanged(groupId)
+      this.updateGroupStatus(groupId)
+      return
     }
 
     const adapter = getAdapter(target.platform)
@@ -2241,7 +2377,10 @@ export class BrowserViewManager {
   /**
    * Submit content for all targets in a publish group
    */
-  async submitGroupAll(groupId: string): Promise<void> {
+  async submitGroupAll(
+    groupId: string,
+    options: { skipAdapterSubmitFor?: Set<string> } = {}
+  ): Promise<void> {
     const group = this.publishGroups.get(groupId)
     if (!group) {
       throw new Error(`Publish group not found: ${groupId}`)
@@ -2249,7 +2388,9 @@ export class BrowserViewManager {
 
     for (const accountId of group.views.keys()) {
       try {
-        await this.submitGroupTarget(groupId, accountId)
+        await this.submitGroupTarget(groupId, accountId, {
+          skipAdapterSubmit: options.skipAdapterSubmitFor?.has(accountId) === true
+        })
       } catch (error) {
         console.error(`Failed to submit for ${accountId}:`, error)
       }

@@ -17,7 +17,9 @@ export default defineConfig(({ mode }) => {
       resolve: {
         alias: {
           '@main': resolve('src/main'),
-          '@shared': resolve('src/shared')
+          '@shared': resolve('src/shared'),
+          '@ext': resolve('../extension/src'),
+          '~sync': resolve('../extension/src/sync')
         }
       },
       build: {

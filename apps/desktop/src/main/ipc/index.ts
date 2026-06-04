@@ -264,10 +264,10 @@ export function registerIpcHandlers(
       await new Promise((resolve) => setTimeout(resolve, 2000))
 
       // Fill content based on content type
-      await manager.fillPlatformContent(platform, contentType, data)
+      const fillResult = await manager.fillPlatformContent(platform, contentType, data, autoSubmit === true)
 
       // Auto submit if enabled
-      if (autoSubmit) {
+      if (autoSubmit && !fillResult.skipAdapterSubmit) {
         await new Promise((resolve) => setTimeout(resolve, 1000))
         await manager.submitPlatformContent(platform, contentType)
       }
@@ -292,10 +292,10 @@ export function registerIpcHandlers(
       await new Promise((resolve) => setTimeout(resolve, 2000))
 
       // Fill content in executor view (now keyed by accountId)
-      await manager.fillExecutorContent(accountId, contentType, data)
+      const fillResult = await manager.fillExecutorContent(accountId, contentType, data, autoSubmit === true)
 
       // Auto submit if enabled
-      if (autoSubmit) {
+      if (autoSubmit && !fillResult.skipAdapterSubmit) {
         await new Promise((resolve) => setTimeout(resolve, 1000))
         await manager.submitExecutorContent(accountId, contentType)
       }
@@ -660,10 +660,10 @@ export function registerIpcHandlers(
       await new Promise((resolve) => setTimeout(resolve, 2000))
 
       // Fill content
-      await manager.fillExecutorContent(accountId, contentType, data)
+      const fillResult = await manager.fillExecutorContent(accountId, contentType, data, autoSubmit === true)
 
       // Auto submit if enabled
-      if (autoSubmit) {
+      if (autoSubmit && !fillResult.skipAdapterSubmit) {
         await new Promise((resolve) => setTimeout(resolve, 1000))
         await manager.submitExecutorContent(accountId, contentType)
       }
@@ -712,10 +712,10 @@ export function registerIpcHandlers(
         await new Promise((resolve) => setTimeout(resolve, 2000))
 
         // Fill content
-        await manager.fillExecutorContent(target.accountId, contentType, data)
+        const fillResult = await manager.fillExecutorContent(target.accountId, contentType, data, autoSubmit === true)
 
         // Auto submit if enabled
-        if (autoSubmit) {
+        if (autoSubmit && !fillResult.skipAdapterSubmit) {
           await new Promise((resolve) => setTimeout(resolve, 1000))
           await manager.submitExecutorContent(target.accountId, contentType)
         }
