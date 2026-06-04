@@ -452,17 +452,20 @@ export async function VideoChejiahao(data: SyncData): Promise<void> {
       return;
     }
 
-    const { content, video, title, description } = data.data as VideoData;
+    const { content, video, title, description, cover } = data.data as VideoData;
     console.log("📝 视频数据:", {
       title: title?.substring(0, 50),
       contentLength: content?.length,
       hasVideo: !!video,
+      hasCover: !!cover,
+      isAutoPublish: data.isAutoPublish,
     });
 
     // 内联定义车家号视频上传器类，避免模块导入问题
     const ChejiahaoVideoUploaderInline = class ChejiahaoVideoUploader {
       private uploader: any = null;
       private uploadToken = "";
+      private usedHardcodedUploadFallback = false;
 
       /**
        * 等待指定时间
@@ -730,6 +733,415 @@ export async function VideoChejiahao(data: SyncData): Promise<void> {
         }
       }
 
+      private async waitForElementOptional(selector: string, timeout = 10000): Promise<Element | null> {
+        return new Promise((resolve) => {
+          const element = document.querySelector(selector);
+          if (element) {
+            resolve(element);
+            return;
+          }
+
+          const observer = new MutationObserver(() => {
+            const element = document.querySelector(selector);
+            if (element) {
+              observer.disconnect();
+              resolve(element);
+            }
+          });
+
+          if (!document.body) {
+            resolve(null);
+            return;
+          }
+
+          observer.observe(document.body, {
+            childList: true,
+            subtree: true,
+          });
+
+          setTimeout(() => {
+            observer.disconnect();
+            resolve(null);
+          }, timeout);
+        });
+      }
+
+      private async waitForElementInRootOptional(
+        selector: string,
+        root: Document | ShadowRoot,
+        timeout = 10000,
+      ): Promise<Element | null> {
+        return new Promise((resolve) => {
+          const element = root.querySelector(selector);
+          if (element) {
+            resolve(element);
+            return;
+          }
+
+          const observeRoot = root instanceof Document ? root.body : root;
+          if (!observeRoot) {
+            resolve(null);
+            return;
+          }
+
+          const observer = new MutationObserver(() => {
+            const element = root.querySelector(selector);
+            if (element) {
+              observer.disconnect();
+              resolve(element);
+            }
+          });
+
+          observer.observe(observeRoot, {
+            childList: true,
+            subtree: true,
+          });
+
+          setTimeout(() => {
+            observer.disconnect();
+            resolve(null);
+          }, timeout);
+        });
+      }
+
+      private dispatchInputEvents(element: HTMLElement): void {
+        element.dispatchEvent(new Event("change", { bubbles: true, composed: true }));
+        element.dispatchEvent(new Event("input", { bubbles: true, composed: true }));
+      }
+
+      private isElementVisible(element: HTMLElement): boolean {
+        return !!(element.offsetParent || element.getClientRects().length > 0);
+      }
+
+      private findExactTextControl(root: ParentNode, text: string): HTMLElement | null {
+        return (
+          Array.from(root.querySelectorAll<HTMLElement>("button, a, span")).find(
+            (element) => element.textContent?.trim() === text && this.isElementVisible(element),
+          ) || null
+        );
+      }
+
+      private findCoverEditButton(): HTMLElement | null {
+        const coverContainerSelectors = [
+          "[class*='cover']",
+          "[class*='Cover']",
+          "[id*='cover']",
+          "[id*='Cover']",
+          "[class*='poster']",
+          "[class*='Poster']",
+          "[id*='poster']",
+          "[id*='Poster']",
+          "[class*='thumb']",
+          "[class*='Thumb']",
+          "[id*='thumb']",
+          "[id*='Thumb']",
+        ];
+
+        for (const container of document.querySelectorAll<HTMLElement>(coverContainerSelectors.join(","))) {
+          const editButton = this.findExactTextControl(container, "编辑");
+          if (editButton) return editButton;
+        }
+
+        const coverTextElements = Array.from(document.querySelectorAll<HTMLElement>("label, div, span, p")).filter(
+          (element) => {
+            const text = element.textContent?.trim() || "";
+            return text.includes("封面") && text.length <= 300;
+          },
+        );
+
+        for (const element of coverTextElements) {
+          let container: HTMLElement | null = element;
+          let depth = 0;
+
+          while (container && container !== document.body && depth < 4) {
+            const text = container.textContent || "";
+            const controls = container.querySelectorAll("button, a, span");
+
+            if (text.includes("封面") && text.length <= 2000 && controls.length <= 20) {
+              const editButton = this.findExactTextControl(container, "编辑");
+              if (editButton) return editButton;
+            }
+
+            container = container.parentElement;
+            depth++;
+          }
+        }
+
+        return null;
+      }
+
+      private closeCoverEditor(iframeDocument?: Document | null): void {
+        const closeSelectors = [
+          "button[aria-label='Close']",
+          "button[aria-label='关闭']",
+          ".ant-modal-close",
+          ".semi-modal-close",
+          "[class*='modal'] [class*='close']",
+          "[class*='Modal'] [class*='close']",
+        ];
+
+        const roots = [iframeDocument, document].filter(Boolean) as Document[];
+        for (const root of roots) {
+          for (const selector of closeSelectors) {
+            const closeButton = root.querySelector(selector) as HTMLElement | null;
+            if (closeButton && this.isElementVisible(closeButton)) {
+              closeButton.click();
+              return;
+            }
+          }
+
+          const modalRoots = Array.from(
+            root.querySelectorAll<HTMLElement>("[role='dialog'], [class*='modal'], [class*='Modal']"),
+          );
+          for (const modalRoot of modalRoots) {
+            const textCloseButton =
+              this.findExactTextControl(modalRoot, "取消") || this.findExactTextControl(modalRoot, "关闭");
+            if (textCloseButton) {
+              textCloseButton.click();
+              return;
+            }
+          }
+        }
+
+        document.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape", bubbles: true }));
+        document.dispatchEvent(new KeyboardEvent("keyup", { key: "Escape", bubbles: true }));
+      }
+
+      private async createImageFile(fileData: NonNullable<VideoData["cover"]>): Promise<File | null> {
+        try {
+          if (!fileData.url) {
+            console.log("车家号封面数据缺少 URL，跳过上传");
+            return null;
+          }
+
+          if (fileData.type && !fileData.type.includes("image/")) {
+            console.log("车家号封面不是图片类型，跳过上传:", fileData.type);
+            return null;
+          }
+
+          const response = await fetch(fileData.url);
+          if (!response.ok) {
+            throw new Error(`HTTP ${response.status}`);
+          }
+
+          const blob = await response.blob();
+          return new File([blob], fileData.name || `cover_${Date.now()}.png`, {
+            type: fileData.type || blob.type || "image/png",
+          });
+        } catch (error) {
+          console.warn("车家号封面文件获取失败:", error);
+          return null;
+        }
+      }
+
+      public async uploadCover(coverData: NonNullable<VideoData["cover"]>): Promise<boolean> {
+        let coverEditorOpened = false;
+        let coverIframeDocument: Document | null = null;
+
+        try {
+          console.log("🖼️ 开始上传车家号封面:", coverData);
+
+          const editCoverButton = this.findCoverEditButton();
+          console.debug("cover edit button -->", editCoverButton);
+          if (!editCoverButton) {
+            console.log("未找到车家号封面编辑入口，跳过封面上传");
+            return false;
+          }
+
+          editCoverButton.click();
+          coverEditorOpened = true;
+          const iframe = (await this.waitForElementOptional(
+            "iframe[name='mofangIframe']",
+            5000,
+          )) as HTMLIFrameElement | null;
+          console.debug("cover iframe -->", iframe);
+          const iframeDocument = iframe?.contentDocument || null;
+          coverIframeDocument = iframeDocument;
+          if (!iframeDocument) {
+            console.log("未找到车家号封面编辑 iframe，跳过封面上传");
+            this.closeCoverEditor();
+            return false;
+          }
+
+          const fileInput = (await this.waitForElementInRootOptional(
+            'input[accept="image/*"]',
+            iframeDocument,
+            5000,
+          )) as HTMLInputElement | null;
+          console.debug("cover file input -->", fileInput);
+          if (!fileInput) {
+            console.log("未找到车家号封面上传输入框，跳过封面上传");
+            this.closeCoverEditor(iframeDocument);
+            return false;
+          }
+
+          const coverFile = await this.createImageFile(coverData);
+          if (!coverFile) {
+            this.closeCoverEditor(iframeDocument);
+            return false;
+          }
+
+          const dataTransfer = new DataTransfer();
+          dataTransfer.items.add(coverFile);
+          if (dataTransfer.files.length === 0) {
+            this.closeCoverEditor(iframeDocument);
+            return false;
+          }
+
+          fileInput.files = dataTransfer.files;
+          this.dispatchInputEvents(fileInput);
+          console.log("车家号封面上传操作已触发");
+          await this.sleep(3000);
+
+          const doneButton = Array.from(iframeDocument.querySelectorAll<HTMLElement>("span")).find(
+            (span) => span.textContent?.trim() === "完成制作",
+          );
+          console.debug("cover done button -->", doneButton);
+          if (!doneButton) {
+            console.log("未找到车家号封面完成制作按钮，跳过确认");
+            this.closeCoverEditor(iframeDocument);
+            return false;
+          }
+
+          doneButton.click();
+          return true;
+        } catch (error) {
+          console.warn("车家号封面上传失败，继续发布流程:", error);
+          if (coverEditorOpened) {
+            this.closeCoverEditor(coverIframeDocument);
+          }
+          return false;
+        }
+      }
+
+      private getUploadStatusText(): string {
+        return Array.from(
+          document.querySelectorAll<HTMLElement>(
+            "#browser_0, div[data-uploadstatus], [class*='upload'], [class*='progress'], .ant-progress",
+          ),
+        )
+          .map((element) => element.textContent?.trim() || "")
+          .filter(Boolean)
+          .join("\n");
+      }
+
+      private hasUploadFailureText(text: string): boolean {
+        return ["上传失败", "上传出错", "上传异常", "转码失败", "重新上传"].some((item) => text.includes(item));
+      }
+
+      private hasUploadProgressText(text: string): boolean {
+        return ["上传中", "已上传", "剩余时间", "上传速度", "%"].some((item) => text.includes(item));
+      }
+
+      private hasUploadSuccessText(text: string): boolean {
+        return ["上传完成", "上传成功", "视频上传完成", "视频上传成功"].some((item) => text.includes(item));
+      }
+
+      private hasUploadSuccessMarker(statusText = this.getUploadStatusText()): boolean {
+        const successElement = document.querySelector(
+          "div[data-uploadstatus='success'], div[data-uploadstatus='complete'], div[data-uploadstatus='done']",
+        );
+        return !!successElement || this.hasUploadSuccessText(statusText);
+      }
+
+      private async waitForVideoUploadComplete(
+        timeout = 120000,
+        uploadWasSeen = false,
+        successWasPresentBeforeCurrentUpload = false,
+      ): Promise<boolean> {
+        const startedAt = Date.now();
+        let sawUploadSignal = uploadWasSeen;
+        let successWasAbsentAfterCurrentUpload = !successWasPresentBeforeCurrentUpload;
+        let loggedStaleSuccessMarker = false;
+
+        while (Date.now() - startedAt < timeout) {
+          const statusText = this.getUploadStatusText();
+
+          if (this.hasUploadFailureText(statusText)) {
+            console.warn("车家号视频上传失败，跳过自动发布:", statusText.substring(0, 200));
+            return false;
+          }
+
+          const hasSuccessMarker = this.hasUploadSuccessMarker(statusText);
+          if (hasSuccessMarker) {
+            if (successWasAbsentAfterCurrentUpload) {
+              console.log("✅ 车家号视频上传已确认完成");
+              return true;
+            }
+
+            if (!loggedStaleSuccessMarker) {
+              console.warn("车家号检测到本次上传前已存在的完成标记，等待当前上传产生新的完成状态");
+              loggedStaleSuccessMarker = true;
+            }
+          } else {
+            successWasAbsentAfterCurrentUpload = true;
+          }
+
+          const uploadingElement = document.querySelector("div[data-uploadstatus='uploading']");
+          const isUploading = !!uploadingElement || this.hasUploadProgressText(statusText);
+          if (isUploading) {
+            sawUploadSignal = true;
+          }
+
+          await this.sleep(3000);
+        }
+
+        console.warn(
+          sawUploadSignal
+            ? "车家号视频上传超时：未观察到明确上传成功标记，跳过自动发布"
+            : "车家号视频上传超时：未观察到上传状态或成功标记，跳过自动发布",
+        );
+        return false;
+      }
+
+      private async confirmVideoUploadIfNeeded(
+        waitForCompletion: boolean,
+        timeout = 120000,
+        uploadWasSeen = false,
+        successWasPresentBeforeCurrentUpload = false,
+      ): Promise<boolean> {
+        if (!waitForCompletion) {
+          console.log("车家号手动发布流程：视频上传已触发，不等待上传完成");
+          return false;
+        }
+
+        return await this.waitForVideoUploadComplete(timeout, uploadWasSeen, successWasPresentBeforeCurrentUpload);
+      }
+
+      public async publishIfAutoEnabled(autoPublish: boolean, videoUploaded: boolean): Promise<void> {
+        if (autoPublish !== true) return;
+
+        if (!videoUploaded) {
+          console.warn("车家号自动发布已跳过：视频未确认上传成功");
+          return;
+        }
+
+        if (this.usedHardcodedUploadFallback) {
+          console.warn("车家号自动发布已跳过：本次上传使用了硬编码 AHVP fallback 参数");
+          return;
+        }
+
+        await this.sleep(5000);
+        const VideoPublishButton = Array.from(document.querySelectorAll<HTMLButtonElement>("button")).find(
+          (button) => {
+            const visibleText = button.innerText || button.textContent || "";
+            return this.isElementVisible(button) && visibleText.includes("发布");
+          },
+        );
+        const exactPublishButton = document.querySelector(
+          "div.button_publish.item.editor-btn.editor-main-btn",
+        ) as HTMLElement | null;
+        const publishButton = VideoPublishButton || exactPublishButton || null;
+        console.debug("sendButton -->", publishButton);
+        if (!publishButton) {
+          console.debug("未找到车家号发布按钮");
+          return;
+        }
+
+        publishButton.dispatchEvent(new Event("click", { bubbles: true }));
+        console.log("✅ 车家号发布按钮点击成功");
+      }
+
       /**
        * 创建具有完整功能的文件项对象
        */
@@ -815,7 +1227,7 @@ export async function VideoChejiahao(data: SyncData): Promise<void> {
       /**
        * 上传视频文件 - 基于车家号muploader系统（使用成功的控制台代码）
        */
-      public async uploadVideo(videoData: any): Promise<void> {
+      public async uploadVideo(videoData: any, waitForCompletion = false): Promise<boolean> {
         try {
           console.log("📹 开始上传视频...");
 
@@ -831,10 +1243,43 @@ export async function VideoChejiahao(data: SyncData): Promise<void> {
             file = new File([arrayBuffer], fileName, { type: "video/mp4" });
           } else {
             console.error("❌ 无效的视频数据");
-            return;
+            return false;
           }
 
           console.log("📁 视频文件:", file.name, file.size, file.type);
+
+          let currentUploadTriggered = false;
+          let currentUploadSuccessWasPresentBeforeTrigger = false;
+          let currentUploadBaselineCaptured = false;
+
+          const captureCurrentUploadBaseline = () => {
+            if (currentUploadBaselineCaptured) return;
+
+            currentUploadSuccessWasPresentBeforeTrigger = this.hasUploadSuccessMarker();
+            currentUploadBaselineCaptured = true;
+
+            if (currentUploadSuccessWasPresentBeforeTrigger) {
+              console.log("⚠️ 检测到旧的上传完成标记，本次上传需要等待新的完成状态");
+            }
+          };
+
+          const markCurrentUploadTriggered = () => {
+            currentUploadTriggered = true;
+          };
+
+          const confirmCurrentUploadIfNeeded = async (timeout = 120000, uploadWasSeen = false) => {
+            if (!currentUploadTriggered) {
+              console.warn("车家号忽略上传状态：当前视频文件尚未触发选择或change事件");
+              return false;
+            }
+
+            return await this.confirmVideoUploadIfNeeded(
+              waitForCompletion,
+              timeout,
+              uploadWasSeen,
+              currentUploadSuccessWasPresentBeforeTrigger,
+            );
+          };
 
           // 等待页面完全加载
           console.log("⏳ 等待页面加载完成...");
@@ -863,18 +1308,16 @@ export async function VideoChejiahao(data: SyncData): Promise<void> {
                 linkText.includes("上传速度") ||
                 linkText.includes("剩余时间")
               ) {
-                console.log("✅ 检测到a标签显示上传状态，上传正在进行中");
-                return;
+                console.log("⚠️ 检测到上传状态，但当前视频尚未触发上传，继续设置本次文件");
               }
 
-              if (linkText.includes("上传失败")) {
+              if (linkText.includes("上传失败") || linkText.includes("重新上传")) {
                 console.log("❌ 检测到上传失败状态");
-                return;
+                return false;
               }
 
-              if (linkText.includes("上传完成") || linkText.includes("100%")) {
-                console.log("🎉 检测到上传完成状态");
-                return;
+              if (this.hasUploadSuccessText(linkText)) {
+                console.log("⚠️ 检测到旧的上传完成状态，继续设置本次文件");
               }
             } else {
               console.log("❌ 未找到browser_0内的a标签");
@@ -891,8 +1334,7 @@ export async function VideoChejiahao(data: SyncData): Promise<void> {
                 '[class*="progress"], [class*="upload"], .ant-progress',
               );
               if (progressElements.length > 0) {
-                console.log("✅ 检测到上传进度条，上传可能已经开始");
-                return;
+                console.log("⚠️ 检测到既有上传进度元素，继续设置本次文件");
               }
             }
           } else {
@@ -953,6 +1395,7 @@ export async function VideoChejiahao(data: SyncData): Promise<void> {
             // 设置文件并触发选择
             const dataTransfer = new DataTransfer();
             dataTransfer.items.add(file);
+            captureCurrentUploadBaseline();
             fileInput.files = dataTransfer.files;
 
             // 尝试直接触发拖放事件来设置文件
@@ -975,6 +1418,7 @@ export async function VideoChejiahao(data: SyncData): Promise<void> {
             browserElementForUpload.dispatchEvent(dragEnterEvent);
             await this.sleep(100);
             browserElementForUpload.dispatchEvent(dropEvent);
+            markCurrentUploadTriggered();
 
             console.log("✅ 拖放事件已触发");
 
@@ -994,7 +1438,12 @@ export async function VideoChejiahao(data: SyncData): Promise<void> {
                 linkText.includes("上传速度")
               ) {
                 console.log("✅ 触发成功！检测到实际上传状态");
-                return;
+                return await confirmCurrentUploadIfNeeded(120000, true);
+              }
+
+              if (this.hasUploadSuccessText(linkText)) {
+                console.log("🎉 检测到上传完成状态，等待确认是否属于本次上传");
+                return await confirmCurrentUploadIfNeeded(120000, false);
               }
             }
 
@@ -1012,11 +1461,13 @@ export async function VideoChejiahao(data: SyncData): Promise<void> {
               if (existingInput.accept?.includes("video")) {
                 const existingDataTransfer = new DataTransfer();
                 existingDataTransfer.items.add(file);
+                captureCurrentUploadBaseline();
                 existingInput.files = existingDataTransfer.files;
 
                 // 触发多种事件
                 existingInput.dispatchEvent(new Event("input", { bubbles: true, composed: true }));
                 existingInput.dispatchEvent(new Event("change", { bubbles: true, composed: true }));
+                markCurrentUploadTriggered();
 
                 console.log("✅ 已在现有文件输入框中设置文件");
                 fileSetSuccess = true;
@@ -1056,11 +1507,13 @@ export async function VideoChejiahao(data: SyncData): Promise<void> {
                 // 设置文件
                 const newDataTransfer = new DataTransfer();
                 newDataTransfer.items.add(file);
+                captureCurrentUploadBaseline();
                 newFileInput.files = newDataTransfer.files;
 
                 // 触发事件
                 console.log("🔄 在用户激活后触发文件change事件...");
                 newFileInput.dispatchEvent(new Event("change", { bubbles: true, composed: true }));
+                markCurrentUploadTriggered();
 
                 // 清理
                 newFileInput.remove();
@@ -1068,6 +1521,7 @@ export async function VideoChejiahao(data: SyncData): Promise<void> {
                 // 如果没有a标签，直接尝试触发change事件
                 console.log("🔄 触发文件change事件...");
                 fileInput.dispatchEvent(new Event("change", { bubbles: true, composed: true }));
+                markCurrentUploadTriggered();
               }
             }
 
@@ -1086,7 +1540,12 @@ export async function VideoChejiahao(data: SyncData): Promise<void> {
                 finalText.includes("上传速度")
               ) {
                 console.log("✅ 文件上传触发成功！检测到实际上传状态");
-                return;
+                return await confirmCurrentUploadIfNeeded(120000, true);
+              }
+
+              if (this.hasUploadSuccessText(finalText)) {
+                console.log("🎉 检测到上传完成状态，等待确认是否属于本次上传");
+                return await confirmCurrentUploadIfNeeded(120000, false);
               }
             }
 
@@ -1153,17 +1612,17 @@ export async function VideoChejiahao(data: SyncData): Promise<void> {
                   linkText.includes("0.00%")
                 ) {
                   console.log("✅ a标签显示上传状态，上传正在进行中");
-                  return;
+                  return await confirmCurrentUploadIfNeeded(120000, true);
                 }
 
-                if (linkText.includes("上传失败")) {
+                if (linkText.includes("上传失败") || linkText.includes("重新上传")) {
                   console.log("❌ a标签显示上传失败");
-                  return;
+                  return false;
                 }
 
-                if (linkText.includes("100%") || linkText.includes("上传完成")) {
-                  console.log("🎉 a标签显示上传完成");
-                  return;
+                if (this.hasUploadSuccessText(linkText)) {
+                  console.log("🎉 a标签显示上传完成，等待确认是否属于本次上传");
+                  return await confirmCurrentUploadIfNeeded(120000, false);
                 }
               } else {
                 console.log("❌ 未找到browser_0内的a标签");
@@ -1172,7 +1631,7 @@ export async function VideoChejiahao(data: SyncData): Promise<void> {
                 const browserText = browserElement.textContent || "";
                 if (browserText.includes("上传中") || browserText.includes("已上传")) {
                   console.log("✅ browser_0显示上传状态（a标签可能已被替换）");
-                  return;
+                  return await confirmCurrentUploadIfNeeded(120000, true);
                 }
               }
             } else {
@@ -1191,7 +1650,7 @@ export async function VideoChejiahao(data: SyncData): Promise<void> {
 
             if (filesFound) {
               console.log("✅ 检测到文件已设置到输入框，上传可能已开始");
-              return;
+              return await confirmCurrentUploadIfNeeded(30000, false);
             }
 
             // 4. 检查是否有XHR上传活动
@@ -1219,7 +1678,7 @@ export async function VideoChejiahao(data: SyncData): Promise<void> {
 
             if (uploadActive) {
               console.log("✅ 检测到上传活动");
-              return;
+              return await confirmCurrentUploadIfNeeded(120000, true);
             }
 
             // 5. 检查页面文本内容中的上传状态
@@ -1249,16 +1708,18 @@ export async function VideoChejiahao(data: SyncData): Promise<void> {
               // 进一步检查具体的上传状态
               if (bodyText.includes("上传中")) {
                 console.log("📊 状态: 上传进行中");
-              } else if (bodyText.includes("上传失败")) {
+                return await confirmCurrentUploadIfNeeded(120000, true);
+              }
+              if (bodyText.includes("上传失败") || bodyText.includes("重新上传")) {
                 console.log("❌ 状态: 上传失败");
-                return;
-              } else if (bodyText.includes("100%") || bodyText.includes("上传完成")) {
-                console.log("🎉 状态: 上传完成");
-                return;
+                return false;
+              }
+              if (this.hasUploadSuccessText(bodyText)) {
+                console.log("🎉 状态: 上传完成，等待确认是否属于本次上传");
+                return await confirmCurrentUploadIfNeeded(120000, false);
               }
 
-              // 对于正在上传的状态，返回true表示成功触发上传
-              return;
+              return await confirmCurrentUploadIfNeeded(120000, true);
             }
 
             // 6. 最后检查：查找上传/发布按钮
@@ -1270,24 +1731,24 @@ export async function VideoChejiahao(data: SyncData): Promise<void> {
                 console.log("✅ 找到上传/发布按钮:", text);
 
                 // 分析按钮文本判断状态
+                if (text.includes("上传失败") || text.includes("重新上传")) {
+                  console.log("❌ 检测到上传失败状态");
+                  return false;
+                }
                 if (text.includes("上传中") || text.includes("已上传")) {
                   console.log("✅ 检测到上传进行中状态");
-                  return;
+                  return await confirmCurrentUploadIfNeeded(120000, true);
                 }
-                if (text.includes("上传失败")) {
-                  console.log("❌ 检测到上传失败状态");
-                  return;
-                }
-                if (text.includes("上传完成") || text.includes("100%")) {
-                  console.log("🎉 检测到上传完成状态");
-                  return;
+                if (this.hasUploadSuccessText(text)) {
+                  console.log("🎉 检测到上传完成状态，等待确认是否属于本次上传");
+                  return await confirmCurrentUploadIfNeeded(120000, false);
                 }
               }
             }
 
             console.log("❌ 无法检测到明确的上传活动");
             console.log("🔧 建议: AHVP系统可能需要手动触发或页面刷新后重试");
-            return;
+            return false;
           }
 
           console.log("✅ AHVP系统已加载");
@@ -1296,6 +1757,11 @@ export async function VideoChejiahao(data: SyncData): Promise<void> {
           console.log("🔍 验证AHVP功能...");
           console.log("  - AHVP.newUploaderManager:", typeof AHVP.newUploaderManager);
           console.log("  - AHVP.UPLOADER_EVENT:", !!AHVP.UPLOADER_EVENT);
+
+          this.usedHardcodedUploadFallback = true;
+          console.warn(
+            "⚠️ 车家号视频上传进入硬编码 AHVP fallback 路径；本次流程将禁止自动发布，避免使用默认参数直接发布",
+          );
 
           // 创建上传manager（按照成功的控制台代码模式）
           console.log("🔧 创建上传manager...");
@@ -1334,7 +1800,7 @@ export async function VideoChejiahao(data: SyncData): Promise<void> {
           const browser = manager.createBrowser(config);
           if (!browser) {
             console.error("❌ 创建browser失败");
-            return;
+            return false;
           }
 
           console.log("✅ 创建browser成功");
@@ -1372,36 +1838,46 @@ export async function VideoChejiahao(data: SyncData): Promise<void> {
           // 开始上传
           console.log("🚀 开始上传...");
           manager.start();
+          markCurrentUploadTriggered();
 
-          // 等待上传完成
-          return new Promise((resolve) => {
+          if (!waitForCompletion) {
+            console.log("车家号手动发布流程：AHVP fallback 上传已启动，不等待上传完成");
+            return false;
+          }
+
+          // Wait for explicit AHVP completion only in auto-publish mode.
+          return new Promise<boolean>((resolve) => {
             let uploadCompleted = false;
+
+            const finish = (succeeded: boolean) => {
+              if (uploadCompleted) return;
+              uploadCompleted = true;
+              resolve(succeeded);
+            };
 
             // 监听上传完成事件
             browser.on(AHVP.UPLOADER_EVENT.COMPLETED, (_item: any, response: any) => {
               console.log("🎉 上传完成:", response);
-              uploadCompleted = true;
-              resolve();
+              finish(true);
             });
 
             browser.on(AHVP.UPLOADER_EVENT.ERROR, (_item: any, error: any) => {
               console.error("❌ 上传失败:", error);
-              uploadCompleted = true;
-              resolve();
+              finish(false);
             });
 
             // 超时处理
             setTimeout(() => {
               if (!uploadCompleted) {
-                console.log("⏰ 上传超时，假设成功");
-                resolve();
+                console.warn("⏰ 车家号视频上传超时，未视为成功，跳过自动发布");
+                finish(false);
               }
             }, 120000); // 2分钟超时
           });
         } catch (error) {
           console.error("❌ 视频上传失败:", error);
           console.error("错误详情:", error.stack);
-          return;
+          return false;
         }
       }
     };
@@ -1427,14 +1903,27 @@ export async function VideoChejiahao(data: SyncData): Promise<void> {
       await uploader.fillDescription(description ?? content);
     }
 
-    // 步骤4: 上传视频
+    let videoUploaded = false;
+
+    // Step 4: upload the required video.
     if (video) {
       console.log("🎥 开始上传视频...");
-      await uploader.uploadVideo(video);
+      videoUploaded = await uploader.uploadVideo(video, data.isAutoPublish === true);
     } else {
       console.error("❌ 缺少视频文件");
       return;
     }
+
+    // Step 5: upload cover best-effort. Cover failure must not block publish.
+    if (cover) {
+      await uploader.uploadCover(cover).catch((error) => {
+        console.warn("车家号封面上传异常，继续发布流程:", error);
+        return false;
+      });
+    }
+
+    // Step 6: auto-publish only after the video upload is confirmed.
+    await uploader.publishIfAutoEnabled(data.isAutoPublish, videoUploaded);
 
     console.log("🎉 车家号视频发布流程完成");
     return;

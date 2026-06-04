@@ -1,19 +1,56 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import type { ArticleData, FileData, SyncData } from "~sync/common";
 
+interface WeiboDraftEndpoint {
+  version: string;
+  createUrl: string;
+  saveUrl: string;
+}
+
+interface DraftRequestResult {
+  ok: boolean;
+  json?: any;
+  id?: string;
+}
+
+const WEIBO_DRAFT_SUCCESS_CODE = 100000;
+const WEIBO_V3_EDITOR_URL = "https://card.weibo.com/article/v3/editor";
+
 export async function ArticleWeibo(data: SyncData) {
   const articleData = data.data as ArticleData;
+  const draftEndpoints: WeiboDraftEndpoint[] = [
+    {
+      version: "v5",
+      createUrl: "https://card.weibo.com/article/v5/aj/editor/draft/create",
+      saveUrl: "https://card.weibo.com/article/v5/aj/editor/draft/save",
+    },
+    {
+      version: "v3",
+      createUrl: "https://card.weibo.com/article/v3/aj/editor/draft/create",
+      saveUrl: "https://card.weibo.com/article/v3/aj/editor/draft/save",
+    },
+  ];
 
   async function getAccountId() {
-    const res = await fetch("https://card.weibo.com/article/v3/editor");
-    const html = await res.text();
-    const match = html.match(/\$CONFIG\['uid'\]\s*=\s*(\d+);/);
-    return match ? match[1] : null;
+    try {
+      const res = await fetch(WEIBO_V3_EDITOR_URL);
+      if (!res.ok) {
+        console.debug(`v3 editor request failed: ${res.status} ${res.statusText}`);
+        return null;
+      }
+
+      const html = await res.text();
+      const match = html.match(/\$CONFIG\['uid'\]\s*=\s*(\d+);/);
+      return match ? match[1] : null;
+    } catch (error) {
+      console.debug("v3 editor request failed:", error);
+      return null;
+    }
   }
 
   const accountId = await getAccountId();
 
-  // 裁剪图片
+  // Crop an image to the required cover ratio.
   async function cropImage(fileInfo: FileData, ratio: number) {
     const canvas = document.createElement("canvas");
 
@@ -59,7 +96,7 @@ export async function ArticleWeibo(data: SyncData) {
     return { ...fileInfo, base64Data: croppedImageData };
   }
 
-  // 上传图片
+  // Upload an image to Weibo's shared picture API.
   async function uploadImage(fileInfo: FileData): Promise<{ pid: string; width: number; height: number } | null> {
     console.debug("uploadImage", fileInfo);
 
@@ -101,7 +138,7 @@ export async function ArticleWeibo(data: SyncData) {
     }
   }
 
-  // 处理文章内容中的图片
+  // Replace article inline images with uploaded Weibo image URLs.
   async function processContent(
     htmlContent: string,
     imageFiles: FileData[],
@@ -126,7 +163,7 @@ export async function ArticleWeibo(data: SyncData) {
           const uploaded = await uploadImage(fileInfo);
           if (uploaded) {
             const { pid, width, height } = uploaded;
-            // 包成微博图文标准的 figure+srcset 结构以提升多分辨率渲染;src 仍为 large,srcset 失效也不影响展示
+            // Use Weibo's figure/srcset structure while keeping large as the fallback src.
             const figure = doc.createElement("figure");
             figure.className = "image";
             const newImg = doc.createElement("img");
@@ -152,41 +189,7 @@ export async function ArticleWeibo(data: SyncData) {
     return doc.body.innerHTML;
   }
 
-  // 创建并保存草稿
-  async function createAndSaveDraft(
-    processedData: ArticleData,
-    coverUrl: string | null,
-    updateTip: (msg: string) => void,
-  ): Promise<string | null> {
-    updateTip("正在创建草稿...");
-
-    // 创建草稿
-    const createUrl = new URL("https://card.weibo.com/article/v3/aj/editor/draft/create");
-    createUrl.searchParams.set("uid", accountId || "");
-    createUrl.searchParams.set("_rid", new Date().getTime().toString());
-
-    const createUrlString = createUrl.toString();
-    const createResponse = await fetch(createUrlString, {
-      method: "POST",
-      credentials: "include",
-    });
-
-    const createResult = await createResponse.json();
-    console.debug("createResult", createResult);
-
-    const draftId = createResult.data.id;
-    if (!draftId) {
-      console.debug("草稿创建失败");
-      return null;
-    }
-
-    // 保存草稿
-    const saveUrl = new URL("https://card.weibo.com/article/v3/aj/editor/draft/save");
-    saveUrl.searchParams.set("uid", accountId || "");
-    saveUrl.searchParams.set("id", draftId);
-    saveUrl.searchParams.set("_rid", new Date().getTime().toString());
-
-    const saveUrlString = saveUrl.toString();
+  function buildDraftFormData(processedData: ArticleData, coverUrl: string | null, draftId: string) {
     const formData = new FormData();
 
     formData.append("title", processedData.title?.slice(0, 32) || "");
@@ -242,27 +245,150 @@ export async function ArticleWeibo(data: SyncData) {
     formData.append("ver", "4.0");
     formData.append("_rid", new Date().getTime().toString());
 
-    console.debug("formData", formData);
+    return formData;
+  }
 
-    const saveResponse = await fetch(saveUrlString, {
-      method: "POST",
-      body: formData,
-      credentials: "include",
-    });
+  async function requestDraftJson(url: string, init: RequestInit, label: string): Promise<DraftRequestResult> {
+    try {
+      const response = await fetch(url, init);
+      if (!response.ok) {
+        console.debug(`${label} failed: ${response.status} ${response.statusText}`);
+        return { ok: false };
+      }
 
-    const saveResult = await saveResponse.json();
-    console.debug("result", saveResult);
-
-    if (saveResult.code === 100000) {
-      console.debug("草稿发布成功");
-      return draftId;
+      try {
+        return { ok: true, json: await response.json() };
+      } catch (error) {
+        console.debug(`${label} returned non-JSON:`, error);
+        return { ok: false };
+      }
+    } catch (error) {
+      console.debug(`${label} failed:`, error);
+      return { ok: false };
     }
-    console.debug("草稿发布失败", saveResult.msg);
-    updateTip(`草稿发布失败:${saveResult.msg}`);
+  }
+
+  async function createDraft(endpoint: WeiboDraftEndpoint): Promise<DraftRequestResult> {
+    const createUrl = new URL(endpoint.createUrl);
+    createUrl.searchParams.set("uid", accountId || "");
+    createUrl.searchParams.set("_rid", new Date().getTime().toString());
+
+    const createResult = await requestDraftJson(
+      createUrl.toString(),
+      {
+        method: "POST",
+        credentials: "include",
+      },
+      `${endpoint.version} draft create`,
+    );
+
+    if (!createResult.ok) {
+      return createResult;
+    }
+
+    console.debug(`${endpoint.version} createResult`, createResult.json);
+    const draftId = createResult.json?.data?.id;
+    if (!draftId) {
+      console.debug(`${endpoint.version} 草稿创建失败`, createResult.json?.msg);
+      return { ok: false, json: createResult.json };
+    }
+
+    return { ok: true, json: createResult.json, id: String(draftId) };
+  }
+
+  async function saveDraft(
+    endpoint: WeiboDraftEndpoint,
+    processedData: ArticleData,
+    coverUrl: string | null,
+    draftId: string,
+  ): Promise<DraftRequestResult> {
+    const saveUrl = new URL(endpoint.saveUrl);
+    saveUrl.searchParams.set("uid", accountId || "");
+    saveUrl.searchParams.set("id", draftId);
+    saveUrl.searchParams.set("_rid", new Date().getTime().toString());
+
+    const formData = buildDraftFormData(processedData, coverUrl, draftId);
+    console.debug(`${endpoint.version} formData`, formData);
+
+    const saveResult = await requestDraftJson(
+      saveUrl.toString(),
+      {
+        method: "POST",
+        body: formData,
+        credentials: "include",
+      },
+      `${endpoint.version} draft save`,
+    );
+
+    if (!saveResult.ok) {
+      return saveResult;
+    }
+
+    console.debug(`${endpoint.version} result`, saveResult.json);
+    if (saveResult.json?.code === WEIBO_DRAFT_SUCCESS_CODE) {
+      console.debug("草稿发布成功");
+      return saveResult;
+    }
+
+    console.debug("草稿发布失败", saveResult.json?.msg);
+    return { ok: false, json: saveResult.json };
+  }
+
+  async function saveDraftWithRetry(
+    endpoint: WeiboDraftEndpoint,
+    processedData: ArticleData,
+    coverUrl: string | null,
+    draftId: string,
+  ) {
+    const firstResult = await saveDraft(endpoint, processedData, coverUrl, draftId);
+    if (firstResult.ok) return firstResult;
+
+    console.debug(`${endpoint.version} draft save failed; retrying once on the same draft`);
+    return await saveDraft(endpoint, processedData, coverUrl, draftId);
+  }
+
+  // Create and save a draft.
+  async function createAndSaveDraft(
+    processedData: ArticleData,
+    coverUrl: string | null,
+    updateTip: (msg: string) => void,
+  ): Promise<string | null> {
+    updateTip("正在创建草稿...");
+
+    const [primaryEndpoint, fallbackEndpoint] = draftEndpoints;
+    const primaryCreateResult = await createDraft(primaryEndpoint);
+    if (primaryCreateResult.id) {
+      const primarySaveResult = await saveDraftWithRetry(
+        primaryEndpoint,
+        processedData,
+        coverUrl,
+        primaryCreateResult.id,
+      );
+      if (primarySaveResult.ok) return primaryCreateResult.id;
+
+      console.debug(
+        `${primaryEndpoint.version} draft save failed after draft ${primaryCreateResult.id}; keeping that draft and skipping v3 fallback`,
+      );
+      updateTip(`草稿发布失败:${primarySaveResult.json?.msg || "草稿发布失败"}`);
+      return null;
+    }
+
+    console.debug(`${primaryEndpoint.version} draft create failed; trying ${fallbackEndpoint.version} fallback`);
+
+    const fallbackCreateResult = await createDraft(fallbackEndpoint);
+    if (!fallbackCreateResult.id) {
+      updateTip(`草稿发布失败:${fallbackCreateResult.json?.msg || "草稿创建失败"}`);
+      return null;
+    }
+
+    const fallbackSaveResult = await saveDraft(fallbackEndpoint, processedData, coverUrl, fallbackCreateResult.id);
+    if (fallbackSaveResult.ok) return fallbackCreateResult.id;
+
+    updateTip(`草稿发布失败:${fallbackSaveResult.json?.msg || "草稿发布失败"}`);
     return null;
   }
 
-  // 更新提示
+  // Update the floating tip.
   function updateTip(message: string) {
     const tipElement = tip.querySelector(".float-tip") as HTMLDivElement;
     if (tipElement) {
@@ -270,12 +396,12 @@ export async function ArticleWeibo(data: SyncData) {
     }
   }
 
-  // 主流程
+  // Main flow.
   const host = document.createElement("div") as HTMLDivElement;
   const tip = document.createElement("div") as HTMLDivElement;
 
   try {
-    // 添加漂浮提示
+    // Add a floating progress tip.
     host.style.position = "fixed";
     host.style.bottom = "20px";
     host.style.right = "20px";
@@ -312,13 +438,13 @@ export async function ArticleWeibo(data: SyncData) {
     `;
     shadow.appendChild(tip);
 
-    // 发布流程
+    // Publish flow.
     async function publishToWeibo() {
       try {
-        // 处理文章内容中的图片
+        // Upload and replace article inline images.
         articleData.htmlContent = await processContent(articleData.htmlContent, articleData.images || [], updateTip);
 
-        // 处理封面图片(可选):无封面时此前会整篇不发布,现修复为封面缺省也照常发布
+        // Cover upload is optional; missing cover should not block draft creation.
         let coverUrl: string | null = null;
         if (articleData.cover) {
           updateTip("正在上传封面...");
@@ -331,7 +457,7 @@ export async function ArticleWeibo(data: SyncData) {
           }
         }
 
-        // 创建并保存草稿(无论是否有封面)
+        // Create and save a draft with or without a cover.
         const draftId = await createAndSaveDraft(articleData, coverUrl, updateTip);
 
         if (draftId) {
@@ -345,7 +471,7 @@ export async function ArticleWeibo(data: SyncData) {
           return true;
         }
 
-        // TODO(待线上验证): 草稿 API 失败时的 DOM 兜底发布尚未实现;参考  weibo.js b13
+        // TODO: Add the DOM fallback publish path after live verification.
         updateTip("草稿创建失败，请手动操作");
         return false;
       } catch (error) {
@@ -356,7 +482,7 @@ export async function ArticleWeibo(data: SyncData) {
 
     await publishToWeibo();
 
-    // 3秒后移除提示
+    // Remove the tip after 3 seconds.
     setTimeout(() => {
       if (document.body.contains(host)) {
         document.body.removeChild(host);
@@ -374,6 +500,5 @@ export async function ArticleWeibo(data: SyncData) {
     }
 
     console.error("发布文章失败:", error);
-    throw error;
   }
 }

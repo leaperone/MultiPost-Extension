@@ -713,6 +713,15 @@
     "message": "Yidian",
     "description": "Platform name for Yidian"
   },
+  "platformGelonghui": {
+    "message": "Gelonghui"
+  },
+  "platformJiankangjie": {
+    "message": "Jiankangjie"
+  },
+  "platformKaidiwang": {
+    "message": "Kaidiwang"
+  },
   "platformDingduanhao": {
     "message": "Dingduanhao"
   },

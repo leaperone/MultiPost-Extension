@@ -162,7 +162,14 @@ export async function refreshAccountInfo(accountKey: string): Promise<AccountInf
     throw new Error(`找不到账号信息: ${accountKey}`);
   }
 
-  const accountInfo = await refreshAccountInfoMap[accountKey].getAccountInfo();
+  const refreshInfo = refreshAccountInfoMap[accountKey];
+  if (!refreshInfo) {
+    console.debug(`No account refresh handler for grouping-only account key: ${accountKey}`);
+    await removeAccountInfo(accountKey);
+    return null;
+  }
+
+  const accountInfo = await refreshInfo.getAccountInfo();
 
   if (!accountInfo) {
     console.error(`获取账号信息失败: ${accountKey}`);

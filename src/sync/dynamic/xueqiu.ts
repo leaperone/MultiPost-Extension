@@ -1,8 +1,8 @@
-import type { DynamicData, SyncData } from "../common";
+import type { DynamicData, FileData, SyncData } from "../common";
 
 // 只支持图文，不支持视频
 export async function DynamicXueqiu(data: SyncData) {
-  const { title, content, images, tags } = data.data as DynamicData;
+  const { title, content, images, videos, tags } = data.data as DynamicData;
 
   function waitForElement(selector: string, timeout = 10000): Promise<Element> {
     return new Promise((resolve, reject) => {
@@ -32,11 +32,41 @@ export async function DynamicXueqiu(data: SyncData) {
     });
   }
 
-  async function uploadFiles(files: File[]) {
-    const fileInput = (await waitForElement('input[type="file"]')) as HTMLInputElement;
+  async function waitForElementOptional(selector: string, timeout = 10000): Promise<Element | null> {
+    return waitForElement(selector, timeout).catch(() => null);
+  }
+
+  async function getUploadFileInput(): Promise<HTMLInputElement | null> {
+    const formSelector = 'form[target="uploadFrame"]';
+    const inputSelector = 'input[type="file"]';
+    const scopedSelector = `${formSelector} ${inputSelector}`;
+    const existingForm = document.querySelector(formSelector) as HTMLFormElement | null;
+    if (existingForm) {
+      return (
+        (existingForm.querySelector(inputSelector) as HTMLInputElement | null) ||
+        ((await waitForElementOptional(scopedSelector, 3000)) as HTMLInputElement | null)
+      );
+    }
+
+    const scopedInput = (await waitForElementOptional(scopedSelector, 3000)) as HTMLInputElement | null;
+    const form = document.querySelector(formSelector) as HTMLFormElement | null;
+    if (form) {
+      return scopedInput || (form.querySelector(inputSelector) as HTMLInputElement | null);
+    }
+
+    return (
+      (document.querySelector(inputSelector) as HTMLInputElement | null) ||
+      ((await waitForElementOptional(inputSelector, 3000)) as HTMLInputElement | null)
+    );
+  }
+
+  async function uploadFiles(files: File[]): Promise<boolean> {
+    if (files.length === 0) return false;
+
+    const fileInput = await getUploadFileInput();
     if (!fileInput) {
-      console.error("未找到文件输入元素");
-      return;
+      console.error("media requested but upload input not found");
+      return false;
     }
 
     const dataTransfer = new DataTransfer();
@@ -49,6 +79,16 @@ export async function DynamicXueqiu(data: SyncData) {
     fileInput.dispatchEvent(new Event("input", { bubbles: true }));
     await new Promise((resolve) => setTimeout(resolve, 2000));
     console.debug("文件上传操作完成");
+    return true;
+  }
+
+  function isImageFileData(file: FileData): boolean {
+    const mime = (file.type || "").toLowerCase();
+    if (mime.startsWith("image/")) return true;
+    if (mime.startsWith("video/") || mime === "application/pdf") return false;
+
+    const hasCommonImageExtension = /\.(gif|jpe?g|png|webp)$/i.test(file.name);
+    return (!mime || mime === "application/octet-stream") && hasCommonImageExtension;
   }
 
   // 辅助函数：等待多个元素出现
@@ -99,24 +139,62 @@ export async function DynamicXueqiu(data: SyncData) {
 
     console.debug("成功填入雪球内容");
 
-    // 处理图片上传
+    const requestedMediaCount = (images?.length ?? 0) + (videos?.length ?? 0);
+    let attachedMediaCount = 0;
+
+    // Upload images.
     if (images && images.length > 0) {
-      const imageFiles = await Promise.all(
-        images.map(async (file) => {
+      const imageFiles: File[] = [];
+      for (const file of images) {
+        if (!isImageFileData(file)) {
+          console.debug("跳过非图片文件:", file);
+          continue;
+        }
+
+        try {
           const response = await fetch(file.url);
+          if (!response.ok) {
+            throw new Error(`Failed to fetch image "${file.name}": ${response.status} ${response.statusText}`);
+          }
           const blob = await response.blob();
-          return new File([blob], file.name, { type: file.type });
-        }),
-      );
-      const currentUploaded = document.querySelectorAll(".img-single-upload");
-      await uploadFiles(imageFiles);
-      await waitForElements(".img-single-upload", images.length + currentUploaded.length);
+          const fileType = file.type || blob.type;
+          if (!isImageFileData({ ...file, type: fileType })) {
+            console.debug("跳过非图片文件:", file);
+            continue;
+          }
+          imageFiles.push(new File([blob], file.name, { type: fileType }));
+        } catch (error) {
+          console.error("获取图片失败:", error);
+        }
+      }
+
+      if (imageFiles.length > 0) {
+        const currentUploaded = document.querySelectorAll(".img-single-upload");
+        const uploaded = await uploadFiles(imageFiles);
+        if (uploaded) {
+          try {
+            await waitForElements(".img-single-upload", imageFiles.length + currentUploaded.length);
+            attachedMediaCount = imageFiles.length;
+          } catch (error) {
+            const uploadedCount = document.querySelectorAll(".img-single-upload").length - currentUploaded.length;
+            attachedMediaCount = Math.max(0, Math.min(imageFiles.length, uploadedCount));
+            console.error("image upload confirmation failed:", error);
+          }
+        }
+      }
     }
 
     console.debug("成功填入雪球内容和图片");
 
-    // 等待一段时间后尝试发布
+    // Wait briefly before trying to publish.
     await new Promise((resolve) => setTimeout(resolve, 5000));
+
+    if (data.isAutoPublish && requestedMediaCount > 0 && attachedMediaCount !== requestedMediaCount) {
+      console.error(
+        `only ${attachedMediaCount} of ${requestedMediaCount} requested media attached; skipping auto-publish to avoid an incomplete post`,
+      );
+      return;
+    }
 
     if (data.isAutoPublish) {
       const maxAttempts = 3;

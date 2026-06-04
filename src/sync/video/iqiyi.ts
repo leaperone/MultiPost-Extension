@@ -1,4 +1,4 @@
-import type { SyncData, VideoData } from "../common";
+import type { FileData, SyncData, VideoData } from "../common";
 
 export async function VideoIqiyi(data: SyncData) {
   function waitForElement(selector: string, timeout = 60000): Promise<Element> {
@@ -8,25 +8,96 @@ export async function VideoIqiyi(data: SyncData) {
         resolve(exist);
         return;
       }
+      let timer = 0;
       const observer = new MutationObserver(() => {
         const found = document.querySelector(selector);
         if (found) {
+          window.clearTimeout(timer);
           observer.disconnect();
           resolve(found);
         }
       });
-      observer.observe(document.body, { childList: true, subtree: true });
-      setTimeout(() => {
+      observer.observe(document.body || document.documentElement, { childList: true, subtree: true });
+      timer = window.setTimeout(() => {
         observer.disconnect();
-        reject(new Error(`元素 "${selector}" 在 ${timeout}ms 内未出现`));
+        reject(new Error(`Element with selector "${selector}" not found within ${timeout}ms`));
       }, timeout);
     });
+  }
+
+  const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+
+  function isVisible(element: Element): boolean {
+    const style = window.getComputedStyle(element);
+    return style.display !== "none" && style.visibility !== "hidden" && element.getClientRects().length > 0;
+  }
+
+  function findVisibleElement<T extends Element>(selector: string, root: ParentNode = document): T | null {
+    return (Array.from(root.querySelectorAll(selector)) as T[]).find(isVisible) ?? null;
+  }
+
+  async function injectCoverFile(input: HTMLInputElement, file: FileData): Promise<boolean> {
+    if (file.type && !file.type.startsWith("image/")) return false;
+
+    const cBuf = await (await fetch(file.url)).arrayBuffer();
+    const coverFile = new File([cBuf], file.name, { type: file.type || "image/png" });
+    const cdt = new DataTransfer();
+    cdt.items.add(coverFile);
+    input.files = cdt.files;
+    input.dispatchEvent(new Event("change", { bubbles: true }));
+    input.dispatchEvent(new Event("input", { bubbles: true }));
+    return true;
+  }
+
+  async function uploadVerticalCoverImage(file: FileData): Promise<void> {
+    const coverEntry = document.querySelector("div.set-cover") as HTMLElement | null;
+    if (!coverEntry) return;
+    coverEntry.click();
+    await sleep(1000);
+
+    const coverPanel = findVisibleElement<HTMLElement>("div.base-cover-new");
+    const coverInput = coverPanel?.querySelector(
+      "div.cover-editor-wrap input[type='file'][accept='.jpg,.jpeg,.png']",
+    ) as HTMLInputElement | null;
+    if (!coverInput) return;
+
+    if (!(await injectCoverFile(coverInput, file))) return;
+    await sleep(3000);
+
+    const confirmBtn = coverPanel?.querySelector("div.mp-popup-btn.editor-modal-bottom button") as HTMLElement | null;
+    confirmBtn?.click();
+  }
+
+  async function uploadHorizontalCoverImage(file: FileData): Promise<void> {
+    let cropPanel = findVisibleElement<HTMLElement>("div.image-crop-content");
+    const cropEntry = cropPanel?.querySelector("div.no-data-wrap div.main-edit-bar") as HTMLElement | null;
+    if (!cropEntry) return;
+    cropEntry.click();
+    await sleep(2000);
+
+    cropPanel = findVisibleElement<HTMLElement>("div.image-crop-content") ?? cropPanel;
+    const panelRoot = cropPanel?.closest("div.base-cover-new") ?? cropPanel;
+    const coverInput = cropPanel?.querySelector(
+      "input[type='file'][accept='.jpg,.jpeg,.png']",
+    ) as HTMLInputElement | null;
+    if (!coverInput) return;
+
+    if (!(await injectCoverFile(coverInput, file))) return;
+    await sleep(3000);
+
+    const doneBtn = Array.from(panelRoot?.querySelectorAll("button") ?? []).find(
+      (button) => button.textContent?.trim() === "完成",
+    );
+    if (doneBtn && !doneBtn.disabled) {
+      doneBtn.click();
+      await sleep(1000);
+    }
   }
 
   async function publishIfAutoEnabled(): Promise<void> {
     if (data.isAutoPublish !== true) return;
 
-    // 轮询期间重新查询按钮，避免页面重渲染后持有失效节点；视频处理较慢，最多约 60s
+    // Re-query while polling so rerenders do not leave us holding a stale button.
     const findPublishButton = () =>
       Array.from(document.querySelectorAll("button")).find((button) => button.textContent?.includes("发布"));
 
@@ -51,13 +122,13 @@ export async function VideoIqiyi(data: SyncData) {
   }
 
   try {
-    const { title, content, video, tags, cover, description, original } = data.data as VideoData;
+    const { title, content, video, tags, cover, horizontalCover, description, original } = data.data as VideoData;
     if (!video) {
       console.error("爱奇艺：未提供视频文件");
       return;
     }
 
-    // 上传视频
+    // Upload video.
     const fileInput = (await waitForElement('input[type="file"]')) as HTMLInputElement;
     const buf = await (await fetch(video.url)).arrayBuffer();
     const ext = video.name.split(".").pop() || "mp4";
@@ -69,7 +140,7 @@ export async function VideoIqiyi(data: SyncData) {
 
     await new Promise((resolve) => setTimeout(resolve, 3000));
 
-    // 标题（爱奇艺标题最长 30 字）
+    // Fill title. iQiyi caps titles at 30 characters.
     const titleInput = document.querySelector(
       'input[type="text"][maxlength], input[placeholder*="标题"]',
     ) as HTMLInputElement | null;
@@ -80,7 +151,7 @@ export async function VideoIqiyi(data: SyncData) {
       titleInput.dispatchEvent(new Event("change", { bubbles: true }));
     }
 
-    // 简介
+    // Fill description.
     const descTextarea = document.querySelector('textarea[placeholder="输入视频简介"]') as HTMLTextAreaElement | null;
     if (descTextarea) {
       descTextarea.focus();
@@ -89,7 +160,7 @@ export async function VideoIqiyi(data: SyncData) {
       descTextarea.dispatchEvent(new Event("change", { bubbles: true }));
     }
 
-    // 标签
+    // Fill tags.
     if (tags?.length) {
       const tagInput = document.querySelector(
         'input[type="text"][autocomplete="off"][class*="mp-input__tag-inner"]',
@@ -107,38 +178,31 @@ export async function VideoIqiyi(data: SyncData) {
       }
     }
 
-    // 原创声明（默认是原创；用户传 false 时切到非原创）
+    // Original declaration defaults to original; explicit false switches to non-original.
     if (original === false) {
-      const nonOriginalRadio = document.querySelectorAll('input[type="radio"][class*="mp-radio__original"]')[1] as
+      const nonOriginalRadio = (document.querySelector('input[type="radio"][value="1"][class*="el-radio__original"]') ||
+        document.querySelectorAll('input[type="radio"][class*="mp-radio__original"]')[1]) as
         | HTMLInputElement
+        | null
         | undefined;
       nonOriginalRadio?.click();
+    } else {
+      const originalRadio = (document.querySelector('input[type="radio"][value="0"][class*="el-radio__original"]') ||
+        document.querySelector('input[type="radio"][value="0"][class*="mp-radio__original"]') ||
+        document.querySelectorAll('input[type="radio"][class*="mp-radio__original"]')[0]) as
+        | HTMLInputElement
+        | null
+        | undefined;
+      originalRadio?.click();
     }
 
-    // 封面：先点 set-cover，弹出编辑器再走 base-cover-new 内部 file input
+    // Upload vertical and horizontal covers.
     if (cover) {
-      const coverEntry = document.querySelector("div.set-cover") as HTMLElement | null;
-      coverEntry?.click();
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-      const coverPanel = Array.from(document.querySelectorAll("div.base-cover-new")).find(
-        (d) => window.getComputedStyle(d).display !== "none",
-      );
-      const coverInput = coverPanel?.querySelector(
-        "div.cover-editor-wrap input[type='file'][accept='.jpg,.jpeg,.png']",
-      ) as HTMLInputElement | null;
-      if (coverInput) {
-        const cBuf = await (await fetch(cover.url)).arrayBuffer();
-        const coverFile = new File([cBuf], cover.name, { type: cover.type || "image/png" });
-        const cdt = new DataTransfer();
-        cdt.items.add(coverFile);
-        coverInput.files = cdt.files;
-        coverInput.dispatchEvent(new Event("change", { bubbles: true }));
-        await new Promise((resolve) => setTimeout(resolve, 2000));
-        const confirmBtn = coverPanel?.querySelector(
-          "div.mp-popup-btn.editor-modal-bottom button",
-        ) as HTMLElement | null;
-        confirmBtn?.click();
-      }
+      await uploadVerticalCoverImage(cover);
+      await sleep(5000);
+    }
+    if (horizontalCover) {
+      await uploadHorizontalCoverImage(horizontalCover);
     }
 
     await publishIfAutoEnabled();

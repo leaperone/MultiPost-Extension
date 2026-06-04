@@ -31,6 +31,11 @@ export async function DynamicThreads(data: SyncData) {
       }, timeout);
     });
   }
+
+  async function waitForElementOptional(selector: string, timeout = 10000): Promise<Element | null> {
+    return waitForElement(selector, timeout).catch(() => null);
+  }
+
   // Threads 的入口图标是 svg[aria-label],按 UI 语言不同走不同字符串
   function findCreateIcon(): HTMLElement | null {
     const labels = ["创建", "建立", "Create", "新貼文", "New post"];
@@ -39,6 +44,57 @@ export async function DynamicThreads(data: SyncData) {
       if (svg) return svg.closest("a, div, button") as HTMLElement | null;
     }
     return null;
+  }
+
+  async function findMediaFileInput(): Promise<HTMLInputElement | null> {
+    const selectors = [
+      'input[type="file"][accept="image/avif,image/jpeg,image/png,image/webp,video/mp4,video/quicktime,video/webm"]',
+      'input[type="file"][accept*="image/jpeg"][accept*="video/mp4"]',
+      'input[type="file"][accept*="image/"][accept*="video/"]',
+    ];
+    for (const selector of selectors) {
+      const input = document.querySelector(selector) as HTMLInputElement | null;
+      if (input) return input;
+    }
+    for (const selector of selectors) {
+      const input = (await waitForElementOptional(selector, 3000)) as HTMLInputElement | null;
+      if (input) return input;
+    }
+    return null;
+  }
+
+  function findPublishElement(root: ParentNode): HTMLElement | null {
+    const publishDiv = Array.from(root.querySelectorAll("div")).find((el) => el.textContent?.trim() === "发布") as
+      | HTMLElement
+      | undefined;
+    const nestedPublishDiv = publishDiv?.querySelector("div") as HTMLElement | null;
+    if (nestedPublishDiv) return nestedPublishDiv;
+    if (publishDiv) return publishDiv;
+
+    const publishLabels = ["Post", "发布", "發佈"];
+    return (
+      Array.from(root.querySelectorAll<HTMLElement>('button, div[role="button"], [aria-label]')).find((el) => {
+        const ariaLabel = el.getAttribute("aria-label")?.trim();
+        const text = el.textContent?.trim();
+        return publishLabels.includes(ariaLabel || "") || publishLabels.includes(text || "");
+      }) || null
+    );
+  }
+
+  function dispatchPublishShortcut(target: HTMLElement) {
+    const isMac = /Mac|macOS|iPhone|iPod|iPad/.test(navigator.userAgent);
+    target.focus();
+    target.dispatchEvent(
+      new KeyboardEvent("keydown", {
+        bubbles: true,
+        cancelable: true,
+        key: "Enter",
+        code: "Enter",
+        metaKey: isMac,
+        ctrlKey: !isMac,
+        composed: true,
+      }),
+    );
   }
 
   try {
@@ -58,11 +114,12 @@ export async function DynamicThreads(data: SyncData) {
     // 查找并填写帖子内容,优先用 contenteditable 通用选择器,再回退到旧的中文 aria-label
     const editor = (dialog.querySelector('div[contenteditable="true"][aria-placeholder]') ||
       dialog.querySelector('div[contenteditable="true"]') ||
-      dialog.querySelector('div[aria-label="文本栏为空白。请输入内容，撰写新帖子。"]')) as HTMLElement;
-    editor.click();
+      dialog.querySelector('div[aria-label="文本栏为空白。请输入内容，撰写新帖子。"]')) as HTMLElement | null;
     if (!editor) {
-      throw new Error("未找到编辑器元素");
+      console.error("未找到编辑器元素");
+      return;
     }
+    editor.click();
     editor.focus();
     const pasteEvent = new ClipboardEvent("paste", {
       bubbles: true,
@@ -75,58 +132,64 @@ export async function DynamicThreads(data: SyncData) {
 
     console.debug("成功填入Threads内容");
 
-    if (images?.length > 0 || videos?.length > 0) {
-      const fileInput = (await waitForElement(
-        'input[type="file"][accept*="image/jpeg,image/png,image/webp,video/mp4,video/quicktime"]',
-      )) as HTMLInputElement;
+    const requestedMediaCount = (images?.length ?? 0) + (videos?.length ?? 0);
+    const mediaFiles = [...(images || []), ...(videos?.[0] ? [videos[0]] : [])].slice(0, 20);
+    let attachedMediaCount = 0;
+    if (mediaFiles.length > 0) {
+      const fileInput = await findMediaFileInput();
 
       if (!fileInput) {
-        throw new Error("未找到文件输入元素");
-      }
-
-      const dataTransfer = new DataTransfer();
-
-      // 处理图片
-      if (images) {
-        for (const image of images) {
+        console.error("media requested but upload input not found");
+      } else {
+        const dataTransfer = new DataTransfer();
+        for (const media of mediaFiles) {
           try {
-            const response = await fetch(image.url);
+            const response = await fetch(media.url);
+            if (!response.ok) {
+              throw new Error(`Failed to fetch media "${media.name}": ${response.status} ${response.statusText}`);
+            }
             const blob = await response.blob();
-            const file = new File([blob], image.name, { type: image.type });
+            const file = new File([blob], media.name, { type: media.type });
             dataTransfer.items.add(file);
           } catch (error) {
-            console.error("获取图片失败:", error);
+            console.error("获取媒体文件失败:", error);
+          }
+        }
+
+        if (dataTransfer.files.length === 0) {
+          console.error("media requested but upload could not be performed");
+        } else {
+          try {
+            fileInput.files = dataTransfer.files;
+            const changeEvent = new Event("change", { bubbles: true });
+            fileInput.dispatchEvent(changeEvent);
+            fileInput.dispatchEvent(new Event("input", { bubbles: true }));
+            attachedMediaCount = dataTransfer.files.length;
+          } catch (error) {
+            console.error("media upload could not be performed:", error);
           }
         }
       }
-
-      // 处理视频
-      if (videos && videos.length > 0) {
-        try {
-          const video = videos[0];
-          const response = await fetch(video.url);
-          const blob = await response.blob();
-          const file = new File([blob], video.name, { type: video.type });
-          dataTransfer.items.add(file);
-        } catch (error) {
-          console.error("获取视频失败:", error);
-        }
-      }
-
-      fileInput.files = dataTransfer.files;
-      const changeEvent = new Event("change", { bubbles: true });
-      fileInput.dispatchEvent(changeEvent);
     }
 
     console.debug("成功填入Threads内容和图片");
 
-    // 等待一段时间后尝试发布
+    // Wait briefly before trying to publish.
     await new Promise((resolve) => setTimeout(resolve, 5000));
+    if (data.isAutoPublish && requestedMediaCount > 0 && attachedMediaCount !== requestedMediaCount) {
+      console.error(
+        `only ${attachedMediaCount} of ${requestedMediaCount} requested media attached; skipping auto-publish to avoid an incomplete post`,
+      );
+      return;
+    }
     if (data.isAutoPublish) {
-      const publishDiv = Array.from(dialog.querySelectorAll("div")).find((el) => el.textContent.trim() === "发布");
-      const nextDiv = publishDiv?.querySelector("div");
-      console.log(nextDiv);
-      nextDiv.click();
+      const publishElement = findPublishElement(dialog);
+      if (publishElement) {
+        publishElement.click();
+      } else {
+        dispatchPublishShortcut(editor);
+        console.log("已触发 Threads 发布快捷键");
+      }
     }
   } catch (error) {
     console.error("填入Threads内容或上传图片时出错:", error);

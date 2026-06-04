@@ -691,6 +691,15 @@
     "message": "一点号",
     "description": "一点号平台名称"
   },
+  "platformGelonghui": {
+    "message": "格隆汇"
+  },
+  "platformJiankangjie": {
+    "message": "健康界"
+  },
+  "platformKaidiwang": {
+    "message": "凯迪网"
+  },
   "platformDingduanhao": {
     "message": "顶端号"
   },

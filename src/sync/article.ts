@@ -4,14 +4,18 @@ import { ArticleAutohome } from "./article/autohome";
 import { ArticleBaijiahao } from "./article/baijiahao";
 import { ArticleBilibili } from "./article/bilibili";
 import { ArticleCSDN } from "./article/csdn";
+import { ArticleDaYuHao } from "./article/dayuhao";
 import { ArticleDingduanhao } from "./article/dingduanhao";
 import { ArticleDongchedi } from "./article/dongchedi";
 import { ArticleDouban } from "./article/douban";
 import { ArticleEastmoney } from "./article/eastmoney";
+import { ArticleGeLongHui } from "./article/gelonghui";
 import { ArticleInfoQ } from "./article/infoq";
+import { ArticleJianKangJie } from "./article/jiankangjie";
 import { ArticleJianpian } from "./article/jianpian";
 import { ArticleJianshu } from "./article/jianshu";
 import { ArticleJuejin } from "./article/juejin";
+import { ArticleKaiDiWang } from "./article/kaidiwang";
 import { ArticleKuaichuanhao } from "./article/kuaichuanhao";
 import { ArticleMedium } from "./article/medium";
 import { ArticleNetease } from "./article/netease";
@@ -315,6 +319,42 @@ export const ArticleInfoMap: Record<string, PlatformInfo> = {
     tags: ["CN"],
     accountKey: "woshipm",
   },
+  // experimental: Gelonghui ARTICLE DOM path
+  ARTICLE_GELONGHUI: {
+    type: "ARTICLE",
+    name: "ARTICLE_GELONGHUI",
+    homeUrl: "https://www.gelonghui.com/",
+    faviconUrl: "https://www.gelonghui.com/favicon.ico",
+    platformName: chrome.i18n.getMessage("platformGelonghui"),
+    injectUrl: "https://www.gelonghui.com/articleCreate/",
+    injectFunction: ArticleGeLongHui,
+    tags: ["CN"],
+    accountKey: "gelonghui",
+  },
+  // experimental: Jiankangjie ARTICLE DOM path
+  ARTICLE_JIANKANGJIE: {
+    type: "ARTICLE",
+    name: "ARTICLE_JIANKANGJIE",
+    homeUrl: "https://www.cn-healthcare.com/",
+    faviconUrl: "https://files.cn-healthcare.com/skin/jkj5/images/n_web_icon.png",
+    platformName: chrome.i18n.getMessage("platformJiankangjie"),
+    injectUrl: "https://ucenter.cn-healthcare.com/article/revision/newedit",
+    injectFunction: ArticleJianKangJie,
+    tags: ["CN"],
+    accountKey: "jiankangjie",
+  },
+  // experimental: Kaidiwang ARTICLE DOM path
+  ARTICLE_KAIDIWANG: {
+    type: "ARTICLE",
+    name: "ARTICLE_KAIDIWANG",
+    homeUrl: "https://www.9kd.com/",
+    faviconUrl: "https://www.9kd.com/favicon2.ico",
+    platformName: chrome.i18n.getMessage("platformKaidiwang"),
+    injectUrl: "https://www.9kd.com/create",
+    injectFunction: ArticleKaiDiWang,
+    tags: ["CN"],
+    accountKey: "kaidiwang",
+  },
   ARTICLE_AUTOHOME: {
     type: "ARTICLE",
     name: "ARTICLE_AUTOHOME",
@@ -397,6 +437,18 @@ export const ArticleInfoMap: Record<string, PlatformInfo> = {
     injectFunction: ArticleSohu,
     tags: ["CN"],
     accountKey: "sohu",
+  },
+  // experimental: Dayuhao ARTICLE DOM path
+  ARTICLE_DAYUHAO: {
+    type: "ARTICLE",
+    name: "ARTICLE_DAYUHAO",
+    homeUrl: "https://mp.dayu.com/",
+    faviconUrl: "https://image.uc.cn/s/uae/g/1v/images/index/favicon.ico",
+    platformName: chrome.i18n.getMessage("platformDayu"),
+    injectUrl: "https://mp.dayu.com/dashboard/article/write",
+    injectFunction: ArticleDaYuHao,
+    tags: ["CN"],
+    accountKey: "dayu",
   },
   // experimental(待线上验证):Dingduanhao ARTICLE DOM 路径
   ARTICLE_DINGDUANHAO: {

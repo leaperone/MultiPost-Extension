@@ -30,6 +30,38 @@ export async function DynamicBluesky(data: SyncData) {
     });
   }
 
+  function findPublishButton(): HTMLButtonElement | null {
+    const publishButton = document.querySelector(
+      'button[aria-label="Publish post"]:not(:disabled)',
+    ) as HTMLButtonElement | null;
+    if (publishButton) return publishButton;
+
+    const publishLabels = ["Publish", "Post", "发布", "发布帖子", "发布帖文", "發佈", "發佈帖子", "發佈貼文"];
+    return (
+      Array.from(document.querySelectorAll<HTMLButtonElement>("button:not(:disabled)")).find((button) => {
+        const ariaLabel = button.getAttribute("aria-label")?.trim();
+        const text = button.textContent?.trim();
+        return publishLabels.includes(ariaLabel || "") || publishLabels.includes(text || "");
+      }) || null
+    );
+  }
+
+  function dispatchPublishShortcut(target: HTMLElement) {
+    const isMac = /Mac|macOS|iPhone|iPod|iPad/.test(navigator.userAgent);
+    target.focus();
+    target.dispatchEvent(
+      new KeyboardEvent("keydown", {
+        bubbles: true,
+        cancelable: true,
+        key: "Enter",
+        code: "Enter",
+        metaKey: isMac,
+        ctrlKey: !isMac,
+        composed: true,
+      }),
+    );
+  }
+
   try {
     const { content, images, title } = data.data as DynamicData;
 
@@ -63,9 +95,10 @@ export async function DynamicBluesky(data: SyncData) {
     contentInput.dispatchEvent(new Event("change", { bubbles: true }));
     console.log("内容已输入:", content);
 
-    if (images.length > 0) {
+    const limitedImages = images.slice(0, 4);
+    if (limitedImages.length > 0) {
       const imageData = [];
-      for (const file of images) {
+      for (const file of limitedImages) {
         const response = await fetch(file.url);
         const blob = await response.blob();
         const imageFile = new File([blob], file.name, { type: file.type });
@@ -81,9 +114,7 @@ export async function DynamicBluesky(data: SyncData) {
     if (data.isAutoPublish) {
       const maxAttempts = 3;
       for (let attempt = 0; attempt < maxAttempts; attempt++) {
-        const publishButton = document.querySelector(
-          'button[aria-label="Publish post"]:not(:disabled)',
-        ) as HTMLButtonElement;
+        const publishButton = findPublishButton();
         if (publishButton) {
           publishButton.click();
           console.log("已点击发布按钮");
@@ -93,6 +124,8 @@ export async function DynamicBluesky(data: SyncData) {
         }
         await new Promise((resolve) => setTimeout(resolve, 1000));
       }
+      dispatchPublishShortcut(contentInput);
+      console.log("已触发 Bluesky 发布快捷键");
     }
   } catch (error) {
     console.error("bluesky 发布过程中出错:", error);

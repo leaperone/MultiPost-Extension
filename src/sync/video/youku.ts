@@ -1,4 +1,4 @@
-import type { SyncData, VideoData } from "../common";
+import type { FileData, SyncData, VideoData } from "../common";
 
 export async function VideoYouku(data: SyncData) {
   function waitForElement(selector: string, timeout = 60000): Promise<Element> {
@@ -8,25 +8,128 @@ export async function VideoYouku(data: SyncData) {
         resolve(exist);
         return;
       }
+      let timer = 0;
       const observer = new MutationObserver(() => {
         const found = document.querySelector(selector);
         if (found) {
+          window.clearTimeout(timer);
           observer.disconnect();
           resolve(found);
         }
       });
-      observer.observe(document.body, { childList: true, subtree: true });
-      setTimeout(() => {
+      observer.observe(document.body || document.documentElement, { childList: true, subtree: true });
+      timer = window.setTimeout(() => {
         observer.disconnect();
-        reject(new Error(`元素 "${selector}" 在 ${timeout}ms 内未出现`));
+        reject(new Error(`Element with selector "${selector}" not found within ${timeout}ms`));
       }, timeout);
     });
+  }
+
+  const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+
+  function isVisible(element: Element): boolean {
+    const style = window.getComputedStyle(element);
+    return style.display !== "none" && style.visibility !== "hidden" && element.getClientRects().length > 0;
+  }
+
+  function findCropDialogRoot(cropIcon: HTMLElement): HTMLElement {
+    const dialogRoot = cropIcon.closest(
+      '[role="dialog"], div[class*="modal"], div[class*="Modal"], div[class*="dialog"], div[class*="Dialog"], div[class*="drawer"], div[class*="Drawer"]',
+    ) as HTMLElement | null;
+    if (dialogRoot) return dialogRoot;
+
+    let root = cropIcon.parentElement;
+    while (root && root !== document.body) {
+      if (root.querySelector("button")) return root;
+      root = root.parentElement;
+    }
+
+    return cropIcon.parentElement ?? document.body;
+  }
+
+  async function waitForCropDialog(
+    existingCropIcons: Set<Element>,
+    timeout = 5000,
+  ): Promise<{
+    cropIcon: HTMLElement;
+    root: HTMLElement;
+  } | null> {
+    const deadline = Date.now() + timeout;
+    while (Date.now() < deadline) {
+      const cropIcons = Array.from(document.querySelectorAll("img.bi-cropper-cropBtnIcon")) as HTMLElement[];
+      const cropIcon = cropIcons.find((icon) => !existingCropIcons.has(icon) && isVisible(findCropDialogRoot(icon)));
+      if (cropIcon) {
+        return {
+          cropIcon,
+          root: findCropDialogRoot(cropIcon),
+        };
+      }
+      await sleep(200);
+    }
+    return null;
+  }
+
+  function findButtonByText(root: ParentNode, text: string): HTMLButtonElement | undefined {
+    return Array.from(root.querySelectorAll("button")).find((button) => button.textContent?.trim() === text);
+  }
+
+  async function waitForButtonByText(
+    root: ParentNode,
+    text: string,
+    timeout = 3000,
+  ): Promise<HTMLButtonElement | null> {
+    const deadline = Date.now() + timeout;
+    while (Date.now() < deadline) {
+      const button = findButtonByText(root, text);
+      if (button) return button;
+      await sleep(200);
+    }
+    return null;
+  }
+
+  async function injectCoverFile(input: HTMLInputElement, file: FileData): Promise<boolean> {
+    if (file.type && !file.type.startsWith("image/")) return false;
+
+    const cBuf = await (await fetch(file.url)).arrayBuffer();
+    const coverFile = new File([cBuf], file.name, { type: file.type || "image/png" });
+    const cdt = new DataTransfer();
+    cdt.items.add(coverFile);
+    input.files = cdt.files;
+    input.dispatchEvent(new Event("change", { bubbles: true }));
+    input.dispatchEvent(new Event("input", { bubbles: true }));
+    return true;
+  }
+
+  async function uploadCoverImage(file: FileData, index: number): Promise<void> {
+    const coverInputs = document.querySelectorAll(
+      "input[type='file'][id*='-imgUpload']",
+    ) as NodeListOf<HTMLInputElement>;
+    const coverInput = coverInputs[index];
+    if (!coverInput) return;
+
+    const existingCropIcons = new Set(document.querySelectorAll("img.bi-cropper-cropBtnIcon"));
+    if (!(await injectCoverFile(coverInput, file))) return;
+    await sleep(3000);
+
+    const cropDialog = await waitForCropDialog(existingCropIcons);
+    if (!cropDialog) return;
+
+    (cropDialog.cropIcon.parentElement ?? cropDialog.cropIcon).click();
+    await sleep(1000);
+
+    const doneBtn = await waitForButtonByText(cropDialog.root, "确 定");
+    doneBtn?.click();
+    if (doneBtn) await sleep(1000);
+
+    const confirmBtn = await waitForButtonByText(cropDialog.root, "确 认");
+    confirmBtn?.click();
+    if (confirmBtn) await sleep(3000);
   }
 
   async function publishIfAutoEnabled(): Promise<void> {
     if (data.isAutoPublish !== true) return;
 
-    // 轮询期间重新查询按钮，避免页面重渲染后持有失效节点；视频处理较慢，最多约 60s
+    // Re-query while polling so rerenders do not leave us holding a stale button.
     const findPublishButton = () =>
       Array.from(document.querySelectorAll("button")).find((button) => button.textContent?.includes("发布"));
 
@@ -51,13 +154,13 @@ export async function VideoYouku(data: SyncData) {
   }
 
   try {
-    const { title, content, video, tags, cover, description } = data.data as VideoData;
+    const { title, content, video, tags, cover, horizontalCover, description } = data.data as VideoData;
     if (!video) {
       console.error("优酷：未提供视频文件");
       return;
     }
 
-    // 上传视频
+    // Upload video.
     const fileInput = (await waitForElement('input[type="file"]')) as HTMLInputElement;
     const buf = await (await fetch(video.url)).arrayBuffer();
     const ext = video.name.split(".").pop() || "mp4";
@@ -69,7 +172,7 @@ export async function VideoYouku(data: SyncData) {
 
     await new Promise((resolve) => setTimeout(resolve, 3000));
 
-    // 标题（优酷用 input#title）
+    // Fill title.
     const titleInput = document.querySelector("input#title") as HTMLInputElement | null;
     if (titleInput && title) {
       titleInput.focus();
@@ -78,7 +181,7 @@ export async function VideoYouku(data: SyncData) {
       titleInput.dispatchEvent(new Event("change", { bubbles: true }));
     }
 
-    // 简介
+    // Fill description.
     const descTextarea = document.querySelector('textarea[placeholder="请输入视频简介"]') as HTMLTextAreaElement | null;
     if (descTextarea) {
       descTextarea.focus();
@@ -87,9 +190,11 @@ export async function VideoYouku(data: SyncData) {
       descTextarea.dispatchEvent(new Event("change", { bubbles: true }));
     }
 
-    // 标签
+    // Fill tags.
     if (tags?.length) {
-      const tagInput = document.querySelector('input[placeholder*="标签"]') as HTMLInputElement | null;
+      const tagInput = (document.querySelector(
+        'input[placeholder="精准标签可获得高点击率，建议8-10个，按Enter键创建"]',
+      ) || document.querySelector('input[placeholder*="标签"]')) as HTMLInputElement | null;
       if (tagInput) {
         for (const tag of tags.slice(0, 10)) {
           tagInput.focus();
@@ -103,24 +208,12 @@ export async function VideoYouku(data: SyncData) {
       }
     }
 
-    // 封面：优酷有多个 imgUpload input，取第一个
+    // Upload vertical and horizontal covers. Youku uses imgUpload[0] and imgUpload[1].
     if (cover) {
-      const coverInputs = document.querySelectorAll(
-        "input[type='file'][id*='-imgUpload']",
-      ) as NodeListOf<HTMLInputElement>;
-      const coverInput = coverInputs[0];
-      if (coverInput) {
-        const cBuf = await (await fetch(cover.url)).arrayBuffer();
-        const coverFile = new File([cBuf], cover.name, { type: cover.type || "image/png" });
-        const cdt = new DataTransfer();
-        cdt.items.add(coverFile);
-        coverInput.files = cdt.files;
-        coverInput.dispatchEvent(new Event("change", { bubbles: true }));
-        await new Promise((resolve) => setTimeout(resolve, 2000));
-        // 裁剪框出现后点确定
-        const cropBtn = document.querySelector("img.bi-cropper-cropBtnIcon") as HTMLElement | null;
-        cropBtn?.click();
-      }
+      await uploadCoverImage(cover, 0);
+    }
+    if (horizontalCover) {
+      await uploadCoverImage(horizontalCover, 1);
     }
 
     await publishIfAutoEnabled();

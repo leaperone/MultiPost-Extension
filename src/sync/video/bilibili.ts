@@ -29,31 +29,89 @@ export async function VideoBilibili(data: SyncData) {
     });
   }
 
-  async function uploadCover(cover: FileData): Promise<void> {
-    console.log("开始上传封面", cover);
-    await waitForElement("div.cover-main-img > div.img");
-    const coverUploadButton = document.querySelector("div.cover-main-img > div.img") as HTMLElement;
-    if (!coverUploadButton) {
-      console.log("未找到封面上传按钮");
+  async function waitForElementOptional(selector: string, timeout = 10000): Promise<Element | null> {
+    return waitForElement(selector, timeout).catch(() => null);
+  }
+
+  const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+
+  function findCoverEntry(): { element: HTMLElement; isFallback: boolean } | null {
+    const existingEntry = document.querySelector("div.cover-main-img > div.img") as HTMLElement | null;
+    if (existingEntry) return { element: existingEntry, isFallback: false };
+
+    const coverMain = document.querySelector("div.cover-main") as HTMLElement | null;
+    const fallbackEntry = Array.from(coverMain?.querySelectorAll<HTMLElement>("span") ?? []).find(
+      (span) => span.textContent?.includes("更换封面") || span.textContent?.includes("封面设置"),
+    );
+    if (fallbackEntry) return { element: fallbackEntry, isFallback: true };
+
+    return null;
+  }
+
+  function findDoneButton(): HTMLElement | null {
+    const footerButton = Array.from(document.querySelectorAll<HTMLElement>("div.cover-select-footer-pick button")).find(
+      (btn) => btn.textContent?.trim() === "完成",
+    );
+    if (footerButton) return footerButton;
+
+    return (
+      Array.from(document.querySelectorAll<HTMLElement>("div.submit")).find(
+        (button) => button.textContent?.trim() === "完成",
+      ) ?? null
+    );
+  }
+
+  function applyOriginalDeclaration(isOriginal: boolean): void {
+    const originalCheckbox = document.querySelector(
+      "div.original-input-wrp input[type='checkbox']",
+    ) as HTMLInputElement | null;
+    if (originalCheckbox) {
+      if (isOriginal && !originalCheckbox.checked) {
+        originalCheckbox.click();
+        console.log("已勾选原创声明");
+      } else if (!isOriginal && originalCheckbox.checked) {
+        originalCheckbox.click();
+        console.log("已取消原创声明");
+      }
       return;
     }
 
-    coverUploadButton.click();
-    await new Promise((resolve) => setTimeout(resolve, 1000));
+    const radioLabels = isOriginal ? ["自制"] : ["转载", "非自制"];
+    const originalRadio = Array.from(document.querySelectorAll<HTMLElement>("span.check-radio-v2-name")).find((span) =>
+      radioLabels.some((label) => span.textContent?.trim() === label || span.textContent?.includes(label)),
+    );
+    if (originalRadio) {
+      originalRadio.click();
+      console.log(isOriginal ? "已选择自制原创声明" : "已选择转载原创声明");
+    } else {
+      console.log(isOriginal ? "未找到自制原创声明单选项" : "未找到转载原创声明单选项");
+    }
+  }
+
+  async function uploadCover(cover: FileData): Promise<boolean> {
+    console.log("开始上传封面", cover);
+    await waitForElementOptional("div.cover-main-img > div.img, div.cover-main");
+    const coverEntry = findCoverEntry();
+    if (!coverEntry) {
+      console.log("未找到封面上传按钮");
+      return false;
+    }
+
+    coverEntry.element.click();
+    await sleep(coverEntry.isFallback ? 1500 : 1000);
 
     const tabContainer = document.querySelector("div.cover-select-header-tab");
-    if (!tabContainer) {
-      console.log("未找到封面选择的tab容器");
-      return;
+    if (tabContainer) {
+      const uploadTab = tabContainer.firstChild?.nextSibling as HTMLElement;
+      if (!uploadTab) {
+        console.log("未找到上传封面tab");
+        return false;
+      }
+      uploadTab.click();
+      await sleep(1000);
+    } else {
+      console.log("未找到封面选择的tab容器，尝试直接查找上传输入框");
     }
-
-    const uploadTab = tabContainer.firstChild?.nextSibling as HTMLElement;
-    if (!uploadTab) {
-      console.log("未找到上传封面tab");
-      return;
-    }
-    uploadTab.click();
-    await new Promise((resolve) => setTimeout(resolve, 1000));
 
     const fileInput = document.querySelector(
       "div.bcc-upload-wrapper > input[type='file'][accept='image/png, image/jpeg']",
@@ -61,22 +119,22 @@ export async function VideoBilibili(data: SyncData) {
 
     if (!fileInput) {
       console.log("未找到封面上传的文件输入框");
-      return;
+      return false;
     }
 
     const dataTransfer = new DataTransfer();
-    if (!cover.type.includes("image/")) {
+    if (cover.type && !cover.type.includes("image/")) {
       console.log("封面文件类型不正确");
-      return;
+      return false;
     }
 
     const response = await fetch(cover.url);
     const blob = await response.blob();
-    const coverFile = new File([blob], cover.name, { type: cover.type });
+    const coverFile = new File([blob], cover.name, { type: cover.type || "image/png" });
     dataTransfer.items.add(coverFile);
 
     if (dataTransfer.files.length === 0) {
-      return;
+      return false;
     }
 
     fileInput.files = dataTransfer.files;
@@ -84,21 +142,25 @@ export async function VideoBilibili(data: SyncData) {
     fileInput.dispatchEvent(new Event("input", { bubbles: true }));
 
     console.log("封面文件上传操作已触发");
-    await new Promise((resolve) => setTimeout(resolve, 3000));
+    await sleep(3000);
 
-    const doneButtons = document.querySelectorAll("div.cover-select-footer-pick button");
-    const doneButton = Array.from(doneButtons).find((btn) => btn.textContent === " 完成 ");
+    const doneButton = findDoneButton();
 
     if (doneButton) {
       (doneButton as HTMLElement).click();
       console.log("封面上传完成");
-    } else {
-      console.log('未找到"完成"按钮');
+      return true;
     }
+    console.log('未找到"完成"按钮');
+    return false;
   }
 
-  async function uploadVideo(file: File): Promise<void> {
-    const fileInput = (await waitForElement('input[type="file"]')) as HTMLInputElement;
+  async function uploadVideo(file: File): Promise<boolean> {
+    const fileInput = (await waitForElementOptional('input[type="file"]')) as HTMLInputElement | null;
+    if (!fileInput) {
+      console.log("未找到视频上传文件输入框");
+      return false;
+    }
 
     // 创建一个新的 File 对象，因为某些浏览器可能不允许直接设置 fileInput.files
     const dataTransfer = new DataTransfer();
@@ -110,6 +172,7 @@ export async function VideoBilibili(data: SyncData) {
     fileInput.dispatchEvent(changeEvent);
 
     console.log("视频上传事件已触发");
+    return true;
   }
 
   async function waitForUploadCompletion(timeout = 600000): Promise<void> {
@@ -132,7 +195,7 @@ export async function VideoBilibili(data: SyncData) {
   }
 
   try {
-    const { content, video, title, tags, cover, description, original } = data.data as VideoData;
+    const { content, video, title, tags, cover, horizontalCover, description, original } = data.data as VideoData;
 
     // 视频简介优先使用 description（独立字段），未提供时回退到 content
     const videoDescription = description ?? content;
@@ -141,8 +204,8 @@ export async function VideoBilibili(data: SyncData) {
 
     // 处理视频上传
     if (video) {
-      await waitForElement('input[type="file"]');
-      await new Promise((resolve) => setTimeout(resolve, 1000));
+      await waitForElementOptional('input[type="file"]');
+      await sleep(1000);
 
       const response = await fetch(video.url);
       const blob = await response.arrayBuffer();
@@ -152,7 +215,8 @@ export async function VideoBilibili(data: SyncData) {
 
       console.log(`视频文件: ${videoFile.name} ${videoFile.type} ${videoFile.size}`);
 
-      await uploadVideo(videoFile);
+      const videoUploadTriggered = await uploadVideo(videoFile);
+      if (!videoUploadTriggered) return;
       console.log("视频上传已初始化");
 
       try {
@@ -167,88 +231,93 @@ export async function VideoBilibili(data: SyncData) {
       return;
     }
 
-    // 处理标题输入
-    const titleInput = (await waitForElement('input.input-val[type="text"][maxlength="80"]')) as HTMLInputElement;
+    // Handle title input.
+    const titleInput =
+      ((await waitForElementOptional('input[maxlength="80"][type="text"]')) as HTMLInputElement | null) ||
+      ((await waitForElementOptional('input.input-val[type="text"][maxlength="80"]', 3000)) as HTMLInputElement | null);
     if (title) {
-      titleInput.focus();
-      titleInput.value = title;
-      titleInput.dispatchEvent(new Event("input", { bubbles: true }));
-      titleInput.dispatchEvent(new Event("change", { bubbles: true }));
-      console.log("标题已输入:", title);
+      if (titleInput) {
+        titleInput.focus();
+        titleInput.value = title;
+        titleInput.dispatchEvent(new Event("input", { bubbles: true }));
+        titleInput.dispatchEvent(new Event("change", { bubbles: true }));
+        console.log("标题已输入:", title);
+      } else {
+        console.log("未找到标题输入框");
+      }
     }
 
     // 等待简介编辑器出现并输入内容
-    const editor = (await waitForElement('div.ql-editor[contenteditable="true"]')) as HTMLDivElement;
+    const editor = (await waitForElementOptional('div.ql-editor[contenteditable="true"]')) as HTMLDivElement | null;
     if (editor) {
       editor.innerHTML = videoDescription || "";
       console.log("简介已输入:", videoDescription);
-    }
-
-    // 原创声明开关:B 站投稿页默认勾选,如用户明确传 original=false 则取消
-    if (!isOriginal) {
-      const originalCheckbox = document.querySelector(
-        "div.original-input-wrp input[type='checkbox']",
-      ) as HTMLInputElement | null;
-      if (originalCheckbox?.checked) {
-        originalCheckbox.click();
-        console.log("已取消原创声明");
-      }
-    }
-
-    await new Promise((resolve) => setTimeout(resolve, 3000));
-
-    // 处理标签
-    // 清除已有标签
-    const existingTags = document.querySelectorAll("div.tag-pre-wrp > div.label-item-v2-container");
-    console.log(`发现 ${existingTags.length} 个已有标签，准备清除...`);
-    for (let i = 0; i < existingTags.length; i++) {
-      const tag = existingTags[i] as HTMLElement;
-      const closeButton = tag.querySelector(".label-item-v2-close");
-      if (closeButton) {
-        (closeButton as HTMLElement).click();
-        await new Promise((resolve) => setTimeout(resolve, 400));
-      }
-    }
-
-    if (!tags || tags.length === 0) {
-      // 如果没有指定标签，选择热门标签
-      console.log("未指定标签，选择热门标签...");
-      const hotTags = document.querySelectorAll(".hot-tag-item");
-      if (hotTags.length > 0) {
-        for (let i = 0; i < 3 && i < hotTags.length; i++) {
-          const tag = hotTags[i] as HTMLElement;
-          tag.click();
-          await new Promise((resolve) => setTimeout(resolve, 1000));
-        }
-      }
     } else {
-      // 添加指定的标签
-      console.log("添加指定标签...");
-      const tagInput = document.querySelector('input[placeholder="按回车键Enter创建标签"]') as HTMLInputElement;
-      if (tagInput) {
-        for (const tag of tags.slice(0, 10)) {
-          tagInput.value = tag;
-          const enterEvent = new KeyboardEvent("keydown", {
-            bubbles: true,
-            cancelable: true,
-            key: "Enter",
-            code: "Enter",
-            keyCode: 13,
-            which: 13,
-          });
-          tagInput.dispatchEvent(enterEvent);
-          await new Promise((resolve) => setTimeout(resolve, 1000));
-        }
-      }
+      console.log("未找到简介编辑器");
     }
 
-    // 上传封面
-    if (cover) {
-      await uploadCover(cover);
+    // Original declaration defaults to self-made; explicit false cancels it when the checkbox exists.
+    applyOriginalDeclaration(isOriginal);
+
+    await sleep(3000);
+
+    // Handle tags best-effort.
+    try {
+      const existingTags = document.querySelectorAll("div.tag-pre-wrp > div.label-item-v2-container");
+      console.log(`发现 ${existingTags.length} 个已有标签，准备清除...`);
+      for (let i = 0; i < existingTags.length; i++) {
+        const tag = existingTags[i] as HTMLElement;
+        const closeButton = tag.querySelector(".label-item-v2-close");
+        if (closeButton) {
+          (closeButton as HTMLElement).click();
+          await sleep(400);
+        }
+      }
+
+      if (!tags || tags.length === 0) {
+        console.log("未指定标签，选择热门标签...");
+        const hotTags = document.querySelectorAll(".hot-tag-item");
+        if (hotTags.length > 0) {
+          for (let i = 0; i < 3 && i < hotTags.length; i++) {
+            const tag = hotTags[i] as HTMLElement;
+            tag.click();
+            await sleep(1000);
+          }
+        }
+      } else {
+        console.log("添加指定标签...");
+        const tagInput = document.querySelector('input[placeholder="按回车键Enter创建标签"]') as HTMLInputElement;
+        if (tagInput) {
+          for (const tag of tags.slice(0, 10)) {
+            tagInput.value = tag;
+            const enterEvent = new KeyboardEvent("keydown", {
+              bubbles: true,
+              cancelable: true,
+              key: "Enter",
+              code: "Enter",
+              keyCode: 13,
+              which: 13,
+            });
+            tagInput.dispatchEvent(enterEvent);
+            await sleep(1000);
+          }
+        }
+      }
+    } catch (error) {
+      console.warn("Bilibili 标签处理失败，继续发布流程:", error);
+    }
+
+    // Upload one cover best-effort.
+    const coverToUpload = horizontalCover || cover;
+    if (coverToUpload) {
+      await uploadCover(coverToUpload).catch((error) => {
+        console.warn("Bilibili 封面上传失败，继续发布流程:", error);
+        return false;
+      });
     }
 
     // 等待标签和封面处理完成
-    await new Promise((resolve) => setTimeout(resolve, 5000));
+    await sleep(5000);
 
     // 如果需要自动发布
     if (data.isAutoPublish) {

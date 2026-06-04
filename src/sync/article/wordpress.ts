@@ -4,22 +4,58 @@ import type { ArticleData, FileData, SyncData } from "~sync/common";
 export async function ArticleWordpress(data: SyncData) {
   console.debug("ArticleWordpress", data);
 
-  // 通过 classic editor 上传图片
+  interface WordpressMediaSize {
+    source_url?: string;
+  }
+
+  interface WordpressMediaUploadResult {
+    source_url?: string;
+    media_details?: {
+      sizes?: Record<string, WordpressMediaSize>;
+    };
+  }
+
+  function prepareArticleContent(articleData: ArticleData): { articleData: ArticleData; contentIsHtml: boolean } {
+    if (articleData.htmlContent) {
+      return {
+        articleData: { ...articleData, htmlContent: articleData.htmlContent },
+        contentIsHtml: true,
+      };
+    }
+
+    return {
+      // TODO: Markdown fallback is sent as-is because this path does not render markdown.
+      articleData: { ...articleData, htmlContent: articleData.markdownContent || "" },
+      contentIsHtml: false,
+    };
+  }
+
+  function getMediaSourceUrl(result: WordpressMediaUploadResult): string | undefined {
+    const sizes = result.media_details?.sizes;
+    return (
+      result.source_url ||
+      sizes?.large?.source_url ||
+      sizes?.full?.source_url ||
+      sizes?.medium?.source_url ||
+      sizes?.thumbnail?.source_url
+    );
+  }
+
+  // Upload media through the classic editor endpoint.
   async function uploadMediaClassic(fileData: FileData, postId: string): Promise<string | undefined> {
     console.debug("uploadMediaClassic", fileData);
 
-    // 获取上传 nonce
+    // Read the upload nonce from the classic editor page.
     const uploadNonceMatch = document.body.innerHTML.match(/{"action":"upload-attachment","_wpnonce":"([^"]+)"}/);
     const uploadNonce = uploadNonceMatch?.[1];
     console.debug("uploadAttachmentNonce", uploadNonce);
 
     const uploadUrl = `${window.location.origin}/wp-admin/async-upload.php`;
 
-    // 获取文件内容
+    // Fetch the local/blob file content before building the WordPress upload form.
     const blob = await (await fetch(fileData.url)).blob();
     const file = new File([blob], fileData.name, { type: fileData.type });
 
-    // 构建表单数据
     const formData = new FormData();
     formData.append("name", fileData.name);
     formData.append("action", "upload-attachment");
@@ -48,11 +84,11 @@ export async function ArticleWordpress(data: SyncData) {
     }
   }
 
-  // 通过 API 上传图片
+  // Upload media through the REST API endpoint.
   async function uploadMediaApi(fileData: FileData, postId: string): Promise<string | undefined> {
     console.debug("uploadMediaApi", fileData);
 
-    // 获取 nonce
+    // Read the REST nonce from the block editor page.
     const nonceMatch = document.body.innerHTML.match(/wp\.apiFetch\.createNonceMiddleware\(([^)]+)\)/);
     const nonceQuote = nonceMatch?.[1];
     console.debug("nonceQuote", nonceQuote);
@@ -61,11 +97,9 @@ export async function ArticleWordpress(data: SyncData) {
 
     const uploadUrl = `${window.location.origin}/wp-json/wp/v2/media?_locale=user`;
 
-    // 获取文件内容
     const blob = await (await fetch(fileData.url)).blob();
     const file = new File([blob], fileData.name, { type: fileData.type });
 
-    // 构建表单数据
     const formData = new FormData();
     formData.append("file", file);
     formData.append("post", postId);
@@ -83,42 +117,44 @@ export async function ArticleWordpress(data: SyncData) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
 
-      const result = await response.json();
+      const result = (await response.json()) as WordpressMediaUploadResult;
       console.debug("Image upload result:", JSON.stringify(result));
 
-      return result?.source_url;
+      return getMediaSourceUrl(result);
     } catch (error) {
       console.debug("Error uploading image:", error);
       return undefined;
     }
   }
 
-  // 处理文章内容中的图片
+  // Upload and replace inline article images.
   async function processContent(
     articleData: ArticleData,
     postId: string,
     isClassicEditor: boolean,
+    contentIsHtml: boolean,
   ): Promise<ArticleData> {
-    // 使用 DOMParser 解析内容
+    if (!contentIsHtml || !articleData.htmlContent) {
+      return articleData;
+    }
+
     const parser = new DOMParser();
     const doc = parser.parseFromString(articleData.htmlContent, "text/html");
     const images = doc.getElementsByTagName("img");
+    const imageFiles = articleData.images ?? [];
 
-    // 处理每个图片
     for (const img of Array.from(images)) {
       const originalSrc = img.getAttribute("src");
       if (originalSrc) {
         console.debug("try replace image:", originalSrc);
-        const fileData = articleData.images.find((file) => file.url === originalSrc);
+        const fileData = imageFiles.find((file) => file.url === originalSrc);
 
         if (fileData) {
-          // 上传图片并获取新的 URL
           const newUrl = isClassicEditor
             ? await uploadMediaClassic(fileData, postId)
             : await uploadMediaApi(fileData, postId);
 
           console.debug("newUrl", newUrl);
-          // 替换图片 URL
           if (newUrl) {
             img.setAttribute("src", newUrl);
           }
@@ -126,21 +162,19 @@ export async function ArticleWordpress(data: SyncData) {
       }
     }
 
-    // 更新内容
     console.log("doc.body.innerHTML", doc.body.innerHTML);
     articleData.htmlContent = doc.body.innerHTML;
     console.log("articleData.htmlContent", articleData.htmlContent);
     return articleData;
   }
 
-  // 通过 classic editor 发布草稿
+  // Publish the draft through the classic editor heartbeat autosave endpoint.
   async function publishDraftClassic(articleData: ArticleData, postId: string): Promise<boolean> {
     console.debug("publishDraftClassic");
 
     const ajaxUrl = `${window.location.origin}/wp-admin/admin-ajax.php`;
     const formData = new FormData();
 
-    // 构建表单数据
     formData.append("data[wp_autosave][post_id]", postId);
     formData.append("data[wp_autosave][post_type]", "post");
     formData.append("data[wp_autosave][post_author]", "1");
@@ -151,12 +185,11 @@ export async function ArticleWordpress(data: SyncData) {
     formData.append("data[wp_autosave][comment_status]", "open");
     formData.append("data[wp_autosave][ping_status]", "open");
 
-    // 获取必要的 nonce
+    // Read the classic editor nonces needed by heartbeat autosave.
     const wpNonce = document.querySelector("#_wpnonce") as HTMLInputElement;
     formData.append("data[wp_autosave][_wpnonce]", wpNonce?.value);
     formData.append("data[wp-refresh-post-nonces][post_id]", postId);
 
-    // 添加心跳检查相关数据
     const heartbeatNonce = document.body.innerHTML.match(/heartbeatSettings = \{"nonce":"([^"]+)"/)?.[1];
     formData.append("_nonce", heartbeatNonce);
     formData.append("action", "heartbeat");
@@ -184,11 +217,10 @@ export async function ArticleWordpress(data: SyncData) {
     }
   }
 
-  // 通过 API 发布草稿
+  // Publish the draft through the REST API endpoint.
   async function publishDraftApi(articleData: ArticleData, postId: string): Promise<boolean> {
     console.debug("publishDraftApi");
 
-    // 获取 nonce
     const nonceMatch = document.body.innerHTML.match(/wp\.apiFetch\.createNonceMiddleware\(([^)]+)\)/);
     const nonceQuote = nonceMatch?.[1];
     const nonce = nonceQuote?.match(/"([^"]+)"/)?.[1];
@@ -224,26 +256,24 @@ export async function ArticleWordpress(data: SyncData) {
     }
   }
 
-  // 主流程
+  // Main flow.
   try {
-    // 获取文章 ID
     const postIdInput = document.querySelector("input#post_ID") as HTMLInputElement;
     const postId = postIdInput?.value;
 
     if (!postId) {
-      throw new Error("未找到文章ID");
+      console.debug("WordPress post ID not found; skipping article publish");
+      return;
     }
 
-    // 判断编辑器类型
     const isClassicEditor = !!document.querySelector("input#title");
 
-    // 处理文章内容（包括图片上传）
     const articleData = data.data as ArticleData;
-    const processedData = await processContent(articleData, postId, isClassicEditor);
+    const { articleData: preparedData, contentIsHtml } = prepareArticleContent(articleData);
+    const processedData = await processContent(preparedData, postId, isClassicEditor, contentIsHtml);
 
     console.debug("processedData", processedData);
 
-    // 发布草稿
     const success = isClassicEditor
       ? await publishDraftClassic(processedData, postId)
       : await publishDraftApi(processedData, postId);
@@ -252,7 +282,6 @@ export async function ArticleWordpress(data: SyncData) {
       throw new Error("发布草稿失败");
     }
 
-    // 如果设置了自动发布，跳转到编辑页面
     if (!data.isAutoPublish) {
       window.location.href = `/wp-admin/post.php?post=${postId}&action=edit`;
     }

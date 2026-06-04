@@ -136,78 +136,141 @@ export async function DynamicWeiXinChannel(data: SyncData) {
     });
   }
 
-  /**
-   * 上传图片文件
-   * @param images - 图片文件数组
-   */
-  async function uploadImages(images: FileData[]): Promise<void> {
-    const fileInput = (await waitForElement('input[type="file"][accept="image/*"]')) as HTMLInputElement;
+  async function waitForElementOptional(selector: string, timeout = 8000): Promise<Element | null> {
+    return waitForElement(selector, timeout).catch(() => null);
+  }
 
-    // 1. 并行下载所有图片，保持数组顺序
-    const files = await Promise.all(
-      images.map(async (image) => {
+  function queryElement(selector: string): Element | null {
+    function findElementInRoot(root: Document | DocumentFragment | ShadowRoot): Element | null {
+      const element = root.querySelector(selector);
+      if (element) return element;
+
+      const allElements = root.querySelectorAll("*");
+      for (const el of allElements) {
+        if (el.shadowRoot) {
+          const found = findElementInRoot(el.shadowRoot);
+          if (found) return found;
+        }
+      }
+
+      return null;
+    }
+
+    return findElementInRoot(document);
+  }
+
+  async function findDescriptionEditor(): Promise<HTMLDivElement | null> {
+    const Selector = 'div[data-placeholder="添加描述, 1000个字符内"]';
+    const legacySelector = "div.input-editor";
+    const Editor = queryElement(Selector) as HTMLDivElement | null;
+    const legacyEditor = queryElement(legacySelector) as HTMLDivElement | null;
+    if (Editor || legacyEditor) return Editor || legacyEditor;
+
+    await waitForElementOptional(`${Selector}, ${legacySelector}`, 1500);
+    const waitedEditor = queryElement(Selector) as HTMLDivElement | null;
+    const waitedLegacyEditor = queryElement(legacySelector) as HTMLDivElement | null;
+    return waitedEditor || waitedLegacyEditor;
+  }
+
+  /**
+   * Upload image files.
+   * @param images - Requested image files.
+   * @returns Number of files attached to the upload input.
+   */
+  async function uploadImages(images: FileData[]): Promise<number> {
+    if (images.length === 0) return 0;
+
+    const fileInput = (await waitForElementOptional('input[type="file"][accept="image/*"]')) as HTMLInputElement | null;
+    if (!fileInput) {
+      console.error("media requested but upload input not found");
+      return 0;
+    }
+    const limitedImages = images.slice(0, 18);
+
+    // Fetch images in order.
+    const files: File[] = [];
+    for (const image of limitedImages) {
+      try {
         const response = await fetch(image.url);
+        if (!response.ok) {
+          throw new Error(`Failed to fetch image "${image.name}": ${response.status} ${response.statusText}`);
+        }
         const blob = await response.blob();
         const file = new File([blob], image.name, { type: image.type });
         console.log(`图片文件准备就绪: ${file.name} ${file.type} ${file.size}`);
-        return file;
-      }),
-    );
+        files.push(file);
+      } catch (error) {
+        console.error("获取图片失败:", error);
+      }
+    }
 
-    // 2. 将所有文件添加到同一个DataTransfer对象中
+    if (files.length === 0) {
+      console.error("media requested but upload could not be performed");
+      return 0;
+    }
+
+    // Add all files to one DataTransfer.
     const dataTransfer = new DataTransfer();
     for (const file of files) {
       dataTransfer.items.add(file);
     }
 
-    // 先聚焦到文件输入框
-    fileInput.focus();
-    await new Promise((resolve) => setTimeout(resolve, 200));
+    try {
+      // Focus the file input first.
+      fileInput.focus();
+      await new Promise((resolve) => setTimeout(resolve, 200));
 
-    // 一次性赋值所有文件
-    fileInput.files = dataTransfer.files;
+      // Assign all files at once.
+      fileInput.files = dataTransfer.files;
 
-    // 触发更完整的事件序列来模拟真实用户行为
-    const events = [
-      new Event("focus", { bubbles: true }),
-      new Event("change", { bubbles: true, cancelable: true }),
-      new Event("input", { bubbles: true, cancelable: true }),
-      new Event("blur", { bubbles: true }),
-    ];
+      // Dispatch a full event sequence to mimic real user input.
+      const events = [
+        new Event("focus", { bubbles: true }),
+        new Event("change", { bubbles: true, cancelable: true }),
+        new Event("input", { bubbles: true, cancelable: true }),
+        new Event("blur", { bubbles: true }),
+      ];
 
-    for (const event of events) {
-      fileInput.dispatchEvent(event);
-      await new Promise((resolve) => setTimeout(resolve, 100));
+      for (const event of events) {
+        fileInput.dispatchEvent(event);
+        await new Promise((resolve) => setTimeout(resolve, 100));
+      }
+    } catch (error) {
+      console.error("media upload could not be performed:", error);
+      return 0;
     }
 
     console.log("所有图片上传事件已触发");
+    return dataTransfer.files.length;
   }
 
   try {
-    const { content, images, title, tags } = data.data as DynamicData;
+    const { content, images, videos, title, tags } = data.data as DynamicData;
     const tagSuffix = tags?.length ? ` ${tags.map((t) => `#${t}`).join(" ")}` : "";
     const finalContent = `${content || ""}${tagSuffix}`;
+    const requestedMediaCount = (images?.length ?? 0) + (videos?.length ?? 0);
+    let attachedMediaCount = 0;
 
     await new Promise((resolve) => setTimeout(resolve, 2000));
 
-    if (images) {
-      await uploadImages(images);
+    if (images && images.length > 0) {
+      attachedMediaCount = await uploadImages(images);
     }
 
     await new Promise((resolve) => setTimeout(resolve, 5000));
 
-    // 处理内容输入
-    const editorElement = (await waitForElement("div.input-editor")) as HTMLDivElement;
+    // Fill the description.
+    const editorElement = await findDescriptionEditor();
     if (editorElement) {
-      // 先清空内容
+      // Clear existing content first.
       editorElement.innerHTML = "";
       editorElement.focus();
       await new Promise((resolve) => setTimeout(resolve, 300));
 
-      // 直接设置innerHTML
+      // Set innerHTML directly.
       editorElement.innerHTML = finalContent;
 
-      // 触发完整的事件序列
+      // Dispatch the full event sequence.
       const events = [
         new Event("focus", { bubbles: true }),
         new ClipboardEvent("paste", {
@@ -221,43 +284,57 @@ export async function DynamicWeiXinChannel(data: SyncData) {
         new Event("blur", { bubbles: true }),
       ];
 
-      // 设置粘贴事件的数据
+      // Set paste data.
       (events[1] as ClipboardEvent).clipboardData?.setData("text/plain", finalContent);
 
       for (const event of events) {
         editorElement.dispatchEvent(event);
         await new Promise((resolve) => setTimeout(resolve, 100));
       }
+    } else {
+      console.error("未找到视频号描述输入框");
     }
 
-    const titleInput = (await waitForElement('input[placeholder="填写标题, 22个字符内"]')) as HTMLInputElement;
+    const titleInput = (await waitForElementOptional(
+      'input[placeholder="填写标题, 22个字符内"]',
+    )) as HTMLInputElement | null;
+    if (titleInput) {
+      // Mimic real user input.
+      titleInput.focus();
+      await new Promise((resolve) => setTimeout(resolve, 200));
 
-    // 模拟真实用户输入行为
-    titleInput.focus();
-    await new Promise((resolve) => setTimeout(resolve, 200));
-
-    // 先清空再设置值
-    titleInput.value = "";
-    await new Promise((resolve) => setTimeout(resolve, 100));
-
-    titleInput.value = title;
-
-    // 触发完整的事件序列
-    const titleEvents = [
-      new Event("focus", { bubbles: true }),
-      new Event("input", { bubbles: true, cancelable: true }),
-      new Event("change", { bubbles: true, cancelable: true }),
-      new Event("keyup", { bubbles: true }),
-      new Event("blur", { bubbles: true }),
-    ];
-
-    for (const event of titleEvents) {
-      titleInput.dispatchEvent(event);
+      // Clear before setting the value.
+      titleInput.value = "";
       await new Promise((resolve) => setTimeout(resolve, 100));
+
+      titleInput.value = title || "";
+
+      // Dispatch the full event sequence.
+      const titleEvents = [
+        new Event("focus", { bubbles: true }),
+        new Event("input", { bubbles: true, cancelable: true }),
+        new Event("change", { bubbles: true, cancelable: true }),
+        new Event("keyup", { bubbles: true }),
+        new Event("blur", { bubbles: true }),
+      ];
+
+      for (const event of titleEvents) {
+        titleInput.dispatchEvent(event);
+        await new Promise((resolve) => setTimeout(resolve, 100));
+      }
+    } else {
+      console.error("未找到视频号标题输入框");
     }
 
-    // 等待内容填写完成
+    // Wait for content input to settle.
     await new Promise((resolve) => setTimeout(resolve, 5000));
+
+    if (data.isAutoPublish && requestedMediaCount > 0 && attachedMediaCount !== requestedMediaCount) {
+      console.error(
+        `only ${attachedMediaCount} of ${requestedMediaCount} requested media attached; skipping auto-publish to avoid an incomplete post`,
+      );
+      return;
+    }
 
     // 处理发布按钮 - 支持shadow DOM查询
     const wujieApp = document.querySelector("wujie-app");

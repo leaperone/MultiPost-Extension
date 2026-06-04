@@ -1,4 +1,4 @@
-import type { SyncData, VideoData } from "../common";
+import type { FileData, SyncData, VideoData } from "../common";
 
 /* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable @typescript-eslint/no-explicit-any */
@@ -23,7 +23,7 @@ export async function VideoAlipay(data: SyncData): Promise<void> {
       return;
     }
 
-    const { content, video, title, description } = data.data as VideoData;
+    const { content, video, videoFile, title, description, tags = [], cover, horizontalCover } = data.data as VideoData;
     console.log("📝 视频数据:", {
       title: title?.substring(0, 50),
       contentLength: content?.length,
@@ -70,6 +70,83 @@ export async function VideoAlipay(data: SyncData): Promise<void> {
         });
       }
 
+      private async waitForElementOptional(selector: string, timeout = 10000): Promise<Element | null> {
+        return this.waitForElement(selector, timeout).catch(() => null);
+      }
+
+      private isVisible(element: Element): boolean {
+        const htmlElement = element as HTMLElement;
+        const style = window.getComputedStyle(htmlElement);
+        return style.display !== "none" && style.visibility !== "hidden" && htmlElement.getClientRects().length > 0;
+      }
+
+      private findVisibleInput<T extends HTMLInputElement | HTMLTextAreaElement>(selectors: string[]): T | null {
+        for (const selector of selectors) {
+          const elements = Array.from(document.querySelectorAll<T>(selector));
+          const element = elements.find((item) => this.isVisible(item));
+          if (element) {
+            console.log("✅ 找到输入框:", selector);
+            return element;
+          }
+        }
+        return null;
+      }
+
+      private async fetchFile(fileData: FileData, fallbackType: string): Promise<File> {
+        const response = await fetch(fileData.url);
+        const arrayBuffer = await response.arrayBuffer();
+        return new File([arrayBuffer], fileData.name, { type: fileData.type || fallbackType });
+      }
+
+      private dispatchInputEvents(element: HTMLElement): void {
+        element.dispatchEvent(new Event("input", { bubbles: true, composed: true }));
+        element.dispatchEvent(new Event("change", { bubbles: true, composed: true }));
+      }
+
+      private async pasteText(element: HTMLElement, text: string): Promise<void> {
+        const before =
+          element instanceof HTMLInputElement || element instanceof HTMLTextAreaElement
+            ? element.value
+            : element.textContent || "";
+
+        const pasteEvent = new ClipboardEvent("paste", {
+          bubbles: true,
+          cancelable: true,
+          clipboardData: new DataTransfer(),
+        });
+        pasteEvent.clipboardData.setData("text/plain", text);
+        element.dispatchEvent(pasteEvent);
+        await this.sleep(100);
+
+        const after =
+          element instanceof HTMLInputElement || element instanceof HTMLTextAreaElement
+            ? element.value
+            : element.textContent || "";
+        if (after !== before) {
+          this.dispatchInputEvents(element);
+          return;
+        }
+
+        if (element instanceof HTMLInputElement || element instanceof HTMLTextAreaElement) {
+          const start = element.selectionStart ?? element.value.length;
+          const end = element.selectionEnd ?? element.value.length;
+          element.value = `${element.value.slice(0, start)}${text}${element.value.slice(end)}`;
+          const nextPosition = start + text.length;
+          element.setSelectionRange(nextPosition, nextPosition);
+        } else {
+          element.textContent = `${element.textContent || ""}${text}`;
+        }
+        this.dispatchInputEvents(element);
+      }
+
+      private findButtonByText(text: string): HTMLElement | null {
+        return (
+          Array.from(document.querySelectorAll<HTMLElement>("button")).find(
+            (button) => button.textContent?.trim() === text,
+          ) ?? null
+        );
+      }
+
       /**
        * 填写标题
        */
@@ -82,6 +159,7 @@ export async function VideoAlipay(data: SyncData): Promise<void> {
 
           // 支付宝标题输入框选择器
           const titleSelectors = [
+            'input[placeholder="一个好的标题，能获得更多人的喜欢哦"]',
             'input[placeholder*="标题"]',
             'input[placeholder*="title"]',
             'input[name*="title"]',
@@ -96,46 +174,40 @@ export async function VideoAlipay(data: SyncData): Promise<void> {
             ".alipay-input",
           ];
 
-          for (const selector of titleSelectors) {
-            const titleElement = document.querySelector(selector) as HTMLInputElement | HTMLTextAreaElement;
-            if (titleElement && titleElement.offsetParent !== null) {
-              console.log("✅ 找到标题输入框:", selector);
-
-              try {
-                // 清空原有内容
-                titleElement.focus();
-                titleElement.select();
-
-                // 逐字符输入模拟真实用户行为
-                for (let i = 0; i < title.length; i++) {
-                  const _char = title[i];
-                  titleElement.value = title.substring(0, i + 1);
-
-                  // 触发输入事件
-                  titleElement.dispatchEvent(new Event("input", { bubbles: true, composed: true }));
-                  await this.sleep(50);
-                }
-
-                // 触发多种事件确保框架识别
-                titleElement.dispatchEvent(new Event("focus", { bubbles: true }));
-                titleElement.dispatchEvent(new Event("input", { bubbles: true, composed: true }));
-                titleElement.dispatchEvent(new Event("change", { bubbles: true, composed: true }));
-                titleElement.dispatchEvent(new Event("blur", { bubbles: true }));
-
-                // 验证设置是否成功
-                console.log(`✅ 标题设置后验证: value="${titleElement.value}"`);
-                if (titleElement.value === title) {
-                  console.log("✅ 标题填写成功");
-                  return;
-                }
-              } catch (e) {
-                console.error("设置标题值时出错:", e);
-              }
-            }
+          const titleElement = this.findVisibleInput<HTMLInputElement | HTMLTextAreaElement>(titleSelectors);
+          if (!titleElement) {
+            console.log("❌ 未找到可用的标题输入框");
+            return;
           }
 
-          console.log("❌ 未找到可用的标题输入框");
-          return;
+          try {
+            // 清空原有内容
+            titleElement.focus();
+            titleElement.select();
+
+            // 逐字符输入模拟真实用户行为
+            for (let i = 0; i < title.length; i++) {
+              titleElement.value = title.substring(0, i + 1);
+
+              // 触发输入事件
+              titleElement.dispatchEvent(new Event("input", { bubbles: true, composed: true }));
+              await this.sleep(50);
+            }
+
+            // 触发多种事件确保框架识别
+            titleElement.dispatchEvent(new Event("focus", { bubbles: true }));
+            titleElement.dispatchEvent(new Event("input", { bubbles: true, composed: true }));
+            titleElement.dispatchEvent(new Event("change", { bubbles: true, composed: true }));
+            titleElement.dispatchEvent(new Event("blur", { bubbles: true }));
+
+            // 验证设置是否成功
+            console.log(`✅ 标题设置后验证: value="${titleElement.value}"`);
+            if (titleElement.value === title) {
+              console.log("✅ 标题填写成功");
+            }
+          } catch (e) {
+            console.error("设置标题值时出错:", e);
+          }
         } catch (error) {
           console.error("填写标题失败:", error);
           return;
@@ -145,12 +217,13 @@ export async function VideoAlipay(data: SyncData): Promise<void> {
       /**
        * 填写描述
        */
-      public async fillDescription(description: string): Promise<void> {
+      public async fillDescriptionAndTags(description: string, tags: string[]): Promise<boolean> {
         try {
           console.log("📝 填写描述:", `${description.substring(0, 100)}...`);
 
           // 支付宝描述输入框选择器
           const descSelectors = [
+            'textarea[placeholder="填写作品描述，让你的作品更容易被看到"]',
             'textarea[placeholder*="描述"]',
             'textarea[placeholder*="简介"]',
             'textarea[placeholder*="内容"]',
@@ -165,46 +238,59 @@ export async function VideoAlipay(data: SyncData): Promise<void> {
             ".alipay-textarea",
           ];
 
-          for (const selector of descSelectors) {
-            const descElement = document.querySelector(selector) as HTMLTextAreaElement;
-            if (descElement && descElement.offsetParent !== null) {
-              console.log("✅ 找到描述输入框:", selector);
-
-              try {
-                descElement.focus();
-                descElement.value = description;
-
-                // 触发多种事件
-                descElement.dispatchEvent(new Event("input", { bubbles: true, composed: true }));
-                descElement.dispatchEvent(new Event("change", { bubbles: true, composed: true }));
-
-                console.log("✅ 描述填写成功");
-                return;
-              } catch (e) {
-                console.error("设置描述值时出错:", e);
-              }
-            }
+          const descElement = this.findVisibleInput<HTMLTextAreaElement>(descSelectors);
+          if (!descElement) {
+            console.log("❌ 未找到可用的描述输入框");
+            return false;
           }
 
-          console.log("❌ 未找到可用的描述输入框");
-          return;
+          try {
+            descElement.focus();
+            descElement.value = "";
+            await this.pasteText(descElement, `${description} `);
+            console.log("✅ 描述填写成功");
+
+            for (const tag of tags.slice(0, 5)) {
+              console.log("🏷️ 添加支付宝话题:", tag);
+              descElement.focus();
+              descElement.setSelectionRange(descElement.value.length, descElement.value.length);
+              await this.pasteText(descElement, ` #${tag}`);
+              await this.sleep(3000);
+
+              const customTopicDiv = Array.from(document.querySelectorAll<HTMLElement>("div")).find(
+                (div) => div.textContent?.trim() === "自定义话题",
+              );
+              if (customTopicDiv) {
+                customTopicDiv.click();
+                await this.sleep(1000);
+              } else {
+                console.log(`未找到"${tag}"的自定义话题确认项`);
+              }
+              await this.sleep(1000);
+            }
+            descElement.blur();
+            return true;
+          } catch (e) {
+            console.error("设置描述或标签时出错:", e);
+            return false;
+          }
         } catch (error) {
           console.error("填写描述失败:", error);
-          return;
+          return false;
         }
       }
 
       /**
        * 上传视频文件
        */
-      public async uploadVideo(videoData: any): Promise<void> {
+      public async uploadVideo(videoData: VideoData["video"], sourceFile?: File): Promise<boolean> {
         try {
           console.log("📹 开始上传视频...");
 
           // 获取视频文件
           let file: File;
-          if (videoData.videoFile) {
-            file = videoData.videoFile;
+          if (sourceFile) {
+            file = sourceFile;
           } else if (videoData.url) {
             const response = await fetch(videoData.url);
             const arrayBuffer = await response.arrayBuffer();
@@ -213,7 +299,7 @@ export async function VideoAlipay(data: SyncData): Promise<void> {
             file = new File([arrayBuffer], fileName, { type: "video/mp4" });
           } else {
             console.error("❌ 无效的视频数据");
-            return;
+            return false;
           }
 
           console.log("📁 视频文件:", file.name, file.size, file.type);
@@ -224,6 +310,28 @@ export async function VideoAlipay(data: SyncData): Promise<void> {
 
           // 查找上传区域
           console.log("🔍 查找支付宝上传区域...");
+
+          const exactFileInput = (await this.waitForElementOptional(
+            'input[type="file"]',
+            5000,
+          )) as HTMLInputElement | null;
+          if (exactFileInput) {
+            const fileInputs = Array.from(document.querySelectorAll<HTMLInputElement>('input[type="file"]'));
+            const targetInput =
+              fileInputs.find((input) => {
+                const accept = input.getAttribute("accept") || "";
+                return accept.includes("video") || accept.includes("*") || accept === "";
+              }) ?? exactFileInput;
+
+            const dataTransfer = new DataTransfer();
+            dataTransfer.items.add(file);
+            targetInput.files = dataTransfer.files;
+            targetInput.dispatchEvent(new Event("change", { bubbles: true, composed: true }));
+            targetInput.dispatchEvent(new Event("input", { bubbles: true, composed: true }));
+            console.log("✅ 文件已设置到 input[type=file]");
+            return true;
+          }
+
           const uploadSelectors = [
             ".upload-area",
             ".video-upload",
@@ -278,10 +386,10 @@ export async function VideoAlipay(data: SyncData): Promise<void> {
               // 触发change事件
               targetInput.dispatchEvent(new Event("change", { bubbles: true, composed: true }));
               console.log("✅ 文件已设置到输入框");
-              return;
+              return true;
             }
             console.log("❌ 未找到合适的文件输入框");
-            return;
+            return false;
           }
 
           // 如果找到了上传区域，尝试点击或操作
@@ -331,7 +439,7 @@ export async function VideoAlipay(data: SyncData): Promise<void> {
             // 等待上传开始
             await this.waitForUploadStart();
 
-            return;
+            return true;
           }
           console.log("⚠️ 上传区域内未找到文件输入框，尝试点击上传区域...");
 
@@ -350,15 +458,104 @@ export async function VideoAlipay(data: SyncData): Promise<void> {
               newFileInput.files = dataTransfer.files;
               newFileInput.dispatchEvent(new Event("change", { bubbles: true, composed: true }));
               console.log("✅ 文件已设置到新找到的输入框");
-              return;
+              return true;
             }
           }
 
           console.log("⚠️ 无法直接上传文件，但页面可能已经准备好了");
-          return;
+          return false;
         } catch (error) {
           console.error("❌ 视频上传失败:", error);
+          return false;
+        }
+      }
+
+      public async uploadCover(cover: FileData, label: string): Promise<boolean> {
+        try {
+          console.log(`🖼️ 开始上传支付宝${label}:`, cover);
+          if (cover.type && !cover.type.includes("image/")) {
+            console.log(`${label}不是图片，跳过上传`);
+            return false;
+          }
+
+          const coverUpload = document.querySelector(
+            "div.antd5-form-item-control-input-content img.absolute",
+          ) as HTMLElement | null;
+          console.debug("coverUpload -->", coverUpload);
+          if (!coverUpload) {
+            console.log(`未找到支付宝${label}封面入口`);
+            return false;
+          }
+
+          coverUpload.click();
+          await this.sleep(1000);
+
+          const uploadCoverTab = Array.from(document.querySelectorAll<HTMLElement>("div[role='tab']")).find(
+            (tab) => tab.textContent?.trim() === "上传封面",
+          );
+          console.debug("uploadCoverTab -->", uploadCoverTab);
+          if (!uploadCoverTab) {
+            console.log(`未找到支付宝${label}上传封面 tab`);
+            return false;
+          }
+
+          uploadCoverTab.click();
+          await this.sleep(1000);
+
+          const fileInput = document.querySelector('input[accept=".jpg, .jpeg, .png"]') as HTMLInputElement | null;
+          console.debug("fileInput -->", fileInput);
+          if (!fileInput) {
+            console.log(`未找到支付宝${label}封面文件输入框`);
+            return false;
+          }
+
+          const dataTransfer = new DataTransfer();
+          dataTransfer.items.add(await this.fetchFile(cover, "image/png"));
+          if (dataTransfer.files.length === 0) return false;
+
+          fileInput.files = dataTransfer.files;
+          fileInput.dispatchEvent(new Event("change", { bubbles: true }));
+          fileInput.dispatchEvent(new Event("input", { bubbles: true }));
+          console.log(`支付宝${label}封面文件上传操作已触发`);
+          await this.sleep(3000);
+
+          const nextButton = this.findButtonByText("下一步");
+          console.debug("nextButton -->", nextButton);
+          nextButton?.click();
+
+          for (let i = 0; i < 5; i++) {
+            const doneButton = this.findButtonByText("完 成") || this.findButtonByText("完成");
+            console.debug("doneButton -->", doneButton);
+            if (doneButton) {
+              doneButton.click();
+              return true;
+            }
+            await this.sleep(1000);
+          }
+
+          console.log(`支付宝${label}封面未找到完成按钮，视为上传失败`);
+          return false;
+        } catch (error) {
+          console.warn(`支付宝${label}封面上传失败:`, error);
+          return false;
+        }
+      }
+
+      public async publishIfAutoEnabled(autoPublish: boolean, videoUploaded: boolean): Promise<void> {
+        if (autoPublish !== true) return;
+
+        if (!videoUploaded) {
+          console.warn("支付宝自动发布已跳过：视频未成功触发上传");
           return;
+        }
+
+        await this.sleep(5000);
+        const publishButton = this.findButtonByText("确认发布");
+        if (publishButton) {
+          console.log("点击支付宝确认发布按钮");
+          publishButton.click();
+        } else {
+          console.log('未找到"确认发布"按钮');
         }
       }
 
@@ -412,32 +609,47 @@ export async function VideoAlipay(data: SyncData): Promise<void> {
     const uploader = new AlipayVideoUploader();
     console.log("✅ 支付宝上传器实例创建完成");
 
-    // 步骤1: 填写标题
-    if (title) {
-      console.log("📝 填写标题:", title);
-      await uploader.fillTitle(title);
-    }
+    let videoUploaded = false;
 
-    // 步骤2: 填写描述
-    if (content) {
-      console.log("📝 填写描述:", `${content.substring(0, 100)}...`);
-      await uploader.fillDescription(description ?? content);
-    }
-
-    // 步骤3: 上传视频
+    // Step 1: upload the required video.
     if (video) {
       console.log("🎥 开始上传视频...");
-      await uploader.uploadVideo(video);
+      videoUploaded = await uploader.uploadVideo(video, videoFile);
     } else {
       console.error("❌ 缺少视频文件");
       return;
     }
 
+    await uploader.sleep(3000);
+
+    // Step 2: fill the title with exact selector first, then legacy fallbacks.
+    if (title) {
+      console.log("📝 填写标题:", title);
+      await uploader.fillTitle(title);
+    }
+
+    // Step 3: fill description and confirm custom topics from the description box.
+    const descriptionText = description ?? content ?? "";
+    if (descriptionText || tags.length > 0) {
+      console.log("📝 填写描述:", `${descriptionText.substring(0, 100)}...`);
+      await uploader.fillDescriptionAndTags(descriptionText, tags);
+    }
+
+    // Step 4: upload one cover best-effort. Cover failure must not block publish.
+    const coverToUpload = cover || horizontalCover;
+    if (coverToUpload) {
+      await uploader.uploadCover(coverToUpload, cover ? "cover" : "horizontalCover");
+    }
+
+    await uploader.publishIfAutoEnabled(data.isAutoPublish, videoUploaded);
+
     console.log("🎉 支付宝视频发布流程完成");
     return;
   } catch (error) {
     console.error("💥 支付宝视频发布失败:", error);
-    console.error("错误详情:", error.stack);
+    if (error instanceof Error) {
+      console.error("错误详情:", error.stack);
+    }
     return;
   }
 }
