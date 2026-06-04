@@ -129,6 +129,11 @@ export async function sendRequest<D, R>(action: string, data?: D, timeout: numbe
     const messageHandler = (event: MessageEvent<ExtensionResponse<R>>) => {
       if (event.data.type === 'response' && event.data.action === action && event.data.traceId === traceId) {
         cleanup();
+        const response = event.data as ExtensionResponse<R> & { code?: number; message?: string };
+        if (typeof response.code === 'number' && response.code !== 0) {
+          reject(new Error(response.message || `Extension error code ${response.code}`));
+          return;
+        }
         resolve(event.data.data);
       }
     };
