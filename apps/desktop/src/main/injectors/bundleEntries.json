@@ -223,5 +223,347 @@
     "exportName": "DynamicX",
     "injectUrl": "https://x.com/home",
     "accountKey": "x"
+  },
+  {
+    "desktopPlatform": "51cto",
+    "contentType": "ARTICLE",
+    "extensionKey": "ARTICLE_51CTO",
+    "source": "article/51cto.ts",
+    "exportName": "Article51CTO",
+    "injectUrl": "https://blog.51cto.com/blogger/publish?old=1",
+    "accountKey": "51cto"
+  },
+  {
+    "desktopPlatform": "alipay",
+    "contentType": "VIDEO",
+    "extensionKey": "VIDEO_ALIPAY",
+    "source": "video/alipay.ts",
+    "exportName": "VideoAlipay",
+    "injectUrl": "https://c.alipay.com/page/content-creation/publish/short-video",
+    "accountKey": "alipay"
+  },
+  {
+    "desktopPlatform": "chejiahao",
+    "contentType": "VIDEO",
+    "extensionKey": "VIDEO_CHEJIAHAO",
+    "source": "video/chejiahao.ts",
+    "exportName": "VideoChejiahao",
+    "injectUrl": "https://creator.autohome.com.cn/web/publish/video",
+    "accountKey": "chejiahao"
+  },
+  {
+    "desktopPlatform": "csdn",
+    "contentType": "ARTICLE",
+    "extensionKey": "ARTICLE_CSDN",
+    "source": "article/csdn.ts",
+    "exportName": "ArticleCSDN",
+    "injectUrl": "https://mp.csdn.net/mp_blog/creation/editor",
+    "accountKey": "csdn"
+  },
+  {
+    "desktopPlatform": "dayu",
+    "contentType": "VIDEO",
+    "extensionKey": "VIDEO_DAYU",
+    "source": "video/dayu.ts",
+    "exportName": "VideoDayu",
+    "injectUrl": "https://mp.dayu.com/dashboard/video/write",
+    "accountKey": "dayu"
+  },
+  {
+    "desktopPlatform": "dewu",
+    "contentType": "VIDEO",
+    "extensionKey": "VIDEO_DEWU",
+    "source": "video/dewu.ts",
+    "exportName": "VideoDewu",
+    "injectUrl": "https://creator.dewu.com/release",
+    "accountKey": "dewu"
+  },
+  {
+    "desktopPlatform": "douban",
+    "contentType": "DYNAMIC",
+    "extensionKey": "DYNAMIC_DOUBAN",
+    "source": "dynamic/douban.ts",
+    "exportName": "DynamicDouban",
+    "injectUrl": "https://www.douban.com/",
+    "accountKey": "douban"
+  },
+  {
+    "desktopPlatform": "douban",
+    "contentType": "ARTICLE",
+    "extensionKey": "ARTICLE_DOUBAN",
+    "source": "article/douban.ts",
+    "exportName": "ArticleDouban",
+    "injectUrl": "https://www.douban.com/note/create",
+    "accountKey": "douban"
+  },
+  {
+    "desktopPlatform": "eastmoney",
+    "contentType": "VIDEO",
+    "extensionKey": "VIDEO_EASTMONEY",
+    "source": "video/eastmoney.ts",
+    "exportName": "VideoEastmoney",
+    "injectUrl": "https://mp.eastmoney.com/collect/pc_writer/index.html#/publish/video",
+    "accountKey": "eastmoney"
+  },
+  {
+    "desktopPlatform": "eastmoney",
+    "contentType": "ARTICLE",
+    "extensionKey": "ARTICLE_EASTMONEY",
+    "source": "article/eastmoney.ts",
+    "exportName": "ArticleEastmoney",
+    "injectUrl": "https://mp.eastmoney.com/collect/pc_article/index.html",
+    "accountKey": "eastmoney"
+  },
+  {
+    "desktopPlatform": "facebook",
+    "contentType": "DYNAMIC",
+    "extensionKey": "DYNAMIC_FACEBOOK",
+    "source": "dynamic/facebook.ts",
+    "exportName": "DynamicFacebook",
+    "injectUrl": "https://www.facebook.com/",
+    "accountKey": "facebook"
+  },
+  {
+    "desktopPlatform": "instagram",
+    "contentType": "DYNAMIC",
+    "extensionKey": "DYNAMIC_INSTAGRAM",
+    "source": "dynamic/instagram.ts",
+    "exportName": "DynamicInstagram",
+    "injectUrl": "https://www.instagram.com/",
+    "accountKey": "instagram"
+  },
+  {
+    "desktopPlatform": "jianshu",
+    "contentType": "ARTICLE",
+    "extensionKey": "ARTICLE_JIANSHU",
+    "source": "article/jianshu.ts",
+    "exportName": "ArticleJianshu",
+    "injectUrl": "https://www.jianshu.com/writer",
+    "accountKey": "jianshu"
+  },
+  {
+    "desktopPlatform": "juejin",
+    "contentType": "DYNAMIC",
+    "extensionKey": "DYNAMIC_JUEJIN",
+    "source": "dynamic/juejin.ts",
+    "exportName": "DynamicJuejin",
+    "injectUrl": "https://juejin.cn/pins",
+    "accountKey": "juejin"
+  },
+  {
+    "desktopPlatform": "juejin",
+    "contentType": "ARTICLE",
+    "extensionKey": "ARTICLE_JUEJIN",
+    "source": "article/juejin.ts",
+    "exportName": "ArticleJuejin",
+    "injectUrl": "https://juejin.cn/editor/drafts/new?v=2",
+    "accountKey": "juejin"
+  },
+  {
+    "desktopPlatform": "linkedin",
+    "contentType": "DYNAMIC",
+    "extensionKey": "DYNAMIC_LINKEDIN",
+    "source": "dynamic/linkedin.ts",
+    "exportName": "DynamicLinkedin",
+    "injectUrl": "https://www.linkedin.com/feed",
+    "accountKey": "linkedin"
+  },
+  {
+    "desktopPlatform": "netease",
+    "contentType": "VIDEO",
+    "extensionKey": "VIDEO_NETEASE",
+    "source": "video/netease.ts",
+    "exportName": "VideoNetease",
+    "injectUrl": "http://mp.163.com/subscribe_v4/index.html#/home",
+    "accountKey": "netease"
+  },
+  {
+    "desktopPlatform": "okjike",
+    "contentType": "DYNAMIC",
+    "extensionKey": "DYNAMIC_OKJIKE",
+    "source": "dynamic/okjike.ts",
+    "exportName": "DynamicOkjike",
+    "injectUrl": "https://web.okjike.com",
+    "accountKey": "okjike"
+  },
+  {
+    "desktopPlatform": "okjike",
+    "contentType": "VIDEO",
+    "extensionKey": "VIDEO_OKJIKE",
+    "source": "video/okjike.ts",
+    "exportName": "VideoOkjike",
+    "injectUrl": "https://web.okjike.com",
+    "accountKey": "okjike"
+  },
+  {
+    "desktopPlatform": "pinduoduo",
+    "contentType": "VIDEO",
+    "extensionKey": "VIDEO_PINDUODUO",
+    "source": "video/pinduoduo.ts",
+    "exportName": "VideoPinduoduo",
+    "injectUrl": "https://live.pinduoduo.com/creator/live-record",
+    "accountKey": "pinduoduo"
+  },
+  {
+    "desktopPlatform": "qie",
+    "contentType": "VIDEO",
+    "extensionKey": "VIDEO_QIE",
+    "source": "video/qie.ts",
+    "exportName": "VideoQiE",
+    "injectUrl": "https://om.qq.com/main/creation/video",
+    "accountKey": "qie"
+  },
+  {
+    "desktopPlatform": "reddit",
+    "contentType": "DYNAMIC",
+    "extensionKey": "DYNAMIC_REDDIT",
+    "source": "dynamic/reddit.ts",
+    "exportName": "DynamicReddit",
+    "injectUrl": "https://www.reddit.com/submit?type=IMAGE",
+    "accountKey": "reddit"
+  },
+  {
+    "desktopPlatform": "segmentfault",
+    "contentType": "ARTICLE",
+    "extensionKey": "ARTICLE_SEGMENTFAULT",
+    "source": "article/segmentfault.ts",
+    "exportName": "ArticleSegmentfault",
+    "injectUrl": "https://segmentfault.com/write",
+    "accountKey": "segmentfault"
+  },
+  {
+    "desktopPlatform": "sohu",
+    "contentType": "VIDEO",
+    "extensionKey": "VIDEO_SOHU",
+    "source": "video/sohu.ts",
+    "exportName": "VideoSohu",
+    "injectUrl": "https://mp.sohu.com/mpfe/v4/contentManagement/news/addvideo",
+    "accountKey": "sohu"
+  },
+  {
+    "desktopPlatform": "sspai",
+    "contentType": "ARTICLE",
+    "extensionKey": "ARTICLE_SSPAI",
+    "source": "article/sspai.ts",
+    "exportName": "ArticleSSPai",
+    "injectUrl": "https://sspai.com/write",
+    "accountKey": "sspai"
+  },
+  {
+    "desktopPlatform": "substack",
+    "contentType": "DYNAMIC",
+    "extensionKey": "DYNAMIC_SUBSTACK",
+    "source": "dynamic/substack.ts",
+    "exportName": "DynamicSubstack",
+    "injectUrl": "https://substack.com/home",
+    "accountKey": "substack"
+  },
+  {
+    "desktopPlatform": "substack",
+    "contentType": "ARTICLE",
+    "extensionKey": "ARTICLE_SUBSTACK",
+    "source": "article/substack.ts",
+    "exportName": "ArticleSubstack",
+    "injectUrl": "https://substack.com/publish/post",
+    "accountKey": "substack"
+  },
+  {
+    "desktopPlatform": "threads",
+    "contentType": "DYNAMIC",
+    "extensionKey": "DYNAMIC_THREADS",
+    "source": "dynamic/threads.ts",
+    "exportName": "DynamicThreads",
+    "injectUrl": "https://www.threads.net/web",
+    "accountKey": "threads"
+  },
+  {
+    "desktopPlatform": "tiktok",
+    "contentType": "VIDEO",
+    "extensionKey": "VIDEO_TIKTOK",
+    "source": "video/tiktok.ts",
+    "exportName": "VideoTiktok",
+    "injectUrl": "https://www.tiktok.com/tiktokstudio/upload",
+    "accountKey": "tiktok"
+  },
+  {
+    "desktopPlatform": "vivovideo",
+    "contentType": "VIDEO",
+    "extensionKey": "VIDEO_VIVOVIDEO",
+    "source": "video/vivovideo.ts",
+    "exportName": "VideoVivoVideo",
+    "injectUrl": "https://kaixinkan.vivo.com.cn/#/home",
+    "accountKey": "vivovideo"
+  },
+  {
+    "desktopPlatform": "webhook",
+    "contentType": "DYNAMIC",
+    "extensionKey": "DYNAMIC_WEBHOOK",
+    "source": "dynamic/webhook.ts",
+    "exportName": "DynamicWebhook",
+    "injectUrl": "https://multipost.app/about/",
+    "accountKey": "webhook"
+  },
+  {
+    "desktopPlatform": "wordpress",
+    "contentType": "ARTICLE",
+    "extensionKey": "ARTICLE_WORDPRESS",
+    "source": "article/wordpress.ts",
+    "exportName": "ArticleWordpress",
+    "injectUrl": "https://wordpress.com/wp-admin/new-post.php",
+    "accountKey": "wordpress"
+  },
+  {
+    "desktopPlatform": "xueqiu",
+    "contentType": "DYNAMIC",
+    "extensionKey": "DYNAMIC_XUEQIU",
+    "source": "dynamic/xueqiu.ts",
+    "exportName": "DynamicXueqiu",
+    "injectUrl": "https://xueqiu.com",
+    "accountKey": "xueqiu"
+  },
+  {
+    "desktopPlatform": "xueqiu",
+    "contentType": "ARTICLE",
+    "extensionKey": "ARTICLE_XUEQIU",
+    "source": "article/xueqiu.ts",
+    "exportName": "ArticleXueqiu",
+    "injectUrl": "https://mp.xueqiu.com/writeV2?position=pc_home_primary",
+    "accountKey": "xueqiu"
+  },
+  {
+    "desktopPlatform": "yiche",
+    "contentType": "VIDEO",
+    "extensionKey": "VIDEO_YICHE",
+    "source": "video/yiche.ts",
+    "exportName": "VideoYiche",
+    "injectUrl": "https://mp.yiche.com/videos/video",
+    "accountKey": "yiche"
+  },
+  {
+    "desktopPlatform": "yidian",
+    "contentType": "VIDEO",
+    "extensionKey": "VIDEO_YIDIAN",
+    "source": "video/yidian.ts",
+    "exportName": "VideoYidian",
+    "injectUrl": "https://mp.yidianzixun.com/",
+    "accountKey": "yidian"
+  },
+  {
+    "desktopPlatform": "youtube",
+    "contentType": "VIDEO",
+    "extensionKey": "VIDEO_YOUTUBE",
+    "source": "video/youtube.ts",
+    "exportName": "VideoYoutube",
+    "injectUrl": "https://studio.youtube.com/",
+    "accountKey": "youtube"
+  },
+  {
+    "desktopPlatform": "zsxq",
+    "contentType": "DYNAMIC",
+    "extensionKey": "DYNAMIC_ZSXQ",
+    "source": "dynamic/zsxq.ts",
+    "exportName": "DynamicZSXQ",
+    "injectUrl": "https://wx.zsxq.com/",
+    "accountKey": "zsxq"
   }
 ]
