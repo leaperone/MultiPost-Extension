@@ -68,7 +68,7 @@ jobs:
           client-payload: '{
             "ref": "${{ steps.payload.outputs.deploy_ref }}",
             "env": "production",
-            "targets": "hk",
+            "targets": "pve",
             "build_targets": "web,backend",
             "message": "${{ steps.payload.outputs.message }}",
             "author": "${{ steps.payload.outputs.author }}"
