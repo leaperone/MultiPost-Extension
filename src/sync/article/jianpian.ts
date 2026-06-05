@@ -82,7 +82,6 @@ export async function ArticleJianpian(data: SyncData) {
     pasteHtml(contentEditor, articleData.htmlContent || "");
     await sleep(3000);
 
-    // TODO: 该实现包含 Word 文档导入路径,MultiPost ArticleData 暂无 wordFileData,此处仅保留 HTML 粘贴路径。
     if (data.isAutoPublish === true) {
       const publishButton = Array.from(document.querySelectorAll("button, [role='button']")).find((element) =>
         element.textContent?.includes("发布"),

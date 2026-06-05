@@ -1122,7 +1122,7 @@ export async function VideoChejiahao(data: SyncData): Promise<void> {
         }
 
         await this.sleep(5000);
-        const VideoPublishButton = Array.from(document.querySelectorAll<HTMLButtonElement>("button")).find(
+        const fuzzyPublishButton = Array.from(document.querySelectorAll<HTMLButtonElement>("button")).find(
           (button) => {
             const visibleText = button.innerText || button.textContent || "";
             return this.isElementVisible(button) && visibleText.includes("发布");
@@ -1131,7 +1131,7 @@ export async function VideoChejiahao(data: SyncData): Promise<void> {
         const exactPublishButton = document.querySelector(
           "div.button_publish.item.editor-btn.editor-main-btn",
         ) as HTMLElement | null;
-        const publishButton = VideoPublishButton || exactPublishButton || null;
+        const publishButton = fuzzyPublishButton || exactPublishButton || null;
         console.debug("sendButton -->", publishButton);
         if (!publishButton) {
           console.debug("未找到车家号发布按钮");

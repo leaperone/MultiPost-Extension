@@ -1,7 +1,7 @@
 /**
  * Tencent Cloud article publishing (experimental, needs live verification).
  *
- * uses signed COS upload plus the draft API. This implementation keeps the DOM fill path.
+ * This implementation keeps the DOM fill path.
  */
 import type { ArticleData, FileData, SyncData } from "~sync/common";
 

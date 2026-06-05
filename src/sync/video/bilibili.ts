@@ -35,15 +35,15 @@ export async function VideoBilibili(data: SyncData) {
 
   const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
-  function findCoverEntry(): { element: HTMLElement; isFallback: boolean } | null {
+  function findCoverEntry(): { element: HTMLElement; isFallbackEntry: boolean } | null {
     const existingEntry = document.querySelector("div.cover-main-img > div.img") as HTMLElement | null;
-    if (existingEntry) return { element: existingEntry, isFallback: false };
+    if (existingEntry) return { element: existingEntry, isFallbackEntry: false };
 
     const coverMain = document.querySelector("div.cover-main") as HTMLElement | null;
     const fallbackEntry = Array.from(coverMain?.querySelectorAll<HTMLElement>("span") ?? []).find(
       (span) => span.textContent?.includes("更换封面") || span.textContent?.includes("封面设置"),
     );
-    if (fallbackEntry) return { element: fallbackEntry, isFallback: true };
+    if (fallbackEntry) return { element: fallbackEntry, isFallbackEntry: true };
 
     return null;
   }
@@ -98,7 +98,7 @@ export async function VideoBilibili(data: SyncData) {
     }
 
     coverEntry.element.click();
-    await sleep(coverEntry.isFallback ? 1500 : 1000);
+    await sleep(coverEntry.isFallbackEntry ? 1500 : 1000);
 
     const tabContainer = document.querySelector("div.cover-select-header-tab");
     if (tabContainer) {

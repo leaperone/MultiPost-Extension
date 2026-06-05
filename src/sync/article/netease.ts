@@ -6,7 +6,7 @@ import type { ArticleData, SyncData } from "~sync/common";
  * 163 DOM 发布路径实现。选择器与流程需线上回归验证。
  *
  * 仅做 DOM 填充(标题 + 正文 paste + 封面自动 + 门控发布),不做正文图片的平台 CDN 重传——
- * 后者依赖页面内的 wemediaId / realUserId 凭证( 硬编码了其自有账号,对其他用户无效),
+ * 后者依赖页面内的 wemediaId / realUserId 凭证(硬编码账号对其他用户无效),
  * 属后续 API 化工作。
  */
 export async function ArticleNetease(data: SyncData) {

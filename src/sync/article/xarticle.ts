@@ -1,8 +1,7 @@
 /**
  * X 长文发布(experimental,待线上验证)
  *
- * X ARTICLE 分支包含 GraphQL 草稿 API。本实现按策略仅保留 X Articles 页面
- * 的 DOM 填充路径。选择器/流程需线上回归。
+ * 按策略仅保留 X Articles 页面的 DOM 填充路径,选择器与流程需线上回归验证。
  */
 import type { ArticleData, SyncData } from "~sync/common";
 
