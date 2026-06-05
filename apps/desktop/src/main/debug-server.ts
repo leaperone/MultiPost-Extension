@@ -23,6 +23,7 @@
 import * as http from 'http'
 import type { BrowserViewManager } from './browser/browserViewManager'
 import type { BrowserWindow } from 'electron'
+import type { PlatformType, SyncContentData, SyncContentType } from '../shared/types'
 
 const DEBUG_PORT = 19527
 let server: http.Server | null = null
@@ -110,13 +111,13 @@ export function startDebugServer(
         if (!contentType || !targets || !data)
           return json(res, { error: 'Missing contentType, targets, or data' }, 400)
         const groupId = await manager!.createPublishGroup({
-          contentType: contentType as string,
+          contentType: contentType as SyncContentType,
           targets: targets as Array<{
             accountId: string
-            platform: string
+            platform: PlatformType
             displayName: string
           }>,
-          data: data as Record<string, unknown>
+          data: data as SyncContentData
         })
         json(res, { groupId })
       } else if (groupMatch && groupMatch[2] === 'fill' && req.method === 'POST') {

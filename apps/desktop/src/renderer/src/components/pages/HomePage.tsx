@@ -1,4 +1,4 @@
-import { Send, History, Zap, Shield, MessageSquare, Video, FileText } from 'lucide-react'
+import { Send, History, Zap, Shield, MessageSquare, Video, FileText, Radio } from 'lucide-react'
 import type { ViewType } from '../AppSidebar'
 
 interface HomePageProps {
@@ -20,7 +20,7 @@ export function HomePage({ onNavigate }: HomePageProps): React.ReactElement {
       </div>
 
       {/* Quick Actions */}
-      <div className="grid gap-4 sm:grid-cols-3">
+      <div className="grid gap-4 sm:grid-cols-4">
         <button
           onClick={() => onNavigate('publish-dynamic')}
           className="flex items-center gap-4 p-6 bg-card rounded-xl border border-border hover:border-primary hover:shadow-md transition-all text-left"
@@ -57,6 +57,19 @@ export function HomePage({ onNavigate }: HomePageProps): React.ReactElement {
           <div>
             <h3 className="font-semibold">发布文章</h3>
             <p className="text-sm text-muted-foreground">发布长文内容</p>
+          </div>
+        </button>
+
+        <button
+          onClick={() => onNavigate('publish-podcast')}
+          className="flex items-center gap-4 p-6 bg-card rounded-xl border border-border hover:border-primary hover:shadow-md transition-all text-left"
+        >
+          <div className="size-12 rounded-lg bg-primary/10 flex items-center justify-center">
+            <Radio className="size-6 text-primary" />
+          </div>
+          <div>
+            <h3 className="font-semibold">发布播客</h3>
+            <p className="text-sm text-muted-foreground">发布音频内容</p>
           </div>
         </button>
       </div>

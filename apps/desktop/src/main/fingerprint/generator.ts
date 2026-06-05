@@ -13,6 +13,8 @@ import type {
   FontsConfig
 } from '../../shared/types/fingerprint'
 
+const CHROME_NAVIGATOR_VENDOR = 'Google Inc.'
+
 // Seeded random number generator (Mulberry32)
 function createSeededRandom(seed: number): () => number {
   return function () {
@@ -51,23 +53,27 @@ const SCREEN_CONFIGS: Array<Omit<ScreenConfig, 'devicePixelRatio'>> = [
   { width: 3840, height: 2160, availWidth: 3840, availHeight: 2120, colorDepth: 24, pixelDepth: 24 }
 ]
 
-// Platform configurations
-const PLATFORM_CONFIGS: Array<{
+// Platform configuration is locked to the host OS to avoid UA/platform mismatches.
+function getHostPlatformConfig(): {
   platform: NavigatorConfig['platform']
   vendor: string
   maxTouchPoints: number
-}> = [
-  { platform: 'MacIntel', vendor: 'Apple Computer, Inc.', maxTouchPoints: 0 },
-  { platform: 'Win32', vendor: 'Google Inc.', maxTouchPoints: 0 },
-  { platform: 'Linux x86_64', vendor: 'Google Inc.', maxTouchPoints: 0 }
-]
+} {
+  if (process.platform === 'darwin') {
+    return { platform: 'MacIntel', vendor: CHROME_NAVIGATOR_VENDOR, maxTouchPoints: 0 }
+  }
+  if (process.platform === 'win32') {
+    return { platform: 'Win32', vendor: CHROME_NAVIGATOR_VENDOR, maxTouchPoints: 0 }
+  }
+  return { platform: 'Linux x86_64', vendor: CHROME_NAVIGATOR_VENDOR, maxTouchPoints: 0 }
+}
 
-// Chrome versions (recent versions)
-const CHROME_VERSIONS = ['120', '121', '122', '123', '124', '125']
+function getChromeMajorVersion(): string {
+  return (process.versions.chrome || '120.0.0.0').split('.')[0] || '120'
+}
 
 // WebGL configurations (real-world GPU combos)
-const WEBGL_CONFIGS: WebGLConfig[] = [
-  // NVIDIA
+const WINDOWS_WEBGL_CONFIGS: WebGLConfig[] = [
   {
     vendor: 'Google Inc. (NVIDIA)',
     renderer: 'ANGLE (NVIDIA, NVIDIA GeForce RTX 3060 Direct3D11 vs_5_0 ps_5_0, D3D11)',
@@ -111,8 +117,10 @@ const WEBGL_CONFIGS: WebGLConfig[] = [
     renderer: 'ANGLE (Intel, Intel(R) Iris(R) Xe Graphics Direct3D11 vs_5_0 ps_5_0, D3D11)',
     unmaskedVendor: 'Intel Inc.',
     unmaskedRenderer: 'Intel(R) Iris(R) Xe Graphics'
-  },
-  // Apple
+  }
+]
+
+const MACOS_WEBGL_CONFIGS: WebGLConfig[] = [
   {
     vendor: 'Apple Inc.',
     renderer: 'Apple M1',
@@ -132,6 +140,49 @@ const WEBGL_CONFIGS: WebGLConfig[] = [
     unmaskedRenderer: 'Apple M3 Pro'
   }
 ]
+
+const LINUX_WEBGL_CONFIGS: WebGLConfig[] = [
+  {
+    vendor: 'Google Inc. (NVIDIA)',
+    renderer: 'ANGLE (NVIDIA, NVIDIA GeForce RTX 3060/PCIe/SSE2, OpenGL 4.5)',
+    unmaskedVendor: 'NVIDIA Corporation',
+    unmaskedRenderer: 'NVIDIA GeForce RTX 3060/PCIe/SSE2'
+  },
+  {
+    vendor: 'Google Inc. (AMD)',
+    renderer: 'ANGLE (AMD, AMD Radeon RX 6700 XT, OpenGL 4.6)',
+    unmaskedVendor: 'AMD',
+    unmaskedRenderer: 'AMD Radeon RX 6700 XT'
+  },
+  {
+    vendor: 'Google Inc. (Intel)',
+    renderer: 'ANGLE (Intel, Mesa Intel(R) Iris(R) Xe Graphics (TGL GT2), OpenGL 4.6)',
+    unmaskedVendor: 'Intel',
+    unmaskedRenderer: 'Mesa Intel(R) Iris(R) Xe Graphics (TGL GT2)'
+  }
+]
+
+function getWebGLConfigsForNavigatorPlatform(platform: NavigatorConfig['platform']): WebGLConfig[] {
+  if (platform === 'MacIntel') {
+    return MACOS_WEBGL_CONFIGS
+  }
+  if (platform === 'Win32') {
+    return WINDOWS_WEBGL_CONFIGS
+  }
+  return LINUX_WEBGL_CONFIGS
+}
+
+function getHostWebGLConfigs(): WebGLConfig[] {
+  return getWebGLConfigsForNavigatorPlatform(getHostPlatformConfig().platform)
+}
+
+export function getRuntimeWebGLConfig(
+  accountId: string,
+  platform: NavigatorConfig['platform']
+): WebGLConfig {
+  const random = createSeededRandom(stringToSeed(`${accountId}:${platform}:webgl`))
+  return pickRandom(getWebGLConfigsForNavigatorPlatform(platform), random)
+}
 
 // Common fonts (subset of widely installed fonts)
 const COMMON_FONTS = [
@@ -171,11 +222,11 @@ export function generateFingerprintProfile(accountId: string): Omit<FingerprintP
   const random = createSeededRandom(seed)
 
   // Select configurations deterministically
-  const platformConfig = pickRandom(PLATFORM_CONFIGS, random)
+  const platformConfig = getHostPlatformConfig()
   const screenBase = pickRandom(SCREEN_CONFIGS, random)
-  const webgl = pickRandom(WEBGL_CONFIGS, random)
+  const webgl = pickRandom(getHostWebGLConfigs(), random)
   const languageConfig = pickRandom(LANGUAGE_CONFIGS, random)
-  const chromeVersion = pickRandom(CHROME_VERSIONS, random)
+  const chromeVersion = getChromeMajorVersion()
 
   // Hardware specs (realistic ranges)
   const hardwareConcurrency = pickRandom([4, 6, 8, 12, 16], random)

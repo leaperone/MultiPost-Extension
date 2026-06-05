@@ -24,7 +24,14 @@ const PLATFORM_ICONS: Record<string, string> = {
   bilibili: 'B',
   // TODO: 知乎反爬虫问题，暂时禁用
   // zhihu: '知',
-  wechat: '微'
+  wechat: '微',
+  qqmusic: 'Q',
+  lizhi: '荔',
+  ximalaya: '喜',
+  xiaoyuzhou: '宇',
+  qingting: '蜻',
+  neteasepodcast: '易',
+  spotify: 'S'
 }
 
 export function AddAccountModal({ onClose, onAdd }: AddAccountModalProps): React.ReactElement {

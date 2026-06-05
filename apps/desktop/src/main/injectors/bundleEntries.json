@@ -1,0 +1,632 @@
+[
+  {
+    "desktopPlatform": "weibo",
+    "contentType": "DYNAMIC",
+    "extensionKey": "DYNAMIC_WEIBO",
+    "source": "dynamic/weibo.ts",
+    "exportName": "DynamicWeibo",
+    "injectUrl": "https://weibo.com",
+    "accountKey": "weibo"
+  },
+  {
+    "desktopPlatform": "weibo",
+    "contentType": "VIDEO",
+    "extensionKey": "VIDEO_WEIBO",
+    "source": "video/weibo.ts",
+    "exportName": "VideoWeibo",
+    "injectUrl": "https://weibo.com/upload/channel",
+    "accountKey": "weibo"
+  },
+  {
+    "desktopPlatform": "weibo",
+    "contentType": "ARTICLE",
+    "extensionKey": "ARTICLE_WEIBO",
+    "source": "article/weibo.ts",
+    "exportName": "ArticleWeibo",
+    "injectUrl": "https://card.weibo.com/article/v3/editor",
+    "accountKey": "weibo"
+  },
+  {
+    "desktopPlatform": "bilibili",
+    "contentType": "VIDEO",
+    "extensionKey": "VIDEO_BILIBILI",
+    "source": "video/bilibili.ts",
+    "exportName": "VideoBilibili",
+    "injectUrl": "https://member.bilibili.com/platform/upload/video/frame",
+    "accountKey": "bilibili"
+  },
+  {
+    "desktopPlatform": "zhihu",
+    "contentType": "DYNAMIC",
+    "extensionKey": "DYNAMIC_ZHIHU",
+    "source": "dynamic/zhihu.ts",
+    "exportName": "DynamicZhihu",
+    "injectUrl": "https://www.zhihu.com",
+    "accountKey": "zhihu"
+  },
+  {
+    "desktopPlatform": "zhihu",
+    "contentType": "VIDEO",
+    "extensionKey": "VIDEO_ZHIHU",
+    "source": "video/zhihu.ts",
+    "exportName": "VideoZhihu",
+    "injectUrl": "https://www.zhihu.com/zvideo/upload-video",
+    "accountKey": "zhihu"
+  },
+  {
+    "desktopPlatform": "zhihu",
+    "contentType": "ARTICLE",
+    "extensionKey": "ARTICLE_ZHIHU",
+    "source": "article/zhihu.ts",
+    "exportName": "ArticleZhihu",
+    "injectUrl": "https://zhuanlan.zhihu.com/write",
+    "accountKey": "zhihu"
+  },
+  {
+    "desktopPlatform": "douyin",
+    "contentType": "DYNAMIC",
+    "extensionKey": "DYNAMIC_DOUYIN",
+    "source": "dynamic/douyin.ts",
+    "exportName": "DynamicDouyin",
+    "injectUrl": "https://creator.douyin.com/creator-micro/content/upload?default-tab=3",
+    "accountKey": "douyin"
+  },
+  {
+    "desktopPlatform": "douyin",
+    "contentType": "VIDEO",
+    "extensionKey": "VIDEO_DOUYIN",
+    "source": "video/douyin.ts",
+    "exportName": "VideoDouyin",
+    "injectUrl": "https://creator.douyin.com/creator-micro/content/upload",
+    "accountKey": "douyin"
+  },
+  {
+    "desktopPlatform": "wechat",
+    "contentType": "DYNAMIC",
+    "extensionKey": "DYNAMIC_WEIXIN",
+    "source": "dynamic/weixin.ts",
+    "exportName": "DynamicWeixin",
+    "injectUrl": "https://mp.weixin.qq.com/",
+    "accountKey": "weixin"
+  },
+  {
+    "desktopPlatform": "wechat",
+    "contentType": "ARTICLE",
+    "extensionKey": "ARTICLE_WEIXIN",
+    "source": "article/weixin.ts",
+    "exportName": "ArticleWeixin",
+    "injectUrl": "https://mp.weixin.qq.com/",
+    "accountKey": "weixin"
+  },
+  {
+    "desktopPlatform": "weixinchannel",
+    "contentType": "DYNAMIC",
+    "extensionKey": "DYNAMIC_WEIXINCHANNEL",
+    "source": "dynamic/weixinchannel.ts",
+    "exportName": "DynamicWeiXinChannel",
+    "injectUrl": "https://channels.weixin.qq.com/platform/post/finderNewLifeCreate",
+    "accountKey": "weixinchannel"
+  },
+  {
+    "desktopPlatform": "weixinchannel",
+    "contentType": "VIDEO",
+    "extensionKey": "VIDEO_WEIXINCHANNEL",
+    "source": "video/weixinchannel.ts",
+    "exportName": "VideoWeiXinChannel",
+    "injectUrl": "https://channels.weixin.qq.com/platform/post/create",
+    "accountKey": "weixinchannel"
+  },
+  {
+    "desktopPlatform": "xiaohongshu",
+    "contentType": "DYNAMIC",
+    "extensionKey": "DYNAMIC_REDNOTE",
+    "source": "dynamic/rednote.ts",
+    "exportName": "DynamicRednote",
+    "injectUrl": "https://creator.xiaohongshu.com/publish/publish?target=image",
+    "accountKey": "rednote"
+  },
+  {
+    "desktopPlatform": "xiaohongshu",
+    "contentType": "VIDEO",
+    "extensionKey": "VIDEO_REDNOTE",
+    "source": "video/rednote.ts",
+    "exportName": "VideoRednote",
+    "injectUrl": "https://creator.xiaohongshu.com/publish/publish?target=video",
+    "accountKey": "rednote"
+  },
+  {
+    "desktopPlatform": "kuaishou",
+    "contentType": "DYNAMIC",
+    "extensionKey": "DYNAMIC_KUAISHOU",
+    "source": "dynamic/kuaishou.ts",
+    "exportName": "DynamicKuaishou",
+    "injectUrl": "https://cp.kuaishou.com/article/publish/video",
+    "accountKey": "kuaishou"
+  },
+  {
+    "desktopPlatform": "kuaishou",
+    "contentType": "VIDEO",
+    "extensionKey": "VIDEO_KUAISHOU",
+    "source": "video/kuaishou.ts",
+    "exportName": "VideoKuaishou",
+    "injectUrl": "https://cp.kuaishou.com/article/publish/video",
+    "accountKey": "kuaishou"
+  },
+  {
+    "desktopPlatform": "toutiao",
+    "contentType": "DYNAMIC",
+    "extensionKey": "DYNAMIC_TOUTIAO",
+    "source": "dynamic/toutiao.ts",
+    "exportName": "DynamicToutiao",
+    "injectUrl": "https://mp.toutiao.com/profile_v4/weitoutiao/publish",
+    "accountKey": "toutiao"
+  },
+  {
+    "desktopPlatform": "toutiao",
+    "contentType": "ARTICLE",
+    "extensionKey": "ARTICLE_TOUTIAO",
+    "source": "article/toutiao.ts",
+    "exportName": "ArticleToutiao",
+    "injectUrl": "https://mp.toutiao.com/profile_v4/graphic/publish",
+    "accountKey": "toutiao"
+  },
+  {
+    "desktopPlatform": "baijiahao",
+    "contentType": "DYNAMIC",
+    "extensionKey": "DYNAMIC_BAIJIAHAO",
+    "source": "dynamic/baijiahao.ts",
+    "exportName": "DynamicBaijiahao",
+    "injectUrl": "https://baijiahao.baidu.com/builder/rc/edit?type=events",
+    "accountKey": "baijiahao"
+  },
+  {
+    "desktopPlatform": "baijiahao",
+    "contentType": "VIDEO",
+    "extensionKey": "VIDEO_BAIJIAHAO",
+    "source": "video/baijiahao.ts",
+    "exportName": "VideoBaijiahao",
+    "injectUrl": "https://baijiahao.baidu.com/builder/rc/edit?type=videoV2",
+    "accountKey": "baijiahao"
+  },
+  {
+    "desktopPlatform": "baijiahao",
+    "contentType": "ARTICLE",
+    "extensionKey": "ARTICLE_BAIJIAHAO",
+    "source": "article/baijiahao.ts",
+    "exportName": "ArticleBaijiahao",
+    "injectUrl": "https://baijiahao.baidu.com/builder/rc/edit?type=news",
+    "accountKey": "baijiahao"
+  },
+  {
+    "desktopPlatform": "toutiaohao",
+    "contentType": "DYNAMIC",
+    "extensionKey": "DYNAMIC_TOUTIAOHAO",
+    "source": "dynamic/toutiaohao.ts",
+    "exportName": "DynamicToutiaohao",
+    "injectUrl": "https://mp.toutiao.com/profile_v4/weitoutiao/publish",
+    "accountKey": "toutiaohao"
+  },
+  {
+    "desktopPlatform": "toutiaohao",
+    "contentType": "VIDEO",
+    "extensionKey": "VIDEO_TOUTIAOHAO",
+    "source": "video/toutiaohao.ts",
+    "exportName": "VideoToutiaohao",
+    "injectUrl": "https://mp.toutiao.com/profile_v4/xigua/upload-video",
+    "accountKey": "toutiaohao"
+  },
+  {
+    "desktopPlatform": "twitter",
+    "contentType": "DYNAMIC",
+    "extensionKey": "DYNAMIC_X",
+    "source": "dynamic/x.ts",
+    "exportName": "DynamicX",
+    "injectUrl": "https://x.com/home",
+    "accountKey": "x"
+  },
+  {
+    "desktopPlatform": "51cto",
+    "contentType": "ARTICLE",
+    "extensionKey": "ARTICLE_51CTO",
+    "source": "article/51cto.ts",
+    "exportName": "Article51CTO",
+    "injectUrl": "https://blog.51cto.com/blogger/publish?old=1",
+    "accountKey": "51cto"
+  },
+  {
+    "desktopPlatform": "alipay",
+    "contentType": "VIDEO",
+    "extensionKey": "VIDEO_ALIPAY",
+    "source": "video/alipay.ts",
+    "exportName": "VideoAlipay",
+    "injectUrl": "https://c.alipay.com/page/content-creation/publish/short-video",
+    "accountKey": "alipay"
+  },
+  {
+    "desktopPlatform": "chejiahao",
+    "contentType": "VIDEO",
+    "extensionKey": "VIDEO_CHEJIAHAO",
+    "source": "video/chejiahao.ts",
+    "exportName": "VideoChejiahao",
+    "injectUrl": "https://creator.autohome.com.cn/web/publish/video",
+    "accountKey": "chejiahao"
+  },
+  {
+    "desktopPlatform": "csdn",
+    "contentType": "ARTICLE",
+    "extensionKey": "ARTICLE_CSDN",
+    "source": "article/csdn.ts",
+    "exportName": "ArticleCSDN",
+    "injectUrl": "https://mp.csdn.net/mp_blog/creation/editor",
+    "accountKey": "csdn"
+  },
+  {
+    "desktopPlatform": "dayu",
+    "contentType": "VIDEO",
+    "extensionKey": "VIDEO_DAYU",
+    "source": "video/dayu.ts",
+    "exportName": "VideoDayu",
+    "injectUrl": "https://mp.dayu.com/dashboard/video/write",
+    "accountKey": "dayu"
+  },
+  {
+    "desktopPlatform": "dewu",
+    "contentType": "VIDEO",
+    "extensionKey": "VIDEO_DEWU",
+    "source": "video/dewu.ts",
+    "exportName": "VideoDewu",
+    "injectUrl": "https://creator.dewu.com/release",
+    "accountKey": "dewu"
+  },
+  {
+    "desktopPlatform": "douban",
+    "contentType": "DYNAMIC",
+    "extensionKey": "DYNAMIC_DOUBAN",
+    "source": "dynamic/douban.ts",
+    "exportName": "DynamicDouban",
+    "injectUrl": "https://www.douban.com/",
+    "accountKey": "douban"
+  },
+  {
+    "desktopPlatform": "douban",
+    "contentType": "ARTICLE",
+    "extensionKey": "ARTICLE_DOUBAN",
+    "source": "article/douban.ts",
+    "exportName": "ArticleDouban",
+    "injectUrl": "https://www.douban.com/note/create",
+    "accountKey": "douban"
+  },
+  {
+    "desktopPlatform": "eastmoney",
+    "contentType": "VIDEO",
+    "extensionKey": "VIDEO_EASTMONEY",
+    "source": "video/eastmoney.ts",
+    "exportName": "VideoEastmoney",
+    "injectUrl": "https://mp.eastmoney.com/collect/pc_writer/index.html#/publish/video",
+    "accountKey": "eastmoney"
+  },
+  {
+    "desktopPlatform": "eastmoney",
+    "contentType": "ARTICLE",
+    "extensionKey": "ARTICLE_EASTMONEY",
+    "source": "article/eastmoney.ts",
+    "exportName": "ArticleEastmoney",
+    "injectUrl": "https://mp.eastmoney.com/collect/pc_article/index.html",
+    "accountKey": "eastmoney"
+  },
+  {
+    "desktopPlatform": "facebook",
+    "contentType": "DYNAMIC",
+    "extensionKey": "DYNAMIC_FACEBOOK",
+    "source": "dynamic/facebook.ts",
+    "exportName": "DynamicFacebook",
+    "injectUrl": "https://www.facebook.com/",
+    "accountKey": "facebook"
+  },
+  {
+    "desktopPlatform": "instagram",
+    "contentType": "DYNAMIC",
+    "extensionKey": "DYNAMIC_INSTAGRAM",
+    "source": "dynamic/instagram.ts",
+    "exportName": "DynamicInstagram",
+    "injectUrl": "https://www.instagram.com/",
+    "accountKey": "instagram"
+  },
+  {
+    "desktopPlatform": "jianshu",
+    "contentType": "ARTICLE",
+    "extensionKey": "ARTICLE_JIANSHU",
+    "source": "article/jianshu.ts",
+    "exportName": "ArticleJianshu",
+    "injectUrl": "https://www.jianshu.com/writer",
+    "accountKey": "jianshu"
+  },
+  {
+    "desktopPlatform": "juejin",
+    "contentType": "DYNAMIC",
+    "extensionKey": "DYNAMIC_JUEJIN",
+    "source": "dynamic/juejin.ts",
+    "exportName": "DynamicJuejin",
+    "injectUrl": "https://juejin.cn/pins",
+    "accountKey": "juejin"
+  },
+  {
+    "desktopPlatform": "juejin",
+    "contentType": "ARTICLE",
+    "extensionKey": "ARTICLE_JUEJIN",
+    "source": "article/juejin.ts",
+    "exportName": "ArticleJuejin",
+    "injectUrl": "https://juejin.cn/editor/drafts/new?v=2",
+    "accountKey": "juejin"
+  },
+  {
+    "desktopPlatform": "linkedin",
+    "contentType": "DYNAMIC",
+    "extensionKey": "DYNAMIC_LINKEDIN",
+    "source": "dynamic/linkedin.ts",
+    "exportName": "DynamicLinkedin",
+    "injectUrl": "https://www.linkedin.com/feed",
+    "accountKey": "linkedin"
+  },
+  {
+    "desktopPlatform": "netease",
+    "contentType": "VIDEO",
+    "extensionKey": "VIDEO_NETEASE",
+    "source": "video/netease.ts",
+    "exportName": "VideoNetease",
+    "injectUrl": "http://mp.163.com/subscribe_v4/index.html#/home",
+    "accountKey": "netease"
+  },
+  {
+    "desktopPlatform": "okjike",
+    "contentType": "DYNAMIC",
+    "extensionKey": "DYNAMIC_OKJIKE",
+    "source": "dynamic/okjike.ts",
+    "exportName": "DynamicOkjike",
+    "injectUrl": "https://web.okjike.com",
+    "accountKey": "okjike"
+  },
+  {
+    "desktopPlatform": "okjike",
+    "contentType": "VIDEO",
+    "extensionKey": "VIDEO_OKJIKE",
+    "source": "video/okjike.ts",
+    "exportName": "VideoOkjike",
+    "injectUrl": "https://web.okjike.com",
+    "accountKey": "okjike"
+  },
+  {
+    "desktopPlatform": "pinduoduo",
+    "contentType": "VIDEO",
+    "extensionKey": "VIDEO_PINDUODUO",
+    "source": "video/pinduoduo.ts",
+    "exportName": "VideoPinduoduo",
+    "injectUrl": "https://live.pinduoduo.com/creator/live-record",
+    "accountKey": "pinduoduo"
+  },
+  {
+    "desktopPlatform": "qie",
+    "contentType": "VIDEO",
+    "extensionKey": "VIDEO_QIE",
+    "source": "video/qie.ts",
+    "exportName": "VideoQiE",
+    "injectUrl": "https://om.qq.com/main/creation/video",
+    "accountKey": "qie"
+  },
+  {
+    "desktopPlatform": "qqmusic",
+    "contentType": "PODCAST",
+    "extensionKey": "PODCAST_QQMUSIC",
+    "source": "podcast/qqmusic.ts",
+    "exportName": "PodcastQQMusic",
+    "injectUrl": "https://mp.tencentmusic.com/index",
+    "accountKey": "qqmusic"
+  },
+  {
+    "desktopPlatform": "lizhi",
+    "contentType": "PODCAST",
+    "extensionKey": "PODCAST_LIZHI",
+    "source": "podcast/lizhi.ts",
+    "exportName": "PodcastLiZhi",
+    "injectUrl": "https://nj.lizhi.fm/static/newsite/#/index",
+    "accountKey": "lizhi"
+  },
+  {
+    "desktopPlatform": "ximalaya",
+    "contentType": "PODCAST",
+    "extensionKey": "PODCAST_XIMALAYA",
+    "source": "podcast/ximalaya.ts",
+    "exportName": "PodcastXimalaya",
+    "injectUrl": "https://creator.ximalaya.com/anchor/sound-album/sound/single-upload",
+    "accountKey": "ximalaya"
+  },
+  {
+    "desktopPlatform": "xiaoyuzhou",
+    "contentType": "PODCAST",
+    "extensionKey": "PODCAST_XIAOYUZHOU",
+    "source": "podcast/xiaoyuzhou.ts",
+    "exportName": "PodcastXiaoyuzhou",
+    "injectUrl": "https://podcaster.xiaoyuzhoufm.com/dashboard/episodes/new",
+    "accountKey": "xiaoyuzhou"
+  },
+  {
+    "desktopPlatform": "qingting",
+    "contentType": "PODCAST",
+    "extensionKey": "PODCAST_QINGTING",
+    "source": "podcast/qingting.ts",
+    "exportName": "PodcastQingting",
+    "injectUrl": "https://studio.qingting.fm/album",
+    "accountKey": "qingting"
+  },
+  {
+    "desktopPlatform": "neteasepodcast",
+    "contentType": "PODCAST",
+    "extensionKey": "PODCAST_NETEASE",
+    "source": "podcast/netease.ts",
+    "exportName": "PodcastNetease",
+    "injectUrl": "https://podcast.music.163.com/web/podcast/upload",
+    "accountKey": "neteasepodcast"
+  },
+  {
+    "desktopPlatform": "spotify",
+    "contentType": "PODCAST",
+    "extensionKey": "PODCAST_SPOTIFY",
+    "source": "podcast/spotify.ts",
+    "exportName": "PodcastSpotify",
+    "injectUrl": "https://creators.spotify.com/pod/show",
+    "accountKey": "spotify"
+  },
+  {
+    "desktopPlatform": "reddit",
+    "contentType": "DYNAMIC",
+    "extensionKey": "DYNAMIC_REDDIT",
+    "source": "dynamic/reddit.ts",
+    "exportName": "DynamicReddit",
+    "injectUrl": "https://www.reddit.com/submit?type=IMAGE",
+    "accountKey": "reddit"
+  },
+  {
+    "desktopPlatform": "segmentfault",
+    "contentType": "ARTICLE",
+    "extensionKey": "ARTICLE_SEGMENTFAULT",
+    "source": "article/segmentfault.ts",
+    "exportName": "ArticleSegmentfault",
+    "injectUrl": "https://segmentfault.com/write",
+    "accountKey": "segmentfault"
+  },
+  {
+    "desktopPlatform": "sohu",
+    "contentType": "VIDEO",
+    "extensionKey": "VIDEO_SOHU",
+    "source": "video/sohu.ts",
+    "exportName": "VideoSohu",
+    "injectUrl": "https://mp.sohu.com/mpfe/v4/contentManagement/news/addvideo",
+    "accountKey": "sohu"
+  },
+  {
+    "desktopPlatform": "sspai",
+    "contentType": "ARTICLE",
+    "extensionKey": "ARTICLE_SSPAI",
+    "source": "article/sspai.ts",
+    "exportName": "ArticleSSPai",
+    "injectUrl": "https://sspai.com/write",
+    "accountKey": "sspai"
+  },
+  {
+    "desktopPlatform": "substack",
+    "contentType": "DYNAMIC",
+    "extensionKey": "DYNAMIC_SUBSTACK",
+    "source": "dynamic/substack.ts",
+    "exportName": "DynamicSubstack",
+    "injectUrl": "https://substack.com/home",
+    "accountKey": "substack"
+  },
+  {
+    "desktopPlatform": "substack",
+    "contentType": "ARTICLE",
+    "extensionKey": "ARTICLE_SUBSTACK",
+    "source": "article/substack.ts",
+    "exportName": "ArticleSubstack",
+    "injectUrl": "https://substack.com/publish/post",
+    "accountKey": "substack"
+  },
+  {
+    "desktopPlatform": "threads",
+    "contentType": "DYNAMIC",
+    "extensionKey": "DYNAMIC_THREADS",
+    "source": "dynamic/threads.ts",
+    "exportName": "DynamicThreads",
+    "injectUrl": "https://www.threads.net/web",
+    "accountKey": "threads"
+  },
+  {
+    "desktopPlatform": "tiktok",
+    "contentType": "VIDEO",
+    "extensionKey": "VIDEO_TIKTOK",
+    "source": "video/tiktok.ts",
+    "exportName": "VideoTiktok",
+    "injectUrl": "https://www.tiktok.com/tiktokstudio/upload",
+    "accountKey": "tiktok"
+  },
+  {
+    "desktopPlatform": "vivovideo",
+    "contentType": "VIDEO",
+    "extensionKey": "VIDEO_VIVOVIDEO",
+    "source": "video/vivovideo.ts",
+    "exportName": "VideoVivoVideo",
+    "injectUrl": "https://kaixinkan.vivo.com.cn/#/home",
+    "accountKey": "vivovideo"
+  },
+  {
+    "desktopPlatform": "webhook",
+    "contentType": "DYNAMIC",
+    "extensionKey": "DYNAMIC_WEBHOOK",
+    "source": "dynamic/webhook.ts",
+    "exportName": "DynamicWebhook",
+    "injectUrl": "https://multipost.app/about/",
+    "accountKey": "webhook"
+  },
+  {
+    "desktopPlatform": "wordpress",
+    "contentType": "ARTICLE",
+    "extensionKey": "ARTICLE_WORDPRESS",
+    "source": "article/wordpress.ts",
+    "exportName": "ArticleWordpress",
+    "injectUrl": "https://wordpress.com/wp-admin/new-post.php",
+    "accountKey": "wordpress"
+  },
+  {
+    "desktopPlatform": "xueqiu",
+    "contentType": "DYNAMIC",
+    "extensionKey": "DYNAMIC_XUEQIU",
+    "source": "dynamic/xueqiu.ts",
+    "exportName": "DynamicXueqiu",
+    "injectUrl": "https://xueqiu.com",
+    "accountKey": "xueqiu"
+  },
+  {
+    "desktopPlatform": "xueqiu",
+    "contentType": "ARTICLE",
+    "extensionKey": "ARTICLE_XUEQIU",
+    "source": "article/xueqiu.ts",
+    "exportName": "ArticleXueqiu",
+    "injectUrl": "https://mp.xueqiu.com/writeV2?position=pc_home_primary",
+    "accountKey": "xueqiu"
+  },
+  {
+    "desktopPlatform": "yiche",
+    "contentType": "VIDEO",
+    "extensionKey": "VIDEO_YICHE",
+    "source": "video/yiche.ts",
+    "exportName": "VideoYiche",
+    "injectUrl": "https://mp.yiche.com/videos/video",
+    "accountKey": "yiche"
+  },
+  {
+    "desktopPlatform": "yidian",
+    "contentType": "VIDEO",
+    "extensionKey": "VIDEO_YIDIAN",
+    "source": "video/yidian.ts",
+    "exportName": "VideoYidian",
+    "injectUrl": "https://mp.yidianzixun.com/",
+    "accountKey": "yidian"
+  },
+  {
+    "desktopPlatform": "youtube",
+    "contentType": "VIDEO",
+    "extensionKey": "VIDEO_YOUTUBE",
+    "source": "video/youtube.ts",
+    "exportName": "VideoYoutube",
+    "injectUrl": "https://studio.youtube.com/",
+    "accountKey": "youtube"
+  },
+  {
+    "desktopPlatform": "zsxq",
+    "contentType": "DYNAMIC",
+    "extensionKey": "DYNAMIC_ZSXQ",
+    "source": "dynamic/zsxq.ts",
+    "exportName": "DynamicZSXQ",
+    "injectUrl": "https://wx.zsxq.com/",
+    "accountKey": "zsxq"
+  }
+]

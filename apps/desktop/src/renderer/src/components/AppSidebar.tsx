@@ -2,6 +2,7 @@ import {
   MessageSquare,
   Video,
   FileText,
+  Radio,
   Settings,
   Home,
   Info,
@@ -35,6 +36,7 @@ export type ViewType =
   | 'publish-dynamic'
   | 'publish-video'
   | 'publish-article'
+  | 'publish-podcast'
   | 'executor'
   | 'accounts'
   | 'account-login'
@@ -80,7 +82,8 @@ const menuGroups: MenuGroup[] = [
     items: [
       { id: 'publish-dynamic', title: '动态', icon: MessageSquare },
       { id: 'publish-video', title: '视频', icon: Video },
-      { id: 'publish-article', title: '文章', icon: FileText }
+      { id: 'publish-article', title: '文章', icon: FileText },
+      { id: 'publish-podcast', title: '播客', icon: Radio }
     ]
   },
   {

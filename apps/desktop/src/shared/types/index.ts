@@ -57,6 +57,14 @@ export type PlatformType =
   | 'sspai'
   | '51cto'
   | 'wordpress'
+  // 播客平台
+  | 'qqmusic'
+  | 'lizhi'
+  | 'ximalaya'
+  | 'xiaoyuzhou'
+  | 'qingting'
+  | 'neteasepodcast'
+  | 'spotify'
 
 export interface PlatformInfo {
   id: PlatformType
@@ -84,6 +92,15 @@ export interface FileData {
   size?: number // file size in bytes
 }
 
+export function createLocalFileUrl(filePath: string): string {
+  const normalizedPath = filePath.replace(/\\/g, '/')
+  const pathWithoutLeadingSlash = normalizedPath.startsWith('/')
+    ? normalizedPath.slice(1)
+    : normalizedPath
+  const encodedPath = pathWithoutLeadingSlash.split('/').map(encodeURIComponent).join('/')
+  return `local-file://${encodedPath}`
+}
+
 // 从本地文件路径创建 FileData
 export function createFileDataFromPath(
   filePath: string,
@@ -94,7 +111,7 @@ export function createFileDataFromPath(
   return {
     name: fileName,
     path: filePath,
-    url: `local-file://${encodeURIComponent(filePath)}`,
+    url: createLocalFileUrl(filePath),
     type: mimeType,
     size
   }
@@ -106,6 +123,8 @@ export interface DynamicData {
   content: string
   images: FileData[]
   videos: FileData[]
+  tags?: string[]
+  scheduledPublishTime?: number
 }
 
 // Video content
@@ -115,8 +134,13 @@ export interface VideoData {
   video: FileData
   tags?: string[]
   cover?: FileData
+  horizontalCover?: FileData
   verticalCover?: FileData
   scheduledPublishTime?: number // timestamp in milliseconds
+  category?: string | number
+  original?: boolean
+  collectionId?: string | number
+  description?: string
 }
 
 // Article/Blog content
@@ -127,6 +151,13 @@ export interface ArticleData {
   htmlContent: string
   markdownContent: string
   images?: FileData[] // optional embedded images
+  horizontalCover?: FileData
+  verticalCover?: FileData
+  tags?: string[]
+  category?: string | number
+  original?: boolean
+  allowComment?: boolean
+  scheduledPublishTime?: number
 }
 
 // Podcast/Audio content
@@ -134,6 +165,9 @@ export interface PodcastData {
   title: string
   description: string
   audio: FileData
+  cover?: FileData
+  tags?: string[]
+  category?: string | number
 }
 
 // Union type for all content types
@@ -145,6 +179,7 @@ export interface SyncData {
   contentType: SyncContentType
   isAutoPublish: boolean
   data: SyncContentData
+  origin?: SyncContentData
 }
 
 export interface SyncDataPlatform {
@@ -264,6 +299,8 @@ export interface PublishResult {
   error?: string
 }
 
+export type PublishBridgeCode = 0 | number
+
 // IPC Channel types
 export interface IpcChannels {
   // Account management
@@ -317,10 +354,56 @@ export interface BrowserTab {
 // ========== Publish Group Types ==========
 
 // 发布 Group 整体状态
-export type PublishGroupStatus = 'preparing' | 'publishing' | 'completed' | 'failed'
+export type PublishGroupStatus = 'preparing' | 'publishing' | 'completed' | 'failed' | 'cancelled'
 
 // 单个发布目标状态
-export type PublishTargetStatus = 'pending' | 'filling' | 'ready' | 'success' | 'failed'
+export type PublishTargetStatus = 'pending' | 'filling' | 'ready' | 'success' | 'failed' | 'cancelled'
+
+// Web-facing publish status vocabulary used by apps/web/lib/desktop-bridge.ts
+export type PublishStatus = 'idle' | 'pending' | 'processing' | 'completed' | 'failed' | 'cancelled'
+
+export type PublishEventStatus = Exclude<PublishStatus, 'idle'>
+
+export interface PublishTargetResult {
+  platform: PlatformType
+  accountId: string
+  status: PublishTargetStatus
+  error?: string
+  postUrl?: string
+  extensionKey?: string
+}
+
+export interface PublishEventPayload {
+  groupId?: string
+  taskId?: string
+  platform: PlatformType
+  accountId: string
+  contentType: SyncContentType
+  status: PublishEventStatus
+  error?: string
+  postUrl?: string
+  extensionKey?: string
+}
+
+export type PublishLifecycleStatus = PublishGroupStatus | 'idle'
+
+export interface PublishStatusSnapshot {
+  taskId: string
+  groupId?: string
+  contentType?: SyncContentType
+  status: PublishLifecycleStatus
+  targets: PublishTargetResult[]
+  updatedAt: number
+}
+
+export interface PublishBridgeEnvelope<TData = unknown> {
+  code: PublishBridgeCode
+  message: string
+  data: TData
+  success: boolean
+  error?: string
+  results?: PublishTargetResult[]
+}
 
 // 发布 Group 内的单个 Tab
 export interface GroupTab {
@@ -355,6 +438,9 @@ export interface PublishGroup {
     platform: PlatformType
     displayName: string
     status: PublishTargetStatus
+    error?: string
+    postUrl?: string
+    extensionKey?: string
   }>
   activeAccountId: string | null
   createdAt: number

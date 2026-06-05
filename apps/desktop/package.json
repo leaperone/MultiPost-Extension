@@ -22,9 +22,10 @@
     "build:linux": "pnpm build && electron-builder --linux",
     "lint": "eslint . --ext .ts,.tsx",
     "lint:fix": "eslint . --ext .ts,.tsx --fix",
+    "verify:injectors": "node scripts/verify-injector-bundles.mjs",
     "typecheck:main": "tsc --noEmit -p src/main/tsconfig.json",
     "typecheck:renderer": "tsc --noEmit -p src/renderer/tsconfig.json",
-    "typecheck": "pnpm typecheck:main && pnpm typecheck:renderer",
+    "typecheck": "pnpm typecheck:main && pnpm typecheck:renderer && pnpm verify:injectors",
     "release": "./scripts/release-hybrid.sh"
   },
   "dependencies": {
@@ -63,6 +64,7 @@
     "electron": "^34.0.2",
     "electron-builder": "^25.1.8",
     "electron-vite": "^3.0.0",
+    "esbuild": "^0.27.2",
     "eslint": "^9.18.0",
     "eslint-plugin-react": "^7.37.4",
     "react": "^19.0.0",

@@ -2,6 +2,7 @@ import { resolve } from 'path'
 import { defineConfig, externalizeDepsPlugin, loadEnv } from 'electron-vite'
 import react from '@vitejs/plugin-react'
 import tailwindcss from '@tailwindcss/vite'
+import { injectorBundlesVirtualModulePlugin } from './scripts/injector-bundles.mjs'
 
 export default defineConfig(({ mode }) => {
   // 第三个参数为空字符串，加载所有环境变量（不限制前缀）
@@ -10,7 +11,7 @@ export default defineConfig(({ mode }) => {
 
   return {
     main: {
-      plugins: [externalizeDepsPlugin()],
+      plugins: [injectorBundlesVirtualModulePlugin(), externalizeDepsPlugin()],
       define: {
         'process.env.MULTIPOST_WEB_URL': JSON.stringify(env.MULTIPOST_WEB_URL)
       },

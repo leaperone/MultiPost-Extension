@@ -1,22 +1,38 @@
 import { BrowserView, BrowserWindow, session, ipcMain, shell, dialog, net } from 'electron'
 import { join, basename, extname } from 'path'
-import * as fs from 'fs'
 import { v4 as uuidv4 } from 'uuid'
 import { is } from '@electron-toolkit/utils'
-import type {
-  PlatformType,
-  SyncContentType,
-  SyncContentData,
-  BrowserTab,
-  GroupTab,
-  PublishGroupStatus,
-  PublishTargetStatus,
-  PublishGroup
+import {
+  createLocalFileUrl,
+  type PlatformType,
+  type SyncContentType,
+  type SyncContentData,
+  type BrowserTab,
+  type GroupTab,
+  type PublishGroupStatus,
+  type PublishTargetStatus,
+  type PublishGroup,
+  type PublishEventPayload,
+  type PublishEventStatus,
+  type PublishStatus,
+  type PublishStatusSnapshot,
+  type PublishTargetResult
 } from '../../shared/types'
 import { PLATFORMS, PLATFORM_PUBLISH_URLS } from '../../shared/constants'
 import { getAdapter } from '../platforms'
 import { FingerprintService } from '../fingerprint'
 import { getMimeType } from '../utils/mime'
+import { getDesktopRequestHeaders, hardenSession, registerLocalFileProtocol } from './sessionHardening'
+import { DatabaseService } from '../database'
+import {
+  executeExtensionFill,
+  getExtensionInjectUrl,
+  type ExtensionFillResult
+} from '../injectors'
+import {
+  getDesktopInjectorManifestEntry,
+  type DesktopInjectorManifestEntry
+} from '../injectors/manifest'
 
 interface ManagedBrowserView {
   view: BrowserView
@@ -59,6 +75,9 @@ interface PublishGroupView {
       displayName: string
       status: PublishTargetStatus
       isVisible: boolean
+      error?: string
+      postUrl?: string
+      extensionKey?: string
     }
   >
   activeAccountId: string | null
@@ -67,10 +86,34 @@ interface PublishGroupView {
   autoCloseDelay: number // seconds
 }
 
+type GroupFillResults = Map<string, ExtensionFillResult>
+
+interface ExecutorPublishTargetState {
+  accountId: string
+  platform: PlatformType
+  contentType: SyncContentType
+  status: PublishTargetStatus
+  error?: string
+  postUrl?: string
+  extensionKey?: string
+}
+
+interface ExecutorPublishRun {
+  id: string
+  contentType: SyncContentType
+  status: PublishGroupStatus
+  targets: Map<string, ExecutorPublishTargetState>
+  createdAt: number
+  updatedAt: number
+  cancelled: boolean
+}
+
 // Layout constants
 const TABBAR_HEIGHT = 40
 const TOOLBAR_HEIGHT = 40
 const DEFAULT_SIDEBAR_WIDTH = 256 // 16rem expanded
+const PUBLISH_SNAPSHOT_LIMIT = 50
+const PUBLISH_SNAPSHOT_TTL_MS = 10 * 60 * 1000
 
 // Home tab constants - the home tab loads the main web app
 const HOME_TAB_ID = '__home__'
@@ -93,8 +136,16 @@ export class BrowserViewManager {
   private tabBarView: BrowserView | null = null
   // Publish Groups - 发布 Group 管理
   private publishGroups: Map<string, PublishGroupView> = new Map()
+  private executorPublishRuns: Map<string, ExecutorPublishRun> = new Map()
+  private publishStatusSnapshots: Map<string, PublishStatusSnapshot> = new Map()
+  private cancelledPublishIds: Set<string> = new Set()
+  private finalizedPublishRunIds: Set<string> = new Set()
+  private emittedPublishErrorKeys: Set<string> = new Set()
+  private platformPublishPayloads: Map<string, SyncContentData> = new Map()
+  private executorPublishPayloads: Map<string, SyncContentData> = new Map()
   private activeGroupId: string | null = null
   private groupCounter: number = 0 // 用于生成 Group 名称
+  private fingerprintLegacyReloads = new WeakSet<Electron.WebContents>()
 
   constructor(mainWindow: BrowserWindow) {
     this.mainWindow = mainWindow
@@ -107,6 +158,617 @@ export class BrowserViewManager {
     this.mainWindow.on('resize', updateBounds)
     this.mainWindow.on('maximize', updateBounds)
     this.mainWindow.on('unmaximize', updateBounds)
+  }
+
+  private getPlatformFingerprintKey(platform: PlatformType): string {
+    return `platform-default-${platform}`
+  }
+
+  private async applyFingerprintToView(view: BrowserView, profileKey: string): Promise<void> {
+    try {
+      console.log('[BrowserViewManager] Applying fingerprint:', profileKey)
+      await this.fingerprintService.applyFingerprintToWebContents(view.webContents, profileKey)
+      console.log('[BrowserViewManager] Fingerprint applied successfully:', profileKey)
+    } catch (error) {
+      console.warn('[BrowserViewManager] Fingerprint application failed:', error)
+    }
+  }
+
+  private async ensureFingerprintForView(
+    view: BrowserView,
+    profileKey: string,
+    opts: { reloadLoadedLegacy?: boolean } = {}
+  ): Promise<void> {
+    const webContents = view.webContents
+    const hadFingerprint = this.fingerprintService.hasFingerprintScript(webContents)
+    await this.applyFingerprintToView(view, profileKey)
+    const hasFingerprint = this.fingerprintService.hasFingerprintScript(webContents)
+
+    if (
+      opts.reloadLoadedLegacy &&
+      !hadFingerprint &&
+      hasFingerprint &&
+      !this.fingerprintLegacyReloads.has(webContents)
+    ) {
+      this.fingerprintLegacyReloads.add(webContents)
+      await this.reloadWebContentsForFingerprint(webContents)
+    }
+  }
+
+  private async reloadWebContentsForFingerprint(webContents: Electron.WebContents): Promise<void> {
+    if (webContents.isDestroyed()) {
+      return
+    }
+
+    const currentUrl = webContents.getURL()
+    if (!currentUrl || currentUrl === 'about:blank') {
+      return
+    }
+
+    await new Promise<void>((resolve) => {
+      let settled = false
+      const finish = (): void => {
+        if (settled) return
+        settled = true
+        clearTimeout(timeout)
+        webContents.removeListener('did-finish-load', finish)
+        webContents.removeListener('did-fail-load', finish)
+        resolve()
+      }
+
+      const timeout = setTimeout(finish, 15_000)
+      webContents.once('did-finish-load', finish)
+      webContents.once('did-fail-load', finish)
+      webContents.reload()
+    })
+  }
+
+  private formatPublishError(error: unknown): string {
+    if (error instanceof Error) {
+      return error.message
+    }
+    if (typeof error === 'string') {
+      return error
+    }
+    try {
+      return JSON.stringify(error)
+    } catch {
+      return String(error)
+    }
+  }
+
+  private getPlatformPublishPayloadKey(platform: PlatformType, contentType: SyncContentType): string {
+    return `${platform}:${contentType}`
+  }
+
+  private getExecutorPublishPayloadKey(accountId: string, contentType: SyncContentType): string {
+    return `${accountId}:${contentType}`
+  }
+
+  private clearPublishPayloadsForPrefix(cache: Map<string, SyncContentData>, prefix: string): void {
+    for (const key of Array.from(cache.keys())) {
+      if (key.startsWith(prefix)) {
+        cache.delete(key)
+      }
+    }
+  }
+
+  private hasCookieForDomain(cookies: Electron.Cookie[], domain: string): boolean {
+    const normalizedDomain = domain.replace(/^\./, '').toLowerCase()
+    return cookies.some((cookie) => {
+      const cookieDomain = cookie.domain?.replace(/^\./, '').toLowerCase()
+      return cookieDomain === normalizedDomain || cookieDomain?.endsWith(`.${normalizedDomain}`) === true
+    })
+  }
+
+  private hasCookieForAnyDomain(cookies: Electron.Cookie[], domains: string[]): boolean {
+    return domains.some((domain) => this.hasCookieForDomain(cookies, domain))
+  }
+
+  private sendPublishEvent(
+    channel: 'multipost:publish:progress' | 'multipost:publish:complete' | 'multipost:publish:error',
+    payload: PublishEventPayload
+  ): void {
+    const sent = new Set<number>()
+    const sendTo = (webContents: Electron.WebContents | undefined): void => {
+      if (!webContents || webContents.isDestroyed() || sent.has(webContents.id)) {
+        return
+      }
+      sent.add(webContents.id)
+      webContents.send(channel, payload)
+    }
+
+    sendTo(this.tabBarView?.webContents)
+    sendTo(this.homeView?.webContents)
+    sendTo(this.mainWindow.webContents)
+  }
+
+  private toWebPublishStatus(status: PublishTargetStatus): PublishEventStatus {
+    switch (status) {
+      case 'pending':
+        return 'pending'
+      case 'filling':
+      case 'ready':
+        return 'processing'
+      case 'success':
+        return 'completed'
+      case 'failed':
+        return 'failed'
+      case 'cancelled':
+        return 'cancelled'
+    }
+  }
+
+  private isTerminalTargetStatus(status: PublishTargetStatus): boolean {
+    return status === 'success' || status === 'failed' || status === 'cancelled'
+  }
+
+  private buildPublishEventPayload(params: {
+    groupId?: string
+    taskId?: string
+    contentType: SyncContentType
+    target: Pick<
+      PublishTargetResult,
+      'platform' | 'accountId' | 'status' | 'error' | 'postUrl' | 'extensionKey'
+    >
+  }): PublishEventPayload {
+    return {
+      groupId: params.groupId,
+      taskId: params.taskId,
+      platform: params.target.platform,
+      accountId: params.target.accountId,
+      contentType: params.contentType,
+      status: this.toWebPublishStatus(params.target.status),
+      error: params.target.error,
+      postUrl: params.target.postUrl,
+      extensionKey: params.target.extensionKey
+    }
+  }
+
+  private emitPublishErrorOnce(payload: PublishEventPayload): void {
+    const runId = payload.taskId ?? payload.groupId
+    const errorKey = `${runId ?? 'unknown'}:${payload.accountId}:error`
+    if (this.emittedPublishErrorKeys.has(errorKey)) {
+      return
+    }
+    this.emittedPublishErrorKeys.add(errorKey)
+    this.sendPublishEvent('multipost:publish:error', payload)
+  }
+
+  private emitPublishCompleteOnce(runId: string, payload: PublishEventPayload): void {
+    if (this.finalizedPublishRunIds.has(runId)) {
+      return
+    }
+    this.finalizedPublishRunIds.add(runId)
+    this.sendPublishEvent('multipost:publish:complete', payload)
+  }
+
+  private buildGroupTargetResult(
+    target: PublishGroupView['views'] extends Map<string, infer T> ? T : never
+  ): PublishTargetResult {
+    return {
+      platform: target.platform,
+      accountId: target.accountId,
+      status: target.status,
+      error: target.error,
+      postUrl: target.postUrl,
+      extensionKey: target.extensionKey
+    }
+  }
+
+  private buildGroupStatusSnapshot(group: PublishGroupView): PublishStatusSnapshot {
+    return {
+      taskId: group.id,
+      groupId: group.id,
+      contentType: group.contentType,
+      status: group.status,
+      targets: Array.from(group.views.values()).map((target) => this.buildGroupTargetResult(target)),
+      updatedAt: Date.now()
+    }
+  }
+
+  private buildExecutorStatusSnapshot(run: ExecutorPublishRun): PublishStatusSnapshot {
+    return {
+      taskId: run.id,
+      contentType: run.contentType,
+      status: run.status,
+      targets: Array.from(run.targets.values()).map((target) => ({
+        platform: target.platform,
+        accountId: target.accountId,
+        status: target.status,
+        error: target.error,
+        postUrl: target.postUrl,
+        extensionKey: target.extensionKey
+      })),
+      updatedAt: run.updatedAt
+    }
+  }
+
+  private rememberPublishSnapshot(snapshot: PublishStatusSnapshot): void {
+    this.prunePublishSnapshots()
+    if (this.publishStatusSnapshots.has(snapshot.taskId)) {
+      this.publishStatusSnapshots.delete(snapshot.taskId)
+    }
+    this.publishStatusSnapshots.set(snapshot.taskId, snapshot)
+    while (this.publishStatusSnapshots.size > PUBLISH_SNAPSHOT_LIMIT) {
+      const oldestKey = this.publishStatusSnapshots.keys().next().value
+      if (oldestKey === undefined) break
+      this.publishStatusSnapshots.delete(oldestKey)
+    }
+  }
+
+  private prunePublishSnapshots(): void {
+    const oldestKeptAt = Date.now() - PUBLISH_SNAPSHOT_TTL_MS
+    for (const [taskId, snapshot] of this.publishStatusSnapshots) {
+      if (snapshot.updatedAt < oldestKeptAt) {
+        this.publishStatusSnapshots.delete(taskId)
+      }
+    }
+  }
+
+  private clearRunMarkers(taskId: string): void {
+    this.cancelledPublishIds.delete(taskId)
+    this.finalizedPublishRunIds.delete(taskId)
+    for (const key of Array.from(this.emittedPublishErrorKeys)) {
+      if (key.startsWith(`${taskId}:`)) {
+        this.emittedPublishErrorKeys.delete(key)
+      }
+    }
+  }
+
+  private statusSnapshotToWebStatus(snapshot: PublishStatusSnapshot): PublishStatus {
+    if (snapshot.status === 'idle') {
+      return 'idle'
+    }
+    if (snapshot.status === 'cancelled') {
+      return 'cancelled'
+    }
+    if (snapshot.status === 'failed') {
+      return 'failed'
+    }
+    if (snapshot.status === 'completed') {
+      return 'completed'
+    }
+
+    const statuses = snapshot.targets.map((target) => target.status)
+    if (statuses.length === 0) {
+      return snapshot.status === 'preparing' ? 'pending' : 'processing'
+    }
+    if (statuses.some((status) => status === 'cancelled')) {
+      return 'cancelled'
+    }
+    if (statuses.some((status) => status === 'failed')) {
+      return 'failed'
+    }
+    if (statuses.every((status) => status === 'success')) {
+      return 'completed'
+    }
+    if (statuses.every((status) => status === 'pending')) {
+      return 'pending'
+    }
+    return 'processing'
+  }
+
+  private setGroupTargetStatus(
+    groupId: string,
+    accountId: string,
+    status: PublishTargetStatus,
+    details: { error?: string; postUrl?: string; extensionKey?: string } = {}
+  ): void {
+    const group = this.publishGroups.get(groupId)
+    if (!group) return
+
+    const target = group.views.get(accountId)
+    if (!target) return
+
+    const previousStatus = target.status
+    target.status = status
+    if (details.error !== undefined) target.error = details.error
+    if (details.postUrl !== undefined) target.postUrl = details.postUrl
+    if (details.extensionKey !== undefined) target.extensionKey = details.extensionKey
+
+    this.updateGroupStatus(groupId)
+    this.notifyGroupTabsChanged(groupId)
+    this.rememberPublishSnapshot(this.buildGroupStatusSnapshot(group))
+
+    if (previousStatus !== status) {
+      const payload = this.buildPublishEventPayload({
+        groupId,
+        contentType: group.contentType,
+        target
+      })
+      this.sendPublishEvent('multipost:publish:progress', payload)
+      if (status === 'failed') {
+        this.emitPublishErrorOnce(payload)
+      }
+    }
+  }
+
+  private emitGroupRunFinished(groupId: string): void {
+    const group = this.publishGroups.get(groupId)
+    if (!group) return
+
+    const targets = Array.from(group.views.values())
+    const snapshot = this.buildGroupStatusSnapshot(group)
+    this.rememberPublishSnapshot(snapshot)
+
+    if (targets.length === 0 || !targets.every((target) => target.status === 'success')) {
+      return
+    }
+
+    const target = targets[0]
+    this.emitPublishCompleteOnce(
+      groupId,
+      this.buildPublishEventPayload({
+        groupId,
+        contentType: group.contentType,
+        target
+      })
+    )
+  }
+
+  beginExecutorPublishRun(params: {
+    contentType: SyncContentType
+    targets: Array<{ accountId: string; platform: PlatformType }>
+  }): string {
+    const taskId = `executor-${uuidv4()}`
+    const targets = new Map<string, ExecutorPublishTargetState>()
+    for (const target of params.targets) {
+      targets.set(target.accountId, {
+        accountId: target.accountId,
+        platform: target.platform,
+        contentType: params.contentType,
+        status: 'pending'
+      })
+    }
+
+    const run: ExecutorPublishRun = {
+      id: taskId,
+      contentType: params.contentType,
+      status: 'preparing',
+      targets,
+      createdAt: Date.now(),
+      updatedAt: Date.now(),
+      cancelled: false
+    }
+    this.executorPublishRuns.set(taskId, run)
+    this.rememberPublishSnapshot(this.buildExecutorStatusSnapshot(run))
+
+    for (const target of run.targets.values()) {
+      this.sendPublishEvent('multipost:publish:progress', this.buildPublishEventPayload({
+        taskId,
+        contentType: target.contentType,
+        target
+      }))
+    }
+
+    return taskId
+  }
+
+  private updateExecutorRunStatus(run: ExecutorPublishRun): void {
+    const statuses = Array.from(run.targets.values()).map((target) => target.status)
+    if (run.cancelled || statuses.every((status) => status === 'cancelled')) {
+      run.status = 'cancelled'
+    } else if (statuses.some((status) => status === 'failed')) {
+      run.status = statuses.every((status) => this.isTerminalTargetStatus(status)) ? 'failed' : 'publishing'
+    } else if (statuses.every((status) => status === 'success')) {
+      run.status = 'completed'
+    } else if (statuses.some((status) => status === 'filling' || status === 'ready')) {
+      run.status = 'publishing'
+    } else {
+      run.status = 'preparing'
+    }
+    run.updatedAt = Date.now()
+    this.rememberPublishSnapshot(this.buildExecutorStatusSnapshot(run))
+  }
+
+  private setExecutorTargetStatus(
+    taskId: string | undefined,
+    accountId: string,
+    status: PublishTargetStatus,
+    details: { error?: string; postUrl?: string; extensionKey?: string } = {}
+  ): void {
+    if (!taskId) return
+    const run = this.executorPublishRuns.get(taskId)
+    const target = run?.targets.get(accountId)
+    if (!run || !target) return
+
+    const previousStatus = target.status
+    target.status = status
+    if (details.error !== undefined) target.error = details.error
+    if (details.postUrl !== undefined) target.postUrl = details.postUrl
+    if (details.extensionKey !== undefined) target.extensionKey = details.extensionKey
+    this.updateExecutorRunStatus(run)
+
+    if (previousStatus !== status) {
+      const payload = this.buildPublishEventPayload({
+        taskId,
+        contentType: target.contentType,
+        target
+      })
+      this.sendPublishEvent('multipost:publish:progress', payload)
+      if (status === 'failed') {
+        this.emitPublishErrorOnce(payload)
+      }
+    }
+  }
+
+  finishExecutorPublishRun(taskId: string): PublishStatusSnapshot {
+    const run = this.executorPublishRuns.get(taskId)
+    if (!run) {
+      return this.getPublishStatus(taskId)
+    }
+
+    this.updateExecutorRunStatus(run)
+    const snapshot = this.buildExecutorStatusSnapshot(run)
+    const targets = Array.from(run.targets.values())
+
+    if (snapshot.status === 'completed' && targets.length > 0) {
+      this.emitPublishCompleteOnce(
+        taskId,
+        this.buildPublishEventPayload({
+          taskId,
+          contentType: run.contentType,
+          target: targets[0]
+        })
+      )
+    }
+
+    this.rememberPublishSnapshot(snapshot)
+    this.executorPublishRuns.delete(taskId)
+    this.clearRunMarkers(taskId)
+    return snapshot
+  }
+
+  isPublishCancelled(taskId: string): boolean {
+    return (
+      this.cancelledPublishIds.has(taskId) ||
+      this.executorPublishRuns.get(taskId)?.cancelled === true ||
+      this.publishGroups.get(taskId)?.status === 'cancelled' ||
+      this.publishStatusSnapshots.get(taskId)?.status === 'cancelled'
+    )
+  }
+
+  private isExecutorPublishCancelled(taskId?: string): boolean {
+    return taskId !== undefined && (
+      this.cancelledPublishIds.has(taskId) ||
+      this.executorPublishRuns.get(taskId)?.cancelled === true
+    )
+  }
+
+  markExecutorPublishTargetFailed(taskId: string, accountId: string, error: unknown): void {
+    if (this.isPublishCancelled(taskId)) {
+      this.setExecutorTargetStatus(taskId, accountId, 'cancelled')
+      return
+    }
+    this.setExecutorTargetStatus(taskId, accountId, 'failed', {
+      error: this.formatPublishError(error)
+    })
+  }
+
+  getPublishStatus(taskId: string): PublishStatusSnapshot {
+    this.prunePublishSnapshots()
+
+    const group = this.publishGroups.get(taskId)
+    if (group) {
+      const snapshot = this.buildGroupStatusSnapshot(group)
+      this.rememberPublishSnapshot(snapshot)
+      return snapshot
+    }
+
+    const executorRun = this.executorPublishRuns.get(taskId)
+    if (executorRun) {
+      const snapshot = this.buildExecutorStatusSnapshot(executorRun)
+      this.rememberPublishSnapshot(snapshot)
+      return snapshot
+    }
+
+    return (
+      this.publishStatusSnapshots.get(taskId) ?? {
+        taskId,
+        status: 'idle',
+        targets: [],
+        updatedAt: Date.now()
+      }
+    )
+  }
+
+  getWebPublishStatus(taskId: string): PublishStatus {
+    return this.statusSnapshotToWebStatus(this.getPublishStatus(taskId))
+  }
+
+  async cancelPublish(taskId: string): Promise<PublishStatusSnapshot> {
+    const group = this.publishGroups.get(taskId)
+    if (group) {
+      return this.cancelPublishGroup(taskId, group)
+    }
+
+    const executorRun = this.executorPublishRuns.get(taskId)
+    if (executorRun) {
+      return this.cancelExecutorPublishRun(taskId, executorRun)
+    }
+
+    if (this.executorViews.has(taskId)) {
+      const executor = this.executorViews.get(taskId)!
+      await this.closeExecutorView(taskId)
+      const snapshot: PublishStatusSnapshot = {
+        taskId,
+        status: 'cancelled',
+        targets: [
+          {
+            platform: executor.platform,
+            accountId: executor.accountId,
+            status: 'cancelled'
+          }
+        ],
+        updatedAt: Date.now()
+      }
+      this.rememberPublishSnapshot(snapshot)
+      return snapshot
+    }
+
+    return this.getPublishStatus(taskId)
+  }
+
+  private async cancelPublishGroup(
+    groupId: string,
+    group: PublishGroupView
+  ): Promise<PublishStatusSnapshot> {
+    this.cancelledPublishIds.add(groupId)
+
+    for (const target of group.views.values()) {
+      if (target.status !== 'success' && target.status !== 'failed') {
+        this.setGroupTargetStatus(groupId, target.accountId, 'cancelled')
+      }
+    }
+
+    this.updateGroupStatus(groupId)
+    const snapshot = this.buildGroupStatusSnapshot(group)
+    this.rememberPublishSnapshot(snapshot)
+    this.emitGroupRunFinished(groupId)
+
+    for (const target of group.views.values()) {
+      if (target.isVisible) {
+        this.mainWindow.removeBrowserView(target.view)
+        target.isVisible = false
+      }
+      if (!target.view.webContents.isDestroyed()) {
+        target.view.webContents.close()
+      }
+    }
+
+    this.publishGroups.delete(groupId)
+    this.clearRunMarkers(groupId)
+    if (this.activeGroupId === groupId) {
+      this.activeGroupId = null
+      await this.switchToHome()
+    } else {
+      this.notifyTabsChanged()
+    }
+
+    return snapshot
+  }
+
+  private async cancelExecutorPublishRun(
+    taskId: string,
+    run: ExecutorPublishRun
+  ): Promise<PublishStatusSnapshot> {
+    this.cancelledPublishIds.add(taskId)
+    run.cancelled = true
+
+    for (const target of run.targets.values()) {
+      if (target.status !== 'success' && target.status !== 'failed') {
+        this.setExecutorTargetStatus(taskId, target.accountId, 'cancelled')
+      }
+    }
+
+    for (const target of run.targets.values()) {
+      await this.closeExecutorView(target.accountId)
+    }
+
+    const snapshot = this.finishExecutorPublishRun(taskId)
+    this.rememberPublishSnapshot(snapshot)
+    return snapshot
   }
 
   /**
@@ -298,7 +960,6 @@ export class BrowserViewManager {
 
     // 设置默认账号
     ipcMain.handle('multipost:account:setDefault', async (_, id: string) => {
-      const { DatabaseService } = await import('../database')
       const account = await DatabaseService.getInstance().getAccount(id)
       if (account) {
         await DatabaseService.getInstance().setDefaultAccount(id, account.platform)
@@ -340,7 +1001,10 @@ export class BrowserViewManager {
       console.log('[BrowserViewManager] View exists, showing it')
       await this.showView(accountId)
       if (url) {
+        await this.ensureFingerprintForView(existing.view, accountId)
         await this.navigate(accountId, url)
+      } else {
+        await this.ensureFingerprintForView(existing.view, accountId, { reloadLoadedLegacy: true })
       }
       return existing.view
     }
@@ -348,16 +1012,17 @@ export class BrowserViewManager {
     console.log('[BrowserViewManager] Creating new view')
     // Get session partition from account database for session isolation
     // This ensures login state is preserved across different features
-    const { DatabaseService } = await import('../database')
     const account = DatabaseService.getInstance().getAccount(accountId)
     const partition = account?.sessionPartition || `persist:account-${accountId}`
     console.log('[BrowserViewManager] Using session partition:', partition)
     const ses = session.fromPartition(partition)
+    hardenSession(ses)
 
     // Create BrowserView with isolated session
     const view = new BrowserView({
       webPreferences: {
-        preload: join(__dirname, '../preload/index.js'),
+        // Security: third-party platform pages get NO app preload — do not expose
+        // window.api / window.electron (raw ipcRenderer) to untrusted remote content.
         session: ses,
         contextIsolation: true,
         nodeIntegration: false,
@@ -381,17 +1046,8 @@ export class BrowserViewManager {
     view.setAutoResize({ width: false, height: false })
     console.log('[BrowserViewManager] View created with bounds offset y:', topOffset)
 
-    // Apply fingerprint before loading any content
-    // Must wait for CDP commands to complete before loading URL
-    // TODO: Temporarily disabled fingerprint injection
-    // try {
-    //   console.log('[BrowserViewManager] Applying fingerprint...')
-    //   await this.fingerprintService.applyFingerprintToWebContents(view.webContents, accountId)
-    //   console.log('[BrowserViewManager] Fingerprint applied successfully')
-    // } catch (err) {
-    //   console.warn('[BrowserViewManager] Fingerprint application failed:', err)
-    //   // Continue without fingerprint
-    // }
+    // Apply fingerprint before loading any content.
+    await this.ensureFingerprintForView(view, accountId)
 
     // Store the managed view
     const targetUrl = url || PLATFORMS[platform]?.url || 'about:blank'
@@ -609,10 +1265,10 @@ export class BrowserViewManager {
     platform: PlatformType
   ): Promise<{ username: string; displayName?: string; avatar?: string } | null> {
     try {
-      const { DatabaseService } = await import('../database')
       const account = DatabaseService.getInstance().getAccount(accountId)
       const partition = account?.sessionPartition || `persist:account-${accountId}`
       const ses = session.fromPartition(partition)
+      hardenSession(ses)
 
       if (platform === 'bilibili') {
         const cookies = await ses.cookies.get({ domain: '.bilibili.com' })
@@ -621,7 +1277,10 @@ export class BrowserViewManager {
 
         const cookieHeader = cookies.map((c) => `${c.name}=${c.value}`).join('; ')
         const response = await net.fetch('https://api.bilibili.com/x/web-interface/nav', {
-          headers: { Cookie: cookieHeader }
+          headers: getDesktopRequestHeaders({
+            Cookie: cookieHeader,
+            Referer: 'https://www.bilibili.com/'
+          })
         })
         const data = await response.json()
 
@@ -643,11 +1302,11 @@ export class BrowserViewManager {
 
         const cookieHeader = cookies.map((c) => `${c.name}=${c.value}`).join('; ')
         const response = await net.fetch('https://edith.xiaohongshu.com/api/sns/web/v2/user/me', {
-          headers: {
+          headers: getDesktopRequestHeaders({
             Cookie: cookieHeader,
             Origin: 'https://www.xiaohongshu.com',
             Referer: 'https://www.xiaohongshu.com/'
-          }
+          })
         })
         const data = await response.json()
 
@@ -676,7 +1335,6 @@ export class BrowserViewManager {
    */
   async getLoginStatus(accountId: string, platform: PlatformType): Promise<boolean> {
     // Get session partition from database
-    const { DatabaseService } = await import('../database')
     const account = DatabaseService.getInstance().getAccount(accountId)
 
     // Try both old and new partition formats
@@ -725,6 +1383,27 @@ export class BrowserViewManager {
         return cookies.some((c) => c.name === 'z_c0' && c.domain?.includes('zhihu.com'))
       case 'zsxq':
         return cookies.some((c) => c.name === 'zsxq_access_token' && c.domain?.includes('zsxq.com'))
+      case 'qqmusic':
+        // TODO(verify-login): confirm QQ音乐播客 real-login cookie/storage signals.
+        return this.hasCookieForAnyDomain(cookies, ['tencentmusic.com'])
+      case 'lizhi':
+        // TODO(verify-login): confirm 荔枝播客 real-login cookie/storage signals.
+        return this.hasCookieForAnyDomain(cookies, ['lizhi.fm'])
+      case 'ximalaya':
+        // TODO(verify-login): confirm 喜马拉雅 real-login cookie/storage signals.
+        return this.hasCookieForAnyDomain(cookies, ['ximalaya.com'])
+      case 'xiaoyuzhou':
+        // TODO(verify-login): confirm 小宇宙播客 real-login cookie/storage signals.
+        return this.hasCookieForAnyDomain(cookies, ['xiaoyuzhoufm.com'])
+      case 'qingting':
+        // TODO(verify-login): confirm 蜻蜓FM real-login cookie/storage signals.
+        return this.hasCookieForAnyDomain(cookies, ['qingting.fm'])
+      case 'neteasepodcast':
+        // TODO(verify-login): confirm 网易云音乐播客 real-login cookie/storage signals.
+        return this.hasCookieForAnyDomain(cookies, ['music.163.com', '163.com'])
+      case 'spotify':
+        // TODO(verify-login): confirm Spotify for Creators real-login cookie/storage signals.
+        return this.hasCookieForAnyDomain(cookies, ['spotify.com'])
       default:
         return cookies.length > 0
     }
@@ -851,7 +1530,12 @@ export class BrowserViewManager {
       // Navigate to appropriate URL for content type
       const targetUrl = url || this.getPublishUrl(platform, contentType)
       if (targetUrl) {
+        await this.ensureFingerprintForView(existing.view, this.getPlatformFingerprintKey(platform))
         await this.navigatePlatform(platform, targetUrl)
+      } else {
+        await this.ensureFingerprintForView(existing.view, this.getPlatformFingerprintKey(platform), {
+          reloadLoadedLegacy: true
+        })
       }
       return existing.view
     }
@@ -859,11 +1543,15 @@ export class BrowserViewManager {
     // Create partition for session isolation (shared for the platform)
     const partition = `persist:${platform}-default`
     const ses = session.fromPartition(partition)
+    hardenSession(ses)
+    // TODO(phase-capability): replace path-shaped local-file URLs with a per-session allowlist of user-selected files.
+    registerLocalFileProtocol(ses)
 
     // Create BrowserView with isolated session
     const view = new BrowserView({
       webPreferences: {
-        preload: join(__dirname, '../preload/index.js'),
+        // Security: third-party platform pages get NO app preload — do not expose
+        // window.api / window.electron (raw ipcRenderer) to untrusted remote content.
         session: ses,
         contextIsolation: true,
         nodeIntegration: false,
@@ -882,6 +1570,8 @@ export class BrowserViewManager {
     })
     // Disable auto-resize, we manage bounds manually via resize listener
     view.setAutoResize({ width: false, height: false })
+
+    await this.ensureFingerprintForView(view, this.getPlatformFingerprintKey(platform))
 
     // Store the managed view (not visible initially)
     this.platformViews.set(platform, {
@@ -909,6 +1599,11 @@ export class BrowserViewManager {
    * Get the publish URL for a platform and content type
    */
   private getPublishUrl(platform: PlatformType, contentType?: SyncContentType): string {
+    const extensionInjectUrl = getExtensionInjectUrl(platform, contentType)
+    if (extensionInjectUrl) {
+      return extensionInjectUrl
+    }
+
     // If content type is specified, try to get specific URL
     if (contentType && PLATFORM_PUBLISH_URLS[platform]?.[contentType]) {
       return PLATFORM_PUBLISH_URLS[platform][contentType]!
@@ -916,6 +1611,50 @@ export class BrowserViewManager {
     // Fall back to adapter's publishUrl or platform home URL
     const adapter = getAdapter(platform)
     return adapter?.publishUrl || PLATFORMS[platform]?.url || 'about:blank'
+  }
+
+  private normalizeNavigationUrl(url: string): string {
+    try {
+      const normalized = new URL(url)
+      return normalized.toString()
+    } catch {
+      return url.trim()
+    }
+  }
+
+  private async waitForNavigationSettle(): Promise<void> {
+    await new Promise((resolve) => setTimeout(resolve, 2000))
+  }
+
+  private async loadExactUrlIfNeeded(webContents: Electron.WebContents, targetUrl: string): Promise<void> {
+    if (this.normalizeNavigationUrl(webContents.getURL()) === this.normalizeNavigationUrl(targetUrl)) {
+      return
+    }
+    await webContents.loadURL(targetUrl)
+    await this.waitForNavigationSettle()
+  }
+
+  private async submitExtensionBackedContent(
+    webContents: Electron.WebContents,
+    entry: DesktopInjectorManifestEntry,
+    normalizedData: SyncContentData
+  ): Promise<ExtensionFillResult> {
+    await this.loadExactUrlIfNeeded(webContents, entry.injectUrl)
+
+    const extensionResult = await executeExtensionFill(
+      webContents,
+      entry.desktopPlatform,
+      entry.contentType,
+      normalizedData,
+      true
+    )
+    if (!extensionResult.handled) {
+      throw new Error(`No adapter found for platform: ${entry.desktopPlatform}`)
+    }
+    if (!extensionResult.ok) {
+      throw new Error(extensionResult.error || '扩展发布脚本执行失败')
+    }
+    return extensionResult
   }
 
   /**
@@ -1015,11 +1754,53 @@ export class BrowserViewManager {
   async fillPlatformContent(
     platform: PlatformType,
     contentType: SyncContentType,
-    data: SyncContentData
-  ): Promise<void> {
+    data: SyncContentData,
+    isAutoPublish = false
+  ): Promise<ExtensionFillResult> {
     const managed = this.platformViews.get(platform)
     if (!managed) {
       throw new Error(`No view found for platform: ${platform}`)
+    }
+
+    const normalizedData = this.normalizeContentData(data)
+    this.platformPublishPayloads.set(
+      this.getPlatformPublishPayloadKey(platform, contentType),
+      normalizedData
+    )
+
+    const extensionInjectUrl = getExtensionInjectUrl(platform, contentType)
+    if (extensionInjectUrl) {
+      await this.loadExactUrlIfNeeded(managed.view.webContents, extensionInjectUrl)
+    } else {
+      // Navigate to publish URL if not already there
+      const publishUrl = this.getPublishUrl(platform, contentType)
+      const currentUrl = managed.view.webContents.getURL()
+      try {
+        const targetHostname = new URL(publishUrl).hostname
+        if (!currentUrl.includes(targetHostname)) {
+          await managed.view.webContents.loadURL(publishUrl)
+          // Wait for page to load
+          await this.waitForNavigationSettle()
+        }
+      } catch {
+        // If URL parsing fails, just try to navigate
+        await managed.view.webContents.loadURL(publishUrl)
+        await this.waitForNavigationSettle()
+      }
+    }
+
+    const extensionResult = await executeExtensionFill(
+      managed.view.webContents,
+      platform,
+      contentType,
+      normalizedData,
+      isAutoPublish
+    )
+    if (extensionResult.handled) {
+      if (!extensionResult.ok) {
+        throw new Error(extensionResult.error || '扩展发布脚本执行失败')
+      }
+      return extensionResult
     }
 
     const adapter = getAdapter(platform)
@@ -1027,25 +1808,9 @@ export class BrowserViewManager {
       throw new Error(`No adapter found for platform: ${platform}`)
     }
 
-    // Navigate to publish URL if not already there
-    const publishUrl = this.getPublishUrl(platform, contentType)
-    const currentUrl = managed.view.webContents.getURL()
-    try {
-      const targetHostname = new URL(publishUrl).hostname
-      if (!currentUrl.includes(targetHostname)) {
-        await managed.view.webContents.loadURL(publishUrl)
-        // Wait for page to load
-        await new Promise((resolve) => setTimeout(resolve, 2000))
-      }
-    } catch {
-      // If URL parsing fails, just try to navigate
-      await managed.view.webContents.loadURL(publishUrl)
-      await new Promise((resolve) => setTimeout(resolve, 2000))
-    }
-
-    // Get fill script from adapter based on content type
-    const fillScript = adapter.getFillScript(contentType, data)
+    const fillScript = adapter.getFillScript(contentType, normalizedData)
     await managed.view.webContents.executeJavaScript(fillScript)
+    return extensionResult
   }
 
   /**
@@ -1059,6 +1824,17 @@ export class BrowserViewManager {
 
     const adapter = getAdapter(platform)
     if (!adapter) {
+      const entry = getDesktopInjectorManifestEntry(platform, contentType)
+      if (entry) {
+        const normalizedData = this.platformPublishPayloads.get(
+          this.getPlatformPublishPayloadKey(platform, contentType)
+        )
+        if (!normalizedData) {
+          throw new Error(`No filled content data found for extension submit: ${platform}`)
+        }
+        await this.submitExtensionBackedContent(managed.view.webContents, entry, normalizedData)
+        return
+      }
       throw new Error(`No adapter found for platform: ${platform}`)
     }
 
@@ -1079,6 +1855,7 @@ export class BrowserViewManager {
     this.mainWindow.removeBrowserView(managed.view)
     managed.view.webContents.close()
     this.platformViews.delete(platform)
+    this.clearPublishPayloadsForPrefix(this.platformPublishPayloads, `${platform}:`)
 
     if (this.activePlatformId === platform) {
       this.activePlatformId = null
@@ -1205,6 +1982,7 @@ export class BrowserViewManager {
     const existing = this.executorViews.get(accountId)
     if (existing) {
       await this.showExecutorView(accountId)
+      await this.ensureFingerprintForView(existing.view, accountId, { reloadLoadedLegacy: true })
       return existing.view
     }
 
@@ -1212,11 +1990,15 @@ export class BrowserViewManager {
     // Use account session partition if provided, otherwise fall back to executor-specific partition
     const partition = sessionPartition || `persist:executor-${accountId}`
     const ses = session.fromPartition(partition)
+    hardenSession(ses)
+    // TODO(phase-capability): replace path-shaped local-file URLs with a per-session allowlist of user-selected files.
+    registerLocalFileProtocol(ses)
 
     // Create BrowserView
     const view = new BrowserView({
       webPreferences: {
-        preload: join(__dirname, '../preload/index.js'),
+        // Security: third-party platform pages get NO app preload — do not expose
+        // window.api / window.electron (raw ipcRenderer) to untrusted remote content.
         session: ses,
         contextIsolation: true,
         nodeIntegration: false,
@@ -1238,8 +2020,7 @@ export class BrowserViewManager {
     view.setAutoResize({ width: false, height: false })
 
     // Apply fingerprint before loading any content
-    // TODO: Temporarily disabled fingerprint injection
-    // await this.fingerprintService.applyFingerprintToWebContents(view.webContents, accountId)
+    await this.ensureFingerprintForView(view, accountId)
 
     // Store the view keyed by accountId
     this.executorViews.set(accountId, {
@@ -1338,6 +2119,7 @@ export class BrowserViewManager {
     this.mainWindow.removeBrowserView(managed.view)
     managed.view.webContents.close()
     this.executorViews.delete(accountId)
+    this.clearPublishPayloadsForPrefix(this.executorPublishPayloads, `${accountId}:`)
 
     if (this.activeExecutorId === accountId) {
       this.activeExecutorId = null
@@ -1381,54 +2163,168 @@ export class BrowserViewManager {
   async fillExecutorContent(
     accountId: string,
     contentType: SyncContentType,
-    data: SyncContentData
+    data: SyncContentData,
+    isAutoPublish = false,
+    taskId?: string
+  ): Promise<ExtensionFillResult> {
+    const managed = this.executorViews.get(accountId)
+    if (!managed) {
+      throw new Error(`No executor view found for account: ${accountId}`)
+    }
+
+    if (this.isExecutorPublishCancelled(taskId)) {
+      this.setExecutorTargetStatus(taskId, accountId, 'cancelled')
+      throw new Error('Publish cancelled')
+    }
+
+    this.setExecutorTargetStatus(taskId, accountId, 'filling')
+
+    try {
+      const normalizedData = this.normalizeContentData(data)
+      this.executorPublishPayloads.set(
+        this.getExecutorPublishPayloadKey(accountId, contentType),
+        normalizedData
+      )
+
+      const extensionInjectUrl = getExtensionInjectUrl(managed.platform, contentType)
+      if (extensionInjectUrl) {
+        await this.loadExactUrlIfNeeded(managed.view.webContents, extensionInjectUrl)
+      } else {
+        // Navigate to publish URL if not already there
+        const publishUrl = this.getPublishUrl(managed.platform, contentType)
+        const currentUrl = managed.view.webContents.getURL()
+        try {
+          const targetHostname = new URL(publishUrl).hostname
+          if (!currentUrl.includes(targetHostname)) {
+            await managed.view.webContents.loadURL(publishUrl)
+            await this.waitForNavigationSettle()
+          }
+        } catch {
+          await managed.view.webContents.loadURL(publishUrl)
+          await this.waitForNavigationSettle()
+        }
+      }
+
+      if (this.isExecutorPublishCancelled(taskId)) {
+        this.setExecutorTargetStatus(taskId, accountId, 'cancelled')
+        throw new Error('Publish cancelled')
+      }
+
+      const extensionResult = await executeExtensionFill(
+        managed.view.webContents,
+        managed.platform,
+        contentType,
+        normalizedData,
+        isAutoPublish
+      )
+
+      if (this.isExecutorPublishCancelled(taskId)) {
+        this.setExecutorTargetStatus(taskId, accountId, 'cancelled')
+        throw new Error('Publish cancelled')
+      }
+
+      if (extensionResult.handled) {
+        if (!extensionResult.ok) {
+          throw new Error(extensionResult.error || '扩展发布脚本执行失败')
+        }
+        // TODO(future): plug in real publish confirmation once injectors report that the post went live.
+        this.setExecutorTargetStatus(taskId, accountId, 'ready', {
+          extensionKey: extensionResult.extensionKey
+        })
+        return extensionResult
+      }
+
+      const adapter = getAdapter(managed.platform)
+      if (!adapter) {
+        throw new Error(`No adapter found for platform: ${managed.platform}`)
+      }
+
+      const fillScript = adapter.getFillScript(contentType, normalizedData)
+      await managed.view.webContents.executeJavaScript(fillScript)
+      if (this.isExecutorPublishCancelled(taskId)) {
+        this.setExecutorTargetStatus(taskId, accountId, 'cancelled')
+        throw new Error('Publish cancelled')
+      }
+      this.setExecutorTargetStatus(taskId, accountId, 'ready')
+      return extensionResult
+    } catch (error) {
+      if (this.isExecutorPublishCancelled(taskId)) {
+        this.setExecutorTargetStatus(taskId, accountId, 'cancelled')
+      } else {
+        this.setExecutorTargetStatus(taskId, accountId, 'failed', {
+          error: this.formatPublishError(error)
+        })
+      }
+      throw error
+    }
+  }
+
+  /**
+   * Submit content in an executor BrowserView
+   */
+  async submitExecutorContent(
+    accountId: string,
+    contentType: SyncContentType,
+    taskId?: string
   ): Promise<void> {
     const managed = this.executorViews.get(accountId)
     if (!managed) {
       throw new Error(`No executor view found for account: ${accountId}`)
     }
 
-    const adapter = getAdapter(managed.platform)
-    if (!adapter) {
-      throw new Error(`No adapter found for platform: ${managed.platform}`)
+    if (this.isExecutorPublishCancelled(taskId)) {
+      this.setExecutorTargetStatus(taskId, accountId, 'cancelled')
+      throw new Error('Publish cancelled')
     }
 
-    // Navigate to publish URL if not already there
-    const publishUrl = this.getPublishUrl(managed.platform, contentType)
-    const currentUrl = managed.view.webContents.getURL()
     try {
-      const targetHostname = new URL(publishUrl).hostname
-      if (!currentUrl.includes(targetHostname)) {
-        await managed.view.webContents.loadURL(publishUrl)
-        await new Promise((resolve) => setTimeout(resolve, 2000))
+      const adapter = getAdapter(managed.platform)
+      if (!adapter) {
+        const entry = getDesktopInjectorManifestEntry(managed.platform, contentType)
+        if (entry) {
+          const normalizedData = this.executorPublishPayloads.get(
+            this.getExecutorPublishPayloadKey(accountId, contentType)
+          )
+          if (!normalizedData) {
+            throw new Error(`No filled content data found for extension submit: ${managed.platform}`)
+          }
+          const extensionResult = await this.submitExtensionBackedContent(
+            managed.view.webContents,
+            entry,
+            normalizedData
+          )
+          if (this.isExecutorPublishCancelled(taskId)) {
+            this.setExecutorTargetStatus(taskId, accountId, 'cancelled')
+            throw new Error('Publish cancelled')
+          }
+          this.setExecutorTargetStatus(taskId, accountId, 'success', {
+            extensionKey: extensionResult.extensionKey
+          })
+          return
+        }
+        throw new Error(`No adapter found for platform: ${managed.platform}`)
       }
-    } catch {
-      await managed.view.webContents.loadURL(publishUrl)
-      await new Promise((resolve) => setTimeout(resolve, 2000))
-    }
 
-    // Get fill script from adapter based on content type
-    const fillScript = adapter.getFillScript(contentType, data)
-    await managed.view.webContents.executeJavaScript(fillScript)
-  }
-
-  /**
-   * Submit content in an executor BrowserView
-   */
-  async submitExecutorContent(accountId: string, contentType: SyncContentType): Promise<void> {
-    const managed = this.executorViews.get(accountId)
-    if (!managed) {
-      throw new Error(`No executor view found for account: ${accountId}`)
-    }
-
-    const adapter = getAdapter(managed.platform)
-    if (!adapter) {
-      throw new Error(`No adapter found for platform: ${managed.platform}`)
-    }
-
-    const result = await adapter.submit(managed.view, contentType)
-    if (!result.success) {
-      throw new Error(result.error || '发布失败')
+      const result = await adapter.submit(managed.view, contentType)
+      if (this.isExecutorPublishCancelled(taskId)) {
+        this.setExecutorTargetStatus(taskId, accountId, 'cancelled')
+        throw new Error('Publish cancelled')
+      }
+      if (!result.success) {
+        throw new Error(result.error || '发布失败')
+      }
+      this.setExecutorTargetStatus(taskId, accountId, 'success', {
+        postUrl: result.postUrl
+      })
+    } catch (error) {
+      if (this.isExecutorPublishCancelled(taskId)) {
+        this.setExecutorTargetStatus(taskId, accountId, 'cancelled')
+      } else {
+        this.setExecutorTargetStatus(taskId, accountId, 'failed', {
+          error: this.formatPublishError(error)
+        })
+      }
+      throw error
     }
   }
 
@@ -1691,7 +2587,6 @@ export class BrowserViewManager {
       const { accountId, platform, displayName } = target
 
       // Get session partition from database
-      const { DatabaseService } = await import('../database')
       const account = DatabaseService.getInstance().getAccount(accountId)
 
       // Try multiple partition formats for backward compatibility
@@ -1721,14 +2616,15 @@ export class BrowserViewManager {
 
       console.log(`[BrowserViewManager] Account ${displayName} using partition: ${partition}`)
       const ses = session.fromPartition(partition)
-
-      // Register local-file:// protocol on this session (for image upload from local paths)
-      this.registerLocalFileProtocol(ses)
+      hardenSession(ses)
+      // TODO(phase-capability): replace path-shaped local-file URLs with a per-session allowlist of user-selected files.
+      registerLocalFileProtocol(ses)
 
       // Create BrowserView
       const view = new BrowserView({
         webPreferences: {
-          preload: join(__dirname, '../preload/index.js'),
+          // Security: third-party platform pages get NO app preload — do not expose
+          // window.api / window.electron (raw ipcRenderer) to untrusted remote content.
           session: ses,
           contextIsolation: true,
           nodeIntegration: false,
@@ -1743,6 +2639,8 @@ export class BrowserViewManager {
         height: height - topOffset
       })
       view.setAutoResize({ width: false, height: false })
+
+      await this.ensureFingerprintForView(view, accountId)
 
       // Store in group
       group.views.set(accountId, {
@@ -1760,7 +2658,7 @@ export class BrowserViewManager {
       // Navigate to publish URL
       const publishUrl = this.getPublishUrl(platform, contentType)
       console.log(`[BrowserViewManager] Loading ${displayName}: ${publishUrl}`)
-      view.webContents.loadURL(publishUrl)
+      await view.webContents.loadURL(publishUrl)
     }
 
     // Set first account as active
@@ -1778,14 +2676,19 @@ export class BrowserViewManager {
     setTimeout(async () => {
       try {
         console.log(`[BrowserViewManager] Auto-filling content for group: ${groupName}`)
-        await this.fillGroupContent(groupId)
+        const fillResults = await this.fillGroupContent(groupId)
 
         // 自动发布：填充完成后自动提交
         if (group.autoPublish) {
-          const allReady = Array.from(group.views.values()).every((t) => t.status === 'ready')
+          const allReady = Array.from(group.views.values()).every((t) => t.status === 'ready' || t.status === 'success')
           if (allReady) {
+            const skipAdapterSubmitFor = new Set(
+              Array.from(fillResults.entries())
+                .filter(([, result]) => result.handled && result.ok && result.skipAdapterSubmit)
+                .map(([accountId]) => accountId)
+            )
             console.log(`[BrowserViewManager] Auto-publishing group: ${groupName}`)
-            await this.submitGroupAll(groupId)
+            await this.submitGroupAll(groupId, { skipAdapterSubmitFor })
             this.startAutoCloseCountdown(groupId)
           } else {
             console.log(`[BrowserViewManager] Not all targets ready, skipping auto-publish for group: ${groupName}`)
@@ -1932,6 +2835,8 @@ export class BrowserViewManager {
     const group = this.publishGroups.get(groupId)
     if (!group) return
 
+    this.rememberPublishSnapshot(this.buildGroupStatusSnapshot(group))
+
     // Remove all views
     for (const target of group.views.values()) {
       if (target.isVisible) {
@@ -1942,6 +2847,7 @@ export class BrowserViewManager {
 
     // Delete the group
     this.publishGroups.delete(groupId)
+    this.clearRunMarkers(groupId)
 
     // If this was the active group, switch to home
     if (this.activeGroupId === groupId) {
@@ -2012,7 +2918,10 @@ export class BrowserViewManager {
         accountId: t.accountId,
         platform: t.platform,
         displayName: t.displayName,
-        status: t.status
+        status: t.status,
+        error: t.error,
+        postUrl: t.postUrl,
+        extensionKey: t.extensionKey
       })),
       activeAccountId: group.activeAccountId,
       createdAt: group.createdAt
@@ -2033,7 +2942,10 @@ export class BrowserViewManager {
         accountId: t.accountId,
         platform: t.platform,
         displayName: t.displayName,
-        status: t.status
+        status: t.status,
+        error: t.error,
+        postUrl: t.postUrl,
+        extensionKey: t.extensionKey
       })),
       activeAccountId: group.activeAccountId,
       createdAt: group.createdAt
@@ -2048,51 +2960,27 @@ export class BrowserViewManager {
   }
 
   /**
-   * Register local-file:// protocol handler on a session (idempotent).
-   * This allows BrowserViews with custom partitions to fetch local files.
-   */
-  private registeredSessions = new Set<string>()
-  private registerLocalFileProtocol(ses: Electron.Session): void {
-    // Use partition string as key to avoid double-registering
-    const key = (ses as unknown as { storagePath?: string }).storagePath || String(ses)
-    if (this.registeredSessions.has(key)) return
-    this.registeredSessions.add(key)
-
-    try {
-      ses.protocol.handle('local-file', async (request) => {
-        const url = new URL(request.url)
-        const filePath = decodeURIComponent('/' + url.host + url.pathname)
-
-        if (!fs.existsSync(filePath)) {
-          return new Response('File not found', { status: 404 })
-        }
-        if (filePath.includes('..')) {
-          return new Response('Invalid path', { status: 403 })
-        }
-
-        try {
-          const buffer = await fs.promises.readFile(filePath)
-          const mimeType = getMimeType(filePath)
-          return new Response(buffer, {
-            headers: { 'Content-Type': mimeType }
-          })
-        } catch (error) {
-          console.error('[LocalFileProtocol] Failed to read file:', filePath, error)
-          return new Response('Failed to read file', { status: 500 })
-        }
-      })
-      console.log('[BrowserViewManager] Registered local-file:// protocol on session')
-    } catch {
-      // Already registered on this session - ignore
-    }
-  }
-
-  /**
    * Normalize content data: convert string file paths to FileData objects with local-file:// URLs.
    * Web side sends images/videos as string[] (file paths), but adapters expect FileData[].
    */
   private normalizeContentData(data: SyncContentData): SyncContentData {
-    function toFileData(item: string | { url: string; name: string; type?: string }): {
+    function getFallbackMimeType(ext: string, fallbackKind: 'image' | 'video' | 'audio' | 'file'): string {
+      if (!ext) {
+        return 'application/octet-stream'
+      }
+      if (fallbackKind === 'audio') {
+        return `audio/${ext === 'mp3' ? 'mpeg' : ext}`
+      }
+      if (fallbackKind === 'image') {
+        return `image/${ext}`
+      }
+      if (fallbackKind === 'video') {
+        return `video/${ext}`
+      }
+      return 'application/octet-stream'
+    }
+
+    function toFileData(item: string | { url: string; name: string; type?: string }, fallbackKind: 'image' | 'video' | 'audio' | 'file' = 'file'): {
       url: string
       name: string
       type: string
@@ -2101,11 +2989,11 @@ export class BrowserViewManager {
         // Convert file path to local-file:// URL
         const name = basename(item)
         const ext = extname(item).slice(1).toLowerCase()
-        const type = getMimeType(item) || `image/${ext}`
+        const type = getMimeType(item) || getFallbackMimeType(ext, fallbackKind)
         // Standard scheme URL: local-file:// + path (Chromium treats first segment as host)
         // e.g. /tmp/photo.png -> local-file://tmp/photo.png (host=tmp, path=/photo.png)
         // The protocol handler reconstructs: '/' + host + pathname = /tmp/photo.png
-        return { url: `local-file://${item.startsWith('/') ? item.slice(1) : item}`, name, type }
+        return { url: createLocalFileUrl(item), name, type }
       }
       return { url: item.url, name: item.name, type: item.type || 'application/octet-stream' }
     }
@@ -2113,27 +3001,43 @@ export class BrowserViewManager {
     const normalized = { ...data }
 
     if ('images' in normalized && Array.isArray(normalized.images)) {
-      normalized.images = normalized.images.map(toFileData)
+      normalized.images = normalized.images.map((item) => toFileData(item, 'image'))
     }
     if ('videos' in normalized && Array.isArray(normalized.videos)) {
-      normalized.videos = normalized.videos.map(toFileData)
+      normalized.videos = normalized.videos.map((item) => toFileData(item, 'video'))
     }
     if ('video' in normalized && normalized.video) {
-      normalized.video = typeof normalized.video === 'string' ? toFileData(normalized.video) : normalized.video
+      normalized.video = typeof normalized.video === 'string' ? toFileData(normalized.video, 'video') : normalized.video
     }
     if ('cover' in normalized && normalized.cover) {
-      normalized.cover = typeof normalized.cover === 'string' ? toFileData(normalized.cover) : normalized.cover
+      normalized.cover = typeof normalized.cover === 'string' ? toFileData(normalized.cover, 'image') : normalized.cover
+    }
+    if ('horizontalCover' in normalized && normalized.horizontalCover) {
+      normalized.horizontalCover =
+        typeof normalized.horizontalCover === 'string'
+          ? toFileData(normalized.horizontalCover, 'image')
+          : normalized.horizontalCover
+    }
+    if ('verticalCover' in normalized && normalized.verticalCover) {
+      normalized.verticalCover =
+        typeof normalized.verticalCover === 'string'
+          ? toFileData(normalized.verticalCover, 'image')
+          : normalized.verticalCover
+    }
+    if ('audio' in normalized && normalized.audio) {
+      normalized.audio = typeof normalized.audio === 'string' ? toFileData(normalized.audio, 'audio') : normalized.audio
     }
 
     return normalized
   }
 
-  async fillGroupContent(groupId: string): Promise<void> {
+  async fillGroupContent(groupId: string): Promise<GroupFillResults> {
     const group = this.publishGroups.get(groupId)
     if (!group) {
       throw new Error(`Publish group not found: ${groupId}`)
     }
 
+    const fillResults: GroupFillResults = new Map()
     group.status = 'publishing'
 
     // Normalize data once (convert string paths to local-file:// URLs)
@@ -2141,38 +3045,101 @@ export class BrowserViewManager {
 
     for (const [accountId, target] of group.views) {
       try {
-        target.status = 'filling'
-        this.notifyGroupTabsChanged(groupId)
-
-        const adapter = getAdapter(target.platform)
-        if (!adapter) {
-          target.status = 'failed'
-          console.error(`No adapter found for platform: ${target.platform}`)
+        if (this.cancelledPublishIds.has(groupId)) {
+          if (target.status !== 'success' && target.status !== 'failed') {
+            this.setGroupTargetStatus(groupId, accountId, 'cancelled')
+          }
           continue
         }
+
+        this.setGroupTargetStatus(groupId, accountId, 'filling')
 
         // Wait for page to be ready
         await new Promise((resolve) => setTimeout(resolve, 1000))
 
-        // Execute fill script with normalized data
+        if (this.cancelledPublishIds.has(groupId)) {
+          this.setGroupTargetStatus(groupId, accountId, 'cancelled')
+          continue
+        }
+
+        const extensionInjectUrl = getExtensionInjectUrl(target.platform, group.contentType)
+        if (extensionInjectUrl) {
+          await this.loadExactUrlIfNeeded(target.view.webContents, extensionInjectUrl)
+        }
+
+        if (this.cancelledPublishIds.has(groupId)) {
+          this.setGroupTargetStatus(groupId, accountId, 'cancelled')
+          continue
+        }
+
+        const extensionResult = await executeExtensionFill(
+          target.view.webContents,
+          target.platform,
+          group.contentType,
+          normalizedData,
+          group.autoPublish
+        )
+        if (this.cancelledPublishIds.has(groupId)) {
+          this.setGroupTargetStatus(groupId, accountId, 'cancelled')
+          continue
+        }
+        if (extensionResult.handled) {
+          fillResults.set(accountId, extensionResult)
+          if (!extensionResult.ok) {
+            throw new Error(extensionResult.error || '扩展发布脚本执行失败')
+          }
+          // TODO(future): plug in real publish confirmation once injectors report that the post went live.
+          this.setGroupTargetStatus(groupId, accountId, 'ready', {
+            extensionKey: extensionResult.extensionKey
+          })
+          console.log(`[BrowserViewManager] Filled content for ${target.displayName} via extension injector`)
+          continue
+        }
+
+        const adapter = getAdapter(target.platform)
+        if (!adapter) {
+          const error = `No adapter found for platform: ${target.platform}`
+          if (this.cancelledPublishIds.has(groupId)) {
+            this.setGroupTargetStatus(groupId, accountId, 'cancelled')
+          } else {
+            this.setGroupTargetStatus(groupId, accountId, 'failed', { error })
+          }
+          console.error(error)
+          continue
+        }
+
         const fillScript = adapter.getFillScript(group.contentType, normalizedData)
         await target.view.webContents.executeJavaScript(fillScript)
+        if (this.cancelledPublishIds.has(groupId)) {
+          this.setGroupTargetStatus(groupId, accountId, 'cancelled')
+          continue
+        }
 
-        target.status = 'ready'
+        this.setGroupTargetStatus(groupId, accountId, 'ready')
         console.log(`[BrowserViewManager] Filled content for ${target.displayName}`)
       } catch (error) {
-        target.status = 'failed'
+        if (this.cancelledPublishIds.has(groupId)) {
+          this.setGroupTargetStatus(groupId, accountId, 'cancelled')
+        } else {
+          this.setGroupTargetStatus(groupId, accountId, 'failed', {
+            error: this.formatPublishError(error)
+          })
+        }
         console.error(`Failed to fill content for ${accountId}:`, error)
       }
-
-      this.notifyGroupTabsChanged(groupId)
     }
+
+    return fillResults
   }
 
   /**
    * Submit content for a single target in a publish group
    */
-  async submitGroupTarget(groupId: string, accountId: string): Promise<void> {
+  async submitGroupTarget(
+    groupId: string,
+    accountId: string,
+    options: { skipAdapterSubmit?: boolean; suppressFinishEvent?: boolean } = {}
+  ): Promise<void> {
     const group = this.publishGroups.get(groupId)
     if (!group) {
       throw new Error(`Publish group not found: ${groupId}`)
@@ -2183,31 +3150,76 @@ export class BrowserViewManager {
       throw new Error(`Target not found in group: ${accountId}`)
     }
 
-    const adapter = getAdapter(target.platform)
-    if (!adapter) {
-      throw new Error(`No adapter found for platform: ${target.platform}`)
+    if (options.skipAdapterSubmit) {
+      // TODO(future): plug in real publish confirmation once extension injectors report live-post success.
+      this.setGroupTargetStatus(groupId, accountId, 'ready')
+      return
     }
 
     try {
+      if (this.cancelledPublishIds.has(groupId)) {
+        this.setGroupTargetStatus(groupId, accountId, 'cancelled')
+        throw new Error('Publish cancelled')
+      }
+
+      const adapter = getAdapter(target.platform)
+      if (!adapter) {
+        const entry = getDesktopInjectorManifestEntry(target.platform, group.contentType)
+        if (!entry) {
+          throw new Error(`No adapter found for platform: ${target.platform}`)
+        }
+        const extensionResult = await this.submitExtensionBackedContent(
+          target.view.webContents,
+          entry,
+          this.normalizeContentData(group.data)
+        )
+        if (this.cancelledPublishIds.has(groupId)) {
+          this.setGroupTargetStatus(groupId, accountId, 'cancelled')
+          throw new Error('Publish cancelled')
+        }
+        this.setGroupTargetStatus(groupId, accountId, 'success', {
+          extensionKey: extensionResult.extensionKey
+        })
+        return
+      }
+
       const result = await adapter.submit(target.view, group.contentType)
+      if (this.cancelledPublishIds.has(groupId)) {
+        this.setGroupTargetStatus(groupId, accountId, 'cancelled')
+        throw new Error('Publish cancelled')
+      }
       if (result.success) {
-        target.status = 'success'
+        this.setGroupTargetStatus(groupId, accountId, 'success', {
+          postUrl: result.postUrl
+        })
       } else {
-        target.status = 'failed'
+        this.setGroupTargetStatus(groupId, accountId, 'failed', {
+          error: result.error || '发布失败'
+        })
       }
     } catch (error) {
-      target.status = 'failed'
+      if (this.cancelledPublishIds.has(groupId)) {
+        this.setGroupTargetStatus(groupId, accountId, 'cancelled')
+      } else {
+        this.setGroupTargetStatus(groupId, accountId, 'failed', {
+          error: this.formatPublishError(error)
+        })
+      }
       throw error
     } finally {
-      this.notifyGroupTabsChanged(groupId)
-      this.updateGroupStatus(groupId)
+      if (!options.suppressFinishEvent) {
+        this.emitGroupRunFinished(groupId)
+      }
     }
   }
 
   /**
    * Submit content for all targets in a publish group
    */
-  async submitGroupAll(groupId: string): Promise<void> {
+  async submitGroupAll(
+    groupId: string,
+    options: { skipAdapterSubmitFor?: Set<string> } = {}
+  ): Promise<void> {
     const group = this.publishGroups.get(groupId)
     if (!group) {
       throw new Error(`Publish group not found: ${groupId}`)
@@ -2215,11 +3227,23 @@ export class BrowserViewManager {
 
     for (const accountId of group.views.keys()) {
       try {
-        await this.submitGroupTarget(groupId, accountId)
+        if (this.cancelledPublishIds.has(groupId)) {
+          const target = group.views.get(accountId)
+          if (target && target.status !== 'success' && target.status !== 'failed') {
+            this.setGroupTargetStatus(groupId, accountId, 'cancelled')
+          }
+          continue
+        }
+        await this.submitGroupTarget(groupId, accountId, {
+          skipAdapterSubmit: options.skipAdapterSubmitFor?.has(accountId) === true,
+          suppressFinishEvent: true
+        })
       } catch (error) {
         console.error(`Failed to submit for ${accountId}:`, error)
       }
     }
+
+    this.emitGroupRunFinished(groupId)
   }
 
   /**
@@ -2231,12 +3255,20 @@ export class BrowserViewManager {
 
     const statuses = Array.from(group.views.values()).map((t) => t.status)
 
-    if (statuses.every((s) => s === 'success')) {
+    if (statuses.length === 0) {
+      group.status = 'cancelled'
+    } else if (statuses.every((s) => s === 'cancelled')) {
+      group.status = 'cancelled'
+    } else if (statuses.some((s) => s === 'cancelled') && statuses.every((s) => this.isTerminalTargetStatus(s))) {
+      group.status = 'cancelled'
+    } else if (statuses.every((s) => s === 'success')) {
       group.status = 'completed'
-    } else if (statuses.some((s) => s === 'failed')) {
+    } else if (statuses.some((s) => s === 'failed') && statuses.every((s) => this.isTerminalTargetStatus(s))) {
       group.status = 'failed'
     } else if (statuses.every((s) => s === 'ready' || s === 'success')) {
       group.status = 'preparing'
+    } else if (statuses.some((s) => s === 'filling')) {
+      group.status = 'publishing'
     }
   }
 
@@ -2254,9 +3286,7 @@ export class BrowserViewManager {
     const target = group.views.get(accountId)
     if (!target) return
 
-    target.status = status
-    this.notifyGroupTabsChanged(groupId)
-    this.updateGroupStatus(groupId)
+    this.setGroupTargetStatus(groupId, accountId, status)
   }
 
   // ========== Debug methods (dev only) ==========

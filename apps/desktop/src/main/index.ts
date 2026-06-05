@@ -1,15 +1,14 @@
 import { app, shell, BrowserWindow, ipcMain, protocol, session } from 'electron'
 import { join } from 'path'
-import * as fs from 'fs'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import { registerIpcHandlers } from './ipc'
 import { BrowserViewManager } from './browser/browserViewManager'
 import { DatabaseService } from './database'
 import { initAutoUpdater, registerUpdaterIpcHandlers, checkForUpdatesSilently } from './updater'
 import { createMenu } from './menu'
-import { getMimeType } from './utils/mime'
 import { KeepAliveService } from './keepalive'
 import { startDebugServer } from './debug-server'
+import { getDesktopUserAgent, handleLocalFileRequest, hardenSession } from './browser/sessionHardening'
 
 // 在 app.whenReady() 之前注册 local-file:// 协议
 protocol.registerSchemesAsPrivileged([
@@ -74,37 +73,10 @@ function createWindow(): void {
 app.whenReady().then(async () => {
   // Set app user model id for windows
   electronApp.setAppUserModelId('com.multipost.desktop')
+  app.userAgentFallback = getDesktopUserAgent()
 
   // 注册 local-file:// 协议处理器
-  protocol.handle('local-file', async (request) => {
-    const url = new URL(request.url)
-    // Standard scheme URL: Chromium puts first path segment in host
-    // e.g. local-file://tmp/photo.png -> host=tmp, pathname=/photo.png
-    // Reconstruct: '/' + host + pathname = /tmp/photo.png
-    const filePath = decodeURIComponent('/' + url.host + url.pathname)
-
-    // 安全检查：验证文件存在
-    if (!fs.existsSync(filePath)) {
-      return new Response('File not found', { status: 404 })
-    }
-
-    // 安全检查：禁止目录遍历
-    if (filePath.includes('..')) {
-      return new Response('Invalid path', { status: 403 })
-    }
-
-    try {
-      const buffer = await fs.promises.readFile(filePath)
-      const mimeType = getMimeType(filePath)
-
-      return new Response(buffer, {
-        headers: { 'Content-Type': mimeType }
-      })
-    } catch (error) {
-      console.error('Failed to read file:', filePath, error)
-      return new Response('Failed to read file', { status: 500 })
-    }
-  })
+  protocol.handle('local-file', handleLocalFileRequest)
 
   // Initialize database
   await DatabaseService.getInstance().initialize()
@@ -118,17 +90,7 @@ app.whenReady().then(async () => {
     optimizer.watchWindowShortcuts(window)
   })
 
-  // Inject custom header for desktop detection on web app requests
-  const webAppUrls = is.dev
-    ? ['http://localhost:3000/*']
-    : ['https://multipost.app/*']
-  session.defaultSession.webRequest.onBeforeSendHeaders(
-    { urls: webAppUrls },
-    (details, callback) => {
-      details.requestHeaders['X-MultiPost-Desktop'] = '1'
-      callback({ requestHeaders: details.requestHeaders })
-    }
-  )
+  hardenSession(session.defaultSession, { includeDesktopHeader: true })
 
   createMenu()
   createWindow()

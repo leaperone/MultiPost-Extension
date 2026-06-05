@@ -13,7 +13,8 @@ const STATUS_COLORS: Record<PublishTargetStatus, string> = {
   filling: 'bg-amber-500 animate-pulse',
   ready: 'bg-emerald-500',
   success: 'bg-green-500',
-  failed: 'bg-red-500'
+  failed: 'bg-red-500',
+  cancelled: 'bg-gray-500'
 }
 
 // Status border colors for group tabs
@@ -22,7 +23,8 @@ const STATUS_BORDER_COLORS: Record<PublishTargetStatus, string> = {
   filling: 'border-amber-400',
   ready: 'border-emerald-400',
   success: 'border-green-400',
-  failed: 'border-red-400'
+  failed: 'border-red-400',
+  cancelled: 'border-gray-400'
 }
 
 interface BrowserTabsProps {
