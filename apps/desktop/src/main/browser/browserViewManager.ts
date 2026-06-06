@@ -41,7 +41,7 @@ import {
   trackAccountProxyForWebContents,
   withAccountProxySession
 } from '../proxy/accountProxy'
-import { openExternalUrl } from './externalUrl'
+import { isSupportedBrowserNavigationUrl, openExternalUrl } from './externalUrl'
 
 interface ManagedBrowserView {
   view: BrowserView
@@ -96,6 +96,12 @@ interface PublishGroupView {
 }
 
 type GroupFillResults = Map<string, ExtensionFillResult>
+type NavigationGuardableWebContents = Electron.WebContents & {
+  on(
+    event: 'will-frame-navigate',
+    listener: (event: Electron.Event, url: string) => void
+  ): Electron.WebContents
+}
 
 interface ExecutorPublishTargetState {
   accountId: string
@@ -166,6 +172,31 @@ export class BrowserViewManager {
     this.mainWindow.on('unmaximize', updateBounds)
   }
 
+  private blockUnsupportedNavigation(
+    url: string,
+    source: string,
+    event?: { preventDefault: () => void }
+  ): boolean {
+    if (isSupportedBrowserNavigationUrl(url)) {
+      return false
+    }
+
+    event?.preventDefault()
+    console.warn(`[BrowserViewManager] Blocked unsupported navigation from ${source}:`, url)
+    void openExternalUrl(url)
+    return true
+  }
+
+  private installNavigationGuard(webContents: Electron.WebContents, source: string): void {
+    const guard = (event: Electron.Event, url: string): void => {
+      this.blockUnsupportedNavigation(url, source, event)
+    }
+
+    webContents.on('will-navigate', guard)
+    ;(webContents as NavigationGuardableWebContents).on('will-frame-navigate', guard)
+    webContents.on('will-redirect', guard)
+  }
+
   private installThirdPartyWindowOpenHandler(view: BrowserView, ses: Session): void {
     view.webContents.setWindowOpenHandler(({ url, disposition }) => {
       if (disposition === 'new-window') {
@@ -182,6 +213,7 @@ export class BrowserViewManager {
                 sandbox: true
               }
             })
+            this.installNavigationGuard(child.webContents, `child-window:${url}`)
             trackAccountProxyForWebContents(child.webContents)
             child.once('ready-to-show', () => {
               if (!child.isDestroyed()) {
@@ -191,6 +223,10 @@ export class BrowserViewManager {
             return child.webContents
           }
         }
+      }
+
+      if (this.blockUnsupportedNavigation(url, 'window-open')) {
+        return { action: 'deny' }
       }
 
       try {
@@ -771,6 +807,7 @@ export class BrowserViewManager {
         sandbox: false
       }
     })
+    this.installNavigationGuard(this.tabBarView.webContents, 'tabbar')
     this.tabBarView.setBounds({
       x: 0,
       y: 0,
@@ -799,6 +836,7 @@ export class BrowserViewManager {
         webSecurity: true
       }
     })
+    this.installNavigationGuard(this.homeView.webContents, 'home')
     this.homeView.setBounds({
       x: 0,
       y: TABBAR_HEIGHT,
@@ -879,7 +917,9 @@ export class BrowserViewManager {
         : 'https://multipost.app'
       const fullPath = path.startsWith('/dashboard') ? path : `/dashboard${path}`
       const url = `${baseUrl}${fullPath}`
-      this.homeView.webContents.loadURL(url)
+      if (!this.blockUnsupportedNavigation(url, 'home:navigateTo')) {
+        this.homeView.webContents.loadURL(url)
+      }
     })
 
     // 导航报告
@@ -1020,6 +1060,7 @@ export class BrowserViewManager {
         sandbox: true
       }
     })
+    this.installNavigationGuard(view.webContents, `account:${accountId}`)
 
     // Set bounds (full width, only reserve space for tab bar)
     // MainWebView is hidden when BrowserView is shown, so no sidebar offset needed
@@ -1222,13 +1263,20 @@ export class BrowserViewManager {
       throw new Error(`No view found for account: ${accountId}`)
     }
     const account = DatabaseService.getInstance().getAccount(accountId)
+    const targetUrl = this.normalizeNavigationUrl(url)
+    if (this.blockUnsupportedNavigation(targetUrl, `account:${accountId}:navigate`)) {
+      return
+    }
     await applyAccountProxy(managed.view.webContents.session, account)
-    await managed.view.webContents.loadURL(this.normalizeNavigationUrl(url))
+    await managed.view.webContents.loadURL(targetUrl)
   }
 
   async navigateTab(tabId: string, url: string): Promise<void> {
     const targetUrl = this.normalizeNavigationUrl(url)
     if (!targetUrl) {
+      return
+    }
+    if (this.blockUnsupportedNavigation(targetUrl, `tab:${tabId}:navigate`)) {
       return
     }
 
@@ -1601,6 +1649,7 @@ export class BrowserViewManager {
         sandbox: true
       }
     })
+    this.installNavigationGuard(view.webContents, `platform:${platform}`)
 
     // Set bounds (full width, reserve space for tab bar and toolbar)
     const [width, height] = this.mainWindow.getContentSize()
@@ -1686,6 +1735,9 @@ export class BrowserViewManager {
 
   private async loadExactUrlIfNeeded(webContents: Electron.WebContents, targetUrl: string): Promise<void> {
     if (this.normalizeNavigationUrl(webContents.getURL()) === this.normalizeNavigationUrl(targetUrl)) {
+      return
+    }
+    if (this.blockUnsupportedNavigation(targetUrl, 'loadExactUrlIfNeeded')) {
       return
     }
     await webContents.loadURL(targetUrl)
@@ -2066,6 +2118,7 @@ export class BrowserViewManager {
         sandbox: true
       }
     })
+    this.installNavigationGuard(view.webContents, `executor:${accountId}`)
 
     // Set bounds for executor view (full width, reserve space for tab bar)
     const [width, height] = this.mainWindow.getContentSize()
@@ -2738,6 +2791,7 @@ export class BrowserViewManager {
             sandbox: true
           }
         })
+        this.installNavigationGuard(view.webContents, `publish-group:${groupId}:${accountId}`)
 
         view.setBounds({
           x: 0,
@@ -3527,6 +3581,9 @@ export class BrowserViewManager {
    */
   async debugNavigate(url: string): Promise<void> {
     if (!this.homeView) throw new Error('Home view not available')
+    if (this.blockUnsupportedNavigation(url, 'debugNavigate')) {
+      return
+    }
     await this.homeView.webContents.loadURL(url)
   }
 

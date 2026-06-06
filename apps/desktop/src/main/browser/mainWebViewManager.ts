@@ -7,7 +7,7 @@
 import { BrowserView, BrowserWindow, ipcMain, dialog } from 'electron'
 import { join } from 'path'
 import { is } from '@electron-toolkit/utils'
-import { openExternalUrl } from './externalUrl'
+import { isSupportedBrowserNavigationUrl, openExternalUrl } from './externalUrl'
 
 // 开发环境使用本地地址，生产环境使用线上地址
 const WEB_BASE_URL = is.dev
@@ -15,6 +15,12 @@ const WEB_BASE_URL = is.dev
   : 'https://multipost.app'
 
 const DESKTOP_PATH = '/dashboard'
+type NavigationGuardableWebContents = Electron.WebContents & {
+  on(
+    event: 'will-frame-navigate',
+    listener: (event: Electron.Event, url: string) => void
+  ): Electron.WebContents
+}
 
 export class MainWebViewManager {
   private mainWindow: BrowserWindow
@@ -70,6 +76,19 @@ export class MainWebViewManager {
     if (!this.webView) return
 
     const webContents = this.webView.webContents
+    const guardNavigation = (event: Electron.Event, url: string): void => {
+      if (isSupportedBrowserNavigationUrl(url)) {
+        return
+      }
+
+      event.preventDefault()
+      console.warn('[MainWebViewManager] Blocked unsupported navigation:', url)
+      void openExternalUrl(url)
+    }
+
+    webContents.on('will-navigate', guardNavigation)
+    ;(webContents as NavigationGuardableWebContents).on('will-frame-navigate', guardNavigation)
+    webContents.on('will-redirect', guardNavigation)
 
     // 页面导航完成
     webContents.on('did-navigate', (_, url) => {
