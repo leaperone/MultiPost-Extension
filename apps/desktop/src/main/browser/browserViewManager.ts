@@ -1,4 +1,4 @@
-import { BrowserView, BrowserWindow, session, ipcMain, shell, dialog, net } from 'electron'
+import { BrowserView, BrowserWindow, session, ipcMain, shell, dialog, type Session } from 'electron'
 import { join, basename, extname } from 'path'
 import { v4 as uuidv4 } from 'uuid'
 import { is } from '@electron-toolkit/utils'
@@ -20,7 +20,6 @@ import {
 } from '../../shared/types'
 import { PLATFORMS, PLATFORM_PUBLISH_URLS } from '../../shared/constants'
 import { getAdapter } from '../platforms'
-import { FingerprintService } from '../fingerprint'
 import { getMimeType } from '../utils/mime'
 import { getDesktopRequestHeaders, hardenSession, registerLocalFileProtocol } from './sessionHardening'
 import { DatabaseService } from '../database'
@@ -33,6 +32,15 @@ import {
   getDesktopInjectorManifestEntry,
   type DesktopInjectorManifestEntry
 } from '../injectors/manifest'
+import {
+  acquireAccountProxyForSession,
+  applyAccountProxy,
+  applyAccountProxyToTrackedAccountSessions,
+  releaseAccountProxyForSession,
+  releaseAccountProxyForWebContents,
+  trackAccountProxyForWebContents,
+  withAccountProxySession
+} from '../proxy/accountProxy'
 
 interface ManagedBrowserView {
   view: BrowserView
@@ -129,7 +137,6 @@ export class BrowserViewManager {
   // Active executor is now tracked by accountId
   private activeExecutorId: string | null = null
   private sidebarWidth: number = DEFAULT_SIDEBAR_WIDTH
-  private fingerprintService: FingerprintService
   // Home tab BrowserView - loads the main web app
   private homeView: BrowserView | null = null
   // Tab bar BrowserView - always on top
@@ -145,11 +152,9 @@ export class BrowserViewManager {
   private executorPublishPayloads: Map<string, SyncContentData> = new Map()
   private activeGroupId: string | null = null
   private groupCounter: number = 0 // 用于生成 Group 名称
-  private fingerprintLegacyReloads = new WeakSet<Electron.WebContents>()
 
   constructor(mainWindow: BrowserWindow) {
     this.mainWindow = mainWindow
-    this.fingerprintService = FingerprintService.getInstance()
 
     // Listen for window resize/maximize/unmaximize to update all view bounds
     const updateBounds = (): void => {
@@ -160,66 +165,41 @@ export class BrowserViewManager {
     this.mainWindow.on('unmaximize', updateBounds)
   }
 
-  private getPlatformFingerprintKey(platform: PlatformType): string {
-    return `platform-default-${platform}`
-  }
-
-  private async applyFingerprintToView(view: BrowserView, profileKey: string): Promise<void> {
-    try {
-      console.log('[BrowserViewManager] Applying fingerprint:', profileKey)
-      await this.fingerprintService.applyFingerprintToWebContents(view.webContents, profileKey)
-      console.log('[BrowserViewManager] Fingerprint applied successfully:', profileKey)
-    } catch (error) {
-      console.warn('[BrowserViewManager] Fingerprint application failed:', error)
-    }
-  }
-
-  private async ensureFingerprintForView(
-    view: BrowserView,
-    profileKey: string,
-    opts: { reloadLoadedLegacy?: boolean } = {}
-  ): Promise<void> {
-    const webContents = view.webContents
-    const hadFingerprint = this.fingerprintService.hasFingerprintScript(webContents)
-    await this.applyFingerprintToView(view, profileKey)
-    const hasFingerprint = this.fingerprintService.hasFingerprintScript(webContents)
-
-    if (
-      opts.reloadLoadedLegacy &&
-      !hadFingerprint &&
-      hasFingerprint &&
-      !this.fingerprintLegacyReloads.has(webContents)
-    ) {
-      this.fingerprintLegacyReloads.add(webContents)
-      await this.reloadWebContentsForFingerprint(webContents)
-    }
-  }
-
-  private async reloadWebContentsForFingerprint(webContents: Electron.WebContents): Promise<void> {
-    if (webContents.isDestroyed()) {
-      return
-    }
-
-    const currentUrl = webContents.getURL()
-    if (!currentUrl || currentUrl === 'about:blank') {
-      return
-    }
-
-    await new Promise<void>((resolve) => {
-      let settled = false
-      const finish = (): void => {
-        if (settled) return
-        settled = true
-        clearTimeout(timeout)
-        webContents.removeListener('did-finish-load', finish)
-        webContents.removeListener('did-fail-load', finish)
-        resolve()
+  private installThirdPartyWindowOpenHandler(view: BrowserView, ses: Session): void {
+    view.webContents.setWindowOpenHandler(({ url, disposition }) => {
+      if (disposition === 'new-window') {
+        return {
+          action: 'allow',
+          createWindow: (options) => {
+            const child = new BrowserWindow({
+              ...options,
+              autoHideMenuBar: true,
+              webPreferences: {
+                session: ses,
+                contextIsolation: true,
+                nodeIntegration: false,
+                sandbox: true
+              }
+            })
+            trackAccountProxyForWebContents(child.webContents)
+            child.once('ready-to-show', () => {
+              if (!child.isDestroyed()) {
+                child.show()
+              }
+            })
+            return child.webContents
+          }
+        }
       }
 
-      const timeout = setTimeout(finish, 15_000)
-      webContents.once('did-finish-load', finish)
-      webContents.once('did-fail-load', finish)
-      webContents.reload()
+      try {
+        void view.webContents.loadURL(url).catch((error) => {
+          console.warn('[BrowserViewManager] Failed to navigate window-open URL:', error)
+        })
+      } catch (error) {
+        console.warn('[BrowserViewManager] Failed to navigate window-open URL:', error)
+      }
+      return { action: 'deny' }
     })
   }
 
@@ -733,6 +713,7 @@ export class BrowserViewManager {
         target.isVisible = false
       }
       if (!target.view.webContents.isDestroyed()) {
+        await releaseAccountProxyForWebContents(target.view.webContents)
         target.view.webContents.close()
       }
     }
@@ -994,6 +975,7 @@ export class BrowserViewManager {
    */
   async openView(accountId: string, platform: PlatformType, url?: string): Promise<BrowserView> {
     console.log('[BrowserViewManager] openView called:', { accountId, platform, url })
+    const account = DatabaseService.getInstance().getAccount(accountId)
 
     // Check if view already exists
     const existing = this.views.get(accountId)
@@ -1001,10 +983,9 @@ export class BrowserViewManager {
       console.log('[BrowserViewManager] View exists, showing it')
       await this.showView(accountId)
       if (url) {
-        await this.ensureFingerprintForView(existing.view, accountId)
         await this.navigate(accountId, url)
       } else {
-        await this.ensureFingerprintForView(existing.view, accountId, { reloadLoadedLegacy: true })
+        await applyAccountProxy(existing.view.webContents.session, account)
       }
       return existing.view
     }
@@ -1012,11 +993,11 @@ export class BrowserViewManager {
     console.log('[BrowserViewManager] Creating new view')
     // Get session partition from account database for session isolation
     // This ensures login state is preserved across different features
-    const account = DatabaseService.getInstance().getAccount(accountId)
     const partition = account?.sessionPartition || `persist:account-${accountId}`
     console.log('[BrowserViewManager] Using session partition:', partition)
     const ses = session.fromPartition(partition)
     hardenSession(ses)
+    await applyAccountProxy(ses, account)
 
     // Create BrowserView with isolated session
     const view = new BrowserView({
@@ -1045,9 +1026,8 @@ export class BrowserViewManager {
     // Disable auto-resize, we manage bounds manually via resize listener
     view.setAutoResize({ width: false, height: false })
     console.log('[BrowserViewManager] View created with bounds offset y:', topOffset)
-
-    // Apply fingerprint before loading any content.
-    await this.ensureFingerprintForView(view, accountId)
+    this.installThirdPartyWindowOpenHandler(view, ses)
+    trackAccountProxyForWebContents(view.webContents)
 
     // Store the managed view
     const targetUrl = url || PLATFORMS[platform]?.url || 'about:blank'
@@ -1135,6 +1115,7 @@ export class BrowserViewManager {
 
     this.mainWindow.removeBrowserView(managed.view)
     // Destroy the webContents
+    await releaseAccountProxyForWebContents(managed.view.webContents)
     managed.view.webContents.close()
     this.views.delete(accountId)
 
@@ -1218,6 +1199,8 @@ export class BrowserViewManager {
     if (!managed) {
       throw new Error(`No view found for account: ${accountId}`)
     }
+    const account = DatabaseService.getInstance().getAccount(accountId)
+    await applyAccountProxy(managed.view.webContents.session, account)
     await managed.view.webContents.loadURL(url)
   }
 
@@ -1269,60 +1252,61 @@ export class BrowserViewManager {
       const partition = account?.sessionPartition || `persist:account-${accountId}`
       const ses = session.fromPartition(partition)
       hardenSession(ses)
+      return await withAccountProxySession(ses, account, async () => {
+        if (platform === 'bilibili') {
+          const cookies = await ses.cookies.get({ domain: '.bilibili.com' })
+          const sessdata = cookies.find((c) => c.name === 'SESSDATA')
+          if (!sessdata) return null
 
-      if (platform === 'bilibili') {
-        const cookies = await ses.cookies.get({ domain: '.bilibili.com' })
-        const sessdata = cookies.find((c) => c.name === 'SESSDATA')
-        if (!sessdata) return null
-
-        const cookieHeader = cookies.map((c) => `${c.name}=${c.value}`).join('; ')
-        const response = await net.fetch('https://api.bilibili.com/x/web-interface/nav', {
-          headers: getDesktopRequestHeaders({
-            Cookie: cookieHeader,
-            Referer: 'https://www.bilibili.com/'
+          const cookieHeader = cookies.map((c) => `${c.name}=${c.value}`).join('; ')
+          const response = await ses.fetch('https://api.bilibili.com/x/web-interface/nav', {
+            headers: getDesktopRequestHeaders({
+              Cookie: cookieHeader,
+              Referer: 'https://www.bilibili.com/'
+            })
           })
-        })
-        const data = await response.json()
+          const data = await response.json()
 
-        if (data.data?.isLogin) {
-          const result = {
-            username: String(data.data.mid),
-            displayName: data.data.uname,
-            avatar: data.data.face
+          if (data.data?.isLogin) {
+            const result = {
+              username: String(data.data.mid),
+              displayName: data.data.uname,
+              avatar: data.data.face
+            }
+            console.log('[BrowserViewManager] fetchUserInfoFromSession result:', result)
+            return result
           }
-          console.log('[BrowserViewManager] fetchUserInfoFromSession result:', result)
-          return result
         }
-      }
 
-      if (platform === 'xiaohongshu') {
-        const cookies = await ses.cookies.get({ domain: '.xiaohongshu.com' })
-        const webSession = cookies.find((c) => c.name === 'web_session')
-        if (!webSession) return null
+        if (platform === 'xiaohongshu') {
+          const cookies = await ses.cookies.get({ domain: '.xiaohongshu.com' })
+          const webSession = cookies.find((c) => c.name === 'web_session')
+          if (!webSession) return null
 
-        const cookieHeader = cookies.map((c) => `${c.name}=${c.value}`).join('; ')
-        const response = await net.fetch('https://edith.xiaohongshu.com/api/sns/web/v2/user/me', {
-          headers: getDesktopRequestHeaders({
-            Cookie: cookieHeader,
-            Origin: 'https://www.xiaohongshu.com',
-            Referer: 'https://www.xiaohongshu.com/'
+          const cookieHeader = cookies.map((c) => `${c.name}=${c.value}`).join('; ')
+          const response = await ses.fetch('https://edith.xiaohongshu.com/api/sns/web/v2/user/me', {
+            headers: getDesktopRequestHeaders({
+              Cookie: cookieHeader,
+              Origin: 'https://www.xiaohongshu.com',
+              Referer: 'https://www.xiaohongshu.com/'
+            })
           })
-        })
-        const data = await response.json()
+          const data = await response.json()
 
-        if (data.data?.nickname) {
-          const result = {
-            username: data.data.red_id || data.data.nickname,
-            displayName: data.data.nickname,
-            avatar: data.data.imageb
+          if (data.data?.nickname) {
+            const result = {
+              username: data.data.red_id || data.data.nickname,
+              displayName: data.data.nickname,
+              avatar: data.data.imageb
+            }
+            console.log('[BrowserViewManager] fetchUserInfoFromSession xiaohongshu result:', result)
+            return result
           }
-          console.log('[BrowserViewManager] fetchUserInfoFromSession xiaohongshu result:', result)
-          return result
         }
-      }
 
-      // TODO: Add session-based user info fetch for other platforms
-      return null
+        // TODO: Add session-based user info fetch for other platforms
+        return null
+      })
     } catch (e) {
       console.error('[BrowserViewManager] fetchUserInfoFromSession error:', e)
       return null
@@ -1422,6 +1406,15 @@ export class BrowserViewManager {
    */
   getAllViews(): Map<string, ManagedBrowserView> {
     return this.views
+  }
+
+  async reapplyAccountProxy(accountId: string): Promise<void> {
+    const account = DatabaseService.getInstance().getAccount(accountId)
+    if (!account) {
+      return
+    }
+
+    await applyAccountProxyToTrackedAccountSessions(account)
   }
 
   /**
@@ -1530,12 +1523,7 @@ export class BrowserViewManager {
       // Navigate to appropriate URL for content type
       const targetUrl = url || this.getPublishUrl(platform, contentType)
       if (targetUrl) {
-        await this.ensureFingerprintForView(existing.view, this.getPlatformFingerprintKey(platform))
         await this.navigatePlatform(platform, targetUrl)
-      } else {
-        await this.ensureFingerprintForView(existing.view, this.getPlatformFingerprintKey(platform), {
-          reloadLoadedLegacy: true
-        })
       }
       return existing.view
     }
@@ -1570,8 +1558,7 @@ export class BrowserViewManager {
     })
     // Disable auto-resize, we manage bounds manually via resize listener
     view.setAutoResize({ width: false, height: false })
-
-    await this.ensureFingerprintForView(view, this.getPlatformFingerprintKey(platform))
+    this.installThirdPartyWindowOpenHandler(view, ses)
 
     // Store the managed view (not visible initially)
     this.platformViews.set(platform, {
@@ -1978,11 +1965,13 @@ export class BrowserViewManager {
     contentType?: SyncContentType,
     sessionPartition?: string
   ): Promise<BrowserView> {
+    const account = DatabaseService.getInstance().getAccount(accountId)
+
     // Check if view already exists for this account
     const existing = this.executorViews.get(accountId)
     if (existing) {
+      await applyAccountProxy(existing.view.webContents.session, account)
       await this.showExecutorView(accountId)
-      await this.ensureFingerprintForView(existing.view, accountId, { reloadLoadedLegacy: true })
       return existing.view
     }
 
@@ -1993,6 +1982,7 @@ export class BrowserViewManager {
     hardenSession(ses)
     // TODO(phase-capability): replace path-shaped local-file URLs with a per-session allowlist of user-selected files.
     registerLocalFileProtocol(ses)
+    await applyAccountProxy(ses, account)
 
     // Create BrowserView
     const view = new BrowserView({
@@ -2018,9 +2008,8 @@ export class BrowserViewManager {
 
     // Disable auto-resize, we manage bounds manually via resize listener
     view.setAutoResize({ width: false, height: false })
-
-    // Apply fingerprint before loading any content
-    await this.ensureFingerprintForView(view, accountId)
+    this.installThirdPartyWindowOpenHandler(view, ses)
+    trackAccountProxyForWebContents(view.webContents)
 
     // Store the view keyed by accountId
     this.executorViews.set(accountId, {
@@ -2117,6 +2106,7 @@ export class BrowserViewManager {
     if (!managed) return
 
     this.mainWindow.removeBrowserView(managed.view)
+    await releaseAccountProxyForWebContents(managed.view.webContents)
     managed.view.webContents.close()
     this.executorViews.delete(accountId)
     this.clearPublishPayloadsForPrefix(this.executorPublishPayloads, `${accountId}:`)
@@ -2547,6 +2537,20 @@ export class BrowserViewManager {
 
   // ========== Publish Group Methods ==========
 
+  private async destroyPublishGroupViews(group: PublishGroupView): Promise<void> {
+    for (const target of group.views.values()) {
+      if (target.isVisible) {
+        this.mainWindow.removeBrowserView(target.view)
+        target.isVisible = false
+      }
+      if (!target.view.webContents.isDestroyed()) {
+        await releaseAccountProxyForWebContents(target.view.webContents)
+        target.view.webContents.close()
+      }
+    }
+    group.views.clear()
+  }
+
   /**
    * Create a new publish group with multiple target accounts
    */
@@ -2581,96 +2585,129 @@ export class BrowserViewManager {
 
     const [width, height] = this.mainWindow.getContentSize()
     const topOffset = TABBAR_HEIGHT
+    let temporaryProxySession: Session | null = null
 
-    // Create BrowserView for each target account
-    for (const target of targets) {
-      const { accountId, platform, displayName } = target
-
-      // Get session partition from database
-      const account = DatabaseService.getInstance().getAccount(accountId)
-
-      // Try multiple partition formats for backward compatibility
-      // Old format: persist:{platform}-{accountId}
-      // New format: persist:account-{accountId}
-      const newPartition = account?.sessionPartition || `persist:account-${accountId}`
-      const oldPartition = `persist:${platform}-${accountId}`
-
-      // Check which partition has cookies (login state)
-      // Prioritize new partition, only fall back to old if new has no cookies
-      let partition = newPartition
-      const newSes = session.fromPartition(newPartition)
-      const newCookies = await newSes.cookies.get({})
-
-      if (newCookies.length > 0) {
-        console.log(`[BrowserViewManager] Using new partition (${newCookies.length} cookies): ${newPartition}`)
-      } else {
-        const oldSes = session.fromPartition(oldPartition)
-        const oldCookies = await oldSes.cookies.get({})
-        if (oldCookies.length > 0) {
-          console.log(`[BrowserViewManager] Falling back to old partition (${oldCookies.length} cookies): ${oldPartition}`)
-          partition = oldPartition
-        } else {
-          console.log(`[BrowserViewManager] No cookies in either partition, using new: ${newPartition}`)
+    try {
+      // Deduplicate targets by accountId: a publish group cannot have the same
+      // account twice, and a duplicate would overwrite group.views and orphan the
+      // first view's proxy listener during failure cleanup.
+      const seenAccountIds = new Set<string>()
+      const uniqueTargets = targets.filter((target) => {
+        if (seenAccountIds.has(target.accountId)) {
+          return false
         }
+        seenAccountIds.add(target.accountId)
+        return true
+      })
+
+      // Create BrowserView for each target account
+      for (const target of uniqueTargets) {
+        const { accountId, platform, displayName } = target
+
+        // Get session partition from database
+        const account = DatabaseService.getInstance().getAccount(accountId)
+
+        // Try multiple partition formats for backward compatibility
+        // Old format: persist:{platform}-{accountId}
+        // New format: persist:account-{accountId}
+        const newPartition = account?.sessionPartition || `persist:account-${accountId}`
+        const oldPartition = `persist:${platform}-${accountId}`
+
+        // Check which partition has cookies (login state)
+        // Prioritize new partition, only fall back to old if new has no cookies
+        let partition = newPartition
+        const newSes = session.fromPartition(newPartition)
+        const newCookies = await newSes.cookies.get({})
+
+        if (newCookies.length > 0) {
+          console.log(`[BrowserViewManager] Using new partition (${newCookies.length} cookies): ${newPartition}`)
+        } else {
+          const oldSes = session.fromPartition(oldPartition)
+          const oldCookies = await oldSes.cookies.get({})
+          if (oldCookies.length > 0) {
+            console.log(`[BrowserViewManager] Falling back to old partition (${oldCookies.length} cookies): ${oldPartition}`)
+            partition = oldPartition
+          } else {
+            console.log(`[BrowserViewManager] No cookies in either partition, using new: ${newPartition}`)
+          }
+        }
+
+        console.log(`[BrowserViewManager] Account ${displayName} using partition: ${partition}`)
+        const ses = session.fromPartition(partition)
+        hardenSession(ses)
+        // TODO(phase-capability): replace path-shaped local-file URLs with a per-session allowlist of user-selected files.
+        registerLocalFileProtocol(ses)
+        await applyAccountProxy(ses, account)
+        await acquireAccountProxyForSession(ses)
+        temporaryProxySession = ses
+
+        // Create BrowserView
+        const view = new BrowserView({
+          webPreferences: {
+            // Security: third-party platform pages get NO app preload — do not expose
+            // window.api / window.electron (raw ipcRenderer) to untrusted remote content.
+            session: ses,
+            contextIsolation: true,
+            nodeIntegration: false,
+            sandbox: true
+          }
+        })
+
+        view.setBounds({
+          x: 0,
+          y: topOffset,
+          width: width,
+          height: height - topOffset
+        })
+        view.setAutoResize({ width: false, height: false })
+        this.installThirdPartyWindowOpenHandler(view, ses)
+        trackAccountProxyForWebContents(view.webContents)
+
+        // Store in group before loadURL so failure cleanup can release this view.
+        group.views.set(accountId, {
+          view,
+          accountId,
+          platform,
+          displayName,
+          status: 'pending',
+          isVisible: false
+        })
+        await releaseAccountProxyForSession(ses)
+        temporaryProxySession = null
+
+        // Capture console output from this view (dev only)
+        this.debugAttachConsoleCapture(view.webContents, `group:${displayName}:${platform}`)
+
+        // Navigate to publish URL
+        const publishUrl = this.getPublishUrl(platform, contentType)
+        console.log(`[BrowserViewManager] Loading ${displayName}: ${publishUrl}`)
+        await view.webContents.loadURL(publishUrl)
       }
 
-      console.log(`[BrowserViewManager] Account ${displayName} using partition: ${partition}`)
-      const ses = session.fromPartition(partition)
-      hardenSession(ses)
-      // TODO(phase-capability): replace path-shaped local-file URLs with a per-session allowlist of user-selected files.
-      registerLocalFileProtocol(ses)
+      // Set first account as active
+      if (uniqueTargets.length > 0) {
+        group.activeAccountId = uniqueTargets[0].accountId
+      }
 
-      // Create BrowserView
-      const view = new BrowserView({
-        webPreferences: {
-          // Security: third-party platform pages get NO app preload — do not expose
-          // window.api / window.electron (raw ipcRenderer) to untrusted remote content.
-          session: ses,
-          contextIsolation: true,
-          nodeIntegration: false,
-          sandbox: true
-        }
-      })
+      // Store the group
+      this.publishGroups.set(groupId, group)
 
-      view.setBounds({
-        x: 0,
-        y: topOffset,
-        width: width,
-        height: height - topOffset
-      })
-      view.setAutoResize({ width: false, height: false })
-
-      await this.ensureFingerprintForView(view, accountId)
-
-      // Store in group
-      group.views.set(accountId, {
-        view,
-        accountId,
-        platform,
-        displayName,
-        status: 'pending',
-        isVisible: false
-      })
-
-      // Capture console output from this view (dev only)
-      this.debugAttachConsoleCapture(view.webContents, `group:${displayName}:${platform}`)
-
-      // Navigate to publish URL
-      const publishUrl = this.getPublishUrl(platform, contentType)
-      console.log(`[BrowserViewManager] Loading ${displayName}: ${publishUrl}`)
-      await view.webContents.loadURL(publishUrl)
+      // Show the group
+      await this.showPublishGroup(groupId)
+    } catch (error) {
+      if (this.publishGroups.get(groupId) === group) {
+        this.publishGroups.delete(groupId)
+      }
+      if (this.activeGroupId === groupId) {
+        this.activeGroupId = null
+      }
+      if (temporaryProxySession) {
+        await releaseAccountProxyForSession(temporaryProxySession)
+        temporaryProxySession = null
+      }
+      await this.destroyPublishGroupViews(group)
+      throw error
     }
-
-    // Set first account as active
-    if (targets.length > 0) {
-      group.activeAccountId = targets[0].accountId
-    }
-
-    // Store the group
-    this.publishGroups.set(groupId, group)
-
-    // Show the group
-    await this.showPublishGroup(groupId)
 
     // 自动执行填充 - 等待页面加载完成后执行
     setTimeout(async () => {
@@ -2807,6 +2844,7 @@ export class BrowserViewManager {
     }
 
     // Destroy the view
+    await releaseAccountProxyForWebContents(target.view.webContents)
     target.view.webContents.close()
     group.views.delete(accountId)
 
@@ -2842,6 +2880,7 @@ export class BrowserViewManager {
       if (target.isVisible) {
         this.mainWindow.removeBrowserView(target.view)
       }
+      await releaseAccountProxyForWebContents(target.view.webContents)
       target.view.webContents.close()
     }
 

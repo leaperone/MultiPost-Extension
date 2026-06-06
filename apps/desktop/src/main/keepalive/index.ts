@@ -2,8 +2,12 @@ import { BrowserView, session } from 'electron'
 import { PLATFORMS } from '../../shared/constants'
 import type { Account, PlatformType, KeepAliveAccountResult, KeepAliveStatus } from '../../shared/types'
 import { DatabaseService } from '../database'
-import { FingerprintService } from '../fingerprint'
 import { hardenSession } from '../browser/sessionHardening'
+import {
+  applyAccountProxy,
+  releaseAccountProxyForWebContents,
+  trackAccountProxyForWebContents
+} from '../proxy/accountProxy'
 
 interface KeepAliveOptions {
   intervalMs?: number
@@ -136,6 +140,7 @@ export class KeepAliveService {
       const partition = account.sessionPartition || `persist:account-${account.id}`
       const ses = session.fromPartition(partition)
       hardenSession(ses)
+      await applyAccountProxy(ses, account)
 
       view = new BrowserView({
         webPreferences: {
@@ -145,12 +150,7 @@ export class KeepAliveService {
           sandbox: true
         }
       })
-
-      try {
-        await FingerprintService.getInstance().applyFingerprintToWebContents(view.webContents, account.id)
-      } catch (error) {
-        console.warn('[KeepAlive] Fingerprint application failed:', error)
-      }
+      trackAccountProxyForWebContents(view.webContents)
 
       // Load platform URL with timeout
       await Promise.race([
@@ -208,6 +208,7 @@ export class KeepAliveService {
       // Destroy the hidden view
       if (view) {
         try {
+          await releaseAccountProxyForWebContents(view.webContents)
           ;(view.webContents as Electron.WebContents).close()
         } catch {
           // View may already be destroyed

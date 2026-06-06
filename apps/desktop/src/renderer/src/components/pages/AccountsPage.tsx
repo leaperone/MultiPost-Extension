@@ -19,6 +19,12 @@ import { addToast } from '@heroui/react'
 import { PLATFORMS } from '@shared/constants'
 import type { Account, AccountGroup, PlatformType } from '@shared/types'
 import { PlatformIcon } from '../publish/shared'
+import {
+  createProxyConfigDraft,
+  proxyDraftToConfig,
+  ProxyConfigSection,
+  type ProxyConfigDraft
+} from '../ProxyConfigSection'
 
 interface AccountsPageProps {
   onLoginAccount?: (account: Account) => void
@@ -37,8 +43,14 @@ export function AccountsPage({ onLoginAccount }: AccountsPageProps): React.React
   const [newGroupName, setNewGroupName] = useState('')
   const [newGroupColor, setNewGroupColor] = useState('')
   const [selectedPlatform, setSelectedPlatform] = useState<PlatformType | ''>('')
+  const [newAccountProxyDraft, setNewAccountProxyDraft] = useState<ProxyConfigDraft>(() =>
+    createProxyConfigDraft()
+  )
   const [editingAccount, setEditingAccount] = useState<Account | null>(null)
   const [editDisplayName, setEditDisplayName] = useState('')
+  const [editProxyDraft, setEditProxyDraft] = useState<ProxyConfigDraft>(() =>
+    createProxyConfigDraft()
+  )
 
   const loadData = useCallback(async () => {
     try {
@@ -65,14 +77,21 @@ export function AccountsPage({ onLoginAccount }: AccountsPageProps): React.React
     loadData()
   }, [loadData])
 
+  const closeAddAccountModal = () => {
+    onAddAccountClose()
+    setSelectedPlatform('')
+    setNewAccountProxyDraft(createProxyConfigDraft())
+  }
+
   const handleAddAccount = async () => {
     if (!selectedPlatform) return
 
     try {
-      const account = await window.api.account.create(selectedPlatform)
+      const account = await window.api.account.create(selectedPlatform, {
+        proxyConfig: proxyDraftToConfig(newAccountProxyDraft)
+      })
       setAccounts((prev) => [account, ...prev])
-      onAddAccountClose()
-      setSelectedPlatform('')
+      closeAddAccountModal()
       addToast({
         title: '添加成功',
         description: `已添加 ${PLATFORMS[selectedPlatform]?.name || selectedPlatform} 账号`,
@@ -177,6 +196,7 @@ export function AccountsPage({ onLoginAccount }: AccountsPageProps): React.React
   const handleEditAccount = (account: Account) => {
     setEditingAccount(account)
     setEditDisplayName(account.displayName || account.username || '')
+    setEditProxyDraft(createProxyConfigDraft(account.proxyConfig))
     onEditAccountOpen()
   }
 
@@ -185,7 +205,8 @@ export function AccountsPage({ onLoginAccount }: AccountsPageProps): React.React
 
     try {
       await window.api.account.update(editingAccount.id, {
-        displayName: editDisplayName.trim() || undefined
+        displayName: editDisplayName.trim() || undefined,
+        proxyConfig: proxyDraftToConfig(editProxyDraft)
       })
       await loadData()
       onEditAccountClose()
@@ -375,10 +396,10 @@ export function AccountsPage({ onLoginAccount }: AccountsPageProps): React.React
       )}
 
       {/* Add Account Modal */}
-      <Modal isOpen={isAddAccountOpen} onClose={onAddAccountClose}>
+      <Modal isOpen={isAddAccountOpen} onClose={closeAddAccountModal}>
         <ModalContent>
           <ModalHeader>添加账号</ModalHeader>
-          <ModalBody>
+          <ModalBody className="flex flex-col gap-4">
             <Select
               label="选择平台"
               placeholder="请选择平台"
@@ -389,9 +410,14 @@ export function AccountsPage({ onLoginAccount }: AccountsPageProps): React.React
                 <SelectItem key={p.key}>{p.label}</SelectItem>
               ))}
             </Select>
+
+            <ProxyConfigSection
+              value={newAccountProxyDraft}
+              onChange={setNewAccountProxyDraft}
+            />
           </ModalBody>
           <ModalFooter>
-            <Button variant="light" onPress={onAddAccountClose}>
+            <Button variant="light" onPress={closeAddAccountModal}>
               取消
             </Button>
             <Button color="primary" onPress={handleAddAccount} isDisabled={!selectedPlatform}>
@@ -433,14 +459,20 @@ export function AccountsPage({ onLoginAccount }: AccountsPageProps): React.React
       {/* Edit Account Modal */}
       <Modal isOpen={isEditAccountOpen} onClose={onEditAccountClose}>
         <ModalContent>
-          <ModalHeader>编辑账号名称</ModalHeader>
-          <ModalBody>
+          <ModalHeader>编辑账号</ModalHeader>
+          <ModalBody className="flex flex-col gap-4">
             <Input
               label="显示名称"
               placeholder="输入账号显示名称"
               value={editDisplayName}
               onChange={(e) => setEditDisplayName(e.target.value)}
               autoFocus
+            />
+            <ProxyConfigSection
+              key={editingAccount?.id || 'edit-proxy'}
+              value={editProxyDraft}
+              onChange={setEditProxyDraft}
+              defaultExpanded={Boolean(editingAccount?.proxyConfig)}
             />
           </ModalBody>
           <ModalFooter>

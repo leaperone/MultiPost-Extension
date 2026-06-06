@@ -1,6 +1,3 @@
-// Re-export fingerprint types
-export * from './fingerprint'
-
 // Platform types - all platforms from MultiPost-Extension
 export type PlatformType =
   // 已实现的平台
@@ -198,6 +195,14 @@ export interface PostContent {
 }
 
 // Account types
+export interface ProxyConfig {
+  protocol: 'http' | 'https' | 'socks5'
+  host: string
+  port: number
+  username?: string
+  password?: string
+}
+
 export interface Account {
   id: string
   platform: PlatformType
@@ -208,6 +213,7 @@ export interface Account {
   lastLoginAt?: number
   groupId?: string
   sessionPartition: string
+  proxyConfig?: ProxyConfig
   isDefault: boolean
   createdAt: number
   updatedAt: number
