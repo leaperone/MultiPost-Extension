@@ -1,6 +1,6 @@
 {
   "name": "multipost",
-  "version": "1.2.5",
+  "version": "1.2.6",
   "private": true,
   "packageManager": "pnpm@10.32.1",
   "scripts": {
