@@ -82,6 +82,7 @@ function createWindow(): void {
     height: 800,
     minWidth: 920,
     minHeight: 600,
+    center: true,
     show: false,
     autoHideMenuBar: true,
     backgroundColor: '#f7f8fa',
@@ -98,9 +99,8 @@ function createWindow(): void {
   })
 
   mainWindow.on('ready-to-show', () => {
-    mainWindow?.maximize()
     mainWindow?.show()
-    // Update view bounds after maximize settles
+    // Update BrowserView bounds after the native window finishes showing.
     setTimeout(() => {
       browserViewManager?.updateBounds()
     }, 200)
