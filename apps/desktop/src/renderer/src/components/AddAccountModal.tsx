@@ -55,8 +55,8 @@ export function AddAccountModal({ onClose, onAdd }: AddAccountModalProps): React
           </Button>
         </ModalHeader>
 
-        <ModalBody className="pb-6">
-          <p className="text-default-500 text-sm mb-4">选择要添加的社交媒体平台</p>
+        <ModalBody className="pb-6 flex flex-col gap-4">
+          <p className="text-default-500 text-sm">选择要添加的社交媒体平台</p>
 
           {loading ? (
             <div className="flex items-center justify-center py-10">

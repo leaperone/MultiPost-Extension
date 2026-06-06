@@ -12,10 +12,11 @@ import type {
   ScheduledPublishStatus,
   PublishTask,
   PlatformType,
+  ProxyConfig,
   TaskStatus,
   SyncContentType
 } from '../../shared/types'
-import type { FingerprintProfile, FingerprintProfileRow } from '../../shared/types/fingerprint'
+import { normalizeProxyConfig } from '../proxy/accountProxy'
 
 export class DatabaseService {
   private static instance: DatabaseService
@@ -78,6 +79,9 @@ export class DatabaseService {
     if (!columnNames.includes('is_default')) {
       this.db.exec('ALTER TABLE accounts ADD COLUMN is_default INTEGER DEFAULT 0')
     }
+    if (!columnNames.includes('proxy_config')) {
+      this.db.exec('ALTER TABLE accounts ADD COLUMN proxy_config TEXT')
+    }
   }
 
   private createTables(): void {
@@ -107,6 +111,7 @@ export class DatabaseService {
         last_login_at INTEGER,
         group_id TEXT,
         session_partition TEXT NOT NULL,
+        proxy_config TEXT,
         is_default INTEGER DEFAULT 0,
         created_at INTEGER NOT NULL,
         updated_at INTEGER NOT NULL,
@@ -187,23 +192,6 @@ export class DatabaseService {
       )
     `)
 
-    // Fingerprint profiles table
-    this.db.exec(`
-      CREATE TABLE IF NOT EXISTS fingerprint_profiles (
-        id TEXT PRIMARY KEY,
-        account_id TEXT NOT NULL UNIQUE,
-        navigator_config TEXT NOT NULL,
-        screen_config TEXT NOT NULL,
-        webgl_config TEXT NOT NULL,
-        canvas_config TEXT NOT NULL,
-        audio_config TEXT NOT NULL,
-        fonts_config TEXT NOT NULL,
-        created_at INTEGER NOT NULL,
-        updated_at INTEGER NOT NULL,
-        FOREIGN KEY (account_id) REFERENCES accounts(id) ON DELETE CASCADE
-      )
-    `)
-
     // Create indexes
     this.db.exec(`
       CREATE INDEX IF NOT EXISTS idx_accounts_platform ON accounts(platform);
@@ -218,7 +206,6 @@ export class DatabaseService {
       CREATE INDEX IF NOT EXISTS idx_tasks_status ON publish_tasks(status);
       CREATE INDEX IF NOT EXISTS idx_tasks_account ON publish_tasks(account_id);
       CREATE INDEX IF NOT EXISTS idx_tasks_scheduled ON publish_tasks(scheduled_at);
-      CREATE INDEX IF NOT EXISTS idx_fingerprint_account ON fingerprint_profiles(account_id);
     `)
   }
 
@@ -287,8 +274,8 @@ export class DatabaseService {
     if (!this.db) throw new Error('Database not initialized')
 
     const stmt = this.db.prepare(`
-      INSERT INTO accounts (id, platform, username, display_name, avatar, is_logged_in, last_login_at, group_id, session_partition, is_default, created_at, updated_at)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      INSERT INTO accounts (id, platform, username, display_name, avatar, is_logged_in, last_login_at, group_id, session_partition, proxy_config, is_default, created_at, updated_at)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `)
 
     stmt.run(
@@ -301,6 +288,7 @@ export class DatabaseService {
       account.lastLoginAt || null,
       account.groupId || null,
       account.sessionPartition,
+      this.serializeProxyConfig(account.proxyConfig),
       account.isDefault ? 1 : 0,
       account.createdAt,
       account.updatedAt
@@ -337,7 +325,7 @@ export class DatabaseService {
     query += ' ORDER BY is_default DESC, created_at DESC'
 
     const stmt = this.db.prepare(query)
-    return (stmt.all(...params) as AccountRow[]).map(this.rowToAccount)
+    return (stmt.all(...params) as AccountRow[]).map((row) => this.rowToAccount(row))
   }
 
   updateAccount(id: string, data: Partial<Account>): Account | null {
@@ -356,6 +344,7 @@ export class DatabaseService {
         is_logged_in = ?,
         last_login_at = ?,
         group_id = ?,
+        proxy_config = ?,
         is_default = ?,
         updated_at = ?
       WHERE id = ?
@@ -368,6 +357,7 @@ export class DatabaseService {
       updated.isLoggedIn ? 1 : 0,
       updated.lastLoginAt || null,
       updated.groupId || null,
+      this.serializeProxyConfig(updated.proxyConfig),
       updated.isDefault ? 1 : 0,
       updated.updatedAt,
       id
@@ -783,100 +773,7 @@ export class DatabaseService {
     stmt.run(id)
   }
 
-  // ========== Fingerprint Profile Methods ==========
-
-  createFingerprintProfile(profile: FingerprintProfile): FingerprintProfile {
-    if (!this.db) throw new Error('Database not initialized')
-
-    const stmt = this.db.prepare(`
-      INSERT INTO fingerprint_profiles (id, account_id, navigator_config, screen_config, webgl_config, canvas_config, audio_config, fonts_config, created_at, updated_at)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-    `)
-
-    stmt.run(
-      profile.id,
-      profile.accountId,
-      JSON.stringify(profile.navigator),
-      JSON.stringify(profile.screen),
-      JSON.stringify(profile.webgl),
-      JSON.stringify(profile.canvas),
-      JSON.stringify(profile.audio),
-      JSON.stringify(profile.fonts),
-      profile.createdAt,
-      profile.updatedAt
-    )
-
-    return profile
-  }
-
-  getFingerprintProfile(accountId: string): FingerprintProfile | null {
-    if (!this.db) throw new Error('Database not initialized')
-
-    const stmt = this.db.prepare('SELECT * FROM fingerprint_profiles WHERE account_id = ?')
-    const row = stmt.get(accountId) as FingerprintProfileRow | undefined
-
-    return row ? this.rowToFingerprintProfile(row) : null
-  }
-
-  updateFingerprintProfile(
-    accountId: string,
-    data: Partial<FingerprintProfile>
-  ): FingerprintProfile | null {
-    if (!this.db) throw new Error('Database not initialized')
-
-    const existing = this.getFingerprintProfile(accountId)
-    if (!existing) return null
-
-    const updated = { ...existing, ...data, updatedAt: Date.now() }
-
-    const stmt = this.db.prepare(`
-      UPDATE fingerprint_profiles SET
-        navigator_config = ?,
-        screen_config = ?,
-        webgl_config = ?,
-        canvas_config = ?,
-        audio_config = ?,
-        fonts_config = ?,
-        updated_at = ?
-      WHERE account_id = ?
-    `)
-
-    stmt.run(
-      JSON.stringify(updated.navigator),
-      JSON.stringify(updated.screen),
-      JSON.stringify(updated.webgl),
-      JSON.stringify(updated.canvas),
-      JSON.stringify(updated.audio),
-      JSON.stringify(updated.fonts),
-      updated.updatedAt,
-      accountId
-    )
-
-    return updated
-  }
-
-  deleteFingerprintProfile(accountId: string): void {
-    if (!this.db) throw new Error('Database not initialized')
-    const stmt = this.db.prepare('DELETE FROM fingerprint_profiles WHERE account_id = ?')
-    stmt.run(accountId)
-  }
-
   // ========== Helper Methods ==========
-
-  private rowToFingerprintProfile(row: FingerprintProfileRow): FingerprintProfile {
-    return {
-      id: row.id,
-      accountId: row.account_id,
-      navigator: JSON.parse(row.navigator_config),
-      screen: JSON.parse(row.screen_config),
-      webgl: JSON.parse(row.webgl_config),
-      canvas: JSON.parse(row.canvas_config),
-      audio: JSON.parse(row.audio_config),
-      fonts: JSON.parse(row.fonts_config),
-      createdAt: row.created_at,
-      updatedAt: row.updated_at
-    }
-  }
 
   private rowToAccountGroup(row: AccountGroupRow): AccountGroup {
     return {
@@ -900,9 +797,27 @@ export class DatabaseService {
       lastLoginAt: row.last_login_at || undefined,
       groupId: row.group_id || undefined,
       sessionPartition: row.session_partition,
+      proxyConfig: this.parseProxyConfig(row.proxy_config, row.id),
       isDefault: row.is_default === 1,
       createdAt: row.created_at,
       updatedAt: row.updated_at
+    }
+  }
+
+  private serializeProxyConfig(proxyConfig: ProxyConfig | undefined): string | null {
+    // TODO(proxy): encrypt proxyConfig.password with Electron safeStorage before persisting.
+    const normalized = normalizeProxyConfig(proxyConfig)
+    return normalized ? JSON.stringify(normalized) : null
+  }
+
+  private parseProxyConfig(value: string | null, accountId: string): ProxyConfig | undefined {
+    if (!value) return undefined
+
+    try {
+      return normalizeProxyConfig(JSON.parse(value))
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error)
+      throw new Error(`Invalid proxy_config for account ${accountId}: ${message}`)
     }
   }
 
@@ -1001,6 +916,7 @@ interface AccountRow {
   last_login_at: number | null
   group_id: string | null
   session_partition: string
+  proxy_config: string | null
   is_default: number
   created_at: number
   updated_at: number

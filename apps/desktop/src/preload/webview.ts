@@ -16,6 +16,7 @@ import type {
   ScheduledPublish,
   PlatformInfo,
   PlatformType,
+  ProxyConfig,
   SyncContentType,
   SyncContentData,
   UpdateInfo,
@@ -137,8 +138,8 @@ const multipost = {
 
     get: (id: string): Promise<Account | null> => ipcRenderer.invoke(IPC_CHANNELS.ACCOUNT_GET, id),
 
-    create: (platform: PlatformType): Promise<Account> =>
-      ipcRenderer.invoke(IPC_CHANNELS.ACCOUNT_CREATE, platform),
+    create: (platform: PlatformType, options?: { proxyConfig?: ProxyConfig }): Promise<Account> =>
+      ipcRenderer.invoke(IPC_CHANNELS.ACCOUNT_CREATE, platform, options),
 
     update: (id: string, data: Partial<Account>): Promise<Account> =>
       ipcRenderer.invoke(IPC_CHANNELS.ACCOUNT_UPDATE, id, data),

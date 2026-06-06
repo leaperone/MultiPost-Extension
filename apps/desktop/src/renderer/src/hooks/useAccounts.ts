@@ -1,11 +1,11 @@
 import { useState, useEffect, useCallback } from 'react'
-import type { Account, PlatformType } from '../../../shared/types'
+import type { Account, PlatformType, ProxyConfig } from '../../../shared/types'
 
 interface UseAccountsReturn {
   accounts: Account[]
   loading: boolean
   error: Error | null
-  createAccount: (platform: PlatformType) => Promise<Account>
+  createAccount: (platform: PlatformType, proxyConfig?: ProxyConfig) => Promise<Account>
   deleteAccount: (id: string) => Promise<void>
   updateAccount: (id: string, data: Partial<Account>) => Promise<Account>
   refreshAccounts: () => Promise<void>
@@ -29,8 +29,8 @@ export function useAccounts(): UseAccountsReturn {
     }
   }, [])
 
-  const createAccount = useCallback(async (platform: PlatformType): Promise<Account> => {
-    const account = await window.api.account.create(platform)
+  const createAccount = useCallback(async (platform: PlatformType, proxyConfig?: ProxyConfig): Promise<Account> => {
+    const account = await window.api.account.create(platform, { proxyConfig })
     setAccounts((prev) => [account, ...prev])
     return account
   }, [])

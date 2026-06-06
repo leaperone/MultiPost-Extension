@@ -13,6 +13,7 @@ import {
   type PublishHistoryStatus,
   type ScheduledPublish,
   type PlatformType,
+  type ProxyConfig,
   type PublishTask,
   type TaskStatus,
   type SyncContentType,
@@ -25,6 +26,7 @@ import {
 import { BrowserViewManager } from '../browser/browserViewManager'
 import { DatabaseService } from '../database'
 import type { KeepAliveService } from '../keepalive'
+import { normalizeProxyConfig } from '../proxy/accountProxy'
 
 type BrowserViewManagerGetter = () => BrowserViewManager | null
 
@@ -83,6 +85,26 @@ function snapshotWasCancelled(snapshot: PublishStatusSnapshot): boolean {
   return snapshot.status === 'cancelled' || snapshot.targets.some((target) => target.status === 'cancelled')
 }
 
+function hasOwnProperty<T extends object, K extends PropertyKey>(
+  value: T,
+  key: K
+): value is T & Record<K, unknown> {
+  return Object.prototype.hasOwnProperty.call(value, key)
+}
+
+function formatAccountForLog(
+  account: Pick<Account, 'id' | 'platform' | 'proxyConfig'> | null | undefined
+): { id: string; platform: PlatformType; hasProxyConfig: boolean } | null {
+  if (!account) {
+    return null
+  }
+  return {
+    id: account.id,
+    platform: account.platform,
+    hasProxyConfig: Boolean(account.proxyConfig)
+  }
+}
+
 export function registerIpcHandlers(
   ipcMain: IpcMain,
   getBrowserViewManager: BrowserViewManagerGetter,
@@ -138,21 +160,25 @@ export function registerIpcHandlers(
     return db.getAccount(id)
   })
 
-  ipcMain.handle(IPC_CHANNELS.ACCOUNT_CREATE, async (_, platform: PlatformType) => {
-    const now = Date.now()
-    const accountId = uuidv4()
-    const account: Account = {
-      id: accountId,
-      platform,
-      username: `${platform}_user`,
-      isLoggedIn: false,
-      sessionPartition: `persist:account-${accountId}`,
-      isDefault: false,
-      createdAt: now,
-      updatedAt: now
+  ipcMain.handle(
+    IPC_CHANNELS.ACCOUNT_CREATE,
+    async (_, platform: PlatformType, options?: { proxyConfig?: ProxyConfig }) => {
+      const now = Date.now()
+      const accountId = uuidv4()
+      const account: Account = {
+        id: accountId,
+        platform,
+        username: `${platform}_user`,
+        isLoggedIn: false,
+        sessionPartition: `persist:account-${accountId}`,
+        proxyConfig: normalizeProxyConfig(options?.proxyConfig),
+        isDefault: false,
+        createdAt: now,
+        updatedAt: now
+      }
+      return db.createAccount(account)
     }
-    return db.createAccount(account)
-  })
+  )
 
   ipcMain.handle(IPC_CHANNELS.ACCOUNT_DELETE, async (_, id: string) => {
     // Close any open browser views for this account
@@ -164,7 +190,17 @@ export function registerIpcHandlers(
   })
 
   ipcMain.handle(IPC_CHANNELS.ACCOUNT_UPDATE, async (_, id: string, data: Partial<Account>) => {
-    return db.updateAccount(id, data)
+    const hasProxyConfigUpdate = hasOwnProperty(data, 'proxyConfig')
+    const updateData: Partial<Account> = { ...data }
+    if (hasProxyConfigUpdate) {
+      updateData.proxyConfig = normalizeProxyConfig(data.proxyConfig)
+    }
+
+    const updated = db.updateAccount(id, updateData)
+    if (updated && hasProxyConfigUpdate) {
+      await getBrowserViewManager()?.reapplyAccountProxy(id)
+    }
+    return updated
   })
 
   ipcMain.handle(
@@ -178,13 +214,13 @@ export function registerIpcHandlers(
   ipcMain.handle(
     IPC_CHANNELS.BROWSER_OPEN,
     async (_, accountId: string, url?: string) => {
-      console.log('[IPC] BROWSER_OPEN called with accountId:', accountId, 'url:', url)
+      console.log('[IPC] BROWSER_OPEN called:', { accountId, hasUrl: Boolean(url) })
       const manager = getBrowserViewManager()
       console.log('[IPC] BrowserViewManager:', manager ? 'initialized' : 'null')
       if (!manager) throw new Error('BrowserViewManager not initialized')
 
       const account = db.getAccount(accountId)
-      console.log('[IPC] Account:', account)
+      console.log('[IPC] BROWSER_OPEN account:', formatAccountForLog(account))
       if (!account) throw new Error(`Account not found: ${accountId}`)
 
       await manager.openView(accountId, account.platform, url)

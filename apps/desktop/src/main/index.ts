@@ -9,6 +9,7 @@ import { createMenu } from './menu'
 import { KeepAliveService } from './keepalive'
 import { startDebugServer } from './debug-server'
 import { getDesktopUserAgent, handleLocalFileRequest, hardenSession } from './browser/sessionHardening'
+import { closeAllAnonymizedProxies } from './proxy/accountProxy'
 
 // 在 app.whenReady() 之前注册 local-file:// 协议
 protocol.registerSchemesAsPrivileged([
@@ -24,9 +25,53 @@ protocol.registerSchemesAsPrivileged([
   }
 ])
 
+app.commandLine.appendSwitch('force-webrtc-ip-handling-policy', 'default_public_interface_only')
+
 let mainWindow: BrowserWindow | null = null
 let browserViewManager: BrowserViewManager | null = null
 const keepAliveService = new KeepAliveService()
+let proxyCleanupStarted = false
+let proxyCleanupComplete = false
+
+function cleanupAccountProxies(): void {
+  if (proxyCleanupStarted || proxyCleanupComplete) {
+    return
+  }
+
+  proxyCleanupStarted = true
+  void closeAllAnonymizedProxies()
+    .catch((error) => {
+      console.warn('[Main] Failed to clean up account proxies:', error)
+    })
+    .finally(() => {
+      proxyCleanupComplete = true
+      proxyCleanupStarted = false
+    })
+}
+
+app.on('will-quit', (event) => {
+  if (proxyCleanupComplete) {
+    return
+  }
+
+  event.preventDefault()
+  if (proxyCleanupStarted) {
+    return
+  }
+
+  proxyCleanupStarted = true
+  void closeAllAnonymizedProxies()
+    .catch((error) => {
+      console.warn('[Main] Failed to clean up account proxies:', error)
+    })
+    .finally(() => {
+      proxyCleanupComplete = true
+      proxyCleanupStarted = false
+      app.quit()
+    })
+})
+
+app.on('quit', cleanupAccountProxies)
 
 function createWindow(): void {
   mainWindow = new BrowserWindow({

@@ -13,6 +13,7 @@ import type {
   ScheduledPublishStatus,
   PlatformInfo,
   PlatformType,
+  ProxyConfig,
   PublishTask,
   TaskStatus,
   SyncContentType,
@@ -44,8 +45,8 @@ const api = {
     list: (filters?: { platform?: PlatformType; groupId?: string }): Promise<Account[]> =>
       ipcRenderer.invoke(IPC_CHANNELS.ACCOUNT_LIST, filters),
     get: (id: string): Promise<Account | null> => ipcRenderer.invoke(IPC_CHANNELS.ACCOUNT_GET, id),
-    create: (platform: PlatformType): Promise<Account> =>
-      ipcRenderer.invoke(IPC_CHANNELS.ACCOUNT_CREATE, platform),
+    create: (platform: PlatformType, options?: { proxyConfig?: ProxyConfig }): Promise<Account> =>
+      ipcRenderer.invoke(IPC_CHANNELS.ACCOUNT_CREATE, platform, options),
     delete: (id: string): Promise<void> => ipcRenderer.invoke(IPC_CHANNELS.ACCOUNT_DELETE, id),
     update: (id: string, data: Partial<Account>): Promise<Account> =>
       ipcRenderer.invoke(IPC_CHANNELS.ACCOUNT_UPDATE, id, data),
