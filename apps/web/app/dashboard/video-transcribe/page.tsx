@@ -38,6 +38,7 @@ import {
 } from '@/actions/video-transcription';
 import { VideoTranscriptionStatus, type VideoExtractResult } from '@/actions/video-transcription/types';
 import { useTranslation } from '@/i18n/client';
+import { useLocale } from '@/i18n/locale-provider';
 
 interface TranscriptionTask {
   id: string;
@@ -263,7 +264,8 @@ function TaskCard({
   onDelete: (id: string) => void;
   onRetry: (id: string) => void;
 }) {
-  const { t, i18n } = useTranslation('dashboard');
+  const { t } = useTranslation('dashboard');
+  const locale = useLocale();
   const [expanded, setExpanded] = useState(false);
 
   const getStatusChip = () => {
@@ -338,7 +340,7 @@ function TaskCard({
             )}
             <p className="mt-1 truncate text-xs text-muted-foreground">{task.videoUrl}</p>
             <p className="mt-1 text-xs text-muted-foreground">
-              {new Date(task.createdAt).toLocaleString(i18n.language)}
+              {new Date(task.createdAt).toLocaleString(locale)}
             </p>
           </div>
           <div className="flex gap-1">

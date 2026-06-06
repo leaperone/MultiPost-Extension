@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect } from 'react';
-import i18next, { i18n } from 'i18next';
+import i18next, { type i18n as I18nextInstance } from 'i18next';
 import { initReactI18next, useTranslation as useTransAlias } from 'react-i18next';
 import resourcesToBackend from 'i18next-resources-to-backend';
 import { Locales, getOptions, supportedLocales, FALLBACK_LOCALE } from './settings';
@@ -24,23 +24,18 @@ i18next
 export function useTranslation(ns: string) {
   const lng = useLocale();
 
-  const translator = useTransAlias(ns);
+  const translator = useTransAlias(ns, { i18n: i18next, lng });
   const { i18n } = translator;
 
-  // Always call the hook unconditionally — issue #256 root cause was conditional
+  // Always call the hook unconditionally - issue #256 root cause was conditional
   // invocation, which changes hook count across renders and crashes the page.
-  // The effect itself guards against unnecessary changeLanguage calls.
+  // Locale synchronization must happen post-commit so render stays side-effect free.
   useCustomTranslationImplem(i18n, lng);
-
-  // Server-side imperative path: do it synchronously so SSR output uses the right locale.
-  if (runsOnServerSide && lng && i18n.resolvedLanguage !== lng) {
-    i18n.changeLanguage(lng);
-  }
 
   return translator;
 }
 
-function useCustomTranslationImplem(i18n: i18n, lng: Locales) {
+function useCustomTranslationImplem(i18n: I18nextInstance, lng: Locales) {
   // This effect changes the language of the application when the lng prop changes.
   useEffect(() => {
     if (!lng || i18n.resolvedLanguage === lng) return;
