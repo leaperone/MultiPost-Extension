@@ -2,6 +2,7 @@ import { BrowserView, session } from 'electron'
 import { PLATFORMS } from '../../shared/constants'
 import type { Account, PlatformType, KeepAliveAccountResult, KeepAliveStatus } from '../../shared/types'
 import { DatabaseService } from '../database'
+import { isSupportedBrowserNavigationUrl, openExternalUrl } from '../browser/externalUrl'
 import { hardenSession } from '../browser/sessionHardening'
 import {
   applyAccountProxy,
@@ -20,6 +21,35 @@ const DEFAULT_DELAY_MS = 30 * 1000 // 30 seconds after startup
 const PAGE_WAIT_MS = 15 * 1000 // wait for JS/cookie refresh
 const PAGE_TIMEOUT_MS = 30 * 1000 // total timeout per account
 const ACCOUNT_GAP_MS = 5 * 1000 // gap between accounts
+
+type NavigationGuardableWebContents = Electron.WebContents & {
+  on(
+    event: 'will-frame-navigate',
+    listener: (event: Electron.Event, url: string) => void
+  ): Electron.WebContents
+}
+
+function installKeepAliveNavigationGuard(view: BrowserView, source: string): void {
+  const webContents = view.webContents
+  const guardNavigation = (event: Electron.Event, url: string): void => {
+    if (isSupportedBrowserNavigationUrl(url)) {
+      return
+    }
+
+    event.preventDefault()
+    console.warn(`[KeepAlive] Blocked unsupported navigation from ${source}:`, url)
+    void openExternalUrl(url)
+  }
+
+  webContents.on('will-navigate', guardNavigation)
+  ;(webContents as NavigationGuardableWebContents).on('will-frame-navigate', guardNavigation)
+  webContents.on('will-redirect', guardNavigation)
+  webContents.setWindowOpenHandler(({ url }) => {
+    console.warn(`[KeepAlive] Blocked window open from ${source}:`, url)
+    void openExternalUrl(url)
+    return { action: 'deny' }
+  })
+}
 
 export class KeepAliveService {
   private timer: NodeJS.Timeout | null = null
@@ -151,6 +181,7 @@ export class KeepAliveService {
         }
       })
       trackAccountProxyForWebContents(view.webContents)
+      installKeepAliveNavigationGuard(view, `${account.platform}:${account.id}`)
 
       // Load platform URL with timeout
       await Promise.race([
