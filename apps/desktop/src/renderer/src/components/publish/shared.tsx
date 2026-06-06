@@ -13,7 +13,11 @@ import {
 import { Icon } from '@iconify/react'
 import { useState, useEffect, useMemo, useCallback } from 'react'
 import type { Account, PlatformType, SyncContentType } from '../../../../shared/types'
-import { PLATFORMS } from '../../../../shared/constants'
+import {
+  getPlatformPublishTarget,
+  getPlatformPublishTargetsByContentType,
+  PLATFORMS
+} from '../../../../shared/constants'
 
 // Platform icon component with fallback mechanism
 export function PlatformIcon({ platform, size = 20 }: { platform: PlatformType; size?: number }) {
@@ -131,6 +135,7 @@ export const PLATFORM_CATEGORIES: PlatformCategory[] = [
       'threads',
       'bluesky',
       'substack',
+      'pinterest',
       'webhook'
     ]
   },
@@ -151,13 +156,39 @@ export const PLATFORM_CATEGORIES: PlatformCategory[] = [
       'alipay',
       'yidian',
       'pinduoduo',
-      'vivovideo'
+      'vivovideo',
+      'iqiyi',
+      'youku',
+      'tencentvideo'
     ]
   },
   {
     id: 'article',
     name: '文章平台',
-    platforms: ['csdn', 'jianshu', 'segmentfault', 'sspai', '51cto', 'wordpress']
+    platforms: [
+      'csdn',
+      'jianshu',
+      'segmentfault',
+      'sspai',
+      '51cto',
+      'wordpress',
+      'aliyun',
+      'tencentyun',
+      'medium',
+      'oschina',
+      'infoq',
+      'smzdm',
+      'woshipm',
+      'gelonghui',
+      'jiankangjie',
+      'kaidiwang',
+      'autohome',
+      'jianpian',
+      'tonghuashun',
+      'dongchedi',
+      'dingduanhao',
+      'kuaichuanhao'
+    ]
   },
   {
     id: 'podcast',
@@ -257,8 +288,7 @@ export function AccountSelector({
   const accountsByPlatform = useMemo(() => {
     const grouped = new Map<PlatformType, Account[]>()
     for (const account of accounts) {
-      const platformInfo = PLATFORMS[account.platform]
-      if (platformInfo?.supportedContentTypes.includes(contentType)) {
+      if (getPlatformPublishTarget(account.platform, contentType)) {
         const existing = grouped.get(account.platform) || []
         grouped.set(account.platform, [...existing, account])
       }
@@ -276,13 +306,9 @@ export function AccountSelector({
 
   // Get platforms that support this content type but don't have saved accounts
   const otherAvailablePlatforms = useMemo(() => {
-    const allPlatforms = Object.keys(PLATFORMS) as PlatformType[]
-    return allPlatforms.filter((platform) => {
-      const platformInfo = PLATFORMS[platform]
-      if (!platformInfo?.supportedContentTypes.includes(contentType)) return false
-      // Exclude platforms that already have logged-in accounts
-      return !platformsWithAccounts.includes(platform)
-    })
+    return getPlatformPublishTargetsByContentType(contentType)
+      .map((target) => target.platform)
+      .filter((platform) => !platformsWithAccounts.includes(platform))
   }, [contentType, platformsWithAccounts])
 
   // Group other platforms by category for display
@@ -330,7 +356,9 @@ export function AccountSelector({
               <div key={platform} className="p-3 rounded-lg border bg-background">
                 <div className="flex items-center gap-2 mb-2">
                   <PlatformIcon platform={platform} size={18} />
-                  <span className="text-sm font-medium">{platformInfo?.name || platform}</span>
+                  <span className="text-sm font-medium">
+                    {getPlatformPublishTarget(platform, contentType)?.name || platformInfo?.name || platform}
+                  </span>
                 </div>
                 <div className="flex flex-wrap gap-2">
                   {platformAccounts.map((account) => {
@@ -421,7 +449,11 @@ export function AccountSelector({
                             size="sm"
                           />
                           <PlatformIcon platform={platform} size={16} />
-                          <span className="text-sm">{platformInfo?.name || platform}</span>
+                          <span className="text-sm">
+                            {getPlatformPublishTarget(platform, contentType)?.name ||
+                              platformInfo?.name ||
+                              platform}
+                          </span>
                         </label>
                       )
                     })}
@@ -452,11 +484,12 @@ export function useAccountSelection(contentType: SyncContentType) {
         // Auto-select default accounts for each platform
         const defaults = new Set<string>()
         for (const account of accountList) {
-          if (account.isDefault && account.isLoggedIn) {
-            const platformInfo = PLATFORMS[account.platform]
-            if (platformInfo?.supportedContentTypes.includes(contentType)) {
-              defaults.add(account.id)
-            }
+          if (
+            account.isDefault &&
+            account.isLoggedIn &&
+            getPlatformPublishTarget(account.platform, contentType)
+          ) {
+            defaults.add(account.id)
           }
         }
         setSelectedAccountIds(defaults)
@@ -543,14 +576,9 @@ export function PlatformSelector({
   onClearAll,
   isDisabled = false
 }: PlatformSelectorProps): React.ReactElement {
-  const supportedPlatforms = Object.keys(PLATFORMS) as PlatformType[]
-
   const availablePlatforms = useMemo(() => {
-    return supportedPlatforms.filter((platform) => {
-      const platformInfo = PLATFORMS[platform]
-      return platformInfo?.supportedContentTypes.includes(contentType)
-    })
-  }, [contentType, supportedPlatforms])
+    return getPlatformPublishTargetsByContentType(contentType).map((target) => target.platform)
+  }, [contentType])
 
   const categorizedPlatforms = useMemo(() => {
     return PLATFORM_CATEGORIES.map((category) => ({
@@ -602,7 +630,6 @@ export function PlatformSelector({
               <div className="text-xs text-muted-foreground mb-2">{category.name}</div>
               <div className="flex flex-wrap gap-2">
                 {category.platforms.map((platform) => {
-                  const platformInfo = PLATFORMS[platform]
                   const isSelected = selectedPlatforms.has(platform)
                   return (
                     <label
@@ -619,7 +646,12 @@ export function PlatformSelector({
                         isDisabled={isDisabled}
                         size="sm"
                       />
-                      <span className="text-sm">{platformInfo?.name || platform}</span>
+                      <PlatformIcon platform={platform} size={16} />
+                      <span className="text-sm">
+                        {getPlatformPublishTarget(platform, contentType)?.name ||
+                          PLATFORMS[platform]?.name ||
+                          platform}
+                      </span>
                     </label>
                   )
                 })}

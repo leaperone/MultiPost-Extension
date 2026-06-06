@@ -8,6 +8,7 @@ import {
   CardBody,
   Checkbox,
   Chip,
+  Image,
   Spinner,
   Textarea,
 } from '@heroui/react';
@@ -49,8 +50,14 @@ export default function DynamicPublishPage() {
   const [isPublishing, setIsPublishing] = useState(false);
   const [isSelectingFiles, setIsSelectingFiles] = useState(false);
 
+  // 只显示支持动态的平台
+  const dynamicAccounts = accounts.filter((account) => {
+    const platform = platforms.find((p) => p.id === account.platform);
+    return platform?.supportedContentTypes.includes('DYNAMIC');
+  });
+
   // 按平台分组账号
-  const accountsByPlatform = accounts.reduce(
+  const accountsByPlatform = dynamicAccounts.reduce(
     (acc, account) => {
       if (!acc[account.platform]) {
         acc[account.platform] = [];
@@ -204,9 +211,10 @@ export default function DynamicPublishPage() {
                 key={image.path}
                 className="relative group">
                 <div className="w-20 h-20 rounded-lg overflow-hidden bg-muted">
-                  <img
+                  <Image
                     src={image.previewUrl}
                     alt={`Image ${index + 1}`}
+                    removeWrapper
                     className="w-full h-full object-cover"
                   />
                 </div>
@@ -240,10 +248,10 @@ export default function DynamicPublishPage() {
           <div className="flex items-center justify-center py-8">
             <Spinner size="lg" />
           </div>
-        ) : accounts.length === 0 ? (
+        ) : dynamicAccounts.length === 0 ? (
           <Card className="shadow-none border">
             <CardBody className="py-8 text-center">
-              <p className="text-muted-foreground">还没有添加任何账号</p>
+              <p className="text-muted-foreground">没有支持动态发布的账号</p>
               <Button
                 className="mt-4"
                 variant="flat"

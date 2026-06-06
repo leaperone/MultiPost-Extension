@@ -1596,7 +1596,7 @@ export class BrowserViewManager {
       return PLATFORM_PUBLISH_URLS[platform][contentType]!
     }
     // Fall back to adapter's publishUrl or platform home URL
-    const adapter = getAdapter(platform)
+    const adapter = getAdapter(platform, contentType)
     return adapter?.publishUrl || PLATFORMS[platform]?.url || 'about:blank'
   }
 
@@ -1790,7 +1790,7 @@ export class BrowserViewManager {
       return extensionResult
     }
 
-    const adapter = getAdapter(platform)
+    const adapter = getAdapter(platform, contentType)
     if (!adapter) {
       throw new Error(`No adapter found for platform: ${platform}`)
     }
@@ -1809,7 +1809,7 @@ export class BrowserViewManager {
       throw new Error(`No view found for platform: ${platform}`)
     }
 
-    const adapter = getAdapter(platform)
+    const adapter = getAdapter(platform, contentType)
     if (!adapter) {
       const entry = getDesktopInjectorManifestEntry(platform, contentType)
       if (entry) {
@@ -2224,7 +2224,7 @@ export class BrowserViewManager {
         return extensionResult
       }
 
-      const adapter = getAdapter(managed.platform)
+      const adapter = getAdapter(managed.platform, contentType)
       if (!adapter) {
         throw new Error(`No adapter found for platform: ${managed.platform}`)
       }
@@ -2268,7 +2268,7 @@ export class BrowserViewManager {
     }
 
     try {
-      const adapter = getAdapter(managed.platform)
+      const adapter = getAdapter(managed.platform, contentType)
       if (!adapter) {
         const entry = getDesktopInjectorManifestEntry(managed.platform, contentType)
         if (entry) {
@@ -3135,7 +3135,7 @@ export class BrowserViewManager {
           continue
         }
 
-        const adapter = getAdapter(target.platform)
+        const adapter = getAdapter(target.platform, group.contentType)
         if (!adapter) {
           const error = `No adapter found for platform: ${target.platform}`
           if (this.cancelledPublishIds.has(groupId)) {
@@ -3201,7 +3201,7 @@ export class BrowserViewManager {
         throw new Error('Publish cancelled')
       }
 
-      const adapter = getAdapter(target.platform)
+      const adapter = getAdapter(target.platform, group.contentType)
       if (!adapter) {
         const entry = getDesktopInjectorManifestEntry(target.platform, group.contentType)
         if (!entry) {

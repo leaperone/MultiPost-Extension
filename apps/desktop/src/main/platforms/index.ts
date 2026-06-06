@@ -1,4 +1,4 @@
-import type { PlatformType } from '../../shared/types'
+import type { PlatformType, SyncContentType } from '../../shared/types'
 import { PLATFORMS } from '../../shared/constants'
 import type { PlatformAdapter } from './base'
 import { WeiboAdapter } from './weibo'
@@ -59,6 +59,7 @@ import { VivovideoAdapter } from './vivovideo'
 
 // Registry of platform adapters
 const adapters: Map<PlatformType, PlatformAdapter> = new Map()
+const genericAdapters: Map<PlatformType, GenericAdapter> = new Map()
 
 // Register specialized adapters (platforms with custom implementation)
 adapters.set('weibo', new WeiboAdapter())
@@ -116,21 +117,48 @@ adapters.set('yidian', new YidianAdapter())
 adapters.set('pinduoduo', new PinduoduoAdapter())
 adapters.set('vivovideo', new VivovideoAdapter())
 
-// Platforms that use GenericAdapter - all platforms now have specialized adapters
-const genericPlatforms: PlatformType[] = []
+const genericPlatforms = (Object.keys(PLATFORMS) as PlatformType[]).filter(
+  (platform) => !adapters.has(platform)
+)
 
 // Register generic adapters for all other platforms
 for (const platform of genericPlatforms) {
   if (PLATFORMS[platform]) {
-    adapters.set(platform, new GenericAdapter(platform))
+    const adapter = new GenericAdapter(platform)
+    adapters.set(platform, adapter)
+    genericAdapters.set(platform, adapter)
   }
+}
+
+function getGenericAdapter(platform: PlatformType): GenericAdapter | undefined {
+  if (!PLATFORMS[platform]) return undefined
+
+  let adapter = genericAdapters.get(platform)
+  if (!adapter) {
+    adapter = new GenericAdapter(platform)
+    genericAdapters.set(platform, adapter)
+  }
+  return adapter
 }
 
 /**
  * Get adapter for a specific platform
  */
-export function getAdapter(platform: PlatformType): PlatformAdapter | undefined {
-  return adapters.get(platform)
+export function getAdapter(
+  platform: PlatformType,
+  contentType?: SyncContentType
+): PlatformAdapter | undefined {
+  const adapter = adapters.get(platform)
+  if (
+    contentType &&
+    adapter &&
+    !adapter.supportedContentTypes.includes(contentType) &&
+    PLATFORMS[platform]?.supportedContentTypes.includes(contentType)
+  ) {
+    return getGenericAdapter(platform)
+  }
+
+  return adapter
 }
 
 /**

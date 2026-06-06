@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import {
   Button,
   Card,
+  Chip,
   Modal,
   ModalContent,
   ModalHeader,
@@ -9,29 +10,13 @@ import {
   Spinner
 } from '@heroui/react'
 import { X } from 'lucide-react'
+import { CONTENT_TYPE_LABELS, getPlatformAccountKey } from '../../../shared/constants'
 import type { PlatformInfo, PlatformType } from '../../../shared/types'
+import { PlatformIcon } from './publish/shared'
 
 interface AddAccountModalProps {
   onClose: () => void
   onAdd: (platform: PlatformType) => Promise<void>
-}
-
-const PLATFORM_ICONS: Record<string, string> = {
-  weibo: '微',
-  xiaohongshu: '红',
-  twitter: 'X',
-  douyin: '抖',
-  bilibili: 'B',
-  // TODO: 知乎反爬虫问题，暂时禁用
-  // zhihu: '知',
-  wechat: '微',
-  qqmusic: 'Q',
-  lizhi: '荔',
-  ximalaya: '喜',
-  xiaoyuzhou: '宇',
-  qingting: '蜻',
-  neteasepodcast: '易',
-  spotify: 'S'
 }
 
 export function AddAccountModal({ onClose, onAdd }: AddAccountModalProps): React.ReactElement {
@@ -47,7 +32,7 @@ export function AddAccountModal({ onClose, onAdd }: AddAccountModalProps): React
 
   return (
     <Modal isOpen onOpenChange={(open) => !open && onClose()}>
-      <ModalContent className="max-w-[480px]">
+      <ModalContent className="max-w-[720px]">
         <ModalHeader className="flex items-center justify-between">
           <span className="text-lg font-semibold">添加账号</span>
           <Button variant="light" size="sm" isIconOnly onPress={onClose}>
@@ -63,18 +48,30 @@ export function AddAccountModal({ onClose, onAdd }: AddAccountModalProps): React
               <Spinner size="lg" />
             </div>
           ) : (
-            <div className="grid grid-cols-3 sm:grid-cols-4 gap-3">
+            <div className="grid max-h-[60vh] grid-cols-1 gap-3 overflow-auto sm:grid-cols-2 lg:grid-cols-3">
               {platforms.map((platform) => (
                 <Card
                   key={platform.id}
                   isPressable
                   onPress={() => onAdd(platform.id)}
-                  className="flex flex-col items-center gap-2 p-4 hover:border-primary transition-colors"
+                  className="flex flex-row items-start gap-3 p-3 text-left hover:border-primary transition-colors"
                 >
-                  <div className="w-12 h-12 rounded-xl bg-default-100 flex items-center justify-center text-2xl">
-                    {PLATFORM_ICONS[platform.id] || platform.id[0].toUpperCase()}
+                  <div className="flex size-11 shrink-0 items-center justify-center rounded-lg border bg-default-50">
+                    <PlatformIcon platform={platform.id} size={24} />
                   </div>
-                  <span className="text-xs text-center">{platform.name}</span>
+                  <div className="min-w-0 flex-1">
+                    <div className="truncate text-sm font-semibold">{platform.name}</div>
+                    <div className="mt-1 truncate text-xs text-default-500">
+                      {getPlatformAccountKey(platform.id)}
+                    </div>
+                    <div className="mt-2 flex flex-wrap gap-1">
+                      {platform.supportedContentTypes.map((contentType) => (
+                        <Chip key={contentType} size="sm" variant="flat" className="h-6 px-1">
+                          {CONTENT_TYPE_LABELS[contentType]}
+                        </Chip>
+                      ))}
+                    </div>
+                  </div>
                 </Card>
               ))}
             </div>

@@ -1,9 +1,10 @@
 import { useState } from 'react'
-import { Button, Card, Spinner } from '@heroui/react'
+import { Button, Card, Chip, Spinner } from '@heroui/react'
 import { Plus, RefreshCw, Trash2, CheckCircle, Circle } from 'lucide-react'
 import type { Account, PlatformType } from '../../../shared/types'
-import { PLATFORMS } from '../../../shared/constants'
+import { CONTENT_TYPE_LABELS, PLATFORMS } from '../../../shared/constants'
 import { AddAccountModal } from './AddAccountModal'
+import { PlatformIcon } from './publish/shared'
 
 interface AccountListProps {
   accounts: Account[]
@@ -13,23 +14,6 @@ interface AccountListProps {
   onCreate: (platform: PlatformType) => Promise<Account>
   onDelete: (id: string) => Promise<void>
   onRefresh: () => Promise<void>
-}
-
-const PLATFORM_ICONS: Record<string, string> = {
-  weibo: '微',
-  xiaohongshu: '红',
-  twitter: 'X',
-  douyin: '抖',
-  bilibili: 'B',
-  zhihu: '知',
-  wechat: '微',
-  qqmusic: 'Q',
-  lizhi: '荔',
-  ximalaya: '喜',
-  xiaoyuzhou: '宇',
-  qingting: '蜻',
-  neteasepodcast: '易',
-  spotify: 'S'
 }
 
 export function AccountList({
@@ -104,13 +88,20 @@ export function AccountList({
               }`}
             >
               <div className="flex items-center gap-3 mb-3">
-                <div className="w-10 h-10 rounded-lg bg-default-100 flex items-center justify-center text-xl">
-                  {PLATFORM_ICONS[account.platform] || account.platform[0].toUpperCase()}
+                <div className="w-10 h-10 rounded-lg bg-default-100 flex items-center justify-center">
+                  <PlatformIcon platform={account.platform} size={22} />
                 </div>
                 <div className="flex-1 min-w-0">
                   <h3 className="text-sm font-semibold truncate">{account.username}</h3>
                   <p className="text-xs text-default-500">{getPlatformName(account.platform)}</p>
                 </div>
+              </div>
+              <div className="mb-3 flex flex-wrap gap-1">
+                {(PLATFORMS[account.platform]?.supportedContentTypes || []).map((contentType) => (
+                  <Chip key={contentType} size="sm" variant="flat" className="h-6 px-1">
+                    {CONTENT_TYPE_LABELS[contentType]}
+                  </Chip>
+                ))}
               </div>
               <div className="flex items-center justify-between pt-3 border-t border-default-200">
                 <span

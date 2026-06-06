@@ -1,4 +1,10 @@
-import type { PlatformInfo, SyncContentType } from './types'
+import type {
+  PlatformInfo,
+  PlatformPublishTarget,
+  PlatformPublishTargetId,
+  PlatformType,
+  SyncContentType
+} from './types'
 
 export const PLATFORMS: Record<string, PlatformInfo> = {
   // ========== 已实现的平台 ==========
@@ -18,19 +24,21 @@ export const PLATFORMS: Record<string, PlatformInfo> = {
     icon: 'xiaohongshu',
     iconifyIcon: 'simple-icons:xiaohongshu',
     faviconUrl: 'https://www.xiaohongshu.com/favicon.ico',
+    accountKey: 'rednote',
     url: 'https://www.xiaohongshu.com',
     loginUrl: 'https://www.xiaohongshu.com/login',
     supportedContentTypes: ['DYNAMIC', 'VIDEO']
   },
   twitter: {
     id: 'twitter',
-    name: 'Twitter/X',
-    icon: 'twitter',
+    name: 'X',
+    icon: 'x',
     iconifyIcon: 'simple-icons:x',
     faviconUrl: 'https://abs.twimg.com/favicons/twitter.3.ico',
+    accountKey: 'x',
     url: 'https://x.com',
     loginUrl: 'https://x.com/i/flow/login',
-    supportedContentTypes: ['DYNAMIC']
+    supportedContentTypes: ['DYNAMIC', 'ARTICLE']
   },
   douyin: {
     id: 'douyin',
@@ -52,23 +60,23 @@ export const PLATFORMS: Record<string, PlatformInfo> = {
     loginUrl: 'https://passport.bilibili.com/login',
     supportedContentTypes: ['DYNAMIC', 'VIDEO', 'ARTICLE']
   },
-  // TODO: 知乎反爬虫问题，暂时禁用，后续解决后再启用
-  // zhihu: {
-  //   id: 'zhihu',
-  //   name: '知乎',
-  //   icon: 'zhihu',
-  //   iconifyIcon: 'simple-icons:zhihu',
-  //   faviconUrl: 'https://static.zhihu.com/heifetz/favicon.ico',
-  //   url: 'https://www.zhihu.com',
-  //   loginUrl: 'https://www.zhihu.com/signin',
-  //   supportedContentTypes: ['DYNAMIC', 'VIDEO', 'ARTICLE']
-  // },
+  zhihu: {
+    id: 'zhihu',
+    name: '知乎',
+    icon: 'zhihu',
+    iconifyIcon: 'simple-icons:zhihu',
+    faviconUrl: 'https://static.zhihu.com/heifetz/favicon.ico',
+    url: 'https://www.zhihu.com',
+    loginUrl: 'https://www.zhihu.com/signin',
+    supportedContentTypes: ['DYNAMIC', 'VIDEO', 'ARTICLE']
+  },
   wechat: {
     id: 'wechat',
     name: '微信公众号',
     icon: 'wechat',
     iconifyIcon: 'simple-icons:wechat',
     faviconUrl: 'https://mp.weixin.qq.com/favicon.ico',
+    accountKey: 'weixin',
     url: 'https://mp.weixin.qq.com',
     loginUrl: 'https://mp.weixin.qq.com/cgi-bin/loginpage',
     supportedContentTypes: ['DYNAMIC', 'ARTICLE']
@@ -177,7 +185,7 @@ export const PLATFORMS: Record<string, PlatformInfo> = {
     faviconUrl: 'https://wx.zsxq.com/favicon.ico',
     url: 'https://wx.zsxq.com',
     loginUrl: 'https://wx.zsxq.com/',
-    supportedContentTypes: ['DYNAMIC']
+    supportedContentTypes: ['DYNAMIC', 'ARTICLE']
   },
   xiaoheihe: {
     id: 'xiaoheihe',
@@ -247,6 +255,16 @@ export const PLATFORMS: Record<string, PlatformInfo> = {
     faviconUrl: 'https://www.reddit.com/favicon.ico',
     url: 'https://www.reddit.com',
     loginUrl: 'https://www.reddit.com/login/',
+    supportedContentTypes: ['DYNAMIC']
+  },
+  pinterest: {
+    id: 'pinterest',
+    name: 'Pinterest',
+    icon: 'pinterest',
+    iconifyIcon: 'simple-icons:pinterest',
+    faviconUrl: 'https://s.pinimg.com/webapp/favicon_48x48-7470a30d.png',
+    url: 'https://www.pinterest.com',
+    loginUrl: 'https://www.pinterest.com/login/',
     supportedContentTypes: ['DYNAMIC']
   },
   threads: {
@@ -322,9 +340,10 @@ export const PLATFORMS: Record<string, PlatformInfo> = {
     id: 'qie',
     name: '企鹅号',
     icon: 'qie',
+    faviconUrl: 'https://om.qq.com/favicon.ico',
     url: 'https://om.qq.com',
     loginUrl: 'https://om.qq.com/',
-    supportedContentTypes: ['VIDEO']
+    supportedContentTypes: ['VIDEO', 'ARTICLE']
   },
   chejiahao: {
     id: 'chejiahao',
@@ -354,25 +373,28 @@ export const PLATFORMS: Record<string, PlatformInfo> = {
     id: 'sohu',
     name: '搜狐',
     icon: 'sohu',
+    faviconUrl: 'https://statics.itc.cn/mp-new/icon/1.1/favicon.ico',
     url: 'https://mp.sohu.com',
     loginUrl: 'https://mp.sohu.com/',
-    supportedContentTypes: ['VIDEO']
+    supportedContentTypes: ['VIDEO', 'ARTICLE']
   },
   netease: {
     id: 'netease',
     name: '网易',
     icon: 'netease',
+    faviconUrl: 'https://static.ws.126.net/163/f2e/news/mp_pc_login/resource/static/share-icon.png',
     url: 'http://mp.163.com',
     loginUrl: 'http://mp.163.com/',
-    supportedContentTypes: ['VIDEO']
+    supportedContentTypes: ['VIDEO', 'ARTICLE']
   },
   dayu: {
     id: 'dayu',
     name: '大鱼号',
     icon: 'dayu',
+    faviconUrl: 'https://image.uc.cn/s/uae/g/1v/images/index/favicon.ico',
     url: 'https://mp.dayu.com',
     loginUrl: 'https://mp.dayu.com/',
-    supportedContentTypes: ['VIDEO']
+    supportedContentTypes: ['VIDEO', 'ARTICLE']
   },
   alipay: {
     id: 'alipay',
@@ -386,9 +408,10 @@ export const PLATFORMS: Record<string, PlatformInfo> = {
     id: 'yidian',
     name: '一点号',
     icon: 'yidian',
+    faviconUrl: 'https://static.yidianzixun.com/img/faviconred.ico',
     url: 'https://mp.yidianzixun.com',
     loginUrl: 'https://mp.yidianzixun.com/',
-    supportedContentTypes: ['VIDEO']
+    supportedContentTypes: ['VIDEO', 'ARTICLE']
   },
   pinduoduo: {
     id: 'pinduoduo',
@@ -404,6 +427,36 @@ export const PLATFORMS: Record<string, PlatformInfo> = {
     icon: 'vivovideo',
     url: 'https://kaixinkan.vivo.com.cn',
     loginUrl: 'https://kaixinkan.vivo.com.cn/',
+    supportedContentTypes: ['VIDEO']
+  },
+  iqiyi: {
+    id: 'iqiyi',
+    name: '爱奇艺',
+    icon: 'iqiyi',
+    iconifyIcon: 'simple-icons:iqiyi',
+    faviconUrl: 'https://www.iqiyi.com/favicon.ico',
+    url: 'https://mp.iqiyi.com',
+    loginUrl: 'https://mp.iqiyi.com/',
+    supportedContentTypes: ['VIDEO']
+  },
+  youku: {
+    id: 'youku',
+    name: '优酷',
+    icon: 'youku',
+    iconifyIcon: 'simple-icons:youku',
+    faviconUrl: 'https://www.youku.com/favicon.ico',
+    url: 'https://mp.youku.com',
+    loginUrl: 'https://mp.youku.com/',
+    supportedContentTypes: ['VIDEO']
+  },
+  tencentvideo: {
+    id: 'tencentvideo',
+    name: '腾讯视频',
+    icon: 'tencentvideo',
+    iconifyIcon: 'simple-icons:tencentqq',
+    faviconUrl: 'https://v.qq.com/favicon.ico',
+    url: 'https://v.qq.com',
+    loginUrl: 'https://v.qq.com/',
     supportedContentTypes: ['VIDEO']
   },
 
@@ -454,6 +507,153 @@ export const PLATFORMS: Record<string, PlatformInfo> = {
     icon: 'wordpress',
     url: 'https://wordpress.com',
     loginUrl: 'https://wordpress.com/log-in',
+    supportedContentTypes: ['ARTICLE']
+  },
+  aliyun: {
+    id: 'aliyun',
+    name: '阿里云开发者',
+    icon: 'aliyun',
+    iconifyIcon: 'simple-icons:alibabacloud',
+    faviconUrl: 'https://img.alicdn.com/tfs/TB1_ZXuNcfpK1RjSZFOXXa6nFXa-32-32.ico',
+    url: 'https://developer.aliyun.com',
+    loginUrl: 'https://account.aliyun.com/login/login.htm',
+    supportedContentTypes: ['ARTICLE']
+  },
+  tencentyun: {
+    id: 'tencentyun',
+    name: '腾讯云开发者',
+    icon: 'tencentyun',
+    iconifyIcon: 'simple-icons:tencentqq',
+    faviconUrl: 'https://cloud.tencent.com/favicon.ico',
+    url: 'https://cloud.tencent.com/developer',
+    loginUrl: 'https://cloud.tencent.com/login',
+    supportedContentTypes: ['ARTICLE']
+  },
+  medium: {
+    id: 'medium',
+    name: 'Medium',
+    icon: 'medium',
+    iconifyIcon: 'simple-icons:medium',
+    faviconUrl: 'https://medium.com/favicon.ico',
+    url: 'https://medium.com',
+    loginUrl: 'https://medium.com/m/signin',
+    supportedContentTypes: ['ARTICLE']
+  },
+  oschina: {
+    id: 'oschina',
+    name: '开源中国',
+    icon: 'oschina',
+    faviconUrl: 'https://www.oschina.net/favicon.ico',
+    url: 'https://www.oschina.net',
+    loginUrl: 'https://www.oschina.net/home/login',
+    supportedContentTypes: ['ARTICLE']
+  },
+  infoq: {
+    id: 'infoq',
+    name: 'InfoQ',
+    icon: 'infoq',
+    faviconUrl: 'https://static001.geekbang.org/infoq/favicon.ico',
+    url: 'https://www.infoq.cn',
+    loginUrl: 'https://www.infoq.cn/',
+    supportedContentTypes: ['ARTICLE']
+  },
+  smzdm: {
+    id: 'smzdm',
+    name: '什么值得买',
+    icon: 'smzdm',
+    faviconUrl: 'https://www.smzdm.com/favicon.ico',
+    url: 'https://www.smzdm.com',
+    loginUrl: 'https://zhiyou.smzdm.com/user/login',
+    supportedContentTypes: ['ARTICLE']
+  },
+  woshipm: {
+    id: 'woshipm',
+    name: '人人都是产品经理',
+    icon: 'woshipm',
+    faviconUrl: 'https://www.woshipm.com/favicon.ico',
+    url: 'https://www.woshipm.com',
+    loginUrl: 'https://www.woshipm.com/login',
+    supportedContentTypes: ['ARTICLE']
+  },
+  gelonghui: {
+    id: 'gelonghui',
+    name: '格隆汇',
+    icon: 'gelonghui',
+    faviconUrl: 'https://www.gelonghui.com/favicon.ico',
+    url: 'https://www.gelonghui.com',
+    loginUrl: 'https://www.gelonghui.com/login',
+    supportedContentTypes: ['ARTICLE']
+  },
+  jiankangjie: {
+    id: 'jiankangjie',
+    name: '健康界',
+    icon: 'jiankangjie',
+    faviconUrl: 'https://files.cn-healthcare.com/skin/jkj5/images/n_web_icon.png',
+    url: 'https://www.cn-healthcare.com',
+    loginUrl: 'https://ucenter.cn-healthcare.com',
+    supportedContentTypes: ['ARTICLE']
+  },
+  kaidiwang: {
+    id: 'kaidiwang',
+    name: '凯迪网',
+    icon: 'kaidiwang',
+    faviconUrl: 'https://www.9kd.com/favicon2.ico',
+    url: 'https://www.9kd.com',
+    loginUrl: 'https://www.9kd.com/login',
+    supportedContentTypes: ['ARTICLE']
+  },
+  autohome: {
+    id: 'autohome',
+    name: '汽车之家',
+    icon: 'autohome',
+    faviconUrl: 'https://www.autohome.com.cn/favicon.ico',
+    url: 'https://www.autohome.com.cn',
+    loginUrl: 'https://www.autohome.com.cn/',
+    supportedContentTypes: ['ARTICLE']
+  },
+  jianpian: {
+    id: 'jianpian',
+    name: '简篇',
+    icon: 'jianpian',
+    faviconUrl: 'https://ss2.meipian.me/editor-v3/webcdn/logo.ico',
+    url: 'https://www.jianpian.cn',
+    loginUrl: 'https://www.jianpian.cn',
+    supportedContentTypes: ['ARTICLE']
+  },
+  tonghuashun: {
+    id: 'tonghuashun',
+    name: '同花顺',
+    icon: 'tonghuashun',
+    faviconUrl: 'https://t.10jqka.com.cn/circle/images/favicon.ico',
+    url: 'https://t.10jqka.com.cn',
+    loginUrl: 'https://t.10jqka.com.cn',
+    supportedContentTypes: ['ARTICLE']
+  },
+  dongchedi: {
+    id: 'dongchedi',
+    name: '懂车帝',
+    icon: 'dongchedi',
+    faviconUrl: 'https://p3-dcd.byteimg.com/obj/tos-cn-i-dcdx/4e214394e186b0a95bc9ab7fc5154770',
+    url: 'https://mp.dcdapp.com',
+    loginUrl: 'https://mp.dcdapp.com',
+    supportedContentTypes: ['ARTICLE']
+  },
+  dingduanhao: {
+    id: 'dingduanhao',
+    name: '顶端号',
+    icon: 'dingduanhao',
+    faviconUrl: 'https://mp.topnews.cn/favicon.ico',
+    url: 'https://mp.topnews.cn',
+    loginUrl: 'https://mp.topnews.cn',
+    supportedContentTypes: ['ARTICLE']
+  },
+  kuaichuanhao: {
+    id: 'kuaichuanhao',
+    name: '快传号',
+    icon: 'kuaichuanhao',
+    faviconUrl: 'https://p0.ssl.qhimg.com/t0144491522ec4696d3.png',
+    url: 'https://kuaichuan.360kuai.com',
+    loginUrl: 'https://kuaichuan.360kuai.com',
     supportedContentTypes: ['ARTICLE']
   },
 
@@ -548,7 +748,8 @@ export const PLATFORM_PUBLISH_URLS: Record<string, Partial<Record<SyncContentTyp
     VIDEO: 'https://creator.xiaohongshu.com/publish/publish?target=video'
   },
   twitter: {
-    DYNAMIC: 'https://x.com/home'
+    DYNAMIC: 'https://x.com/home',
+    ARTICLE: 'https://x.com/compose/articles'
   },
   douyin: {
     DYNAMIC: 'https://creator.douyin.com/creator-micro/content/upload?default-tab=3',
@@ -559,12 +760,11 @@ export const PLATFORM_PUBLISH_URLS: Record<string, Partial<Record<SyncContentTyp
     VIDEO: 'https://member.bilibili.com/platform/upload/video/frame',
     ARTICLE: 'https://member.bilibili.com/article-text/home?newEditor=-1'
   },
-  // TODO: 知乎反爬虫问题，暂时禁用
-  // zhihu: {
-  //   DYNAMIC: 'https://www.zhihu.com/',
-  //   VIDEO: 'https://www.zhihu.com/zvideo/upload-video',
-  //   ARTICLE: 'https://zhuanlan.zhihu.com/write'
-  // },
+  zhihu: {
+    DYNAMIC: 'https://www.zhihu.com/',
+    VIDEO: 'https://www.zhihu.com/zvideo/upload-video',
+    ARTICLE: 'https://zhuanlan.zhihu.com/write'
+  },
   wechat: {
     DYNAMIC: 'https://mp.weixin.qq.com/',
     ARTICLE: 'https://mp.weixin.qq.com/'
@@ -611,7 +811,8 @@ export const PLATFORM_PUBLISH_URLS: Record<string, Partial<Record<SyncContentTyp
     DYNAMIC: 'https://www.dedao.cn/knowledge/home'
   },
   zsxq: {
-    DYNAMIC: 'https://wx.zsxq.com/'
+    DYNAMIC: 'https://wx.zsxq.com/',
+    ARTICLE: 'https://wx.zsxq.com/'
   },
   xiaoheihe: {
     DYNAMIC: 'https://www.xiaoheihe.cn/creator/editor/draft/image_text',
@@ -637,6 +838,9 @@ export const PLATFORM_PUBLISH_URLS: Record<string, Partial<Record<SyncContentTyp
   },
   reddit: {
     DYNAMIC: 'https://www.reddit.com/submit?type=IMAGE'
+  },
+  pinterest: {
+    DYNAMIC: 'https://www.pinterest.com/pin-creation-tool/'
   },
   threads: {
     DYNAMIC: 'https://www.threads.net/web'
@@ -665,7 +869,8 @@ export const PLATFORM_PUBLISH_URLS: Record<string, Partial<Record<SyncContentTyp
     ARTICLE: 'https://mp.eastmoney.com/collect/pc_article/index.html'
   },
   qie: {
-    VIDEO: 'https://om.qq.com/main/creation/video'
+    VIDEO: 'https://om.qq.com/main/creation/video',
+    ARTICLE: 'https://om.qq.com/main/creation/article'
   },
   chejiahao: {
     VIDEO: 'https://creator.autohome.com.cn/web/publish/video'
@@ -677,25 +882,38 @@ export const PLATFORM_PUBLISH_URLS: Record<string, Partial<Record<SyncContentTyp
     VIDEO: 'https://mp.yiche.com/videos/video'
   },
   sohu: {
-    VIDEO: 'https://mp.sohu.com/mpfe/v4/contentManagement/news/addvideo'
+    VIDEO: 'https://mp.sohu.com/mpfe/v4/contentManagement/news/addvideo',
+    ARTICLE: 'https://mp.sohu.com/mpfe/v4/contentManagement/news/addarticle'
   },
   netease: {
-    VIDEO: 'http://mp.163.com/subscribe_v4/index.html#/home'
+    VIDEO: 'http://mp.163.com/subscribe_v4/index.html#/home',
+    ARTICLE: 'https://mp.163.com/#/article-publish'
   },
   dayu: {
-    VIDEO: 'https://mp.dayu.com/dashboard/video/write'
+    VIDEO: 'https://mp.dayu.com/dashboard/video/write',
+    ARTICLE: 'https://mp.dayu.com/dashboard/article/write'
   },
   alipay: {
     VIDEO: 'https://c.alipay.com/page/content-creation/publish/short-video'
   },
   yidian: {
-    VIDEO: 'https://mp.yidianzixun.com/'
+    VIDEO: 'https://mp.yidianzixun.com/',
+    ARTICLE: 'https://mp.yidianzixun.com/#/Writing/articleEditor'
   },
   pinduoduo: {
     VIDEO: 'https://live.pinduoduo.com/creator/live-record'
   },
   vivovideo: {
     VIDEO: 'https://kaixinkan.vivo.com.cn/#/home'
+  },
+  iqiyi: {
+    VIDEO: 'https://mp.iqiyi.com/sns/publishv2/video'
+  },
+  youku: {
+    VIDEO: 'https://mp.youku.com/v2/manage/upload'
+  },
+  tencentvideo: {
+    VIDEO: 'https://cm.v.qq.com/upload'
   },
 
   // ========== 文章平台 ==========
@@ -716,6 +934,54 @@ export const PLATFORM_PUBLISH_URLS: Record<string, Partial<Record<SyncContentTyp
   },
   wordpress: {
     ARTICLE: 'https://wordpress.com/wp-admin/new-post.php'
+  },
+  aliyun: {
+    ARTICLE: 'https://developer.aliyun.com/article/new'
+  },
+  tencentyun: {
+    ARTICLE: 'https://cloud.tencent.com/developer/article/write-new'
+  },
+  medium: {
+    ARTICLE: 'https://medium.com/new-story'
+  },
+  oschina: {
+    ARTICLE: 'https://my.oschina.net/new/blog'
+  },
+  infoq: {
+    ARTICLE: 'https://xie.infoq.cn/'
+  },
+  smzdm: {
+    ARTICLE: 'https://zhiyou.smzdm.com/user/article/post'
+  },
+  woshipm: {
+    ARTICLE: 'https://www.woshipm.com/wp-admin/post-new.php'
+  },
+  gelonghui: {
+    ARTICLE: 'https://www.gelonghui.com/articleCreate/'
+  },
+  jiankangjie: {
+    ARTICLE: 'https://ucenter.cn-healthcare.com/article/revision/newedit'
+  },
+  kaidiwang: {
+    ARTICLE: 'https://www.9kd.com/create'
+  },
+  autohome: {
+    ARTICLE: 'https://chejiahao.autohome.com.cn/article/post.html'
+  },
+  jianpian: {
+    ARTICLE: 'https://www.jianpian.cn/p/edit'
+  },
+  tonghuashun: {
+    ARTICLE: 'https://t.10jqka.com.cn/newcircle/creation/postAll'
+  },
+  dongchedi: {
+    ARTICLE: 'https://mp.dcdapp.com/profile_v2/publish/article'
+  },
+  dingduanhao: {
+    ARTICLE: 'https://mp.topnews.cn/#/scriptWrite'
+  },
+  kuaichuanhao: {
+    ARTICLE: 'https://kuaichuan.360kuai.com/#/console/publish/article'
   },
 
   // ========== 播客平台 ==========
@@ -740,6 +1006,98 @@ export const PLATFORM_PUBLISH_URLS: Record<string, Partial<Record<SyncContentTyp
   spotify: {
     PODCAST: 'https://creators.spotify.com/pod/show'
   }
+}
+
+export const PLATFORM_PUBLISH_TARGET_LABELS: Record<
+  string,
+  Partial<Record<SyncContentType, string>>
+> = {
+  xiaohongshu: {
+    DYNAMIC: '小红书图文',
+    VIDEO: '小红书视频'
+  },
+  twitter: {
+    DYNAMIC: 'X 动态',
+    ARTICLE: 'X 长文'
+  },
+  bilibili: {
+    DYNAMIC: 'B站动态',
+    VIDEO: 'B站视频',
+    ARTICLE: 'B站专栏'
+  },
+  wechat: {
+    DYNAMIC: '微信公众号动态',
+    ARTICLE: '微信公众号文章'
+  },
+  weixinchannel: {
+    DYNAMIC: '视频号动态',
+    VIDEO: '视频号视频'
+  },
+  qie: {
+    VIDEO: '企鹅号视频',
+    ARTICLE: '企鹅号文章'
+  },
+  zsxq: {
+    DYNAMIC: '知识星球动态',
+    ARTICLE: '知识星球文章'
+  }
+}
+
+export function getPlatformAccountKey(platform: PlatformType): string {
+  return PLATFORMS[platform]?.accountKey || platform
+}
+
+export function getPlatformPublishTargetId(
+  platform: PlatformType,
+  contentType: SyncContentType
+): PlatformPublishTargetId {
+  return `${platform}:${contentType}`
+}
+
+function createPlatformPublishTargets(): Record<PlatformPublishTargetId, PlatformPublishTarget> {
+  const targets = {} as Record<PlatformPublishTargetId, PlatformPublishTarget>
+
+  for (const [platform, urlsByContentType] of Object.entries(PLATFORM_PUBLISH_URLS)) {
+    const platformInfo = PLATFORMS[platform as PlatformType]
+    if (!platformInfo) continue
+
+    for (const [contentType, url] of Object.entries(urlsByContentType)) {
+      if (!url) continue
+
+      const typedContentType = contentType as SyncContentType
+      const typedPlatform = platform as PlatformType
+      const id = getPlatformPublishTargetId(typedPlatform, typedContentType)
+      targets[id] = {
+        id,
+        platform: typedPlatform,
+        accountKey: getPlatformAccountKey(typedPlatform),
+        contentType: typedContentType,
+        name:
+          PLATFORM_PUBLISH_TARGET_LABELS[platform]?.[typedContentType] ||
+          `${platformInfo.name}${CONTENT_TYPE_LABELS[typedContentType]}`,
+        url
+      }
+    }
+  }
+
+  return targets
+}
+
+export const PLATFORM_PUBLISH_TARGETS = createPlatformPublishTargets()
+
+export function getPlatformPublishTarget(
+  platform: PlatformType,
+  contentType: SyncContentType
+): PlatformPublishTarget | undefined {
+  return PLATFORM_PUBLISH_TARGETS[getPlatformPublishTargetId(platform, contentType)]
+}
+
+export function getPlatformPublishTargetsByContentType(
+  contentType: SyncContentType
+): PlatformPublishTarget[] {
+  return Object.values(PLATFORM_PUBLISH_TARGETS).filter(
+    (target) => target.contentType === contentType
+  )
 }
 
 export const IPC_CHANNELS = {

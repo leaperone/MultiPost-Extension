@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import {
   Avatar,
   Button,
@@ -11,6 +11,7 @@ import {
   DropdownItem,
   DropdownMenu,
   DropdownTrigger,
+  Image,
   Input,
   Modal,
   ModalBody,
@@ -20,89 +21,234 @@ import {
   Spinner,
   useDisclosure,
 } from '@heroui/react';
+import { Icon } from '@iconify/react';
 import {
   Check,
-  ChevronDown,
+  CheckCircle2,
+  Circle,
+  KeyRound,
   LogIn,
   MoreHorizontal,
   Plus,
   RefreshCw,
   Search,
+  ShieldCheck,
+  Star,
   Trash2,
   UserCircle,
+  Users,
 } from 'lucide-react';
 import {
   Account,
+  ContentType,
   getDesktopBridge,
+  PlatformInfo,
   useDesktopAccounts,
   useDesktopPlatforms,
   useIsDesktop,
 } from '@/lib/desktop-bridge';
 
+type ContentTypeFilter = 'ALL' | ContentType;
+
+const CONTENT_TYPE_LABELS: Record<ContentType, string> = {
+  DYNAMIC: '动态',
+  VIDEO: '视频',
+  ARTICLE: '文章',
+  PODCAST: '播客',
+};
+
+const CONTENT_TYPE_FILTERS: Array<{ value: ContentTypeFilter; label: string }> = [
+  { value: 'ALL', label: '全部' },
+  { value: 'DYNAMIC', label: '动态' },
+  { value: 'VIDEO', label: '视频' },
+  { value: 'ARTICLE', label: '文章' },
+  { value: 'PODCAST', label: '播客' },
+];
+
+function getPlatformAccountKey(platform?: PlatformInfo): string {
+  return platform?.accountKey || platform?.id || '';
+}
+
+function getAccountLabel(account: Account): string {
+  return account.displayName || account.username || account.platform;
+}
+
+function supportsContentType(platform: PlatformInfo | undefined, filter: ContentTypeFilter): boolean {
+  return filter === 'ALL' || Boolean(platform?.supportedContentTypes.includes(filter));
+}
+
+function PlatformIcon({ platform, className = 'size-10' }: { platform?: PlatformInfo; className?: string }) {
+  const [faviconError, setFaviconError] = useState(false);
+  const fallback = platform?.name?.slice(0, 1) || platform?.id?.slice(0, 1).toUpperCase() || '?';
+
+  return (
+    <span
+      className={`${className} inline-flex shrink-0 items-center justify-center rounded-lg border bg-background text-sm font-semibold text-foreground shadow-sm`}>
+      {platform?.iconifyIcon ? (
+        <Icon
+          icon={platform.iconifyIcon}
+          className="size-5"
+        />
+      ) : platform?.faviconUrl && !faviconError ? (
+        <Image
+          src={platform.faviconUrl}
+          alt={platform.name}
+          width={20}
+          height={20}
+          removeWrapper
+          className="size-5 rounded-sm"
+          onError={() => setFaviconError(true)}
+        />
+      ) : (
+        fallback
+      )}
+    </span>
+  );
+}
+
+function ContentTypeChips({
+  types,
+  size = 'sm',
+}: {
+  types?: ContentType[];
+  size?: 'sm' | 'md';
+}) {
+  if (!types?.length) {
+    return (
+      <Chip
+        size={size}
+        variant="flat">
+        未配置
+      </Chip>
+    );
+  }
+
+  return (
+    <div className="flex flex-wrap gap-1.5">
+      {types.map((type) => (
+        <Chip
+          key={type}
+          size={size}
+          variant="flat"
+          color={
+            type === 'VIDEO'
+              ? 'secondary'
+              : type === 'ARTICLE'
+                ? 'success'
+                : type === 'PODCAST'
+                  ? 'warning'
+                  : 'primary'
+          }>
+          {CONTENT_TYPE_LABELS[type]}
+        </Chip>
+      ))}
+    </div>
+  );
+}
+
 /**
  * Desktop 账号管理页面
- *
- * 功能:
- * - 显示所有已登录账号
- * - 添加新账号（调用 JS Bridge 打开登录窗口）
- * - 删除账号
- * - 检查登录状态
- * - 账号分组管理
- * - 浏览器标签栏管理
  */
 export default function DesktopAccountsPage() {
   const isDesktop = useIsDesktop();
   const { accounts, loading, refresh } = useDesktopAccounts();
-  const { platforms } = useDesktopPlatforms();
+  const { platforms, loading: platformsLoading } = useDesktopPlatforms();
   const [searchQuery, setSearchQuery] = useState('');
-  const [selectedPlatform, setSelectedPlatform] = useState<string | null>(null);
+  const [platformSearch, setPlatformSearch] = useState('');
+  const [contentTypeFilter, setContentTypeFilter] = useState<ContentTypeFilter>('ALL');
   const { isOpen: isAddOpen, onOpen: onAddOpen, onClose: onAddClose } = useDisclosure();
   const { isOpen: isDeleteOpen, onOpen: onDeleteOpen, onClose: onDeleteClose } = useDisclosure();
   const [accountToDelete, setAccountToDelete] = useState<Account | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
   const [checkingStatus, setCheckingStatus] = useState<Set<string>>(new Set());
 
-  // 过滤账号
-  const filteredAccounts = accounts.filter((account) => {
-    const matchesSearch =
-      !searchQuery ||
-      account.username.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      account.displayName?.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesPlatform = !selectedPlatform || account.platform === selectedPlatform;
-    return matchesSearch && matchesPlatform;
-  });
+  const platformById = useMemo(() => {
+    return new Map(platforms.map((platform) => [platform.id, platform]));
+  }, [platforms]);
 
-  // 按平台分组账号
-  const accountsByPlatform = filteredAccounts.reduce(
-    (acc, account) => {
-      if (!acc[account.platform]) {
-        acc[account.platform] = [];
-      }
-      acc[account.platform].push(account);
-      return acc;
-    },
-    {} as Record<string, Account[]>
-  );
+  const accountStats = useMemo(() => {
+    const platformIds = new Set(accounts.map((account) => account.platform));
+    const loggedIn = accounts.filter((account) => account.isLoggedIn).length;
+    const multiTypePlatforms = platforms.filter((platform) => platform.supportedContentTypes.length > 1).length;
 
-  // 添加账号
+    return {
+      total: accounts.length,
+      loggedIn,
+      platformCount: platformIds.size,
+      multiTypePlatforms,
+    };
+  }, [accounts, platforms]);
+
+  const filteredAccounts = useMemo(() => {
+    const query = searchQuery.trim().toLowerCase();
+
+    return accounts.filter((account) => {
+      const platform = platformById.get(account.platform);
+      const accountKey = getPlatformAccountKey(platform).toLowerCase();
+      const platformName = platform?.name.toLowerCase() || account.platform.toLowerCase();
+      const matchesSearch =
+        !query ||
+        account.username.toLowerCase().includes(query) ||
+        account.displayName?.toLowerCase().includes(query) ||
+        account.platform.toLowerCase().includes(query) ||
+        platformName.includes(query) ||
+        accountKey.includes(query);
+      const matchesContentType = supportsContentType(platform, contentTypeFilter);
+
+      return matchesSearch && matchesContentType;
+    });
+  }, [accounts, contentTypeFilter, platformById, searchQuery]);
+
+  const accountsByPlatform = useMemo(() => {
+    return filteredAccounts.reduce(
+      (acc, account) => {
+        if (!acc[account.platform]) {
+          acc[account.platform] = [];
+        }
+        acc[account.platform].push(account);
+        return acc;
+      },
+      {} as Record<string, Account[]>
+    );
+  }, [filteredAccounts]);
+
+  const filteredPlatforms = useMemo(() => {
+    const query = platformSearch.trim().toLowerCase();
+
+    return platforms.filter((platform) => {
+      const accountKey = getPlatformAccountKey(platform).toLowerCase();
+      const matchesSearch =
+        !query ||
+        platform.name.toLowerCase().includes(query) ||
+        platform.id.toLowerCase().includes(query) ||
+        accountKey.includes(query);
+      const matchesContentType = supportsContentType(platform, contentTypeFilter);
+
+      return matchesSearch && matchesContentType;
+    });
+  }, [contentTypeFilter, platformSearch, platforms]);
+
+  const closeAddAccountModal = () => {
+    setPlatformSearch('');
+    onAddClose();
+  };
+
   const handleAddAccount = async (platform: string) => {
     const bridge = getDesktopBridge();
     if (!bridge) return;
 
     try {
       const newAccount = await bridge.account.create(platform);
-      // 立即打开登录页
       if (newAccount?.id) {
         await bridge.account.openLogin(newAccount.id);
       }
-      onAddClose();
+      closeAddAccountModal();
       refresh();
     } catch (error) {
       console.error('Failed to add account:', error);
     }
   };
 
-  // 删除账号
   const handleDeleteAccount = async () => {
     if (!accountToDelete) return;
 
@@ -122,7 +268,6 @@ export default function DesktopAccountsPage() {
     }
   };
 
-  // 检查登录状态
   const handleCheckStatus = async (account: Account) => {
     const bridge = getDesktopBridge();
     if (!bridge) return;
@@ -142,9 +287,7 @@ export default function DesktopAccountsPage() {
     }
   };
 
-  // 打开登录窗口
   const handleOpenLogin = async (account: Account) => {
-    console.log("[AccountsPage] handleOpenLogin called, account:", account.id);
     const bridge = getDesktopBridge();
     if (!bridge) return;
 
@@ -155,7 +298,6 @@ export default function DesktopAccountsPage() {
     }
   };
 
-  // 设为默认账号
   const handleSetDefault = async (account: Account) => {
     const bridge = getDesktopBridge();
     if (!bridge) return;
@@ -168,13 +310,6 @@ export default function DesktopAccountsPage() {
     }
   };
 
-  // 获取平台显示名称
-  const getPlatformName = (platformId: string) => {
-    const platform = platforms.find((p) => p.id === platformId);
-    return platform?.name || platformId;
-  };
-
-  // 确认删除
   const confirmDelete = (account: Account) => {
     setAccountToDelete(account);
     onDeleteOpen();
@@ -183,8 +318,9 @@ export default function DesktopAccountsPage() {
   if (!isDesktop) {
     return (
       <div className="p-6">
-        <Card className="shadow-none border">
-          <CardBody>
+        <Card className="border shadow-none">
+          <CardBody className="flex-row items-center gap-3">
+            <KeyRound className="size-5 text-muted-foreground" />
             <p className="text-muted-foreground">请在 Desktop 应用中打开此页面</p>
           </CardBody>
         </Card>
@@ -192,16 +328,22 @@ export default function DesktopAccountsPage() {
     );
   }
 
-  return (
-    <div className="flex flex-col h-full">
+  const isPageLoading = loading || platformsLoading;
 
-      {/* 主内容区域 */}
-      <div className="flex-1 overflow-auto p-6 space-y-6">
-        {/* 页面标题和操作 */}
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-2xl font-bold">账号管理</h1>
-            <p className="text-muted-foreground">管理已登录的社交媒体账号</p>
+  return (
+    <div className="flex h-full flex-col">
+      <div className="flex-1 space-y-6 overflow-auto p-6">
+        <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+          <div className="flex items-start gap-3">
+            <div className="flex size-12 items-center justify-center rounded-lg border bg-background shadow-sm">
+              <KeyRound className="size-5 text-primary" />
+            </div>
+            <div>
+              <h1 className="text-2xl font-semibold tracking-normal">账号管理</h1>
+              <p className="text-sm text-muted-foreground">
+                账号按平台保存，发布能力按动态、视频、文章、播客区分。
+              </p>
+            </div>
           </div>
           <div className="flex items-center gap-2">
             <Button
@@ -220,215 +362,314 @@ export default function DesktopAccountsPage() {
           </div>
         </div>
 
-        {/* 搜索和筛选 */}
-        <div className="flex items-center gap-4">
+        <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+          <Card className="border shadow-none">
+            <CardBody className="gap-1">
+              <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                <Users className="size-4" />
+                已添加账号
+              </div>
+              <div className="text-2xl font-semibold">{accountStats.total}</div>
+            </CardBody>
+          </Card>
+          <Card className="border shadow-none">
+            <CardBody className="gap-1">
+              <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                <ShieldCheck className="size-4" />
+                已登录
+              </div>
+              <div className="text-2xl font-semibold">{accountStats.loggedIn}</div>
+            </CardBody>
+          </Card>
+          <Card className="border shadow-none">
+            <CardBody className="gap-1">
+              <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                <Circle className="size-4" />
+                账号平台
+              </div>
+              <div className="text-2xl font-semibold">{accountStats.platformCount}</div>
+            </CardBody>
+          </Card>
+          <Card className="border shadow-none">
+            <CardBody className="gap-1">
+              <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                <CheckCircle2 className="size-4" />
+                多类型平台
+              </div>
+              <div className="text-2xl font-semibold">{accountStats.multiTypePlatforms}</div>
+            </CardBody>
+          </Card>
+        </div>
+
+        <div className="flex flex-col gap-3 rounded-lg border bg-background p-3 lg:flex-row lg:items-center">
           <Input
-            placeholder="搜索账号..."
+            placeholder="搜索账号、平台或 accountKey"
             value={searchQuery}
             onValueChange={setSearchQuery}
             startContent={<Search className="size-4 text-muted-foreground" />}
-            className="max-w-xs"
+            className="lg:max-w-sm"
           />
-          <Dropdown>
-            <DropdownTrigger>
+          <div className="flex flex-wrap gap-2">
+            {CONTENT_TYPE_FILTERS.map((filter) => (
               <Button
-                variant="bordered"
-                endContent={<ChevronDown className="size-4" />}>
-                {selectedPlatform ? getPlatformName(selectedPlatform) : '全部平台'}
+                key={filter.value}
+                size="sm"
+                variant={contentTypeFilter === filter.value ? 'solid' : 'bordered'}
+                color={contentTypeFilter === filter.value ? 'primary' : 'default'}
+                onPress={() => setContentTypeFilter(filter.value)}>
+                {filter.label}
               </Button>
-            </DropdownTrigger>
-            <DropdownMenu
-              selectionMode="single"
-              selectedKeys={selectedPlatform ? [selectedPlatform] : []}
-              onSelectionChange={(keys) => {
-                const selected = Array.from(keys)[0] as string;
-                setSelectedPlatform(selected || null);
-              }}
-              items={[{ id: '', name: '全部平台' }, ...platforms]}>
-              {(item) => <DropdownItem key={item.id}>{item.name}</DropdownItem>}
-            </DropdownMenu>
-          </Dropdown>
+            ))}
+          </div>
         </div>
 
-        {/* 账号列表 */}
-        {loading ? (
+        {isPageLoading ? (
           <div className="flex items-center justify-center py-12">
             <Spinner size="lg" />
           </div>
         ) : filteredAccounts.length === 0 ? (
-          <Card className="shadow-none border">
+          <Card className="border shadow-none">
             <CardBody className="py-12">
-              <div className="text-center space-y-2">
-                <UserCircle className="size-12 mx-auto text-muted-foreground" />
-                <p className="text-muted-foreground">
-                  {searchQuery || selectedPlatform ? '没有找到匹配的账号' : '还没有添加任何账号'}
+              <div className="space-y-3 text-center">
+                <UserCircle className="mx-auto size-12 text-muted-foreground" />
+                <p className="text-sm text-muted-foreground">
+                  {searchQuery || contentTypeFilter !== 'ALL' ? '没有找到匹配的账号' : '还没有添加任何账号'}
                 </p>
                 <Button
                   color="primary"
                   variant="flat"
                   onPress={onAddOpen}>
-                  添加第一个账号
+                  添加账号
                 </Button>
               </div>
             </CardBody>
           </Card>
         ) : (
-          <div className="space-y-6">
-            {Object.entries(accountsByPlatform).map(([platform, platformAccounts]) => (
-              <div key={platform}>
-                <h3 className="text-sm font-medium text-muted-foreground mb-3">
-                  {getPlatformName(platform)} ({platformAccounts.length})
-                </h3>
-                <div className="grid gap-3">
-                  {platformAccounts.map((account) => (
-                    <Card
-                      key={account.id}
-                      className="shadow-none border">
-                      <CardBody>
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center gap-3">
-                            {/* TODO: avatar URL from platforms like bilibili (i0.hdslb.com) is blocked by CDN anti-hotlink, need to proxy through our own image proxy service */}
-                            <Avatar
-                              src={account.avatar}
-                              name={account.displayName || account.username}
-                              size="md"
-                              imgProps={{ referrerPolicy: 'no-referrer' }}
-                            />
-                            <div>
-                              <div className="flex items-center gap-2">
-                                <span className="font-medium">
-                                  {account.displayName || account.username}
+          <div className="space-y-5">
+            {Object.entries(accountsByPlatform).map(([platformId, platformAccounts]) => {
+              const platform = platformById.get(platformId);
+              const accountKey = getPlatformAccountKey(platform) || platformId;
+
+              return (
+                <section
+                  key={platformId}
+                  className="space-y-3">
+                  <div className="flex flex-wrap items-center justify-between gap-3">
+                    <div className="flex min-w-0 items-center gap-3">
+                      <PlatformIcon platform={platform} />
+                      <div className="min-w-0">
+                        <div className="flex items-center gap-2">
+                          <h2 className="truncate text-base font-semibold">{platform?.name || platformId}</h2>
+                          <Chip
+                            size="sm"
+                            variant="flat">
+                            {platformAccounts.length} 个账号
+                          </Chip>
+                        </div>
+                        <p className="truncate text-xs text-muted-foreground">accountKey: {accountKey}</p>
+                      </div>
+                    </div>
+                    <ContentTypeChips types={platform?.supportedContentTypes} />
+                  </div>
+
+                  <div className="grid gap-3 xl:grid-cols-2">
+                    {platformAccounts.map((account) => (
+                      <Card
+                        key={account.id}
+                        className="border shadow-none">
+                        <CardBody>
+                          <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+                            <div className="flex min-w-0 items-center gap-3">
+                              <div className="relative shrink-0">
+                                <Avatar
+                                  src={account.avatar}
+                                  name={getAccountLabel(account)}
+                                  size="md"
+                                  imgProps={{ referrerPolicy: 'no-referrer' }}
+                                />
+                                <span className="absolute -bottom-1 -right-1">
+                                  <PlatformIcon
+                                    platform={platform}
+                                    className="size-6"
+                                  />
                                 </span>
-                                {account.isDefault && (
-                                  <Chip
-                                    size="sm"
-                                    color="primary"
-                                    variant="flat">
-                                    默认
-                                  </Chip>
-                                )}
                               </div>
-                              <p className="text-sm text-muted-foreground">@{account.username}</p>
+                              <div className="min-w-0">
+                                <div className="flex flex-wrap items-center gap-2">
+                                  <span className="truncate font-medium">{getAccountLabel(account)}</span>
+                                  {account.isDefault && (
+                                    <Chip
+                                      size="sm"
+                                      color="primary"
+                                      variant="flat"
+                                      startContent={<Star className="size-3" />}>
+                                      默认
+                                    </Chip>
+                                  )}
+                                </div>
+                                <p className="truncate text-sm text-muted-foreground">@{account.username}</p>
+                              </div>
+                            </div>
+
+                            <div className="flex flex-wrap items-center gap-2 md:justify-end">
+                              <Chip
+                                size="sm"
+                                color={account.isLoggedIn ? 'success' : 'warning'}
+                                variant="flat">
+                                {account.isLoggedIn ? '已登录' : '未登录'}
+                              </Chip>
+                              <Button
+                                size="sm"
+                                variant="bordered"
+                                startContent={<LogIn className="size-4" />}
+                                onPress={() => handleOpenLogin(account)}>
+                                {account.isLoggedIn ? '重新登录' : '登录'}
+                              </Button>
+                              <Dropdown>
+                                <DropdownTrigger>
+                                  <Button
+                                    isIconOnly
+                                    variant="light"
+                                    size="sm">
+                                    <MoreHorizontal className="size-4" />
+                                  </Button>
+                                </DropdownTrigger>
+                                <DropdownMenu
+                                  disabledKeys={account.isDefault ? ['default'] : []}
+                                  onAction={(key) => {
+                                    switch (key) {
+                                      case 'check':
+                                        handleCheckStatus(account);
+                                        break;
+                                      case 'default':
+                                        handleSetDefault(account);
+                                        break;
+                                      case 'delete':
+                                        confirmDelete(account);
+                                        break;
+                                    }
+                                  }}>
+                                  <DropdownItem
+                                    key="check"
+                                    startContent={
+                                      checkingStatus.has(account.id) ? (
+                                        <Spinner size="sm" />
+                                      ) : (
+                                        <RefreshCw className="size-4" />
+                                      )
+                                    }>
+                                    检查登录状态
+                                  </DropdownItem>
+                                  <DropdownItem
+                                    key="default"
+                                    className={account.isDefault ? 'hidden' : ''}
+                                    startContent={<Check className="size-4" />}>
+                                    设为默认
+                                  </DropdownItem>
+                                  <DropdownItem
+                                    key="delete"
+                                    className="text-danger"
+                                    color="danger"
+                                    startContent={<Trash2 className="size-4" />}>
+                                    删除账号
+                                  </DropdownItem>
+                                </DropdownMenu>
+                              </Dropdown>
                             </div>
                           </div>
-                          <div className="flex items-center gap-2">
-                            <Chip
-                              size="sm"
-                              color={account.isLoggedIn ? 'success' : 'warning'}
-                              variant="flat">
-                              {account.isLoggedIn ? '已登录' : '未登录'}
-                            </Chip>
-                            <Dropdown>
-                              <DropdownTrigger>
-                                <Button
-                                  isIconOnly
-                                  variant="light"
-                                  size="sm">
-                                  <MoreHorizontal className="size-4" />
-                                </Button>
-                              </DropdownTrigger>
-                              <DropdownMenu
-                                disabledKeys={account.isDefault ? ['default'] : []}
-                                onAction={(key) => {
-                                  switch (key) {
-                                    case 'check':
-                                      handleCheckStatus(account);
-                                      break;
-                                    case 'login':
-                                      handleOpenLogin(account);
-                                      break;
-                                    case 'default':
-                                      handleSetDefault(account);
-                                      break;
-                                    case 'delete':
-                                      confirmDelete(account);
-                                      break;
-                                  }
-                                }}>
-                                <DropdownItem
-                                  key="check"
-                                  startContent={
-                                    checkingStatus.has(account.id) ? (
-                                      <Spinner size="sm" />
-                                    ) : (
-                                      <RefreshCw className="size-4" />
-                                    )
-                                  }>
-                                  检查登录状态
-                                </DropdownItem>
-                                <DropdownItem
-                                  key="login"
-                                  startContent={<LogIn className="size-4" />}>
-                                  {account.isLoggedIn ? '重新登录' : '登录'}
-                                </DropdownItem>
-                                <DropdownItem
-                                  key="default"
-                                  className={account.isDefault ? 'hidden' : ''}
-                                  startContent={<Check className="size-4" />}>
-                                  设为默认
-                                </DropdownItem>
-                                <DropdownItem
-                                  key="delete"
-                                  className="text-danger"
-                                  color="danger"
-                                  startContent={<Trash2 className="size-4" />}>
-                                  删除账号
-                                </DropdownItem>
-                              </DropdownMenu>
-                            </Dropdown>
-                          </div>
-                        </div>
-                      </CardBody>
-                    </Card>
-                  ))}
-                </div>
-              </div>
-            ))}
+                        </CardBody>
+                      </Card>
+                    ))}
+                  </div>
+                </section>
+              );
+            })}
           </div>
         )}
 
-        {/* 添加账号 Modal */}
         <Modal
           isOpen={isAddOpen}
-          onClose={onAddClose}
-          size="2xl">
+          onClose={closeAddAccountModal}
+          size="5xl">
           <ModalContent>
-            <ModalHeader>添加账号</ModalHeader>
-            <ModalBody className="max-h-[60vh] overflow-y-auto">
-              <p className="text-muted-foreground mb-4">选择要添加的平台</p>
-              <div className="grid grid-cols-3 gap-3">
-                {platforms.map((platform) => (
-                  <Card
-                    key={platform.id}
-                    isPressable
-                    className="shadow-none border cursor-pointer hover:bg-muted/50"
-                    onPress={() => handleAddAccount(platform.id)}>
-                    <CardBody className="items-center py-4">
-                      <span className="font-medium">{platform.name}</span>
-                    </CardBody>
-                  </Card>
-                ))}
+            <ModalHeader className="flex flex-col gap-1">
+              <span>添加账号</span>
+              <span className="text-sm font-normal text-muted-foreground">
+                选择账号平台，平台支持的发布类型会在卡片上标出。
+              </span>
+            </ModalHeader>
+            <ModalBody className="max-h-[72vh] overflow-hidden">
+              <div className="flex flex-col gap-3 lg:flex-row lg:items-center">
+                <Input
+                  placeholder="搜索平台或 accountKey"
+                  value={platformSearch}
+                  onValueChange={setPlatformSearch}
+                  startContent={<Search className="size-4 text-muted-foreground" />}
+                  className="lg:max-w-sm"
+                />
+                <div className="flex flex-wrap gap-2">
+                  {CONTENT_TYPE_FILTERS.map((filter) => (
+                    <Button
+                      key={filter.value}
+                      size="sm"
+                      variant={contentTypeFilter === filter.value ? 'solid' : 'bordered'}
+                      color={contentTypeFilter === filter.value ? 'primary' : 'default'}
+                      onPress={() => setContentTypeFilter(filter.value)}>
+                      {filter.label}
+                    </Button>
+                  ))}
+                </div>
+              </div>
+
+              <div className="min-h-0 flex-1 overflow-y-auto pr-1">
+                {filteredPlatforms.length === 0 ? (
+                  <div className="py-12 text-center text-sm text-muted-foreground">没有找到匹配的平台</div>
+                ) : (
+                  <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                    {filteredPlatforms.map((platform) => {
+                      const accountKey = getPlatformAccountKey(platform);
+
+                      return (
+                        <Card
+                          key={platform.id}
+                          isPressable
+                          className="border shadow-none transition-colors hover:border-primary/60"
+                          onPress={() => handleAddAccount(platform.id)}>
+                          <CardBody className="gap-3">
+                            <div className="flex items-start gap-3">
+                              <PlatformIcon platform={platform} />
+                              <div className="min-w-0 flex-1">
+                                <div className="truncate font-medium">{platform.name}</div>
+                                <div className="truncate text-xs text-muted-foreground">{accountKey}</div>
+                              </div>
+                            </div>
+                            <ContentTypeChips types={platform.supportedContentTypes} />
+                          </CardBody>
+                        </Card>
+                      );
+                    })}
+                  </div>
+                )}
               </div>
             </ModalBody>
             <ModalFooter>
               <Button
                 variant="light"
-                onPress={onAddClose}>
+                onPress={closeAddAccountModal}>
                 取消
               </Button>
             </ModalFooter>
           </ModalContent>
         </Modal>
 
-        {/* 删除确认 Modal */}
         <Modal
           isOpen={isDeleteOpen}
           onClose={onDeleteClose}>
           <ModalContent>
             <ModalHeader>确认删除</ModalHeader>
-            <ModalBody className="max-h-[60vh] overflow-y-auto">
+            <ModalBody>
               <p>
-                确定要删除账号 <strong>{accountToDelete?.displayName || accountToDelete?.username}</strong>{' '}
+                确定要删除账号 <strong>{accountToDelete ? getAccountLabel(accountToDelete) : ''}</strong>{' '}
                 吗？此操作不可撤销。
               </p>
             </ModalBody>

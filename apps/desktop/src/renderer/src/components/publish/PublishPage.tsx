@@ -12,7 +12,12 @@ import type {
   PodcastData,
   FileData
 } from '../../../../shared/types'
-import { PLATFORMS, CONTENT_TYPE_LABELS } from '../../../../shared/constants'
+import {
+  CONTENT_TYPE_LABELS,
+  getPlatformPublishTarget,
+  getPlatformPublishTargetsByContentType,
+  PLATFORMS
+} from '../../../../shared/constants'
 
 function formatFileSize(bytes: number): string {
   if (bytes === 0) return '0 B'
@@ -29,9 +34,6 @@ export interface PlatformPublishState {
   status: PublishStatus
   message?: string
 }
-
-// Get all supported platforms from PLATFORMS constant
-const SUPPORTED_PLATFORMS: PlatformType[] = Object.keys(PLATFORMS) as PlatformType[]
 
 // Available content types
 const AVAILABLE_CONTENT_TYPES: SyncContentType[] = ['DYNAMIC', 'VIDEO', 'ARTICLE', 'PODCAST']
@@ -80,6 +82,7 @@ const PLATFORM_CATEGORIES: PlatformCategory[] = [
       'threads',
       'bluesky',
       'substack',
+      'pinterest',
       'webhook'
     ]
   },
@@ -100,13 +103,39 @@ const PLATFORM_CATEGORIES: PlatformCategory[] = [
       'alipay',
       'yidian',
       'pinduoduo',
-      'vivovideo'
+      'vivovideo',
+      'iqiyi',
+      'youku',
+      'tencentvideo'
     ]
   },
   {
     id: 'article',
     name: '文章平台',
-    platforms: ['csdn', 'jianshu', 'segmentfault', 'sspai', '51cto', 'wordpress']
+    platforms: [
+      'csdn',
+      'jianshu',
+      'segmentfault',
+      'sspai',
+      '51cto',
+      'wordpress',
+      'aliyun',
+      'tencentyun',
+      'medium',
+      'oschina',
+      'infoq',
+      'smzdm',
+      'woshipm',
+      'gelonghui',
+      'jiankangjie',
+      'kaidiwang',
+      'autohome',
+      'jianpian',
+      'tonghuashun',
+      'dongchedi',
+      'dingduanhao',
+      'kuaichuanhao'
+    ]
   },
   {
     id: 'podcast',
@@ -285,10 +314,7 @@ export function PublishPage({
 
   // Filter platforms that support the selected content type
   const availablePlatforms = useMemo(() => {
-    return SUPPORTED_PLATFORMS.filter((platform) => {
-      const platformInfo = PLATFORMS[platform]
-      return platformInfo?.supportedContentTypes.includes(contentType)
-    })
+    return getPlatformPublishTargetsByContentType(contentType).map((target) => target.platform)
   }, [contentType])
 
   // Group available platforms by category
@@ -317,7 +343,7 @@ export function PublishPage({
     const removedPlatforms: string[] = []
     selectedPlatforms.forEach((platform) => {
       const platformInfo = PLATFORMS[platform]
-      if (platformInfo?.supportedContentTypes.includes(type)) {
+      if (getPlatformPublishTarget(platform, type)) {
         newSelected.add(platform)
       } else if (platformInfo) {
         removedPlatforms.push(platformInfo.name)
@@ -1025,7 +1051,11 @@ export function PublishPage({
                             isDisabled={isPublishing}
                             size="sm"
                           />
-                          <span className="text-sm">{platformInfo?.name || platform}</span>
+                          <span className="text-sm">
+                            {getPlatformPublishTarget(platform, contentType)?.name ||
+                              platformInfo?.name ||
+                              platform}
+                          </span>
                         </label>
                       )
                     })}

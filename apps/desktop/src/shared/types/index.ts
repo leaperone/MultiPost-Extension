@@ -32,6 +32,7 @@ export type PlatformType =
   | 'bluesky'
   | 'substack'
   | 'webhook'
+  | 'pinterest'
   // 视频平台
   | 'youtube'
   | 'tiktok'
@@ -47,6 +48,9 @@ export type PlatformType =
   | 'yidian'
   | 'pinduoduo'
   | 'vivovideo'
+  | 'iqiyi'
+  | 'youku'
+  | 'tencentvideo'
   // 文章平台
   | 'csdn'
   | 'jianshu'
@@ -54,6 +58,22 @@ export type PlatformType =
   | 'sspai'
   | '51cto'
   | 'wordpress'
+  | 'aliyun'
+  | 'tencentyun'
+  | 'medium'
+  | 'oschina'
+  | 'infoq'
+  | 'smzdm'
+  | 'woshipm'
+  | 'gelonghui'
+  | 'jiankangjie'
+  | 'kaidiwang'
+  | 'autohome'
+  | 'jianpian'
+  | 'tonghuashun'
+  | 'dongchedi'
+  | 'dingduanhao'
+  | 'kuaichuanhao'
   // 播客平台
   | 'qqmusic'
   | 'lizhi'
@@ -69,6 +89,7 @@ export interface PlatformInfo {
   icon: string
   iconifyIcon?: string // Iconify icon identifier, e.g. 'simple-icons:bilibili'
   faviconUrl?: string // Platform favicon URL as fallback
+  accountKey?: string // Matching browser extension accountKey when desktop id differs
   url: string
   loginUrl: string
   supportedContentTypes: SyncContentType[]
@@ -76,6 +97,18 @@ export interface PlatformInfo {
 
 // Content types - matching browser extension
 export type SyncContentType = 'DYNAMIC' | 'VIDEO' | 'ARTICLE' | 'PODCAST'
+
+export type PlatformPublishTargetId = `${PlatformType}:${SyncContentType}`
+
+export interface PlatformPublishTarget {
+  id: PlatformPublishTargetId
+  platform: PlatformType
+  accountKey: string
+  contentType: SyncContentType
+  name: string
+  url: string
+  extensionKey?: string
+}
 
 // Legacy content type for backwards compatibility
 export type ContentType = 'text' | 'image' | 'video' | 'article'

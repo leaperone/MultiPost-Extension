@@ -106,6 +106,9 @@ export interface PlatformInfo {
   id: PlatformType
   name: string
   icon: string
+  iconifyIcon?: string
+  faviconUrl?: string
+  accountKey?: string
   supportedContentTypes: ContentType[]
   loginUrl: string
 }
