@@ -1130,6 +1130,7 @@ export const IPC_CHANNELS = {
   BROWSER_TAB_SWITCH: 'browser:tabSwitch',
   BROWSER_TAB_SWITCH_HOME: 'browser:tabSwitchHome',
   BROWSER_TAB_CLOSE: 'browser:tabClose',
+  BROWSER_TAB_NAVIGATE: 'browser:tabNavigate',
   BROWSER_TAB_GO_BACK: 'browser:tabGoBack',
   BROWSER_TAB_GO_FORWARD: 'browser:tabGoForward',
   BROWSER_TAB_REFRESH: 'browser:tabRefresh',

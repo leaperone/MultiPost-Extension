@@ -1009,6 +1009,12 @@ export function registerIpcHandlers(
     return manager.closeTab(accountId)
   })
 
+  ipcMain.handle(IPC_CHANNELS.BROWSER_TAB_NAVIGATE, async (_, tabId: string, url: string) => {
+    const manager = getBrowserViewManager()
+    if (!manager) throw new Error('BrowserViewManager not initialized')
+    await manager.navigateTab(tabId, url)
+  })
+
   ipcMain.handle(IPC_CHANNELS.BROWSER_TAB_GO_BACK, async (_, accountId: string) => {
     const manager = getBrowserViewManager()
     if (!manager) throw new Error('BrowserViewManager not initialized')

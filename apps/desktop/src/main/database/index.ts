@@ -82,6 +82,9 @@ export class DatabaseService {
     if (!columnNames.includes('proxy_config')) {
       this.db.exec('ALTER TABLE accounts ADD COLUMN proxy_config TEXT')
     }
+    if (!columnNames.includes('remark')) {
+      this.db.exec('ALTER TABLE accounts ADD COLUMN remark TEXT')
+    }
   }
 
   private createTables(): void {
@@ -106,6 +109,7 @@ export class DatabaseService {
         platform TEXT NOT NULL,
         username TEXT NOT NULL,
         display_name TEXT,
+        remark TEXT,
         avatar TEXT,
         is_logged_in INTEGER DEFAULT 0,
         last_login_at INTEGER,
@@ -274,8 +278,8 @@ export class DatabaseService {
     if (!this.db) throw new Error('Database not initialized')
 
     const stmt = this.db.prepare(`
-      INSERT INTO accounts (id, platform, username, display_name, avatar, is_logged_in, last_login_at, group_id, session_partition, proxy_config, is_default, created_at, updated_at)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      INSERT INTO accounts (id, platform, username, display_name, remark, avatar, is_logged_in, last_login_at, group_id, session_partition, proxy_config, is_default, created_at, updated_at)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `)
 
     stmt.run(
@@ -283,6 +287,7 @@ export class DatabaseService {
       account.platform,
       account.username,
       account.displayName || null,
+      account.remark || null,
       account.avatar || null,
       account.isLoggedIn ? 1 : 0,
       account.lastLoginAt || null,
@@ -340,6 +345,7 @@ export class DatabaseService {
       UPDATE accounts SET
         username = ?,
         display_name = ?,
+        remark = ?,
         avatar = ?,
         is_logged_in = ?,
         last_login_at = ?,
@@ -353,6 +359,7 @@ export class DatabaseService {
     stmt.run(
       updated.username,
       updated.displayName || null,
+      updated.remark || null,
       updated.avatar || null,
       updated.isLoggedIn ? 1 : 0,
       updated.lastLoginAt || null,
@@ -792,6 +799,7 @@ export class DatabaseService {
       platform: row.platform as PlatformType,
       username: row.username,
       displayName: row.display_name || undefined,
+      remark: row.remark || undefined,
       avatar: row.avatar || undefined,
       isLoggedIn: row.is_logged_in === 1,
       lastLoginAt: row.last_login_at || undefined,
@@ -911,6 +919,7 @@ interface AccountRow {
   platform: string
   username: string
   display_name: string | null
+  remark: string | null
   avatar: string | null
   is_logged_in: number
   last_login_at: number | null

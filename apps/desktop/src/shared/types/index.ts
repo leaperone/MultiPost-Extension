@@ -241,6 +241,7 @@ export interface Account {
   platform: PlatformType
   username: string
   displayName?: string
+  remark?: string
   avatar?: string
   isLoggedIn: boolean
   lastLoginAt?: number
@@ -357,6 +358,7 @@ export interface IpcChannels {
   'browser:navigate': (accountId: string, url: string) => Promise<void>
   'browser:execute': (accountId: string, script: string) => Promise<unknown>
   'browser:getLoginStatus': (accountId: string) => Promise<boolean>
+  'browser:tabNavigate': (tabId: string, url: string) => Promise<void>
 
   // Publishing
   'publish:execute': (taskId: string) => Promise<PublishResult>

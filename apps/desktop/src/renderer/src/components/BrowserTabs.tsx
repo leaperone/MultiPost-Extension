@@ -1,42 +1,126 @@
 import { useState, useEffect, useCallback } from 'react'
 import { Button } from '@heroui/react'
-import { X, ChevronLeft, ChevronRight, RotateCw, Home, Layers, Play, FileEdit } from 'lucide-react'
+import {
+  X,
+  ChevronLeft,
+  ChevronRight,
+  RotateCw,
+  Home,
+  Layers,
+  Play,
+  FileEdit,
+  LockKeyhole,
+  Globe2,
+  Loader2
+} from 'lucide-react'
 import type { BrowserTab, GroupTab, PublishTargetStatus } from '../../../shared/types'
 import { PLATFORMS } from '../../../shared/constants'
 
-// Home tab ID constant (must match browserViewManager.ts)
 const HOME_TAB_ID = '__home__'
 
-// Status colors for group tabs - more vibrant colors
+const PLATFORM_ACCENTS: Record<string, string> = {
+  weibo: '#e6162d',
+  xiaohongshu: '#ff2442',
+  twitter: '#111827',
+  douyin: '#00bcd4',
+  bilibili: '#00a1d6',
+  zhihu: '#1677ff',
+  wechat: '#07c160',
+  weixinchannel: '#07c160',
+  xueqiu: '#1f6feb',
+  okjike: '#ffe411',
+  kuaishou: '#ff4906',
+  baijiahao: '#2932e1',
+  toutiao: '#f04142',
+  toutiaohao: '#f04142',
+  v2ex: '#778087',
+  douban: '#2e963d',
+  juejin: '#1e80ff',
+  instagram: '#e4405f',
+  facebook: '#1877f2',
+  linkedin: '#0a66c2',
+  reddit: '#ff4500',
+  threads: '#111827',
+  bluesky: '#1185fe',
+  substack: '#ff6719',
+  youtube: '#ff0000',
+  tiktok: '#00bcd4',
+  medium: '#111827',
+  wordpress: '#21759b',
+  spotify: '#1db954'
+}
+
+const FALLBACK_ACCENTS = ['#2563eb', '#dc2626', '#16a34a', '#9333ea', '#ea580c', '#0891b2']
+
 const STATUS_COLORS: Record<PublishTargetStatus, string> = {
-  pending: 'bg-gray-400',
+  pending: 'bg-slate-400',
   filling: 'bg-amber-500 animate-pulse',
   ready: 'bg-emerald-500',
   success: 'bg-green-500',
   failed: 'bg-red-500',
-  cancelled: 'bg-gray-500'
+  cancelled: 'bg-slate-500'
 }
 
-// Status border colors for group tabs
 const STATUS_BORDER_COLORS: Record<PublishTargetStatus, string> = {
-  pending: 'border-gray-300',
+  pending: 'border-slate-300',
   filling: 'border-amber-400',
   ready: 'border-emerald-400',
   success: 'border-green-400',
   failed: 'border-red-400',
-  cancelled: 'border-gray-400'
+  cancelled: 'border-slate-400'
 }
 
 interface BrowserTabsProps {
   className?: string
 }
 
-// Custom hook to manage browser tabs state
+function getPlatformAccent(platform?: string): string {
+  if (!platform) return '#64748b'
+  const configured = PLATFORM_ACCENTS[platform]
+  if (configured) return configured
+
+  let hash = 0
+  for (const char of platform) {
+    hash = (hash * 31 + char.charCodeAt(0)) % FALLBACK_ACCENTS.length
+  }
+  return FALLBACK_ACCENTS[hash]
+}
+
+function getTabDisplayTitle(tab: BrowserTab): string {
+  if (tab.isHome) return 'MultiPost'
+  if (tab.isGroup) return tab.title
+  return tab.title || PLATFORMS[tab.platform]?.name || tab.platform
+}
+
+function getUrlHost(url?: string): string {
+  if (!url) return ''
+  try {
+    const parsed = new URL(url)
+    if (parsed.protocol === 'http:' || parsed.protocol === 'https:') {
+      return parsed.hostname.replace(/^www\./, '')
+    }
+    return parsed.protocol.replace(':', '')
+  } catch {
+    return ''
+  }
+}
+
+function getAddressSecurity(url?: string): 'secure' | 'plain' | 'unknown' {
+  if (!url) return 'unknown'
+  try {
+    const parsed = new URL(url)
+    if (parsed.protocol === 'https:') return 'secure'
+    if (parsed.protocol === 'http:') return 'plain'
+    return 'unknown'
+  } catch {
+    return 'unknown'
+  }
+}
+
 export function useBrowserTabs() {
   const [tabs, setTabs] = useState<BrowserTab[]>([])
   const [loading, setLoading] = useState(false)
 
-  // Load initial tabs
   const loadTabs = useCallback(async () => {
     try {
       setLoading(true)
@@ -49,7 +133,6 @@ export function useBrowserTabs() {
     }
   }, [])
 
-  // Subscribe to tabs changed events
   useEffect(() => {
     loadTabs()
 
@@ -82,6 +165,14 @@ export function useBrowserTabs() {
       }
     } catch (error) {
       console.error('Failed to close tab:', error)
+    }
+  }, [])
+
+  const navigateTab = useCallback(async (tabId: string, url: string) => {
+    try {
+      await window.api.browser.tabNavigate(tabId, url)
+    } catch (error) {
+      console.error('Failed to navigate tab:', error)
     }
   }, [])
 
@@ -119,6 +210,7 @@ export function useBrowserTabs() {
     loading,
     switchTab,
     closeTab,
+    navigateTab,
     goBack,
     goForward,
     refresh,
@@ -126,12 +218,10 @@ export function useBrowserTabs() {
   }
 }
 
-// Custom hook to manage group tabs state
 export function useGroupTabs(groupId: string | null) {
   const [groupTabs, setGroupTabs] = useState<GroupTab[]>([])
   const [groupStatus, setGroupStatus] = useState<string | undefined>()
 
-  // Load group tabs
   const loadGroupTabs = useCallback(async () => {
     if (!groupId) {
       setGroupTabs([])
@@ -145,7 +235,6 @@ export function useGroupTabs(groupId: string | null) {
     }
   }, [groupId])
 
-  // Subscribe to group tabs changed events
   useEffect(() => {
     loadGroupTabs()
 
@@ -203,15 +292,6 @@ export function useGroupTabs(groupId: string | null) {
     }
   }, [groupId])
 
-  const closeGroup = useCallback(async () => {
-    if (!groupId) return
-    try {
-      await window.api.publishGroup.close(groupId)
-    } catch (error) {
-      console.error('Failed to close group:', error)
-    }
-  }, [groupId])
-
   return {
     groupTabs,
     groupStatus,
@@ -219,44 +299,53 @@ export function useGroupTabs(groupId: string | null) {
     closeGroupTab,
     fillAll,
     submitAll,
-    closeGroup,
     loadGroupTabs
   }
 }
 
-// Tab favicon component
-function TabFavicon({ tab }: { tab: BrowserTab }) {
+function TabFavicon({ tab, className = 'size-4' }: { tab: BrowserTab; className?: string }) {
   const [imgError, setImgError] = useState(false)
 
-  // Home tab shows home icon
   if (tab.isHome) {
-    return <Home className="size-4 text-muted-foreground" />
-  }
-
-  // Get favicon URL from platform config or tab
-  const faviconUrl = tab.faviconUrl || PLATFORMS[tab.platform]?.faviconUrl
-
-  if (!faviconUrl || imgError) {
-    // Fallback: show first letter of platform name
-    const platformName = PLATFORMS[tab.platform]?.name || tab.platform
     return (
-      <div className="size-4 rounded bg-muted flex items-center justify-center text-xs font-medium text-muted-foreground">
-        {platformName.charAt(0).toUpperCase()}
-      </div>
+      <span className={`${className} inline-flex items-center justify-center rounded-md bg-blue-50 text-blue-600`}>
+        <Home className="size-3.5" />
+      </span>
     )
   }
 
+  const platformInfo = PLATFORMS[tab.platform]
+  const accent = getPlatformAccent(tab.platform)
+  const faviconUrl = tab.faviconUrl || platformInfo?.faviconUrl
+
+  if (faviconUrl && !imgError) {
+    return (
+      <span
+        className={`${className} inline-flex items-center justify-center rounded-md`}
+        style={{ backgroundColor: `${accent}14` }}
+      >
+        <img
+          src={faviconUrl}
+          alt=""
+          className="size-3.5 rounded-sm object-contain"
+          referrerPolicy="no-referrer"
+          onError={() => setImgError(true)}
+        />
+      </span>
+    )
+  }
+
+  const platformName = platformInfo?.name || tab.platform
   return (
-    <img
-      src={faviconUrl}
-      alt=""
-      className="size-4 rounded"
-      onError={() => setImgError(true)}
-    />
+    <span
+      className={`${className} inline-flex items-center justify-center rounded-md text-[10px] font-semibold`}
+      style={{ backgroundColor: `${accent}18`, color: accent }}
+    >
+      {platformName.charAt(0).toUpperCase()}
+    </span>
   )
 }
 
-// Single tab component
 function TabItem({
   tab,
   onSwitch,
@@ -266,40 +355,37 @@ function TabItem({
   onSwitch: () => void
   onClose: () => void
 }) {
-  const platformInfo = PLATFORMS[tab.platform]
-
-  // Get display title - for group tabs show the group name
-  const displayTitle = tab.isHome
-    ? '首页'
-    : tab.isGroup
-      ? tab.title
-      : (tab.title || platformInfo?.name || tab.platform)
+  const displayTitle = getTabDisplayTitle(tab)
+  const host = getUrlHost(tab.url)
 
   return (
     <div
       className={`
-        flex items-center gap-2 px-3 py-1 rounded-md cursor-pointer select-none
-        transition-colors whitespace-nowrap group min-w-0 max-w-[200px]
-        ${tab.isActive ? 'bg-muted' : 'hover:bg-muted/50'}
+        app-no-drag group flex h-8 min-w-[132px] max-w-[220px] cursor-pointer select-none items-center gap-2
+        rounded-t-lg border px-2.5 text-slate-700 transition-colors
+        ${
+          tab.isActive
+            ? 'border-slate-200 border-b-white bg-white shadow-sm'
+            : 'border-transparent bg-transparent hover:bg-white/70'
+        }
       `}
       onClick={onSwitch}
-      title={displayTitle}
+      title={host ? `${displayTitle} - ${host}` : displayTitle}
     >
-      {/* Favicon - show Layers icon for group tabs */}
       {tab.isGroup ? (
-        <Layers className="size-4 text-muted-foreground" />
+        <span className="inline-flex size-4 items-center justify-center rounded-md bg-amber-50 text-amber-600">
+          <Layers className="size-3.5" />
+        </span>
       ) : (
         <TabFavicon tab={tab} />
       )}
 
-      {/* Title */}
-      <span className="text-sm truncate flex-1">{displayTitle}</span>
+      <span className="min-w-0 flex-1 truncate text-[13px] font-medium">{displayTitle}</span>
 
-      {/* Close button (not shown for home tab) */}
       {!tab.isHome && (
         <button
           type="button"
-          className="ml-1 opacity-60 hover:opacity-100 hover:bg-muted-foreground/20 rounded p-0.5 transition-opacity shrink-0"
+          className="shrink-0 rounded p-0.5 text-slate-400 opacity-0 transition hover:bg-slate-200 hover:text-slate-700 group-hover:opacity-100"
           onClick={(e) => {
             e.stopPropagation()
             e.preventDefault()
@@ -307,14 +393,13 @@ function TabItem({
           }}
           title="关闭标签页"
         >
-          <X className="size-3" />
+          <X className="size-3.5" />
         </button>
       )}
     </div>
   )
 }
 
-// Group tab item component - compact inline style with status colors
 function GroupTabItem({
   tab,
   onSwitch,
@@ -325,37 +410,47 @@ function GroupTabItem({
   onClose: () => void
 }) {
   const platformInfo = PLATFORMS[tab.platform]
+  const accent = getPlatformAccent(tab.platform)
 
   return (
     <div
       className={`
-        flex items-center gap-1.5 px-2 py-0.5 rounded-md cursor-pointer select-none
-        transition-all whitespace-nowrap min-w-0 max-w-[160px] border
-        ${tab.isActive ? 'bg-muted shadow-sm' : 'hover:bg-muted/50 border-transparent'}
+        app-no-drag flex h-7 min-w-[108px] max-w-[168px] cursor-pointer select-none items-center gap-1.5
+        rounded-md border px-2 text-slate-700 transition-colors
+        ${tab.isActive ? 'bg-white shadow-sm' : 'border-transparent hover:bg-white/70'}
         ${tab.isActive ? STATUS_BORDER_COLORS[tab.status] : 'border-transparent'}
       `}
       onClick={onSwitch}
       title={`${tab.displayName} - ${platformInfo?.name || tab.platform} (${tab.status})`}
     >
-      {/* Status indicator */}
-      <div className={`size-2 rounded-full shrink-0 ${STATUS_COLORS[tab.status]}`} />
+      <span className={`size-2 rounded-full ${STATUS_COLORS[tab.status]}`} />
 
-      {/* Platform favicon */}
       {platformInfo?.faviconUrl ? (
-        <img src={platformInfo.faviconUrl} alt="" className="size-3.5 rounded" />
+        <span
+          className="inline-flex size-4 items-center justify-center rounded"
+          style={{ backgroundColor: `${accent}14` }}
+        >
+          <img
+            src={platformInfo.faviconUrl}
+            alt=""
+            className="size-3 rounded-sm object-contain"
+            referrerPolicy="no-referrer"
+          />
+        </span>
       ) : (
-        <div className="size-3.5 rounded bg-muted flex items-center justify-center text-[9px] font-medium text-muted-foreground">
+        <span
+          className="inline-flex size-4 items-center justify-center rounded text-[9px] font-semibold"
+          style={{ backgroundColor: `${accent}18`, color: accent }}
+        >
           {(platformInfo?.name || tab.platform).charAt(0).toUpperCase()}
-        </div>
+        </span>
       )}
 
-      {/* Display name */}
-      <span className="text-xs font-medium truncate flex-1">{tab.displayName}</span>
+      <span className="min-w-0 flex-1 truncate text-xs font-medium">{tab.displayName}</span>
 
-      {/* Close button */}
       <button
         type="button"
-        className="opacity-60 hover:opacity-100 hover:bg-muted-foreground/20 rounded p-0.5 transition-opacity shrink-0"
+        className="shrink-0 rounded p-0.5 text-slate-400 transition hover:bg-slate-200 hover:text-slate-700"
         onClick={(e) => {
           e.stopPropagation()
           e.preventDefault()
@@ -369,7 +464,6 @@ function GroupTabItem({
   )
 }
 
-// Group tab bar component (inline in single row - when group is active)
 function GroupTabBar({
   groupTabs,
   onSwitchTab,
@@ -384,9 +478,8 @@ function GroupTabBar({
   onSubmitAll: () => void
 }) {
   return (
-    <div className="flex items-center gap-1">
-      {/* Group tabs */}
-      <div className="flex items-center gap-0.5 overflow-x-auto scrollbar-hide">
+    <div className="app-no-drag flex min-w-0 items-center gap-1">
+      <div className="flex min-w-0 items-center gap-1 overflow-x-auto scrollbar-hide">
         {groupTabs.map((tab) => (
           <GroupTabItem
             key={tab.id}
@@ -397,33 +490,33 @@ function GroupTabBar({
         ))}
       </div>
 
-      {/* Action buttons */}
-      <div className="flex items-center gap-1 shrink-0 ml-1">
+      <div className="flex shrink-0 items-center gap-1">
         <Button
           size="sm"
           variant="flat"
-          className="h-6 px-2 text-xs"
+          isIconOnly
+          className="h-7 min-w-7 rounded-md text-slate-600"
           onPress={onFillAll}
-          startContent={<FileEdit className="size-3" />}
+          title="填充所有"
         >
-          填充
+          <FileEdit className="size-3.5" />
         </Button>
         <Button
           size="sm"
           variant="solid"
           color="primary"
-          className="h-6 px-2 text-xs"
+          isIconOnly
+          className="h-7 min-w-7 rounded-md"
           onPress={onSubmitAll}
-          startContent={<Play className="size-3" />}
+          title="发布所有"
         >
-          发布
+          <Play className="size-3.5" />
         </Button>
       </div>
     </div>
   )
 }
 
-// Navigation controls for active tab
 function NavigationControls({
   activeTab,
   onGoBack,
@@ -435,16 +528,14 @@ function NavigationControls({
   onGoForward: () => void
   onRefresh: () => void
 }) {
-  if (!activeTab) return null
-
   return (
-    <div className="flex items-center gap-1 mr-2 shrink-0">
+    <div className="app-no-drag flex shrink-0 items-center gap-1">
       <Button
         size="sm"
         variant="light"
         isIconOnly
-        className="min-w-7 w-7 h-7"
-        isDisabled={!activeTab.canGoBack}
+        className="h-7 min-w-7 rounded-md text-slate-600"
+        isDisabled={!activeTab?.canGoBack}
         onPress={onGoBack}
         title="后退"
       >
@@ -454,8 +545,8 @@ function NavigationControls({
         size="sm"
         variant="light"
         isIconOnly
-        className="min-w-7 w-7 h-7"
-        isDisabled={!activeTab.canGoForward}
+        className="h-7 min-w-7 rounded-md text-slate-600"
+        isDisabled={!activeTab?.canGoForward}
         onPress={onGoForward}
         title="前进"
       >
@@ -465,7 +556,8 @@ function NavigationControls({
         size="sm"
         variant="light"
         isIconOnly
-        className="min-w-7 w-7 h-7"
+        className="h-7 min-w-7 rounded-md text-slate-600"
+        isDisabled={!activeTab}
         onPress={onRefresh}
         title="刷新"
       >
@@ -475,40 +567,83 @@ function NavigationControls({
   )
 }
 
+function AddressBar({
+  activeTab,
+  onNavigate
+}: {
+  activeTab: BrowserTab | null
+  onNavigate: (tabId: string, url: string) => Promise<void>
+}) {
+  const [address, setAddress] = useState('')
+  const [isNavigating, setIsNavigating] = useState(false)
+
+  useEffect(() => {
+    setAddress(activeTab?.url || '')
+  }, [activeTab?.id, activeTab?.url])
+
+  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault()
+    if (!activeTab || !address.trim()) return
+
+    try {
+      setIsNavigating(true)
+      await onNavigate(activeTab.id, address.trim())
+    } finally {
+      setIsNavigating(false)
+    }
+  }
+
+  const security = getAddressSecurity(activeTab?.url)
+  const host = getUrlHost(activeTab?.url)
+
+  return (
+    <form
+      className={`
+        app-no-drag flex h-8 min-w-0 flex-1 items-center gap-2 rounded-lg border bg-white px-2.5 shadow-sm
+        ${activeTab ? 'border-slate-200 focus-within:border-slate-400' : 'border-slate-200 opacity-70'}
+      `}
+      onSubmit={handleSubmit}
+    >
+      {isNavigating ? (
+        <Loader2 className="size-4 shrink-0 animate-spin text-slate-400" />
+      ) : security === 'secure' ? (
+        <LockKeyhole className="size-4 shrink-0 text-emerald-600" />
+      ) : (
+        <Globe2 className="size-4 shrink-0 text-slate-400" />
+      )}
+      <input
+        value={address}
+        disabled={!activeTab || isNavigating}
+        onChange={(event) => setAddress(event.target.value)}
+        className="min-w-0 flex-1 bg-transparent text-[13px] text-slate-800 outline-none placeholder:text-slate-400"
+        placeholder="输入网址"
+        spellCheck={false}
+      />
+      {host && <span className="hidden shrink-0 text-xs text-slate-400 md:inline">{host}</span>}
+    </form>
+  )
+}
+
 export function BrowserTabs({ className }: BrowserTabsProps): React.ReactElement {
-  const { tabs, activeTab, activeGroupTab, switchTab, closeTab, goBack, goForward, refresh } =
-    useBrowserTabs()
+  const {
+    tabs,
+    activeTab,
+    activeGroupTab,
+    switchTab,
+    closeTab,
+    navigateTab,
+    goBack,
+    goForward,
+    refresh
+  } = useBrowserTabs()
 
-  // Get active group ID from the active group tab
   const activeGroupId = activeGroupTab?.groupId || null
-
-  // Use group tabs hook
   const { groupTabs, switchGroupTab, closeGroupTab, fillAll, submitAll } =
     useGroupTabs(activeGroupId)
 
-  const handleGoBack = () => {
-    if (activeTab) {
-      goBack(activeTab.id)
-    }
-  }
-
-  const handleGoForward = () => {
-    if (activeTab) {
-      goForward(activeTab.id)
-    }
-  }
-
-  const handleRefresh = () => {
-    if (activeTab) {
-      refresh(activeTab.id)
-    }
-  }
-
   const handleCloseTab = async (tabId: string) => {
-    // Check if this is a group tab
     const tab = tabs.find((t) => t.id === tabId)
     if (tab?.isGroup && tab.groupId) {
-      // Close the entire group
       await window.api.publishGroup.close(tab.groupId)
     } else {
       await closeTab(tabId)
@@ -516,39 +651,43 @@ export function BrowserTabs({ className }: BrowserTabsProps): React.ReactElement
   }
 
   return (
-    <div className={`bg-background h-10 border-b flex items-center gap-1 px-2 ${className || ''}`}>
-      {/* Navigation controls */}
-      <NavigationControls
-        activeTab={activeTab}
-        onGoBack={handleGoBack}
-        onGoForward={handleGoForward}
-        onRefresh={handleRefresh}
-      />
-
-      {/* Tab list */}
-      <div className="flex items-center gap-0.5 flex-1 overflow-x-auto scrollbar-hide min-w-0">
-        {tabs.map((tab) => (
-          <TabItem
-            key={tab.id}
-            tab={tab}
-            onSwitch={() => switchTab(tab.id)}
-            onClose={() => handleCloseTab(tab.id)}
-          />
-        ))}
+    <div className={`h-[72px] border-b border-slate-200 bg-[#f7f8fa] text-slate-800 ${className || ''}`}>
+      <div className="app-drag flex h-9 items-end gap-1 px-2 pt-1">
+        <div className="w-[78px] shrink-0" />
+        <div className="flex min-w-0 flex-1 items-end gap-1 overflow-x-auto scrollbar-hide">
+          {tabs.map((tab) => (
+            <TabItem
+              key={tab.id}
+              tab={tab}
+              onSwitch={() => switchTab(tab.id)}
+              onClose={() => handleCloseTab(tab.id)}
+            />
+          ))}
+        </div>
       </div>
 
-      {/* Right section: Group tabs (when group is active) */}
-      {activeGroupId && groupTabs.length > 0 && (
-        <div className="shrink-0 border-l ml-1 pl-1">
-          <GroupTabBar
-            groupTabs={groupTabs}
-            onSwitchTab={switchGroupTab}
-            onCloseTab={closeGroupTab}
-            onFillAll={fillAll}
-            onSubmitAll={submitAll}
-          />
-        </div>
-      )}
+      <div className="app-drag flex h-9 items-center gap-2 px-3 pb-1">
+        <NavigationControls
+          activeTab={activeTab}
+          onGoBack={() => activeTab && goBack(activeTab.id)}
+          onGoForward={() => activeTab && goForward(activeTab.id)}
+          onRefresh={() => activeTab && refresh(activeTab.id)}
+        />
+
+        <AddressBar activeTab={activeTab} onNavigate={navigateTab} />
+
+        {activeGroupId && groupTabs.length > 0 && (
+          <div className="hidden min-w-0 max-w-[42%] shrink border-l border-slate-200 pl-2 xl:block">
+            <GroupTabBar
+              groupTabs={groupTabs}
+              onSwitchTab={switchGroupTab}
+              onCloseTab={closeGroupTab}
+              onFillAll={fillAll}
+              onSubmitAll={submitAll}
+            />
+          </div>
+        )}
+      </div>
     </div>
   )
 }

@@ -37,15 +37,26 @@ export type PublishStatus =
   | 'failed'
   | 'cancelled'
 
+export interface ProxyConfig {
+  protocol: 'http' | 'https' | 'socks5'
+  host: string
+  port: number
+  username?: string
+  password?: string
+}
+
 export interface Account {
   id: string
   platform: PlatformType
   username: string
   displayName?: string
+  remark?: string
   avatar?: string
   isLoggedIn: boolean
   lastLoginAt?: number
   groupId?: string
+  sessionPartition?: string
+  proxyConfig?: ProxyConfig
   isDefault: boolean
   createdAt: number
   updatedAt: number

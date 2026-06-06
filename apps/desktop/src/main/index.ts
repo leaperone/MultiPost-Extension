@@ -1,4 +1,4 @@
-import { app, shell, BrowserWindow, ipcMain, protocol, session } from 'electron'
+import { app, BrowserWindow, ipcMain, protocol, session } from 'electron'
 import { join } from 'path'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import { registerIpcHandlers } from './ipc'
@@ -10,6 +10,7 @@ import { KeepAliveService } from './keepalive'
 import { startDebugServer } from './debug-server'
 import { getDesktopUserAgent, handleLocalFileRequest, hardenSession } from './browser/sessionHardening'
 import { closeAllAnonymizedProxies } from './proxy/accountProxy'
+import { openExternalUrl } from './browser/externalUrl'
 
 // 在 app.whenReady() 之前注册 local-file:// 协议
 protocol.registerSchemesAsPrivileged([
@@ -74,14 +75,20 @@ app.on('will-quit', (event) => {
 app.on('quit', cleanupAccountProxies)
 
 function createWindow(): void {
+  const isDarwin = process.platform === 'darwin'
+
   mainWindow = new BrowserWindow({
     width: 1200,
     height: 800,
-    minWidth: 800,
+    minWidth: 920,
     minHeight: 600,
     show: false,
     autoHideMenuBar: true,
-    titleBarStyle: 'default',
+    backgroundColor: '#f7f8fa',
+    titleBarStyle: isDarwin ? 'hiddenInset' : 'hidden',
+    ...(isDarwin
+      ? { trafficLightPosition: { x: 14, y: 13 } }
+      : { titleBarOverlay: { color: '#f7f8fa', symbolColor: '#334155', height: 36 } }),
     webPreferences: {
       preload: join(__dirname, '../preload/index.js'),
       sandbox: false,
@@ -100,7 +107,7 @@ function createWindow(): void {
   })
 
   mainWindow.webContents.setWindowOpenHandler((details) => {
-    shell.openExternal(details.url)
+    void openExternalUrl(details.url)
     return { action: 'deny' }
   })
 

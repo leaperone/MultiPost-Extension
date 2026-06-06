@@ -92,6 +92,8 @@ const api = {
     switchToHome: (): Promise<void> => ipcRenderer.invoke(IPC_CHANNELS.BROWSER_TAB_SWITCH_HOME),
     closeTab: (accountId: string): Promise<boolean> =>
       ipcRenderer.invoke(IPC_CHANNELS.BROWSER_TAB_CLOSE, accountId),
+    tabNavigate: (tabId: string, url: string): Promise<void> =>
+      ipcRenderer.invoke(IPC_CHANNELS.BROWSER_TAB_NAVIGATE, tabId, url),
     tabGoBack: (accountId: string): Promise<void> =>
       ipcRenderer.invoke(IPC_CHANNELS.BROWSER_TAB_GO_BACK, accountId),
     tabGoForward: (accountId: string): Promise<void> =>

@@ -4,9 +4,10 @@
  * 管理主站 WebView 的加载、导航和通信
  */
 
-import { BrowserView, BrowserWindow, ipcMain, shell, dialog } from 'electron'
+import { BrowserView, BrowserWindow, ipcMain, dialog } from 'electron'
 import { join } from 'path'
 import { is } from '@electron-toolkit/utils'
+import { openExternalUrl } from './externalUrl'
 
 // 开发环境使用本地地址，生产环境使用线上地址
 const WEB_BASE_URL = is.dev
@@ -87,7 +88,7 @@ export class MainWebViewManager {
 
     // 新窗口请求（外部链接）
     webContents.setWindowOpenHandler(({ url }) => {
-      shell.openExternal(url)
+      void openExternalUrl(url)
       return { action: 'deny' }
     })
 
@@ -274,7 +275,7 @@ export class MainWebViewManager {
 
     // 打开外部链接
     ipcMain.handle('multipost:app:openExternal', async (_, url: string) => {
-      await shell.openExternal(url)
+      await openExternalUrl(url)
     })
 
     // 选择文件

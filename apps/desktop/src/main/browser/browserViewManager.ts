@@ -1,4 +1,4 @@
-import { BrowserView, BrowserWindow, session, ipcMain, shell, dialog, type Session } from 'electron'
+import { BrowserView, BrowserWindow, session, ipcMain, dialog, type Session } from 'electron'
 import { join, basename, extname } from 'path'
 import { v4 as uuidv4 } from 'uuid'
 import { is } from '@electron-toolkit/utils'
@@ -41,6 +41,7 @@ import {
   trackAccountProxyForWebContents,
   withAccountProxySession
 } from '../proxy/accountProxy'
+import { openExternalUrl } from './externalUrl'
 
 interface ManagedBrowserView {
   view: BrowserView
@@ -117,7 +118,7 @@ interface ExecutorPublishRun {
 }
 
 // Layout constants
-const TABBAR_HEIGHT = 40
+const TABBAR_HEIGHT = 72
 const TOOLBAR_HEIGHT = 40
 const DEFAULT_SIDEBAR_WIDTH = 256 // 16rem expanded
 const PUBLISH_SNAPSHOT_LIMIT = 50
@@ -785,6 +786,7 @@ export class BrowserViewManager {
     } else {
       await this.tabBarView.webContents.loadFile(join(__dirname, '../renderer/index.html'))
     }
+    this.debugAttachConsoleCapture(this.tabBarView.webContents, 'tabbar')
     console.log('[BrowserViewManager] Tab bar view created')
 
     // 2. Create home content BrowserView
@@ -830,7 +832,7 @@ export class BrowserViewManager {
       } catch {
         // invalid URL
       }
-      shell.openExternal(url)
+      void openExternalUrl(url)
       return { action: 'deny' }
     })
 
@@ -845,6 +847,14 @@ export class BrowserViewManager {
 
     // Setup navigation events for home view
     this.homeView.webContents.on('page-title-updated', () => {
+      this.notifyTabsChanged()
+    })
+
+    this.homeView.webContents.on('did-navigate', () => {
+      this.notifyTabsChanged()
+    })
+
+    this.homeView.webContents.on('did-navigate-in-page', () => {
       this.notifyTabsChanged()
     })
 
@@ -890,7 +900,7 @@ export class BrowserViewManager {
 
     // 打开外部链接
     ipcMain.handle('multipost:app:openExternal', async (_, url: string) => {
-      await shell.openExternal(url)
+      await openExternalUrl(url)
     })
 
     // 选择文件
@@ -1086,6 +1096,18 @@ export class BrowserViewManager {
       this.notifyTabsChanged()
     })
 
+    view.webContents.on('did-navigate-in-page', (_event, navigatedUrl) => {
+      const managed = this.views.get(accountId)
+      if (managed) {
+        managed.url = navigatedUrl
+      }
+      this.mainWindow.webContents.send('browser:navigated', {
+        accountId,
+        url: navigatedUrl
+      })
+      this.notifyTabsChanged()
+    })
+
     view.webContents.on('page-title-updated', (_event, title) => {
       const managed = this.views.get(accountId)
       if (managed) {
@@ -1201,7 +1223,40 @@ export class BrowserViewManager {
     }
     const account = DatabaseService.getInstance().getAccount(accountId)
     await applyAccountProxy(managed.view.webContents.session, account)
-    await managed.view.webContents.loadURL(url)
+    await managed.view.webContents.loadURL(this.normalizeNavigationUrl(url))
+  }
+
+  async navigateTab(tabId: string, url: string): Promise<void> {
+    const targetUrl = this.normalizeNavigationUrl(url)
+    if (!targetUrl) {
+      return
+    }
+
+    if (tabId === HOME_TAB_ID) {
+      if (!this.homeView) {
+        throw new Error('Home view is not initialized')
+      }
+      await this.homeView.webContents.loadURL(targetUrl)
+      this.notifyTabsChanged()
+      return
+    }
+
+    const managed = this.views.get(tabId)
+    if (managed) {
+      await this.navigate(tabId, targetUrl)
+      return
+    }
+
+    const group = this.publishGroups.get(tabId)
+    const activeTarget = group?.activeAccountId ? group.views.get(group.activeAccountId) : null
+    if (activeTarget) {
+      await activeTarget.view.webContents.loadURL(targetUrl)
+      this.notifyTabsChanged()
+      this.notifyGroupTabsChanged(tabId)
+      return
+    }
+
+    throw new Error(`No tab found: ${tabId}`)
   }
 
   /**
@@ -1426,7 +1481,7 @@ export class BrowserViewManager {
 
   /**
    * Update bounds for all views based on current window size
-   * All BrowserViews start below the single-row tab bar (40px)
+   * All BrowserViews start below the browser chrome.
    */
   private updateAllViewBounds(): void {
     if (this.mainWindow.isDestroyed()) return
@@ -1601,11 +1656,27 @@ export class BrowserViewManager {
   }
 
   private normalizeNavigationUrl(url: string): string {
+    const trimmed = url.trim()
+    if (!trimmed) return ''
+
     try {
-      const normalized = new URL(url)
+      const normalized = new URL(trimmed)
       return normalized.toString()
     } catch {
-      return url.trim()
+      if (trimmed.startsWith('/')) {
+        const baseUrl = is.dev
+          ? (process.env.MULTIPOST_WEB_URL || 'http://localhost:3000')
+          : 'https://multipost.app'
+        return new URL(trimmed, baseUrl).toString()
+      }
+
+      const localhostPattern = /^(localhost|127\.0\.0\.1|\[::1\])(?::\d+)?(?:\/.*)?$/i
+      if (localhostPattern.test(trimmed)) {
+        return `http://${trimmed}`
+      }
+
+      const hasLikelyDomain = /^[^\s/]+\.[^\s/]+(?:\/.*)?$/.test(trimmed)
+      return hasLikelyDomain ? `https://${trimmed}` : trimmed
     }
   }
 
@@ -2479,11 +2550,11 @@ export class BrowserViewManager {
    * Go back in tab history
    */
   async tabGoBack(accountId: string): Promise<void> {
-    const managed = this.views.get(accountId)
-    if (!managed) return
+    const webContents = this.getWebContentsForTab(accountId)
+    if (!webContents) return
 
-    if (managed.view.webContents.canGoBack()) {
-      managed.view.webContents.goBack()
+    if (webContents.canGoBack()) {
+      webContents.goBack()
     }
   }
 
@@ -2491,11 +2562,11 @@ export class BrowserViewManager {
    * Go forward in tab history
    */
   async tabGoForward(accountId: string): Promise<void> {
-    const managed = this.views.get(accountId)
-    if (!managed) return
+    const webContents = this.getWebContentsForTab(accountId)
+    if (!webContents) return
 
-    if (managed.view.webContents.canGoForward()) {
-      managed.view.webContents.goForward()
+    if (webContents.canGoForward()) {
+      webContents.goForward()
     }
   }
 
@@ -2503,10 +2574,25 @@ export class BrowserViewManager {
    * Refresh a tab
    */
   async tabRefresh(accountId: string): Promise<void> {
-    const managed = this.views.get(accountId)
-    if (!managed) return
+    const webContents = this.getWebContentsForTab(accountId)
+    if (!webContents) return
 
-    managed.view.webContents.reload()
+    webContents.reload()
+  }
+
+  private getWebContentsForTab(tabId: string): Electron.WebContents | null {
+    if (tabId === HOME_TAB_ID) {
+      return this.homeView?.webContents || null
+    }
+
+    const managed = this.views.get(tabId)
+    if (managed) {
+      return managed.view.webContents
+    }
+
+    const group = this.publishGroups.get(tabId)
+    const activeTarget = group?.activeAccountId ? group.views.get(group.activeAccountId) : null
+    return activeTarget?.view.webContents || null
   }
 
   /**
@@ -3461,11 +3547,14 @@ export class BrowserViewManager {
   }
 
   /**
-   * Execute script in a view by ID (accountId or '__home__')
+   * Execute script in a view by ID (accountId, '__home__', or '__tabbar__')
    */
   async debugExecScript(viewId: string, script: string): Promise<unknown> {
     if (viewId === '__home__' && this.homeView) {
       return this.homeView.webContents.executeJavaScript(script)
+    }
+    if (viewId === '__tabbar__' && this.tabBarView) {
+      return this.tabBarView.webContents.executeJavaScript(script)
     }
     const managed = this.views.get(viewId)
     if (managed) {
