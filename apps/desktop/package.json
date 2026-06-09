@@ -1,6 +1,6 @@
 {
   "name": "multipost-desktop",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "MultiPost Desktop - Social Media Multi-Platform Publishing",
   "main": "./out/main/index.js",
   "author": "MultiPost Team",
@@ -80,5 +80,4 @@
     "node": ">=18.0.0"
   },
   "pnpm": {}
-
 }
