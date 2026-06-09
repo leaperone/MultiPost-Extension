@@ -6,7 +6,7 @@ import {
   getDynamicDraft,
   updateDynamicDraft,
   deleteDynamicDraft,
-} from '@/actions/draft';
+} from '../src/actions/draft';
 import type { Draft, DraftFileData, DraftFileDataClient } from '@/lib/types/draft';
 import { nanoid } from 'nanoid';
 
@@ -111,7 +111,11 @@ export const useMdDraftStore = create(
 
       loadDraft: async (id: string) => {
         try {
-          const result = await getDynamicDraft(id);
+          const result = await getDynamicDraft({
+            data: {
+              draftId: id,
+            },
+          });
           if (result.success && result.data) {
             set({
               activeDraftId: id,
@@ -156,7 +160,11 @@ export const useMdDraftStore = create(
 
       deleteDraft: async (id: string) => {
         try {
-          const result = await deleteDynamicDraft(id);
+          const result = await deleteDynamicDraft({
+            data: {
+              draftId: id,
+            },
+          });
           if (result.success) {
             const { activeDraftId, drafts } = get();
             const newDrafts = drafts.filter((d) => d.id !== id);
@@ -189,10 +197,15 @@ export const useMdDraftStore = create(
         set({ isSaving: true });
         try {
           const filesToSave: DraftFileData[] = currentFiles.map(({ file: _f, uploadProgress: _u, ...rest }) => rest);
-          const result = await updateDynamicDraft(activeDraftId, {
-            title: currentTitle,
-            content: currentContent,
-            files: filesToSave,
+          const result = await updateDynamicDraft({
+            data: {
+              draftId: activeDraftId,
+              data: {
+                title: currentTitle,
+                content: currentContent,
+                files: filesToSave,
+              },
+            },
           });
 
           if (result.success) {

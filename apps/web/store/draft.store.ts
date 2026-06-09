@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import { PosterGenerationSchema } from '@/actions/draw/poster/types';
+import { PosterGenerationSchema } from '../src/actions/draw/poster/types';
 
 /**
  * Draft publish state interface
