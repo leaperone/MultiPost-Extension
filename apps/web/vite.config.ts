@@ -1,0 +1,52 @@
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
+import { tanstackStart } from '@tanstack/react-start/plugin/vite';
+import tailwindcss from '@tailwindcss/vite';
+import viteReact from '@vitejs/plugin-react';
+import { config as dotenvConfig } from 'dotenv';
+import { defineConfig } from 'vite';
+import tsConfigPaths from 'vite-tsconfig-paths';
+
+const webRoot = fileURLToPath(new URL('.', import.meta.url));
+const monorepoRoot = path.resolve(webRoot, '../..');
+const prismaRoot = path.join(monorepoRoot, 'prisma');
+const generatedPrismaClient = path.join(prismaRoot, 'client_multipost');
+
+// Load monorepo root env files the same way next.config.mjs did.
+dotenvConfig({ path: path.join(monorepoRoot, '.env.local'), override: true });
+dotenvConfig({ path: path.join(monorepoRoot, '.env') });
+
+export default defineConfig({
+  server: {
+    port: 3000,
+  },
+  plugins: [
+    tanstackStart(),
+    viteReact(),
+    tailwindcss(),
+    tsConfigPaths({ projects: [path.join(webRoot, 'tsconfig.json')] }),
+  ],
+  resolve: {
+    alias: [
+      { find: /^@\/prisma\/(.*)$/, replacement: `${prismaRoot}/$1` },
+      { find: '@', replacement: webRoot },
+    ],
+  },
+  ssr: {
+    external: [
+      '@prisma/client',
+      '@prisma/client/runtime/library',
+      '@/prisma/client_multipost',
+      '../../prisma/client_multipost',
+      generatedPrismaClient,
+    ],
+    optimizeDeps: {
+      exclude: [
+        '@prisma/client',
+        '@prisma/client/runtime/library',
+        '@/prisma/client_multipost',
+        '../../prisma/client_multipost',
+      ],
+    },
+  },
+});

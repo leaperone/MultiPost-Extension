@@ -2,6 +2,7 @@
   "compilerOptions": {
     "target": "ES6",
     "lib": ["dom", "dom.iterable", "esnext"],
+    "types": ["node", "vite/client"],
     "allowJs": true,
     "skipLibCheck": true,
     "strict": true,
@@ -21,6 +22,10 @@
   },
   "include": [
     "next-env.d.ts",
+    "src/**/*.ts",
+    "src/**/*.tsx",
+    "src/routeTree.gen.ts",
+    "vite.config.ts",
     "**/*.ts",
     "**/*.tsx",
     ".next/types/**/*.ts",

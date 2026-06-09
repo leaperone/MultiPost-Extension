@@ -2,10 +2,11 @@
   "name": "multipost-web",
   "version": "1.1.9-build.2",
   "private": true,
+  "type": "module",
   "scripts": {
-    "dev": "../../node_modules/.bin/next dev -H 0.0.0.0 --webpack",
-    "build": "../../node_modules/.bin/next build --webpack",
-    "start": "../../node_modules/.bin/next start",
+    "dev": "vite dev",
+    "build": "vite build",
+    "start": "node dist/server/server.js",
     "lint": "../../node_modules/.bin/eslint ."
   }
 }
