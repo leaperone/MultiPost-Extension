@@ -1,12 +1,16 @@
 import { createFileRoute } from '@tanstack/react-router';
 
-import { auth } from '../../../lib/auth';
-
 export const Route = createFileRoute('/api/auth/$')({
   server: {
     handlers: {
-      GET: async ({ request }) => auth.handler(request),
-      POST: async ({ request }) => auth.handler(request),
+      GET: handleAuthRequest,
+      POST: handleAuthRequest,
     },
   },
 });
+
+async function handleAuthRequest({ request }: { request: Request }) {
+  // Keep Prisma-backed Better Auth out of the public route graph until an auth request is handled.
+  const { auth } = await import('../../../lib/auth');
+  return auth.handler(request);
+}

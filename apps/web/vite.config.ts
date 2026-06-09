@@ -20,6 +20,10 @@ export default defineConfig({
   server: {
     port: 3000,
   },
+  // Expose existing NEXT_PUBLIC_* client env vars (alongside Vite's VITE_*) so
+  // migrated client code reading import.meta.env.NEXT_PUBLIC_* keeps working
+  // without renaming every key during the Next.js -> TanStack Start migration.
+  envPrefix: ['VITE_', 'NEXT_PUBLIC_'],
   plugins: [
     tanstackStart(),
     viteReact(),
