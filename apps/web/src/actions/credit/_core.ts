@@ -11,6 +11,8 @@ import { Decimal } from '@prisma/client/runtime/library';
 
 import { multipostDb } from '../../lib/db';
 
+type CreditWriteClient = Pick<typeof multipostDb, 'credit'>;
+
 function assertPositiveFiniteDecimal(amount: Decimal.Value): Decimal {
   const decimal = new Decimal(amount);
 
@@ -131,22 +133,25 @@ export async function deductCredit(params: DeductCreditParams): Promise<DeductCr
   }
 }
 
-export async function addCredit(userId: string, amount: Decimal, isFree: boolean) {
+async function addCreditWithClient(
+  client: CreditWriteClient,
+  userId: string,
+  amount: Decimal,
+  isFree: boolean,
+) {
   const amountToAdd = assertPositiveFiniteDecimal(amount);
 
   try {
     const creditToAdd = isFree ? new Decimal(0) : amountToAdd;
     const freeCreditToAdd = isFree ? amountToAdd : new Decimal(0);
 
-    const existingCredit = await multipostDb.credit.findUnique({
-      where: { userId },
-    });
-
-    const updatedCredit = await multipostDb.credit.upsert({
+    // Use atomic increments so concurrent successful grants (e.g. webhook
+    // retries / simultaneous recharges) cannot lose updates via read-modify-write.
+    const updatedCredit = await client.credit.upsert({
       where: { userId },
       update: {
-        credits: existingCredit?.credits.add(creditToAdd) ?? creditToAdd,
-        freeCredits: existingCredit?.freeCredits.add(freeCreditToAdd) ?? freeCreditToAdd,
+        credits: { increment: creditToAdd },
+        freeCredits: { increment: freeCreditToAdd },
       },
       create: {
         userId,
@@ -165,6 +170,19 @@ export async function addCredit(userId: string, amount: Decimal, isFree: boolean
   } catch (error) {
     return { success: false, error: `${(error as Error).message}` };
   }
+}
+
+export async function addCredit(userId: string, amount: Decimal, isFree: boolean) {
+  return addCreditWithClient(multipostDb, userId, amount, isFree);
+}
+
+export async function addCreditInTransaction(
+  client: CreditWriteClient,
+  userId: string,
+  amount: Decimal,
+  isFree: boolean,
+) {
+  return addCreditWithClient(client, userId, amount, isFree);
 }
 
 export async function batchDeductCredit(
