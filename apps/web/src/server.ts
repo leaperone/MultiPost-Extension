@@ -95,7 +95,7 @@ async function sendWebResponse(res: ServerResponse, webResponse: Response) {
   }
 
   await new Promise<void>((resolve, reject) => {
-    Readable.fromWeb(webResponse.body as ReadableStream<Uint8Array>)
+    Readable.fromWeb(webResponse.body as unknown as Parameters<typeof Readable.fromWeb>[0])
       .on('error', reject)
       .on('end', resolve)
       .pipe(res);

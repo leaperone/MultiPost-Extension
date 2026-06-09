@@ -28,11 +28,15 @@ model User {
   name               String?
   email              String               @unique
   emailVerified      DateTime?
+  emailVerifiedBool  Boolean              @default(false)
   image              String?
   accounts           Account[]
   sessions           Session[]
   // Optional for WebAuthn support
   Authenticator      Authenticator[]
+  betterauthsessions BetterAuthSession[]
+  betterauthaccounts BetterAuthAccount[]
+  betterauthpasskeys BetterAuthPasskey[]
   SocialMediaAccount SocialMediaAccount[]
 
   createdAt           DateTime              @default(now())
@@ -58,6 +62,73 @@ model User {
   VideoTranscription      VideoTranscription[]
   SupportConversation     SupportConversation[]
   SupportMessage          SupportMessage[]
+}
+
+model BetterAuthSession {
+  id        String   @id @default(cuid())
+  expiresAt DateTime
+  token     String   @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  ipAddress String?
+  userAgent String?
+  userId    String
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model BetterAuthAccount {
+  id                    String    @id @default(cuid())
+  accountId             String
+  providerId            String
+  userId                String
+  accessToken           String?
+  refreshToken          String?
+  idToken               String?
+  accessTokenExpiresAt  DateTime?
+  refreshTokenExpiresAt DateTime?
+  scope                 String?
+  password              String?
+  tokenType             String?
+  sessionState          String?
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@unique([providerId, accountId])
+}
+
+model BetterAuthVerification {
+  id         String   @id @default(cuid())
+  identifier String
+  value      String
+  expiresAt  DateTime
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@index([identifier])
+}
+
+model BetterAuthPasskey {
+  id           String    @id @default(cuid())
+  name         String?
+  publicKey    String
+  userId       String
+  credentialID String    @unique
+  counter      Int
+  deviceType   String
+  backedUp     Boolean
+  transports   String?
+  createdAt    DateTime?
+  aaguid       String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
 }
 
 model Account {
