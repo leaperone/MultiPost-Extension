@@ -15,17 +15,17 @@ import {
   Textarea,
 } from '@heroui/react';
 import { MegaphoneIcon, UploadCloudIcon, XIcon } from 'lucide-react';
-import Link from 'next/link';
+import { Link } from '@tanstack/react-router';
 
 import { useTranslation } from '@/i18n/client';
-import { reportPublishError } from '@/actions/feedback/report-publish-error';
-import { getFeedbackUploadUrl } from '@/actions/feedback/upload';
+import { reportPublishError } from '../../src/actions/feedback/report-publish-error';
+import { getFeedbackUploadUrl } from '../../src/actions/feedback/upload';
 import {
   ERROR_TYPES,
   FEEDBACK_SOURCES,
   type ErrorType,
   type FeedbackSource,
-} from '@/actions/feedback/types';
+} from '../../src/actions/feedback/types';
 
 const MAX_SCREENSHOT_BYTES = 4 * 1024 * 1024;
 const ACCEPTED_TYPES = ['image/png', 'image/jpeg', 'image/webp'];
@@ -133,7 +133,11 @@ export default function PublishErrorReportDialog({
   );
 
   const uploadScreenshot = useCallback(async (file: File): Promise<string | undefined> => {
-    const result = await getFeedbackUploadUrl(file.name);
+    const result = await getFeedbackUploadUrl({
+      data: {
+        filename: file.name,
+      },
+    });
     if (!result.success || !result.uploadUrl || !result.key) {
       throw new Error(result.error ?? 'Upload URL unavailable');
     }
@@ -175,16 +179,18 @@ export default function PublishErrorReportDialog({
 
     try {
       const result = await reportPublishError({
-        platform: platform || undefined,
-        taskId: context.taskId,
-        logId: context.logId,
-        status: context.status,
-        errorMessage: context.errorMessage,
-        description: description.trim(),
-        errorType,
-        source: context.source,
-        screenshotKey,
-        page: typeof window !== 'undefined' ? window.location.pathname : undefined,
+        data: {
+          platform: platform || undefined,
+          taskId: context.taskId,
+          logId: context.logId,
+          status: context.status,
+          errorMessage: context.errorMessage,
+          description: description.trim(),
+          errorType,
+          source: context.source,
+          screenshotKey,
+          page: typeof window !== 'undefined' ? window.location.pathname : undefined,
+        },
       });
 
       if (result.ok) {
@@ -344,7 +350,7 @@ export default function PublishErrorReportDialog({
           <p className="text-xs text-foreground/60">
             {t('modal.contributeHint')}{' '}
             <Link
-              href="/community"
+              to="/community"
               target="_blank"
               className="underline">
               {t('modal.contributeLink')}

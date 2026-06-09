@@ -10,6 +10,10 @@ const createPublishTaskSchema = z.object({
   selectedAccountIds: z.array(z.string()).optional(),
 });
 
+const publishTaskIdSchema = z.object({
+  taskId: z.string().min(1),
+});
+
 export const createPublishTask = createServerFn({ method: 'POST' })
   .validator(createPublishTaskSchema)
   .handler(async ({ data }) => {
@@ -117,7 +121,240 @@ export const createPublishTask = createServerFn({ method: 'POST' })
     } catch (error) {
       return {
         success: false,
-        error: 'Failed to create publish task',
+      error: 'Failed to create publish task',
+    };
+  }
+});
+
+export const getScheduledTasks = createServerFn({ method: 'GET' }).handler(async () => {
+  const session = await getSession();
+  if (!session?.user?.id) {
+    throw new Error('Unauthorized');
+  }
+
+  const publishTasks = await multipostDb.publishTask.findMany({
+    where: {
+      userId: session.user.id,
+    },
+    include: {
+      draft: {
+        select: {
+          title: true,
+          content: true,
+        },
+      },
+      PublishTaskLog: {
+        select: {
+          id: true,
+          platform: true,
+          platformId: true,
+          publishedAt: true,
+          status: true,
+          error: true,
+          message: true,
+        },
+      },
+    },
+    orderBy: {
+      publishedAt: 'asc',
+    },
+  });
+
+  return publishTasks.map((task) => ({
+    id: task.id,
+    title: task.draft.title || `Publish Task ${task.id.slice(-6)}`,
+    start: task.publishedAt.toISOString(),
+    description:
+      task.draft.content?.slice(0, 100) +
+      (task.draft.content && task.draft.content.length > 100 ? '...' : ''),
+    status: task.status,
+    classNames: [`status-${task.status}`],
+    extendedProps: {
+      draftId: task.draftId,
+      status: task.status,
+      content: task.draft.content,
+      createdAt: task.createdAt.toISOString(),
+      updatedAt: task.updatedAt.toISOString(),
+      publishTaskLogs: task.PublishTaskLog.map((log) => ({
+        ...log,
+        publishedAt: log.publishedAt?.toISOString() ?? null,
+      })),
+    },
+  }));
+});
+
+export const getPublishTaskDetail = createServerFn({ method: 'GET' })
+  .validator(publishTaskIdSchema)
+  .handler(async ({ data }) => {
+    const session = await getSession();
+    if (!session?.user?.id) {
+      throw new Error('Unauthorized');
+    }
+
+    const task = await multipostDb.publishTask.findFirst({
+      where: {
+        id: data.taskId,
+        userId: session.user.id,
+      },
+      include: {
+        draft: true,
+        PublishTaskLog: {
+          orderBy: {
+            createdAt: 'desc',
+          },
+        },
+      },
+    });
+
+    if (!task) {
+      throw new Error('Task not found');
+    }
+
+    return {
+      ...task,
+      publishedAt: task.publishedAt.toISOString(),
+      createdAt: task.createdAt.toISOString(),
+      updatedAt: task.updatedAt.toISOString(),
+      draft: {
+        ...task.draft,
+        createdAt: task.draft.createdAt.toISOString(),
+        updatedAt: task.draft.updatedAt.toISOString(),
+      },
+      PublishTaskLog: task.PublishTaskLog.map((log) => ({
+        ...log,
+        publishedAt: log.publishedAt?.toISOString() ?? null,
+        createdAt: log.createdAt.toISOString(),
+        updatedAt: log.updatedAt.toISOString(),
+      })),
+    };
+  });
+
+export const cancelPublishTask = createServerFn({ method: 'POST' })
+  .validator(publishTaskIdSchema)
+  .handler(async ({ data }) => {
+    const session = await getSession();
+    if (!session?.user?.id) {
+      throw new Error('Unauthorized');
+    }
+
+    try {
+      const task = await multipostDb.publishTask.findFirst({
+        where: {
+          id: data.taskId,
+          userId: session.user.id,
+        },
+      });
+
+      if (!task) {
+        return {
+          success: false,
+          error: 'Task not found',
+        };
+      }
+
+      if (task.status !== 'pending') {
+        return {
+          success: false,
+          error: 'Only pending tasks can be cancelled',
+        };
+      }
+
+      await multipostDb.publishTask.update({
+        where: {
+          id: data.taskId,
+        },
+        data: {
+          status: 'cancelled',
+          updatedAt: new Date(),
+        },
+      });
+
+      await multipostDb.publishTaskLog.updateMany({
+        where: {
+          publishTaskId: data.taskId,
+          status: 'pending',
+        },
+        data: {
+          status: 'cancelled',
+          updatedAt: new Date(),
+        },
+      });
+
+      return {
+        success: true,
+        message: 'Task cancelled',
+      };
+    } catch (error) {
+      console.error('Error cancelling task:', error);
+      return {
+        success: false,
+        error: 'Failed to cancel task',
+      };
+    }
+  });
+
+export const restartPublishTask = createServerFn({ method: 'POST' })
+  .validator(publishTaskIdSchema)
+  .handler(async ({ data }) => {
+    const session = await getSession();
+    if (!session?.user?.id) {
+      throw new Error('Unauthorized');
+    }
+
+    try {
+      const task = await multipostDb.publishTask.findFirst({
+        where: {
+          id: data.taskId,
+          userId: session.user.id,
+        },
+      });
+
+      if (!task) {
+        return {
+          success: false,
+          error: 'Task not found',
+        };
+      }
+
+      if (task.status !== 'cancelled' && task.status !== 'failed') {
+        return {
+          success: false,
+          error: 'Only cancelled or failed tasks can be restarted',
+        };
+      }
+
+      await multipostDb.publishTask.update({
+        where: {
+          id: data.taskId,
+        },
+        data: {
+          status: 'pending',
+          updatedAt: new Date(),
+        },
+      });
+
+      await multipostDb.publishTaskLog.updateMany({
+        where: {
+          publishTaskId: data.taskId,
+          status: {
+            in: ['cancelled', 'failed'],
+          },
+        },
+        data: {
+          status: 'pending',
+          updatedAt: new Date(),
+        },
+      });
+
+      return {
+        success: true,
+        message: 'Task restarted',
+      };
+    } catch (error) {
+      console.error('Error restarting task:', error);
+      return {
+        success: false,
+        error: 'Failed to restart task',
       };
     }
   });
