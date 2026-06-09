@@ -345,7 +345,7 @@ export default function DynamicPage() {
       try {
         const [platformData, extraConfigList] = await Promise.all([
           getPlatformInfos('DYNAMIC'),
-          getPlatformExtraConfigList(),
+          getPlatformExtraConfigList({ data: {} }),
         ]);
 
         if (extraConfigList.success && extraConfigList.data) {

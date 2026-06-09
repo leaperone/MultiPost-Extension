@@ -1,8 +1,8 @@
 'use client';
 
-import { useRef, useEffect, useState, useCallback } from 'react';
+import { lazy, Suspense, useRef, useEffect, useState, useCallback } from 'react';
 import confetti from 'canvas-confetti';
-import Link from 'next/link';
+import { Link } from '@tanstack/react-router';
 import { nanoid } from 'nanoid';
 import {
   MessageCircleHeartIcon,
@@ -36,7 +36,6 @@ import {
 } from '@heroui/react';
 import { addToast } from '@heroui/toast';
 import { Icon } from '@iconify/react';
-import dynamic from 'next/dynamic';
 import {
   DndContext,
   closestCenter,
@@ -55,10 +54,8 @@ import {
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 
-import { useSession } from 'next-auth/react';
 import { useExtensionStatus } from '@/hooks/useExtensionStatus';
 import { ExtensionGuide } from './ExtensionGuide';
-import { useTranslation } from '@/i18n/client';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
 
@@ -72,13 +69,15 @@ import {
   trackPublishFailed,
   trackPlatformSelected,
 } from '@/lib/posthog/events';
-import PlatformCheckbox from '@/app/dashboard/publish/components/PlatformCheckbox';
-import { getPlatformExtraConfigList } from '@/app/dashboard/publish/action';
-import LibraryModal from '@/app/dashboard/publish/dynamic/components/LibraryModal';
-import { ImageGenerateModal } from '@/app/dashboard/publish/dynamic/components/ImageGenerateModal';
+import { useSession } from '../../src/lib/auth-client';
+import { useTranslation } from '../../src/i18n/client';
+import { getPlatformExtraConfigList } from '../../src/actions/publish';
+import PlatformCheckbox from '../../src/routes/dashboard/publish/-components/PlatformCheckbox';
+import LibraryModal from '../../src/routes/dashboard/publish/-components/dynamic/LibraryModal';
+import { ImageGenerateModal } from '../../src/routes/dashboard/publish/-components/dynamic/ImageGenerateModal';
 
-const ReactPlayer = dynamic(() => import('react-player'), { ssr: false });
-const Viewer = dynamic(() => import('react-viewer'), { ssr: false });
+const ReactPlayer = lazy(() => import('react-player'));
+const Viewer = lazy(() => import('react-viewer'));
 
 type PublishType = 'dynamic' | 'video' | 'podcast';
 
@@ -169,15 +168,17 @@ const SortableMedia = ({ id, file, index, type, onDelete, onImageClick, onVideoC
         <div
           className="size-full cursor-pointer"
           onClick={() => onVideoClick?.(file.url)}>
-          <ReactPlayer
-            url={file.url}
-            width="100%"
-            height="100%"
-            playing={false}
-            controls={false}
-            volume={0}
-            muted
-          />
+          <Suspense fallback={<div className="size-full animate-pulse bg-default-200" />}>
+            <ReactPlayer
+              url={file.url}
+              width="100%"
+              height="100%"
+              playing={false}
+              controls={false}
+              volume={0}
+              muted
+            />
+          </Suspense>
           <div className="pointer-events-none absolute inset-0 flex items-center justify-center bg-black/30 opacity-0 transition-opacity group-hover:opacity-100">
             <VideoIcon className="size-8 text-white" />
           </div>
@@ -214,13 +215,15 @@ const VideoViewer = ({ visible, url, onClose }: VideoViewerProps) => {
       <div
         className="relative aspect-video w-full max-w-4xl"
         onClick={(e) => e.stopPropagation()}>
-        <ReactPlayer
-          url={url}
-          width="100%"
-          height="100%"
-          controls
-          playing
-        />
+        <Suspense fallback={<div className="size-full animate-pulse bg-default-200" />}>
+          <ReactPlayer
+            url={url}
+            width="100%"
+            height="100%"
+            controls
+            playing
+          />
+        </Suspense>
         <Button
           isIconOnly
           size="sm"
@@ -333,7 +336,7 @@ export function HomePublisher() {
         };
         const [platformData, extraConfigList] = await Promise.all([
           getPlatformInfos(typeMap[publishType]),
-          getPlatformExtraConfigList(),
+          getPlatformExtraConfigList({ data: {} }),
         ]);
 
         if (extraConfigList.success && extraConfigList.data) {
@@ -770,7 +773,7 @@ export function HomePublisher() {
     { key: 'dynamic' as const, icon: <MessageCircleHeartIcon className="size-5" /> },
     { key: 'video' as const, icon: <VideoIcon className="size-5" /> },
     { key: 'podcast' as const, icon: <PodcastIcon className="size-5" /> },
-    { key: 'article' as const, href: '/dashboard/md', icon: <FileTextIcon className="size-5" /> },
+    { key: 'article' as const, to: '/dashboard/md', icon: <FileTextIcon className="size-5" /> },
   ];
 
   // Content Step for Dynamic - 完全模仿 dashboard/publish/dynamic/page.tsx
@@ -938,12 +941,16 @@ export function HomePublisher() {
         )}
       </Card>
 
-      <Viewer
-        visible={viewerVisible}
-        onClose={() => setViewerVisible(false)}
-        images={images.map((file) => ({ src: file.url, alt: file.name }))}
-        activeIndex={currentImage}
-      />
+      {viewerVisible && (
+        <Suspense fallback={null}>
+          <Viewer
+            visible={viewerVisible}
+            onClose={() => setViewerVisible(false)}
+            images={images.map((file) => ({ src: file.url, alt: file.name }))}
+            activeIndex={currentImage}
+          />
+        </Suspense>
+      )}
 
       <Button color="primary" className="w-full" onClick={handleNextStep}>
         <ArrowRightIcon className="size-5" />
@@ -980,7 +987,15 @@ export function HomePublisher() {
         <>
           <Card className="shadow-none border relative overflow-hidden p-4">
             <div className="group relative mb-2 aspect-video w-full overflow-hidden rounded-2xl">
-              <ReactPlayer url={videoFile.url} width="100%" height="100%" controls playing={false} />
+              <Suspense fallback={<div className="aspect-video w-full animate-pulse bg-default-200" />}>
+                <ReactPlayer
+                  url={videoFile.url}
+                  width="100%"
+                  height="100%"
+                  controls
+                  playing={false}
+                />
+              </Suspense>
               <Button isIconOnly size="sm" color="danger" className="absolute right-2 top-2 z-50 opacity-0 transition-opacity group-hover:opacity-100" onPress={() => setVideoFile(null)}>
                 <XIcon className="size-4" />
               </Button>
@@ -1259,8 +1274,10 @@ export function HomePublisher() {
         <div className="mx-auto mb-6 flex max-w-2xl flex-row items-center justify-between gap-4">
           <div className="inline-flex items-center gap-1 rounded-2xl border p-1">
             {tabs.map((tab) =>
-              tab.href ? (
-                <Link key={tab.key} href={tab.href}>
+              'to' in tab ? (
+                <Link
+                  key={tab.key}
+                  to={tab.to as never}>
                   <button className="inline-flex items-center justify-center whitespace-nowrap rounded-xl px-4 py-2 text-sm font-medium transition-all duration-200 text-foreground/60 hover:bg-default-100 hover:text-foreground">{tab.icon}</button>
                 </Link>
               ) : (
@@ -1277,7 +1294,9 @@ export function HomePublisher() {
             )}
           </div>
 
-          <Link href="/docs/user-guide/contact-us" target="_blank">
+          <Link
+            to={'/docs/user-guide/contact-us' as never}
+            target="_blank">
             <Button size="sm" variant="bordered">
               <MessageSquareIcon className="mr-2 size-4" />
               {tPublish('contactUs')}
@@ -1314,7 +1333,9 @@ export function HomePublisher() {
         <p className="mt-4 text-center text-xs text-foreground/50">{t('homePublisher.quickPublish.tips')}</p>
         <p className="mt-1 text-center text-xs text-foreground/50">
           {t('homePublisher.quickPublish.contactTip')}{' '}
-          <Link href="/docs/user-guide/contact-us" className="text-primary underline hover:text-primary/80">
+          <Link
+            to={'/docs/user-guide/contact-us' as never}
+            className="text-primary underline hover:text-primary/80">
             {t('homePublisher.quickPublish.contactUs')}
           </Link>
         </p>

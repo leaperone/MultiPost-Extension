@@ -3,8 +3,9 @@
 import { Button, Spinner } from '@heroui/react';
 import { RefreshCwIcon, ArrowRightIcon, CheckIcon, MonitorIcon } from 'lucide-react';
 import { Icon } from '@iconify/react';
-import { useTranslation } from '@/i18n/client';
 import { motion } from 'framer-motion';
+
+import { useTranslation } from '../../src/i18n/client';
 
 interface ExtensionGuideProps {
   isLoading?: boolean;

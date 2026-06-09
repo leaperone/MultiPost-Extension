@@ -88,30 +88,32 @@ export const getPlatformExtraConfig = createServerFn({ method: 'GET' })
     }
   });
 
-export const getPlatformExtraConfigList = createServerFn({ method: 'GET' }).handler(async () => {
-  try {
-    const session = await getSession();
-    if (!session?.user?.id) {
+export const getPlatformExtraConfigList = createServerFn({ method: 'GET' })
+  .validator(z.object({}))
+  .handler(async () => {
+    try {
+      const session = await getSession();
+      if (!session?.user?.id) {
+        return {
+          success: false,
+          error: 'Authentication failed',
+        };
+      }
+
+      const platformExtraConfigList = await multipostDb.platformExtraConfig.findMany({
+        where: {
+          userId: session.user.id,
+        },
+      });
+
+      return {
+        success: true,
+        data: platformExtraConfigList,
+      };
+    } catch {
       return {
         success: false,
-        error: 'Authentication failed',
+        error: 'Failed to get platform extra config list',
       };
     }
-
-    const platformExtraConfigList = await multipostDb.platformExtraConfig.findMany({
-      where: {
-        userId: session.user.id,
-      },
-    });
-
-    return {
-      success: true,
-      data: platformExtraConfigList,
-    };
-  } catch {
-    return {
-      success: false,
-      error: 'Failed to get platform extra config list',
-    };
-  }
-});
+  });

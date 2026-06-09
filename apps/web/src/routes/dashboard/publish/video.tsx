@@ -122,7 +122,7 @@ export default function VideoPage() {
       try {
         const [platformData, extraConfigList] = await Promise.all([
           getPlatformInfos('VIDEO'),
-          getPlatformExtraConfigList(),
+          getPlatformExtraConfigList({ data: {} }),
         ]);
 
         if (extraConfigList.success && extraConfigList.data) {

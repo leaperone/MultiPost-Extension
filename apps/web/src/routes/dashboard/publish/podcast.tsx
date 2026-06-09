@@ -153,7 +153,7 @@ export default function PodcastPage() {
       try {
         const [platformData, extraConfigList] = await Promise.all([
           getPlatformInfos('PODCAST'),
-          getPlatformExtraConfigList(),
+          getPlatformExtraConfigList({ data: {} }),
         ]);
 
         if (extraConfigList.success && extraConfigList.data) {
