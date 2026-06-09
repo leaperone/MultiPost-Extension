@@ -2,7 +2,7 @@ import { createServerFn } from '@tanstack/react-start';
 import { nanoid } from 'nanoid';
 import { z } from 'zod';
 
-import { prisma } from '@/lib/db';
+import { prisma } from '../../../lib/db';
 import { getSession } from '../../../lib/session';
 import {
   FACEBOOK_CONFIG,

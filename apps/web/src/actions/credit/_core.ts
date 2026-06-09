@@ -1,6 +1,5 @@
 // SERVER-INTERNAL ONLY. Never expose as a client-callable server function. Callers must authorize the userId themselves.
 
-import { multipostDb } from '@/lib/db';
 import type {
   BatchDeductCreditParams,
   BatchDeductCreditResult,
@@ -9,6 +8,8 @@ import type {
   DeductCreditResult,
 } from '@/actions/credit/types';
 import { Decimal } from '@prisma/client/runtime/library';
+
+import { multipostDb } from '../../lib/db';
 
 function assertPositiveFiniteDecimal(amount: Decimal.Value): Decimal {
   const decimal = new Decimal(amount);

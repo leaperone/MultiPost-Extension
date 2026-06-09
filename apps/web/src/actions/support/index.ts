@@ -2,7 +2,7 @@ import { createServerFn } from '@tanstack/react-start';
 import crypto from 'node:crypto';
 
 import { getPresignedDownloadUrl, getPresignedUploadUrl } from '@/lib/bitiful';
-import { multipostDb } from '@/lib/db';
+import { multipostDb } from '../../lib/db';
 import { Prisma } from '@/prisma/client_multipost';
 import { getSession } from '../../lib/session';
 import {

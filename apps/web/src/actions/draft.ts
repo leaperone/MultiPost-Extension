@@ -1,7 +1,7 @@
 import { createServerFn } from '@tanstack/react-start';
 import { z } from 'zod';
 
-import { multipostDb } from '@/lib/db';
+import { multipostDb } from '../lib/db';
 import { DraftFileDataSchema } from '@/lib/types/draft';
 import { getSession } from '../lib/session';
 

@@ -3,7 +3,7 @@ import { Decimal } from '@prisma/client/runtime/library';
 import { nanoid } from 'nanoid';
 import { z } from 'zod';
 
-import { multipostDb } from '@/lib/db';
+import { multipostDb } from '../../lib/db';
 import { requestAlipayUrl } from '@/lib/alipay';
 import { createStripeCheckoutSession } from '@/lib/stripe';
 import type { CreditInfo } from '@/actions/credit/types';

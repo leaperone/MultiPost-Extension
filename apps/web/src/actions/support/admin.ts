@@ -1,7 +1,7 @@
 import { createServerFn } from '@tanstack/react-start';
 
 import { deleteObject, getPresignedDownloadUrl } from '@/lib/bitiful';
-import { prisma } from '@/lib/db';
+import { prisma } from '../../lib/db';
 import { Prisma } from '@/prisma/client_multipost';
 import { isAdmin } from '../admin';
 import { getSession } from '../../lib/session';

@@ -1,6 +1,6 @@
 import { createServerFn } from '@tanstack/react-start';
 
-import { multipostDb } from '@/lib/db';
+import { multipostDb } from '../../lib/db';
 import { getSession } from '../../lib/session';
 
 /**

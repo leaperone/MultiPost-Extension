@@ -8,7 +8,6 @@ import { nanoid } from 'nanoid';
 
 import { RechargeStatus, RechargeType } from '@/actions/credit/types';
 import { sendVerificationRequest as sendVerificationRequestDev } from '@/lib/devauth';
-import { prisma } from '@/lib/db';
 import { sendVerificationRequest as sendVerificationRequestMailgun } from '@/lib/mailgun';
 import type { SigninMethod } from '@/lib/posthog/events';
 import {
@@ -16,6 +15,8 @@ import {
   trackSigninCompletedServer,
   trackUserCreatedServer,
 } from '@/lib/posthog/server-events';
+
+import { prisma } from './db';
 
 const AUTH_BASE_PATH = '/api/auth';
 const createdUserByContext = new WeakMap<object, string>();

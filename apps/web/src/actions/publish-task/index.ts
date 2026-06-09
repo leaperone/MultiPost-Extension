@@ -1,7 +1,7 @@
 import { createServerFn } from '@tanstack/react-start';
 import { z } from 'zod';
 
-import { multipostDb } from '@/lib/db';
+import { multipostDb } from '../../lib/db';
 import { getSession } from '../../lib/session';
 
 const createPublishTaskSchema = z.object({
