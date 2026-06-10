@@ -1,6 +1,8 @@
+import { createReadStream, existsSync, statSync } from 'node:fs';
 import { createServer } from 'node:http';
+import { dirname, extname, join, resolve } from 'node:path';
 import { Readable } from 'node:stream';
-import { pathToFileURL } from 'node:url';
+import { fileURLToPath, pathToFileURL } from 'node:url';
 import { createStartHandler, defaultStreamHandler } from '@tanstack/react-start/server';
 
 import type { IncomingMessage, ServerResponse } from 'node:http';
@@ -25,12 +27,112 @@ const documentSecurityHeaders = {
 
 export default serverEntry;
 
+// In the production build this file runs as dist/server/server.js, so the
+// client bundle (hashed /assets/* plus copied public/ files) sits in ../client.
+const staticRoot = (() => {
+  const candidate = resolve(dirname(fileURLToPath(import.meta.url)), '../client');
+
+  return existsSync(candidate) ? candidate : null;
+})();
+
+const MIME_TYPES: Record<string, string> = {
+  '.js': 'text/javascript; charset=utf-8',
+  '.mjs': 'text/javascript; charset=utf-8',
+  '.css': 'text/css; charset=utf-8',
+  '.html': 'text/html; charset=utf-8',
+  '.json': 'application/json; charset=utf-8',
+  '.map': 'application/json; charset=utf-8',
+  '.svg': 'image/svg+xml',
+  '.png': 'image/png',
+  '.jpg': 'image/jpeg',
+  '.jpeg': 'image/jpeg',
+  '.gif': 'image/gif',
+  '.webp': 'image/webp',
+  '.avif': 'image/avif',
+  '.ico': 'image/x-icon',
+  '.txt': 'text/plain; charset=utf-8',
+  '.xml': 'application/xml; charset=utf-8',
+  '.woff': 'font/woff',
+  '.woff2': 'font/woff2',
+  '.ttf': 'font/ttf',
+  '.otf': 'font/otf',
+  '.webmanifest': 'application/manifest+json',
+  '.wasm': 'application/wasm',
+  '.mp4': 'video/mp4',
+  '.webm': 'video/webm',
+  '.pdf': 'application/pdf',
+};
+
+function tryServeStatic(req: IncomingMessage, res: ServerResponse) {
+  if (!staticRoot || (req.method !== 'GET' && req.method !== 'HEAD')) {
+    return false;
+  }
+
+  let pathname: string;
+  try {
+    pathname = decodeURIComponent(new URL(req.url ?? '/', 'http://internal').pathname);
+  } catch {
+    return false;
+  }
+
+  if (pathname === '/' || pathname.includes('\0') || pathname.split('/').includes('..')) {
+    return false;
+  }
+
+  const filePath = resolve(join(staticRoot, pathname));
+
+  if (!filePath.startsWith(staticRoot)) {
+    return false;
+  }
+
+  let stats;
+  try {
+    stats = statSync(filePath);
+  } catch {
+    return false;
+  }
+
+  if (!stats.isFile()) {
+    return false;
+  }
+
+  res.statusCode = 200;
+  res.setHeader('Content-Type', MIME_TYPES[extname(filePath).toLowerCase()] ?? 'application/octet-stream');
+  res.setHeader('Content-Length', stats.size);
+  res.setHeader('X-Content-Type-Options', 'nosniff');
+  // Vite asset filenames are content-hashed, so /assets/* can cache forever.
+  res.setHeader(
+    'Cache-Control',
+    pathname.startsWith('/assets/') ? 'public, max-age=31536000, immutable' : 'public, max-age=3600',
+  );
+
+  if (req.method === 'HEAD') {
+    res.end();
+    return true;
+  }
+
+  createReadStream(filePath)
+    .on('error', () => {
+      if (!res.headersSent) {
+        res.statusCode = 500;
+      }
+      res.end();
+    })
+    .pipe(res);
+
+  return true;
+}
+
 if (isDirectRun()) {
   const port = Number(process.env.PORT ?? 3000);
   const host = process.env.HOST ?? '0.0.0.0';
 
   createServer(async (req, res) => {
     try {
+      if (tryServeStatic(req, res)) {
+        return;
+      }
+
       const webRequest = toWebRequest(req, port);
       const webResponse = await serverEntry.fetch(webRequest);
 
