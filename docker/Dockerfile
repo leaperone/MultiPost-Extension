@@ -84,7 +84,11 @@ COPY --from=builder /usr/share/zoneinfo/Asia/Shanghai /usr/share/zoneinfo/Asia/S
 
 COPY --from=builder /app/package.json /app/pnpm-lock.yaml /app/pnpm-workspace.yaml ./
 COPY --from=builder /app/node_modules ./node_modules
+# Web deps live in apps/web/package.json; pnpm links them via relative symlinks
+# into the root .pnpm store, so both trees (and workspace packages) must ship.
+COPY --from=builder /app/packages ./packages
 COPY --from=builder /app/apps/web/package.json ./apps/web/package.json
+COPY --from=builder /app/apps/web/node_modules ./apps/web/node_modules
 COPY --from=builder /app/apps/web/dist ./apps/web/dist
 COPY --from=builder /app/apps/web/public ./apps/web/public
 RUN if [ -d /app/apps/web/dist/client ]; then \
