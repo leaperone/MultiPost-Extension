@@ -1,6 +1,6 @@
 'use client';
 
-import { useTranslation } from '@/src/i18n/client';
+import { useTranslation } from '@/i18n/client';
 import { Button } from '@heroui/react';
 import { Code } from 'lucide-react';
 import { useState } from 'react';

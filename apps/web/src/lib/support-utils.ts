@@ -1,7 +1,7 @@
 'use client';
 
-import { getSupportUploadUrl } from '@/src/actions/support';
-import type { SupportStatus, SupportMessageRole, SupportCategory } from '@/src/actions/support/types';
+import { getSupportUploadUrl } from '@/actions/support';
+import type { SupportStatus, SupportMessageRole, SupportCategory } from '@/actions/support/types';
 
 // --- Image compression ---
 

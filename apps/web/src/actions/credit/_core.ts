@@ -6,7 +6,7 @@ import type {
   CreditInfo,
   DeductCreditParams,
   DeductCreditResult,
-} from '@/src/actions/credit/types';
+} from '@/actions/credit/types';
 import { isMultipostRootDbClient } from '@db/client';
 import { Credit, CreditUsage } from '@db/schema/schema';
 import {

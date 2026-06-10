@@ -3,7 +3,7 @@
 import React from 'react';
 import { Button, Chip, Input } from '@heroui/react';
 import { PlusIcon } from 'lucide-react';
-import { useTranslation } from '@/src/i18n/client';
+import { useTranslation } from '@/i18n/client';
 import { cn } from '@/lib/utils';
 
 interface HeroTagInputProps {

@@ -1,5 +1,5 @@
 import type { DecimalInput } from '@db/helpers';
-import type { UsageType } from '@/src/actions/credit/types';
+import type { UsageType } from '@/actions/credit/types';
 
 import { deductCredit } from './_core';
 

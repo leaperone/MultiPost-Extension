@@ -1,7 +1,7 @@
 'use client';
 
 import { Chip, Card } from '@heroui/react';
-import { useTranslation } from '@/src/i18n/client';
+import { useTranslation } from '@/i18n/client';
 
 export default function StatusLegend() {
   const { t } = useTranslation('schedule');

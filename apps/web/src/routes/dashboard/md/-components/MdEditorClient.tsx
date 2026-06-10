@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react'
 import { cn, Modal, ModalContent, ModalHeader, ModalBody, ModalFooter, Button } from '@heroui/react'
 import { Construction, ExternalLinkIcon } from 'lucide-react'
-import { useTranslation } from '@/src/i18n/client'
+import { useTranslation } from '@/i18n/client'
 import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from '@/components/ui/resizable'
 import { prepareWorker } from '@/lib/markdown-engine/worker-client'
 import { useMdDraftStore } from '@/store/md-draft.store'

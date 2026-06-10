@@ -18,21 +18,12 @@
     "paths": {
       "collections/*": ["./.source/*"],
       "@db/*": ["../../db/*"],
-      "@/src/*": ["./src/*"],
-      "@/*": ["./*"]
+      "@/*": ["./src/*"]
     }
   },
   "include": [
     "src/**/*.ts",
     "src/**/*.tsx",
-    "lib/**/*.ts",
-    "lib/**/*.tsx",
-    "components/**/*.ts",
-    "components/**/*.tsx",
-    "store/**/*.ts",
-    "store/**/*.tsx",
-    "hooks/**/*.ts",
-    "hooks/**/*.tsx",
     ".source/**/*.ts",
     "hero.ts",
     "source.config.ts",

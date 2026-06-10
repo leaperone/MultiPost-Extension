@@ -101,7 +101,7 @@ export default defineConfig(async () => ({
     alias: [
       { find: /^collections\/(.*)$/, replacement: `${fumadocsSourceDir}/$1` },
       { find: /^@db\/(.*)$/, replacement: `${dbRoot}/$1` },
-      { find: '@', replacement: webRoot },
+      { find: '@', replacement: path.join(webRoot, 'src') },
     ],
   },
 }));

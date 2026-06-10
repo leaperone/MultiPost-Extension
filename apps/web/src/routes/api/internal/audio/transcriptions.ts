@@ -2,7 +2,7 @@ import { createFileRoute } from '@tanstack/react-router';
 import Decimal from 'decimal.js';
 import { z } from 'zod';
 
-import { PRICING } from '@/src/actions/credit/types';
+import { PRICING } from '@/actions/credit/types';
 
 import { preflightResponse, withCors } from '../../../../lib/cors';
 import { authInternalRequest } from '../../../../lib/internalAuth';

@@ -3,7 +3,7 @@ import { PosterGeneration } from '@db/schema/schema';
 import { and, eq, ne } from 'drizzle-orm';
 import { z } from 'zod';
 
-import { PRICING } from '@/src/actions/credit/types';
+import { PRICING } from '@/actions/credit/types';
 
 import { deductCredit } from '../../../actions/credit/_core';
 import { PosterGenerationStatus } from '../../../actions/draw/poster/types';

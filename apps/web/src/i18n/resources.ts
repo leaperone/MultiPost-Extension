@@ -3,7 +3,7 @@ type LocaleJsonModule = {
 };
 
 const modules = import.meta.glob<LocaleJsonModule>(
-  '../../i18n/locales/*/*.json',
+  './locales/*/*.json',
   { eager: true },
 );
 

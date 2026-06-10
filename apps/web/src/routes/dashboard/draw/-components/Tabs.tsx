@@ -3,7 +3,7 @@ import { useLocation, useNavigate } from '@tanstack/react-router';
 import { ImageIcon, PaletteIcon } from 'lucide-react';
 import type { Key } from 'react';
 
-import { useTranslation } from '@/src/i18n/client';
+import { useTranslation } from '@/i18n/client';
 
 export default function HeaderTabs() {
   const pathname = useLocation({

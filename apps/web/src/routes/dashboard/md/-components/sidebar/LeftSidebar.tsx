@@ -3,7 +3,7 @@
 import { addToast } from '@heroui/react'
 import { nanoid } from 'nanoid'
 import { useMdDraftStore } from '@/store/md-draft.store'
-import { useTranslation } from '@/src/i18n/client'
+import { useTranslation } from '@/i18n/client'
 import DraftList from './DraftList'
 import ChatCreationPanel from './ChatCreationPanel'
 import MediaLibrary from '../../../drafts/-components/MediaLibrary'

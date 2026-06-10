@@ -2,7 +2,7 @@ import { Card, CardBody } from '@heroui/react';
 import { useEffect, useState, useRef } from 'react';
 import { checkLeaperOneStatus, completeImageGeneration, failImageGeneration } from '../../../../../actions/draw/image';
 import { ImageGenerationStatus } from '../../../../../actions/draw/image/types';
-import { useTranslation } from '@/src/i18n/client';
+import { useTranslation } from '@/i18n/client';
 
 interface ResultWaiterProps {
   taskId: string;

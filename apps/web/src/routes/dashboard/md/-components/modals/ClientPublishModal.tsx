@@ -17,7 +17,7 @@ import {
   Checkbox,
 } from '@heroui/react';
 import { toast } from 'sonner';
-import { useTranslation } from '@/src/i18n/client';
+import { useTranslation } from '@/i18n/client';
 import PlatformCheckbox from '../../../publish/-components/PlatformCheckbox';
 import type { PlatformInfo } from '@/lib/extension';
 import { CalendarDateTime, now, getLocalTimeZone } from '@internationalized/date';
