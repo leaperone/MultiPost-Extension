@@ -5,8 +5,12 @@
   "type": "module",
   "scripts": {
     "dev": "vite dev",
+    "generate-routes": "tsr generate",
     "build": "vite build",
     "start": "node dist/server/server.js",
     "lint": "../../node_modules/.bin/eslint ."
+  },
+  "devDependencies": {
+    "@tanstack/router-cli": "^1.167.17"
   }
 }

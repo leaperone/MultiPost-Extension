@@ -40,6 +40,9 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
+      - name: Generate route tree
+        run: pnpm --filter multipost-web generate-routes
+
       - name: Typecheck
         run: pnpm --filter multipost-web exec tsc --noEmit
 
