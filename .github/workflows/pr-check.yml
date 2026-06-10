@@ -26,7 +26,7 @@ jobs:
           cache: 'pnpm'
 
       - name: Setup Deno
-        uses: denoland/setup-deno@v3
+        uses: denoland/setup-deno@v2
         with:
           deno-version: v2.8.2
 
