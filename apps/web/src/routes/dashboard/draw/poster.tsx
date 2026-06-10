@@ -704,7 +704,7 @@ function GallerySection() {
   );
 }
 
-export default function PosterPage() {
+function PosterPage() {
   return (
     <div className="space-y-4 p-8">
       <PosterGenerationSection />

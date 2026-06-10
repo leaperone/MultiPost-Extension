@@ -497,7 +497,7 @@ function GallerySection() {
   );
 }
 
-export default function ImagePage() {
+function ImagePage() {
   return (
     <div className="space-y-8 p-4 md:p-8">
       <ImageGenerationSection />

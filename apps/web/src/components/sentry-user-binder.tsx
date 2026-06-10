@@ -1,4 +1,3 @@
-import * as Sentry from '@sentry/react';
 import { useEffect, useRef } from 'react';
 
 import { useSession } from '../lib/auth-client';
@@ -12,18 +11,20 @@ export function SentryUserBinder() {
     const epoch = ++epochRef.current;
     const userId = session?.user?.id?.trim();
 
-    if (!userId) {
-      Sentry.setUser(null);
-      return;
-    }
+    // Dynamic import keeps @sentry/core out of the entry chunk; the epoch guard
+    // drops stale updates that resolve after a newer session change.
+    void import('@sentry/core').then(({ setUser }) => {
+      if (epoch !== epochRef.current) return;
 
-    Promise.resolve().then(() => {
-      if (epoch === epochRef.current) {
-        Sentry.setUser({
-          id: userId,
-          ...(session?.user?.name ? { username: session.user.name } : {}),
-        });
+      if (!userId) {
+        setUser(null);
+        return;
       }
+
+      setUser({
+        id: userId,
+        ...(session?.user?.name ? { username: session.user.name } : {}),
+      });
     });
   }, [session?.user?.id, session?.user?.name, status]);
 

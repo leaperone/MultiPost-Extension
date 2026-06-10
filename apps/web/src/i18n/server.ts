@@ -8,14 +8,17 @@ import {
   supportedLocales,
   type Locales,
 } from './settings';
-import { resources } from './resources';
+import { loadLocaleResources } from './resources';
 
 async function initI18next(lang: Locales, namespace: string) {
+  const locales = lang === FALLBACK_LOCALE ? [lang] : [lang, FALLBACK_LOCALE];
+  const bundles = await Promise.all(locales.map(loadLocaleResources));
+  const resources = Object.fromEntries(locales.map((locale, index) => [locale, bundles[index]]));
+
   const i18nInstance = createInstance();
   await i18nInstance.init({
     ...getOptions(lang, namespace),
     resources,
-    preload: supportedLocales,
     interpolation: {
       escapeValue: false,
     },

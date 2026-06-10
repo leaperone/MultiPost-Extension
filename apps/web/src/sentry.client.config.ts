@@ -1,4 +1,8 @@
-import * as Sentry from '@sentry/react';
+import {
+  browserTracingIntegration,
+  init,
+  tanstackRouterBrowserTracingIntegration,
+} from '@sentry/react';
 
 import { createSentryOptions } from './sentry.shared';
 
@@ -9,12 +13,15 @@ export function initSentryClient(router?: unknown) {
     return;
   }
 
-  const tracingIntegration =
-    router && 'tanstackRouterBrowserTracingIntegration' in Sentry
-      ? Sentry.tanstackRouterBrowserTracingIntegration(router)
-      : Sentry.browserTracingIntegration();
+  // Named imports keep @sentry/react tree-shakeable; a namespace import with an
+  // `in` check used to drag the replay/feedback integrations into the bundle.
+  const tracingIntegration = router
+    ? tanstackRouterBrowserTracingIntegration(
+        router as Parameters<typeof tanstackRouterBrowserTracingIntegration>[0],
+      )
+    : browserTracingIntegration();
 
-  Sentry.init({
+  init({
     ...createSentryOptions({ runtime: 'client' }),
     integrations: [tracingIntegration],
   });

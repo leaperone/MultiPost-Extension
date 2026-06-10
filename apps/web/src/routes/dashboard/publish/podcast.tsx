@@ -79,7 +79,7 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({ url, name, onDelete }) => {
   );
 };
 
-export default function PodcastPage() {
+function PodcastPage() {
   const { t } = useTranslation('publish');
   const navigate = useNavigate();
   const [currentStep, setCurrentStep] = useState<number>(2);

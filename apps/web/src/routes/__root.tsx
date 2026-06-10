@@ -6,6 +6,7 @@ import interCss from '@fontsource/inter/latin.css?url';
 import globalsCss from '../styles/globals.css?url';
 import { SentryRouteErrorBoundary } from '../components/SentryRouteErrorBoundary';
 import { Providers } from '../components/providers';
+import { ensureLocaleResources } from '../i18n/client';
 import { getLocale } from '../i18n/server';
 import { FALLBACK_LOCALE } from '../i18n/settings';
 import {
@@ -25,7 +26,13 @@ const isProduction = process.env.NODE_ENV === 'production';
 const isDevelopment = process.env.NODE_ENV === 'development';
 
 export const Route = createRootRoute({
-  loader: () => loadLocale(),
+  loader: async () => {
+    const { locale } = await loadLocale();
+    // Components render through the shared i18next instance during SSR, so the
+    // active locale bundle must be applied before the tree renders.
+    await ensureLocaleResources(locale);
+    return { locale };
+  },
   head: () => ({
     meta: [
       { charSet: 'utf-8' },

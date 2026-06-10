@@ -1,7 +1,7 @@
 'use client';
 
 import { lazy, Suspense, useRef, useEffect, useState, useCallback } from 'react';
-import confetti from 'canvas-confetti';
+import type { Options as ConfettiOptions } from 'canvas-confetti';
 import { Link } from '@tanstack/react-router';
 import { nanoid } from 'nanoid';
 import {
@@ -78,6 +78,12 @@ import { ImageGenerateModal } from '@/routes/dashboard/publish/-components/dynam
 
 const ReactPlayer = lazy(() => import('react-player'));
 const Viewer = lazy(() => import('react-viewer'));
+
+// canvas-confetti only fires on user-visible milestones; load it on demand so
+// it stays out of the homepage's initial chunk.
+function fireConfetti(options: ConfettiOptions) {
+  void import('canvas-confetti').then(({ default: confetti }) => confetti(options));
+}
 
 type PublishType = 'dynamic' | 'video' | 'podcast';
 
@@ -301,7 +307,7 @@ export function HomePublisher() {
   useEffect(() => {
     if (isInstalled && !hasShownConfettiRef.current) {
       hasShownConfettiRef.current = true;
-      confetti({
+      fireConfetti({
         particleCount: 50,
         spread: 60,
         origin: { y: 0.6 },
@@ -397,7 +403,7 @@ export function HomePublisher() {
   };
 
   const handlePublishSuccess = () => {
-    confetti({
+    fireConfetti({
       particleCount: 30,
       spread: 50,
       origin: { y: 0.7 },

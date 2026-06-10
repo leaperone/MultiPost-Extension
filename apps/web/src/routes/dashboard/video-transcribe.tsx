@@ -549,7 +549,7 @@ function DeleteConfirmModal({
   );
 }
 
-export default function VideoTranscribePage() {
+function VideoTranscribePage() {
   const { t } = useTranslation('dashboard');
   const [tasks, setTasks] = useState<TranscriptionTask[]>([]);
   const [loading, setLoading] = useState(true);

@@ -223,7 +223,7 @@ const VideoViewer = ({ visible, url, onClose }: VideoViewerProps) => {
   );
 };
 
-export default function DynamicPage() {
+function DynamicPage() {
   const { t } = useTranslation('publish');
   const navigate = useNavigate();
   const [currentStep, setCurrentStep] = useState<number>(2);

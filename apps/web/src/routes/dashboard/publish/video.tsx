@@ -55,7 +55,7 @@ export const Route = createFileRoute('/dashboard/publish/video')({
 
 const ReactPlayer = lazy(() => import('react-player'));
 
-export default function VideoPage() {
+function VideoPage() {
   const { t } = useTranslation('publish');
   const navigate = useNavigate();
   const [currentStep, setCurrentStep] = useState<number>(2);

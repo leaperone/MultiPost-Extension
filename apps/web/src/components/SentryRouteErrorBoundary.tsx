@@ -1,12 +1,18 @@
 import { Button } from '@heroui/react';
 import { Link, type ErrorComponentProps } from '@tanstack/react-router';
-import * as Sentry from '@sentry/core';
 import { HomeIcon, RefreshCwIcon } from 'lucide-react';
 import { useEffect } from 'react';
 
 export function SentryRouteErrorBoundary({ error, reset }: ErrorComponentProps) {
   useEffect(() => {
-    Sentry.captureException(error);
+    // Dynamic import keeps Sentry out of the entry chunk. Initializing first
+    // covers errors thrown before the deferred bootstrap init has run.
+    void Promise.all([import('../sentry.client.config'), import('@sentry/core')]).then(
+      ([{ initSentryClient }, { captureException }]) => {
+        initSentryClient();
+        captureException(error);
+      },
+    );
   }, [error]);
 
   return (
