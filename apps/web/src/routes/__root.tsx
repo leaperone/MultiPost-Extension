@@ -3,8 +3,10 @@ import { createRootRoute, HeadContent, Outlet, Scripts } from '@tanstack/react-r
 
 import interCss from '@fontsource/inter/latin.css?url';
 import globalsCss from '../styles/globals.css?url';
+import { SentryRouteErrorBoundary } from '../components/SentryRouteErrorBoundary';
 import { Providers } from '../components/providers';
 import { getLocale } from '../i18n/server';
+import { FALLBACK_LOCALE } from '../i18n/settings';
 import {
   DEFAULT_DESCRIPTION,
   DEFAULT_TITLE,
@@ -101,6 +103,7 @@ export const Route = createRootRoute({
         : []),
     ],
   }),
+  errorComponent: RootErrorDocument,
   component: RootDocument,
 });
 
@@ -124,6 +127,28 @@ function RootDocument() {
         <Providers locale={locale}>
           <Outlet />
         </Providers>
+        <Scripts />
+      </body>
+    </html>
+  );
+}
+
+function RootErrorDocument(props: React.ComponentProps<typeof SentryRouteErrorBoundary>) {
+  return (
+    <html
+      lang={FALLBACK_LOCALE}
+      className="dark"
+      style={{ colorScheme: 'dark' }}>
+      <head>
+        <HeadContent />
+      </head>
+      <body
+        className="bg-background text-foreground antialiased"
+        style={{
+          fontFamily:
+            'Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
+        }}>
+        <SentryRouteErrorBoundary {...props} />
         <Scripts />
       </body>
     </html>

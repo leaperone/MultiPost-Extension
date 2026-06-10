@@ -30,6 +30,10 @@ export function useTranslation(ns: string) {
   return translator;
 }
 
+export function changeClientLanguage(lng: Locales) {
+  return i18next.changeLanguage(lng);
+}
+
 function useCustomTranslationImplem(i18n: I18nextInstance, lng: Locales) {
   useEffect(() => {
     if (!lng || i18n.resolvedLanguage === lng) return;

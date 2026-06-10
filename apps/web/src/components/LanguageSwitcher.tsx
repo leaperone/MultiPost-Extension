@@ -1,19 +1,34 @@
 import { Button, Dropdown, DropdownItem, DropdownMenu, DropdownTrigger } from '@heroui/react';
+import { useRouter } from '@tanstack/react-router';
 import { LanguagesIcon } from 'lucide-react';
 import type { Key } from 'react';
+import { useState } from 'react';
 
+import { changeClientLanguage } from '../i18n/client';
 import { useLocale } from '../i18n/locale-provider';
-import { LANGUAGE_COOKIE, languages } from '../i18n/settings';
-
-const ONE_YEAR = 60 * 60 * 24 * 365;
+import { languages, supportedLocales, type Locales } from '../i18n/settings';
+import { switchLocale } from '../i18n/switch-locale';
 
 export default function LanguageSwitcher() {
+  const router = useRouter();
   const locale = useLocale();
+  const [isPending, setIsPending] = useState(false);
 
-  const handleLocaleChange = (key: Key) => {
-    document.cookie = `${LANGUAGE_COOKIE}=${encodeURIComponent(String(key))}; Path=/; Max-Age=${ONE_YEAR}; SameSite=Lax`;
-    // TODO(Phase 5): replace the reload with switch-locale createServerFn + router invalidation.
-    window.location.reload();
+  const handleLocaleChange = async (key: Key) => {
+    const nextLocale = String(key);
+    if (!supportedLocales.includes(nextLocale as Locales) || nextLocale === locale) {
+      return;
+    }
+
+    setIsPending(true);
+    try {
+      const localeValue = nextLocale as Locales;
+      await changeClientLanguage(localeValue);
+      await switchLocale({ data: { locale: localeValue } });
+      await router.invalidate();
+    } finally {
+      setIsPending(false);
+    }
   };
 
   return (
@@ -23,7 +38,9 @@ export default function LanguageSwitcher() {
           isIconOnly
           variant="light"
           size="sm"
-          aria-label="Select language">
+          aria-label="Select language"
+          isLoading={isPending}
+          isDisabled={isPending}>
           <LanguagesIcon />
         </Button>
       </DropdownTrigger>

@@ -4,6 +4,11 @@ import { pathToFileURL } from 'node:url';
 import { createStartHandler, defaultStreamHandler } from '@tanstack/react-start/server';
 
 import type { IncomingMessage, ServerResponse } from 'node:http';
+import * as Sentry from '@sentry/node';
+
+import { initSentryServer } from './sentry.server.config';
+
+initSentryServer();
 
 const fetch = createStartHandler(defaultStreamHandler);
 
@@ -24,6 +29,7 @@ if (isDirectRun()) {
 
       await sendWebResponse(res, webResponse);
     } catch (error) {
+      Sentry.captureException(error);
       console.error(error);
       if (!res.headersSent) {
         res.statusCode = 500;

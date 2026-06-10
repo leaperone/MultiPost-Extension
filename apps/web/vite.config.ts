@@ -25,6 +25,8 @@ export default defineConfig({
   // without renaming every key during the Next.js -> TanStack Start migration.
   envPrefix: ['VITE_', 'NEXT_PUBLIC_'],
   plugins: [
+    // TODO(Phase 8): add Sentry and PostHog source map upload here, gated on
+    // CI plus the relevant auth-token/project env vars.
     tanstackStart(),
     viteReact(),
     tailwindcss(),
