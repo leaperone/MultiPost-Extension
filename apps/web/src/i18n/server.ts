@@ -11,7 +11,7 @@ import {
 import { loadLocaleResources } from './resources';
 
 async function initI18next(lang: Locales, namespace: string) {
-  const locales = lang === FALLBACK_LOCALE ? [lang] : [lang, FALLBACK_LOCALE];
+  const locales: Locales[] = lang === FALLBACK_LOCALE ? [lang] : [lang, FALLBACK_LOCALE];
   const bundles = await Promise.all(locales.map(loadLocaleResources));
   const resources = Object.fromEntries(locales.map((locale, index) => [locale, bundles[index]]));
 

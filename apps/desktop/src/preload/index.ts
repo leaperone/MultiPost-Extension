@@ -90,9 +90,10 @@ const api = {
     switchTab: (accountId: string): Promise<void> =>
       ipcRenderer.invoke(IPC_CHANNELS.BROWSER_TAB_SWITCH, accountId),
     switchToHome: (): Promise<void> => ipcRenderer.invoke(IPC_CHANNELS.BROWSER_TAB_SWITCH_HOME),
-    // Open (and lazily create) the web dashboard tab, optionally at a path
+    // Open (and lazily create) the web dashboard tab, optionally at a path.
+    // An empty path opens the dashboard without forcing an extra navigation.
     openWebDashboard: (path?: string): void => {
-      ipcRenderer.send('multipost:navigation:navigateTo', path ?? '/dashboard')
+      ipcRenderer.send('multipost:navigation:navigateTo', path ?? '')
     },
     closeTab: (accountId: string): Promise<boolean> =>
       ipcRenderer.invoke(IPC_CHANNELS.BROWSER_TAB_CLOSE, accountId),
@@ -281,28 +282,6 @@ const api = {
     delete: (id: string): Promise<void> => ipcRenderer.invoke(IPC_CHANNELS.SCHEDULED_DELETE, id),
     cancel: (id: string): Promise<ScheduledPublish | null> =>
       ipcRenderer.invoke(IPC_CHANNELS.SCHEDULED_CANCEL, id)
-  },
-
-  // Main WebView control (for hybrid architecture)
-  webview: {
-    // Navigate to a path in the main WebView
-    navigateTo: (path: string): void => {
-      ipcRenderer.send('multipost:navigation:navigateTo', path)
-    },
-    // Show the main WebView
-    show: (): void => {
-      ipcRenderer.send('multipost:webview:show')
-    },
-    // Hide the main WebView
-    hide: (): void => {
-      ipcRenderer.send('multipost:webview:hide')
-    },
-    // Listen for path changes from WebView
-    onPathChanged: (callback: (path: string) => void) => {
-      const listener = (_: Electron.IpcRendererEvent, path: string) => callback(path)
-      ipcRenderer.on('webview:path-changed', listener)
-      return () => ipcRenderer.removeListener('webview:path-changed', listener)
-    }
   },
 
   // Publish Group management

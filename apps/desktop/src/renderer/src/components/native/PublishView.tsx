@@ -63,9 +63,21 @@ export function PublishView({ contentType }: { contentType: SyncContentType }): 
         />
       )
     case 'ARTICLE':
-      return <ArticlePublishPage {...commonProps} onStartPublish={handleStartPublish} />
+      return (
+        <ArticlePublishPage
+          {...commonProps}
+          onStartPublish={handleStartPublish}
+          initialDraft={initialDraft}
+        />
+      )
     case 'PODCAST':
-      return <PodcastPublishPage {...commonProps} onStartPublish={handleStartPublish} />
+      return (
+        <PodcastPublishPage
+          {...commonProps}
+          onStartPublish={handleStartPublish}
+          initialDraft={initialDraft}
+        />
+      )
     case 'DYNAMIC':
     default:
       return (

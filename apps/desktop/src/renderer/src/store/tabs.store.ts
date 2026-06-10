@@ -2,7 +2,6 @@ import { create } from 'zustand'
 import type { BrowserTab } from '@shared/types'
 
 export const HOME_TAB_ID = '__home__'
-export const WEB_TAB_ID = '__web__'
 
 interface TabsState {
   tabs: BrowserTab[]
@@ -91,16 +90,3 @@ export const useTabsStore = create<TabsState>((set, get) => ({
   }
 }))
 
-export function selectActiveTab(state: TabsState): BrowserTab | null {
-  return state.tabs.find((tab) => tab.isActive) || null
-}
-
-export function selectActiveGroupTab(state: TabsState): BrowserTab | null {
-  return state.tabs.find((tab) => tab.isGroup && tab.isActive) || null
-}
-
-export function selectIsHomeActive(state: TabsState): boolean {
-  const activeTab = selectActiveTab(state)
-  // No tabs yet (initial load) counts as home so the native UI shows instantly
-  return !activeTab || activeTab.isHome
-}

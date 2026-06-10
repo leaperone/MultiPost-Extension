@@ -1,7 +1,0 @@
-export { AboutPage } from './AboutPage'
-export { AccountsPage } from './AccountsPage'
-export { DraftsPage } from './DraftsPage'
-export { ExecutorPage } from './ExecutorPage'
-export { HistoryPage } from './HistoryPage'
-export { HomePage } from './HomePage'
-export { SettingsPage } from './SettingsPage'

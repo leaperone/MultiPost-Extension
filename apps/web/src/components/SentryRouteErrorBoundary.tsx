@@ -1,18 +1,24 @@
 import { Button } from '@heroui/react';
 import { Link, type ErrorComponentProps } from '@tanstack/react-router';
+import { createClientOnlyFn } from '@tanstack/react-start';
 import { HomeIcon, RefreshCwIcon } from 'lucide-react';
 import { useEffect } from 'react';
 
+// Dynamic import keeps Sentry out of the entry chunk; initializing first
+// covers errors thrown before the deferred bootstrap init has run. Wrapped as
+// client-only so the SSR bundle never pulls in the browser Sentry config.
+const reportErrorToSentry = createClientOnlyFn((error: unknown) => {
+  void Promise.all([import('../sentry.client.config'), import('@sentry/core')]).then(
+    ([{ initSentryClient }, { captureException }]) => {
+      initSentryClient();
+      captureException(error);
+    },
+  );
+});
+
 export function SentryRouteErrorBoundary({ error, reset }: ErrorComponentProps) {
   useEffect(() => {
-    // Dynamic import keeps Sentry out of the entry chunk. Initializing first
-    // covers errors thrown before the deferred bootstrap init has run.
-    void Promise.all([import('../sentry.client.config'), import('@sentry/core')]).then(
-      ([{ initSentryClient }, { captureException }]) => {
-        initSentryClient();
-        captureException(error);
-      },
-    );
+    reportErrorToSentry(error);
   }, [error]);
 
   return (

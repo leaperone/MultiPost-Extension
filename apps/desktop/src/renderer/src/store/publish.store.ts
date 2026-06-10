@@ -1,7 +1,6 @@
 import { create } from 'zustand'
 import { addToast } from '@heroui/react'
 import type { PlatformType, SyncContentData, SyncContentType } from '@shared/types'
-import { useAccountsStore } from './accounts.store'
 
 interface StartPublishParams {
   contentType: SyncContentType
@@ -27,7 +26,9 @@ export const usePublishStore = create<PublishState>((set) => ({
   startPublish: async ({ contentType, data, selectedAccountIds, selectedOtherPlatforms, autoSubmit }) => {
     set({ isStarting: true })
     try {
-      const accounts = useAccountsStore.getState().accounts
+      // Fetch fresh accounts at publish time: the selector UI loads its own
+      // list over IPC, so a cached store snapshot could miss recent changes.
+      const accounts = await window.api.account.list()
       const targets = accounts
         .filter((account) => selectedAccountIds.has(account.id))
         .map((account) => ({

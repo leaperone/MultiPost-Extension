@@ -937,11 +937,13 @@ export class BrowserViewManager {
       const fullPath = path.startsWith('/dashboard') ? path : `/dashboard${path}`
       const url = `${WEB_DASHBOARD_BASE_URL}${fullPath}`
       if (!this.blockUnsupportedNavigation(url, 'web-dashboard:navigateTo')) {
-        void view.webContents.loadURL(url)
+        view.webContents.loadURL(url).catch((error) => {
+          console.error('[BrowserViewManager] Web dashboard navigation failed:', error)
+        })
       }
     }
 
-    // Hide platform views
+    // Hide account, publish group, platform and executor views
     for (const managed of this.views.values()) {
       if (managed.isVisible) {
         this.mainWindow.removeBrowserView(managed.view)
@@ -949,6 +951,7 @@ export class BrowserViewManager {
       }
     }
     this.hideAllGroupViews()
+    this.hideAuxiliarySurfaces()
 
     this.mainWindow.addBrowserView(view)
     if (this.tabBarView) {
@@ -980,6 +983,28 @@ export class BrowserViewManager {
     } else {
       this.notifyTabsChanged()
     }
+  }
+
+  /**
+   * Hide simple-mode platform views and executor views. These are auxiliary
+   * surfaces that must never stay visible when switching to a top-level tab
+   * (native home, web dashboard, account view, publish group).
+   */
+  private hideAuxiliarySurfaces(): void {
+    for (const managed of this.platformViews.values()) {
+      if (managed.isVisible) {
+        this.mainWindow.removeBrowserView(managed.view)
+        managed.isVisible = false
+      }
+    }
+    for (const managed of this.executorViews.values()) {
+      if (managed.isVisible) {
+        this.mainWindow.removeBrowserView(managed.view)
+        managed.isVisible = false
+      }
+    }
+    this.activePlatformId = null
+    this.activeExecutorId = null
   }
 
   /**
@@ -1194,9 +1219,9 @@ export class BrowserViewManager {
       this.mainWindow.removeBrowserView(this.webDashboardView)
     }
 
-    // Hide all other content views
-    for (const managed of this.views.values()) {
-      if (managed.isVisible) {
+    // Hide all other content views (the freshly registered one stays visible)
+    for (const [id, managed] of this.views) {
+      if (id !== accountId && managed.isVisible) {
         this.mainWindow.removeBrowserView(managed.view)
         managed.isVisible = false
       }
@@ -1309,10 +1334,11 @@ export class BrowserViewManager {
     const managed = this.views.get(accountId)
     if (!managed) return
 
-    // Hide web dashboard view
+    // Hide web dashboard, platform and executor views
     if (this.webDashboardView) {
       this.mainWindow.removeBrowserView(this.webDashboardView)
     }
+    this.hideAuxiliarySurfaces()
 
     this.hideAllExcept(accountId)
     this.mainWindow.addBrowserView(managed.view)
@@ -2705,11 +2731,12 @@ export class BrowserViewManager {
       }
     }
 
-    // Hide web dashboard and publish group views
+    // Hide web dashboard, publish group, platform and executor views
     if (this.webDashboardView) {
       this.mainWindow.removeBrowserView(this.webDashboardView)
     }
     this.hideAllGroupViews()
+    this.hideAuxiliarySurfaces()
 
     // Ensure tab bar stays on top
     if (this.tabBarView) {
@@ -3055,10 +3082,11 @@ export class BrowserViewManager {
     const group = this.publishGroups.get(groupId)
     if (!group) return
 
-    // Hide home view
+    // Hide web dashboard, platform and executor views
     if (this.webDashboardView) {
       this.mainWindow.removeBrowserView(this.webDashboardView)
     }
+    this.hideAuxiliarySurfaces()
 
     // Hide all other views
     for (const managed of this.views.values()) {

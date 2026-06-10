@@ -45,7 +45,7 @@ function applyLocaleResources(lng: Locales) {
  * server rendered, avoiding hydration mismatches.
  */
 export function ensureLocaleResources(lng: Locales): Promise<void> {
-  const targets = lng === FALLBACK_LOCALE ? [lng] : [lng, FALLBACK_LOCALE];
+  const targets: Locales[] = lng === FALLBACK_LOCALE ? [lng] : [lng, FALLBACK_LOCALE];
   return Promise.all(targets.map(applyLocaleResources)).then(() => undefined);
 }
 
