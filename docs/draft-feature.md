@@ -1,5 +1,7 @@
 # MultiPost 草稿功能 (Beta)
 
+> ⚠️ **历史文档**：本文写于 Next.js + Prisma 时代，文中的代码路径、Prisma schema 示例与框架描述已过时。当前技术栈为 TanStack Start + Drizzle（schema 见 `db/schema/`，web 代码见 `apps/web/src/`），功能描述部分仍可参考。
+
 ## 功能概述
 
 MultiPost 的草稿功能允许用户创建、编辑和管理动态内容的草稿，支持实时保存和媒体管理。该功能目前处于 Beta 阶段，提供完整的内容创作工作流程。

@@ -6,11 +6,11 @@ Multi-platform social media content publishing SaaS. This monorepo contains the 
 
 | App | Path | Tech Stack | Description |
 |-----|------|------------|-------------|
-| **Web** | `apps/web/` | Next.js 16 + React 19 + Prisma + PostgreSQL | SaaS web application |
+| **Web** | `apps/web/` | TanStack Start + React 19 + Drizzle + PostgreSQL | SaaS web application |
 | **Desktop** | `apps/desktop/` | Electron 34 + Vite 6 + React 19 | Desktop client (44+ platform adapters) |
 | **Extension** | `apps/extension/` | Plasmo + React 18 | Browser extension (git submodule) |
-| **Backend Worker** | `apps/backend/` | Deno + Prisma | Publish tasks, account refresh |
-| **Video STT Worker** | `apps/video-stt-worker/` | Deno + Prisma | Video speech-to-text |
+| **Backend Worker** | `apps/backend/` | Deno + Drizzle | Publish tasks, account refresh |
+| **Video STT Worker** | `apps/video-stt-worker/` | Deno + Drizzle | Video speech-to-text |
 | **Shared** | `packages/shared/` | TypeScript | Shared types & platform definitions |
 
 ## Quick Start
@@ -53,7 +53,7 @@ cd apps/desktop && pnpm build:linux
 # Start dev database (Docker)
 docker compose -f .devcontainer/dev-db/docker-compose.yml up -d postgres-multipost
 
-# Generate Prisma client & deploy migrations
+# Apply Atlas migrations (Drizzle schema lives in db/)
 make dev
 ```
 
