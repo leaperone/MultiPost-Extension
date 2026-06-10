@@ -16,6 +16,7 @@
     "incremental": true,
     "plugins": [{ "name": "next" }],
     "paths": {
+      "collections/*": ["./.source/*"],
       "@/prisma/*": ["../../prisma/*"],
       "@/*": ["./*"]
     }

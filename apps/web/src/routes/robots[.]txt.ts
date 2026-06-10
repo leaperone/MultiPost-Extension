@@ -1,7 +1,7 @@
 import { createFileRoute } from '@tanstack/react-router';
 
 const baseUrl = 'https://multipost.app';
-const disallow = ['/dashboard/', '/admin/', '/api/', '/auth/', '/blog', '/docs', '/on-install'];
+const disallow = ['/dashboard/', '/admin/', '/api/', '/auth/', '/on-install'];
 
 export const Route = createFileRoute('/robots.txt')({
   server: {

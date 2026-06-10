@@ -4,19 +4,22 @@ import { tanstackStart } from '@tanstack/react-start/plugin/vite';
 import tailwindcss from '@tailwindcss/vite';
 import viteReact from '@vitejs/plugin-react';
 import { config as dotenvConfig } from 'dotenv';
+import fumadocsMdx from 'fumadocs-mdx/vite';
 import { defineConfig } from 'vite';
 import tsConfigPaths from 'vite-tsconfig-paths';
+import * as sourceConfig from './source.config';
 
 const webRoot = fileURLToPath(new URL('.', import.meta.url));
 const monorepoRoot = path.resolve(webRoot, '../..');
 const prismaRoot = path.join(monorepoRoot, 'prisma');
 const generatedPrismaClient = path.join(prismaRoot, 'client_multipost');
+const fumadocsSourceDir = path.join(webRoot, '.source');
 
 // Load monorepo root env files the same way next.config.mjs did.
 dotenvConfig({ path: path.join(monorepoRoot, '.env.local'), override: true });
 dotenvConfig({ path: path.join(monorepoRoot, '.env') });
 
-export default defineConfig({
+export default defineConfig(async () => ({
   server: {
     port: 3000,
   },
@@ -25,6 +28,11 @@ export default defineConfig({
   // without renaming every key during the Next.js -> TanStack Start migration.
   envPrefix: ['VITE_', 'NEXT_PUBLIC_'],
   plugins: [
+    await fumadocsMdx(sourceConfig, {
+      index: {
+        target: 'vite',
+      },
+    }),
     // TODO(Phase 8): add Sentry and PostHog source map upload here, gated on
     // CI plus the relevant auth-token/project env vars.
     tanstackStart(),
@@ -34,6 +42,7 @@ export default defineConfig({
   ],
   resolve: {
     alias: [
+      { find: /^collections\/(.*)$/, replacement: `${fumadocsSourceDir}/$1` },
       { find: /^@\/prisma\/(.*)$/, replacement: `${prismaRoot}/$1` },
       { find: '@', replacement: webRoot },
     ],
@@ -55,4 +64,4 @@ export default defineConfig({
       ],
     },
   },
-});
+}));

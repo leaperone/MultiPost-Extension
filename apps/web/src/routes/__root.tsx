@@ -1,6 +1,7 @@
 import { createServerFn } from '@tanstack/react-start';
 import { createRootRoute, HeadContent, Outlet, Scripts } from '@tanstack/react-router';
 
+import fumadocsCss from 'fumadocs-ui/style.css?url';
 import interCss from '@fontsource/inter/latin.css?url';
 import globalsCss from '../styles/globals.css?url';
 import { SentryRouteErrorBoundary } from '../components/SentryRouteErrorBoundary';
@@ -72,6 +73,7 @@ export const Route = createRootRoute({
       { rel: 'icon', href: '/favicon.ico' },
       { rel: 'icon', href: '/icon.png', type: 'image/png', sizes: '32x32' },
       { rel: 'apple-touch-icon', href: '/apple-icon.png', sizes: '180x180', type: 'image/png' },
+      { rel: 'stylesheet', href: fumadocsCss },
       { rel: 'stylesheet', href: interCss },
       { rel: 'stylesheet', href: globalsCss },
     ],
