@@ -1,6 +1,8 @@
 import { createServerFn } from '@tanstack/react-start';
+import { VideoTranscription } from '@db/schema/schema';
+import { and, desc, eq, inArray, type SQL } from 'drizzle-orm';
 
-import { multipostDb } from '../../lib/db';
+import { db } from '../../lib/db';
 import { getSession } from '../../lib/session';
 import {
   CreateTranscriptionSchema,
@@ -9,6 +11,11 @@ import {
   listVideoTranscriptionsSchema,
   videoTranscriptionTaskIdSchema,
 } from './types';
+
+function andAll(conditions: (SQL | undefined)[]) {
+  const filtered = conditions.filter((condition): condition is SQL => Boolean(condition));
+  return filtered.length > 0 ? and(...filtered) : undefined;
+}
 
 /**
  * Create a new video transcription task.
@@ -28,8 +35,9 @@ export const createVideoTranscription = createServerFn({ method: 'POST' })
 
       const { videoUrl, videoId, platform, audioUrl, duration, metadata } = data;
 
-      const task = await multipostDb.videoTranscription.create({
-        data: {
+      const [task] = await db
+        .insert(VideoTranscription)
+        .values({
           userId: session.user.id,
           videoUrl,
           videoId: videoId || null,
@@ -38,8 +46,12 @@ export const createVideoTranscription = createServerFn({ method: 'POST' })
           duration: duration || null,
           metadata: metadata ? JSON.parse(JSON.stringify(metadata)) : null,
           status: VideoTranscriptionStatus.PENDING,
-        },
-      });
+        })
+        .returning();
+
+      if (!task) {
+        throw new Error('创建任务失败');
+      }
 
       return {
         success: true,
@@ -70,12 +82,11 @@ export const getVideoTranscription = createServerFn({ method: 'GET' })
         };
       }
 
-      const task = await multipostDb.videoTranscription.findFirst({
-        where: {
-          id: data.taskId,
-          userId: session.user.id,
-        },
-      });
+      const [task] = await db
+        .select()
+        .from(VideoTranscription)
+        .where(and(eq(VideoTranscription.id, data.taskId), eq(VideoTranscription.userId, session.user.id)))
+        .limit(1);
 
       if (!task) {
         return {
@@ -114,22 +125,20 @@ export const listVideoTranscriptions = createServerFn({ method: 'GET' })
 
       const { status, limit = 20, offset = 0 } = data;
 
-      const where: { userId: string; status?: string } = {
-        userId: session.user.id,
-      };
-
-      if (status) {
-        where.status = status;
-      }
+      const where = andAll([
+        eq(VideoTranscription.userId, session.user.id),
+        status ? eq(VideoTranscription.status, status) : undefined,
+      ]);
 
       const [tasks, total] = await Promise.all([
-        multipostDb.videoTranscription.findMany({
-          where,
-          orderBy: { createdAt: 'desc' },
-          take: limit,
-          skip: offset,
-        }),
-        multipostDb.videoTranscription.count({ where }),
+        db
+          .select()
+          .from(VideoTranscription)
+          .where(where)
+          .orderBy(desc(VideoTranscription.createdAt))
+          .limit(limit)
+          .offset(offset),
+        db.$count(VideoTranscription, where),
       ]);
 
       return {
@@ -164,12 +173,11 @@ export const deleteVideoTranscription = createServerFn({ method: 'POST' })
         };
       }
 
-      const task = await multipostDb.videoTranscription.findFirst({
-        where: {
-          id: data.taskId,
-          userId: session.user.id,
-        },
-      });
+      const [task] = await db
+        .select()
+        .from(VideoTranscription)
+        .where(and(eq(VideoTranscription.id, data.taskId), eq(VideoTranscription.userId, session.user.id)))
+        .limit(1);
 
       if (!task) {
         return {
@@ -185,9 +193,7 @@ export const deleteVideoTranscription = createServerFn({ method: 'POST' })
         };
       }
 
-      await multipostDb.videoTranscription.delete({
-        where: { id: data.taskId },
-      });
+      await db.delete(VideoTranscription).where(eq(VideoTranscription.id, data.taskId));
 
       return {
         success: true,
@@ -224,12 +230,15 @@ export const getVideoTranscriptionsByIds = createServerFn({ method: 'GET' })
         };
       }
 
-      const tasks = await multipostDb.videoTranscription.findMany({
-        where: {
-          id: { in: data.taskIds },
-          userId: session.user.id,
-        },
-      });
+      const tasks = await db
+        .select()
+        .from(VideoTranscription)
+        .where(
+          and(
+            inArray(VideoTranscription.id, data.taskIds),
+            eq(VideoTranscription.userId, session.user.id),
+          ),
+        );
 
       return {
         success: true,
@@ -259,12 +268,11 @@ export const retryVideoTranscription = createServerFn({ method: 'POST' })
         };
       }
 
-      const task = await multipostDb.videoTranscription.findFirst({
-        where: {
-          id: data.taskId,
-          userId: session.user.id,
-        },
-      });
+      const [task] = await db
+        .select()
+        .from(VideoTranscription)
+        .where(and(eq(VideoTranscription.id, data.taskId), eq(VideoTranscription.userId, session.user.id)))
+        .limit(1);
 
       if (!task) {
         return {
@@ -280,13 +288,14 @@ export const retryVideoTranscription = createServerFn({ method: 'POST' })
         };
       }
 
-      await multipostDb.videoTranscription.update({
-        where: { id: data.taskId },
-        data: {
+      await db
+        .update(VideoTranscription)
+        .set({
           status: VideoTranscriptionStatus.PENDING,
           error: null,
-        },
-      });
+          updatedAt: new Date(),
+        })
+        .where(eq(VideoTranscription.id, data.taskId));
 
       return {
         success: true,

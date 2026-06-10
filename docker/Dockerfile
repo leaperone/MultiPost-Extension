@@ -17,7 +17,6 @@ WORKDIR /app
 
 FROM base AS deps
 RUN --mount=type=cache,id=pnpm-multipost,target=/pnpm/store pnpm install --frozen-lockfile
-RUN sh prisma/generate.sh
 
 FROM deps AS builder
 ENV NODE_OPTIONS="--max-old-space-size=8192"
@@ -83,7 +82,6 @@ COPY --from=builder /usr/share/zoneinfo/Asia/Shanghai /usr/share/zoneinfo/Asia/S
 
 COPY --from=builder /app/package.json /app/pnpm-lock.yaml /app/pnpm-workspace.yaml ./
 COPY --from=builder /app/node_modules ./node_modules
-COPY --from=builder /app/prisma/client_multipost ./prisma/client_multipost
 COPY --from=builder /app/apps/web/package.json ./apps/web/package.json
 COPY --from=builder /app/apps/web/dist ./apps/web/dist
 COPY --from=builder /app/apps/web/public ./apps/web/public
@@ -95,23 +93,25 @@ EXPOSE 3000
 CMD [ "node", "dist/server/server.js" ]
 
 FROM denoland/deno:latest as backend-cache
-WORKDIR /app
-COPY --from=deps /app/apps/backend/ .
-RUN deno cache main.ts
+WORKDIR /app/apps/backend
+COPY --from=deps /app/apps/backend /app/apps/backend
+COPY --from=deps /app/db /app/db
+RUN deno check main.ts
 
 FROM denoland/deno:latest as backend
 RUN apt-get update && apt-get install -y openssl
-WORKDIR /app
-COPY --from=backend-cache /app .
+WORKDIR /app/apps/backend
+COPY --from=backend-cache /app /app
 CMD ["deno", "run", "-A", "main.ts"]
 
 FROM denoland/deno:latest as video-stt-worker-cache
-WORKDIR /app
-COPY --from=deps /app/apps/video-stt-worker/ .
-RUN deno cache src/main.ts
+WORKDIR /app/apps/video-stt-worker
+COPY --from=deps /app/apps/video-stt-worker /app/apps/video-stt-worker
+COPY --from=deps /app/db /app/db
+RUN deno check src/main.ts
 
 FROM denoland/deno:latest as video-stt-worker
 RUN apt-get update && apt-get install -y openssl ffmpeg
-WORKDIR /app
-COPY --from=video-stt-worker-cache /app .
+WORKDIR /app/apps/video-stt-worker
+COPY --from=video-stt-worker-cache /app /app
 CMD ["deno", "run", "-A", "src/main.ts"]

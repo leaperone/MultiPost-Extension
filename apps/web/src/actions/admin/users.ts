@@ -1,7 +1,11 @@
 import { createServerFn } from '@tanstack/react-start';
+import { User } from '@db/schema/auth-schema';
+import { Credit } from '@db/schema/schema';
+import { toDecimal } from '@db/helpers';
+import { desc, eq, lt } from 'drizzle-orm';
 import { z } from 'zod';
 
-import { multipostDb } from '../../lib/db';
+import { db } from '../../lib/db';
 import { getSession } from '../../lib/session';
 import { isAdmin } from '../admin';
 import type { RespT } from '../../lib/request';
@@ -68,22 +72,22 @@ export const getUsers = createServerFn({ method: 'GET' })
     if (!session) return unauthorized({ users: [], count: 0 });
 
     const limit = data.limit ?? 20;
-    const where = data.cursor ? { id: { lt: data.cursor } } : {};
+    const where = data.cursor ? lt(User.id, data.cursor) : undefined;
 
-    const [users, count] = await Promise.all([
-      multipostDb.user.findMany({
-        where,
-        orderBy: { id: 'desc' },
-        take: limit,
-        select: {
-          id: true,
-          name: true,
-          email: true,
-          image: true,
-          createdAt: true,
-        },
-      }),
-      multipostDb.user.count(),
+    const [users, countRows] = await Promise.all([
+      db
+        .select({
+          id: User.id,
+          name: User.name,
+          email: User.email,
+          image: User.image,
+          createdAt: User.createdAt,
+        })
+        .from(User)
+        .where(where)
+        .orderBy(desc(User.id))
+        .limit(limit),
+      db.$count(User),
     ]);
 
     return {
@@ -91,7 +95,7 @@ export const getUsers = createServerFn({ method: 'GET' })
       msg: 'success',
       data: {
         users: users.map(serializeUser),
-        count,
+        count: countRows,
         nextCursor: users.length === limit ? users[users.length - 1]?.id : undefined,
       },
     };
@@ -104,32 +108,34 @@ export const searchUser = createServerFn({ method: 'GET' })
     if (!session) return unauthorized(null);
     if (!data.id && !data.email) return { code: -1, msg: 'id or email required', data: null };
 
+    const selectUser = {
+      id: User.id,
+      name: User.name,
+      email: User.email,
+      image: User.image,
+      createdAt: User.createdAt,
+    };
+
     const user = data.id
-      ? await multipostDb.user.findUnique({
-          where: { id: data.id },
-          select: {
-            id: true,
-            name: true,
-            email: true,
-            image: true,
-            createdAt: true,
-          },
-        })
+      ? (
+          await db
+            .select(selectUser)
+            .from(User)
+            .where(eq(User.id, data.id))
+            .limit(1)
+        )[0] ?? null
       : null;
 
     const fallbackUser =
       user || !data.email
         ? user
-        : await multipostDb.user.findUnique({
-            where: { email: data.email },
-            select: {
-              id: true,
-              name: true,
-              email: true,
-              image: true,
-              createdAt: true,
-            },
-          });
+        : (
+            await db
+              .select(selectUser)
+              .from(User)
+              .where(eq(User.email, data.email))
+              .limit(1)
+          )[0] ?? null;
 
     return {
       code: 0,
@@ -144,16 +150,18 @@ export const getUserCreditBalance = createServerFn({ method: 'GET' })
     const session = await requireAdmin();
     if (!session) return unauthorized({ credits: 0, freeCredits: 0 });
 
-    const credit = await multipostDb.credit.findUnique({
-      where: { userId: data.userId },
-    });
+    const [credit] = await db
+      .select()
+      .from(Credit)
+      .where(eq(Credit.userId, data.userId))
+      .limit(1);
 
     return {
       code: 0,
       msg: 'success',
       data: {
-        credits: credit?.credits?.toNumber() ?? 0,
-        freeCredits: credit?.freeCredits?.toNumber() ?? 0,
+        credits: toDecimal(credit?.credits)?.toNumber() ?? 0,
+        freeCredits: toDecimal(credit?.freeCredits)?.toNumber() ?? 0,
       },
     };
   });

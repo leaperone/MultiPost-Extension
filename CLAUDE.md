@@ -16,7 +16,8 @@ This is a **pnpm workspace monorepo** containing all MultiPost projects:
 │   └── video-stt-worker/      # Deno worker: video speech-to-text
 ├── packages/
 │   └── shared/                # @multipost/shared: shared types & platform definitions
-├── prisma/                    # Shared Prisma schema and generators
+├── db/                        # Shared Drizzle schema, client, and Atlas migrations
+├── prisma/                    # Deploy shim only: migrate_deploy.sh
 ├── pnpm-workspace.yaml        # Workspace config
 └── turbo.json                 # Turborepo task orchestration
 ```
@@ -77,13 +78,15 @@ pnpm dev                    # Start development server
 
 ### Database Quick Setup
 ```bash
-make dev                    # Start dev DB + deploy migrations (recommended)
-make dbdev                  # Generate Prisma clients + deploy migrations
+make dev                    # Start dev DB + apply Atlas migrations (recommended)
+make dbdev                  # Build Drizzle source + apply Atlas migrations
 
 # Manual commands (if needed)
-sh prisma/generate.sh       # Generate Prisma client
-sh prisma/migrate.sh        # Run database migrations
-sh prisma/migrate_deploy.sh # Deploy migrations to production
+pnpm db:build:source        # Export Drizzle schema to db/atlas/_source.sql
+pnpm db:diff                # Generate Atlas migration from Drizzle source
+pnpm db:lint                # Atlas migrate lint + no-DML lint
+pnpm db:studio              # Open Drizzle Studio
+sh prisma/migrate_deploy.sh # Production deploy contract: Atlas migrate apply
 ```
 
 ### Code Quality
@@ -129,13 +132,14 @@ apps/web/lib/          # Web libraries and utilities
 apps/web/store/        # Web global state (Zustand)
 apps/backend/          # Backend worker and job processing
 apps/video-stt-worker/ # Video speech-to-text worker
-prisma/                # Shared database schemas and generators
+db/                    # Shared Drizzle schema/client and Atlas migrations
+prisma/                # Production migration entrypoint shim only
 ```
 
 ### Core Architecture
 - **Next.js App Router**: Modern routing with server/client components
 - **NextAuth.js**: Authentication with GitHub, Google, Passkey, and Mailgun providers
-- **Prisma + PostgreSQL**: Database with custom client generation
+- **Drizzle + PostgreSQL + Atlas**: Shared schema/client with Atlas DDL migrations
 - **Zustand**: Client-side state management (drafts, publishing, chat history)
 - **Credit System**: Built-in payment and usage tracking with Stripe/Alipay integration
 - **Worker System**: Background job processing for content publishing and image generation
@@ -147,10 +151,10 @@ prisma/                # Shared database schemas and generators
 - Automatic user credit allocation (0.5 for signup, 1.0 for GitHub)
 - Custom user session extensions
 
-#### Database (`apps/web/lib/db.ts`, `prisma/`)
-- Custom Prisma client (`client_multipost`) with singleton pattern
-- Schema includes Users, Credits, Social Media Accounts, Extensions, Drafts, Image/Poster Generation
-- Migration scripts for deployment
+#### Database (`apps/web/src/lib/db.ts`, `db/`)
+- Shared Drizzle schema lives in `db/schema/`; app and worker clients use `db/client.ts`
+- Atlas migrations live in `db/atlas/migrations/`; run `pnpm db:build:source` before diffs/lint
+- `prisma/migrate_deploy.sh` remains only as the external deploy contract and runs Atlas apply
 
 #### State Management (`apps/web/store/`)
 - `draft.store.ts`: Draft creation and publishing platform selection
@@ -191,7 +195,7 @@ prisma/                # Shared database schemas and generators
 ### Development Patterns
 - Server actions for data mutations
 - Client components for interactive UI
-- Prisma transactions for credit operations
+- Drizzle transactions for credit operations
 - Environment-based feature toggles
 - Docker support for development database
 

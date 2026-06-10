@@ -1,7 +1,9 @@
-import { PrismaClient } from '../prisma/client_multipost_deno/client.ts';
+import { asc, eq } from 'drizzle-orm';
+import { VideoTranscription as VideoTranscriptionTable } from '@db/schema/index.ts';
 import { STTService } from '../services/stt.service.ts';
 import { getConfig } from '../config.ts';
 import { logger } from '../utils/logger.ts';
+import type { MultipostDb } from '../db.ts';
 
 /**
  * Processing state manager (singleton) to prevent duplicate processing
@@ -53,12 +55,12 @@ export class ProcessingManager {
  * Note: Video info extraction is now done on the web side before task creation
  */
 export class TranscriptionWorker {
-  private db: PrismaClient;
+  private db: MultipostDb;
   private sttService: STTService;
   private processingManager: ProcessingManager;
   private maxConcurrent: number = 3;
 
-  constructor(database: PrismaClient, maxConcurrent: number = 3) {
+  constructor(database: MultipostDb, maxConcurrent: number = 3) {
     this.db = database;
     this.processingManager = ProcessingManager.getInstance();
     this.maxConcurrent = maxConcurrent;
@@ -76,10 +78,10 @@ export class TranscriptionWorker {
     try {
       logger.info('🔄 Recovering tasks stuck in processing state...');
 
-      const stuckTasks = await this.db.videoTranscription.findMany({
-        where: { status: 'processing' },
-        select: { id: true },
-      });
+      const stuckTasks = await this.db
+        .select({ id: VideoTranscriptionTable.id })
+        .from(VideoTranscriptionTable)
+        .where(eq(VideoTranscriptionTable.status, 'processing'));
 
       if (stuckTasks.length === 0) {
         logger.info('✅ No stuck tasks to recover');
@@ -90,10 +92,10 @@ export class TranscriptionWorker {
 
       for (const { id } of stuckTasks) {
         try {
-          await this.db.videoTranscription.update({
-            where: { id },
-            data: { status: 'pending', error: null },
-          });
+          await this.db
+            .update(VideoTranscriptionTable)
+            .set({ status: 'pending', error: null, updatedAt: new Date() })
+            .where(eq(VideoTranscriptionTable.id, id));
           logger.info(`♻️ Task ${id} reset to pending`);
         } catch (err) {
           logger.error(`❌ Failed to reset task ${id}:`, err);
@@ -113,15 +115,18 @@ export class TranscriptionWorker {
       const availableSlots = this.maxConcurrent - currentProcessing;
 
       if (availableSlots <= 0) {
-        logger.debug(`⏳ Max concurrent tasks reached (${currentProcessing}/${this.maxConcurrent})`);
+        logger.debug(
+          `⏳ Max concurrent tasks reached (${currentProcessing}/${this.maxConcurrent})`,
+        );
         return;
       }
 
-      const pendingTasks = await this.db.videoTranscription.findMany({
-        where: { status: 'pending' },
-        orderBy: { createdAt: 'asc' },
-        take: availableSlots,
-      });
+      const pendingTasks = await this.db
+        .select()
+        .from(VideoTranscriptionTable)
+        .where(eq(VideoTranscriptionTable.status, 'pending'))
+        .orderBy(asc(VideoTranscriptionTable.createdAt))
+        .limit(availableSlots);
 
       if (pendingTasks.length === 0) {
         logger.debug('📭 No pending transcription tasks');
@@ -161,9 +166,11 @@ export class TranscriptionWorker {
 
     try {
       // Get task from database
-      const task = await this.db.videoTranscription.findUnique({
-        where: { id: taskId },
-      });
+      const [task] = await this.db
+        .select()
+        .from(VideoTranscriptionTable)
+        .where(eq(VideoTranscriptionTable.id, taskId))
+        .limit(1);
 
       if (!task) {
         throw new Error(`Task not found: ${taskId}`);
@@ -179,18 +186,24 @@ export class TranscriptionWorker {
 
       // Check if audioUrl is available (extracted on web side)
       if (!task.audioUrl) {
-        throw new Error('Audio URL not available. Video info should be extracted on web side before creating task.');
+        throw new Error(
+          'Audio URL not available. Video info should be extracted on web side before creating task.',
+        );
       }
 
       // Update status to processing
-      await this.db.videoTranscription.update({
-        where: { id: taskId },
-        data: { status: 'processing' },
-      });
+      await this.db
+        .update(VideoTranscriptionTable)
+        .set({ status: 'processing', updatedAt: new Date() })
+        .where(eq(VideoTranscriptionTable.id, taskId));
 
       logger.info(`🎵 Audio URL: ${task.audioUrl.substring(0, 80)}...`);
       if (task.duration) {
-        logger.info(`⏱️ Duration: ${task.duration}s (${Math.floor(task.duration / 60)}m ${task.duration % 60}s)`);
+        logger.info(
+          `⏱️ Duration: ${task.duration}s (${Math.floor(task.duration / 60)}m ${
+            task.duration % 60
+          }s)`,
+        );
       }
 
       // Transcribe audio (video info already extracted on web side)
@@ -201,13 +214,14 @@ export class TranscriptionWorker {
       logger.info(`⏱️ Transcription took ${(transcribeTime / 1000).toFixed(2)}s`);
 
       // Update with transcript and mark as completed
-      await this.db.videoTranscription.update({
-        where: { id: taskId },
-        data: {
+      await this.db
+        .update(VideoTranscriptionTable)
+        .set({
           transcript,
           status: 'completed',
-        },
-      });
+          updatedAt: new Date(),
+        })
+        .where(eq(VideoTranscriptionTable.id, taskId));
 
       logger.success(`🎉 Task ${taskId} completed successfully!`);
       logger.info(`📝 Transcript length: ${transcript.length} characters`);
@@ -216,13 +230,14 @@ export class TranscriptionWorker {
 
       // Update status to failed
       try {
-        await this.db.videoTranscription.update({
-          where: { id: taskId },
-          data: {
+        await this.db
+          .update(VideoTranscriptionTable)
+          .set({
             status: 'failed',
             error: error instanceof Error ? error.message : String(error),
-          },
-        });
+            updatedAt: new Date(),
+          })
+          .where(eq(VideoTranscriptionTable.id, taskId));
       } catch (updateErr) {
         logger.error(`❌ Failed to update task status:`, updateErr);
       }

@@ -1,9 +1,12 @@
 import { createServerFn } from '@tanstack/react-start';
-import { Decimal } from '@prisma/client/runtime/library';
+import { fromDecimal, toDecimal } from '@db/helpers';
+import { Credit, CreditUsage, RechargeCredit } from '@db/schema/schema';
+import Decimal from 'decimal.js';
+import { desc, eq } from 'drizzle-orm';
 import { nanoid } from 'nanoid';
 import { z } from 'zod';
 
-import { multipostDb } from '../../lib/db';
+import { db } from '../../lib/db';
 import { requestAlipayUrl } from '@/lib/alipay';
 import { createStripeCheckoutSession } from '@/lib/stripe';
 import type { CreditInfo } from '@/src/actions/credit/types';
@@ -35,18 +38,23 @@ export const getUserSelfCredit = createServerFn({ method: 'GET' }).handler(
       throw new Error('Authentication failed');
     }
 
-    const credit = await multipostDb.credit.findUnique({
-      where: { userId: session.user.id },
-    });
+    const [credit] = await db
+      .select()
+      .from(Credit)
+      .where(eq(Credit.userId, session.user.id))
+      .limit(1);
 
     if (!credit) {
       return zeroCreditInfo();
     }
 
+    const credits = toDecimal(credit.credits);
+    const freeCredits = toDecimal(credit.freeCredits);
+
     return {
-      credits: Number(credit.credits),
-      freeCredits: Number(credit.freeCredits),
-      totalCredits: Number(credit.credits.add(credit.freeCredits)),
+      credits: credits.toNumber(),
+      freeCredits: freeCredits.toNumber(),
+      totalCredits: credits.add(freeCredits).toNumber(),
     };
   },
 );
@@ -61,18 +69,19 @@ export const getCreditUsageHistory = createServerFn({ method: 'GET' }).handler(a
       };
     }
 
-    const usageHistory = await multipostDb.creditUsage.findMany({
-      where: { userId: session.user.id },
-      orderBy: { createdAt: 'desc' },
-      take: 50,
-    });
+    const usageHistory = await db
+      .select()
+      .from(CreditUsage)
+      .where(eq(CreditUsage.userId, session.user.id))
+      .orderBy(desc(CreditUsage.createdAt))
+      .limit(50);
 
     return {
       success: true,
       data: usageHistory.map((usage) => ({
         id: usage.id,
         type: usage.type,
-        amount: Number(usage.amount),
+        amount: toDecimal(usage.amount).toNumber(),
         isFree: usage.isFree,
         createdAt: usage.createdAt,
       })),
@@ -94,17 +103,19 @@ export const rechargeViaAlipay = createServerFn({ method: 'POST' })
         throw new Error('Authentication failed');
       }
 
-      const recharge = await multipostDb.rechargeCredit.create({
-        data: {
+      const amount = new Decimal(data.amount.toString());
+      const [recharge] = await db
+        .insert(RechargeCredit)
+        .values({
           userId: session.user.id,
           orderId: `MP-${nanoid(32)}`,
           type: RechargeType.ALIPAY,
-          amount: new Decimal(data.amount.toString()),
+          amount: fromDecimal(amount),
           status: RechargeStatus.PENDING,
-        },
-      });
+        })
+        .returning();
 
-      const resp = await requestAlipayUrl(recharge.orderId, recharge.amount, data.returnUrl);
+      const resp = await requestAlipayUrl(recharge.orderId, amount, data.returnUrl);
       const redirectUrl = resp.result || '';
 
       if (!redirectUrl) {
@@ -132,19 +143,21 @@ export const rechargeViaStripe = createServerFn({ method: 'POST' })
         throw new Error('Authentication failed');
       }
 
-      const recharge = await multipostDb.rechargeCredit.create({
-        data: {
+      const amount = new Decimal(data.amount.toString());
+      const [recharge] = await db
+        .insert(RechargeCredit)
+        .values({
           userId: session.user.id,
           orderId: `MP-${nanoid(32)}`,
           type: RechargeType.STRIPE,
-          amount: new Decimal(data.amount.toString()),
+          amount: fromDecimal(amount),
           status: RechargeStatus.PENDING,
-        },
-      });
+        })
+        .returning();
 
       const resp = await createStripeCheckoutSession(
         recharge.orderId,
-        recharge.amount,
+        amount,
         data.returnUrl,
       );
       const redirectUrl = resp.result || '';

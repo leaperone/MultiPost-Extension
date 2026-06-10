@@ -5,7 +5,15 @@
  * @date 2024-12-19
  */
 
-import { PrismaClient } from '../prisma/client_multipost_deno/client.ts';
+import { and, eq } from "drizzle-orm";
+import type { JsonValue } from "@db/helpers.ts";
+import {
+  Draft as DraftTable,
+  PublishTask as PublishTaskTable,
+  PublishTaskLog as PublishTaskLogTable,
+  SocialMediaAccount as SocialMediaAccountTable,
+} from "@db/schema/index.ts";
+import type { MultipostDb } from "../db.ts";
 
 // Common interfaces for all platforms
 export interface SocialMediaAccount {
@@ -23,7 +31,7 @@ export interface SocialMediaAccount {
   scope: string | null;
   expiresAt: Date | null;
   isActive: boolean;
-  metadata: unknown;
+  metadata: JsonValue | null;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -43,7 +51,7 @@ export interface PublishTask {
 export interface Draft {
   title: string | null;
   content: string | null;
-  files: unknown;
+  files: JsonValue | null;
   userId: string;
 }
 
@@ -56,8 +64,8 @@ export interface PublishTaskLog {
   publishedAt: Date | null;
   error: string | null;
   message: string | null;
-  publishData: unknown | null;
-  result: unknown | null;
+  publishData: JsonValue | null;
+  result: JsonValue | null;
   publishTaskId: string;
 }
 
@@ -68,14 +76,18 @@ export interface TaskProcessingResult {
   error?: string;
 }
 
+export function getErrorMessage(error: unknown): string {
+  return error instanceof Error ? error.message : String(error);
+}
+
 /**
  * Base class for all social media platform clients
  */
 export abstract class BaseSocialMediaClient {
-  protected db: PrismaClient;
+  protected db: MultipostDb;
   protected platform: string;
 
-  constructor(database: PrismaClient, platform: string) {
+  constructor(database: MultipostDb, platform: string) {
     this.db = database;
     this.platform = platform;
   }
@@ -85,14 +97,19 @@ export abstract class BaseSocialMediaClient {
    * @param logId - Publish task log ID
    * @returns Promise with processing result
    */
-  abstract processPublishTaskLog(logId: string, publishTask: PublishTask): Promise<TaskProcessingResult>;
+  abstract processPublishTaskLog(
+    logId: string,
+    publishTask: PublishTask,
+  ): Promise<TaskProcessingResult>;
 
   /**
    * Process account refresh for this platform
    * @param accountId - Account ID to refresh
    * @returns Promise with processing result
    */
-  abstract processRefreshAccount(accountId: string): Promise<TaskProcessingResult>;
+  abstract processRefreshAccount(
+    accountId: string,
+  ): Promise<TaskProcessingResult>;
 
   /**
    * Process task status check for this platform
@@ -100,7 +117,10 @@ export abstract class BaseSocialMediaClient {
    * @param accessToken - Access token for the account
    * @returns Promise with processing result
    */
-  abstract processCheckTask(logId: string, accessToken: string): Promise<TaskProcessingResult>;
+  abstract processCheckTask(
+    logId: string,
+    accessToken: string,
+  ): Promise<TaskProcessingResult>;
 
   /**
    * Validate if the client can handle the given platform
@@ -130,20 +150,19 @@ export abstract class BaseSocialMediaClient {
     logId: string,
     status: string,
     message: string,
-    data?: unknown,
+    data?: JsonValue,
   ): Promise<void> {
     try {
-      await this.db.publishTaskLog.update({
-        where: { id: logId },
-        data: {
+      await this.db
+        .update(PublishTaskLogTable)
+        .set({
           status,
-          publishedAt: status === 'completed' ? new Date() : undefined,
-          error: status === 'failed' ? 'TASK_FAILED' : undefined,
-          message: status === 'failed' ? message : undefined,
-          result: data ? data : undefined,
+          ...(status === "completed" ? { publishedAt: new Date() } : {}),
+          ...(status === "failed" ? { error: "TASK_FAILED", message } : {}),
+          ...(data !== undefined ? { result: data } : {}),
           updatedAt: new Date(),
-        },
-      });
+        })
+        .where(eq(PublishTaskLogTable.id, logId));
 
       console.log(`📝 Updated publish task log ${logId} status to: ${status}`);
     } catch (error) {
@@ -156,19 +175,22 @@ export abstract class BaseSocialMediaClient {
    * @param accountId - Account ID
    * @param updates - Account updates
    */
-  protected async updateAccountInfo(accountId: string, updates: Partial<SocialMediaAccount>): Promise<void> {
+  protected async updateAccountInfo(
+    accountId: string,
+    updates: Partial<SocialMediaAccount>,
+  ): Promise<void> {
     try {
       // Filter out fields that cannot be updated
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      const { id, userId, createdAt, metadata, ...updatableFields } = updates;
+      const { id, userId, createdAt, ...updatableFields } = updates;
 
-      await this.db.socialMediaAccount.update({
-        where: { id: accountId },
-        data: {
+      await this.db
+        .update(SocialMediaAccountTable)
+        .set({
           ...updatableFields,
           updatedAt: new Date(),
-        },
-      });
+        } as Partial<typeof SocialMediaAccountTable.$inferInsert>)
+        .where(eq(SocialMediaAccountTable.id, accountId));
 
       console.log(`📝 Updated account info for: ${accountId}`);
     } catch (error) {
@@ -181,15 +203,18 @@ export abstract class BaseSocialMediaClient {
    * @param accountId - Account ID
    * @param reason - Reason for deactivation
    */
-  protected async markAccountInactive(accountId: string, reason: string): Promise<void> {
+  protected async markAccountInactive(
+    accountId: string,
+    reason: string,
+  ): Promise<void> {
     try {
-      await this.db.socialMediaAccount.update({
-        where: { id: accountId },
-        data: {
+      await this.db
+        .update(SocialMediaAccountTable)
+        .set({
           isActive: false,
           updatedAt: new Date(),
-        },
-      });
+        })
+        .where(eq(SocialMediaAccountTable.id, accountId));
 
       console.log(`⚠️  Marked account ${accountId} as inactive: ${reason}`);
     } catch (error) {
@@ -202,11 +227,17 @@ export abstract class BaseSocialMediaClient {
    * @param accountId - Account ID
    * @returns Account or null if not found
    */
-  protected async getAccount(accountId: string): Promise<SocialMediaAccount | null> {
+  protected async getAccount(
+    accountId: string,
+  ): Promise<SocialMediaAccount | null> {
     try {
-      return await this.db.socialMediaAccount.findUnique({
-        where: { id: accountId },
-      });
+      const [account] = await this.db
+        .select()
+        .from(SocialMediaAccountTable)
+        .where(eq(SocialMediaAccountTable.id, accountId))
+        .limit(1);
+
+      return account ?? null;
     } catch (error) {
       console.error(`❌ Failed to get account:`, error);
       return null;
@@ -220,10 +251,39 @@ export abstract class BaseSocialMediaClient {
    */
   protected async getPublishTask(taskId: string): Promise<PublishTask | null> {
     try {
-      return await this.db.publishTask.findUnique({
-        where: { id: taskId },
-        include: { PublishTaskLog: { where: { status: 'pending' } }, draft: true },
-      });
+      const [task] = await this.db
+        .select()
+        .from(PublishTaskTable)
+        .where(eq(PublishTaskTable.id, taskId))
+        .limit(1);
+
+      if (!task) {
+        return null;
+      }
+
+      const [draft] = await this.db.select().from(DraftTable).where(
+        eq(DraftTable.id, task.draftId),
+      ).limit(1);
+
+      if (!draft) {
+        return null;
+      }
+
+      const logs = await this.db
+        .select()
+        .from(PublishTaskLogTable)
+        .where(
+          and(
+            eq(PublishTaskLogTable.publishTaskId, task.id),
+            eq(PublishTaskLogTable.status, "pending"),
+          ),
+        );
+
+      return {
+        ...task,
+        draft,
+        PublishTaskLog: logs,
+      };
     } catch (error) {
       console.error(`❌ Failed to get publish task:`, error);
       return null;
@@ -235,11 +295,17 @@ export abstract class BaseSocialMediaClient {
    * @param logId - Log ID
    * @returns Publish task log or null if not found
    */
-  protected async getPublishTaskLog(logId: string): Promise<PublishTaskLog | null> {
+  protected async getPublishTaskLog(
+    logId: string,
+  ): Promise<PublishTaskLog | null> {
     try {
-      return await this.db.publishTaskLog.findUnique({
-        where: { id: logId },
-      });
+      const [log] = await this.db
+        .select()
+        .from(PublishTaskLogTable)
+        .where(eq(PublishTaskLogTable.id, logId))
+        .limit(1);
+
+      return log ?? null;
     } catch (error) {
       console.error(`❌ Failed to get publish task log:`, error);
       return null;

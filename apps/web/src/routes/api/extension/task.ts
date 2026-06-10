@@ -1,7 +1,10 @@
 import { createFileRoute } from '@tanstack/react-router';
+import { Draft, ExtensionClient, ExtensionTask } from '@db/schema/schema';
+import { and, eq, isNull } from 'drizzle-orm';
 
 import { authKey } from '../../../lib/authKey';
 import { preflightResponse, withCors } from '../../../lib/cors';
+import { db } from '../../../lib/db';
 import { errorResponse, successResponse, unauthenticatedResponse } from '../../../lib/response';
 import { DraftPostData, taskSchema, TaskStatus, TaskType } from './-types';
 
@@ -22,17 +25,20 @@ async function POST({ request }: { request: Request }) {
   }
 
   try {
-    const { prisma } = await import('../../../lib/db');
     const body = await request.json();
     const validatedData = taskSchema.parse(body);
 
-    const client = await prisma.extensionClient.findUnique({
-      where: {
-        id: validatedData.targetClientId,
-        userId,
-        deletedAt: null,
-      },
-    });
+    const [client] = await db
+      .select()
+      .from(ExtensionClient)
+      .where(
+        and(
+          eq(ExtensionClient.id, validatedData.targetClientId),
+          eq(ExtensionClient.userId, userId),
+          isNull(ExtensionClient.deletedAt),
+        ),
+      )
+      .limit(1);
     if (!client) {
       throw new Error('CLIENT_NOT_FOUND');
     }
@@ -41,30 +47,30 @@ async function POST({ request }: { request: Request }) {
       if (!('draftId' in validatedData.taskData)) {
         throw new Error('DRAFT_ID_REQUIRED');
       }
-      const draft = await prisma.draft.findUnique({
-        where: {
-          id: (validatedData.taskData as DraftPostData).draftId,
-          userId,
-        },
-      });
+      const [draft] = await db
+        .select()
+        .from(Draft)
+        .where(and(eq(Draft.id, (validatedData.taskData as DraftPostData).draftId), eq(Draft.userId, userId)))
+        .limit(1);
       if (!draft) {
         throw new Error('DRAFT_NOT_FOUND');
       }
     }
 
-    const task = await prisma.extensionTask.create({
-      data: {
+    const [task] = await db
+      .insert(ExtensionTask)
+      .values({
         userId,
         targetClientId: validatedData.targetClientId,
         taskType: validatedData.taskType,
         taskData: body.taskData,
         status: TaskStatus.PENDING,
-      },
-    });
+      })
+      .returning();
     return withCors(
       successResponse({
-        taskId: task.id,
-        status: task.status,
+        taskId: task?.id,
+        status: task?.status,
       }),
     );
   } catch (error) {
@@ -84,21 +90,18 @@ async function GET({ request }: { request: Request }) {
     throw new Error('TASK_ID_REQUIRED');
   }
   try {
-    const { prisma } = await import('../../../lib/db');
-    const task = await prisma.extensionTask.findUnique({
-      where: {
-        id: taskId,
-        userId,
-      },
-      select: {
-        id: true,
-        taskType: true,
-        status: true,
-        targetClientId: true,
-        createdAt: true,
-        updatedAt: true,
-      },
-    });
+    const [task] = await db
+      .select({
+        id: ExtensionTask.id,
+        taskType: ExtensionTask.taskType,
+        status: ExtensionTask.status,
+        targetClientId: ExtensionTask.targetClientId,
+        createdAt: ExtensionTask.createdAt,
+        updatedAt: ExtensionTask.updatedAt,
+      })
+      .from(ExtensionTask)
+      .where(and(eq(ExtensionTask.id, taskId), eq(ExtensionTask.userId, userId)))
+      .limit(1);
     return withCors(successResponse(task));
   } catch (error) {
     return withCors(errorResponse(error));

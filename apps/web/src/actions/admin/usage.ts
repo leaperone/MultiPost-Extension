@@ -1,7 +1,20 @@
 import { createServerFn } from '@tanstack/react-start';
+import { User } from '@db/schema/auth-schema';
+import { CreditUsage as CreditUsageTable } from '@db/schema/schema';
+import {
+  and,
+  count,
+  countDistinct,
+  desc,
+  eq,
+  ilike,
+  lt,
+  sum,
+  type SQL,
+} from 'drizzle-orm';
 import { z } from 'zod';
 
-import { multipostDb } from '../../lib/db';
+import { db } from '../../lib/db';
 import type { RespT } from '../../lib/request';
 import { getSession } from '../../lib/session';
 import { isAdmin } from '../admin';
@@ -56,6 +69,24 @@ function unauthorized<T>(data: T): RespT<T> {
   return { code: -1, msg: 'You are not an admin', data };
 }
 
+function andAll(conditions: (SQL | undefined)[]) {
+  const filtered = conditions.filter((condition): condition is SQL => Boolean(condition));
+  return filtered.length > 0 ? and(...filtered) : undefined;
+}
+
+function creditUsageWhere(data: z.infer<typeof getCreditUsagesSchema>) {
+  return andAll([
+    data.cursor ? lt(CreditUsageTable.id, data.cursor) : undefined,
+    data.userId ? eq(CreditUsageTable.userId, data.userId) : undefined,
+    data.type ? eq(CreditUsageTable.type, data.type) : undefined,
+    data.email ? ilike(User.email, `%${data.email}%`) : undefined,
+  ]);
+}
+
+function sumToNumber(value: string | null | undefined) {
+  return Number(value ?? 0);
+}
+
 export const getCreditUsages = createServerFn({ method: 'GET' })
   .validator(getCreditUsagesSchema)
   .handler(async ({ data }): Promise<RespT<GetCreditUsagesResult>> => {
@@ -63,42 +94,35 @@ export const getCreditUsages = createServerFn({ method: 'GET' })
     if (!session) return unauthorized({ creditUsages: [], count: 0 });
 
     const limit = data.limit ?? 20;
-    const where: {
-      id?: { lt: string };
-      userId?: string;
-      type?: string;
-      user?: { email: { contains: string; mode: 'insensitive' } };
-    } = {};
+    const where = creditUsageWhere(data);
 
-    if (data.cursor) where.id = { lt: data.cursor };
-    if (data.userId) where.userId = data.userId;
-    if (data.type) where.type = data.type;
-    if (data.email) {
-      where.user = {
-        email: {
-          contains: data.email,
-          mode: 'insensitive',
-        },
-      };
-    }
-
-    const [creditUsages, count] = await Promise.all([
-      multipostDb.creditUsage.findMany({
-        where,
-        orderBy: { createdAt: 'desc' },
-        take: limit,
-        include: {
+    const [creditUsages, countRows] = await Promise.all([
+      db
+        .select({
+          id: CreditUsageTable.id,
+          userId: CreditUsageTable.userId,
+          type: CreditUsageTable.type,
+          amount: CreditUsageTable.amount,
+          isFree: CreditUsageTable.isFree,
+          createdAt: CreditUsageTable.createdAt,
+          updatedAt: CreditUsageTable.updatedAt,
           user: {
-            select: {
-              id: true,
-              name: true,
-              email: true,
-              image: true,
-            },
+            id: User.id,
+            name: User.name,
+            email: User.email,
+            image: User.image,
           },
-        },
-      }),
-      multipostDb.creditUsage.count({ where }),
+        })
+        .from(CreditUsageTable)
+        .innerJoin(User, eq(CreditUsageTable.userId, User.id))
+        .where(where)
+        .orderBy(desc(CreditUsageTable.createdAt))
+        .limit(limit),
+      db
+        .select({ count: count() })
+        .from(CreditUsageTable)
+        .innerJoin(User, eq(CreditUsageTable.userId, User.id))
+        .where(where),
     ]);
 
     return {
@@ -109,13 +133,13 @@ export const getCreditUsages = createServerFn({ method: 'GET' })
           id: usage.id,
           userId: usage.userId,
           type: usage.type,
-          amount: usage.amount.toString(),
+          amount: usage.amount,
           isFree: usage.isFree,
           createdAt: usage.createdAt.toISOString(),
           updatedAt: usage.updatedAt.toISOString(),
           user: usage.user,
         })),
-        count,
+        count: countRows[0]?.count ?? 0,
         nextCursor: creditUsages.length === limit ? creditUsages[creditUsages.length - 1]?.id : undefined,
       },
     };
@@ -130,29 +154,26 @@ export const getCreditUsageStats = createServerFn({ method: 'GET' })
 
     const [totalUsageResult, freeUsageResult, paidUsageResult, uniqueUsersResult] =
       await Promise.all([
-        multipostDb.creditUsage.aggregate({ _sum: { amount: true } }),
-        multipostDb.creditUsage.aggregate({
-          where: { isFree: true },
-          _sum: { amount: true },
-        }),
-        multipostDb.creditUsage.aggregate({
-          where: { isFree: false },
-          _sum: { amount: true },
-        }),
-        multipostDb.creditUsage.groupBy({
-          by: ['userId'],
-          _count: { userId: true },
-        }),
+        db.select({ amount: sum(CreditUsageTable.amount) }).from(CreditUsageTable),
+        db
+          .select({ amount: sum(CreditUsageTable.amount) })
+          .from(CreditUsageTable)
+          .where(eq(CreditUsageTable.isFree, true)),
+        db
+          .select({ amount: sum(CreditUsageTable.amount) })
+          .from(CreditUsageTable)
+          .where(eq(CreditUsageTable.isFree, false)),
+        db.select({ count: countDistinct(CreditUsageTable.userId) }).from(CreditUsageTable),
       ]);
 
     return {
       code: 0,
       msg: 'success',
       data: {
-        totalUsage: Number(totalUsageResult._sum.amount ?? 0),
-        freeUsage: Number(freeUsageResult._sum.amount ?? 0),
-        paidUsage: Number(paidUsageResult._sum.amount ?? 0),
-        uniqueUsers: uniqueUsersResult.length,
+        totalUsage: sumToNumber(totalUsageResult[0]?.amount),
+        freeUsage: sumToNumber(freeUsageResult[0]?.amount),
+        paidUsage: sumToNumber(paidUsageResult[0]?.amount),
+        uniqueUsers: uniqueUsersResult[0]?.count ?? 0,
       },
     };
   });

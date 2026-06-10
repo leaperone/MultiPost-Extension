@@ -1,9 +1,10 @@
 import { createServerFn } from '@tanstack/react-start';
+import { PosterGeneration } from '@db/schema/schema';
+import { and, desc, eq, ne } from 'drizzle-orm';
 import { z } from 'zod';
 
-import { multipostDb } from '../../../lib/db';
+import { db } from '../../../lib/db';
 import { PRICING } from '@/src/actions/credit/types';
-import type { Prisma } from '@/prisma/client_multipost';
 import { deductCredit } from '../../credit/_core';
 import { getSession } from '../../../lib/session';
 import {
@@ -86,9 +87,10 @@ export const generatePoster = createServerFn({ method: 'POST' })
       const category = Category.find((item) => item.name === data.category);
       const isScrollytelling = category?.scene === 'scrollytelling';
 
-      const result = await multipostDb.$transaction(async (tx) => {
-        const created = await tx.posterGeneration.create({
-          data: {
+      const result = await db.transaction(async (tx) => {
+        const [created] = await tx
+          .insert(PosterGeneration)
+          .values({
             userId: session.user.id,
             prompt: finalPrompt,
             status: PosterGenerationStatus.PENDING,
@@ -96,8 +98,12 @@ export const generatePoster = createServerFn({ method: 'POST' })
             height: data.height,
             model: data.model,
             systemPrompt: category?.systemPrompt,
-          },
-        });
+          })
+          .returning();
+
+        if (!created) {
+          throw new Error('Failed to create poster generation');
+        }
 
         const bodyData: Record<string, unknown> = {
           name: created.id,
@@ -131,14 +137,15 @@ export const generatePoster = createServerFn({ method: 'POST' })
           if (!responseData.success) {
             throw new Error(responseData.error);
           }
-          await tx.posterGeneration.update({
-            where: { id: created.id },
-            data: {
+          await tx
+            .update(PosterGeneration)
+            .set({
               taskId: responseData.task.id,
               status: responseData.task.status,
               urls: responseData.urls,
-            },
-          });
+              updatedAt: new Date(),
+            })
+            .where(eq(PosterGeneration.id, created.id));
         } else {
           throw new Error(responseData.error);
         }
@@ -165,9 +172,11 @@ export const getPosterGeneration = createServerFn({ method: 'GET' })
       if (!session?.user?.id) {
         throw new Error('Unauthorized');
       }
-      const result = await multipostDb.posterGeneration.findUnique({
-        where: { id: data.id, userId: session.user.id },
-      });
+      const [result] = await db
+        .select()
+        .from(PosterGeneration)
+        .where(and(eq(PosterGeneration.id, data.id), eq(PosterGeneration.userId, session.user.id)))
+        .limit(1);
 
       if (!result) {
         throw new Error('Poster generation not found');
@@ -195,20 +204,15 @@ export const getPosterGenerations = createServerFn({ method: 'GET' })
         throw new Error('Unauthorized');
       }
 
-      const where: Prisma.PosterGenerationWhereInput = {
-        userId: session.user.id,
-      };
-
-      if (data.status !== 'all') {
-        where.status = data.status;
-      }
-
-      const result = await multipostDb.posterGeneration.findMany({
-        where,
-        orderBy: {
-          createdAt: 'desc',
-        },
-      });
+      const result = await db
+        .select()
+        .from(PosterGeneration)
+        .where(
+          data.status !== 'all'
+            ? and(eq(PosterGeneration.userId, session.user.id), eq(PosterGeneration.status, data.status))
+            : eq(PosterGeneration.userId, session.user.id),
+        )
+        .orderBy(desc(PosterGeneration.createdAt));
 
       return {
         success: true,
@@ -231,9 +235,11 @@ export const getIframeUrl = createServerFn({ method: 'POST' })
       if (!session?.user?.id) {
         throw new Error('Unauthorized');
       }
-      const result = await multipostDb.posterGeneration.findUnique({
-        where: { id: data.id, userId: session.user.id },
-      });
+      const [result] = await db
+        .select()
+        .from(PosterGeneration)
+        .where(and(eq(PosterGeneration.id, data.id), eq(PosterGeneration.userId, session.user.id)))
+        .limit(1);
 
       if (!result) {
         throw new Error('Poster generation not found');
@@ -276,10 +282,14 @@ export const getIframeUrl = createServerFn({ method: 'POST' })
       }
 
       const expiresAt = new Date(now.getTime() + 60 * 24 * 60 * 60 * 1000);
-      await multipostDb.posterGeneration.update({
-        where: { id: data.id },
-        data: { seedeToken: responseData.token, seedeTokenExpiresAt: expiresAt },
-      });
+      await db
+        .update(PosterGeneration)
+        .set({
+          seedeToken: responseData.token,
+          seedeTokenExpiresAt: expiresAt,
+          updatedAt: new Date(),
+        })
+        .where(eq(PosterGeneration.id, data.id));
 
       return {
         success: true,
@@ -307,9 +317,11 @@ export const updatePosterGeneration = createServerFn({ method: 'POST' })
         throw new Error('Unauthorized');
       }
 
-      const result = await multipostDb.posterGeneration.findUnique({
-        where: { id: data.id, userId: session.user.id },
-      });
+      const [result] = await db
+        .select()
+        .from(PosterGeneration)
+        .where(and(eq(PosterGeneration.id, data.id), eq(PosterGeneration.userId, session.user.id)))
+        .limit(1);
 
       if (!result) {
         throw new Error('Poster generation not found');
@@ -343,18 +355,25 @@ export const updatePosterGeneration = createServerFn({ method: 'POST' })
       }
 
       if (responseData.task.status === 'completed') {
-        const updated = await multipostDb.posterGeneration.updateMany({
-          where: { id: result.id, status: { not: PosterGenerationStatus.COMPLETED } },
-          data: {
+        const updated = await db
+          .update(PosterGeneration)
+          .set({
             status: PosterGenerationStatus.COMPLETED,
             urls: responseData.task.metadata.urls,
             lastImageUrl: responseData.task.metadata.urls.image,
             projectId: responseData.task.project_id,
             taskId: responseData.task.task_id,
-          },
-        });
+            updatedAt: new Date(),
+          })
+          .where(
+            and(
+              eq(PosterGeneration.id, result.id),
+              ne(PosterGeneration.status, PosterGenerationStatus.COMPLETED),
+            ),
+          )
+          .returning({ id: PosterGeneration.id });
 
-        if (updated.count > 0) {
+        if (updated.length > 0) {
           try {
             await deductCredit({
               userId: result.userId,
@@ -366,9 +385,11 @@ export const updatePosterGeneration = createServerFn({ method: 'POST' })
           }
         }
 
-        const latest = await multipostDb.posterGeneration.findUnique({
-          where: { id: result.id },
-        });
+        const [latest] = await db
+          .select()
+          .from(PosterGeneration)
+          .where(eq(PosterGeneration.id, result.id))
+          .limit(1);
 
         return {
           success: true,
@@ -398,10 +419,11 @@ export const updatePosterGeneration = createServerFn({ method: 'POST' })
         updateData.status = PosterGenerationStatus.FAILED;
       }
 
-      const updated = await multipostDb.posterGeneration.update({
-        where: { id: result.id },
-        data: updateData,
-      });
+      const [updated] = await db
+        .update(PosterGeneration)
+        .set({ ...updateData, updatedAt: new Date() })
+        .where(eq(PosterGeneration.id, result.id))
+        .returning();
 
       return {
         success: true,
@@ -574,9 +596,11 @@ export const getTaskHtml = createServerFn({ method: 'GET' })
         throw new Error('Unauthorized');
       }
 
-      const result = await multipostDb.posterGeneration.findUnique({
-        where: { id: data.id, userId: session.user.id },
-      });
+      const [result] = await db
+        .select()
+        .from(PosterGeneration)
+        .where(and(eq(PosterGeneration.id, data.id), eq(PosterGeneration.userId, session.user.id)))
+        .limit(1);
 
       if (!result) {
         throw new Error('Poster generation not found');
@@ -609,23 +633,23 @@ export const listAllPosters = createServerFn({ method: 'GET' }).handler(async ()
     if (!session?.user?.id) {
       throw new Error('Unauthorized');
     }
-    const result = await multipostDb.posterGeneration.findMany({
-      where: {
-        userId: session.user.id,
-        status: PosterGenerationStatus.COMPLETED,
-      },
-      orderBy: {
-        createdAt: 'desc',
-      },
-      select: {
-        id: true,
-        prompt: true,
-        taskId: true,
-        projectId: true,
-        createdAt: true,
-        lastImageUrl: true,
-      },
-    });
+    const result = await db
+      .select({
+        id: PosterGeneration.id,
+        prompt: PosterGeneration.prompt,
+        taskId: PosterGeneration.taskId,
+        projectId: PosterGeneration.projectId,
+        createdAt: PosterGeneration.createdAt,
+        lastImageUrl: PosterGeneration.lastImageUrl,
+      })
+      .from(PosterGeneration)
+      .where(
+        and(
+          eq(PosterGeneration.userId, session.user.id),
+          eq(PosterGeneration.status, PosterGenerationStatus.COMPLETED),
+        ),
+      )
+      .orderBy(desc(PosterGeneration.createdAt));
     return {
       success: true,
       data: result,

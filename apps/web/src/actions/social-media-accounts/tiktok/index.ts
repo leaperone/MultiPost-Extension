@@ -1,8 +1,10 @@
 import { createServerFn } from '@tanstack/react-start';
+import { SocialMediaAccount } from '@db/schema/schema';
+import { and, desc, eq } from 'drizzle-orm';
 import { nanoid } from 'nanoid';
 import { z } from 'zod';
 
-import { prisma } from '../../../lib/db';
+import { db } from '../../../lib/db';
 import { getSession } from '../../../lib/session';
 import { generateTikTokAuthUrl, refreshTikTokToken, revokeTikTokToken } from './oauth';
 
@@ -16,16 +18,17 @@ export const getTikTokAccounts = createServerFn({ method: 'GET' }).handler(async
     throw new Error('Unauthorized');
   }
 
-  return await prisma.socialMediaAccount.findMany({
-    where: {
-      userId: session.user.id,
-      platform: 'tiktok',
-      isActive: true,
-    },
-    orderBy: {
-      createdAt: 'desc',
-    },
-  });
+  return await db
+    .select()
+    .from(SocialMediaAccount)
+    .where(
+      and(
+        eq(SocialMediaAccount.userId, session.user.id),
+        eq(SocialMediaAccount.platform, 'tiktok'),
+        eq(SocialMediaAccount.isActive, true),
+      ),
+    )
+    .orderBy(desc(SocialMediaAccount.createdAt));
 });
 
 export const disconnectTikTokAccount = createServerFn({ method: 'POST' })
@@ -36,13 +39,17 @@ export const disconnectTikTokAccount = createServerFn({ method: 'POST' })
       throw new Error('Unauthorized');
     }
 
-    const account = await prisma.socialMediaAccount.findFirst({
-      where: {
-        id: data.accountId,
-        userId: session.user.id,
-        platform: 'tiktok',
-      },
-    });
+    const [account] = await db
+      .select()
+      .from(SocialMediaAccount)
+      .where(
+        and(
+          eq(SocialMediaAccount.id, data.accountId),
+          eq(SocialMediaAccount.userId, session.user.id),
+          eq(SocialMediaAccount.platform, 'tiktok'),
+        ),
+      )
+      .limit(1);
 
     if (!account) {
       throw new Error('TikTok account not found');
@@ -54,13 +61,13 @@ export const disconnectTikTokAccount = createServerFn({ method: 'POST' })
       console.error('Failed to revoke TikTok token:', error);
     }
 
-    await prisma.socialMediaAccount.update({
-      where: { id: data.accountId },
-      data: {
+    await db
+      .update(SocialMediaAccount)
+      .set({
         isActive: false,
         updatedAt: new Date(),
-      },
-    });
+      })
+      .where(eq(SocialMediaAccount.id, data.accountId));
 
     // Client caller invalidates /dashboard/settings/social-media-accounts after mutation.
   });
@@ -73,14 +80,18 @@ export const refreshTikTokAccountToken = createServerFn({ method: 'POST' })
       throw new Error('Unauthorized');
     }
 
-    const account = await prisma.socialMediaAccount.findFirst({
-      where: {
-        id: data.accountId,
-        userId: session.user.id,
-        platform: 'tiktok',
-        isActive: true,
-      },
-    });
+    const [account] = await db
+      .select()
+      .from(SocialMediaAccount)
+      .where(
+        and(
+          eq(SocialMediaAccount.id, data.accountId),
+          eq(SocialMediaAccount.userId, session.user.id),
+          eq(SocialMediaAccount.platform, 'tiktok'),
+          eq(SocialMediaAccount.isActive, true),
+        ),
+      )
+      .limit(1);
 
     if (!account || !account.refreshToken) {
       throw new Error('TikTok account not found or no refresh token available');
@@ -90,17 +101,17 @@ export const refreshTikTokAccountToken = createServerFn({ method: 'POST' })
       const tokenData = await refreshTikTokToken(account.refreshToken);
       const expiresAt = new Date(Date.now() + tokenData.expires_in * 1000);
 
-      await prisma.socialMediaAccount.update({
-        where: { id: data.accountId },
-        data: {
+      await db
+        .update(SocialMediaAccount)
+        .set({
           accessToken: tokenData.access_token,
           refreshToken: tokenData.refresh_token,
           tokenType: tokenData.token_type,
           scope: tokenData.scope,
           expiresAt,
           updatedAt: new Date(),
-        },
-      });
+        })
+        .where(eq(SocialMediaAccount.id, data.accountId));
 
       // Client caller invalidates /dashboard/settings/social-media-accounts after mutation.
       return { success: true };
@@ -118,14 +129,22 @@ export const getTikTokAccountById = createServerFn({ method: 'GET' })
       throw new Error('Unauthorized');
     }
 
-    return await prisma.socialMediaAccount.findFirst({
-      where: {
-        id: data.accountId,
-        userId: session.user.id,
-        platform: 'tiktok',
-        isActive: true,
-      },
-    });
+    return (
+      (
+        await db
+          .select()
+          .from(SocialMediaAccount)
+          .where(
+            and(
+              eq(SocialMediaAccount.id, data.accountId),
+              eq(SocialMediaAccount.userId, session.user.id),
+              eq(SocialMediaAccount.platform, 'tiktok'),
+              eq(SocialMediaAccount.isActive, true),
+            ),
+          )
+          .limit(1)
+      )[0] ?? null
+    );
   });
 
 export const initiateTikTokAuth = createServerFn({ method: 'POST' }).handler(async () => {

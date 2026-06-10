@@ -1,7 +1,9 @@
 import { createServerFn } from '@tanstack/react-start';
+import { PromotionTask } from '@db/schema/schema';
+import { desc } from 'drizzle-orm';
 import { z } from 'zod';
 
-import { multipostDb } from '../../lib/db';
+import { db } from '../../lib/db';
 import { getSession } from '../../lib/session';
 import { isAdmin } from '../admin';
 import type { ClientPromotionTask } from '../activity';
@@ -21,28 +23,28 @@ export const getAdminPromotionTasks = createServerFn({ method: 'GET' })
     const session = await requireAdmin();
     if (!session) return [];
 
-    const tasks = await multipostDb.promotionTask.findMany({
-      orderBy: {
-        createdAt: 'desc',
-      },
-      select: {
-        id: true,
-        userId: true,
-        taskType: true,
-        title: true,
-        description: true,
-        link: true,
-        keywords: true,
-        examples: true,
-        expiredAt: true,
-        createdAt: true,
-        updatedAt: true,
-        reward: true,
-      },
-    });
+    const tasks = await db
+      .select({
+        id: PromotionTask.id,
+        userId: PromotionTask.userId,
+        taskType: PromotionTask.taskType,
+        title: PromotionTask.title,
+        description: PromotionTask.description,
+        link: PromotionTask.link,
+        keywords: PromotionTask.keywords,
+        examples: PromotionTask.examples,
+        expiredAt: PromotionTask.expiredAt,
+        createdAt: PromotionTask.createdAt,
+        updatedAt: PromotionTask.updatedAt,
+        reward: PromotionTask.reward,
+      })
+      .from(PromotionTask)
+      .orderBy(desc(PromotionTask.createdAt));
 
     return tasks.map((task) => ({
       ...task,
+      keywords: task.keywords ?? [],
+      examples: task.examples ?? [],
       reward: task.reward.toString(),
       expiredAt: task.expiredAt.toISOString(),
       createdAt: task.createdAt.toISOString(),

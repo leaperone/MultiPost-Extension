@@ -1,9 +1,11 @@
 import { createFileRoute } from '@tanstack/react-router';
 
 import { cdnUrl, getEndPoint } from '@/lib/bitiful';
+import { FileHosting } from '@db/schema/schema';
+import { eq, sql } from 'drizzle-orm';
 
 import { preflightResponse, withCors } from '../../../../../lib/cors';
-import { multipostDb } from '../../../../../lib/db';
+import { db } from '../../../../../lib/db';
 import { errorResp, successResp } from '../../../../../lib/request';
 import { fileMetadata, initFile, optionalFileAuth } from '../-common';
 
@@ -41,10 +43,14 @@ async function GET({ request, params }: { request: Request; params: { id: string
 
     url = cdnUrl(url);
 
-    await multipostDb.fileHosting.update({
-      where: { id: fileId },
-      data: { times: { increment: 1 }, previewUrl: url },
-    });
+    await db
+      .update(FileHosting)
+      .set({
+        times: sql`${FileHosting.times} + 1`,
+        previewUrl: url,
+        updatedAt: new Date(),
+      })
+      .where(eq(FileHosting.id, fileId));
 
     return withCors(
       successResp({

@@ -1,4 +1,4 @@
-import { PrismaClient } from './prisma/client_multipost_deno/client.ts';
+import { createWorkerDb } from './db.ts';
 import { TranscriptionWorker } from './worker/transcription.worker.ts';
 import { getConfig, validateConfig } from './config.ts';
 import { logger } from './utils/logger.ts';
@@ -22,13 +22,12 @@ async function main() {
     logger.debug('Configuration loaded:');
     logger.debug(`  - Temp dir: ${config.tempDir}`);
     logger.debug(`  - Max file size: ${(config.maxFileSize / 1024 / 1024).toFixed(2)} MB`);
-    logger.debug(`  - Video extract API: ${config.videoExtractApiUrl}`);
     logger.debug(`  - STT API: ${config.sttApiUrl}`);
     logger.success('✓ Configuration validated');
 
     // Initialize database connection
     logger.emoji('🔌', 'Connecting to database...');
-    const db = new PrismaClient();
+    const { db } = createWorkerDb();
     logger.success('✓ Database connected');
 
     // Initialize worker

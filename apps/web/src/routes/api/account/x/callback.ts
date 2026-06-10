@@ -1,11 +1,12 @@
 import { createFileRoute } from '@tanstack/react-router';
+import { SocialMediaAccount } from '@db/schema/schema';
 
 import {
   exchangeCodeForToken,
   getXUserInfo,
   validateRequiredScopes,
 } from '../../../../actions/social-media-accounts/x/oauth';
-import { prisma } from '../../../../lib/db';
+import { db } from '../../../../lib/db';
 import { redirectToSettings, requireOAuthSession } from '../-oauth';
 
 export const Route = createFileRoute('/api/account/x/callback')({
@@ -50,35 +51,17 @@ async function GET({ request }: { request: Request }) {
     const userInfo = await getXUserInfo(tokenData.access_token);
     const expiresAt = new Date(Date.now() + (tokenData.expires_in || 7200) * 1000);
 
-    await prisma.socialMediaAccount.upsert({
-      where: {
-        userId_platform_platformId: {
-          userId: session.user.id,
-          platform: 'x',
-          platformId: userInfo.id,
-        },
-      },
-      update: {
-        accessToken: tokenData.access_token,
-        refreshToken: tokenData.refresh_token,
-        tokenType: tokenData.token_type,
-        scope: tokenData.scope,
-        expiresAt,
-        username: userInfo.username,
-        displayName: userInfo.name,
-        avatarUrl: userInfo.profile_image_url,
-        description: userInfo.description,
-        isActive: true,
-        metadata: {
-          verified: userInfo.verified,
-          followers_count: userInfo.followers_count,
-          following_count: userInfo.following_count,
-          tweet_count: userInfo.tweet_count,
-          listed_count: userInfo.listed_count,
-        },
-        updatedAt: new Date(),
-      },
-      create: {
+    const metadata = {
+      verified: userInfo.verified ?? null,
+      followers_count: userInfo.followers_count ?? null,
+      following_count: userInfo.following_count ?? null,
+      tweet_count: userInfo.tweet_count ?? null,
+      listed_count: userInfo.listed_count ?? null,
+    };
+
+    await db
+      .insert(SocialMediaAccount)
+      .values({
         userId: session.user.id,
         platform: 'x',
         platformId: userInfo.id,
@@ -92,15 +75,29 @@ async function GET({ request }: { request: Request }) {
         avatarUrl: userInfo.profile_image_url,
         description: userInfo.description,
         isActive: true,
-        metadata: {
-          verified: userInfo.verified,
-          followers_count: userInfo.followers_count,
-          following_count: userInfo.following_count,
-          tweet_count: userInfo.tweet_count,
-          listed_count: userInfo.listed_count,
+        metadata,
+      })
+      .onConflictDoUpdate({
+        target: [
+          SocialMediaAccount.userId,
+          SocialMediaAccount.platform,
+          SocialMediaAccount.platformId,
+        ],
+        set: {
+          accessToken: tokenData.access_token,
+          refreshToken: tokenData.refresh_token,
+          tokenType: tokenData.token_type,
+          scope: tokenData.scope,
+          expiresAt,
+          username: userInfo.username,
+          displayName: userInfo.name,
+          avatarUrl: userInfo.profile_image_url,
+          description: userInfo.description,
+          isActive: true,
+          metadata,
+          updatedAt: new Date(),
         },
-      },
-    });
+      });
 
     return redirectToSettings(request, '?success=x_connected');
   } catch (error) {

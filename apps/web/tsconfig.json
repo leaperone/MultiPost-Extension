@@ -10,13 +10,14 @@
     "esModuleInterop": true,
     "module": "esnext",
     "moduleResolution": "bundler",
+    "allowImportingTsExtensions": true,
     "resolveJsonModule": true,
     "isolatedModules": true,
     "jsx": "react-jsx",
     "incremental": true,
     "paths": {
       "collections/*": ["./.source/*"],
-      "@/prisma/*": ["../../prisma/*"],
+      "@db/*": ["../../db/*"],
       "@/src/*": ["./src/*"],
       "@/*": ["./*"]
     }

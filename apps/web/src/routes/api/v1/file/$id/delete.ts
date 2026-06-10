@@ -1,9 +1,11 @@
 import { createFileRoute } from '@tanstack/react-router';
 
 import { deleteObject } from '@/lib/bitiful';
+import { FileHosting } from '@db/schema/schema';
+import { eq } from 'drizzle-orm';
 
 import { preflightResponse, withCors } from '../../../../../lib/cors';
-import { multipostDb } from '../../../../../lib/db';
+import { db } from '../../../../../lib/db';
 import { errorResp, successResp } from '../../../../../lib/request';
 import { initFile, optionalFileAuth } from '../-common';
 
@@ -36,19 +38,21 @@ async function POST({ request, params }: { request: Request; params: { id: strin
 
     await deleteObject(file.key);
 
-    const updatedFile = await multipostDb.fileHosting.update({
-      where: { id: fileId },
-      data: {
+    const [updatedFile] = await db
+      .update(FileHosting)
+      .set({
         deletedAt: new Date(),
         previewUrl: null,
-      },
-    });
+        updatedAt: new Date(),
+      })
+      .where(eq(FileHosting.id, fileId))
+      .returning();
 
     return withCors(
       successResp({
         fileId,
         message: 'File deleted successfully',
-        deletedAt: updatedFile.deletedAt,
+        deletedAt: updatedFile?.deletedAt,
         filename: file.filename,
       }),
     );

@@ -1,12 +1,23 @@
 import { passkey } from '@better-auth/passkey';
-import { Decimal } from '@prisma/client/runtime/library';
+import { fromDecimal } from '@db/helpers';
+import {
+  BetterAuthAccount,
+  BetterAuthPasskey,
+  BetterAuthSession,
+  BetterAuthVerification,
+  User,
+} from '@db/schema/auth-schema';
+import { RechargeCredit } from '@db/schema/schema';
 import { betterAuth } from 'better-auth';
-import { prismaAdapter } from 'better-auth/adapters/prisma';
+import { drizzleAdapter } from 'better-auth/adapters/drizzle';
 import { magicLink } from 'better-auth/plugins';
 import { tanstackStartCookies } from 'better-auth/tanstack-start';
+import Decimal from 'decimal.js';
+import { and, eq, isNull } from 'drizzle-orm';
 import { nanoid } from 'nanoid';
 
 import { RechargeStatus, RechargeType } from '@/src/actions/credit/types';
+import { addCreditInTransaction } from '@/src/actions/credit/_core';
 import { sendVerificationRequest as sendVerificationRequestDev } from '@/lib/devauth';
 import { sendVerificationRequest as sendVerificationRequestMailgun } from '@/lib/mailgun';
 import type { SigninMethod } from '@/lib/posthog/events';
@@ -16,7 +27,8 @@ import {
   trackUserCreatedServer,
 } from '@/lib/posthog/server-events';
 
-import { prisma } from './db';
+import { db } from './db';
+import { isUniqueConstraintError } from './dbErrors';
 
 const AUTH_BASE_PATH = '/api/auth';
 const createdUserByContext = new WeakMap<object, string>();
@@ -177,55 +189,47 @@ function hasVerifiedEmail(user: Record<string, unknown>) {
   return user.emailVerified === true || user.emailVerifiedBool === true;
 }
 
-function isUniqueConstraintError(error: unknown) {
-  return (
-    typeof error === 'object' &&
-    error !== null &&
-    'code' in error &&
-    (error as { code?: unknown }).code === 'P2002'
-  );
-}
-
 async function grantCreditOnce(userId: string, type: RechargeType, amount: Decimal) {
   const orderId = `AUTH-${type}-${userId}`;
 
   try {
-    return await prisma.$transaction(async (tx) => {
-      const existing = await tx.rechargeCredit.findFirst({
-        where: {
-          userId,
-          type,
-          status: RechargeStatus.SUCCESS,
-        },
-        select: { id: true },
-      });
+    return await db.transaction(async (tx) => {
+      const [existing] = await tx
+        .select({ id: RechargeCredit.id })
+        .from(RechargeCredit)
+        .where(
+          and(
+            eq(RechargeCredit.userId, userId),
+            eq(RechargeCredit.type, type),
+            eq(RechargeCredit.status, RechargeStatus.SUCCESS),
+          ),
+        )
+        .limit(1);
 
       if (existing) {
         return false;
       }
 
-      await tx.rechargeCredit.create({
-        data: {
+      const [created] = await tx
+        .insert(RechargeCredit)
+        .values({
           userId,
-          amount,
+          amount: fromDecimal(amount),
           orderId,
           type,
           status: RechargeStatus.SUCCESS,
-        },
-      });
+        })
+        .onConflictDoNothing({ target: RechargeCredit.orderId })
+        .returning({ id: RechargeCredit.id });
 
-      await tx.credit.upsert({
-        where: { userId },
-        update: {
-          credits: { increment: new Decimal(0) },
-          freeCredits: { increment: amount },
-        },
-        create: {
-          userId,
-          credits: new Decimal(0),
-          freeCredits: amount,
-        },
-      });
+      if (!created) {
+        return false;
+      }
+
+      const result = await addCreditInTransaction(tx, userId, amount, true);
+      if (!result.success) {
+        throw new Error(result.error || 'Failed to grant auth credit');
+      }
 
       return true;
     });
@@ -240,14 +244,23 @@ async function grantCreditOnce(userId: string, type: RechargeType, amount: Decim
 const baseURL = authBaseURL();
 const origin = new URL(baseURL).origin;
 const rpID = new URL(baseURL).hostname;
+const authSchemaMap = {
+  User,
+  BetterAuthSession,
+  BetterAuthAccount,
+  BetterAuthVerification,
+  BetterAuthPasskey,
+};
 
 export const auth = betterAuth({
   appName: 'MultiPost',
   baseURL,
   basePath: AUTH_BASE_PATH,
   secret: authSecret(),
-  database: prismaAdapter(prisma, {
-    provider: 'postgresql',
+  database: drizzleAdapter(db, {
+    provider: 'pg',
+    schema: authSchemaMap,
+    transaction: true,
   }),
   advanced: {
     database: {
@@ -320,15 +333,10 @@ export const auth = betterAuth({
           }
 
           if (hasVerifiedEmail(user)) {
-            await prisma.user.updateMany({
-              where: {
-                id: user.id,
-                emailVerified: null,
-              },
-              data: {
-                emailVerified: new Date(),
-              },
-            });
+            await db
+              .update(User)
+              .set({ emailVerified: new Date() })
+              .where(and(eq(User.id, user.id), isNull(User.emailVerified)));
           }
 
           await grantCreditOnce(user.id, RechargeType.SIGNUP, new Decimal(0.5));
@@ -344,15 +352,10 @@ export const auth = betterAuth({
             return;
           }
 
-          await prisma.user.updateMany({
-            where: {
-              id: user.id,
-              emailVerified: null,
-            },
-            data: {
-              emailVerified: new Date(),
-            },
-          });
+          await db
+            .update(User)
+            .set({ emailVerified: new Date() })
+            .where(and(eq(User.id, user.id), isNull(User.emailVerified)));
         },
       },
     },

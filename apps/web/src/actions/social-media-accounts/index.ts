@@ -1,7 +1,9 @@
 import { createServerFn } from '@tanstack/react-start';
+import { SocialMediaAccount } from '@db/schema/schema';
+import { and, asc, desc, eq, ne } from 'drizzle-orm';
 import { z } from 'zod';
 
-import { multipostDb } from '../../lib/db';
+import { db } from '../../lib/db';
 import { getSession } from '../../lib/session';
 
 const platformAccountSchema = z.object({
@@ -22,16 +24,17 @@ export const getSocialMediaAccounts = createServerFn({ method: 'GET' }).handler(
       };
     }
 
-    const accounts = await multipostDb.socialMediaAccount.findMany({
-      where: {
-        userId: session.user.id,
-        platform: {
-          not: 'facebook',
-        },
-        isActive: true,
-      },
-      orderBy: [{ platform: 'asc' }, { createdAt: 'desc' }],
-    });
+    const accounts = await db
+      .select()
+      .from(SocialMediaAccount)
+      .where(
+        and(
+          eq(SocialMediaAccount.userId, session.user.id),
+          ne(SocialMediaAccount.platform, 'facebook'),
+          eq(SocialMediaAccount.isActive, true),
+        ),
+      )
+      .orderBy(asc(SocialMediaAccount.platform), desc(SocialMediaAccount.createdAt));
 
     return {
       success: true,
@@ -54,20 +57,23 @@ export const getSocialMediaAccountByPlatformId = createServerFn({ method: 'GET' 
     }
 
     try {
-      const account = await multipostDb.socialMediaAccount.findFirst({
-        where: {
-          userId: session.user.id,
-          platform: data.platform,
-          platformId: data.platformId,
-        },
-        select: {
-          id: true,
-          platform: true,
-          platformId: true,
-          displayName: true,
-          username: true,
-        },
-      });
+      const [account = null] = await db
+        .select({
+          id: SocialMediaAccount.id,
+          platform: SocialMediaAccount.platform,
+          platformId: SocialMediaAccount.platformId,
+          displayName: SocialMediaAccount.displayName,
+          username: SocialMediaAccount.username,
+        })
+        .from(SocialMediaAccount)
+        .where(
+          and(
+            eq(SocialMediaAccount.userId, session.user.id),
+            eq(SocialMediaAccount.platform, data.platform),
+            eq(SocialMediaAccount.platformId, data.platformId),
+          ),
+        )
+        .limit(1);
 
       return {
         success: true,

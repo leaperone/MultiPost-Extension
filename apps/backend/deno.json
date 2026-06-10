@@ -1,12 +1,21 @@
 {
+  "nodeModulesDir": "auto",
   "tasks": {
     "dev": "npx dotenv -e .env -- deno run -A --watch main.ts",
-    "start": "npx dotenv -e .env -- deno run -A main.ts"
+    "start": "npx dotenv -e .env -- deno run -A main.ts",
+    "check": "deno check main.ts"
   },
   "imports": {
-    "@prisma/client": "npm:@prisma/client@^6.13.0",
+    "@db/": "../../db/",
+    "@paralleldrive/cuid2": "npm:@paralleldrive/cuid2@2.2.2",
     "@std/assert": "jsr:@std/assert@1",
+    "decimal.js": "npm:decimal.js@10.5.0",
     "dotenv-cli": "npm:dotenv-cli@^8.0.0",
+    "drizzle-orm": "npm:drizzle-orm@0.45.2",
+    "drizzle-orm/node-postgres": "npm:drizzle-orm@0.45.2/node-postgres",
+    "drizzle-orm/pg-core": "npm:drizzle-orm@0.45.2/pg-core",
+    "drizzle-orm/relations": "npm:drizzle-orm@0.45.2/relations",
+    "pg": "npm:pg@8.21.0",
     "zod": "npm:zod@^3.25.76"
   }
 }

@@ -1,4 +1,6 @@
 import { createFileRoute } from '@tanstack/react-router';
+import { Draft, ExtensionClient, ExtensionTask } from '@db/schema/schema';
+import { and, asc, eq, isNull } from 'drizzle-orm';
 import { nanoid } from 'nanoid';
 import { z } from 'zod';
 
@@ -6,9 +8,8 @@ import { BASE_URL } from '@/lib/constants';
 
 import { authKey } from '../../../lib/authKey';
 import { preflightResponse, withCors } from '../../../lib/cors';
+import { db } from '../../../lib/db';
 import { DraftPostData, SchedulePublishPostData, TaskStatus, TaskType } from './-types';
-
-type PrismaDb = typeof import('../../../lib/db')['prisma'];
 
 const schema = z.object({
   extensionClientId: z.string().optional(),
@@ -25,16 +26,12 @@ export const Route = createFileRoute('/api/extension/ping')({
   },
 });
 
-async function taskNeedToHandle(prisma: PrismaDb, targetClientId: string) {
-  const tasks = await prisma.extensionTask.findMany({
-    where: {
-      targetClientId,
-      status: TaskStatus.PENDING,
-    },
-    orderBy: {
-      createdAt: 'asc',
-    },
-  });
+async function taskNeedToHandle(targetClientId: string) {
+  const tasks = await db
+    .select()
+    .from(ExtensionTask)
+    .where(and(eq(ExtensionTask.targetClientId, targetClientId), eq(ExtensionTask.status, TaskStatus.PENDING)))
+    .orderBy(asc(ExtensionTask.createdAt));
 
   for (const task of tasks) {
     if (task.taskType === TaskType.PUBLISH_POST) {
@@ -50,9 +47,7 @@ async function taskNeedToHandle(prisma: PrismaDb, targetClientId: string) {
 
     if (task.taskType === TaskType.DRAFT_POST) {
       const draftPostData = task.taskData as unknown as DraftPostData;
-      const draft = await prisma.draft.findUnique({
-        where: { id: draftPostData.draftId },
-      });
+      const [draft] = await db.select().from(Draft).where(eq(Draft.id, draftPostData.draftId)).limit(1);
       if (draft && draftPostData.timestamp <= Date.now() + 10 * 60 * 1000) {
         return task;
       }
@@ -74,37 +69,41 @@ async function POST({ request }: { request: Request }) {
   }
 
   try {
-    const { prisma } = await import('../../../lib/db');
     const body = await request.json();
     const { extensionClientId, platformInfos, extensionVersion } = schema.parse(body);
 
     if (!extensionClientId) {
-      const newClient = await prisma.extensionClient.create({
-        data: {
+      const [newClient] = await db
+        .insert(ExtensionClient)
+        .values({
           userId,
           name: `New Client ${nanoid(8)}`,
           platformInfos: {},
           extensionVersion,
-        },
-      });
+        })
+        .returning();
       return withCors(
         Response.json({
           success: true,
           data: {
             action: 'NEW_CLIENT',
-            clientId: newClient.id,
+            clientId: newClient?.id,
           },
         }),
       );
     }
 
-    const client = await prisma.extensionClient.findUnique({
-      where: {
-        id: extensionClientId,
-        userId,
-        deletedAt: null,
-      },
-    });
+    const [client] = await db
+      .select()
+      .from(ExtensionClient)
+      .where(
+        and(
+          eq(ExtensionClient.id, extensionClientId),
+          eq(ExtensionClient.userId, userId),
+          isNull(ExtensionClient.deletedAt),
+        ),
+      )
+      .limit(1);
     if (!client) {
       return withCors(
         Response.json({
@@ -114,26 +113,23 @@ async function POST({ request }: { request: Request }) {
       );
     }
 
-    await prisma.extensionClient.update({
-      where: {
-        id: extensionClientId,
-      },
-      data: {
+    await db
+      .update(ExtensionClient)
+      .set({
         extensionVersion,
         updatedAt: new Date(),
-      },
-    });
+      })
+      .where(eq(ExtensionClient.id, extensionClientId));
 
     if (platformInfos) {
-      await prisma.extensionClient.update({
-        where: {
-          id: extensionClientId,
-        },
-        data: {
+      await db
+        .update(ExtensionClient)
+        .set({
           extensionVersion,
           platformInfos,
-        },
-      });
+          updatedAt: new Date(),
+        })
+        .where(eq(ExtensionClient.id, extensionClientId));
       return withCors(
         Response.json({
           success: true,
@@ -144,7 +140,7 @@ async function POST({ request }: { request: Request }) {
       );
     }
 
-    const task = await taskNeedToHandle(prisma, extensionClientId);
+    const task = await taskNeedToHandle(extensionClientId);
 
     if (task) {
       return withCors(

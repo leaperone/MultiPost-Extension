@@ -59,11 +59,20 @@ export function createSentryOptions({ runtime }: SentryRuntimeOptions) {
     sendDefaultPii: false,
     // issue #259: silence only extension-*probe* timeouts (env check). User-initiated
     // actions (PUBLISH, LINK_EXTENSION, OPEN_OPTIONS) keep reporting so real failures stay visible.
-    // issue #258: silence Prisma "can't reach database" — transient infrastructure,
-    // not application bugs. Caught at the data-access layer where possible; this is the safety net.
+    // issue #258: silence transient database connectivity failures. Caught at the
+    // data-access layer where possible; this is the safety net.
     ignoreErrors: [
       /^Extension request timeout: action=MUTLIPOST_EXTENSION_(CHECK_SERVICE_STATUS|PLATFORMS|REQUEST_TRUST_DOMAIN) timeout=\d+ms$/,
       /Can't reach database server at/,
+      /connect ECONNREFUSED/i,
+      /getaddrinfo ENOTFOUND/i,
+      /connect ETIMEDOUT/i,
+      /read ECONNRESET/i,
+      /Connection terminated unexpectedly/i,
+      /server closed the connection unexpectedly/i,
+      /terminating connection due to administrator command/i,
+      /database system is (shutting down|starting up|in recovery mode)/i,
+      /\b(08000|08001|08003|08004|08006|08007|08P01|57P0[1-3])\b/,
     ],
     beforeSend,
     beforeSendTransaction,

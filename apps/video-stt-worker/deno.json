@@ -8,12 +8,19 @@
     "lint": "deno lint"
   },
   "imports": {
-    "@prisma/client": "npm:@prisma/client@^6.14.0",
+    "@db/": "../../db/",
+    "@paralleldrive/cuid2": "npm:@paralleldrive/cuid2@2.2.2",
     "@std/dotenv": "jsr:@std/dotenv@^0.225.2",
     "@std/path": "jsr:@std/path@^1.0.8",
     "@std/http": "jsr:@std/http@^1.0.10",
     "@std/async": "jsr:@std/async@^1.0.8",
-    "dotenv-cli": "npm:dotenv-cli@^8.0.0"
+    "decimal.js": "npm:decimal.js@10.5.0",
+    "dotenv-cli": "npm:dotenv-cli@^8.0.0",
+    "drizzle-orm": "npm:drizzle-orm@0.45.2",
+    "drizzle-orm/node-postgres": "npm:drizzle-orm@0.45.2/node-postgres",
+    "drizzle-orm/pg-core": "npm:drizzle-orm@0.45.2/pg-core",
+    "drizzle-orm/relations": "npm:drizzle-orm@0.45.2/relations",
+    "pg": "npm:pg@8.21.0"
   },
   "fmt": {
     "useTabs": false,

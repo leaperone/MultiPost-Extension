@@ -3,11 +3,12 @@ import { createId } from '@paralleldrive/cuid2';
 import { z } from 'zod';
 
 import { getPresignedUploadUrl } from '@/lib/bitiful';
+import { FileHosting } from '@db/schema/schema';
 
 import { preCheckCredit } from '../../../../actions/credit/_core';
 import { authKey } from '../../../../lib/authKey';
 import { preflightResponse, withCors } from '../../../../lib/cors';
-import { multipostDb } from '../../../../lib/db';
+import { db } from '../../../../lib/db';
 import { errorResp, successResp, unauthResp } from '../../../../lib/request';
 
 const FILEHOSTING_BUCKET_FOLDER = 'filehosting';
@@ -48,15 +49,13 @@ async function POST({ request }: { request: Request }) {
     const fileId = createId();
     const fileKey = `${FILEHOSTING_BUCKET_FOLDER}/${fileId}`;
 
-    await multipostDb.fileHosting.create({
-      data: {
+    await db.insert(FileHosting).values({
         id: fileId,
         key: fileKey,
         userId,
         expiredAt: new Date(Date.now() + 10 * 365 * 24 * 60 * 60 * 1000),
         filename,
         source: SOURCE_MAP[source as keyof typeof SOURCE_MAP] || 'USER_UPLOAD',
-      },
     });
 
     return withCors(

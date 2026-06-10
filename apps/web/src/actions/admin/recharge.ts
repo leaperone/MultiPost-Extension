@@ -1,11 +1,16 @@
 import { createServerFn } from '@tanstack/react-start';
-import { Decimal } from '@prisma/client/runtime/library';
+import { fromDecimal } from '@db/helpers';
+import { RechargeCredit } from '@db/schema/schema';
+import { User } from '@db/schema/auth-schema';
+import Decimal from 'decimal.js';
+import { desc, eq } from 'drizzle-orm';
 import { nanoid } from 'nanoid';
 import { z } from 'zod';
 
-import { multipostDb } from '../../lib/db';
+import { db } from '../../lib/db';
 import { getSession } from '../../lib/session';
 import { isAdmin } from '../admin';
+import { addCreditInTransaction } from '../credit/_core';
 import { RechargeStatus, RechargeType } from '../credit/types';
 
 const rechargeSchema = z.object({
@@ -45,10 +50,7 @@ export const adminRecharge = createServerFn({ method: 'POST' })
     }
 
     try {
-      const user = await multipostDb.user.findUnique({
-        where: { email: data.email },
-        include: { Credit: true },
-      });
+      const [user] = await db.select().from(User).where(eq(User.email, data.email)).limit(1);
 
       if (!user) {
         return { success: false, message: '用户不存在' };
@@ -56,28 +58,19 @@ export const adminRecharge = createServerFn({ method: 'POST' })
 
       const amount = new Decimal(data.amount.toString());
 
-      await multipostDb.$transaction(async (tx) => {
-        await tx.rechargeCredit.create({
-          data: {
-            userId: user.id,
-            orderId: `MP-${nanoid(32)}`,
-            type: RechargeType.ADMIN,
-            amount,
-            status: RechargeStatus.SUCCESS,
-          },
+      await db.transaction(async (tx) => {
+        await tx.insert(RechargeCredit).values({
+          userId: user.id,
+          orderId: `MP-${nanoid(32)}`,
+          type: RechargeType.ADMIN,
+          amount: fromDecimal(amount),
+          status: RechargeStatus.SUCCESS,
         });
 
-        await tx.credit.upsert({
-          where: { userId: user.id },
-          update: {
-            freeCredits: { increment: amount },
-          },
-          create: {
-            userId: user.id,
-            credits: new Decimal(0),
-            freeCredits: amount,
-          },
-        });
+        const result = await addCreditInTransaction(tx, user.id, amount, true);
+        if (!result.success) {
+          throw new Error(result.error || 'Failed to grant credit');
+        }
       });
 
       return { success: true, message: '充值成功' };
@@ -96,19 +89,23 @@ export const getRechargeHistory = createServerFn({ method: 'GET' })
     }
 
     try {
-      const recharges = await multipostDb.rechargeCredit.findMany({
-        include: {
+      const recharges = await db
+        .select({
+          id: RechargeCredit.id,
+          orderId: RechargeCredit.orderId,
+          type: RechargeCredit.type,
+          amount: RechargeCredit.amount,
+          status: RechargeCredit.status,
+          createdAt: RechargeCredit.createdAt,
+          updatedAt: RechargeCredit.updatedAt,
           user: {
-            select: {
-              email: true,
-              name: true,
-            },
+            email: User.email,
+            name: User.name,
           },
-        },
-        orderBy: {
-          createdAt: 'desc',
-        },
-      });
+        })
+        .from(RechargeCredit)
+        .innerJoin(User, eq(RechargeCredit.userId, User.id))
+        .orderBy(desc(RechargeCredit.createdAt));
 
       return {
         success: true,
@@ -116,7 +113,7 @@ export const getRechargeHistory = createServerFn({ method: 'GET' })
           id: recharge.id,
           orderId: recharge.orderId,
           type: recharge.type,
-          amount: recharge.amount.toString(),
+          amount: recharge.amount,
           status: recharge.status,
           createdAt: recharge.createdAt.toISOString(),
           updatedAt: recharge.updatedAt.toISOString(),

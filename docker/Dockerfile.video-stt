@@ -1,4 +1,4 @@
-FROM node:20.18.1-alpine3.20 AS base
+FROM node:20.19.0-alpine3.20 AS base
 ENV PNPM_HOME="/pnpm"
 ENV PATH="$PNPM_HOME:$PATH"
 RUN npm install -g pnpm
@@ -9,17 +9,17 @@ WORKDIR /app
 
 FROM base AS deps
 RUN --mount=type=cache,id=pnpm-multipost,target=/pnpm/store pnpm install --frozen-lockfile
-RUN sh prisma/generate.sh
 
 FROM denoland/deno:latest AS video-stt-worker-cache
-WORKDIR /app
-COPY --from=deps /app/apps/video-stt-worker/ .
-RUN deno cache src/main.ts
+WORKDIR /app/apps/video-stt-worker
+COPY --from=deps /app/apps/video-stt-worker /app/apps/video-stt-worker
+COPY --from=deps /app/db /app/db
+RUN deno check src/main.ts
 
 FROM denoland/deno:latest AS video-stt-worker
 RUN apt-get update && apt-get install -y openssl ffmpeg && rm -rf /var/lib/apt/lists/* \
     || (sed -i 's|deb.debian.org|mirrors.aliyun.com|g' /etc/apt/sources.list.d/debian.sources \
     && apt-get update && apt-get install -y openssl ffmpeg && rm -rf /var/lib/apt/lists/*)
-WORKDIR /app
-COPY --from=video-stt-worker-cache /app .
+WORKDIR /app/apps/video-stt-worker
+COPY --from=video-stt-worker-cache /app /app
 CMD ["deno", "run", "-A", "src/main.ts"]

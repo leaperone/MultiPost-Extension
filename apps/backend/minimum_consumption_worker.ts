@@ -1,13 +1,21 @@
-import { PrismaClient, Prisma } from './prisma/client_multipost_deno/client.ts';
+import { Decimal } from "decimal.js";
+import { and, eq, gte, lt, sql } from "drizzle-orm";
+import {
+  Credit as CreditTable,
+  CreditUsage as CreditUsageTable,
+  User as UserTable,
+} from "@db/schema/index.ts";
+import { fromDecimal } from "@db/helpers.ts";
+import type { MultipostDb } from "./db.ts";
 
 /**
  * Worker for processing minimum consumption requirements
  * Runs monthly to ensure users meet minimum consumption targets
  */
 export class MinimumConsumptionWorker {
-  private multipostDb: PrismaClient;
+  private multipostDb: MultipostDb;
 
-  constructor(multipostDb: PrismaClient) {
+  constructor(multipostDb: MultipostDb) {
     this.multipostDb = multipostDb;
   }
 
@@ -22,7 +30,11 @@ export class MinimumConsumptionWorker {
 
     // First day of the previous month (e.g., if current month is July, this is June 1, 00:00:00)
     // JavaScript's Date constructor handles month underflow correctly (e.g., month -1 becomes December of previous year)
-    const firstDayPreviousMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+    const firstDayPreviousMonth = new Date(
+      now.getFullYear(),
+      now.getMonth() - 1,
+      1,
+    );
 
     return {
       startDate: firstDayPreviousMonth, // e.g., June 1, 00:00:00
@@ -35,15 +47,19 @@ export class MinimumConsumptionWorker {
    * Checks previous month usage and deducts credits if needed
    */
   async processMinimumConsumption(): Promise<void> {
-    console.log('🕐 Starting minimum consumption check cron job...');
+    console.log("🕐 Starting minimum consumption check cron job...");
     const { startDate, endDate } = this.getPreviousMonthDateRange();
     console.log(
       `📅 Checking consumption for period: ${startDate.toISOString()} (inclusive) to ${endDate.toISOString()} (exclusive)`,
     );
 
     try {
-      const users = await this.multipostDb.user.findMany();
-      console.log(`👥 Processing ${users.length} users for minimum consumption check`);
+      const users = await this.multipostDb.select({ id: UserTable.id }).from(
+        UserTable,
+      );
+      console.log(
+        `👥 Processing ${users.length} users for minimum consumption check`,
+      );
 
       let processedCount = 0;
       let adjustedCount = 0;
@@ -51,13 +67,20 @@ export class MinimumConsumptionWorker {
 
       for (const user of users) {
         try {
-          const wasAdjusted = await this.processUserMinimumConsumption(user.id, startDate, endDate);
+          const wasAdjusted = await this.processUserMinimumConsumption(
+            user.id,
+            startDate,
+            endDate,
+          );
           if (wasAdjusted) {
             adjustedCount++;
           }
           processedCount++;
         } catch (error) {
-          console.error(`❌ Failed to process minimum consumption for user ${user.id}:`, error);
+          console.error(
+            `❌ Failed to process minimum consumption for user ${user.id}:`,
+            error,
+          );
           errorCount++;
         }
       }
@@ -67,7 +90,7 @@ export class MinimumConsumptionWorker {
       console.log(`   - Users with adjustments: ${adjustedCount}`);
       console.log(`   - Errors encountered: ${errorCount}`);
     } catch (error) {
-      console.error('❌ Failed to process minimum consumption check:', error);
+      console.error("❌ Failed to process minimum consumption check:", error);
       throw error;
     }
   }
@@ -79,29 +102,38 @@ export class MinimumConsumptionWorker {
    * @param endDate - End date for usage period
    * @returns Promise<boolean> - true if adjustment was made, false otherwise
    */
-  private async processUserMinimumConsumption(userId: string, startDate: Date, endDate: Date): Promise<boolean> {
-    const totalUsageResult = await this.multipostDb.creditUsage.aggregate({
-      _sum: {
-        amount: true,
-      },
-      where: {
-        userId: userId,
-        createdAt: {
-          gte: startDate, // Usage on or after the first day of the previous month
-          lt: endDate, // Usage before the first day of the current month
-        },
-      },
-    });
+  private async processUserMinimumConsumption(
+    userId: string,
+    startDate: Date,
+    endDate: Date,
+  ): Promise<boolean> {
+    const [totalUsageResult] = await this.multipostDb
+      .select({ amount: sql<string | null>`sum(${CreditUsageTable.amount})` })
+      .from(CreditUsageTable)
+      .where(
+        and(
+          eq(CreditUsageTable.userId, userId),
+          gte(CreditUsageTable.createdAt, startDate),
+          lt(CreditUsageTable.createdAt, endDate),
+        ),
+      );
 
-    const totalUsagePreviousMonth = totalUsageResult._sum.amount || new Prisma.Decimal(0);
-    console.log(`👤 User ${userId}: Total credit usage last month = ${totalUsagePreviousMonth.toString()}`);
+    const totalUsagePreviousMonth = new Decimal(totalUsageResult?.amount ?? 0);
+    console.log(
+      `👤 User ${userId}: Total credit usage last month = ${totalUsagePreviousMonth.toString()}`,
+    );
 
-    const minimumConsumptionTarget = new Prisma.Decimal(5);
-    const minimumThreshold = new Prisma.Decimal(1); // User's consumption must be at least 1
+    const minimumConsumptionTarget = new Decimal(5);
+    const minimumThreshold = new Decimal(1); // User's consumption must be at least 1
 
     // Condition: 1 <= totalUsagePreviousMonth < 5
-    if (totalUsagePreviousMonth.gte(minimumThreshold) && totalUsagePreviousMonth.lessThan(minimumConsumptionTarget)) {
-      const amountToDeduct = minimumConsumptionTarget.sub(totalUsagePreviousMonth);
+    if (
+      totalUsagePreviousMonth.gte(minimumThreshold) &&
+      totalUsagePreviousMonth.lessThan(minimumConsumptionTarget)
+    ) {
+      const amountToDeduct = minimumConsumptionTarget.sub(
+        totalUsagePreviousMonth,
+      );
       console.log(
         `💰 User ${userId}: Needs to deduct ${amountToDeduct.toString()} to meet minimum consumption target of ${minimumConsumptionTarget.toString()}.`,
       );
@@ -128,26 +160,36 @@ export class MinimumConsumptionWorker {
    * @param userId - User ID to deduct credits from
    * @param amountToDeduct - Amount to deduct
    */
-  private async performDeduction(userId: string, amountToDeduct: Prisma.Decimal): Promise<void> {
-    await this.multipostDb.$transaction(async (tx) => {
-      const userCredit = await tx.credit.findUnique({
-        where: { userId },
-      });
+  private async performDeduction(
+    userId: string,
+    amountToDeduct: Decimal,
+  ): Promise<void> {
+    await this.multipostDb.transaction(async (tx) => {
+      const [userCredit] = await tx
+        .select()
+        .from(CreditTable)
+        .where(eq(CreditTable.userId, userId))
+        .for("update")
+        .limit(1);
 
       if (!userCredit) {
-        console.warn(`⚠️  User ${userId}: No credit record found. Skipping deduction.`);
+        console.warn(
+          `⚠️  User ${userId}: No credit record found. Skipping deduction.`,
+        );
         return;
       }
 
       let remainingDeduction = amountToDeduct;
-      let deductedFromFree = new Prisma.Decimal(0);
-      let deductedFromPaid = new Prisma.Decimal(0);
+      let deductedFromFree = new Decimal(0);
+      let deductedFromPaid = new Decimal(0);
+      const freeCredits = new Decimal(userCredit.freeCredits);
+      const credits = new Decimal(userCredit.credits);
 
       // Attempt to deduct from free credits first
-      if (userCredit.freeCredits.greaterThan(0) && remainingDeduction.greaterThan(0)) {
-        const canDeductFromFree = userCredit.freeCredits.gte(remainingDeduction)
+      if (freeCredits.greaterThan(0) && remainingDeduction.greaterThan(0)) {
+        const canDeductFromFree = freeCredits.gte(remainingDeduction)
           ? remainingDeduction
-          : userCredit.freeCredits;
+          : freeCredits;
         deductedFromFree = canDeductFromFree;
         remainingDeduction = remainingDeduction.sub(canDeductFromFree);
       }
@@ -182,34 +224,31 @@ export class MinimumConsumptionWorker {
       }
 
       // Update user's credit balance
-      await tx.credit.update({
-        where: { userId },
-        data: {
-          freeCredits: userCredit.freeCredits.sub(deductedFromFree),
-          credits: userCredit.credits.sub(deductedFromPaid),
-        },
-      });
+      await tx
+        .update(CreditTable)
+        .set({
+          freeCredits: fromDecimal(freeCredits.sub(deductedFromFree)),
+          credits: fromDecimal(credits.sub(deductedFromPaid)),
+          updatedAt: new Date(),
+        })
+        .where(eq(CreditTable.userId, userId));
 
       // Record usage for the deducted free credits portion
       if (deductedFromFree.greaterThan(0)) {
-        await tx.creditUsage.create({
-          data: {
-            userId,
-            type: 'MINIMUM_CONSUMPTION_ADJUSTMENT',
-            amount: deductedFromFree,
-            isFree: true, // This portion was from free credits
-          },
+        await tx.insert(CreditUsageTable).values({
+          userId,
+          type: "MINIMUM_CONSUMPTION_ADJUSTMENT",
+          amount: fromDecimal(deductedFromFree),
+          isFree: true, // This portion was from free credits
         });
       }
       // Record usage for the deducted paid credits portion
       if (deductedFromPaid.greaterThan(0)) {
-        await tx.creditUsage.create({
-          data: {
-            userId,
-            type: 'MINIMUM_CONSUMPTION_ADJUSTMENT',
-            amount: deductedFromPaid,
-            isFree: false, // This portion was from paid credits
-          },
+        await tx.insert(CreditUsageTable).values({
+          userId,
+          type: "MINIMUM_CONSUMPTION_ADJUSTMENT",
+          amount: fromDecimal(deductedFromPaid),
+          isFree: false, // This portion was from paid credits
         });
       }
 

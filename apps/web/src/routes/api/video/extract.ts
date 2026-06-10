@@ -1,9 +1,11 @@
 import { createFileRoute } from '@tanstack/react-router';
+import { VideoTranscription } from '@db/schema/schema';
+import { and, desc, eq } from 'drizzle-orm';
 import { z } from 'zod';
 
 import type { VideoExtractResult } from '../../../actions/video-transcription/types';
 import { authKey } from '../../../lib/authKey';
-import { multipostDb } from '../../../lib/db';
+import { db } from '../../../lib/db';
 import { errorResp, successResp, unauthResp } from '../../../lib/request';
 
 const requestSchema = z.object({ url: z.string().min(1, 'Video URL is required') });
@@ -205,22 +207,27 @@ async function createBilibiliTask(
   videoUrl: string,
   result: VideoExtractResult & { transcript: string },
 ) {
-  const existing = await multipostDb.videoTranscription.findFirst({
-    where: {
-      userId,
-      platform: 'bilibili',
-      videoId: result.videoId,
-      status: 'completed',
-    },
-    orderBy: { createdAt: 'desc' },
-  });
+  const [existing] = await db
+    .select()
+    .from(VideoTranscription)
+    .where(
+      and(
+        eq(VideoTranscription.userId, userId),
+        eq(VideoTranscription.platform, 'bilibili'),
+        eq(VideoTranscription.videoId, result.videoId),
+        eq(VideoTranscription.status, 'completed'),
+      ),
+    )
+    .orderBy(desc(VideoTranscription.createdAt))
+    .limit(1);
 
   if (existing) {
     return { ...result, taskId: existing.id };
   }
 
-  const task = await multipostDb.videoTranscription.create({
-    data: {
+  const [task] = await db
+    .insert(VideoTranscription)
+    .values({
       userId,
       videoUrl,
       videoId: result.videoId || null,
@@ -235,8 +242,12 @@ async function createBilibiliTask(
       },
       transcript: result.transcript,
       status: 'completed',
-    },
-  });
+    })
+    .returning();
+
+  if (!task) {
+    throw new Error('Failed to create transcription task');
+  }
 
   return { ...result, taskId: task.id };
 }

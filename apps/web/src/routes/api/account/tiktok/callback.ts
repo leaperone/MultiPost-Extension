@@ -1,11 +1,12 @@
 import { createFileRoute } from '@tanstack/react-router';
+import { SocialMediaAccount } from '@db/schema/schema';
 
 import {
   exchangeCodeForToken,
   getTikTokUserInfo,
   validateRequiredScopes,
 } from '../../../../actions/social-media-accounts/tiktok/oauth';
-import { prisma } from '../../../../lib/db';
+import { db } from '../../../../lib/db';
 import { redirectToSettings, requireOAuthSession } from '../-oauth';
 
 export const Route = createFileRoute('/api/account/tiktok/callback')({
@@ -48,28 +49,9 @@ async function GET({ request }: { request: Request }) {
     const userInfo = await getTikTokUserInfo(tokenData.access_token);
     const expiresAt = new Date(Date.now() + tokenData.expires_in * 1000);
 
-    await prisma.socialMediaAccount.upsert({
-      where: {
-        userId_platform_platformId: {
-          userId: session.user.id,
-          platform: 'tiktok',
-          platformId: userInfo.open_id,
-        },
-      },
-      update: {
-        accessToken: tokenData.access_token,
-        refreshToken: tokenData.refresh_token,
-        tokenType: tokenData.token_type,
-        scope: tokenData.scope,
-        expiresAt,
-        username: userInfo.username || userInfo.display_name,
-        displayName: userInfo.display_name,
-        avatarUrl: userInfo.avatar_url,
-        isActive: true,
-        metadata: { ...userInfo },
-        updatedAt: new Date(),
-      },
-      create: {
+    await db
+      .insert(SocialMediaAccount)
+      .values({
         userId: session.user.id,
         platform: 'tiktok',
         platformId: userInfo.open_id,
@@ -83,8 +65,27 @@ async function GET({ request }: { request: Request }) {
         avatarUrl: userInfo.avatar_url,
         isActive: true,
         metadata: { ...userInfo },
-      },
-    });
+      })
+      .onConflictDoUpdate({
+        target: [
+          SocialMediaAccount.userId,
+          SocialMediaAccount.platform,
+          SocialMediaAccount.platformId,
+        ],
+        set: {
+          accessToken: tokenData.access_token,
+          refreshToken: tokenData.refresh_token,
+          tokenType: tokenData.token_type,
+          scope: tokenData.scope,
+          expiresAt,
+          username: userInfo.username || userInfo.display_name,
+          displayName: userInfo.display_name,
+          avatarUrl: userInfo.avatar_url,
+          isActive: true,
+          metadata: { ...userInfo },
+          updatedAt: new Date(),
+        },
+      });
 
     return redirectToSettings(request, '?success=tiktok_connected');
   } catch (error) {

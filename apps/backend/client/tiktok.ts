@@ -5,8 +5,19 @@
  * @date 2024-12-19
  */
 
-import { PrismaClient, Prisma } from '../prisma/client_multipost_deno/client.ts';
-import { BaseSocialMediaClient, PublishTask, TaskProcessingResult } from './base.ts';
+import { and, eq } from "drizzle-orm";
+import type { JsonValue } from "@db/helpers.ts";
+import {
+  PublishTaskLog as PublishTaskLogTable,
+  SocialMediaAccount as SocialMediaAccountTable,
+} from "@db/schema/index.ts";
+import {
+  BaseSocialMediaClient,
+  getErrorMessage,
+  PublishTask,
+  TaskProcessingResult,
+} from "./base.ts";
+import type { MultipostDb } from "../db.ts";
 
 // Type definitions for TikTok API responses
 export interface TikTokTokenResponse {
@@ -79,9 +90,9 @@ export interface TikTokStatusResponse {
  * Base TikTok API client with common functionality
  */
 export abstract class BaseTikTokApiClient {
-  protected baseUrl = 'https://open.tiktokapis.com/v2';
-  protected clientKey = process.env.TIKTOK_CLIENT_KEY || '';
-  protected clientSecret = process.env.TIKTOK_CLIENT_SECRET || '';
+  protected baseUrl = "https://open.tiktokapis.com/v2";
+  protected clientKey = process.env.TIKTOK_CLIENT_KEY || "";
+  protected clientSecret = process.env.TIKTOK_CLIENT_SECRET || "";
 
   constructor(protected accessToken: string) {}
 
@@ -91,7 +102,10 @@ export abstract class BaseTikTokApiClient {
    * @param options - Fetch options
    * @returns Promise with the response
    */
-  protected async makeRequest(url: string, options: RequestInit): Promise<Response> {
+  protected async makeRequest(
+    url: string,
+    options: RequestInit,
+  ): Promise<Response> {
     const response = await fetch(url, options);
 
     if (!response.ok) {
@@ -112,10 +126,11 @@ export class TikTokRefreshClient extends BaseTikTokApiClient {
    * @returns Promise with the user info
    */
   async validateToken(): Promise<TikTokUserInfo> {
-    const url = `${this.baseUrl}/user/info/?fields=open_id,union_id,avatar_url,avatar_url_100,avatar_large_url,display_name`;
+    const url =
+      `${this.baseUrl}/user/info/?fields=open_id,union_id,avatar_url,avatar_url_100,avatar_large_url,display_name`;
 
     const response = await this.makeRequest(url, {
-      method: 'GET',
+      method: "GET",
       headers: {
         Authorization: `Bearer ${this.accessToken}`,
       },
@@ -134,14 +149,14 @@ export class TikTokRefreshClient extends BaseTikTokApiClient {
     const url = `${this.baseUrl}/oauth/token/`;
 
     const response = await this.makeRequest(url, {
-      method: 'POST',
+      method: "POST",
       headers: {
-        'Content-Type': 'application/x-www-form-urlencoded',
+        "Content-Type": "application/x-www-form-urlencoded",
       },
       body: new URLSearchParams({
         client_key: this.clientKey,
         client_secret: this.clientSecret,
-        grant_type: 'refresh_token',
+        grant_type: "refresh_token",
         refresh_token: refreshToken,
       }),
     });
@@ -190,7 +205,10 @@ export class TikTokPublishClient extends BaseTikTokApiClient {
    * @param sourceInfo - Source information including image URLs
    * @returns Promise with the initialization response
    */
-  async initContentPublish(postInfo: TikTokPostInfo, sourceInfo: TikTokSourceInfo): Promise<TikTokApiResponse> {
+  async initContentPublish(
+    postInfo: TikTokPostInfo,
+    sourceInfo: TikTokSourceInfo,
+  ): Promise<TikTokApiResponse> {
     await this.checkRateLimit();
 
     const url = `${this.baseUrl}/post/publish/content/init/`;
@@ -198,15 +216,15 @@ export class TikTokPublishClient extends BaseTikTokApiClient {
     const payload = {
       post_info: postInfo,
       source_info: sourceInfo,
-      post_mode: 'DIRECT_POST',
-      media_type: 'PHOTO',
+      post_mode: "DIRECT_POST",
+      media_type: "PHOTO",
     };
 
     const response = await this.makeRequest(url, {
-      method: 'POST',
+      method: "POST",
       headers: {
         Authorization: `Bearer ${this.accessToken}`,
-        'Content-Type': 'application/json',
+        "Content-Type": "application/json",
       },
       body: JSON.stringify(payload),
     });
@@ -225,10 +243,10 @@ export class TikTokPublishClient extends BaseTikTokApiClient {
     const url = `${this.baseUrl}/post/publish/status/fetch/`;
 
     const response = await this.makeRequest(url, {
-      method: 'POST',
+      method: "POST",
       headers: {
         Authorization: `Bearer ${this.accessToken}`,
-        'Content-Type': 'application/json; charset=UTF-8',
+        "Content-Type": "application/json; charset=UTF-8",
       },
       body: JSON.stringify({
         publish_id: publishId,
@@ -251,18 +269,18 @@ export class TikTokUtils {
   static prepareDescription(content: string): string {
     // Clean and format the content for TikTok
     let description = content
-      .replace(/<[^>]*>/g, '') // Remove HTML tags
-      .replace(/\n+/g, ' ') // Replace multiple newlines with space
+      .replace(/<[^>]*>/g, "") // Remove HTML tags
+      .replace(/\n+/g, " ") // Replace multiple newlines with space
       .trim();
 
     // Add hashtags if not present
-    if (!description.includes('#')) {
-      description += ' #fyp #viral';
+    if (!description.includes("#")) {
+      description += " #fyp #viral";
     }
 
     // Limit length for TikTok
     if (description.length > 2000) {
-      description = description.substring(0, 1997) + '...';
+      description = description.substring(0, 1997) + "...";
     }
 
     return description;
@@ -281,7 +299,7 @@ export class TikTokUtils {
     return files
       .filter((file: unknown) => {
         const fileObj = file as { type?: string };
-        return fileObj.type?.startsWith('image/');
+        return fileObj.type?.startsWith("image/");
       })
       .map((file: unknown) => {
         const fileObj = file as { url?: string };
@@ -295,8 +313,8 @@ export class TikTokUtils {
  * TikTok platform client implementation
  */
 export class TikTokClient extends BaseSocialMediaClient {
-  constructor(database: PrismaClient) {
-    super(database, 'tiktok');
+  constructor(database: MultipostDb) {
+    super(database, "tiktok");
   }
 
   /**
@@ -304,7 +322,9 @@ export class TikTokClient extends BaseSocialMediaClient {
    * @param accountId - Account ID to refresh
    * @returns Promise with processing result
    */
-  async processRefreshAccount(accountId: string): Promise<TaskProcessingResult> {
+  async processRefreshAccount(
+    accountId: string,
+  ): Promise<TaskProcessingResult> {
     try {
       console.log(`🔄 Refreshing TikTok account: ${accountId}`);
 
@@ -314,12 +334,14 @@ export class TikTokClient extends BaseSocialMediaClient {
         return {
           success: false,
           message: `Account not found: ${accountId}`,
-          error: 'ACCOUNT_NOT_FOUND',
+          error: "ACCOUNT_NOT_FOUND",
         };
       }
 
       console.log(
-        `📋 Found account: ${account.platform} - ${account.username || account.displayName} (isActive=${account.isActive})`,
+        `📋 Found account: ${account.platform} - ${
+          account.username || account.displayName
+        } (isActive=${account.isActive})`,
       );
 
       // Create TikTok API client
@@ -329,13 +351,15 @@ export class TikTokClient extends BaseSocialMediaClient {
       if (!account.refreshToken) {
         return {
           success: false,
-          message: 'No refresh token available for account',
-          error: 'NO_REFRESH_TOKEN',
+          message: "No refresh token available for account",
+          error: "NO_REFRESH_TOKEN",
         };
       }
 
       console.log(`🔄 Attempting to refresh TikTok token`);
-      const refreshResponse = await tiktokClient.refreshToken(account.refreshToken);
+      const refreshResponse = await tiktokClient.refreshToken(
+        account.refreshToken,
+      );
 
       const newAccessToken = refreshResponse.access_token;
       const newRefreshToken = refreshResponse.refresh_token;
@@ -351,7 +375,9 @@ export class TikTokClient extends BaseSocialMediaClient {
         expiresAt: expiresAt,
       });
 
-      console.log(`✅ TikTok token refreshed successfully, expires at: ${expiresAt}`);
+      console.log(
+        `✅ TikTok token refreshed successfully, expires at: ${expiresAt}`,
+      );
 
       // Validate the new token
       const newTiktokClient = new TikTokRefreshClient(newAccessToken);
@@ -364,7 +390,7 @@ export class TikTokClient extends BaseSocialMediaClient {
         avatarUrl: newUserInfo.avatar_url,
         metadata: {
           ...newUserInfo,
-          updatedAt: new Date(),
+          updatedAt: new Date().toISOString(),
         },
       });
 
@@ -375,14 +401,15 @@ export class TikTokClient extends BaseSocialMediaClient {
       };
     } catch (error) {
       console.error(`❌ Error refreshing TikTok account ${accountId}:`, error);
+      const message = getErrorMessage(error);
 
       // Mark account as inactive if refresh failed
-      await this.markAccountInactive(accountId, `Refresh failed: ${error.message}`);
+      await this.markAccountInactive(accountId, `Refresh failed: ${message}`);
 
       return {
         success: false,
-        message: `Error refreshing TikTok account: ${error.message}`,
-        error: error.message,
+        message: `Error refreshing TikTok account: ${message}`,
+        error: message,
       };
     }
   }
@@ -393,7 +420,10 @@ export class TikTokClient extends BaseSocialMediaClient {
    * @param accessToken - Access token for the account
    * @returns Promise with processing result
    */
-  async processCheckTask(logId: string, accessToken: string): Promise<TaskProcessingResult> {
+  async processCheckTask(
+    logId: string,
+    accessToken: string,
+  ): Promise<TaskProcessingResult> {
     try {
       console.log(`🔍 Checking TikTok publish status for log: ${logId}`);
 
@@ -403,7 +433,7 @@ export class TikTokClient extends BaseSocialMediaClient {
         return {
           success: false,
           message: `No publish data found for log ${logId}`,
-          error: 'NO_PUBLISH_DATA',
+          error: "NO_PUBLISH_DATA",
         };
       }
 
@@ -415,7 +445,7 @@ export class TikTokClient extends BaseSocialMediaClient {
         return {
           success: false,
           message: `No publish ID found in publish data for log ${logId}`,
-          error: 'NO_PUBLISH_ID',
+          error: "NO_PUBLISH_ID",
         };
       }
 
@@ -435,69 +465,88 @@ export class TikTokClient extends BaseSocialMediaClient {
       const downloadedBytes = statusResponse.data?.downloaded_bytes;
 
       console.log(`📊 Publish status: ${status}, fail reason: ${failReason}`);
-      console.log(`📊 Uploaded bytes: ${uploadedBytes}, Downloaded bytes: ${downloadedBytes}`);
+      console.log(
+        `📊 Uploaded bytes: ${uploadedBytes}, Downloaded bytes: ${downloadedBytes}`,
+      );
 
       // Handle different status values based on TikTok API documentation
       let newStatus: string;
       let message: string;
 
       switch (status) {
-        case 'PUBLISH_COMPLETE':
+        case "PUBLISH_COMPLETE":
           if (postIds && postIds.length > 0) {
-            newStatus = 'completed';
-            message = postIds[0] || 'Published successfully';
-            console.log(`🎉 Publish log ${logId} completed successfully with post ID: ${postIds[0] || 'unknown'}`);
+            newStatus = "completed";
+            message = postIds[0] || "Published successfully";
+            console.log(
+              `🎉 Publish log ${logId} completed successfully with post ID: ${
+                postIds[0] || "unknown"
+              }`,
+            );
           } else {
-            newStatus = 'completed';
-            message = 'Published to creator inbox';
-            console.log(`📬 Publish log ${logId} completed - content sent to creator inbox`);
+            newStatus = "completed";
+            message = "Published to creator inbox";
+            console.log(
+              `📬 Publish log ${logId} completed - content sent to creator inbox`,
+            );
           }
           break;
 
-        case 'SEND_TO_USER_INBOX':
-          newStatus = 'processing';
-          message = 'Content sent to creator inbox';
-          console.log(`📬 Publish log ${logId} - content sent to creator inbox for editing`);
+        case "SEND_TO_USER_INBOX":
+          newStatus = "processing";
+          message = "Content sent to creator inbox";
+          console.log(
+            `📬 Publish log ${logId} - content sent to creator inbox for editing`,
+          );
           break;
 
-        case 'PROCESSING_UPLOAD':
-        case 'PROCESSING_DOWNLOAD':
-          newStatus = 'processing';
+        case "PROCESSING_UPLOAD":
+        case "PROCESSING_DOWNLOAD":
+          newStatus = "processing";
           message = `Processing: ${status}`;
           console.log(`⏳ Publish log ${logId} is still processing: ${status}`);
           break;
 
-        case 'FAILED':
-          newStatus = 'failed';
-          message = failReason || 'Unknown error';
+        case "FAILED":
+          newStatus = "failed";
+          message = failReason || "Unknown error";
           console.log(`❌ Publish log ${logId} failed: ${failReason}`);
           break;
 
         default:
-          newStatus = 'processing';
+          newStatus = "processing";
           message = `Unknown status: ${status}`;
           console.log(`❓ Publish log ${logId} has unknown status: ${status}`);
           break;
       }
 
       // Update log status
-      await this.updatePublishTaskLogStatus(logId, newStatus, message, statusResponse);
+      await this.updatePublishTaskLogStatus(
+        logId,
+        newStatus,
+        message,
+        statusResponse as JsonValue,
+      );
 
       return {
-        success: newStatus !== 'failed',
+        success: newStatus !== "failed",
         message: `Status check completed: ${message}`,
         data: { status: newStatus, statusResponse },
       };
     } catch (error) {
-      console.error(`❌ Error checking TikTok publish status for log ${logId}:`, error);
+      console.error(
+        `❌ Error checking TikTok publish status for log ${logId}:`,
+        error,
+      );
+      const message = getErrorMessage(error);
 
       // Update log with error
-      await this.updatePublishTaskLogStatus(logId, 'failed', error.message);
+      await this.updatePublishTaskLogStatus(logId, "failed", message);
 
       return {
         success: false,
-        message: `Error checking TikTok publish status: ${error.message}`,
-        error: error.message,
+        message: `Error checking TikTok publish status: ${message}`,
+        error: message,
       };
     }
   }
@@ -508,7 +557,10 @@ export class TikTokClient extends BaseSocialMediaClient {
    * @param publishTask - Parent PublishTask
    * @returns Promise with processing result
    */
-  async processPublishTaskLog(logId: string, publishTask: PublishTask): Promise<TaskProcessingResult> {
+  async processPublishTaskLog(
+    logId: string,
+    publishTask: PublishTask,
+  ): Promise<TaskProcessingResult> {
     try {
       console.log(`🔄 Processing TikTok publish log ${logId}`);
 
@@ -517,35 +569,38 @@ export class TikTokClient extends BaseSocialMediaClient {
         return {
           success: false,
           message: `No publish task log found for ID: ${logId}`,
-          error: 'NO_PUBLISH_TASK_LOG',
+          error: "NO_PUBLISH_TASK_LOG",
         };
       }
 
       // Update log status to processing
-      await this.db.publishTaskLog.update({
-        where: { id: logId },
-        data: { status: 'processing' },
-      });
+      await this.db
+        .update(PublishTaskLogTable)
+        .set({ status: "processing", updatedAt: new Date() })
+        .where(eq(PublishTaskLogTable.id, logId));
 
       // Get TikTok account from database
-      const tiktokAccount = await this.db.socialMediaAccount.findUnique({
-        where: {
-          userId_platform_platformId: {
-            userId: log.userId,
-            platform: log.platform,
-            platformId: log.platformId,
-          },
-          isActive: true,
-        },
-      });
+      const [tiktokAccount] = await this.db
+        .select()
+        .from(SocialMediaAccountTable)
+        .where(
+          and(
+            eq(SocialMediaAccountTable.userId, log.userId),
+            eq(SocialMediaAccountTable.platform, log.platform),
+            eq(SocialMediaAccountTable.platformId, log.platformId),
+            eq(SocialMediaAccountTable.isActive, true),
+          ),
+        )
+        .limit(1);
 
       if (!tiktokAccount) {
-        const errorMsg = `No active TikTok account found for userId=${log.userId}, platformId=${log.platformId}, platform=${log.platform}`;
-        await this.updatePublishTaskLogStatus(logId, 'failed', errorMsg);
+        const errorMsg =
+          `No active TikTok account found for userId=${log.userId}, platformId=${log.platformId}, platform=${log.platform}`;
+        await this.updatePublishTaskLogStatus(logId, "failed", errorMsg);
         return {
           success: false,
           message: errorMsg,
-          error: 'NO_ACTIVE_ACCOUNT',
+          error: "NO_ACTIVE_ACCOUNT",
         };
       }
 
@@ -554,59 +609,69 @@ export class TikTokClient extends BaseSocialMediaClient {
 
       // Prepare post information
       const postInfo: TikTokPostInfo = {
-        title: publishTask.draft.title || '',
-        description: TikTokUtils.prepareDescription(publishTask.draft.content || ''),
+        title: publishTask.draft.title || "",
+        description: TikTokUtils.prepareDescription(
+          publishTask.draft.content || "",
+        ),
         disable_comment: false,
-        privacy_level: 'SELF_ONLY',
+        privacy_level: "SELF_ONLY",
         auto_add_music: true,
       };
 
       // Prepare source information
       const sourceInfo: TikTokSourceInfo = {
-        source: 'PULL_FROM_URL',
+        source: "PULL_FROM_URL",
         photo_cover_index: 0,
         photo_images: TikTokUtils.extractImageUrls(publishTask.draft.files),
       };
 
       // Initialize content publishing
       console.log(`🚀 Initializing TikTok content publishing for log ${logId}`);
-      const initResponse = await tiktokClient.initContentPublish(postInfo, sourceInfo);
+      const initResponse = await tiktokClient.initContentPublish(
+        postInfo,
+        sourceInfo,
+      );
 
       if (initResponse.data?.publish_id) {
         const publishId = initResponse.data.publish_id;
         console.log(`✅ TikTok publish initialized with ID: ${publishId}`);
 
         // Update log with publish ID and store initResponse
-        await this.db.publishTaskLog.update({
-          where: { id: logId },
-          data: {
-            publishData: initResponse as Prisma.InputJsonValue,
-          },
-        });
+        await this.db
+          .update(PublishTaskLogTable)
+          .set({
+            publishData: initResponse as JsonValue,
+            updatedAt: new Date(),
+          })
+          .where(eq(PublishTaskLogTable.id, logId));
 
-        console.log(`✅ TikTok publish initialized with ID: ${publishId}. Status checking will be handled separately.`);
+        console.log(
+          `✅ TikTok publish initialized with ID: ${publishId}. Status checking will be handled separately.`,
+        );
 
         return {
           success: true,
-          message: `TikTok publish initialized successfully with ID: ${publishId}`,
+          message:
+            `TikTok publish initialized successfully with ID: ${publishId}`,
           data: { publishId, initResponse },
         };
       } else {
-        const errorMsg = 'Failed to get publish ID from TikTok API response';
-        await this.updatePublishTaskLogStatus(logId, 'failed', errorMsg);
+        const errorMsg = "Failed to get publish ID from TikTok API response";
+        await this.updatePublishTaskLogStatus(logId, "failed", errorMsg);
         return {
           success: false,
           message: errorMsg,
-          error: 'NO_PUBLISH_ID',
+          error: "NO_PUBLISH_ID",
         };
       }
     } catch (error) {
       console.error(`❌ Error processing TikTok publish log ${logId}:`, error);
-      await this.updatePublishTaskLogStatus(logId, 'failed', error.message);
+      const message = getErrorMessage(error);
+      await this.updatePublishTaskLogStatus(logId, "failed", message);
       return {
         success: false,
-        message: `Error processing TikTok publish log: ${error.message}`,
-        error: error.message,
+        message: `Error processing TikTok publish log: ${message}`,
+        error: message,
       };
     }
   }

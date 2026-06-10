@@ -1,6 +1,8 @@
 import { createFileRoute } from '@tanstack/react-router';
+import { PromotionCode, PromotionSubmission, PromotionTask } from '@db/schema/schema';
+import { eq, gt } from 'drizzle-orm';
 
-import { multipostDb } from '../../../lib/db';
+import { db } from '../../../lib/db';
 import { successResponse } from '../../../lib/response';
 
 export const Route = createFileRoute('/api/promotion/tasks')({
@@ -19,13 +21,10 @@ async function GET({ request }: { request: Request }) {
     : null;
   const userId = session?.user?.id;
 
-  const tasks = await multipostDb.promotionTask.findMany({
-    where: {
-      expiredAt: {
-        gt: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000),
-      },
-    },
-  });
+  const tasks = await db
+    .select()
+    .from(PromotionTask)
+    .where(gt(PromotionTask.expiredAt, new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)));
 
   if (!userId) {
     return successResponse(
@@ -36,17 +35,12 @@ async function GET({ request }: { request: Request }) {
     );
   }
 
-  const codes = await multipostDb.promotionCode.findMany({
-    where: {
-      userId,
-    },
-  });
+  const codes = await db.select().from(PromotionCode).where(eq(PromotionCode.userId, userId));
 
-  const submissions = await multipostDb.promotionSubmission.findMany({
-    where: {
-      userId,
-    },
-  });
+  const submissions = await db
+    .select()
+    .from(PromotionSubmission)
+    .where(eq(PromotionSubmission.userId, userId));
 
   return successResponse(
     tasks.map((task) => {

@@ -25,8 +25,40 @@ jobs:
           node-version: '20'
           cache: 'pnpm'
 
+      - name: Setup Deno
+        uses: denoland/setup-deno@v3
+        with:
+          deno-version: v2.8.2
+
+      - name: Setup Atlas
+        run: |
+          curl -fsSL https://release.ariga.io/atlas/atlas-community-linux-amd64-v1.2.2 -o /tmp/atlas
+          printf '%s  %s\n' 'a38e34e886cd0b9d2d625fe0046fed107785b1562bd2d07dbd96fadfc57dec62' /tmp/atlas | sha256sum -c -
+          chmod +x /tmp/atlas
+          sudo mv /tmp/atlas /usr/local/bin/atlas
+
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
+      - name: Typecheck
+        run: pnpm --filter multipost-web exec tsc --noEmit
+
       - name: Lint
         run: pnpm lint
+
+      - name: Build Atlas source
+        run: pnpm db:build:source
+
+      - name: Atlas migrate lint
+        run: atlas migrate lint --env local --config file://db/atlas/atlas.hcl --latest=1
+
+      - name: Atlas no-DML lint
+        run: pnpm db:lint:no-dml
+
+      - name: Backend Deno check
+        working-directory: apps/backend
+        run: deno check main.ts
+
+      - name: Video STT Deno check
+        working-directory: apps/video-stt-worker
+        run: deno check src/main.ts

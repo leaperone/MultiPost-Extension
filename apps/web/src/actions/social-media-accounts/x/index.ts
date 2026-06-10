@@ -1,8 +1,10 @@
 import { createServerFn } from '@tanstack/react-start';
+import { SocialMediaAccount } from '@db/schema/schema';
+import { and, desc, eq } from 'drizzle-orm';
 import { nanoid } from 'nanoid';
 import { z } from 'zod';
 
-import { prisma } from '../../../lib/db';
+import { db } from '../../../lib/db';
 import { getSession } from '../../../lib/session';
 import { generatePKCE, generateXAuthUrl, refreshXToken, revokeXToken } from './oauth';
 
@@ -16,16 +18,17 @@ export const getXAccounts = createServerFn({ method: 'GET' }).handler(async () =
     throw new Error('Unauthorized');
   }
 
-  return await prisma.socialMediaAccount.findMany({
-    where: {
-      userId: session.user.id,
-      platform: 'x',
-      isActive: true,
-    },
-    orderBy: {
-      createdAt: 'desc',
-    },
-  });
+  return await db
+    .select()
+    .from(SocialMediaAccount)
+    .where(
+      and(
+        eq(SocialMediaAccount.userId, session.user.id),
+        eq(SocialMediaAccount.platform, 'x'),
+        eq(SocialMediaAccount.isActive, true),
+      ),
+    )
+    .orderBy(desc(SocialMediaAccount.createdAt));
 });
 
 export const disconnectXAccount = createServerFn({ method: 'POST' })
@@ -36,13 +39,17 @@ export const disconnectXAccount = createServerFn({ method: 'POST' })
       throw new Error('Unauthorized');
     }
 
-    const account = await prisma.socialMediaAccount.findFirst({
-      where: {
-        id: data.accountId,
-        userId: session.user.id,
-        platform: 'x',
-      },
-    });
+    const [account] = await db
+      .select()
+      .from(SocialMediaAccount)
+      .where(
+        and(
+          eq(SocialMediaAccount.id, data.accountId),
+          eq(SocialMediaAccount.userId, session.user.id),
+          eq(SocialMediaAccount.platform, 'x'),
+        ),
+      )
+      .limit(1);
 
     if (!account) {
       throw new Error('X account not found');
@@ -54,13 +61,13 @@ export const disconnectXAccount = createServerFn({ method: 'POST' })
       console.error('Failed to revoke X token:', error);
     }
 
-    await prisma.socialMediaAccount.update({
-      where: { id: data.accountId },
-      data: {
+    await db
+      .update(SocialMediaAccount)
+      .set({
         isActive: false,
         updatedAt: new Date(),
-      },
-    });
+      })
+      .where(eq(SocialMediaAccount.id, data.accountId));
 
     // Client caller invalidates /dashboard/settings/social-media-accounts after mutation.
   });
@@ -73,14 +80,18 @@ export const refreshXAccountToken = createServerFn({ method: 'POST' })
       throw new Error('Unauthorized');
     }
 
-    const account = await prisma.socialMediaAccount.findFirst({
-      where: {
-        id: data.accountId,
-        userId: session.user.id,
-        platform: 'x',
-        isActive: true,
-      },
-    });
+    const [account] = await db
+      .select()
+      .from(SocialMediaAccount)
+      .where(
+        and(
+          eq(SocialMediaAccount.id, data.accountId),
+          eq(SocialMediaAccount.userId, session.user.id),
+          eq(SocialMediaAccount.platform, 'x'),
+          eq(SocialMediaAccount.isActive, true),
+        ),
+      )
+      .limit(1);
 
     if (!account || !account.refreshToken) {
       throw new Error('X account not found or no refresh token available');
@@ -90,17 +101,17 @@ export const refreshXAccountToken = createServerFn({ method: 'POST' })
       const tokenData = await refreshXToken(account.refreshToken);
       const expiresAt = new Date(Date.now() + tokenData.expires_in * 1000);
 
-      await prisma.socialMediaAccount.update({
-        where: { id: data.accountId },
-        data: {
+      await db
+        .update(SocialMediaAccount)
+        .set({
           accessToken: tokenData.access_token,
           refreshToken: tokenData.refresh_token,
           tokenType: tokenData.token_type,
           scope: tokenData.scope,
           expiresAt,
           updatedAt: new Date(),
-        },
-      });
+        })
+        .where(eq(SocialMediaAccount.id, data.accountId));
 
       // Client caller invalidates /dashboard/settings/social-media-accounts after mutation.
       return { success: true };
@@ -118,14 +129,22 @@ export const getXAccountById = createServerFn({ method: 'GET' })
       throw new Error('Unauthorized');
     }
 
-    return await prisma.socialMediaAccount.findFirst({
-      where: {
-        id: data.accountId,
-        userId: session.user.id,
-        platform: 'x',
-        isActive: true,
-      },
-    });
+    return (
+      (
+        await db
+          .select()
+          .from(SocialMediaAccount)
+          .where(
+            and(
+              eq(SocialMediaAccount.id, data.accountId),
+              eq(SocialMediaAccount.userId, session.user.id),
+              eq(SocialMediaAccount.platform, 'x'),
+              eq(SocialMediaAccount.isActive, true),
+            ),
+          )
+          .limit(1)
+      )[0] ?? null
+    );
   });
 
 export const initiateXAuth = createServerFn({ method: 'POST' }).handler(async () => {

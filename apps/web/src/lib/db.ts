@@ -1,25 +1,62 @@
-import path from 'node:path';
-import { createRequire } from 'node:module';
+import { createDb, createDbPool, type MultipostDb } from '@db/client';
+import type { Pool } from 'pg';
 
-type PrismaClientConstructor = (typeof import('@/prisma/client_multipost'))['PrismaClient'];
-type PrismaMultipostClient = InstanceType<PrismaClientConstructor>;
-
-const require = createRequire(import.meta.url);
-const prismaClientPath = path.resolve(process.cwd(), '../../prisma/client_multipost');
-const { PrismaClient: PrismaMultipostClient } = require(prismaClientPath) as {
-  PrismaClient: PrismaClientConstructor;
+const globalForDb = globalThis as typeof globalThis & {
+  multipostPgPoolGlobal?: Pool;
+  multipostDrizzleGlobal?: MultipostDb;
 };
 
-const globalForPrisma = globalThis as typeof globalThis & {
-  prismaMultipostGlobal?: PrismaMultipostClient;
-};
+let poolInstance = globalForDb.multipostPgPoolGlobal;
+let dbInstance = globalForDb.multipostDrizzleGlobal;
 
-const createMultipostClient = () => new PrismaMultipostClient();
+function getPool() {
+  if (!poolInstance) {
+    poolInstance = createDbPool();
+    if (process.env.NODE_ENV !== 'production') {
+      globalForDb.multipostPgPoolGlobal = poolInstance;
+    }
+  }
 
-export const multipostDb = globalForPrisma.prismaMultipostGlobal ?? createMultipostClient();
-
-if (process.env.NODE_ENV !== 'production') {
-  globalForPrisma.prismaMultipostGlobal = multipostDb;
+  return poolInstance;
 }
 
-export const prisma = multipostDb;
+function getDb() {
+  if (!dbInstance) {
+    dbInstance = createDb(getPool());
+    if (process.env.NODE_ENV !== 'production') {
+      globalForDb.multipostDrizzleGlobal = dbInstance;
+    }
+  }
+
+  return dbInstance;
+}
+
+export const multipostPgPool = new Proxy({} as Pool, {
+  get(_target, prop, receiver) {
+    const pool = getPool();
+    const value = Reflect.get(pool, prop, receiver);
+    return typeof value === 'function' ? value.bind(pool) : value;
+  },
+  has(_target, prop) {
+    return Reflect.has(getPool(), prop);
+  },
+  getPrototypeOf() {
+    return Object.getPrototypeOf(getPool());
+  },
+});
+
+export const drizzleDb = new Proxy({} as MultipostDb, {
+  get(_target, prop, receiver) {
+    const realDb = getDb();
+    const value = Reflect.get(realDb, prop, receiver);
+    return typeof value === 'function' ? value.bind(realDb) : value;
+  },
+  has(_target, prop) {
+    return Reflect.has(getDb(), prop);
+  },
+  getPrototypeOf() {
+    return Object.getPrototypeOf(getDb());
+  },
+});
+
+export const db = drizzleDb;

@@ -1,3 +1,9 @@
+import { User } from '@db/schema/auth-schema';
+import { APIKey } from '@db/schema/schema';
+import { eq } from 'drizzle-orm';
+
+import { db } from './db';
+
 export async function authInternalRequest(request: Request) {
   const authHeader = request.headers.get('Authorization');
   if (!authHeader) {
@@ -27,21 +33,15 @@ export async function authInternalRequest(request: Request) {
     };
   }
 
-  const { multipostDb } = await import('./db');
-
-  const key = await multipostDb.aPIKey.findUnique({
-    where: {
-      key: apiKey,
-    },
-    select: {
-      userId: true,
-      user: {
-        select: {
-          email: true,
-        },
-      },
-    },
-  });
+  const [key] = await db
+    .select({
+      userId: APIKey.userId,
+      email: User.email,
+    })
+    .from(APIKey)
+    .innerJoin(User, eq(APIKey.userId, User.id))
+    .where(eq(APIKey.key, apiKey))
+    .limit(1);
   if (!key) {
     return {
       success: false,
@@ -52,6 +52,6 @@ export async function authInternalRequest(request: Request) {
   return {
     success: true,
     userId: key.userId,
-    email: key.user.email,
+    email: key.email,
   };
 }

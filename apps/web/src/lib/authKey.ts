@@ -1,28 +1,9 @@
-// Prisma transient connection error codes (https://www.prisma.io/docs/orm/reference/error-reference).
-const TRANSIENT_DB_ERROR_CODES = new Set(['P1001', 'P1002', 'P1008', 'P1017']);
+import { User } from '@db/schema/auth-schema';
+import { APIKey } from '@db/schema/schema';
+import { eq } from 'drizzle-orm';
 
-function isTransientDbError(error: unknown): boolean {
-  return (
-    typeof error === 'object' &&
-    error !== null &&
-    'code' in error &&
-    typeof (error as { code?: unknown }).code === 'string' &&
-    TRANSIENT_DB_ERROR_CODES.has((error as { code: string }).code)
-  );
-}
-
-function transientDbErrorCode(error: unknown) {
-  if (
-    typeof error === 'object' &&
-    error !== null &&
-    'code' in error &&
-    typeof (error as { code?: unknown }).code === 'string'
-  ) {
-    return (error as { code: string }).code;
-  }
-
-  return undefined;
-}
+import { db } from './db';
+import { isTransientDbError, transientDbErrorCode } from './dbErrors';
 
 /**
  * Validate a request using the same shape as the old Next.js authKey action.
@@ -34,7 +15,7 @@ function transientDbErrorCode(error: unknown) {
  */
 export async function authKey(request: Request) {
   // Wrap the whole flow — both session lookup (which also hits the DB) and the
-  // API-key Prisma queries — so transient DB errors return a structured
+  // API-key DB queries — so transient DB errors return a structured
   // DB_UNAVAILABLE instead of bubbling to Sentry (issue #258).
   try {
     const authHeader = request.headers.get('Authorization');
@@ -66,15 +47,13 @@ export async function authKey(request: Request) {
       };
     }
 
-    const { multipostDb } = await import('./db');
-
     if (apiKey === process.env.INTERNAL_SECRET) {
       const authUserId = request.headers.get('x-user-id');
-      const user = await multipostDb.user.findUnique({
-        where: {
-          id: authUserId || '',
-        },
-      });
+      const [user] = await db
+        .select()
+        .from(User)
+        .where(eq(User.id, authUserId || ''))
+        .limit(1);
       if (!user) {
         return {
           success: false,
@@ -88,19 +67,15 @@ export async function authKey(request: Request) {
       };
     }
 
-    const key = await multipostDb.aPIKey.findUnique({
-      where: {
-        key: apiKey,
-      },
-      select: {
-        userId: true,
-        user: {
-          select: {
-            email: true,
-          },
-        },
-      },
-    });
+    const [key] = await db
+      .select({
+        userId: APIKey.userId,
+        email: User.email,
+      })
+      .from(APIKey)
+      .innerJoin(User, eq(APIKey.userId, User.id))
+      .where(eq(APIKey.key, apiKey))
+      .limit(1);
     if (!key) {
       return {
         success: false,
@@ -111,7 +86,7 @@ export async function authKey(request: Request) {
     return {
       success: true,
       userId: key.userId,
-      email: key.user.email,
+      email: key.email,
     };
   } catch (error) {
     if (isTransientDbError(error)) {

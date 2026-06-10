@@ -1,5 +1,5 @@
 import { dollarToYuan } from '@/src/actions/credit/types';
-import { Decimal } from '@prisma/client/runtime/library';
+import Decimal from 'decimal.js';
 import ky from 'ky';
 
 export async function requestAlipayUrl(orderId: string, amount: Decimal, returnUrl: string) {

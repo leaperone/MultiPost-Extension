@@ -16,10 +16,10 @@
 		},
 		{
 			"type": "shell",
-			"command": "sh prisma/generate.sh",
+			"command": "pnpm db:build:source",
 			"group": "build",
 			"problemMatcher": [],
-			"label": "pnpm: prisma:generate",
+			"label": "pnpm: db:build:source",
 			"presentation": {
 				"reveal": "silent",
 				"clear": true,
@@ -31,7 +31,7 @@
 			"label": "build before test",
 			"dependsOn": [
 				"pnpm: install",
-				"pnpm: prisma:generate",
+				"pnpm: db:build:source",
 			],
 			"dependsOrder": "sequence",
 			"presentation": {

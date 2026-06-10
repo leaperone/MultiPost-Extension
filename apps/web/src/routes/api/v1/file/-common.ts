@@ -1,7 +1,9 @@
 import { headObject } from '@/lib/bitiful';
+import { FileHosting } from '@db/schema/schema';
+import { and, eq, isNull } from 'drizzle-orm';
 
 import { authKey } from '../../../../lib/authKey';
-import { multipostDb } from '../../../../lib/db';
+import { db } from '../../../../lib/db';
 
 export async function optionalFileAuth(request: Request) {
   try {
@@ -13,12 +15,13 @@ export async function optionalFileAuth(request: Request) {
 
 export async function initFile(fileId: string) {
   try {
-    let file = await multipostDb.fileHosting.findFirst({
-      where: {
-        id: fileId,
-        deletedAt: null,
-      },
-    });
+    let file = (
+      await db
+        .select()
+        .from(FileHosting)
+        .where(and(eq(FileHosting.id, fileId), isNull(FileHosting.deletedAt)))
+        .limit(1)
+    )[0];
 
     if (!file) {
       throw new Error('file not found');
@@ -31,13 +34,17 @@ export async function initFile(fileId: string) {
     if (!file.type || !file.size) {
       const head = await headObject(file.key);
       if (head.ContentType && head.ContentLength) {
-        file = await multipostDb.fileHosting.update({
-          where: { id: fileId },
-          data: {
+        file = (
+          await db
+            .update(FileHosting)
+            .set({
             type: head.ContentType,
             size: head.ContentLength,
-          },
-        });
+              updatedAt: new Date(),
+            })
+            .where(eq(FileHosting.id, fileId))
+            .returning()
+        )[0];
       } else {
         throw new Error('file not found');
       }

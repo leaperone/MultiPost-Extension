@@ -1,7 +1,10 @@
 import { createServerFn } from '@tanstack/react-start';
+import { User } from '@db/schema/auth-schema';
+import { VideoTranscription } from '@db/schema/schema';
+import { and, count, countDistinct, desc, eq, ilike, lt, type SQL } from 'drizzle-orm';
 import { z } from 'zod';
 
-import { multipostDb } from '../../lib/db';
+import { db } from '../../lib/db';
 import type { RespT } from '../../lib/request';
 import { getSession } from '../../lib/session';
 import { isAdmin } from '../admin';
@@ -78,6 +81,18 @@ function toSerializableJson(value: unknown): SerializableJson {
   return JSON.parse(serialized) as SerializableJson;
 }
 
+function andAll(conditions: (SQL | undefined)[]) {
+  const filtered = conditions.filter((condition): condition is SQL => Boolean(condition));
+  return filtered.length > 0 ? and(...filtered) : undefined;
+}
+
+function videoTranscriptionWhere(data: z.infer<typeof getVideoTranscriptionsSchema>) {
+  return andAll([
+    data.cursor ? lt(VideoTranscription.id, data.cursor) : undefined,
+    data.email ? ilike(User.email, `%${data.email}%`) : undefined,
+  ]);
+}
+
 export const getVideoTranscriptions = createServerFn({ method: 'GET' })
   .validator(getVideoTranscriptionsSchema)
   .handler(async ({ data }): Promise<RespT<GetVideoTranscriptionsResult>> => {
@@ -85,38 +100,41 @@ export const getVideoTranscriptions = createServerFn({ method: 'GET' })
     if (!session) return unauthorized({ transcriptions: [], count: 0 });
 
     const limit = data.limit ?? 20;
-    const where: {
-      id?: { lt: string };
-      user?: { email: { contains: string; mode: 'insensitive' } };
-    } = {};
+    const where = videoTranscriptionWhere(data);
 
-    if (data.cursor) where.id = { lt: data.cursor };
-    if (data.email) {
-      where.user = {
-        email: {
-          contains: data.email,
-          mode: 'insensitive',
-        },
-      };
-    }
-
-    const [transcriptions, count] = await Promise.all([
-      multipostDb.videoTranscription.findMany({
-        where,
-        orderBy: { createdAt: 'desc' },
-        take: limit,
-        include: {
+    const [transcriptions, countRows] = await Promise.all([
+      db
+        .select({
+          id: VideoTranscription.id,
+          userId: VideoTranscription.userId,
+          videoUrl: VideoTranscription.videoUrl,
+          videoId: VideoTranscription.videoId,
+          platform: VideoTranscription.platform,
+          audioUrl: VideoTranscription.audioUrl,
+          duration: VideoTranscription.duration,
+          transcript: VideoTranscription.transcript,
+          status: VideoTranscription.status,
+          error: VideoTranscription.error,
+          metadata: VideoTranscription.metadata,
+          createdAt: VideoTranscription.createdAt,
+          updatedAt: VideoTranscription.updatedAt,
           user: {
-            select: {
-              id: true,
-              name: true,
-              email: true,
-              image: true,
-            },
+            id: User.id,
+            name: User.name,
+            email: User.email,
+            image: User.image,
           },
-        },
-      }),
-      multipostDb.videoTranscription.count({ where }),
+        })
+        .from(VideoTranscription)
+        .innerJoin(User, eq(VideoTranscription.userId, User.id))
+        .where(where)
+        .orderBy(desc(VideoTranscription.createdAt))
+        .limit(limit),
+      db
+        .select({ count: count() })
+        .from(VideoTranscription)
+        .innerJoin(User, eq(VideoTranscription.userId, User.id))
+        .where(where),
     ]);
 
     return {
@@ -139,7 +157,7 @@ export const getVideoTranscriptions = createServerFn({ method: 'GET' })
           updatedAt: record.updatedAt.toISOString(),
           user: record.user,
         })),
-        count,
+        count: countRows[0]?.count ?? 0,
         nextCursor: transcriptions.length === limit ? transcriptions[transcriptions.length - 1]?.id : undefined,
       },
     };
@@ -153,25 +171,31 @@ export const getTranscriptionStats = createServerFn({ method: 'GET' })
     if (!session) return unauthorized(empty);
 
     const [total, completed, processing, failed, uniqueUsersResult] = await Promise.all([
-      multipostDb.videoTranscription.count(),
-      multipostDb.videoTranscription.count({ where: { status: 'completed' } }),
-      multipostDb.videoTranscription.count({ where: { status: 'processing' } }),
-      multipostDb.videoTranscription.count({ where: { status: 'failed' } }),
-      multipostDb.videoTranscription.groupBy({
-        by: ['userId'],
-        _count: { userId: true },
-      }),
+      db.select({ count: count() }).from(VideoTranscription),
+      db
+        .select({ count: count() })
+        .from(VideoTranscription)
+        .where(eq(VideoTranscription.status, 'completed')),
+      db
+        .select({ count: count() })
+        .from(VideoTranscription)
+        .where(eq(VideoTranscription.status, 'processing')),
+      db
+        .select({ count: count() })
+        .from(VideoTranscription)
+        .where(eq(VideoTranscription.status, 'failed')),
+      db.select({ count: countDistinct(VideoTranscription.userId) }).from(VideoTranscription),
     ]);
 
     return {
       code: 0,
       msg: 'success',
       data: {
-        total,
-        completed,
-        processing,
-        failed,
-        uniqueUsers: uniqueUsersResult.length,
+        total: total[0]?.count ?? 0,
+        completed: completed[0]?.count ?? 0,
+        processing: processing[0]?.count ?? 0,
+        failed: failed[0]?.count ?? 0,
+        uniqueUsers: uniqueUsersResult[0]?.count ?? 0,
       },
     };
   });

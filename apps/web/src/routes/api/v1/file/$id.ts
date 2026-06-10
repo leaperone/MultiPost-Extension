@@ -1,9 +1,11 @@
 import { createFileRoute } from '@tanstack/react-router';
 
 import { getPresignedDownloadUrl } from '@/lib/bitiful';
+import { FileHosting } from '@db/schema/schema';
+import { eq, sql } from 'drizzle-orm';
 
 import { preflightResponse, withCors } from '../../../../lib/cors';
-import { multipostDb } from '../../../../lib/db';
+import { db } from '../../../../lib/db';
 import { errorResp } from '../../../../lib/request';
 import { initFile, optionalFileAuth } from './-common';
 
@@ -32,10 +34,10 @@ async function GET({ request, params }: { request: Request; params: { id: string
 
     const url = await getPresignedDownloadUrl(file.key, 3600);
 
-    await multipostDb.fileHosting.update({
-      where: { id: fileId },
-      data: { times: { increment: 1 } },
-    });
+    await db
+      .update(FileHosting)
+      .set({ times: sql`${FileHosting.times} + 1`, updatedAt: new Date() })
+      .where(eq(FileHosting.id, fileId));
 
     return withCors(
       new Response(null, {

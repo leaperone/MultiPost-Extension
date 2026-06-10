@@ -1,11 +1,21 @@
 import { createServerFn } from '@tanstack/react-start';
+import { fromDecimal } from '@db/helpers';
+import {
+  PromotionCode,
+  PromotionSubmission,
+  PromotionTask,
+  RechargeCredit,
+} from '@db/schema/schema';
+import { and, desc, eq, gt, inArray } from 'drizzle-orm';
 import { nanoid } from 'nanoid';
 import { z } from 'zod';
 
-import type { PromotionTask } from '@/prisma/client_multipost';
 import { RechargeStatus, RechargeType } from './credit/types';
+import { addCreditInTransaction } from './credit/_core';
+import { db } from '../lib/db';
+import { getSession } from '../lib/session';
 
-type MultipostDb = typeof import('../lib/db')['multipostDb'];
+type PromotionTaskRow = typeof PromotionTask.$inferSelect;
 
 export enum PromotionSubmissionStatus {
   PENDING = 'PENDING',
@@ -24,13 +34,15 @@ export const PromotionTaskTypeLabelMap = {
 } as const;
 
 export type ClientPromotionTask = Omit<
-  PromotionTask,
-  'reward' | 'expiredAt' | 'createdAt' | 'updatedAt'
+  PromotionTaskRow,
+  'reward' | 'expiredAt' | 'createdAt' | 'updatedAt' | 'keywords' | 'examples'
 > & {
   reward: string;
   expiredAt: string;
   createdAt: string;
   updatedAt: string;
+  keywords: string[];
+  examples: string[];
   code?: string;
   isVerified?: boolean;
 };
@@ -59,11 +71,13 @@ const verifySchema = z.object({
 const FETCH_TWEET_ENDPOINT = '/v1/twitter/web/fetch_tweet_detail';
 
 function serializeTask(
-  task: PromotionTask,
+  task: PromotionTaskRow,
   additions: Pick<ClientPromotionTask, 'code' | 'isVerified'> = {},
 ): ClientPromotionTask {
   return {
     ...task,
+    keywords: task.keywords ?? [],
+    examples: task.examples ?? [],
     reward: task.reward.toString(),
     expiredAt: task.expiredAt.toISOString(),
     createdAt: task.createdAt.toISOString(),
@@ -72,33 +86,23 @@ function serializeTask(
   };
 }
 
-async function getActivityServerDeps() {
-  const [{ multipostDb }, { getSession }] = await Promise.all([
-    import('../lib/db'),
-    import('../lib/session'),
-  ]);
-
-  return { multipostDb, getSession };
-}
-
 async function userTaskAdditions(
-  multipostDb: MultipostDb,
   userId: string,
   taskIds: string[],
 ) {
+  if (taskIds.length === 0) {
+    return new Map<string, Pick<ClientPromotionTask, 'code' | 'isVerified'>>();
+  }
+
   const [codes, submissions] = await Promise.all([
-    multipostDb.promotionCode.findMany({
-      where: {
-        userId,
-        taskId: { in: taskIds },
-      },
-    }),
-    multipostDb.promotionSubmission.findMany({
-      where: {
-        userId,
-        taskId: { in: taskIds },
-      },
-    }),
+    db
+      .select()
+      .from(PromotionCode)
+      .where(and(eq(PromotionCode.userId, userId), inArray(PromotionCode.taskId, taskIds))),
+    db
+      .select()
+      .from(PromotionSubmission)
+      .where(and(eq(PromotionSubmission.userId, userId), inArray(PromotionSubmission.taskId, taskIds))),
   ]);
 
   return new Map(
@@ -119,18 +123,12 @@ async function userTaskAdditions(
 export const getActivityTasks = createServerFn({ method: 'GET' })
   .validator(emptySchema)
   .handler(async (): Promise<ClientPromotionTask[]> => {
-    const { multipostDb, getSession } = await getActivityServerDeps();
     const session = await getSession();
-    const tasks = await multipostDb.promotionTask.findMany({
-      where: {
-        expiredAt: {
-          gt: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000),
-        },
-      },
-      orderBy: {
-        createdAt: 'desc',
-      },
-    });
+    const tasks = await db
+      .select()
+      .from(PromotionTask)
+      .where(gt(PromotionTask.expiredAt, new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)))
+      .orderBy(desc(PromotionTask.createdAt));
 
     const userId = session?.user?.id;
     if (!userId) {
@@ -138,7 +136,6 @@ export const getActivityTasks = createServerFn({ method: 'GET' })
     }
 
     const additions = await userTaskAdditions(
-      multipostDb,
       userId,
       tasks.map((task) => task.id),
     );
@@ -149,11 +146,8 @@ export const getActivityTasks = createServerFn({ method: 'GET' })
 export const getActivityTaskDetail = createServerFn({ method: 'GET' })
   .validator(taskDetailSchema)
   .handler(async ({ data }): Promise<ClientPromotionTask | null> => {
-    const { multipostDb, getSession } = await getActivityServerDeps();
     const session = await getSession();
-    const task = await multipostDb.promotionTask.findUnique({
-      where: { id: data.id },
-    });
+    const [task] = await db.select().from(PromotionTask).where(eq(PromotionTask.id, data.id)).limit(1);
 
     if (!task) return null;
 
@@ -162,35 +156,29 @@ export const getActivityTaskDetail = createServerFn({ method: 'GET' })
       return serializeTask(task);
     }
 
-    const additions = await userTaskAdditions(multipostDb, userId, [task.id]);
+    const additions = await userTaskAdditions(userId, [task.id]);
     return serializeTask(task, additions.get(task.id));
   });
 
 export const getPromotionCode = createServerFn({ method: 'POST' })
   .validator(taskIdSchema)
   .handler(async ({ data }) => {
-    const { multipostDb, getSession } = await getActivityServerDeps();
     const session = await getSession();
     if (!session?.user?.id) {
       throw new Error('请先登录');
     }
 
-    const task = await multipostDb.promotionTask.findUnique({
-      where: {
-        id: data.taskId,
-      },
-    });
+    const [task] = await db.select().from(PromotionTask).where(eq(PromotionTask.id, data.taskId)).limit(1);
 
     if (!task) {
       throw new Error('任务不存在');
     }
 
-    const existingCode = await multipostDb.promotionCode.findFirst({
-      where: {
-        taskId: data.taskId,
-        userId: session.user.id,
-      },
-    });
+    const [existingCode] = await db
+      .select()
+      .from(PromotionCode)
+      .where(and(eq(PromotionCode.taskId, data.taskId), eq(PromotionCode.userId, session.user.id)))
+      .limit(1);
 
     if (existingCode) {
       return {
@@ -198,13 +186,14 @@ export const getPromotionCode = createServerFn({ method: 'POST' })
       };
     }
 
-    const code = await multipostDb.promotionCode.create({
-      data: {
+    const [code] = await db
+      .insert(PromotionCode)
+      .values({
         taskId: data.taskId,
         userId: session.user.id,
         code: nanoid(6),
-      },
-    });
+      })
+      .returning();
 
     return {
       code: code.code,
@@ -214,11 +203,7 @@ export const getPromotionCode = createServerFn({ method: 'POST' })
 export const verifyPromotionTask = createServerFn({ method: 'POST' })
   .validator(verifySchema)
   .handler(async ({ data }) => {
-    const { multipostDb, getSession } = await getActivityServerDeps();
-    const [{ fetchTikhub }, { addCredit }] = await Promise.all([
-      import('@/lib/tikhub'),
-      import('./credit/_core'),
-    ]);
+    const { fetchTikhub } = await import('@/lib/tikhub');
     const session = await getSession();
     if (!session?.user?.id) {
       throw new Error('请先登录');
@@ -229,9 +214,7 @@ export const verifyPromotionTask = createServerFn({ method: 'POST' })
       throw new Error('帖子ID不存在');
     }
 
-    const task = await multipostDb.promotionTask.findUnique({
-      where: { id: data.taskId },
-    });
+    const [task] = await db.select().from(PromotionTask).where(eq(PromotionTask.id, data.taskId)).limit(1);
 
     if (!task) {
       throw new Error('任务不存在');
@@ -241,33 +224,31 @@ export const verifyPromotionTask = createServerFn({ method: 'POST' })
       throw new Error('帖子链接与任务链接相同');
     }
 
-    const code = await multipostDb.promotionCode.findFirst({
-      where: {
-        taskId: task.id,
-        userId: session.user.id,
-      },
-    });
+    const [code] = await db
+      .select()
+      .from(PromotionCode)
+      .where(and(eq(PromotionCode.taskId, task.id), eq(PromotionCode.userId, session.user.id)))
+      .limit(1);
 
     if (!code) {
       throw new Error('推广码不存在');
     }
 
-    const existingSubmission = await multipostDb.promotionSubmission.findFirst({
-      where: {
-        taskId: task.id,
-        userId: session.user.id,
-      },
-    });
+    const [existingSubmission] = await db
+      .select()
+      .from(PromotionSubmission)
+      .where(and(eq(PromotionSubmission.taskId, task.id), eq(PromotionSubmission.userId, session.user.id)))
+      .limit(1);
 
     if (existingSubmission) {
       throw new Error('您已经提交过该任务');
     }
 
-    const existingSubmissionByLink = await multipostDb.promotionSubmission.findFirst({
-      where: {
-        link: data.link,
-      },
-    });
+    const [existingSubmissionByLink] = await db
+      .select()
+      .from(PromotionSubmission)
+      .where(eq(PromotionSubmission.link, data.link))
+      .limit(1);
 
     if (existingSubmissionByLink) {
       throw new Error('链接已提交过');
@@ -312,40 +293,39 @@ export const verifyPromotionTask = createServerFn({ method: 'POST' })
       }
     }
 
-    await multipostDb.$transaction(async (tx) => {
-      await tx.promotionSubmission.create({
-        data: {
-          taskId: task.id,
-          userId: session.user.id,
-          link: data.link,
-          scrapedData: tweetData.data,
-          verifiedData: {
-            status: PromotionSubmissionStatus.VERIFIED,
-            text: tweetData.data.text,
-            reply_to: tweetData.data.reply_to,
-            author: tweetData.data.author,
-            likes: tweetData.data.likes,
-            comments: tweetData.data.comments,
-            retweets: tweetData.data.retweets,
-            views: tweetData.data.views,
-            bookmarks: tweetData.data.bookmarks,
-            created_at: tweetData.data.created_at,
-          },
+    await db.transaction(async (tx) => {
+      await tx.insert(PromotionSubmission).values({
+        taskId: task.id,
+        userId: session.user.id,
+        link: data.link,
+        scrapedData: tweetData.data,
+        verifiedData: {
           status: PromotionSubmissionStatus.VERIFIED,
+          text: tweetData.data.text,
+          reply_to: tweetData.data.reply_to,
+          author: tweetData.data.author,
+          likes: tweetData.data.likes,
+          comments: tweetData.data.comments,
+          retweets: tweetData.data.retweets,
+          views: tweetData.data.views,
+          bookmarks: tweetData.data.bookmarks,
+          created_at: tweetData.data.created_at,
         },
+        status: PromotionSubmissionStatus.VERIFIED,
       });
 
-      await tx.rechargeCredit.create({
-        data: {
-          userId: session.user.id,
-          amount: task.reward,
-          orderId: `MP-${nanoid(32)}`,
-          type: RechargeType.PROMOTION,
-          status: RechargeStatus.SUCCESS,
-        },
+      await tx.insert(RechargeCredit).values({
+        userId: session.user.id,
+        amount: fromDecimal(task.reward),
+        orderId: `MP-${nanoid(32)}`,
+        type: RechargeType.PROMOTION,
+        status: RechargeStatus.SUCCESS,
       });
 
-      await addCredit(session.user.id, task.reward, true);
+      const result = await addCreditInTransaction(tx, session.user.id, task.reward, true);
+      if (!result.success) {
+        throw new Error(result.error || 'Failed to grant promotion credit');
+      }
     });
 
     return {

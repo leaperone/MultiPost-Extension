@@ -1,8 +1,10 @@
 import { createOpenAI } from '@ai-sdk/openai';
 import { createFileRoute } from '@tanstack/react-router';
+import { PromotionTask } from '@db/schema/schema';
 import { generateText } from 'ai';
+import { eq } from 'drizzle-orm';
 
-import { multipostDb } from '../../../lib/db';
+import { db } from '../../../lib/db';
 import { errorResponse, successResponse, unauthenticatedResponse } from '../../../lib/response';
 import { PromotionTaskTypeLabelMap } from './-types';
 
@@ -38,11 +40,7 @@ async function POST({ request }: { request: Request }) {
   try {
     const { taskId, code }: { taskId: string; code: string } = await request.json();
 
-    const task = await multipostDb.promotionTask.findUnique({
-      where: {
-        id: taskId,
-      },
-    });
+    const [task] = await db.select().from(PromotionTask).where(eq(PromotionTask.id, taskId)).limit(1);
 
     if (!task) {
       return errorResponse('任务不存在');

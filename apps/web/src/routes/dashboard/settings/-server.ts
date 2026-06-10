@@ -1,5 +1,10 @@
 import { createServerFn } from '@tanstack/react-start';
+import { Draft, ExtensionClient, ExtensionTask } from '@db/schema/schema';
+import { and, count, desc, eq, inArray, isNull } from 'drizzle-orm';
 import { z } from 'zod';
+
+import { db } from '../../../lib/db';
+import { getSession } from '../../../lib/session';
 
 const clientIdSchema = z.object({
   clientId: z.string().min(1),
@@ -26,17 +31,7 @@ function toDateString(value: Date) {
   return value.toISOString();
 }
 
-async function getServerContext() {
-  const [{ prisma }, { getSession }] = await Promise.all([
-    import('../../../lib/db'),
-    import('../../../lib/session'),
-  ]);
-
-  return { prisma, getSession };
-}
-
 export const getClientSettingsData = createServerFn({ method: 'GET' }).handler(async () => {
-  const { prisma, getSession } = await getServerContext();
   const session = await getSession();
   if (!session?.user?.id) {
     return {
@@ -46,17 +41,19 @@ export const getClientSettingsData = createServerFn({ method: 'GET' }).handler(a
   }
 
   const [clients, clientCount] = await Promise.all([
-    prisma.extensionClient.findMany({
-      where: { userId: session.user.id, deletedAt: null },
-      orderBy: { updatedAt: 'desc' },
-    }),
-    prisma.extensionClient.count({
-      where: { userId: session.user.id, deletedAt: null },
-    }),
+    db
+      .select()
+      .from(ExtensionClient)
+      .where(and(eq(ExtensionClient.userId, session.user.id), isNull(ExtensionClient.deletedAt)))
+      .orderBy(desc(ExtensionClient.updatedAt)),
+    db
+      .select({ value: count() })
+      .from(ExtensionClient)
+      .where(and(eq(ExtensionClient.userId, session.user.id), isNull(ExtensionClient.deletedAt))),
   ]);
 
   return {
-    clientCount,
+    clientCount: clientCount[0]?.value ?? 0,
     clients: clients.map((client) => ({
       id: client.id,
       name: client.name,
@@ -70,18 +67,16 @@ export const getClientSettingsData = createServerFn({ method: 'GET' }).handler(a
 export const deleteClient = createServerFn({ method: 'POST' })
   .validator(clientIdSchema)
   .handler(async ({ data }) => {
-    const { prisma, getSession } = await getServerContext();
     const session = await getSession();
     if (!session?.user?.id) {
       throw new Error('Not authenticated');
     }
 
-    const client = await prisma.extensionClient.findFirst({
-      where: {
-        id: data.clientId,
-        userId: session.user.id,
-      },
-    });
+    const [client] = await db
+      .select()
+      .from(ExtensionClient)
+      .where(and(eq(ExtensionClient.id, data.clientId), eq(ExtensionClient.userId, session.user.id)))
+      .limit(1);
 
     if (!client) {
       throw new Error('Client not found or you do not have permission to delete it.');
@@ -91,16 +86,16 @@ export const deleteClient = createServerFn({ method: 'POST' })
       return;
     }
 
-    await prisma.extensionClient.update({
-      where: { id: data.clientId },
-      data: {
+    await db
+      .update(ExtensionClient)
+      .set({
         deletedAt: new Date(),
-      },
-    });
+        updatedAt: new Date(),
+      })
+      .where(eq(ExtensionClient.id, data.clientId));
   });
 
 async function getTaskDisplayInfo(
-  prisma: Awaited<ReturnType<typeof getServerContext>>['prisma'],
   task: {
     taskType: string;
     taskData: unknown;
@@ -111,15 +106,13 @@ async function getTaskDisplayInfo(
 
   if (task.taskType === 'DRAFT_POST' && typeof taskData.draftId === 'string') {
     try {
-      const draft = await prisma.draft.findFirst({
-        where: {
-          id: taskData.draftId,
-          userId,
-        },
-        select: {
-          title: true,
-        },
-      });
+      const [draft] = await db
+        .select({
+          title: Draft.title,
+        })
+        .from(Draft)
+        .where(and(eq(Draft.id, taskData.draftId), eq(Draft.userId, userId)))
+        .limit(1);
 
       return {
         title: draft?.title || 'Untitled Draft',
@@ -150,31 +143,37 @@ async function getTaskDisplayInfo(
 export const getClientDetails = createServerFn({ method: 'GET' })
   .validator(clientIdSchema)
   .handler(async ({ data }) => {
-    const { prisma, getSession } = await getServerContext();
     const session = await getSession();
     if (!session?.user?.id) {
       return null;
     }
 
-    const client = await prisma.extensionClient.findFirst({
-      where: {
-        id: data.clientId,
-        userId: session.user.id,
-        deletedAt: null,
-      },
-    });
+    const [client] = await db
+      .select()
+      .from(ExtensionClient)
+      .where(
+        and(
+          eq(ExtensionClient.id, data.clientId),
+          eq(ExtensionClient.userId, session.user.id),
+          isNull(ExtensionClient.deletedAt),
+        ),
+      )
+      .limit(1);
 
     if (!client) {
       return null;
     }
 
-    const tasks = await prisma.extensionTask.findMany({
-      where: {
-        targetClientId: data.clientId,
-        userId: session.user.id,
-      },
-      orderBy: { createdAt: 'desc' },
-    });
+    const tasks = await db
+      .select()
+      .from(ExtensionTask)
+      .where(
+        and(
+          eq(ExtensionTask.targetClientId, data.clientId),
+          eq(ExtensionTask.userId, session.user.id),
+        ),
+      )
+      .orderBy(desc(ExtensionTask.createdAt));
 
     const tasksWithDisplayInfo = await Promise.all(
       tasks.map(async (task) => ({
@@ -183,7 +182,7 @@ export const getClientDetails = createServerFn({ method: 'GET' })
         taskType: task.taskType,
         createdAt: toDateString(task.createdAt),
         updatedAt: toDateString(task.updatedAt),
-        displayInfo: await getTaskDisplayInfo(prisma, task, session.user.id),
+        displayInfo: await getTaskDisplayInfo(task, session.user.id),
       })),
     );
 
@@ -203,61 +202,44 @@ export const getClientDetails = createServerFn({ method: 'GET' })
 export const deleteTask = createServerFn({ method: 'POST' })
   .validator(taskIdSchema)
   .handler(async ({ data }) => {
-    const { prisma, getSession } = await getServerContext();
     const session = await getSession();
     if (!session?.user?.id) {
       throw new Error('Not authenticated');
     }
 
-    const task = await prisma.extensionTask.findFirst({
-      where: {
-        id: data.taskId,
-        userId: session.user.id,
-      },
-    });
+    const [task] = await db
+      .select()
+      .from(ExtensionTask)
+      .where(and(eq(ExtensionTask.id, data.taskId), eq(ExtensionTask.userId, session.user.id)))
+      .limit(1);
 
     if (!task) {
       throw new Error('Task not found or you do not have permission to delete it.');
     }
 
-    await prisma.extensionTask.delete({
-      where: {
-        id: data.taskId,
-      },
-    });
+    await db.delete(ExtensionTask).where(eq(ExtensionTask.id, data.taskId));
   });
 
 export const deleteBatchTasks = createServerFn({ method: 'POST' })
   .validator(taskIdsSchema)
   .handler(async ({ data }) => {
-    const { prisma, getSession } = await getServerContext();
     const session = await getSession();
     if (!session?.user?.id) {
       throw new Error('Not authenticated');
     }
 
-    const tasks = await prisma.extensionTask.findMany({
-      where: {
-        id: {
-          in: data.taskIds,
-        },
-        userId: session.user.id,
-      },
-      select: {
-        id: true,
-      },
-    });
+    const tasks = await db
+      .select({
+        id: ExtensionTask.id,
+      })
+      .from(ExtensionTask)
+      .where(and(inArray(ExtensionTask.id, data.taskIds), eq(ExtensionTask.userId, session.user.id)));
 
     if (tasks.length !== data.taskIds.length) {
       throw new Error('Some tasks not found or you do not have permission to delete them.');
     }
 
-    await prisma.extensionTask.deleteMany({
-      where: {
-        id: {
-          in: data.taskIds,
-        },
-        userId: session.user.id,
-      },
-    });
+    await db
+      .delete(ExtensionTask)
+      .where(and(inArray(ExtensionTask.id, data.taskIds), eq(ExtensionTask.userId, session.user.id)));
   });

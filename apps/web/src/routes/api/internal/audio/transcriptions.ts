@@ -1,5 +1,5 @@
 import { createFileRoute } from '@tanstack/react-router';
-import { Decimal } from '@prisma/client/runtime/library';
+import Decimal from 'decimal.js';
 import { z } from 'zod';
 
 import { PRICING } from '@/src/actions/credit/types';

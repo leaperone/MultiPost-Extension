@@ -9,7 +9,9 @@ import ChatCreationPanel from './ChatCreationPanel'
 import MediaLibrary from '../../../drafts/-components/MediaLibrary'
 import { ImageGeneratePanel } from '../../../drafts/-components/ImageGeneratePanel'
 import { PosterGeneratePanel } from '../../../drafts/-components/PosterGeneratePanel'
-import type { FileHosting } from '@/prisma/client_multipost'
+import type { FileHosting as FileHostingTable } from '@db/schema/schema'
+
+type FileHosting = typeof FileHostingTable.$inferSelect
 
 export default function SidebarContent() {
   const { t } = useTranslation('draft')

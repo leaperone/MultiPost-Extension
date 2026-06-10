@@ -1,7 +1,9 @@
 import { createServerFn } from '@tanstack/react-start';
+import { Draft, PublishTask, PublishTaskLog, SocialMediaAccount } from '@db/schema/schema';
+import { and, asc, desc, eq, inArray } from 'drizzle-orm';
 import { z } from 'zod';
 
-import { multipostDb } from '../../lib/db';
+import { db } from '../../lib/db';
 import { getSession } from '../../lib/session';
 
 const createPublishTaskSchema = z.object({
@@ -43,12 +45,11 @@ export const createPublishTask = createServerFn({ method: 'POST' })
         };
       }
 
-      const draft = await multipostDb.draft.findFirst({
-        where: {
-          id: draftId,
-          userId,
-        },
-      });
+      const [draft] = await db
+        .select()
+        .from(Draft)
+        .where(and(eq(Draft.id, draftId), eq(Draft.userId, userId)))
+        .limit(1);
 
       if (!draft) {
         return {
@@ -57,13 +58,16 @@ export const createPublishTask = createServerFn({ method: 'POST' })
         };
       }
 
-      const accounts = await multipostDb.socialMediaAccount.findMany({
-        where: {
-          id: { in: selectedAccountIds },
-          userId,
-          isActive: true,
-        },
-      });
+      const accounts = await db
+        .select()
+        .from(SocialMediaAccount)
+        .where(
+          and(
+            inArray(SocialMediaAccount.id, selectedAccountIds),
+            eq(SocialMediaAccount.userId, userId),
+            eq(SocialMediaAccount.isActive, true),
+          ),
+        );
 
       if (accounts.length !== selectedAccountIds.length) {
         return {
@@ -80,29 +84,33 @@ export const createPublishTask = createServerFn({ method: 'POST' })
         };
       }
 
-      const result = await multipostDb.$transaction(async (tx) => {
-        const publishTask = await tx.publishTask.create({
-          data: {
+      const result = await db.transaction(async (tx) => {
+        const [publishTask] = await tx
+          .insert(PublishTask)
+          .values({
             userId,
             draftId,
             publishedAt: publishTime,
             status: 'pending',
-          },
-        });
+          })
+          .returning();
 
-        const publishTaskLogs = await Promise.all(
-          accounts.map((account) =>
-            tx.publishTaskLog.create({
-              data: {
+        if (!publishTask) {
+          throw new Error('Failed to create publish task');
+        }
+
+        const publishTaskLogs = await tx
+          .insert(PublishTaskLog)
+          .values(
+            accounts.map((account) => ({
                 publishTaskId: publishTask.id,
                 userId,
                 platform: account.platform,
                 platformId: account.platformId,
                 status: 'pending',
-              },
-            }),
-          ),
-        );
+            })),
+          )
+          .returning();
 
         return {
           publishTask,
@@ -132,51 +140,66 @@ export const getScheduledTasks = createServerFn({ method: 'GET' }).handler(async
     throw new Error('Unauthorized');
   }
 
-  const publishTasks = await multipostDb.publishTask.findMany({
-    where: {
-      userId: session.user.id,
-    },
-    include: {
-      draft: {
-        select: {
-          title: true,
-          content: true,
-        },
-      },
-      PublishTaskLog: {
-        select: {
-          id: true,
-          platform: true,
-          platformId: true,
-          publishedAt: true,
-          status: true,
-          error: true,
-          message: true,
-        },
-      },
-    },
-    orderBy: {
-      publishedAt: 'asc',
-    },
-  });
+  const publishTasks = await db
+    .select()
+    .from(PublishTask)
+    .where(eq(PublishTask.userId, session.user.id))
+    .orderBy(asc(PublishTask.publishedAt));
+
+  const draftIds = publishTasks.map((task) => task.draftId);
+  const taskIds = publishTasks.map((task) => task.id);
+  const [drafts, logs] = taskIds.length
+    ? await Promise.all([
+        db
+          .select({
+            id: Draft.id,
+            title: Draft.title,
+            content: Draft.content,
+          })
+          .from(Draft)
+          .where(inArray(Draft.id, draftIds)),
+        db
+          .select({
+            id: PublishTaskLog.id,
+            publishTaskId: PublishTaskLog.publishTaskId,
+            platform: PublishTaskLog.platform,
+            platformId: PublishTaskLog.platformId,
+            publishedAt: PublishTaskLog.publishedAt,
+            status: PublishTaskLog.status,
+            error: PublishTaskLog.error,
+            message: PublishTaskLog.message,
+          })
+          .from(PublishTaskLog)
+          .where(inArray(PublishTaskLog.publishTaskId, taskIds)),
+      ])
+    : [[], []];
+
+  const draftById = new Map(drafts.map((draft) => [draft.id, draft]));
+  const logsByTaskId = new Map<string, typeof logs>();
+  for (const log of logs) {
+    const grouped = logsByTaskId.get(log.publishTaskId) ?? [];
+    grouped.push(log);
+    logsByTaskId.set(log.publishTaskId, grouped);
+  }
 
   return publishTasks.map((task) => ({
     id: task.id,
-    title: task.draft.title || `Publish Task ${task.id.slice(-6)}`,
+    title: draftById.get(task.draftId)?.title || `Publish Task ${task.id.slice(-6)}`,
     start: task.publishedAt.toISOString(),
     description:
-      task.draft.content?.slice(0, 100) +
-      (task.draft.content && task.draft.content.length > 100 ? '...' : ''),
+      draftById.get(task.draftId)?.content?.slice(0, 100) +
+      (draftById.get(task.draftId)?.content && draftById.get(task.draftId)!.content!.length > 100 ? '...' : ''),
     status: task.status,
     classNames: [`status-${task.status}`],
     extendedProps: {
       draftId: task.draftId,
       status: task.status,
-      content: task.draft.content,
+      content: draftById.get(task.draftId)?.content,
       createdAt: task.createdAt.toISOString(),
       updatedAt: task.updatedAt.toISOString(),
-      publishTaskLogs: task.PublishTaskLog.map((log) => ({
+      publishTaskLogs: (logsByTaskId.get(task.id) ?? []).map((log) => ({
         ...log,
+        publishTaskId: undefined,
         publishedAt: log.publishedAt?.toISOString() ?? null,
       })),
     },
@@ -191,24 +214,22 @@ export const getPublishTaskDetail = createServerFn({ method: 'GET' })
       throw new Error('Unauthorized');
     }
 
-    const task = await multipostDb.publishTask.findFirst({
-      where: {
-        id: data.taskId,
-        userId: session.user.id,
-      },
-      include: {
-        draft: true,
-        PublishTaskLog: {
-          orderBy: {
-            createdAt: 'desc',
-          },
-        },
-      },
-    });
+    const [task] = await db
+      .select()
+      .from(PublishTask)
+      .where(and(eq(PublishTask.id, data.taskId), eq(PublishTask.userId, session.user.id)))
+      .limit(1);
 
     if (!task) {
       throw new Error('Task not found');
     }
+
+    const [draft] = await db.select().from(Draft).where(eq(Draft.id, task.draftId)).limit(1);
+    const logs = await db
+      .select()
+      .from(PublishTaskLog)
+      .where(eq(PublishTaskLog.publishTaskId, task.id))
+      .orderBy(desc(PublishTaskLog.createdAt));
 
     return {
       ...task,
@@ -216,11 +237,11 @@ export const getPublishTaskDetail = createServerFn({ method: 'GET' })
       createdAt: task.createdAt.toISOString(),
       updatedAt: task.updatedAt.toISOString(),
       draft: {
-        ...task.draft,
-        createdAt: task.draft.createdAt.toISOString(),
-        updatedAt: task.draft.updatedAt.toISOString(),
+        ...draft,
+        createdAt: draft?.createdAt.toISOString(),
+        updatedAt: draft?.updatedAt.toISOString(),
       },
-      PublishTaskLog: task.PublishTaskLog.map((log) => ({
+      PublishTaskLog: logs.map((log) => ({
         ...log,
         publishedAt: log.publishedAt?.toISOString() ?? null,
         createdAt: log.createdAt.toISOString(),
@@ -238,12 +259,11 @@ export const cancelPublishTask = createServerFn({ method: 'POST' })
     }
 
     try {
-      const task = await multipostDb.publishTask.findFirst({
-        where: {
-          id: data.taskId,
-          userId: session.user.id,
-        },
-      });
+      const [task] = await db
+        .select()
+        .from(PublishTask)
+        .where(and(eq(PublishTask.id, data.taskId), eq(PublishTask.userId, session.user.id)))
+        .limit(1);
 
       if (!task) {
         return {
@@ -259,26 +279,21 @@ export const cancelPublishTask = createServerFn({ method: 'POST' })
         };
       }
 
-      await multipostDb.publishTask.update({
-        where: {
-          id: data.taskId,
-        },
-        data: {
+      await db
+        .update(PublishTask)
+        .set({
           status: 'cancelled',
           updatedAt: new Date(),
-        },
-      });
+        })
+        .where(eq(PublishTask.id, data.taskId));
 
-      await multipostDb.publishTaskLog.updateMany({
-        where: {
-          publishTaskId: data.taskId,
-          status: 'pending',
-        },
-        data: {
+      await db
+        .update(PublishTaskLog)
+        .set({
           status: 'cancelled',
           updatedAt: new Date(),
-        },
-      });
+        })
+        .where(and(eq(PublishTaskLog.publishTaskId, data.taskId), eq(PublishTaskLog.status, 'pending')));
 
       return {
         success: true,
@@ -302,12 +317,11 @@ export const restartPublishTask = createServerFn({ method: 'POST' })
     }
 
     try {
-      const task = await multipostDb.publishTask.findFirst({
-        where: {
-          id: data.taskId,
-          userId: session.user.id,
-        },
-      });
+      const [task] = await db
+        .select()
+        .from(PublishTask)
+        .where(and(eq(PublishTask.id, data.taskId), eq(PublishTask.userId, session.user.id)))
+        .limit(1);
 
       if (!task) {
         return {
@@ -323,28 +337,26 @@ export const restartPublishTask = createServerFn({ method: 'POST' })
         };
       }
 
-      await multipostDb.publishTask.update({
-        where: {
-          id: data.taskId,
-        },
-        data: {
+      await db
+        .update(PublishTask)
+        .set({
           status: 'pending',
           updatedAt: new Date(),
-        },
-      });
+        })
+        .where(eq(PublishTask.id, data.taskId));
 
-      await multipostDb.publishTaskLog.updateMany({
-        where: {
-          publishTaskId: data.taskId,
-          status: {
-            in: ['cancelled', 'failed'],
-          },
-        },
-        data: {
+      await db
+        .update(PublishTaskLog)
+        .set({
           status: 'pending',
           updatedAt: new Date(),
-        },
-      });
+        })
+        .where(
+          and(
+            eq(PublishTaskLog.publishTaskId, data.taskId),
+            inArray(PublishTaskLog.status, ['cancelled', 'failed']),
+          ),
+        );
 
       return {
         success: true,

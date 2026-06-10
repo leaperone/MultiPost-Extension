@@ -7,7 +7,9 @@ import { getUserImageFiles } from '../-actions';
 import { toast } from 'sonner';
 import ky from 'ky';
 import { useTranslation } from '@/src/i18n/client';
-import { FileHosting } from '@/prisma/client_multipost';
+import type { FileHosting as FileHostingTable } from '@db/schema/schema';
+
+type FileHosting = typeof FileHostingTable.$inferSelect;
 
 const Viewer = lazy(() => import('react-viewer'));
 

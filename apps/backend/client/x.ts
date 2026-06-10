@@ -5,8 +5,19 @@
  * @date 2024-12-19
  */
 
-import { PrismaClient, Prisma } from '../prisma/client_multipost_deno/client.ts';
-import { BaseSocialMediaClient, PublishTask, TaskProcessingResult } from './base.ts';
+import { and, eq } from "drizzle-orm";
+import type { JsonValue } from "@db/helpers.ts";
+import {
+  PublishTaskLog as PublishTaskLogTable,
+  SocialMediaAccount as SocialMediaAccountTable,
+} from "@db/schema/index.ts";
+import {
+  BaseSocialMediaClient,
+  getErrorMessage,
+  PublishTask,
+  TaskProcessingResult,
+} from "./base.ts";
+import type { MultipostDb } from "../db.ts";
 
 // X API response interfaces
 export interface XPostInfo {
@@ -62,13 +73,13 @@ export interface XMediaUploadResponse {
  * X platform client implementation
  */
 export class XClient extends BaseSocialMediaClient {
-  private baseUrl = 'https://api.x.com/2';
-  private uploadUrl = 'https://api.x.com/2';
-  private clientId = process.env.X_CLIENT_ID || '';
-  private clientSecret = process.env.X_CLIENT_SECRET || '';
+  private baseUrl = "https://api.x.com/2";
+  private uploadUrl = "https://api.x.com/2";
+  private clientId = process.env.X_CLIENT_ID || "";
+  private clientSecret = process.env.X_CLIENT_SECRET || "";
 
-  constructor(database: PrismaClient) {
-    super(database, 'x');
+  constructor(database: MultipostDb) {
+    super(database, "x");
   }
 
   /**
@@ -76,7 +87,9 @@ export class XClient extends BaseSocialMediaClient {
    * @param accountId - Account ID to refresh
    * @returns Promise with processing result
    */
-  async processRefreshAccount(accountId: string): Promise<TaskProcessingResult> {
+  async processRefreshAccount(
+    accountId: string,
+  ): Promise<TaskProcessingResult> {
     try {
       console.log(`🔄 Refreshing X account: ${accountId}`);
 
@@ -86,18 +99,22 @@ export class XClient extends BaseSocialMediaClient {
         return {
           success: false,
           message: `Account not found: ${accountId}`,
-          error: 'ACCOUNT_NOT_FOUND',
+          error: "ACCOUNT_NOT_FOUND",
         };
       }
 
-      console.log(`📋 Found X account: ${account.username || account.displayName} (isActive=${account.isActive})`);
+      console.log(
+        `📋 Found X account: ${
+          account.username || account.displayName
+        } (isActive=${account.isActive})`,
+      );
 
       // Check if account has refresh token
       if (!account.refreshToken) {
         return {
           success: false,
-          message: 'No refresh token available for account',
-          error: 'NO_REFRESH_TOKEN',
+          message: "No refresh token available for account",
+          error: "NO_REFRESH_TOKEN",
         };
       }
 
@@ -120,23 +137,26 @@ export class XClient extends BaseSocialMediaClient {
         isActive: true,
       });
 
-      console.log(`✅ X token refreshed successfully, expires at: ${expiresAt}`);
+      console.log(
+        `✅ X token refreshed successfully, expires at: ${expiresAt}`,
+      );
 
       return {
         success: true,
         message: `X account ${accountId} refreshed successfully`,
-        data: { platform: 'x', expiresAt },
+        data: { platform: "x", expiresAt },
       };
     } catch (error) {
       console.error(`❌ Error refreshing X account ${accountId}:`, error);
+      const message = getErrorMessage(error);
 
       // Mark account as inactive if refresh failed
-      await this.markAccountInactive(accountId, `Refresh failed: ${error.message}`);
+      await this.markAccountInactive(accountId, `Refresh failed: ${message}`);
 
       return {
         success: false,
-        message: `Error refreshing X account: ${error.message}`,
-        error: error.message,
+        message: `Error refreshing X account: ${message}`,
+        error: message,
       };
     }
   }
@@ -147,7 +167,10 @@ export class XClient extends BaseSocialMediaClient {
    * @param accessToken - Access token for the account
    * @returns Promise with processing result
    */
-  async processCheckTask(logId: string, accessToken: string): Promise<TaskProcessingResult> {
+  async processCheckTask(
+    logId: string,
+    accessToken: string,
+  ): Promise<TaskProcessingResult> {
     try {
       console.log(`🔍 Checking X publish status for log: ${logId}`);
 
@@ -157,7 +180,7 @@ export class XClient extends BaseSocialMediaClient {
         return {
           success: false,
           message: `No publish data found for X log ${logId}`,
-          error: 'NO_PUBLISH_DATA',
+          error: "NO_PUBLISH_DATA",
         };
       }
 
@@ -169,7 +192,7 @@ export class XClient extends BaseSocialMediaClient {
         return {
           success: false,
           message: `No tweet ID found in publish data for X log ${logId}`,
-          error: 'NO_TWEET_ID',
+          error: "NO_TWEET_ID",
         };
       }
 
@@ -178,33 +201,46 @@ export class XClient extends BaseSocialMediaClient {
 
       if (statusResponse.data) {
         // Tweet exists, mark as completed
-        await this.updatePublishTaskLogStatus(logId, 'completed', 'X post published successfully', statusResponse);
+        await this.updatePublishTaskLogStatus(
+          logId,
+          "completed",
+          "X post published successfully",
+          statusResponse as JsonValue,
+        );
 
         return {
           success: true,
           message: `X status check completed successfully`,
-          data: { status: 'completed', tweetId, statusResponse },
+          data: { status: "completed", tweetId, statusResponse },
         };
       } else {
         // Tweet not found, mark as failed
-        await this.updatePublishTaskLogStatus(logId, 'failed', 'Tweet not found on X');
+        await this.updatePublishTaskLogStatus(
+          logId,
+          "failed",
+          "Tweet not found on X",
+        );
 
         return {
           success: false,
           message: `Tweet not found on X: ${tweetId}`,
-          error: 'TWEET_NOT_FOUND',
+          error: "TWEET_NOT_FOUND",
         };
       }
     } catch (error) {
-      console.error(`❌ Error checking X publish status for log ${logId}:`, error);
+      console.error(
+        `❌ Error checking X publish status for log ${logId}:`,
+        error,
+      );
+      const message = getErrorMessage(error);
 
       // Update log with error
-      await this.updatePublishTaskLogStatus(logId, 'failed', error.message);
+      await this.updatePublishTaskLogStatus(logId, "failed", message);
 
       return {
         success: false,
-        message: `Error checking X publish status: ${error.message}`,
-        error: error.message,
+        message: `Error checking X publish status: ${message}`,
+        error: message,
       };
     }
   }
@@ -215,7 +251,10 @@ export class XClient extends BaseSocialMediaClient {
    * @param publishTask - Parent PublishTask
    * @returns Promise with processing result
    */
-  async processPublishTaskLog(logId: string, publishTask: PublishTask): Promise<TaskProcessingResult> {
+  async processPublishTaskLog(
+    logId: string,
+    publishTask: PublishTask,
+  ): Promise<TaskProcessingResult> {
     try {
       console.log(`🔄 Processing X publish log ${logId}`);
 
@@ -224,70 +263,83 @@ export class XClient extends BaseSocialMediaClient {
         return {
           success: false,
           message: `No publish task log found for ID: ${logId}`,
-          error: 'NO_PUBLISH_TASK_LOG',
+          error: "NO_PUBLISH_TASK_LOG",
         };
       }
 
       // Update log status to processing
-      await this.db.publishTaskLog.update({
-        where: { id: logId },
-        data: { status: 'processing' },
-      });
+      await this.db
+        .update(PublishTaskLogTable)
+        .set({ status: "processing", updatedAt: new Date() })
+        .where(eq(PublishTaskLogTable.id, logId));
 
       // Get X account from database
-      const xAccount = await this.db.socialMediaAccount.findUnique({
-        where: {
-          userId_platform_platformId: {
-            userId: publishTask.userId,
-            platform: log.platform,
-            platformId: log.platformId,
-          },
-          isActive: true,
-        },
-      });
+      const [xAccount] = await this.db
+        .select()
+        .from(SocialMediaAccountTable)
+        .where(
+          and(
+            eq(SocialMediaAccountTable.userId, publishTask.userId),
+            eq(SocialMediaAccountTable.platform, log.platform),
+            eq(SocialMediaAccountTable.platformId, log.platformId),
+            eq(SocialMediaAccountTable.isActive, true),
+          ),
+        )
+        .limit(1);
 
       if (!xAccount) {
-        const errorMsg = `No active X account found for userId=${publishTask.userId}, platformId=${log.platformId}, platform=${log.platform}`;
-        await this.updatePublishTaskLogStatus(log.id, 'failed', errorMsg);
+        const errorMsg =
+          `No active X account found for userId=${publishTask.userId}, platformId=${log.platformId}, platform=${log.platform}`;
+        await this.updatePublishTaskLogStatus(log.id, "failed", errorMsg);
         return {
           success: false,
           message: errorMsg,
-          error: 'NO_ACTIVE_ACCOUNT',
+          error: "NO_ACTIVE_ACCOUNT",
         };
       }
 
       // Prepare tweet content
-      const tweetText = this.prepareTweetText(publishTask.draft.content || '');
+      const tweetText = this.prepareTweetText(publishTask.draft.content || "");
 
       // Upload media if available
       let mediaIds: string[] = [];
       if (publishTask.draft.files) {
         try {
-          mediaIds = await this.uploadMediaFiles(publishTask.draft.files, xAccount.accessToken);
+          mediaIds = await this.uploadMediaFiles(
+            publishTask.draft.files,
+            xAccount.accessToken,
+          );
           console.log(`📸 Uploaded ${mediaIds.length} media files for X`);
         } catch (error) {
-          console.warn(`⚠️  Failed to upload media for X: ${error.message}`);
+          console.warn(
+            `⚠️  Failed to upload media for X: ${getErrorMessage(error)}`,
+          );
           // Continue without media
         }
       }
 
       // Post tweet to X
       console.log(`🚀 Posting tweet to X for log ${log.id}`);
-      const tweetResponse = await this.postTweet(tweetText, xAccount.accessToken, mediaIds);
+      const tweetResponse = await this.postTweet(
+        tweetText,
+        xAccount.accessToken,
+        mediaIds,
+      );
 
       if (tweetResponse.data?.id) {
         const tweetId = tweetResponse.data.id;
         console.log(`✅ X tweet posted successfully with ID: ${tweetId}`);
 
         // Update log with tweet response
-        await this.db.publishTaskLog.update({
-          where: { id: log.id },
-          data: {
-            publishData: tweetResponse as Prisma.InputJsonValue,
-            status: 'completed',
+        await this.db
+          .update(PublishTaskLogTable)
+          .set({
+            publishData: tweetResponse as JsonValue,
+            status: "completed",
             publishedAt: new Date(),
-          },
-        });
+            updatedAt: new Date(),
+          })
+          .where(eq(PublishTaskLogTable.id, log.id));
 
         return {
           success: true,
@@ -295,15 +347,16 @@ export class XClient extends BaseSocialMediaClient {
           data: { tweetId, tweetResponse },
         };
       } else {
-        throw new Error('Failed to get tweet ID from X API response');
+        throw new Error("Failed to get tweet ID from X API response");
       }
     } catch (error) {
       console.error(`❌ Error processing X publish log ${logId}:`, error);
-      await this.updatePublishTaskLogStatus(logId, 'failed', error.message);
+      const message = getErrorMessage(error);
+      await this.updatePublishTaskLogStatus(logId, "failed", message);
       return {
         success: false,
-        message: `Error processing X publish log: ${error.message}`,
-        error: error.message,
+        message: `Error processing X publish log: ${message}`,
+        error: message,
       };
     }
   }
@@ -315,11 +368,11 @@ export class XClient extends BaseSocialMediaClient {
    */
   private prepareTweetText(content: string): string {
     // Remove HTML tags and clean up content
-    let text = content.replace(/<[^>]*>/g, '');
+    let text = content.replace(/<[^>]*>/g, "");
 
     // Truncate to X character limit (280 characters)
     if (text.length > 280) {
-      text = text.substring(0, 277) + '...';
+      text = text.substring(0, 277) + "...";
     }
 
     return text.trim();
@@ -331,7 +384,10 @@ export class XClient extends BaseSocialMediaClient {
    * @param accessToken - Access token
    * @returns Promise with array of media IDs
    */
-  private async uploadMediaFiles(files: unknown, accessToken: string): Promise<string[]> {
+  private async uploadMediaFiles(
+    files: unknown,
+    accessToken: string,
+  ): Promise<string[]> {
     const mediaIds: string[] = [];
 
     // Convert files to array if it's not already
@@ -342,7 +398,9 @@ export class XClient extends BaseSocialMediaClient {
         // Extract file URL or data from the file object
         const fileUrl = this.extractFileUrl(file);
         if (!fileUrl) {
-          console.warn(`⚠️  Could not extract file URL from: ${JSON.stringify(file)}`);
+          console.warn(
+            `⚠️  Could not extract file URL from: ${JSON.stringify(file)}`,
+          );
           continue;
         }
 
@@ -355,7 +413,9 @@ export class XClient extends BaseSocialMediaClient {
 
         console.log(`📸 Uploaded media file: ${mediaId}`);
       } catch (error) {
-        console.error(`❌ Failed to upload media file: ${error.message}`);
+        console.error(
+          `❌ Failed to upload media file: ${getErrorMessage(error)}`,
+        );
         // Continue with other files
       }
     }
@@ -369,11 +429,11 @@ export class XClient extends BaseSocialMediaClient {
    * @returns File URL or null
    */
   private extractFileUrl(file: unknown): string | null {
-    if (typeof file === 'string') {
+    if (typeof file === "string") {
       return file;
     }
 
-    if (typeof file === 'object' && file !== null) {
+    if (typeof file === "object" && file !== null) {
       const fileObj = file as Record<string, unknown>;
       return (fileObj.url as string) || (fileObj.path as string) || null;
     }
@@ -389,7 +449,9 @@ export class XClient extends BaseSocialMediaClient {
   private async downloadFile(url: string): Promise<ArrayBuffer> {
     const response = await fetch(url);
     if (!response.ok) {
-      throw new Error(`Failed to download file: ${response.status} ${response.statusText}`);
+      throw new Error(
+        `Failed to download file: ${response.status} ${response.statusText}`,
+      );
     }
     return await response.arrayBuffer();
   }
@@ -400,16 +462,19 @@ export class XClient extends BaseSocialMediaClient {
    * @param accessToken - Access token
    * @returns Promise with media ID
    */
-  private async uploadMedia(fileData: ArrayBuffer, accessToken: string): Promise<string> {
+  private async uploadMedia(
+    fileData: ArrayBuffer,
+    accessToken: string,
+  ): Promise<string> {
     const url = `${this.uploadUrl}/media/upload`;
 
     // Create form data with media file
     const formData = new FormData();
-    formData.append('media', new Blob([fileData]), 'media.jpeg');
-    formData.append('media_category', 'tweet_image');
+    formData.append("media", new Blob([fileData]), "media.jpeg");
+    formData.append("media_category", "tweet_image");
 
     const response = await fetch(url, {
-      method: 'POST',
+      method: "POST",
       headers: {
         Authorization: `Bearer ${accessToken}`,
       },
@@ -418,7 +483,9 @@ export class XClient extends BaseSocialMediaClient {
 
     if (!response.ok) {
       const errorText = await response.text();
-      throw new Error(`X media upload error: ${response.status} - ${errorText}`);
+      throw new Error(
+        `X media upload error: ${response.status} - ${errorText}`,
+      );
     }
 
     const result: XMediaUploadResponse = await response.json();
@@ -431,7 +498,10 @@ export class XClient extends BaseSocialMediaClient {
    * @param options - Fetch options
    * @returns Promise with the response
    */
-  private async makeRequest(url: string, options: RequestInit): Promise<Response> {
+  private async makeRequest(
+    url: string,
+    options: RequestInit,
+  ): Promise<Response> {
     const response = await fetch(url, options);
 
     if (!response.ok) {
@@ -449,7 +519,11 @@ export class XClient extends BaseSocialMediaClient {
    * @param mediaIds - Optional media IDs to attach
    * @returns Promise with the response
    */
-  async postTweet(text: string, accessToken: string, mediaIds?: string[]): Promise<XApiResponse> {
+  async postTweet(
+    text: string,
+    accessToken: string,
+    mediaIds?: string[],
+  ): Promise<XApiResponse> {
     const url = `${this.baseUrl}/tweets`;
 
     const tweetData: Record<string, unknown> = {
@@ -464,10 +538,10 @@ export class XClient extends BaseSocialMediaClient {
     }
 
     const response = await this.makeRequest(url, {
-      method: 'POST',
+      method: "POST",
       headers: {
         Authorization: `Bearer ${accessToken}`,
-        'Content-Type': 'application/json',
+        "Content-Type": "application/json",
       },
       body: JSON.stringify(tweetData),
     });
@@ -481,11 +555,14 @@ export class XClient extends BaseSocialMediaClient {
    * @param accessToken - Access token
    * @returns Promise with the status response
    */
-  async getTweetStatus(tweetId: string, accessToken: string): Promise<XStatusResponse> {
+  async getTweetStatus(
+    tweetId: string,
+    accessToken: string,
+  ): Promise<XStatusResponse> {
     const url = `${this.baseUrl}/tweets/${tweetId}`;
 
     const response = await this.makeRequest(url, {
-      method: 'GET',
+      method: "GET",
       headers: {
         Authorization: `Bearer ${accessToken}`,
       },
@@ -506,28 +583,34 @@ export class XClient extends BaseSocialMediaClient {
   }> {
     // Check if client credentials are available
     if (!this.clientId || !this.clientSecret) {
-      throw new Error('X_CLIENT_ID and X_CLIENT_SECRET environment variables are required');
+      throw new Error(
+        "X_CLIENT_ID and X_CLIENT_SECRET environment variables are required",
+      );
     }
 
-    const url = 'https://api.x.com/2/oauth2/token';
+    const url = "https://api.x.com/2/oauth2/token";
 
     const formData = new URLSearchParams({
-      grant_type: 'refresh_token',
+      grant_type: "refresh_token",
       refresh_token: refreshToken,
     });
 
     const response = await fetch(url, {
-      method: 'POST',
+      method: "POST",
       headers: {
-        'Content-Type': 'application/x-www-form-urlencoded',
-        Authorization: `Basic ${Buffer.from(`${this.clientId}:${this.clientSecret}`).toString('base64')}`,
+        "Content-Type": "application/x-www-form-urlencoded",
+        Authorization: `Basic ${
+          Buffer.from(`${this.clientId}:${this.clientSecret}`).toString(
+            "base64",
+          )
+        }`,
       },
       body: formData,
     });
 
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
-      console.error('X token refresh failed:', errorData);
+      console.error("X token refresh failed:", errorData);
       throw new Error(`X token refresh failed: ${response.statusText}`);
     }
 

@@ -1,33 +1,31 @@
 import { RechargeStatus } from '@/src/actions/credit/types';
+import { RechargeCredit } from '@db/schema/schema';
+import { and, eq, ne } from 'drizzle-orm';
 
 import { addCreditInTransaction } from '../../../../actions/credit/_core';
-import { multipostDb } from '../../../../lib/db';
+import { db } from '../../../../lib/db';
 
 export type RechargeNotifyResult = 'success' | 'not_found';
 
 export async function grantRechargeCredit(orderId: string): Promise<RechargeNotifyResult> {
-  return multipostDb.$transaction(async (tx) => {
-    const recharge = await tx.rechargeCredit.findUnique({
-      where: { orderId },
-    });
+  return db.transaction(async (tx) => {
+    const [recharge] = await tx
+      .update(RechargeCredit)
+      .set({ status: RechargeStatus.SUCCESS })
+      .where(and(eq(RechargeCredit.orderId, orderId), ne(RechargeCredit.status, RechargeStatus.SUCCESS)))
+      .returning();
 
     if (!recharge) {
-      return 'not_found';
-    }
+      const [existing] = await tx
+        .select({ id: RechargeCredit.id })
+        .from(RechargeCredit)
+        .where(eq(RechargeCredit.orderId, orderId))
+        .limit(1);
 
-    if (recharge.status === RechargeStatus.SUCCESS) {
-      return 'success';
-    }
+      if (!existing) {
+        return 'not_found';
+      }
 
-    const updated = await tx.rechargeCredit.updateMany({
-      where: {
-        orderId,
-        status: { not: RechargeStatus.SUCCESS },
-      },
-      data: { status: RechargeStatus.SUCCESS },
-    });
-
-    if (updated.count === 0) {
       return 'success';
     }
 

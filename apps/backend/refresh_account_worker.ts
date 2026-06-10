@@ -1,12 +1,14 @@
-import { PrismaClient } from './prisma/client_multipost_deno/client.ts';
-import { SocialMediaClientFactory } from './client/factory.ts';
+import { eq, lt, lte } from "drizzle-orm";
+import { SocialMediaAccount as SocialMediaAccountTable } from "@db/schema/index.ts";
+import { SocialMediaClientFactory } from "./client/factory.ts";
+import type { MultipostDb } from "./db.ts";
 
 // Worker class to handle account refresh
 export class RefreshAccountWorker {
-  private db: PrismaClient;
+  private db: MultipostDb;
   private clientFactory: SocialMediaClientFactory;
 
-  constructor(database: PrismaClient) {
+  constructor(database: MultipostDb) {
     this.db = database;
     this.clientFactory = SocialMediaClientFactory.getInstance(database);
   }
@@ -20,16 +22,20 @@ export class RefreshAccountWorker {
       console.log(`🔄 Refreshing account: ${accountId}`);
 
       // Get account from database
-      const account = await this.db.socialMediaAccount.findUnique({
-        where: { id: accountId },
-      });
+      const [account] = await this.db
+        .select()
+        .from(SocialMediaAccountTable)
+        .where(eq(SocialMediaAccountTable.id, accountId))
+        .limit(1);
 
       if (!account) {
         throw new Error(`Account not found: ${accountId}`);
       }
 
       console.log(
-        `📋 Found account: ${account.platform} - ${account.username || account.displayName} (isActive=${account.isActive})`,
+        `📋 Found account: ${account.platform} - ${
+          account.username || account.displayName
+        } (isActive=${account.isActive})`,
       );
 
       // Check if platform is supported
@@ -39,12 +45,19 @@ export class RefreshAccountWorker {
       }
 
       // Use the platform client to refresh the account
-      const result = await this.clientFactory.processRefreshAccount(accountId, account.platform);
+      const result = await this.clientFactory.processRefreshAccount(
+        accountId,
+        account.platform,
+      );
 
       if (result.success) {
-        console.log(`✅ Successfully refreshed ${account.platform} account ${accountId}: ${result.message}`);
+        console.log(
+          `✅ Successfully refreshed ${account.platform} account ${accountId}: ${result.message}`,
+        );
       } else {
-        console.error(`❌ Failed to refresh ${account.platform} account ${accountId}: ${result.message}`);
+        console.error(
+          `❌ Failed to refresh ${account.platform} account ${accountId}: ${result.message}`,
+        );
         throw new Error(result.message);
       }
     } catch (error) {
@@ -61,15 +74,14 @@ export class RefreshAccountWorker {
       // Find accounts expiring within 1 hour (regardless of isActive)
       const oneHourFromNow = new Date(Date.now() + 60 * 60 * 1000);
 
-      const accountsNeedingRefresh = await this.db.socialMediaAccount.findMany({
-        where: {
-          expiresAt: {
-            lte: oneHourFromNow,
-          },
-        },
-      });
+      const accountsNeedingRefresh = await this.db
+        .select()
+        .from(SocialMediaAccountTable)
+        .where(lte(SocialMediaAccountTable.expiresAt, oneHourFromNow));
 
-      console.log(`📋 Found ${accountsNeedingRefresh.length} accounts expiring within 1 hour (all statuses)`);
+      console.log(
+        `📋 Found ${accountsNeedingRefresh.length} accounts expiring within 1 hour (all statuses)`,
+      );
 
       for (const account of accountsNeedingRefresh) {
         try {
@@ -88,22 +100,25 @@ export class RefreshAccountWorker {
    */
   async processExpiredAccounts(): Promise<void> {
     try {
-      const expiredAccounts = await this.db.socialMediaAccount.findMany({
-        where: {
-          isActive: true,
-          expiresAt: {
-            lt: new Date(),
-          },
-        },
-      });
+      const expiredAccounts = await this.db
+        .select()
+        .from(SocialMediaAccountTable)
+        .where(lt(SocialMediaAccountTable.expiresAt, new Date()));
 
-      console.log(`📋 Found ${expiredAccounts.length} expired accounts`);
+      const activeExpiredAccounts = expiredAccounts.filter((account) =>
+        account.isActive
+      );
 
-      for (const account of expiredAccounts) {
+      console.log(`📋 Found ${activeExpiredAccounts.length} expired accounts`);
+
+      for (const account of activeExpiredAccounts) {
         try {
           await this.refreshAccount(account.id);
         } catch (error) {
-          console.error(`❌ Failed to refresh expired account ${account.id}:`, error);
+          console.error(
+            `❌ Failed to refresh expired account ${account.id}:`,
+            error,
+          );
         }
       }
     } catch (error) {
@@ -116,11 +131,10 @@ export class RefreshAccountWorker {
    */
   async validateAllActiveAccounts(): Promise<void> {
     try {
-      const activeAccounts = await this.db.socialMediaAccount.findMany({
-        where: {
-          isActive: true,
-        },
-      });
+      const activeAccounts = await this.db
+        .select()
+        .from(SocialMediaAccountTable)
+        .where(eq(SocialMediaAccountTable.isActive, true));
 
       console.log(`📋 Validating ${activeAccounts.length} active accounts`);
 
@@ -139,17 +153,26 @@ export class RefreshAccountWorker {
   /**
    * Process all accounts that need refresh for a specific platform
    */
-  async processAllAccountsNeedingRefreshForPlatform(platform: string): Promise<void> {
+  async processAllAccountsNeedingRefreshForPlatform(
+    platform: string,
+  ): Promise<void> {
     try {
       console.log(`🔄 Processing all ${platform} accounts needing refresh...`);
-      const results = await this.clientFactory.processAllAccountsNeedingRefresh(platform);
+      const results = await this.clientFactory.processAllAccountsNeedingRefresh(
+        platform,
+      );
 
       const successCount = results.filter((r) => r.success).length;
       const failureCount = results.filter((r) => !r.success).length;
 
-      console.log(`📊 ${platform} accounts processed: ${successCount} success, ${failureCount} failed`);
+      console.log(
+        `📊 ${platform} accounts processed: ${successCount} success, ${failureCount} failed`,
+      );
     } catch (error) {
-      console.error(`❌ Error processing ${platform} accounts needing refresh:`, error);
+      console.error(
+        `❌ Error processing ${platform} accounts needing refresh:`,
+        error,
+      );
     }
   }
 }

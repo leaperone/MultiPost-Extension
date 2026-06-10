@@ -1,8 +1,10 @@
 import { createServerFn } from '@tanstack/react-start';
-import type { InputJsonValue } from '@prisma/client/runtime/library';
+import { PlatformExtraConfig } from '@db/schema/schema';
+import type { JsonValue } from '@db/helpers';
+import { and, eq } from 'drizzle-orm';
 import { z } from 'zod';
 
-import { multipostDb } from '../../lib/db';
+import { db } from '../../lib/db';
 import { getSession } from '../../lib/session';
 
 const platformExtraConfigSchema = z.object({
@@ -26,22 +28,21 @@ export const savePlatformExtraConfig = createServerFn({ method: 'POST' })
         };
       }
 
-      const platformExtraConfig = await multipostDb.platformExtraConfig.upsert({
-        where: {
-          userId_platform: {
-            userId: session.user.id,
-            platform: data.platform,
-          },
-        },
-        update: {
-          data: data.data as InputJsonValue,
-        },
-        create: {
+      const [platformExtraConfig] = await db
+        .insert(PlatformExtraConfig)
+        .values({
           userId: session.user.id,
           platform: data.platform,
-          data: data.data as InputJsonValue,
-        },
-      });
+          data: data.data as JsonValue,
+        })
+        .onConflictDoUpdate({
+          target: [PlatformExtraConfig.userId, PlatformExtraConfig.platform],
+          set: {
+            data: data.data as JsonValue,
+            updatedAt: new Date(),
+          },
+        })
+        .returning();
 
       return {
         success: true,
@@ -67,14 +68,20 @@ export const getPlatformExtraConfig = createServerFn({ method: 'GET' })
         };
       }
 
-      const platformExtraConfig = await multipostDb.platformExtraConfig.findUniqueOrThrow({
-        where: {
-          userId_platform: {
-            userId: session.user.id,
-            platform: data.platform,
-          },
-        },
-      });
+      const [platformExtraConfig] = await db
+        .select()
+        .from(PlatformExtraConfig)
+        .where(
+          and(
+            eq(PlatformExtraConfig.userId, session.user.id),
+            eq(PlatformExtraConfig.platform, data.platform),
+          ),
+        )
+        .limit(1);
+
+      if (!platformExtraConfig) {
+        throw new Error('Platform extra config not found');
+      }
 
       return {
         success: true,
@@ -100,11 +107,10 @@ export const getPlatformExtraConfigList = createServerFn({ method: 'GET' })
         };
       }
 
-      const platformExtraConfigList = await multipostDb.platformExtraConfig.findMany({
-        where: {
-          userId: session.user.id,
-        },
-      });
+      const platformExtraConfigList = await db
+        .select()
+        .from(PlatformExtraConfig)
+        .where(eq(PlatformExtraConfig.userId, session.user.id));
 
       return {
         success: true,

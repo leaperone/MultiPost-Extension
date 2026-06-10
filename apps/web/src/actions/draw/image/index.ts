@@ -1,7 +1,9 @@
 import { createServerFn } from '@tanstack/react-start';
+import { FileHosting, ImageGeneration, ImageGenerationLog } from '@db/schema/schema';
+import { and, desc, eq, inArray } from 'drizzle-orm';
 import { z } from 'zod';
 
-import { multipostDb } from '../../../lib/db';
+import { db } from '../../../lib/db';
 import {
   createImageGeneration as createLeaperOneTask,
   convertImageSize,
@@ -32,6 +34,34 @@ const failImageGenerationSchema = z.object({
   taskId: z.string().min(1),
   errorMessage: z.string(),
 });
+
+type ImageLogWithFile = typeof ImageGenerationLog.$inferSelect & {
+  fileHosting: typeof FileHosting.$inferSelect | null;
+};
+
+async function imageLogsByTaskIds(taskIds: string[]) {
+  if (taskIds.length === 0) {
+    return new Map<string, ImageLogWithFile[]>();
+  }
+
+  const rows = await db
+    .select({
+      log: ImageGenerationLog,
+      fileHosting: FileHosting,
+    })
+    .from(ImageGenerationLog)
+    .leftJoin(FileHosting, eq(ImageGenerationLog.fileHostingId, FileHosting.id))
+    .where(inArray(ImageGenerationLog.imageGenerationId, taskIds));
+
+  const grouped = new Map<string, ImageLogWithFile[]>();
+  for (const row of rows) {
+    const item = { ...row.log, fileHosting: row.fileHosting };
+    const logs = grouped.get(row.log.imageGenerationId) ?? [];
+    logs.push(item);
+    grouped.set(row.log.imageGenerationId, logs);
+  }
+  return grouped;
+}
 
 export const newImageGeneration = createServerFn({ method: 'POST' })
   .validator(ImageGenerationSchema)
@@ -70,8 +100,9 @@ export const newImageGeneration = createServerFn({ method: 'POST' })
         referenceImages: validatedTask.images,
       });
 
-      const newTask = await multipostDb.imageGeneration.create({
-        data: {
+      const [newTask] = await db
+        .insert(ImageGeneration)
+        .values({
           userId: session.user.id,
           prompt: validatedTask.prompt,
           extraPrompt,
@@ -80,8 +111,12 @@ export const newImageGeneration = createServerFn({ method: 'POST' })
           size: validatedTask.size.toString(),
           status: ImageGenerationStatus.PROCESSING,
           workflowId: leaperOneId,
-        },
-      });
+        })
+        .returning();
+
+      if (!newTask) {
+        throw new Error('Failed to create image generation task');
+      }
 
       console.log(`Created image generation task ${newTask.id} with LeaperOne ID ${leaperOneId}`);
 
@@ -109,22 +144,21 @@ export const listAllImages = createServerFn({ method: 'GET' }).handler(async () 
       };
     }
 
-    const result = await multipostDb.imageGeneration.findMany({
-      where: {
-        userId: session.user.id,
-        status: ImageGenerationStatus.COMPLETED,
-      },
-      orderBy: {
-        createdAt: 'desc',
-      },
-      include: {
-        ImageGenerationLog: {
-          include: {
-            fileHosting: true,
-          },
-        },
-      },
-    });
+    const tasks = await db
+      .select()
+      .from(ImageGeneration)
+      .where(
+        and(
+          eq(ImageGeneration.userId, session.user.id),
+          eq(ImageGeneration.status, ImageGenerationStatus.COMPLETED),
+        ),
+      )
+      .orderBy(desc(ImageGeneration.createdAt));
+    const logs = await imageLogsByTaskIds(tasks.map((task) => task.id));
+    const result = tasks.map((task) => ({
+      ...task,
+      ImageGenerationLog: logs.get(task.id) ?? [],
+    }));
     return {
       success: true,
       data: result,
@@ -150,19 +184,11 @@ export const getImageGeneration = createServerFn({ method: 'GET' })
         };
       }
 
-      const task = await multipostDb.imageGeneration.findFirst({
-        where: {
-          id: data.taskId,
-          userId: session.user.id,
-        },
-        include: {
-          ImageGenerationLog: {
-            include: {
-              fileHosting: true,
-            },
-          },
-        },
-      });
+      const [task] = await db
+        .select()
+        .from(ImageGeneration)
+        .where(and(eq(ImageGeneration.id, data.taskId), eq(ImageGeneration.userId, session.user.id)))
+        .limit(1);
 
       if (!task) {
         return {
@@ -171,9 +197,14 @@ export const getImageGeneration = createServerFn({ method: 'GET' })
         };
       }
 
+      const logs = await imageLogsByTaskIds([task.id]);
+
       return {
         success: true,
-        data: task,
+        data: {
+          ...task,
+          ImageGenerationLog: logs.get(task.id) ?? [],
+        },
       };
     } catch (error) {
       console.error('getImageGeneration error:', error);
@@ -196,12 +227,11 @@ export const updateImageGeneration = createServerFn({ method: 'GET' })
         };
       }
 
-      const result = await multipostDb.imageGeneration.findFirst({
-        where: {
-          id: data.taskId,
-          userId: session.user.id,
-        },
-      });
+      const [result] = await db
+        .select()
+        .from(ImageGeneration)
+        .where(and(eq(ImageGeneration.id, data.taskId), eq(ImageGeneration.userId, session.user.id)))
+        .limit(1);
 
       if (!result) {
         return {
@@ -249,12 +279,11 @@ export const checkLeaperOneStatus = createServerFn({ method: 'GET' })
         return { success: false, error: 'Unauthorized' };
       }
 
-      const task = await multipostDb.imageGeneration.findFirst({
-        where: {
-          workflowId: data.leaperOneId,
-          userId: session.user.id,
-        },
-      });
+      const [task] = await db
+        .select()
+        .from(ImageGeneration)
+        .where(and(eq(ImageGeneration.workflowId, data.leaperOneId), eq(ImageGeneration.userId, session.user.id)))
+        .limit(1);
 
       if (!task) {
         return { success: false, error: 'Task not found' };
@@ -290,12 +319,11 @@ export const completeImageGeneration = createServerFn({ method: 'POST' })
         return { success: false, error: 'Unauthorized' };
       }
 
-      const task = await multipostDb.imageGeneration.findFirst({
-        where: {
-          id: data.taskId,
-          userId: session.user.id,
-        },
-      });
+      const [task] = await db
+        .select()
+        .from(ImageGeneration)
+        .where(and(eq(ImageGeneration.id, data.taskId), eq(ImageGeneration.userId, session.user.id)))
+        .limit(1);
 
       if (!task) {
         return { success: false, error: 'Task not found' };
@@ -306,21 +334,19 @@ export const completeImageGeneration = createServerFn({ method: 'POST' })
 
         const previewUrl = `${image.url}!style=imagePreview`;
 
-        await multipostDb.imageGenerationLog.create({
-          data: {
+        await db.insert(ImageGenerationLog).values({
             userId: session.user.id,
             imageGenerationId: data.taskId,
             url: image.url,
             previewUrl,
-            response: { source: 'leaperone', imageId: image.id },
-          },
+            response: { source: 'leaperone', imageId: image.id ?? null },
         });
       }
 
-      await multipostDb.imageGeneration.update({
-        where: { id: data.taskId },
-        data: { status: ImageGenerationStatus.COMPLETED },
-      });
+      await db
+        .update(ImageGeneration)
+        .set({ status: ImageGenerationStatus.COMPLETED, updatedAt: new Date() })
+        .where(eq(ImageGeneration.id, data.taskId));
 
       return {
         success: true,
@@ -344,24 +370,24 @@ export const failImageGeneration = createServerFn({ method: 'POST' })
         return { success: false, error: 'Unauthorized' };
       }
 
-      const task = await multipostDb.imageGeneration.findFirst({
-        where: {
-          id: data.taskId,
-          userId: session.user.id,
-        },
-      });
+      const [task] = await db
+        .select()
+        .from(ImageGeneration)
+        .where(and(eq(ImageGeneration.id, data.taskId), eq(ImageGeneration.userId, session.user.id)))
+        .limit(1);
 
       if (!task) {
         return { success: false, error: 'Task not found' };
       }
 
-      await multipostDb.imageGeneration.update({
-        where: { id: data.taskId },
-        data: {
+      await db
+        .update(ImageGeneration)
+        .set({
           status: ImageGenerationStatus.FAILED,
           message: data.errorMessage,
-        },
-      });
+          updatedAt: new Date(),
+        })
+        .where(eq(ImageGeneration.id, data.taskId));
 
       return {
         success: true,

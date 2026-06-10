@@ -1,9 +1,12 @@
-import { Decimal } from '@prisma/client/runtime/library';
 import { createFileRoute } from '@tanstack/react-router';
+import { fromDecimal } from '@db/helpers';
+import { PromotionTask } from '@db/schema/schema';
+import Decimal from 'decimal.js';
+import { and, eq } from 'drizzle-orm';
 import { z } from 'zod';
 
 import { isAdmin } from '../../../actions/admin';
-import { multipostDb } from '../../../lib/db';
+import { db } from '../../../lib/db';
 import { errorResponse, successResponse, unauthenticatedResponse } from '../../../lib/response';
 
 const taskSchema = z.object({
@@ -50,17 +53,19 @@ async function POST({ request }: { request: Request }) {
     const body = await request.json();
     const validatedData = taskSchema.parse(body);
 
-    const task = await multipostDb.promotionTask.create({
-      data: {
+    const [task] = await db
+      .insert(PromotionTask)
+      .values({
         userId: session.user.id,
         ...validatedData,
         expiredAt: new Date(validatedData.expiredAt),
-      },
-    });
+        reward: fromDecimal(validatedData.reward),
+      })
+      .returning();
 
     return successResponse({
       ...task,
-      reward: task.reward.toString(),
+      reward: task?.reward.toString(),
     });
   } catch (error) {
     return errorResponse(error);
@@ -77,23 +82,19 @@ async function PUT({ request }: { request: Request }) {
     const body = await request.json();
     const validatedData = updateTaskSchema.parse(body);
 
-    const existingTask = await multipostDb.promotionTask.findUnique({
-      where: {
-        id: validatedData.id,
-        userId: session.user.id,
-      },
-    });
+    const [existingTask] = await db
+      .select({ id: PromotionTask.id })
+      .from(PromotionTask)
+      .where(and(eq(PromotionTask.id, validatedData.id), eq(PromotionTask.userId, session.user.id)))
+      .limit(1);
 
     if (!existingTask) {
       return errorResponse('Task not found');
     }
 
-    const task = await multipostDb.promotionTask.update({
-      where: {
-        id: validatedData.id,
-        userId: session.user.id,
-      },
-      data: {
+    const [task] = await db
+      .update(PromotionTask)
+      .set({
         taskType: validatedData.taskType,
         title: validatedData.title,
         description: validatedData.description,
@@ -101,13 +102,15 @@ async function PUT({ request }: { request: Request }) {
         keywords: validatedData.keywords,
         examples: validatedData.examples,
         expiredAt: new Date(validatedData.expiredAt),
-        reward: validatedData.reward,
-      },
-    });
+        reward: fromDecimal(validatedData.reward),
+        updatedAt: new Date(),
+      })
+      .where(and(eq(PromotionTask.id, validatedData.id), eq(PromotionTask.userId, session.user.id)))
+      .returning();
 
     return successResponse({
       ...task,
-      reward: task.reward.toString(),
+      reward: task?.reward.toString(),
     });
   } catch (error) {
     return errorResponse(error);

@@ -97,7 +97,7 @@ const platforms = factory.getAvailablePlatforms();
 import { BaseSocialMediaClient, TaskProcessingResult } from './base.ts';
 
 export class YouTubeClient extends BaseSocialMediaClient {
-  constructor(database: PrismaClient) {
+  constructor(database: MultipostDb) {
     super(database, 'youtube');
   }
 

@@ -1,5 +1,16 @@
-import { PrismaClient, Prisma } from './prisma/client_multipost_deno/client.ts';
-import { SocialMediaClientFactory } from './client/factory.ts';
+import { and, eq, isNotNull, sql } from "drizzle-orm";
+import {
+  PublishTaskLog as PublishTaskLogTable,
+  SocialMediaAccount as SocialMediaAccountTable,
+} from "@db/schema/index.ts";
+import { getErrorMessage } from "./client/base.ts";
+import { SocialMediaClientFactory } from "./client/factory.ts";
+import type { MultipostDb } from "./db.ts";
+
+const hasInitializedPublishData = and(
+  isNotNull(PublishTaskLogTable.publishData),
+  sql`${PublishTaskLogTable.publishData} <> 'null'::jsonb`,
+);
 
 // Status checking task management
 export class CheckingPublishStatusManager {
@@ -10,7 +21,8 @@ export class CheckingPublishStatusManager {
 
   static getInstance(): CheckingPublishStatusManager {
     if (!CheckingPublishStatusManager.instance) {
-      CheckingPublishStatusManager.instance = new CheckingPublishStatusManager();
+      CheckingPublishStatusManager.instance =
+        new CheckingPublishStatusManager();
     }
     return CheckingPublishStatusManager.instance;
   }
@@ -26,14 +38,18 @@ export class CheckingPublishStatusManager {
       return false; // Already checking
     }
     this.checkingTasks.add(logId);
-    console.log(`🔍 Publish status check ${logId} marked as checking. Active checks: ${this.checkingTasks.size}`);
+    console.log(
+      `🔍 Publish status check ${logId} marked as checking. Active checks: ${this.checkingTasks.size}`,
+    );
     return true;
   }
 
   // Mark task as completed/failed (remove from checking list)
   finishChecking(logId: string): void {
     this.checkingTasks.delete(logId);
-    console.log(`✅ Publish status check ${logId} removed from checking. Active checks: ${this.checkingTasks.size}`);
+    console.log(
+      `✅ Publish status check ${logId} removed from checking. Active checks: ${this.checkingTasks.size}`,
+    );
   }
 
   // Get list of currently checking tasks
@@ -48,18 +64,20 @@ export class CheckingPublishStatusManager {
 
   // Clear all checking tasks (useful for restart scenarios)
   clearAll(): void {
-    console.log(`🧹 Clearing all checking publish status tasks. Previously had: ${this.checkingTasks.size}`);
+    console.log(
+      `🧹 Clearing all checking publish status tasks. Previously had: ${this.checkingTasks.size}`,
+    );
     this.checkingTasks.clear();
   }
 }
 
 // Worker class to handle publish status checking
 export class CheckPublishStatusWorker {
-  private db: PrismaClient;
+  private db: MultipostDb;
   private checkingManager: CheckingPublishStatusManager;
   private clientFactory: SocialMediaClientFactory;
 
-  constructor(database: PrismaClient) {
+  constructor(database: MultipostDb) {
     this.db = database;
     this.checkingManager = CheckingPublishStatusManager.getInstance();
     this.clientFactory = SocialMediaClientFactory.getInstance(database);
@@ -71,19 +89,29 @@ export class CheckPublishStatusWorker {
    * @param accessToken - Access token for the account
    * @param platform - Platform name
    */
-  async checkAndUpdatePublishStatus(logId: string, accessToken: string, platform: string): Promise<void> {
+  async checkAndUpdatePublishStatus(
+    logId: string,
+    accessToken: string,
+    platform: string,
+  ): Promise<void> {
     try {
-      console.log(`🔍 Checking publish status for log: ${logId} on platform: ${platform}`);
+      console.log(
+        `🔍 Checking publish status for log: ${logId} on platform: ${platform}`,
+      );
 
       // Check if log is already being checked
       if (this.checkingManager.isChecking(logId)) {
-        console.log(`⚠️  Publish status check ${logId} is already being checked, skipping`);
+        console.log(
+          `⚠️  Publish status check ${logId} is already being checked, skipping`,
+        );
         return;
       }
 
       // Mark log as checking
       if (!this.checkingManager.startChecking(logId)) {
-        console.log(`⚠️  Failed to mark publish status check ${logId} as checking, skipping`);
+        console.log(
+          `⚠️  Failed to mark publish status check ${logId} as checking, skipping`,
+        );
         return;
       }
 
@@ -94,12 +122,20 @@ export class CheckPublishStatusWorker {
         }
 
         // Use the platform client to check the task status
-        const result = await this.clientFactory.processCheckTask(logId, accessToken, platform);
+        const result = await this.clientFactory.processCheckTask(
+          logId,
+          accessToken,
+          platform,
+        );
 
         if (result.success) {
-          console.log(`✅ Successfully checked ${platform} publish status for log ${logId}: ${result.message}`);
+          console.log(
+            `✅ Successfully checked ${platform} publish status for log ${logId}: ${result.message}`,
+          );
         } else {
-          console.error(`❌ Failed to check ${platform} publish status for log ${logId}: ${result.message}`);
+          console.error(
+            `❌ Failed to check ${platform} publish status for log ${logId}: ${result.message}`,
+          );
           throw new Error(result.message);
         }
       } finally {
@@ -107,10 +143,14 @@ export class CheckPublishStatusWorker {
         this.checkingManager.finishChecking(logId);
       }
     } catch (error) {
-      console.error(`❌ Error checking publish status for log ${logId}:`, error);
+      console.error(
+        `❌ Error checking publish status for log ${logId}:`,
+        error,
+      );
+      const message = getErrorMessage(error);
 
       // Update log with error
-      await this.updatePublishTaskLogStatus(logId, 'failed', error.message);
+      await this.updatePublishTaskLogStatus(logId, "failed", message);
 
       // Remove from checking list
       this.checkingManager.finishChecking(logId);
@@ -125,26 +165,29 @@ export class CheckPublishStatusWorker {
    * @param status - New status
    * @param message - Status message
    */
-  private async updatePublishTaskLogStatus(logId: string, status: string, message: string): Promise<void> {
+  private async updatePublishTaskLogStatus(
+    logId: string,
+    status: string,
+    message: string,
+  ): Promise<void> {
     try {
-      const updateData: Prisma.PublishTaskLogUpdateInput = {
+      const updateData: Partial<typeof PublishTaskLogTable.$inferInsert> = {
         status,
         updatedAt: new Date(),
       };
 
-      if (status === 'completed') {
+      if (status === "completed") {
         updateData.publishedAt = new Date();
       }
 
-      if (status === 'failed') {
-        updateData.error = 'PUBLISH_FAILED';
+      if (status === "failed") {
+        updateData.error = "PUBLISH_FAILED";
         updateData.message = message;
       }
 
-      await this.db.publishTaskLog.update({
-        where: { id: logId },
-        data: updateData,
-      });
+      await this.db.update(PublishTaskLogTable).set(updateData).where(
+        eq(PublishTaskLogTable.id, logId),
+      );
 
       console.log(`📝 Updated publish task log status to: ${status}`);
     } catch (error) {
@@ -158,40 +201,58 @@ export class CheckPublishStatusWorker {
   async processAllProcessingLogs(): Promise<void> {
     try {
       // Find all processing logs that have publishData (meaning they've been initialized)
-      const processingLogs = await this.db.publishTaskLog.findMany({
-        where: {
-          status: 'processing',
-          publishData: {
-            not: Prisma.JsonNull,
-          },
-        },
-      });
+      const processingLogs = await this.db
+        .select()
+        .from(PublishTaskLogTable)
+        .where(
+          and(
+            eq(PublishTaskLogTable.status, "processing"),
+            hasInitializedPublishData,
+          ),
+        );
 
-      console.log(`📋 Found ${processingLogs.length} processing publish logs to check`);
+      console.log(
+        `📋 Found ${processingLogs.length} processing publish logs to check`,
+      );
 
       for (const log of processingLogs) {
         try {
           // Get account to get access token
-          const account = await this.db.socialMediaAccount.findUnique({
-            where: {
-              userId_platform_platformId: {
-                userId: log.userId,
-                platform: log.platform,
-                platformId: log.platformId,
-              },
-              isActive: true,
-            },
-          });
+          const [account] = await this.db
+            .select()
+            .from(SocialMediaAccountTable)
+            .where(
+              and(
+                eq(SocialMediaAccountTable.userId, log.userId),
+                eq(SocialMediaAccountTable.platform, log.platform),
+                eq(SocialMediaAccountTable.platformId, log.platformId),
+                eq(SocialMediaAccountTable.isActive, true),
+              ),
+            )
+            .limit(1);
 
           if (!account) {
-            console.error(`❌ No active account found for log ${log.id} on platform ${log.platform}`);
-            await this.updatePublishTaskLogStatus(log.id, 'failed', `No active ${log.platform} account found`);
+            console.error(
+              `❌ No active account found for log ${log.id} on platform ${log.platform}`,
+            );
+            await this.updatePublishTaskLogStatus(
+              log.id,
+              "failed",
+              `No active ${log.platform} account found`,
+            );
             continue;
           }
 
-          await this.checkAndUpdatePublishStatus(log.id, account.accessToken, log.platform);
+          await this.checkAndUpdatePublishStatus(
+            log.id,
+            account.accessToken,
+            log.platform,
+          );
         } catch (error) {
-          console.error(`❌ Failed to check publish status for log ${log.id}:`, error);
+          console.error(
+            `❌ Failed to check publish status for log ${log.id}:`,
+            error,
+          );
         }
       }
     } catch (error) {
@@ -205,45 +266,66 @@ export class CheckPublishStatusWorker {
    */
   async processPublishTaskLogs(taskId: string): Promise<void> {
     try {
-      const processingLogs = await this.db.publishTaskLog.findMany({
-        where: {
-          publishTaskId: taskId,
-          status: 'processing',
-          publishData: {
-            not: Prisma.JsonNull,
-          },
-        },
-      });
+      const processingLogs = await this.db
+        .select()
+        .from(PublishTaskLogTable)
+        .where(
+          and(
+            eq(PublishTaskLogTable.publishTaskId, taskId),
+            eq(PublishTaskLogTable.status, "processing"),
+            hasInitializedPublishData,
+          ),
+        );
 
-      console.log(`📋 Found ${processingLogs.length} processing logs for task ${taskId}`);
+      console.log(
+        `📋 Found ${processingLogs.length} processing logs for task ${taskId}`,
+      );
 
       for (const log of processingLogs) {
         try {
           // Get account to get access token
-          const account = await this.db.socialMediaAccount.findUnique({
-            where: {
-              userId_platform_platformId: {
-                userId: log.userId,
-                platform: log.platform,
-                platformId: log.platformId,
-              },
-              isActive: true,
-            },
-          });
+          const [account] = await this.db
+            .select()
+            .from(SocialMediaAccountTable)
+            .where(
+              and(
+                eq(SocialMediaAccountTable.userId, log.userId),
+                eq(SocialMediaAccountTable.platform, log.platform),
+                eq(SocialMediaAccountTable.platformId, log.platformId),
+                eq(SocialMediaAccountTable.isActive, true),
+              ),
+            )
+            .limit(1);
 
           if (!account) {
-            console.error(`❌ No active account found for log ${log.id} on platform ${log.platform}`);
-            await this.updatePublishTaskLogStatus(log.id, 'failed', `No active ${log.platform} account found`);
+            console.error(
+              `❌ No active account found for log ${log.id} on platform ${log.platform}`,
+            );
+            await this.updatePublishTaskLogStatus(
+              log.id,
+              "failed",
+              `No active ${log.platform} account found`,
+            );
             continue;
           }
 
-          await this.checkAndUpdatePublishStatus(log.id, account.accessToken, log.platform);
+          await this.checkAndUpdatePublishStatus(
+            log.id,
+            account.accessToken,
+            log.platform,
+          );
         } catch (error) {
-          console.error(`❌ Failed to check publish status for log ${log.id}:`, error);
+          console.error(
+            `❌ Failed to check publish status for log ${log.id}:`,
+            error,
+          );
         }
       }
     } catch (error) {
-      console.error(`❌ Error processing publish task logs for task ${taskId}:`, error);
+      console.error(
+        `❌ Error processing publish task logs for task ${taskId}:`,
+        error,
+      );
     }
   }
 
@@ -255,45 +337,66 @@ export class CheckPublishStatusWorker {
       console.log(`🔍 Processing all processing ${platform} logs...`);
 
       // Find all processing logs for the specific platform
-      const processingLogs = await this.db.publishTaskLog.findMany({
-        where: {
-          platform: platform.toLowerCase(),
-          status: 'processing',
-          publishData: {
-            not: Prisma.JsonNull,
-          },
-        },
-      });
+      const processingLogs = await this.db
+        .select()
+        .from(PublishTaskLogTable)
+        .where(
+          and(
+            eq(PublishTaskLogTable.platform, platform.toLowerCase()),
+            eq(PublishTaskLogTable.status, "processing"),
+            hasInitializedPublishData,
+          ),
+        );
 
-      console.log(`📋 Found ${processingLogs.length} processing ${platform} logs to check`);
+      console.log(
+        `📋 Found ${processingLogs.length} processing ${platform} logs to check`,
+      );
 
       for (const log of processingLogs) {
         try {
           // Get account to get access token
-          const account = await this.db.socialMediaAccount.findUnique({
-            where: {
-              userId_platform_platformId: {
-                userId: log.userId,
-                platform: log.platform,
-                platformId: log.platformId,
-              },
-              isActive: true,
-            },
-          });
+          const [account] = await this.db
+            .select()
+            .from(SocialMediaAccountTable)
+            .where(
+              and(
+                eq(SocialMediaAccountTable.userId, log.userId),
+                eq(SocialMediaAccountTable.platform, log.platform),
+                eq(SocialMediaAccountTable.platformId, log.platformId),
+                eq(SocialMediaAccountTable.isActive, true),
+              ),
+            )
+            .limit(1);
 
           if (!account) {
-            console.error(`❌ No active ${platform} account found for log ${log.id}`);
-            await this.updatePublishTaskLogStatus(log.id, 'failed', `No active ${platform} account found`);
+            console.error(
+              `❌ No active ${platform} account found for log ${log.id}`,
+            );
+            await this.updatePublishTaskLogStatus(
+              log.id,
+              "failed",
+              `No active ${platform} account found`,
+            );
             continue;
           }
 
-          await this.checkAndUpdatePublishStatus(log.id, account.accessToken, platform);
+          await this.checkAndUpdatePublishStatus(
+            log.id,
+            account.accessToken,
+            platform,
+          );
         } catch (error) {
-          console.error(`❌ Failed to check ${platform} publish status for log ${log.id}:`, error);
+          console.error(
+            `❌ Failed to check ${platform} publish status for log ${log.id}:`,
+            error,
+          );
         }
       }
     } catch (error) {
-      console.error(`❌ Error processing all processing ${platform} logs:`, error);
+      console.error(
+        `❌ Error processing all processing ${platform} logs:`,
+        error,
+      );
     }
   }
 }

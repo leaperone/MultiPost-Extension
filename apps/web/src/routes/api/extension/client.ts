@@ -1,7 +1,10 @@
 import { createFileRoute } from '@tanstack/react-router';
+import { ExtensionClient } from '@db/schema/schema';
+import { and, eq, isNull } from 'drizzle-orm';
 
 import { authKey } from '../../../lib/authKey';
 import { preflightResponse, withCors } from '../../../lib/cors';
+import { db } from '../../../lib/db';
 import { errorResponse, successResponse, unauthenticatedResponse } from '../../../lib/response';
 
 export const Route = createFileRoute('/api/extension/client')({
@@ -27,22 +30,24 @@ async function GET({ request }: { request: Request }) {
   }
 
   try {
-    const { prisma } = await import('../../../lib/db');
-    const client = await prisma.extensionClient.findUnique({
-      where: {
-        id: clientId,
-        userId,
-        deletedAt: null,
-      },
-      select: {
-        id: true,
-        name: true,
-        createdAt: true,
-        updatedAt: true,
-        platformInfos: true,
-        deletedAt: true,
-      },
-    });
+    const [client] = await db
+      .select({
+        id: ExtensionClient.id,
+        name: ExtensionClient.name,
+        createdAt: ExtensionClient.createdAt,
+        updatedAt: ExtensionClient.updatedAt,
+        platformInfos: ExtensionClient.platformInfos,
+        deletedAt: ExtensionClient.deletedAt,
+      })
+      .from(ExtensionClient)
+      .where(
+        and(
+          eq(ExtensionClient.id, clientId),
+          eq(ExtensionClient.userId, userId),
+          isNull(ExtensionClient.deletedAt),
+        ),
+      )
+      .limit(1);
     if (!client) {
       throw new Error('CLIENT_NOT_FOUND');
     }
@@ -59,18 +64,16 @@ async function PUT({ request }: { request: Request }) {
   }
 
   try {
-    const { prisma } = await import('../../../lib/db');
     const body = await request.json();
     const { clientId, name } = body;
-    const updatedClient = await prisma.extensionClient.update({
-      where: {
-        id: clientId,
-        userId,
-      },
-      data: {
+    const [updatedClient] = await db
+      .update(ExtensionClient)
+      .set({
         name,
-      },
-    });
+        updatedAt: new Date(),
+      })
+      .where(and(eq(ExtensionClient.id, clientId), eq(ExtensionClient.userId, userId)))
+      .returning();
     return withCors(successResponse(updatedClient));
   } catch (error) {
     return withCors(errorResponse(error));

@@ -1,11 +1,13 @@
 import { createFileRoute } from '@tanstack/react-router';
+import { PosterGeneration } from '@db/schema/schema';
+import { and, eq, ne } from 'drizzle-orm';
 import { z } from 'zod';
 
 import { PRICING } from '@/src/actions/credit/types';
 
 import { deductCredit } from '../../../actions/credit/_core';
 import { PosterGenerationStatus } from '../../../actions/draw/poster/types';
-import { multipostDb } from '../../../lib/db';
+import { db } from '../../../lib/db';
 import { errorResponse, successResponse } from '../../../lib/response';
 import { safeCompareSecret } from '../../../lib/secret';
 
@@ -46,9 +48,11 @@ async function POST({ request }: { request: Request }) {
     const validatedData = SeedeWebhookSchema.parse(payload);
 
     const { task_id, status, step, urls, project_id } = validatedData;
-    const posterTask = await multipostDb.posterGeneration.findFirst({
-      where: { taskId: task_id },
-    });
+    const [posterTask] = await db
+      .select()
+      .from(PosterGeneration)
+      .where(eq(PosterGeneration.taskId, task_id))
+      .limit(1);
 
     if (!posterTask) {
       throw new Error('Task not found');
@@ -76,17 +80,24 @@ async function POST({ request }: { request: Request }) {
     }
 
     if (status === 'completed') {
-      const updated = await multipostDb.posterGeneration.updateMany({
-        where: { id: posterTask.id, status: { not: PosterGenerationStatus.COMPLETED } },
-        data: {
+      const updated = await db
+        .update(PosterGeneration)
+        .set({
           status: PosterGenerationStatus.COMPLETED,
           projectId: project_id,
           urls: urlsData,
           lastImageUrl: urls?.image,
-        },
-      });
+          updatedAt: new Date(),
+        })
+        .where(
+          and(
+            eq(PosterGeneration.id, posterTask.id),
+            ne(PosterGeneration.status, PosterGenerationStatus.COMPLETED),
+          ),
+        )
+        .returning({ id: PosterGeneration.id });
 
-      if (updated.count > 0) {
+      if (updated.length > 0) {
         try {
           await deductCredit({
             userId: posterTask.userId,
@@ -117,10 +128,10 @@ async function POST({ request }: { request: Request }) {
       updateData.error = validatedData.error || 'Poster generation failed';
     }
 
-    await multipostDb.posterGeneration.update({
-      where: { id: posterTask.id },
-      data: updateData,
-    });
+    await db
+      .update(PosterGeneration)
+      .set({ ...updateData, updatedAt: new Date() })
+      .where(eq(PosterGeneration.id, posterTask.id));
 
     return successResponse({});
   } catch (error) {

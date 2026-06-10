@@ -1,52 +1,40 @@
 ---
 name: database
-description: Database operations including Prisma migrations, schema changes, and MCP queries. Use when creating migrations, modifying database schemas, querying databases via MCP, or setting up database connections.
+description: Database operations including Drizzle schema changes, Atlas migrations, and MCP queries. Use when creating migrations, modifying database schemas, querying databases via MCP, or setting up database connections.
 ---
 
 # Database Operations
 
 ## Database Architecture
 
-The project uses **three separate PostgreSQL databases**:
+MultiPost uses PostgreSQL through Drizzle ORM and Atlas migrations.
 
-| Database | Env Variable | Schema | Client Output |
-|----------|-------------|--------|---------------|
-| Main | `TWOSOMEREN_DATABASE_URL` | `prisma/schema_twosomeren.prisma` | `prisma/client_twosomeren` |
-| Region | `REGION_DATABASE_URL` | `prisma/schema_region.prisma` | `prisma/client_region` |
-| Bilibili | `TWOSOMEREN_BILI_DATABASE_URL` | `prisma/twosomeren_bili/schema_twosomeren_bili.prisma` | `prisma/twosomeren_bili/client_twosomeren_bili` |
-
-## Generate Prisma Client
-
-```bash
-make generate_db_client
-# or manually: ./prisma/generate.sh
-```
+| Database | Env Variable | Drizzle Schema | Atlas Config |
+|----------|--------------|----------------|--------------|
+| Main | `MULTIPOST_DATABASE_URL` | `db/schema/` | `db/atlas/atlas.hcl` |
 
 ## Create New Migrations
 
 ```bash
-# Main business database
-./prisma/migrate.sh <migration_name>
-
-# Bilibili database
-./prisma/migrate_bili.sh <migration_name>
+pnpm db:build:source
+make db_diff
 ```
 
 ## Deploy Migrations
 
 ```bash
-# Production (main database only)
-./prisma/migrate_deploy.sh
+# Production deploy contract entrypoint
+sh prisma/migrate_deploy.sh
 
-# Development (all databases)
-./prisma/migrate_deploy_dev.sh
+# Development
+make dbdev
 ```
 
 ## Quick Setup
 
 ```bash
 make dev              # Start dev DB + deploy migrations
-make dbdev            # Generate Prisma clients + deploy migrations
+make dbdev            # Build Drizzle source + deploy Atlas migrations
 make clean-dev        # Clean and restart dev DB
 ```
 

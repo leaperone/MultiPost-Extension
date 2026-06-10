@@ -1,8 +1,11 @@
 import { createFileRoute } from '@tanstack/react-router';
+import { APIKey } from '@db/schema/schema';
+import { desc, eq } from 'drizzle-orm';
 import { nanoid } from 'nanoid';
 import { z } from 'zod';
 
 import { preflightResponse, withCors } from '../../lib/cors';
+import { db } from '../../lib/db';
 
 const createApiKeySchema = z.object({
   name: z.string().min(1, '名称不能为空').max(100, '名称不能超过100个字符'),
@@ -37,15 +40,11 @@ async function GET({ request }: { request: Request }) {
       return withCors(new Response('Unauthorized', { status: 401 }));
     }
 
-    const { prisma } = await import('../../lib/db');
-    const apiKeys = await prisma.aPIKey.findMany({
-      where: {
-        userId: session.user.id,
-      },
-      orderBy: {
-        createdAt: 'desc',
-      },
-    });
+    const apiKeys = await db
+      .select()
+      .from(APIKey)
+      .where(eq(APIKey.userId, session.user.id))
+      .orderBy(desc(APIKey.createdAt));
 
     const maskedApiKeys = apiKeys.map((key) => ({
       ...key,
@@ -74,14 +73,14 @@ async function POST({ request }: { request: Request }) {
     const body = await request.json();
     const { name } = createApiKeySchema.parse(body);
 
-    const { prisma } = await import('../../lib/db');
-    const newApiKey = await prisma.aPIKey.create({
-      data: {
+    const [newApiKey] = await db
+      .insert(APIKey)
+      .values({
         userId: session.user.id,
         name,
         key: `sk-${nanoid(32)}`,
-      },
-    });
+      })
+      .returning();
 
     return withCors(Response.json(newApiKey));
   } catch (error) {

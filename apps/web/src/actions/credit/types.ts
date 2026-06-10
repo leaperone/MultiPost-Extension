@@ -1,4 +1,5 @@
-import { Decimal } from '@prisma/client/runtime/library';
+import type { DecimalInput } from '@db/helpers';
+import Decimal from 'decimal.js';
 
 export enum RechargeType {
   ALIPAY = 'alipay',
@@ -66,7 +67,7 @@ export interface CreditInfo {
 export interface DeductCreditParams {
   userId: string;
   type: UsageType;
-  amount: Decimal;
+  amount: DecimalInput;
 }
 
 export interface DeductCreditResult {
@@ -82,7 +83,7 @@ export interface BatchDeductCreditParams {
   userId: string;
   records: Array<{
     type: UsageType;
-    amount: Decimal;
+    amount: DecimalInput;
   }>;
 }
 
@@ -92,7 +93,7 @@ export interface BatchDeductCreditResult {
   error?: string;
   failedRecords?: Array<{
     type: UsageType;
-    amount: Decimal;
+    amount: DecimalInput;
     error: string;
   }>;
   usage?: {

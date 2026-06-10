@@ -1,4 +1,4 @@
-import * as Sentry from '@sentry/node';
+import * as Sentry from '@sentry/node-core';
 import { nodeProfilingIntegration } from '@sentry/profiling-node';
 
 import { createSentryOptions } from './sentry.shared';

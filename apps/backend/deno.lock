@@ -3,9 +3,13 @@
   "specifiers": {
     "jsr:@std/assert@1": "1.0.13",
     "jsr:@std/internal@^1.0.6": "1.0.10",
-    "npm:@prisma/client@^6.13.0": "6.13.0",
+    "npm:@paralleldrive/cuid2@2.2.2": "2.2.2",
+    "npm:@types/pg@8.20.0": "8.20.0",
+    "npm:decimal.js@10.5.0": "10.5.0",
     "npm:dotenv-cli@8": "8.0.0",
     "npm:dotenv-cli@8.0.0": "8.0.0",
+    "npm:drizzle-orm@0.45.2": "0.45.2_@types+pg@8.20.0_pg@8.21.0",
+    "npm:pg@8.21.0": "8.21.0",
     "npm:zod@^3.25.76": "3.25.76"
   },
   "jsr": {
@@ -20,10 +24,28 @@
     }
   },
   "npm": {
-    "@prisma/client@6.13.0": {
-      "integrity": "sha512-8m2+I3dQovkV8CkDMluiwEV1TxV9EXdT6xaCz39O6jYw7mkf5gwfmi+cL4LJsEPwz5tG7sreBwkRpEMJedGYUQ==",
-      "scripts": true,
-      "tarball": "https://registry.npmmirror.com/@prisma/client/-/client-6.13.0.tgz"
+    "@noble/hashes@1.8.0": {
+      "integrity": "sha512-jCs9ldd7NwzpgXDIf6P3+NrHh9/sD6CQdxHyjQI+h/6rDNo88ypBxxz45UDuZHz9r3tNz7N/VInSVoVdtXEI4A=="
+    },
+    "@paralleldrive/cuid2@2.2.2": {
+      "integrity": "sha512-ZOBkgDwEdoYVlSeRbYYXs0S9MejQofiVYoTbKzy/6GQa39/q5tQU2IX46+shYnUkpEl3wc+J6wRlar7r2EK2xA==",
+      "dependencies": [
+        "@noble/hashes"
+      ]
+    },
+    "@types/node@25.9.2": {
+      "integrity": "sha512-G05zqtJhcDLb8uslf5EjCxXg9G1KQxiV8OS0R26IC//Eoyitzqe8z37I7cqvnZlrlSfgocQRfSn/AHBZJJFyGw==",
+      "dependencies": [
+        "undici-types"
+      ]
+    },
+    "@types/pg@8.20.0": {
+      "integrity": "sha512-bEPFOaMAHTEP1EzpvHTbmwR8UsFyHSKsRisLIHVMXnpNefSbGA1bD6CVy+qKjGSqmZqNqBDV2azOBo8TgkcVow==",
+      "dependencies": [
+        "@types/node",
+        "pg-protocol",
+        "pg-types"
+      ]
     },
     "cross-spawn@7.0.6": {
       "integrity": "sha512-uV2QOWP2nWzsy2aMp8aRibhi9dlzF5Hgh5SHaB9OiTGEyDTiJJyx0uy51QXdyWbtAHNua4XJzUKca3OzKUd3vA==",
@@ -31,8 +53,10 @@
         "path-key",
         "shebang-command",
         "which"
-      ],
-      "tarball": "https://registry.npmmirror.com/cross-spawn/-/cross-spawn-7.0.6.tgz"
+      ]
+    },
+    "decimal.js@10.5.0": {
+      "integrity": "sha512-8vDa8Qxvr/+d94hSh5P3IJwI5t8/c0KsMp+g8bNw9cY2icONa5aPfvKeieW1WlG0WQYwwhJ7mjui2xtiePQSXw=="
     },
     "dotenv-cli@8.0.0": {
       "integrity": "sha512-aLqYbK7xKOiTMIRf1lDPbI+Y+Ip/wo5k3eyp6ePysVaSqbyxjyK3dK35BTxG+rmd7djf5q2UPs4noPNH+cj0Qw==",
@@ -42,57 +66,130 @@
         "dotenv-expand",
         "minimist"
       ],
-      "bin": true,
-      "tarball": "https://registry.npmmirror.com/dotenv-cli/-/dotenv-cli-8.0.0.tgz"
+      "bin": true
     },
     "dotenv-expand@10.0.0": {
-      "integrity": "sha512-GopVGCpVS1UKH75VKHGuQFqS1Gusej0z4FyQkPdwjil2gNIv+LNsqBlboOzpJFZKVT95GkCyWJbBSdFEFUWI2A==",
-      "tarball": "https://registry.npmmirror.com/dotenv-expand/-/dotenv-expand-10.0.0.tgz"
+      "integrity": "sha512-GopVGCpVS1UKH75VKHGuQFqS1Gusej0z4FyQkPdwjil2gNIv+LNsqBlboOzpJFZKVT95GkCyWJbBSdFEFUWI2A=="
     },
     "dotenv@16.6.1": {
-      "integrity": "sha512-uBq4egWHTcTt33a72vpSG0z3HnPuIl6NqYcTrKEg2azoEyl2hpW0zqlxysq2pK9HlDIHyHyakeYaYnSAwd8bow==",
-      "tarball": "https://registry.npmmirror.com/dotenv/-/dotenv-16.6.1.tgz"
+      "integrity": "sha512-uBq4egWHTcTt33a72vpSG0z3HnPuIl6NqYcTrKEg2azoEyl2hpW0zqlxysq2pK9HlDIHyHyakeYaYnSAwd8bow=="
+    },
+    "drizzle-orm@0.45.2_@types+pg@8.20.0_pg@8.21.0": {
+      "integrity": "sha512-kY0BSaTNYWnoDMVoyY8uxmyHjpJW1geOmBMdSSicKo9CIIWkSxMIj2rkeSR51b8KAPB7m+qysjuHme5nKP+E5Q==",
+      "dependencies": [
+        "@types/pg",
+        "pg"
+      ],
+      "optionalPeers": [
+        "@types/pg",
+        "pg"
+      ]
     },
     "isexe@2.0.0": {
-      "integrity": "sha512-RHxMLp9lnKHGHRng9QFhRCMbYAcVpn69smSGcq3f36xjgVVWThj4qqLbTLlq7Ssj8B+fIQ1EuCEGI2lKsyQeIw==",
-      "tarball": "https://registry.npmmirror.com/isexe/-/isexe-2.0.0.tgz"
+      "integrity": "sha512-RHxMLp9lnKHGHRng9QFhRCMbYAcVpn69smSGcq3f36xjgVVWThj4qqLbTLlq7Ssj8B+fIQ1EuCEGI2lKsyQeIw=="
     },
     "minimist@1.2.8": {
-      "integrity": "sha512-2yyAR8qBkN3YuheJanUpWC5U3bb5osDywNB8RzDVlDwDHbocAJveqqj1u8+SVD7jkWT4yvsHCpWqqWqAxb0zCA==",
-      "tarball": "https://registry.npmmirror.com/minimist/-/minimist-1.2.8.tgz"
+      "integrity": "sha512-2yyAR8qBkN3YuheJanUpWC5U3bb5osDywNB8RzDVlDwDHbocAJveqqj1u8+SVD7jkWT4yvsHCpWqqWqAxb0zCA=="
     },
     "path-key@3.1.1": {
-      "integrity": "sha512-ojmeN0qd+y0jszEtoY48r0Peq5dwMEkIlCOu6Q5f41lfkswXuKtYrhgoTpLnyIcHm24Uhqx+5Tqm2InSwLhE6Q==",
-      "tarball": "https://registry.npmmirror.com/path-key/-/path-key-3.1.1.tgz"
+      "integrity": "sha512-ojmeN0qd+y0jszEtoY48r0Peq5dwMEkIlCOu6Q5f41lfkswXuKtYrhgoTpLnyIcHm24Uhqx+5Tqm2InSwLhE6Q=="
+    },
+    "pg-cloudflare@1.4.0": {
+      "integrity": "sha512-Vo7z/6rrQYxpNRylp4Tlob2elzbh+N/MOQbxFVWCxS7oEx6jF53GTJFxK2WWpKuBRkmiin4Mt+xofFDjx09R0A=="
+    },
+    "pg-connection-string@2.13.0": {
+      "integrity": "sha512-EMnU9E2fSULdsbErBbMaXJvFeD9B4+nPcM3f+4lsiCR0BHLPrLVjv3DbyM2hgQQviKJaTWIRRTjKjWlHg3p2ig=="
+    },
+    "pg-int8@1.0.1": {
+      "integrity": "sha512-WCtabS6t3c8SkpDBUlb1kjOs7l66xsGdKpIPZsg4wR+B3+u9UAum2odSsF9tnvxg80h4ZxLWMy4pRjOsFIqQpw=="
+    },
+    "pg-pool@3.14.0_pg@8.21.0": {
+      "integrity": "sha512-gKtPkFdQPU3DksooVLi9LsjZxrsBUZIpa+7aVx+LV5pNh0KzP4Zleud2po+ConrxbuXGBJ6Hfer6hdgpIBpBaw==",
+      "dependencies": [
+        "pg"
+      ]
+    },
+    "pg-protocol@1.14.0": {
+      "integrity": "sha512-n5taZ1kO3s9ngDTVxsEznOqCyToTgz0FLuPq0B33COy5pPpuWJpY3/2oRBVETuOgzdqRXfWpM9HIhp2LBBT1BA=="
+    },
+    "pg-types@2.2.0": {
+      "integrity": "sha512-qTAAlrEsl8s4OiEQY69wDvcMIdQN6wdz5ojQiOy6YRMuynxenON0O5oCpJI6lshc6scgAY8qvJ2On/p+CXY0GA==",
+      "dependencies": [
+        "pg-int8",
+        "postgres-array",
+        "postgres-bytea",
+        "postgres-date",
+        "postgres-interval"
+      ]
+    },
+    "pg@8.21.0": {
+      "integrity": "sha512-AUP1EYJuHraQGsVoCQVIcM7TEJVGtDzxWtGFZd8rds9d+CCXlU5Js1rYgfLNvxy9iJrpHjGrRjoi/3BT9fRyiA==",
+      "dependencies": [
+        "pg-connection-string",
+        "pg-pool",
+        "pg-protocol",
+        "pg-types",
+        "pgpass"
+      ],
+      "optionalDependencies": [
+        "pg-cloudflare"
+      ]
+    },
+    "pgpass@1.0.5": {
+      "integrity": "sha512-FdW9r/jQZhSeohs1Z3sI1yxFQNFvMcnmfuj4WBMUTxOrAyLMaTcE1aAMBiTlbMNaXvBCQuVi0R7hd8udDSP7ug==",
+      "dependencies": [
+        "split2"
+      ]
+    },
+    "postgres-array@2.0.0": {
+      "integrity": "sha512-VpZrUqU5A69eQyW2c5CA1jtLecCsN2U/bD6VilrFDWq5+5UIEVO7nazS3TEcHf1zuPYO/sqGvUvW62g86RXZuA=="
+    },
+    "postgres-bytea@1.0.1": {
+      "integrity": "sha512-5+5HqXnsZPE65IJZSMkZtURARZelel2oXUEO8rH83VS/hxH5vv1uHquPg5wZs8yMAfdv971IU+kcPUczi7NVBQ=="
+    },
+    "postgres-date@1.0.7": {
+      "integrity": "sha512-suDmjLVQg78nMK2UZ454hAG+OAW+HQPZ6n++TNDUX+L0+uUlLywnoxJKDou51Zm+zTCjrCl0Nq6J9C5hP9vK/Q=="
+    },
+    "postgres-interval@1.2.0": {
+      "integrity": "sha512-9ZhXKM/rw350N1ovuWHbGxnGh/SNJ4cnxHiM0rxE4VN41wsg8P8zWn9hv/buK00RP4WvlOyr/RBDiptyxVbkZQ==",
+      "dependencies": [
+        "xtend"
+      ]
     },
     "shebang-command@2.0.0": {
       "integrity": "sha512-kHxr2zZpYtdmrN1qDjrrX/Z1rR1kG8Dx+gkpK1G4eXmvXswmcE1hTWBWYUzlraYw1/yZp6YuDY77YtvbN0dmDA==",
       "dependencies": [
         "shebang-regex"
-      ],
-      "tarball": "https://registry.npmmirror.com/shebang-command/-/shebang-command-2.0.0.tgz"
+      ]
     },
     "shebang-regex@3.0.0": {
-      "integrity": "sha512-7++dFhtcx3353uBaq8DDR4NuxBetBzC7ZQOhmTQInHEd6bSrXdiEyzCvG07Z44UYdLShWUyXt5M/yhz8ekcb1A==",
-      "tarball": "https://registry.npmmirror.com/shebang-regex/-/shebang-regex-3.0.0.tgz"
+      "integrity": "sha512-7++dFhtcx3353uBaq8DDR4NuxBetBzC7ZQOhmTQInHEd6bSrXdiEyzCvG07Z44UYdLShWUyXt5M/yhz8ekcb1A=="
+    },
+    "split2@4.2.0": {
+      "integrity": "sha512-UcjcJOWknrNkF6PLX83qcHM6KHgVKNkV62Y8a5uYDVv9ydGQVwAHMKqHdJje1VTWpljG0WYpCDhrCdAOYH4TWg=="
+    },
+    "undici-types@7.24.6": {
+      "integrity": "sha512-WRNW+sJgj5OBN4/0JpHFqtqzhpbnV0GuB+OozA9gCL7a993SmU+1JBZCzLNxYsbMfIeDL+lTsphD5jN5N+n0zg=="
     },
     "which@2.0.2": {
       "integrity": "sha512-BLI3Tl1TW3Pvl70l3yq3Y64i+awpwXqsGBYWkkqMtnbXgrMD+yj7rhW0kuEDxzJaYXGjEW5ogapKNMEKNMjibA==",
       "dependencies": [
         "isexe"
       ],
-      "bin": true,
-      "tarball": "https://registry.npmmirror.com/which/-/which-2.0.2.tgz"
+      "bin": true
+    },
+    "xtend@4.0.2": {
+      "integrity": "sha512-LKYU1iAXJXUgAXn9URjiu+MWhyUXHsvfp7mcuYm9dSUKK0/CjtrUwFAxD82/mCWbtLsGjFIad0wIsod4zrTAEQ=="
     },
     "zod@3.25.76": {
-      "integrity": "sha512-gzUt/qt81nXsFGKIFcC3YnfEAx5NkunCfnDlvuBSSFS02bcXu4Lmea0AFIUwbLWxWPx3d9p8S5QoaujKcNQxcQ==",
-      "tarball": "https://registry.npmmirror.com/zod/-/zod-3.25.76.tgz"
+      "integrity": "sha512-gzUt/qt81nXsFGKIFcC3YnfEAx5NkunCfnDlvuBSSFS02bcXu4Lmea0AFIUwbLWxWPx3d9p8S5QoaujKcNQxcQ=="
     }
   },
   "remote": {
     "https://deno.land/x/deno_cron@v1.0.0/cron.ts": "7f984d0c4c7ac4fb1ad3cd241d457e7808a9362735d910abb02dc689883ee3ef",
     "https://deno.land/x/hono@v4.3.7/client/client.ts": "dcda3887257fa3164db7b32c56665c6e757f0ef047a14f3f9599ef41725c1525",
     "https://deno.land/x/hono@v4.3.7/client/index.ts": "30def535310a37bede261f1b23d11a9758983b8e9d60a6c56309cee5f6746ab2",
+    "https://deno.land/x/hono@v4.3.7/client/types.ts": "73fbec704cf968ca5c5bba10aa1131758c52ab31a78301451c79cfc47368d43c",
     "https://deno.land/x/hono@v4.3.7/client/utils.ts": "8be84b49c5c7952666875a8e901fde3044c85c853ea6ba3a7e2c0468478459c0",
     "https://deno.land/x/hono@v4.3.7/compose.ts": "37d6e33b7db80e4c43a0629b12fd3a1e3406e7d9e62a4bfad4b30426ea7ae4f1",
     "https://deno.land/x/hono@v4.3.7/context.ts": "c7b59d259bcfe5187c27c537f889def0baab56f98e8e5a4456546023e70717a5",
@@ -116,11 +213,14 @@
     "https://deno.land/x/hono@v4.3.7/router/trie-router/index.ts": "3eb75e7f71ba81801631b30de6b1f5cefb2c7239c03797e2b2cbab5085911b41",
     "https://deno.land/x/hono@v4.3.7/router/trie-router/node.ts": "d3e00e8f1ba7fb26896459d5bba882356891a07793387c4655d1864c519a91de",
     "https://deno.land/x/hono@v4.3.7/router/trie-router/router.ts": "54ced78d35676302c8fcdda4204f7bdf5a7cc907fbf9967c75674b1e394f830d",
+    "https://deno.land/x/hono@v4.3.7/types.ts": "b561c3ee846121b33c2d81331246cdedf7781636ed72dad7406677105b4275de",
     "https://deno.land/x/hono@v4.3.7/utils/body.ts": "774cb319dfbe886a9d39f12c43dea15a39f9d01e45de0323167cdd5d0aad14d4",
     "https://deno.land/x/hono@v4.3.7/utils/buffer.ts": "2fae689954b427b51fb84ad02bed11a72eae96692c2973802b3b4c1e39cd5b9c",
     "https://deno.land/x/hono@v4.3.7/utils/cookie.ts": "662529d55703d2c0bad8736cb1274eb97524c0ef7882d99254fc7c8fa925b46c",
     "https://deno.land/x/hono@v4.3.7/utils/crypto.ts": "bda0e141bbe46d3a4a20f8fbcb6380d473b617123d9fdfa93e4499410b537acc",
     "https://deno.land/x/hono@v4.3.7/utils/html.ts": "6ea4f6bf41587a51607dff7a6d2865ef4d5001e4203b07e5c8a45b63a098e871",
+    "https://deno.land/x/hono@v4.3.7/utils/http-status.ts": "f5b820f2793e45209f34deddf147b23e3133a89eb4c57dc643759a504706636b",
+    "https://deno.land/x/hono@v4.3.7/utils/types.ts": "050bfa9dc6d0cc4b7c5069944a8bd60066c2f9f95ee69833623ad104f11f92bf",
     "https://deno.land/x/hono@v4.3.7/utils/url.ts": "855169632c61d03703bd08cafb27664ba3fdb352892f01687d5cce8fd49e3cb1",
     "https://deno.land/x/hono@v4.3.7/validator/index.ts": "6c986e8b91dcf857ecc8164a506ae8eea8665792a4ff7215471df669c632ae7c",
     "https://deno.land/x/hono@v4.3.7/validator/validator.ts": "53f3d2ad442e22f0bc2d85b7d8d90320d4e5ecf5fdd58882f906055d33a18e13"
@@ -128,8 +228,11 @@
   "workspace": {
     "dependencies": [
       "jsr:@std/assert@1",
-      "npm:@prisma/client@^6.13.0",
+      "npm:@paralleldrive/cuid2@2.2.2",
+      "npm:decimal.js@10.5.0",
       "npm:dotenv-cli@8",
+      "npm:drizzle-orm@0.45.2",
+      "npm:pg@8.21.0",
       "npm:zod@^3.25.76"
     ]
   }
