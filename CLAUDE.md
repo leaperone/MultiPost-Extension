@@ -17,7 +17,6 @@ This is a **pnpm workspace monorepo** containing all MultiPost projects:
 ├── packages/
 │   └── shared/                # @multipost/shared: shared types & platform definitions
 ├── db/                        # Shared Drizzle schema, client, and Atlas migrations
-├── prisma/                    # Deploy shim only: migrate_deploy.sh
 ├── pnpm-workspace.yaml        # Workspace config
 └── turbo.json                 # Turborepo task orchestration
 ```
@@ -86,7 +85,6 @@ pnpm db:build:source        # Export Drizzle schema to db/atlas/_source.sql
 pnpm db:diff                # Generate Atlas migration from Drizzle source
 pnpm db:lint                # Atlas migrate lint + no-DML lint
 pnpm db:studio              # Open Drizzle Studio
-sh prisma/migrate_deploy.sh # Production deploy contract: Atlas migrate apply
 ```
 
 ### Code Quality
@@ -133,7 +131,6 @@ apps/web/store/        # Web global state (Zustand)
 apps/backend/          # Backend worker and job processing
 apps/video-stt-worker/ # Video speech-to-text worker
 db/                    # Shared Drizzle schema/client and Atlas migrations
-prisma/                # Production migration entrypoint shim only
 ```
 
 ### Core Architecture
@@ -154,7 +151,7 @@ prisma/                # Production migration entrypoint shim only
 #### Database (`apps/web/src/lib/db.ts`, `db/`)
 - Shared Drizzle schema lives in `db/schema/`; app and worker clients use `db/client.ts`
 - Atlas migrations live in `db/atlas/migrations/`; run `pnpm db:build:source` before diffs/lint
-- `prisma/migrate_deploy.sh` remains only as the external deploy contract and runs Atlas apply
+- Production migrations run via `atlas migrate apply` directly in the leaperone-releases deploy workflow (no prisma shim)
 
 #### State Management (`apps/web/store/`)
 - `draft.store.ts`: Draft creation and publishing platform selection

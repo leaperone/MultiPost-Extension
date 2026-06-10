@@ -6,6 +6,7 @@ on:
       - 'worker-v*'
     paths:
       - 'apps/video-stt-worker/**'
+      - 'db/**'
       - 'docker/**'
       - 'pnpm-lock.yaml'
   workflow_dispatch:

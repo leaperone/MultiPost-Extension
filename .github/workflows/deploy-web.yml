@@ -8,7 +8,21 @@ on:
       - 'apps/web/**'
       - 'apps/backend/**'
       - 'packages/**'
-      - 'prisma/**'
+      - 'db/**'
+      - 'docker/**'
+      - 'pnpm-lock.yaml'
+  pull_request:
+    branches:
+      - main
+    types:
+      - opened
+      - synchronize
+      - reopened
+    paths:
+      - 'apps/web/**'
+      - 'apps/backend/**'
+      - 'packages/**'
+      - 'db/**'
       - 'docker/**'
       - 'pnpm-lock.yaml'
   workflow_dispatch:
