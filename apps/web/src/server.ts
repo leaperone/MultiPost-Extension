@@ -16,6 +16,13 @@ const serverEntry = {
   fetch,
 };
 
+const documentSecurityHeaders = {
+  'Content-Security-Policy': 'frame-src *.cloudflare.com seede.ai',
+  'X-Frame-Options': 'SAMEORIGIN',
+  'X-Content-Type-Options': 'nosniff',
+  'Referrer-Policy': 'strict-origin-when-cross-origin',
+} as const;
+
 export default serverEntry;
 
 if (isDirectRun()) {
@@ -95,6 +102,8 @@ async function sendWebResponse(res: ServerResponse, webResponse: Response) {
     res.setHeader('set-cookie', setCookies);
   }
 
+  setDocumentSecurityHeaders(res, webResponse);
+
   if (!webResponse.body) {
     res.end();
     return;
@@ -124,4 +133,18 @@ function getSetCookies(headers: Headers) {
   const cookie = headers.get('set-cookie');
 
   return cookie ? [cookie] : [];
+}
+
+function setDocumentSecurityHeaders(res: ServerResponse, webResponse: Response) {
+  if (!isHtmlResponse(webResponse)) return;
+
+  for (const [key, value] of Object.entries(documentSecurityHeaders)) {
+    if (!res.hasHeader(key)) {
+      res.setHeader(key, value);
+    }
+  }
+}
+
+function isHtmlResponse(webResponse: Response) {
+  return webResponse.headers.get('content-type')?.toLowerCase().includes('text/html') ?? false;
 }

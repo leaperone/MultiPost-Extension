@@ -1,4 +1,4 @@
-FROM node:20.18.1-alpine3.20 AS base
+FROM node:20.19.0-alpine3.20 AS base
 ENV PNPM_HOME="/pnpm"
 ENV PATH="$PNPM_HOME:$PATH"
 RUN npm install -g pnpm
@@ -49,16 +49,12 @@ RUN --mount=type=secret,id=sentry_auth_token \
     if [ -f /run/secrets/sentry_auth_token ]; then \
       export SENTRY_AUTH_TOKEN="$(cat /run/secrets/sentry_auth_token)"; \
     fi && \
-    pnpm --filter multipost-web build && \
-    if [ -n "$SENTRY_RELEASE" ] && [ -n "$SENTRY_AUTH_TOKEN" ]; then \
-      pnpm dlx @sentry/cli@2.58.5 sourcemaps inject /app/apps/web/.next; \
-    fi
+    pnpm --filter multipost-web build
 
 FROM scratch AS sourcemaps
-COPY --from=builder /app/apps/web/.next/static /static
-COPY --from=builder /app/apps/web/.next/server /server
+COPY --from=builder /app/apps/web/dist /dist
 
-FROM node:20.18.1-alpine3.20 AS final
+FROM node:20.19.0-alpine3.20 AS final
 ENV TZ=Asia/Shanghai
 WORKDIR /app
 
@@ -85,12 +81,18 @@ RUN apk update --no-cache && \
 COPY --from=builder /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/ca-certificates.crt
 COPY --from=builder /usr/share/zoneinfo/Asia/Shanghai /usr/share/zoneinfo/Asia/Shanghai
 
-COPY --from=builder /app/apps/web/.next/standalone ./
+COPY --from=builder /app/package.json /app/pnpm-lock.yaml /app/pnpm-workspace.yaml ./
+COPY --from=builder /app/node_modules ./node_modules
+COPY --from=builder /app/prisma/client_multipost ./prisma/client_multipost
+COPY --from=builder /app/apps/web/package.json ./apps/web/package.json
+COPY --from=builder /app/apps/web/dist ./apps/web/dist
 COPY --from=builder /app/apps/web/public ./apps/web/public
-COPY --from=builder /app/apps/web/.next/static ./apps/web/.next/static
-RUN find /app/apps/web/.next/static -name '*.map' -delete
+RUN if [ -d /app/apps/web/dist/client ]; then \
+      find /app/apps/web/dist/client -name '*.map' -delete; \
+    fi
+WORKDIR /app/apps/web
 EXPOSE 3000
-CMD [ "node", "apps/web/server.js" ]
+CMD [ "node", "dist/server/server.js" ]
 
 FROM denoland/deno:latest as backend-cache
 WORKDIR /app

@@ -3,6 +3,7 @@ import type { TableOfContents } from 'fumadocs-core/toc';
 import { blog } from 'collections/server';
 
 import { blogI18n } from './blog-i18n';
+export { getBlogPrerenderPaths } from './content-prerender-paths';
 
 export type SerializableToc = Array<{
   title: string;
@@ -112,15 +113,4 @@ export function getBlogPathMap(lang: string) {
     path: page.path,
     url: page.url,
   }));
-}
-
-export function getBlogPrerenderPaths() {
-  return [
-    '/blog',
-    ...blogI18n.languages.map((lang) => `/blog/${lang}`),
-    ...blogSource.generateParams().map((params) => {
-      const slug = params.slug.length > 0 ? `/${params.slug.join('/')}` : '';
-      return `/blog/${params.lang}${slug}`;
-    }),
-  ];
 }
