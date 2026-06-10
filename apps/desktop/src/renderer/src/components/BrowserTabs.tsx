@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react'
+import { AnimatePresence, motion } from 'framer-motion'
 import { useTabsStore } from '../store/tabs.store'
 import { Button } from '@heroui/react'
 import {
@@ -288,7 +289,12 @@ function TabItem({
   const host = getUrlHost(tab.url)
 
   return (
-    <div
+    <motion.div
+      layout
+      initial={{ opacity: 0, y: 6, width: 0 }}
+      animate={{ opacity: 1, y: 0, width: 'auto' }}
+      exit={{ opacity: 0, scale: 0.92, width: 0, transition: { duration: 0.12 } }}
+      transition={{ type: 'spring', stiffness: 500, damping: 40 }}
       className={`
         app-no-drag group flex h-8 min-w-[132px] max-w-[220px] cursor-pointer select-none items-center gap-2
         rounded-t-lg border px-2.5 text-foreground/80 transition-colors
@@ -299,6 +305,13 @@ function TabItem({
         }
       `}
       onClick={onSwitch}
+      onAuxClick={(e) => {
+        // Middle click closes the tab, matching browser conventions
+        if (e.button === 1 && !tab.isHome) {
+          e.preventDefault()
+          onClose()
+        }
+      }}
       title={host ? `${displayTitle} - ${host}` : displayTitle}
     >
       {tab.isGroup ? (
@@ -325,7 +338,7 @@ function TabItem({
           <X className="size-3.5" />
         </button>
       )}
-    </div>
+    </motion.div>
   )
 }
 
@@ -580,14 +593,16 @@ export function BrowserTabs({ className }: BrowserTabsProps): React.ReactElement
       <div className="app-drag flex h-9 items-end gap-1 px-2 pt-1">
         <div className="w-[78px] shrink-0" />
         <div className="flex min-w-0 flex-1 items-end gap-1 overflow-x-auto scrollbar-hide">
-          {tabs.map((tab) => (
-            <TabItem
-              key={tab.id}
-              tab={tab}
-              onSwitch={() => switchTab(tab.id)}
-              onClose={() => handleCloseTab(tab.id)}
-            />
-          ))}
+          <AnimatePresence initial={false}>
+            {tabs.map((tab) => (
+              <TabItem
+                key={tab.id}
+                tab={tab}
+                onSwitch={() => switchTab(tab.id)}
+                onClose={() => handleCloseTab(tab.id)}
+              />
+            ))}
+          </AnimatePresence>
         </div>
       </div>
 

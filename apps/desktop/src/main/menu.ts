@@ -1,5 +1,6 @@
 import { Menu, app } from 'electron'
 import { checkForUpdates } from './updater'
+import { getBrowserViewManager } from './index'
 
 export function createMenu(): void {
   const template: Electron.MenuItemConstructorOptions[] = [
@@ -57,10 +58,54 @@ export function createMenu(): void {
       ]
     },
     {
+      label: '标签页',
+      submenu: [
+        {
+          label: '回到首页',
+          accelerator: 'CmdOrCtrl+1',
+          click: (): void => {
+            void getBrowserViewManager()?.switchToHome()
+          }
+        },
+        ...[2, 3, 4, 5, 6, 7, 8].map(
+          (n): Electron.MenuItemConstructorOptions => ({
+            label: `切换到标签页 ${n}`,
+            accelerator: `CmdOrCtrl+${n}`,
+            click: (): void => {
+              void getBrowserViewManager()?.switchToTabIndex(n - 1)
+            }
+          })
+        ),
+        { type: 'separator' },
+        {
+          label: '下一个标签页',
+          accelerator: 'Ctrl+Tab',
+          click: (): void => {
+            void getBrowserViewManager()?.cycleTab(1)
+          }
+        },
+        {
+          label: '上一个标签页',
+          accelerator: 'Ctrl+Shift+Tab',
+          click: (): void => {
+            void getBrowserViewManager()?.cycleTab(-1)
+          }
+        },
+        { type: 'separator' },
+        {
+          label: '关闭标签页',
+          accelerator: 'CmdOrCtrl+W',
+          click: (): void => {
+            void getBrowserViewManager()?.closeActiveTab()
+          }
+        }
+      ]
+    },
+    {
       label: '窗口',
       submenu: [
         { label: '最小化', role: 'minimize' },
-        { label: '关闭', role: 'close' }
+        { label: '关闭窗口', role: 'close', accelerator: 'CmdOrCtrl+Shift+W' }
       ]
     }
   ]

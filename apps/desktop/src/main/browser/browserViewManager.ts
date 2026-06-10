@@ -2711,11 +2711,54 @@ export class BrowserViewManager {
       return
     }
 
+    // Handle publish group tabs so clicking a group tab switches back to it
+    if (this.publishGroups.has(accountId)) {
+      await this.showPublishGroup(accountId)
+      return
+    }
+
     const managed = this.views.get(accountId)
     if (!managed) return
 
     await this.showView(accountId)
     this.notifyTabsChanged()
+  }
+
+  /**
+   * Switch to a tab by its position in the tab strip (menu accelerators).
+   */
+  async switchToTabIndex(index: number): Promise<void> {
+    const tabs = this.getTabs()
+    const target = tabs[index]
+    if (target) {
+      await this.switchTab(target.id)
+    }
+  }
+
+  /**
+   * Cycle to the next/previous tab in the strip (menu accelerators).
+   */
+  async cycleTab(offset: 1 | -1): Promise<void> {
+    const tabs = this.getTabs()
+    if (tabs.length < 2) return
+    const activeIndex = tabs.findIndex((tab) => tab.isActive)
+    const nextIndex = (activeIndex + offset + tabs.length) % tabs.length
+    await this.switchTab(tabs[nextIndex].id)
+  }
+
+  /**
+   * Close the currently active tab; the home tab is not closable.
+   */
+  async closeActiveTab(): Promise<void> {
+    const tabs = this.getTabs()
+    const active = tabs.find((tab) => tab.isActive)
+    if (!active || active.isHome) return
+
+    if (active.isGroup && active.groupId) {
+      await this.closePublishGroup(active.groupId)
+      return
+    }
+    await this.closeTab(active.id)
   }
 
   /**

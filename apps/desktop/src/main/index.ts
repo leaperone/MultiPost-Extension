@@ -1,4 +1,4 @@
-import { app, BrowserWindow, ipcMain, protocol, session } from 'electron'
+import { app, BrowserWindow, ipcMain, nativeTheme, protocol, session } from 'electron'
 import { join } from 'path'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import { registerIpcHandlers } from './ipc'
@@ -74,8 +74,22 @@ app.on('will-quit', (event) => {
 
 app.on('quit', cleanupAccountProxies)
 
+interface WindowChromeColors {
+  background: string
+  symbol: string
+}
+
+// The renderer chrome follows the system theme (next-themes), so the native
+// window background and title bar overlay must follow it too.
+function getWindowChromeColors(): WindowChromeColors {
+  return nativeTheme.shouldUseDarkColors
+    ? { background: '#101014', symbol: '#cbd5e1' }
+    : { background: '#f7f8fa', symbol: '#334155' }
+}
+
 function createWindow(): void {
   const isDarwin = process.platform === 'darwin'
+  const chromeColors = getWindowChromeColors()
 
   mainWindow = new BrowserWindow({
     width: 1200,
@@ -85,11 +99,17 @@ function createWindow(): void {
     center: true,
     show: false,
     autoHideMenuBar: true,
-    backgroundColor: '#f7f8fa',
+    backgroundColor: chromeColors.background,
     titleBarStyle: isDarwin ? 'hiddenInset' : 'hidden',
     ...(isDarwin
       ? { trafficLightPosition: { x: 14, y: 13 } }
-      : { titleBarOverlay: { color: '#f7f8fa', symbolColor: '#334155', height: 36 } }),
+      : {
+          titleBarOverlay: {
+            color: chromeColors.background,
+            symbolColor: chromeColors.symbol,
+            height: 36
+          }
+        }),
     webPreferences: {
       preload: join(__dirname, '../preload/index.js'),
       sandbox: false,
@@ -120,6 +140,20 @@ function createWindow(): void {
 
   // Initialize home tab immediately (no need to wait for blank page)
   browserViewManager.initializeHomeTab()
+
+  // Keep the native window chrome in sync with the system theme
+  nativeTheme.on('updated', () => {
+    if (!mainWindow || mainWindow.isDestroyed()) return
+    const colors = getWindowChromeColors()
+    mainWindow.setBackgroundColor(colors.background)
+    if (process.platform !== 'darwin') {
+      mainWindow.setTitleBarOverlay?.({
+        color: colors.background,
+        symbolColor: colors.symbol,
+        height: 36
+      })
+    }
+  })
 }
 
 app.whenReady().then(async () => {
