@@ -991,6 +991,9 @@ export class BrowserViewManager {
    * (native home, web dashboard, account view, publish group).
    */
   private hideAuxiliarySurfaces(): void {
+    // Only detach from the window: the webContents keep running so in-flight
+    // fill/submit automation in these views continues in the background, and
+    // the active IDs stay intact so publish flows can re-show their view.
     for (const managed of this.platformViews.values()) {
       if (managed.isVisible) {
         this.mainWindow.removeBrowserView(managed.view)
@@ -1003,8 +1006,6 @@ export class BrowserViewManager {
         managed.isVisible = false
       }
     }
-    this.activePlatformId = null
-    this.activeExecutorId = null
   }
 
   /**
