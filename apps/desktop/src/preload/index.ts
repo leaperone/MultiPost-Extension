@@ -90,6 +90,10 @@ const api = {
     switchTab: (accountId: string): Promise<void> =>
       ipcRenderer.invoke(IPC_CHANNELS.BROWSER_TAB_SWITCH, accountId),
     switchToHome: (): Promise<void> => ipcRenderer.invoke(IPC_CHANNELS.BROWSER_TAB_SWITCH_HOME),
+    // Open (and lazily create) the web dashboard tab, optionally at a path
+    openWebDashboard: (path?: string): void => {
+      ipcRenderer.send('multipost:navigation:navigateTo', path ?? '/dashboard')
+    },
     closeTab: (accountId: string): Promise<boolean> =>
       ipcRenderer.invoke(IPC_CHANNELS.BROWSER_TAB_CLOSE, accountId),
     tabNavigate: (tabId: string, url: string): Promise<void> =>

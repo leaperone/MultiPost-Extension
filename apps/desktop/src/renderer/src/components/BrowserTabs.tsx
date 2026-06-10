@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react'
+import { useTabsStore } from '../store/tabs.store'
 import { Button } from '@heroui/react'
 import {
   X,
@@ -15,8 +16,6 @@ import {
 } from 'lucide-react'
 import type { BrowserTab, GroupTab, PublishTargetStatus } from '../../../shared/types'
 import { PLATFORMS } from '../../../shared/constants'
-
-const HOME_TAB_ID = '__home__'
 
 const PLATFORM_ACCENTS: Record<string, string> = {
   weibo: '#e6162d',
@@ -88,6 +87,7 @@ function getPlatformAccent(platform?: string): string {
 
 function getTabDisplayTitle(tab: BrowserTab): string {
   if (tab.isHome) return 'MultiPost'
+  if (tab.isWeb) return tab.title || 'Web 工作台'
   if (tab.isGroup) return tab.title
   return tab.title || PLATFORMS[tab.platform]?.name || tab.platform
 }
@@ -118,87 +118,10 @@ function getAddressSecurity(url?: string): 'secure' | 'plain' | 'unknown' {
 }
 
 export function useBrowserTabs() {
-  const [tabs, setTabs] = useState<BrowserTab[]>([])
-  const [loading, setLoading] = useState(false)
-
-  const loadTabs = useCallback(async () => {
-    try {
-      setLoading(true)
-      const tabList = await window.api.browser.getTabs()
-      setTabs(tabList)
-    } catch (error) {
-      console.error('Failed to load tabs:', error)
-    } finally {
-      setLoading(false)
-    }
-  }, [])
-
-  useEffect(() => {
-    loadTabs()
-
-    const unsubscribe = window.api.browser.onTabsChanged((updatedTabs) => {
-      setTabs(updatedTabs)
-    })
-
-    return () => {
-      unsubscribe()
-    }
-  }, [loadTabs])
-
-  const switchTab = useCallback(async (accountId: string) => {
-    try {
-      if (accountId === HOME_TAB_ID) {
-        await window.api.browser.switchToHome()
-      } else {
-        await window.api.browser.switchTab(accountId)
-      }
-    } catch (error) {
-      console.error('Failed to switch tab:', error)
-    }
-  }, [])
-
-  const closeTab = useCallback(async (accountId: string) => {
-    try {
-      const success = await window.api.browser.closeTab(accountId)
-      if (!success) {
-        console.log('Cannot close home tab')
-      }
-    } catch (error) {
-      console.error('Failed to close tab:', error)
-    }
-  }, [])
-
-  const navigateTab = useCallback(async (tabId: string, url: string) => {
-    try {
-      await window.api.browser.tabNavigate(tabId, url)
-    } catch (error) {
-      console.error('Failed to navigate tab:', error)
-    }
-  }, [])
-
-  const goBack = useCallback(async (accountId: string) => {
-    try {
-      await window.api.browser.tabGoBack(accountId)
-    } catch (error) {
-      console.error('Failed to go back:', error)
-    }
-  }, [])
-
-  const goForward = useCallback(async (accountId: string) => {
-    try {
-      await window.api.browser.tabGoForward(accountId)
-    } catch (error) {
-      console.error('Failed to go forward:', error)
-    }
-  }, [])
-
-  const refresh = useCallback(async (accountId: string) => {
-    try {
-      await window.api.browser.tabRefresh(accountId)
-    } catch (error) {
-      console.error('Failed to refresh:', error)
-    }
-  }, [])
+  // Tab state lives in the shared zustand store (single IPC subscription,
+  // initialized by App); this hook only derives view-friendly values.
+  const tabs = useTabsStore((state) => state.tabs)
+  const { switchTab, closeTab, navigateTab, goBack, goForward, refresh } = useTabsStore.getState()
 
   const activeTab = tabs.find((tab) => tab.isActive) || null
   const activeGroupTab = tabs.find((tab) => tab.isGroup && tab.isActive) || null
@@ -207,14 +130,12 @@ export function useBrowserTabs() {
     tabs,
     activeTab,
     activeGroupTab,
-    loading,
     switchTab,
     closeTab,
     navigateTab,
     goBack,
     goForward,
-    refresh,
-    loadTabs
+    refresh
   }
 }
 
@@ -308,8 +229,16 @@ function TabFavicon({ tab, className = 'size-4' }: { tab: BrowserTab; className?
 
   if (tab.isHome) {
     return (
-      <span className={`${className} inline-flex items-center justify-center rounded-md bg-blue-50 text-blue-600`}>
+      <span className={`${className} inline-flex items-center justify-center rounded-md bg-foreground/[0.06] text-foreground`}>
         <Home className="size-3.5" />
+      </span>
+    )
+  }
+
+  if (tab.isWeb) {
+    return (
+      <span className={`${className} inline-flex items-center justify-center rounded-md bg-foreground/[0.06] text-foreground`}>
+        <Globe2 className="size-3.5" />
       </span>
     )
   }
@@ -362,11 +291,11 @@ function TabItem({
     <div
       className={`
         app-no-drag group flex h-8 min-w-[132px] max-w-[220px] cursor-pointer select-none items-center gap-2
-        rounded-t-lg border px-2.5 text-slate-700 transition-colors
+        rounded-t-lg border px-2.5 text-foreground/80 transition-colors
         ${
           tab.isActive
-            ? 'border-slate-200 border-b-white bg-white shadow-sm'
-            : 'border-transparent bg-transparent hover:bg-white/70'
+            ? 'border-b-background bg-background text-foreground shadow-sm'
+            : 'border-transparent bg-transparent hover:bg-foreground/[0.04]'
         }
       `}
       onClick={onSwitch}
@@ -385,7 +314,7 @@ function TabItem({
       {!tab.isHome && (
         <button
           type="button"
-          className="shrink-0 rounded p-0.5 text-slate-400 opacity-0 transition hover:bg-slate-200 hover:text-slate-700 group-hover:opacity-100"
+          className="shrink-0 rounded p-0.5 text-muted-foreground opacity-0 transition hover:bg-foreground/[0.08] hover:text-foreground group-hover:opacity-100"
           onClick={(e) => {
             e.stopPropagation()
             e.preventDefault()
@@ -641,17 +570,13 @@ export function BrowserTabs({ className }: BrowserTabsProps): React.ReactElement
   const { groupTabs, switchGroupTab, closeGroupTab, fillAll, submitAll } =
     useGroupTabs(activeGroupId)
 
-  const handleCloseTab = async (tabId: string) => {
-    const tab = tabs.find((t) => t.id === tabId)
-    if (tab?.isGroup && tab.groupId) {
-      await window.api.publishGroup.close(tab.groupId)
-    } else {
-      await closeTab(tabId)
-    }
-  }
+  // Group-tab handling lives inside the store's closeTab
+  const handleCloseTab = closeTab
+
+  const isNativeHomeActive = !activeTab || activeTab.isHome
 
   return (
-    <div className={`h-[72px] border-b border-slate-200 bg-[#f7f8fa] text-slate-800 ${className || ''}`}>
+    <div className={`h-[72px] border-b bg-background/95 text-foreground ${className || ''}`}>
       <div className="app-drag flex h-9 items-end gap-1 px-2 pt-1">
         <div className="w-[78px] shrink-0" />
         <div className="flex min-w-0 flex-1 items-end gap-1 overflow-x-auto scrollbar-hide">
@@ -667,17 +592,27 @@ export function BrowserTabs({ className }: BrowserTabsProps): React.ReactElement
       </div>
 
       <div className="app-drag flex h-9 items-center gap-2 px-3 pb-1">
-        <NavigationControls
-          activeTab={activeTab}
-          onGoBack={() => activeTab && goBack(activeTab.id)}
-          onGoForward={() => activeTab && goForward(activeTab.id)}
-          onRefresh={() => activeTab && refresh(activeTab.id)}
-        />
+        {isNativeHomeActive ? (
+          // Native home has no navigable web contents; keep the row as a
+          // draggable title strip instead of dead navigation controls.
+          <div className="flex h-8 min-w-0 flex-1 items-center px-1.5 text-xs text-muted-foreground">
+            原生工作台 · 在下方选择功能，或打开账号标签页
+          </div>
+        ) : (
+          <>
+            <NavigationControls
+              activeTab={activeTab}
+              onGoBack={() => activeTab && goBack(activeTab.id)}
+              onGoForward={() => activeTab && goForward(activeTab.id)}
+              onRefresh={() => activeTab && refresh(activeTab.id)}
+            />
 
-        <AddressBar activeTab={activeTab} onNavigate={navigateTab} />
+            <AddressBar activeTab={activeTab} onNavigate={navigateTab} />
+          </>
+        )}
 
         {activeGroupId && groupTabs.length > 0 && (
-          <div className="hidden min-w-0 max-w-[42%] shrink border-l border-slate-200 pl-2 xl:block">
+          <div className="hidden min-w-0 max-w-[42%] shrink border-l pl-2 xl:block">
             <GroupTabBar
               groupTabs={groupTabs}
               onSwitchTab={switchGroupTab}

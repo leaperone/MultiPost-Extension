@@ -130,8 +130,15 @@ const DEFAULT_SIDEBAR_WIDTH = 256 // 16rem expanded
 const PUBLISH_SNAPSHOT_LIMIT = 50
 const PUBLISH_SNAPSHOT_TTL_MS = 10 * 60 * 1000
 
-// Home tab constants - the home tab loads the main web app
+// Home tab constants - the home tab renders the native renderer UI.
+// The web dashboard is an optional, closable tab backed by a lazily
+// created BrowserView.
 const HOME_TAB_ID = '__home__'
+const WEB_TAB_ID = '__web__'
+
+const WEB_DASHBOARD_BASE_URL = is.dev
+  ? process.env.MULTIPOST_WEB_URL || 'http://localhost:3000'
+  : 'https://multipost.app'
 
 export class BrowserViewManager {
   private mainWindow: BrowserWindow
@@ -144,8 +151,9 @@ export class BrowserViewManager {
   // Active executor is now tracked by accountId
   private activeExecutorId: string | null = null
   private sidebarWidth: number = DEFAULT_SIDEBAR_WIDTH
-  // Home tab BrowserView - loads the main web app
-  private homeView: BrowserView | null = null
+  // Optional web dashboard BrowserView - created lazily when the user opens
+  // the web workspace tab; the home tab itself is rendered natively.
+  private webDashboardView: BrowserView | null = null
   // Tab bar BrowserView - always on top
   private tabBarView: BrowserView | null = null
   // Publish Groups - 发布 Group 管理
@@ -170,6 +178,12 @@ export class BrowserViewManager {
     this.mainWindow.on('resize', updateBounds)
     this.mainWindow.on('maximize', updateBounds)
     this.mainWindow.on('unmaximize', updateBounds)
+    // Re-assert bounds when the window becomes visible again: while occluded
+    // (e.g. locked screen) Chromium defers BrowserView resizes, so bounds
+    // changed in the background may not have reached the renderer.
+    this.mainWindow.on('show', updateBounds)
+    this.mainWindow.on('focus', updateBounds)
+    this.mainWindow.on('restore', updateBounds)
   }
 
   private blockUnsupportedNavigation(
@@ -296,7 +310,7 @@ export class BrowserViewManager {
     }
 
     sendTo(this.tabBarView?.webContents)
-    sendTo(this.homeView?.webContents)
+    sendTo(this.webDashboardView?.webContents)
     sendTo(this.mainWindow.webContents)
   }
 
@@ -790,21 +804,28 @@ export class BrowserViewManager {
   }
 
   /**
-   * Initialize the home tab and tab bar
-   * Called after main window is ready
+   * Initialize the native home tab (renderer UI) and tab bar.
+   * Called after main window is ready. The web dashboard is NOT loaded here;
+   * it is created lazily by ensureWebDashboardView() when the user opens it.
    */
   async initializeHomeTab(): Promise<void> {
-    if (this.homeView) return
+    if (this.tabBarView) return
 
     const [width, height] = this.mainWindow.getContentSize()
 
-    // 1. Create tab bar BrowserView first
+    // The renderer view doubles as browser chrome and native home UI: it
+    // covers the whole window while the home tab is active and shrinks to
+    // the tab strip when a content BrowserView is shown.
     this.tabBarView = new BrowserView({
       webPreferences: {
         preload: join(__dirname, '../preload/index.js'),
         contextIsolation: true,
         nodeIntegration: false,
-        sandbox: false
+        sandbox: false,
+        // The chrome/home UI must keep animating while the window is occluded;
+        // otherwise intro animations stall at their first frame and snap when
+        // the window becomes visible again.
+        backgroundThrottling: false
       }
     })
     this.installNavigationGuard(this.tabBarView.webContents, 'tabbar')
@@ -812,7 +833,7 @@ export class BrowserViewManager {
       x: 0,
       y: 0,
       width: width,
-      height: TABBAR_HEIGHT
+      height: height
     })
     this.mainWindow.addBrowserView(this.tabBarView)
 
@@ -826,8 +847,25 @@ export class BrowserViewManager {
     this.debugAttachConsoleCapture(this.tabBarView.webContents, 'tabbar')
     console.log('[BrowserViewManager] Tab bar view created')
 
-    // 2. Create home content BrowserView
-    this.homeView = new BrowserView({
+    // Set native home as active
+    this.activeViewId = HOME_TAB_ID
+    this.notifyTabsChanged()
+
+    // Setup IPC handlers for web dashboard navigation
+    this.setupWebDashboardIpcHandlers()
+
+    console.log('[BrowserViewManager] Native home tab initialized')
+  }
+
+  /**
+   * Create the web dashboard BrowserView on first use.
+   */
+  private async ensureWebDashboardView(): Promise<BrowserView> {
+    if (this.webDashboardView) return this.webDashboardView
+
+    const [width, height] = this.mainWindow.getContentSize()
+
+    const view = new BrowserView({
       webPreferences: {
         preload: join(__dirname, '../preload/webview.js'),
         contextIsolation: true,
@@ -836,35 +874,27 @@ export class BrowserViewManager {
         webSecurity: true
       }
     })
-    this.installNavigationGuard(this.homeView.webContents, 'home')
-    this.homeView.setBounds({
+    this.webDashboardView = view
+    this.installNavigationGuard(view.webContents, 'web-dashboard')
+    view.setBounds({
       x: 0,
       y: TABBAR_HEIGHT,
       width: width,
       height: height - TABBAR_HEIGHT
     })
-    this.mainWindow.addBrowserView(this.homeView)
-
-    // 3. Ensure tab bar is always on top
-    this.mainWindow.setTopBrowserView(this.tabBarView)
-
-    // Load home URL
-    const homeUrl = is.dev
-      ? `${process.env.MULTIPOST_WEB_URL || 'http://localhost:3000'}/dashboard`
-      : 'https://multipost.app/dashboard'
+    view.setAutoResize({ width: false, height: false })
 
     // Handle new window requests (e.g. auth callback, target="_blank" links)
-    // Keep same-origin navigation inside homeView, open external links in system browser
+    // Keep same-origin navigation inside the view, open external links in system browser
     const allowedHosts = ['multipost.app', 'localhost']
-    this.homeView.webContents.setWindowOpenHandler(({ url }) => {
+    view.webContents.setWindowOpenHandler(({ url }) => {
       try {
         const urlObj = new URL(url)
         const isSameOrigin = allowedHosts.some(
           (host) => urlObj.hostname === host || urlObj.hostname.endsWith(`.${host}`)
         )
         if (isSameOrigin) {
-          // Navigate homeView to the URL instead of opening a new window
-          this.homeView?.webContents.loadURL(url)
+          view.webContents.loadURL(url)
           return { action: 'deny' }
         }
       } catch {
@@ -874,52 +904,117 @@ export class BrowserViewManager {
       return { action: 'deny' }
     })
 
-    console.log('[BrowserViewManager] Loading home tab:', homeUrl)
-    await this.homeView.webContents.loadURL(homeUrl)
-
-    // Set as active
-    this.activeViewId = HOME_TAB_ID
-
-    // Notify tabs changed
-    this.notifyTabsChanged()
-
-    // Setup navigation events for home view
-    this.homeView.webContents.on('page-title-updated', () => {
+    view.webContents.on('page-title-updated', () => {
+      this.notifyTabsChanged()
+    })
+    view.webContents.on('did-navigate', () => {
+      this.notifyTabsChanged()
+    })
+    view.webContents.on('did-navigate-in-page', () => {
       this.notifyTabsChanged()
     })
 
-    this.homeView.webContents.on('did-navigate', () => {
-      this.notifyTabsChanged()
+    this.debugAttachConsoleCapture(view.webContents, 'web-dashboard')
+
+    const homeUrl = `${WEB_DASHBOARD_BASE_URL}/dashboard`
+    console.log('[BrowserViewManager] Loading web dashboard:', homeUrl)
+    // A failed load (offline, dev server down) must not abort tab activation;
+    // the view shows Chromium's error page and the user can reload.
+    await view.webContents.loadURL(homeUrl).catch((error) => {
+      console.error('[BrowserViewManager] Web dashboard load failed:', error)
     })
 
-    this.homeView.webContents.on('did-navigate-in-page', () => {
-      this.notifyTabsChanged()
-    })
-
-    // Setup IPC handlers for home view navigation
-    this.setupHomeViewIpcHandlers()
-
-    // Capture console output from home view (dev only)
-    this.debugAttachConsoleCapture(this.homeView.webContents, 'home')
-
-    console.log('[BrowserViewManager] Home tab initialized')
+    return view
   }
 
   /**
-   * Setup IPC handlers for home view (navigation, file dialogs, etc.)
+   * Show the web dashboard tab, creating the view on first use.
    */
-  private setupHomeViewIpcHandlers(): void {
-    // 导航请求 - 在 homeView 中导航
-    ipcMain.on('multipost:navigation:navigateTo', (_, path: string) => {
-      if (!this.homeView) return
-      const baseUrl = is.dev
-        ? (process.env.MULTIPOST_WEB_URL || 'http://localhost:3000')
-        : 'https://multipost.app'
+  async openWebDashboard(path?: string): Promise<void> {
+    const view = await this.ensureWebDashboardView()
+
+    if (path) {
       const fullPath = path.startsWith('/dashboard') ? path : `/dashboard${path}`
-      const url = `${baseUrl}${fullPath}`
-      if (!this.blockUnsupportedNavigation(url, 'home:navigateTo')) {
-        this.homeView.webContents.loadURL(url)
+      const url = `${WEB_DASHBOARD_BASE_URL}${fullPath}`
+      if (!this.blockUnsupportedNavigation(url, 'web-dashboard:navigateTo')) {
+        void view.webContents.loadURL(url)
       }
+    }
+
+    // Hide platform views
+    for (const managed of this.views.values()) {
+      if (managed.isVisible) {
+        this.mainWindow.removeBrowserView(managed.view)
+        managed.isVisible = false
+      }
+    }
+    this.hideAllGroupViews()
+
+    this.mainWindow.addBrowserView(view)
+    if (this.tabBarView) {
+      this.mainWindow.setTopBrowserView(this.tabBarView)
+    }
+
+    this.activeViewId = WEB_TAB_ID
+    this.activeGroupId = null
+    this.updateAllViewBounds()
+    this.notifyTabsChanged()
+  }
+
+  /**
+   * Close the web dashboard tab and destroy its view.
+   */
+  private closeWebDashboard(): void {
+    if (!this.webDashboardView) return
+
+    const wasActive = this.activeViewId === WEB_TAB_ID
+    this.mainWindow.removeBrowserView(this.webDashboardView)
+    const webContents = this.webDashboardView.webContents as Electron.WebContents & {
+      destroy?: () => void
+    }
+    webContents.destroy?.()
+    this.webDashboardView = null
+
+    if (wasActive) {
+      void this.switchToHome()
+    } else {
+      this.notifyTabsChanged()
+    }
+  }
+
+  /**
+   * Hide all publish group views.
+   */
+  private hideAllGroupViews(): void {
+    for (const group of this.publishGroups.values()) {
+      for (const target of group.views.values()) {
+        if (target.isVisible) {
+          this.mainWindow.removeBrowserView(target.view)
+          target.isVisible = false
+        }
+      }
+    }
+  }
+
+  /**
+   * True when the native home tab is the active surface, meaning the renderer
+   * view should cover the whole window instead of just the tab strip.
+   */
+  private isNativeHomeActive(): boolean {
+    // activeViewId null happens in transitional states (e.g. after hiding all
+    // platform views); with no visible content view the native home is the
+    // surface the user sees, so the chrome should stay expanded.
+    const noActiveContent = this.activeViewId === HOME_TAB_ID || this.activeViewId === null
+    return noActiveContent && !this.activeGroupId && !this.hasVisibleView()
+  }
+
+  /**
+   * Setup IPC handlers for the web dashboard tab (navigation, file dialogs, etc.)
+   */
+  private setupWebDashboardIpcHandlers(): void {
+    // 导航请求 - 打开/导航 web 工作台 tab（懒创建）
+    ipcMain.on('multipost:navigation:navigateTo', (_, path: string) => {
+      void this.openWebDashboard(path)
     })
 
     // 导航报告
@@ -927,14 +1022,16 @@ export class BrowserViewManager {
       this.mainWindow.webContents.send('webview:path-changed', path)
     })
 
-    // 显示/隐藏 homeView
+    // 显示/隐藏 web 工作台
     ipcMain.on('multipost:webview:show', () => {
-      this.switchToHome()
+      void this.openWebDashboard()
     })
 
     ipcMain.on('multipost:webview:hide', () => {
-      if (this.homeView) {
-        this.mainWindow.removeBrowserView(this.homeView)
+      if (this.activeViewId === WEB_TAB_ID) {
+        void this.switchToHome()
+      } else if (this.webDashboardView) {
+        this.mainWindow.removeBrowserView(this.webDashboardView)
       }
     })
 
@@ -1001,8 +1098,8 @@ export class BrowserViewManager {
   /**
    * Get the home view
    */
-  getHomeView(): BrowserView | null {
-    return this.homeView
+  getWebDashboardView(): BrowserView | null {
+    return this.webDashboardView
   }
 
   /**
@@ -1093,8 +1190,8 @@ export class BrowserViewManager {
     })
 
     // Hide home view when showing other BrowserView
-    if (this.homeView) {
-      this.mainWindow.removeBrowserView(this.homeView)
+    if (this.webDashboardView) {
+      this.mainWindow.removeBrowserView(this.webDashboardView)
     }
 
     // Hide all other content views
@@ -1117,6 +1214,9 @@ export class BrowserViewManager {
     // Hide other views
     this.hideAllExcept(accountId)
     this.activeViewId = accountId
+
+    // Shrink the renderer view back to the tab strip if we left native home
+    this.updateAllViewBounds()
 
     // Navigate to URL
     console.log('[BrowserViewManager] Loading URL:', targetUrl)
@@ -1209,9 +1309,9 @@ export class BrowserViewManager {
     const managed = this.views.get(accountId)
     if (!managed) return
 
-    // Hide home view
-    if (this.homeView) {
-      this.mainWindow.removeBrowserView(this.homeView)
+    // Hide web dashboard view
+    if (this.webDashboardView) {
+      this.mainWindow.removeBrowserView(this.webDashboardView)
     }
 
     this.hideAllExcept(accountId)
@@ -1223,6 +1323,9 @@ export class BrowserViewManager {
     if (this.tabBarView) {
       this.mainWindow.setTopBrowserView(this.tabBarView)
     }
+
+    // Shrink the renderer view back to the tab strip if we left native home
+    this.updateAllViewBounds()
 
     this.notifyTabsChanged()
   }
@@ -1240,6 +1343,9 @@ export class BrowserViewManager {
     if (this.activeViewId === accountId) {
       this.activeViewId = null
     }
+
+    // Expand the renderer chrome again if this returns us to native home
+    this.updateAllViewBounds()
   }
 
   /**
@@ -1281,10 +1387,15 @@ export class BrowserViewManager {
     }
 
     if (tabId === HOME_TAB_ID) {
-      if (!this.homeView) {
-        throw new Error('Home view is not initialized')
+      // Native home has no address bar target
+      return
+    }
+
+    if (tabId === WEB_TAB_ID) {
+      if (!this.webDashboardView) {
+        throw new Error('Web dashboard view is not initialized')
       }
-      await this.homeView.webContents.loadURL(targetUrl)
+      await this.webDashboardView.webContents.loadURL(targetUrl)
       this.notifyTabsChanged()
       return
     }
@@ -1536,13 +1647,16 @@ export class BrowserViewManager {
 
     const [width, height] = this.mainWindow.getContentSize()
 
-    // Update tab bar view
+    // Update tab bar view. While the native home tab is active the renderer
+    // view covers the whole window (it renders the home UI below the chrome);
+    // otherwise it shrinks to the tab strip above the content views.
     if (this.tabBarView) {
+      const chromeHeight = this.isNativeHomeActive() ? height : TABBAR_HEIGHT
       this.tabBarView.setBounds({
         x: 0,
         y: 0,
         width: width,
-        height: TABBAR_HEIGHT
+        height: chromeHeight
       })
       // Ensure tab bar stays on top
       this.mainWindow.setTopBrowserView(this.tabBarView)
@@ -1553,8 +1667,8 @@ export class BrowserViewManager {
     const contentHeight = height - TABBAR_HEIGHT
 
     // Update home view
-    if (this.homeView) {
-      this.homeView.setBounds({
+    if (this.webDashboardView) {
+      this.webDashboardView.setBounds({
         x: 0,
         y: contentTop,
         width: width,
@@ -1778,6 +1892,12 @@ export class BrowserViewManager {
     this.mainWindow.addBrowserView(managed.view)
     managed.isVisible = true
     this.activePlatformId = platform
+
+    // Ensure tab bar stays on top and shrink the renderer chrome
+    if (this.tabBarView) {
+      this.mainWindow.setTopBrowserView(this.tabBarView)
+    }
+    this.updateAllViewBounds()
   }
 
   /**
@@ -1793,6 +1913,9 @@ export class BrowserViewManager {
     if (this.activePlatformId === platform) {
       this.activePlatformId = null
     }
+
+    // Expand the renderer chrome again if this returns us to native home
+    this.updateAllViewBounds()
   }
 
   /**
@@ -1834,6 +1957,9 @@ export class BrowserViewManager {
     }
     this.activeViewId = null
     this.activePlatformId = null
+
+    // Expand the renderer chrome again if this returns us to native home
+    this.updateAllViewBounds()
   }
 
   /**
@@ -2171,15 +2297,13 @@ export class BrowserViewManager {
     managed.isVisible = true
     this.activeExecutorId = accountId
 
-    // Update bounds
-    const [width, height] = this.mainWindow.getContentSize()
-    const topOffset = TABBAR_HEIGHT
-    managed.view.setBounds({
-      x: 0,
-      y: topOffset,
-      width: width,
-      height: height - topOffset
-    })
+    // Ensure tab bar stays on top
+    if (this.tabBarView) {
+      this.mainWindow.setTopBrowserView(this.tabBarView)
+    }
+
+    // Shrink the renderer chrome and apply consistent content bounds
+    this.updateAllViewBounds()
   }
 
   /**
@@ -2195,6 +2319,9 @@ export class BrowserViewManager {
     if (this.activeExecutorId === accountId) {
       this.activeExecutorId = null
     }
+
+    // Expand the renderer chrome again if this returns us to native home
+    this.updateAllViewBounds()
   }
 
   /**
@@ -2220,6 +2347,9 @@ export class BrowserViewManager {
       }
     }
     this.activeExecutorId = null
+
+    // Expand the renderer chrome again if this returns us to native home
+    this.updateAllViewBounds()
   }
 
   /**
@@ -2238,6 +2368,9 @@ export class BrowserViewManager {
     if (this.activeExecutorId === accountId) {
       this.activeExecutorId = null
     }
+
+    // Expand the renderer chrome again if this returns us to native home
+    this.updateAllViewBounds()
   }
 
   /**
@@ -2466,20 +2599,35 @@ export class BrowserViewManager {
   getTabs(): BrowserTab[] {
     const tabs: BrowserTab[] = []
 
-    // Home tab is always present (first tab)
-    const homeTitle = this.homeView?.webContents.getTitle() || '首页'
-    const homeUrl = this.homeView?.webContents.getURL() || ''
+    // Native home tab is always present (first tab)
     tabs.push({
       id: HOME_TAB_ID,
       platform: 'weibo' as PlatformType, // placeholder, not used for home
-      title: homeTitle,
-      url: homeUrl,
+      title: 'MultiPost',
+      url: '',
       faviconUrl: undefined,
       isActive: this.activeViewId === HOME_TAB_ID && !this.activeGroupId,
       isHome: true,
-      canGoBack: this.homeView?.webContents.canGoBack() || false,
-      canGoForward: this.homeView?.webContents.canGoForward() || false
+      canGoBack: false,
+      canGoForward: false
     })
+
+    // Web dashboard tab (only present after the user opened it)
+    if (this.webDashboardView) {
+      const webContents = this.webDashboardView.webContents
+      tabs.push({
+        id: WEB_TAB_ID,
+        platform: 'weibo' as PlatformType, // placeholder, not used for web tab
+        title: webContents.getTitle() || 'MultiPost Web',
+        url: webContents.getURL() || '',
+        faviconUrl: undefined,
+        isActive: this.activeViewId === WEB_TAB_ID && !this.activeGroupId,
+        isHome: false,
+        isWeb: true,
+        canGoBack: webContents.canGoBack(),
+        canGoForward: webContents.canGoForward()
+      })
+    }
 
     // Add all platform BrowserView tabs
     for (const [id, managed] of this.views) {
@@ -2531,6 +2679,12 @@ export class BrowserViewManager {
       return
     }
 
+    // Handle web dashboard tab
+    if (accountId === WEB_TAB_ID) {
+      await this.openWebDashboard()
+      return
+    }
+
     const managed = this.views.get(accountId)
     if (!managed) return
 
@@ -2539,7 +2693,8 @@ export class BrowserViewManager {
   }
 
   /**
-   * Switch to home tab (hide all BrowserViews, show home view)
+   * Switch to the native home tab: hide every content BrowserView so the
+   * renderer view (expanded to full window) becomes the visible surface.
    */
   async switchToHome(): Promise<void> {
     // Hide all platform views
@@ -2550,10 +2705,11 @@ export class BrowserViewManager {
       }
     }
 
-    // Show home view
-    if (this.homeView) {
-      this.mainWindow.addBrowserView(this.homeView)
+    // Hide web dashboard and publish group views
+    if (this.webDashboardView) {
+      this.mainWindow.removeBrowserView(this.webDashboardView)
     }
+    this.hideAllGroupViews()
 
     // Ensure tab bar stays on top
     if (this.tabBarView) {
@@ -2561,6 +2717,8 @@ export class BrowserViewManager {
     }
 
     this.activeViewId = HOME_TAB_ID
+    this.activeGroupId = null
+    this.updateAllViewBounds()
     this.notifyTabsChanged()
   }
 
@@ -2572,6 +2730,12 @@ export class BrowserViewManager {
     if (accountId === HOME_TAB_ID) {
       console.log('[BrowserViewManager] Cannot close home tab')
       return false
+    }
+
+    // Web dashboard tab destroys its lazily created view
+    if (accountId === WEB_TAB_ID) {
+      this.closeWebDashboard()
+      return true
     }
 
     const managed = this.views.get(accountId)
@@ -2635,7 +2799,12 @@ export class BrowserViewManager {
 
   private getWebContentsForTab(tabId: string): Electron.WebContents | null {
     if (tabId === HOME_TAB_ID) {
-      return this.homeView?.webContents || null
+      // Native home has no web contents to navigate
+      return null
+    }
+
+    if (tabId === WEB_TAB_ID) {
+      return this.webDashboardView?.webContents || null
     }
 
     const managed = this.views.get(tabId)
@@ -2887,8 +3056,8 @@ export class BrowserViewManager {
     if (!group) return
 
     // Hide home view
-    if (this.homeView) {
-      this.mainWindow.removeBrowserView(this.homeView)
+    if (this.webDashboardView) {
+      this.mainWindow.removeBrowserView(this.webDashboardView)
     }
 
     // Hide all other views
@@ -3553,7 +3722,7 @@ export class BrowserViewManager {
     }))
 
     return {
-      homeUrl: this.homeView?.webContents.getURL(),
+      homeUrl: this.webDashboardView?.webContents.getURL(),
       views,
       groups,
       tabs: this.getTabs()
@@ -3580,11 +3749,11 @@ export class BrowserViewManager {
    * Navigate home view to a URL
    */
   async debugNavigate(url: string): Promise<void> {
-    if (!this.homeView) throw new Error('Home view not available')
+    if (!this.webDashboardView) throw new Error('Home view not available')
     if (this.blockUnsupportedNavigation(url, 'debugNavigate')) {
       return
     }
-    await this.homeView.webContents.loadURL(url)
+    await this.webDashboardView.webContents.loadURL(url)
   }
 
   /**
@@ -3607,8 +3776,8 @@ export class BrowserViewManager {
    * Execute script in a view by ID (accountId, '__home__', or '__tabbar__')
    */
   async debugExecScript(viewId: string, script: string): Promise<unknown> {
-    if (viewId === '__home__' && this.homeView) {
-      return this.homeView.webContents.executeJavaScript(script)
+    if ((viewId === '__home__' || viewId === WEB_TAB_ID) && this.webDashboardView) {
+      return this.webDashboardView.webContents.executeJavaScript(script)
     }
     if (viewId === '__tabbar__' && this.tabBarView) {
       return this.tabBarView.webContents.executeJavaScript(script)

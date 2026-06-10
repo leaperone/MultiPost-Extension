@@ -1,19 +1,26 @@
+import { useEffect } from 'react'
 import { UpdateNotification } from './components/UpdateNotification'
 import { BrowserTabs } from './components/BrowserTabs'
+import { NativeShell } from './components/native/NativeShell'
+import { useTabsStore } from './store/tabs.store'
 
 /**
  * Desktop App - 浏览器架构
  *
- * 主窗口 renderer 只负责渲染标签栏
- * 所有内容（包括首页）都在 BrowserView 中显示
- * 标签栏固定在顶部:
- * - 单层: 40px (首页或普通 tab)
- * - 两层: 76px (发布 Group 激活时，显示 Group 内部 tabs)
+ * 主窗口 renderer 渲染顶部浏览器 chrome 和原生首页两部分：
+ * - home tab 激活时主进程把本视图扩展为全窗口，chrome 下方显示 NativeShell
+ * - 其他 tab 激活时本视图缩回 72px，内容由对应 BrowserView 接管
  */
 function App(): React.ReactElement {
+  useEffect(() => useTabsStore.getState().init(), [])
+
   return (
-    <div className="h-screen bg-background">
-      <BrowserTabs />
+    <div className="flex h-screen flex-col bg-background">
+      <BrowserTabs className="shrink-0" />
+
+      <div className="min-h-0 flex-1">
+        <NativeShell />
+      </div>
 
       {/* 更新通知 */}
       <UpdateNotification />

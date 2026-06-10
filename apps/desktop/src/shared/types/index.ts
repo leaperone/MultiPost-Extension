@@ -384,7 +384,8 @@ export interface BrowserTab {
   url: string
   faviconUrl?: string
   isActive: boolean
-  isHome: boolean // 首页 tab 不能关闭
+  isHome: boolean // 首页 tab 不能关闭（原生渲染，无 web contents）
+  isWeb?: boolean // Web 工作台 tab（懒创建、可关闭）
   canGoBack: boolean
   canGoForward: boolean
   // Group-specific fields
