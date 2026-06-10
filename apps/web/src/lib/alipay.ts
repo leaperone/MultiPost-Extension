@@ -1,4 +1,4 @@
-import { dollarToYuan } from '@/src/actions/credit/types';
+import { dollarToYuan } from '@/actions/credit/types';
 import Decimal from 'decimal.js';
 import ky from 'ky';
 

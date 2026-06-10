@@ -3,7 +3,7 @@ import { Icon } from '@iconify/react';
 import { createFileRoute, Link } from '@tanstack/react-router';
 import { Box, CheckCircle, MonitorIcon, Send, Settings, Share2Icon } from 'lucide-react';
 
-import { HomePublisher } from '../../../components/HomePage/HomePublisher';
+import { HomePublisher } from '@/components/HomePage/HomePublisher';
 import { useTranslation } from '../../i18n/client';
 
 const HOME_TITLE = 'MultiPost - Open Source Multi-Platform Social Media Publishing Tool';

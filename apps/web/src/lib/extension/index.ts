@@ -7,7 +7,7 @@
 import type {
   PublishPostData,
   SchedulePublishPostData,
-} from '@/src/routes/api/extension/-types';
+} from '@/routes/api/extension/-types';
 import { v4 as uuidv4 } from 'uuid';
 
 export interface SyncData {

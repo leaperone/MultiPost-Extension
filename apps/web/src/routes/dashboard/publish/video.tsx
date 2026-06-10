@@ -34,7 +34,7 @@ import PlatformCheckbox from './-components/PlatformCheckbox';
 import HeroTagInput from './-components/HeroTagInput';
 import { funcPublish, getPlatformInfos } from '@/lib/extension';
 import type { PlatformInfo } from '@/lib/extension';
-import { useTranslation } from '@/src/i18n/client';
+import { useTranslation } from '@/i18n/client';
 import { useHydration } from '@/hooks/useHydration';
 import { usePlatformStore } from '@/store/publish.store';
 import { getPlatformExtraConfigList } from '../../../actions/publish';

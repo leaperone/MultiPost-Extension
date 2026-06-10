@@ -1,7 +1,7 @@
 import { Stripe } from 'stripe';
 import Decimal from 'decimal.js';
 
-import { getSession } from '@/src/lib/session';
+import { getSession } from '@/lib/session';
 
 // 初始化Stripe客户端
 const stripeClient = new Stripe(process.env.STRIPE_SECRET_KEY || 'secret', {

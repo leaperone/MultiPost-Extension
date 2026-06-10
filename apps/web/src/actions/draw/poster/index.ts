@@ -4,7 +4,7 @@ import { and, desc, eq, ne } from 'drizzle-orm';
 import { z } from 'zod';
 
 import { db } from '../../../lib/db';
-import { PRICING } from '@/src/actions/credit/types';
+import { PRICING } from '@/actions/credit/types';
 import { deductCredit } from '../../credit/_core';
 import { getSession } from '../../../lib/session';
 import {

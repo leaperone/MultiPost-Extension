@@ -6,7 +6,7 @@ import {
   getDynamicDraft,
   updateDynamicDraft,
   deleteDynamicDraft,
-} from '../src/actions/draft';
+} from '@/actions/draft';
 import type { Draft, DraftFileData, DraftFileDataClient } from '@/lib/types/draft';
 import { nanoid } from 'nanoid';
 

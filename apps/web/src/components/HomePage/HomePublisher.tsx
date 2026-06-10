@@ -69,12 +69,12 @@ import {
   trackPublishFailed,
   trackPlatformSelected,
 } from '@/lib/posthog/events';
-import { useSession } from '../../src/lib/auth-client';
-import { useTranslation } from '../../src/i18n/client';
-import { getPlatformExtraConfigList } from '../../src/actions/publish';
-import PlatformCheckbox from '../../src/routes/dashboard/publish/-components/PlatformCheckbox';
-import LibraryModal from '../../src/routes/dashboard/publish/-components/dynamic/LibraryModal';
-import { ImageGenerateModal } from '../../src/routes/dashboard/publish/-components/dynamic/ImageGenerateModal';
+import { useSession } from '@/lib/auth-client';
+import { useTranslation } from '@/i18n/client';
+import { getPlatformExtraConfigList } from '@/actions/publish';
+import PlatformCheckbox from '@/routes/dashboard/publish/-components/PlatformCheckbox';
+import LibraryModal from '@/routes/dashboard/publish/-components/dynamic/LibraryModal';
+import { ImageGenerateModal } from '@/routes/dashboard/publish/-components/dynamic/ImageGenerateModal';
 
 const ReactPlayer = lazy(() => import('react-player'));
 const Viewer = lazy(() => import('react-viewer'));

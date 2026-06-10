@@ -8,7 +8,7 @@ import { PosterGenerationSchema } from '../../../../actions/draw/poster/types';
 import { generatePoster, getPosterGeneration } from '../../../../actions/draw/poster';
 import { ResultWaiter } from './poster/ResultWaiter';
 import { FileImage } from 'lucide-react';
-import { useTranslation } from '@/src/i18n/client';
+import { useTranslation } from '@/i18n/client';
 import { useDraftStore } from '@/store/draft.store';
 import { toast } from 'sonner';
 

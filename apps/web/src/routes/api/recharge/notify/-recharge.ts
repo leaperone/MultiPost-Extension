@@ -1,4 +1,4 @@
-import { RechargeStatus } from '@/src/actions/credit/types';
+import { RechargeStatus } from '@/actions/credit/types';
 import { RechargeCredit } from '@db/schema/schema';
 import { and, eq, ne } from 'drizzle-orm';
 

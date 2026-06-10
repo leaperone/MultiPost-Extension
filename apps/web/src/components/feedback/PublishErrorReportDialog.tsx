@@ -16,16 +16,17 @@ import {
 } from '@heroui/react';
 import { MegaphoneIcon, UploadCloudIcon, XIcon } from 'lucide-react';
 import { Link } from '@tanstack/react-router';
+import { PLATFORMS } from '@multipost/shared';
 
-import { useTranslation } from '@/src/i18n/client';
-import { reportPublishError } from '../../src/actions/feedback/report-publish-error';
-import { getFeedbackUploadUrl } from '../../src/actions/feedback/upload';
+import { useTranslation } from '@/i18n/client';
+import { reportPublishError } from '@/actions/feedback/report-publish-error';
+import { getFeedbackUploadUrl } from '@/actions/feedback/upload';
 import {
   ERROR_TYPES,
   FEEDBACK_SOURCES,
   type ErrorType,
   type FeedbackSource,
-} from '../../src/actions/feedback/types';
+} from '@/actions/feedback/types';
 
 const MAX_SCREENSHOT_BYTES = 4 * 1024 * 1024;
 const ACCEPTED_TYPES = ['image/png', 'image/jpeg', 'image/webp'];
@@ -45,32 +46,47 @@ interface PublishErrorReportDialogProps {
   context: PublishErrorReportContext;
 }
 
-// Keep this list in sync with the desktop platform adapters. We intentionally
-// inline it here rather than depend on @multipost/shared to avoid an extra
-// workspace dep for a small UI form. Display names are localized only loosely
-// (we show the canonical brand name).
-const PLATFORM_OPTIONS: Array<{ id: string; name: string }> = [
-  { id: 'weibo', name: '微博' },
-  { id: 'xiaohongshu', name: '小红书' },
-  { id: 'twitter', name: 'Twitter / X' },
-  { id: 'douyin', name: '抖音' },
-  { id: 'bilibili', name: 'B 站' },
-  { id: 'zhihu', name: '知乎' },
-  { id: 'wechat', name: '微信公众号' },
-  { id: 'tiktok', name: 'TikTok' },
-  { id: 'instagram', name: 'Instagram' },
-  { id: 'facebook', name: 'Facebook' },
-  { id: 'linkedin', name: 'LinkedIn' },
-  { id: 'youtube', name: 'YouTube' },
-  { id: 'threads', name: 'Threads' },
-  { id: 'bluesky', name: 'Bluesky' },
-  { id: 'mastodon', name: 'Mastodon' },
-  { id: 'reddit', name: 'Reddit' },
-  { id: 'medium', name: 'Medium' },
-  { id: 'devto', name: 'dev.to' },
-  { id: 'pinterest', name: 'Pinterest' },
-  { id: 'other', name: 'Other / Not listed' },
+// The dialog exposes a curated subset of the shared platform registry plus a
+// few report-only targets the publisher does not support (zhihu, mastodon,
+// devto, pinterest, other). Overrides pin the historical UI labels where they
+// differ from the registry.
+const PLATFORM_OPTION_IDS = [
+  'weibo',
+  'xiaohongshu',
+  'twitter',
+  'douyin',
+  'bilibili',
+  'zhihu',
+  'wechat',
+  'tiktok',
+  'instagram',
+  'facebook',
+  'linkedin',
+  'youtube',
+  'threads',
+  'bluesky',
+  'mastodon',
+  'reddit',
+  'medium',
+  'devto',
+  'pinterest',
+  'other',
 ];
+
+const LOCAL_PLATFORM_NAMES: Record<string, string> = {
+  twitter: 'Twitter / X',
+  bilibili: 'B 站',
+  zhihu: '知乎',
+  mastodon: 'Mastodon',
+  devto: 'dev.to',
+  pinterest: 'Pinterest',
+  other: 'Other / Not listed',
+};
+
+const PLATFORM_OPTIONS: Array<{ id: string; name: string }> = PLATFORM_OPTION_IDS.map((id) => ({
+  id,
+  name: LOCAL_PLATFORM_NAMES[id] ?? PLATFORMS[id]?.name ?? id,
+}));
 
 const ERROR_TYPE_KEYS: Array<{ value: ErrorType; key: string }> = [
   { value: ERROR_TYPES.CANNOT_PUBLISH, key: 'cannotPublish' },

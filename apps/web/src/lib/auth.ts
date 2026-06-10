@@ -16,8 +16,8 @@ import Decimal from 'decimal.js';
 import { and, eq, isNull } from 'drizzle-orm';
 import { nanoid } from 'nanoid';
 
-import { RechargeStatus, RechargeType } from '@/src/actions/credit/types';
-import { addCreditInTransaction } from '@/src/actions/credit/_core';
+import { RechargeStatus, RechargeType } from '@/actions/credit/types';
+import { addCreditInTransaction } from '@/actions/credit/_core';
 import { sendVerificationRequest as sendVerificationRequestDev } from '@/lib/devauth';
 import { sendVerificationRequest as sendVerificationRequestMailgun } from '@/lib/mailgun';
 import type { SigninMethod } from '@/lib/posthog/events';

@@ -12,8 +12,8 @@ import {
 } from '../../../actions/draw/image/types';
 import { listAllImages, newImageGeneration } from '../../../actions/draw/image';
 import { ImageIcon, Download, Calendar, Maximize2 } from 'lucide-react';
-import { useTranslation } from '@/src/i18n/client';
-import { useLocale } from '@/src/i18n/locale-provider';
+import { useTranslation } from '@/i18n/client';
+import { useLocale } from '@/i18n/locale-provider';
 import { toast } from 'sonner';
 import { routeMeta } from '../../../lib/seo';
 

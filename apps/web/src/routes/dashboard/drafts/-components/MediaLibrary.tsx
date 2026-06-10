@@ -6,7 +6,7 @@ import { Image as ImageIcon, Eye, Plus, X, Upload, RefreshCcw } from 'lucide-rea
 import { getUserImageFiles } from '../-actions';
 import { toast } from 'sonner';
 import ky from 'ky';
-import { useTranslation } from '@/src/i18n/client';
+import { useTranslation } from '@/i18n/client';
 import type { FileHosting as FileHostingTable } from '@db/schema/schema';
 
 type FileHosting = typeof FileHostingTable.$inferSelect;

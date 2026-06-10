@@ -35,8 +35,8 @@ import {
   retryVideoTranscription,
 } from '../../actions/video-transcription';
 import { VideoTranscriptionStatus, type VideoExtractResult } from '../../actions/video-transcription/types';
-import { useTranslation } from '@/src/i18n/client';
-import { useLocale } from '@/src/i18n/locale-provider';
+import { useTranslation } from '@/i18n/client';
+import { useLocale } from '@/i18n/locale-provider';
 import { routeMeta } from '../../lib/seo';
 
 export const Route = createFileRoute('/dashboard/video-transcribe')({

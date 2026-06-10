@@ -1,4 +1,4 @@
-import { Accordion, AccordionItem } from '@heroui/accordion';
+import { Accordion, AccordionItem } from '@heroui/react';
 import { createFileRoute } from '@tanstack/react-router';
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';

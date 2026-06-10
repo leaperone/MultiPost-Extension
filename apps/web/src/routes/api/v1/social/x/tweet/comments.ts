@@ -1,7 +1,7 @@
 import { createFileRoute } from '@tanstack/react-router';
 import { z } from 'zod';
 
-import { CREDIT_PER_REQUEST_SOCIAL_MEDIA } from '@/src/actions/credit/types';
+import { CREDIT_PER_REQUEST_SOCIAL_MEDIA } from '@/actions/credit/types';
 
 import { preflightResponse } from '../../../../../../lib/cors';
 import { runSocialProxy, searchParamsObject, socialErrorResponse } from '../../-common';

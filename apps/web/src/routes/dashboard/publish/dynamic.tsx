@@ -39,7 +39,7 @@ import {
   SparklesIcon,
 } from 'lucide-react';
 import React, { Suspense, lazy, useCallback, useEffect, useRef, useState } from 'react';
-import { useTranslation } from '@/src/i18n/client';
+import { useTranslation } from '@/i18n/client';
 import { Icon } from '@iconify/react';
 import { cn } from '@/lib/utils';
 import {

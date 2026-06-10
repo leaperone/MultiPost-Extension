@@ -8,7 +8,7 @@ import { ResultWaiter } from '../../publish/-components/image/ResultWaiter';
 import { ImageGenerationSchema, ImageGenerationStatus } from '../../../../actions/draw/image/types';
 import { toast } from 'sonner';
 import { Eye, Plus } from 'lucide-react';
-import { useTranslation } from '@/src/i18n/client';
+import { useTranslation } from '@/i18n/client';
 import { useDraftStore } from '@/store/draft.store';
 import { newImageGeneration } from '../../../../actions/draw/image';
 

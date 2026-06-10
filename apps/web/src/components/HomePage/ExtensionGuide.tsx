@@ -5,7 +5,7 @@ import { RefreshCwIcon, ArrowRightIcon, CheckIcon, MonitorIcon } from 'lucide-re
 import { Icon } from '@iconify/react';
 import { motion } from 'framer-motion';
 
-import { useTranslation } from '../../src/i18n/client';
+import { useTranslation } from '@/i18n/client';
 
 interface ExtensionGuideProps {
   isLoading?: boolean;

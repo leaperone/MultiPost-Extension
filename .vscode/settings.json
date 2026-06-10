@@ -4,9 +4,9 @@
       "source.fixAll.eslint": "explicit",
       "source.fixAll.stylelint": "explicit"
     },
-  
+
     "editor.defaultFormatter": "esbenp.prettier-vscode", // 默认使用 prettier 进行格式化
-  
+
     "[typescriptreact]": {
       "editor.defaultFormatter": "esbenp.prettier-vscode",
       "editor.formatOnSave": true, // 保存的时候自动格式化
@@ -34,12 +34,8 @@
       "strings": true
     },
     "i18n-ally.localesPaths": [
-      "i18n/locales"
+      "apps/web/src/i18n/locales"
     ],
-    "[prisma]": {
-      "editor.defaultFormatter": "Prisma.prisma"
-    },
     "i18n-ally.keystyle": "nested",
     "i18n-ally.sourceLanguage": "en",
-    "WillLuke.nextjs.hasPrompted": true,
   }

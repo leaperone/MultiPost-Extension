@@ -9,7 +9,7 @@ This is a **pnpm workspace monorepo** containing all MultiPost projects:
 ```
 .                              # Monorepo root / orchestrator
 ├── apps/
-│   ├── web/                   # Web app (Next.js 16)
+│   ├── web/                   # Web app (TanStack Start + Vite)
 │   ├── desktop/               # Electron desktop client
 │   ├── extension/             # Browser extension (git submodule, public repo)
 │   ├── backend/               # Deno worker: publish tasks, account refresh
@@ -17,8 +17,7 @@ This is a **pnpm workspace monorepo** containing all MultiPost projects:
 ├── packages/
 │   └── shared/                # @multipost/shared: shared types & platform definitions
 ├── db/                        # Shared Drizzle schema, client, and Atlas migrations
-├── pnpm-workspace.yaml        # Workspace config
-└── turbo.json                 # Turborepo task orchestration
+└── pnpm-workspace.yaml        # Workspace config
 ```
 
 **Key rules:**
@@ -89,9 +88,8 @@ pnpm db:studio              # Open Drizzle Studio
 
 ### Code Quality
 ```bash
-pnpm lint                   # Next.js linter (recommended for quick checks)
-pnpm eslint                 # ESLint check
-pnpm eslint:fix             # ESLint with auto-fix
+pnpm lint                   # ESLint check (recommended for quick checks)
+pnpm lint:fix               # ESLint with auto-fix
 ```
 
 **Note:** Don't run `pnpm build` during development, just use lint to check.
@@ -107,35 +105,32 @@ docker compose -f .devcontainer/dev-db/docker-compose.yml up -d postgres-multipo
 ```
 
 ### Release Management
-```bash
-pnpm release                # Standard version bump
-pnpm release:100            # Major version
-pnpm release:010            # Minor version
-pnpm release:001            # Patch version
-```
+
+Releases are tag-driven: push `web-v*` to deploy Web (via leaperone-releases), `desktop-v*` to build Desktop. Use the `/release` skill.
 
 ## Architecture Overview
 
-**MultiPost** is a Next.js 16 social media publishing platform with browser extension integration.
+**MultiPost** is a TanStack Start (Vite + React 19) social media publishing platform with browser extension integration.
 
 ### Directory Structure
 
 ```
-apps/web/app/          # Next.js App Router pages and routes
-apps/web/actions/      # Server Actions
-apps/web/components/   # Reusable React components
-apps/web/hooks/        # Custom React hooks
-apps/web/i18n/         # Internationalization files
-apps/web/lib/          # Web libraries and utilities
-apps/web/store/        # Web global state (Zustand)
-apps/backend/          # Backend worker and job processing
-apps/video-stt-worker/ # Video speech-to-text worker
-db/                    # Shared Drizzle schema/client and Atlas migrations
+apps/web/src/routes/     # TanStack Router file-based routes (incl. /api server routes)
+apps/web/src/actions/    # Server functions (data mutations)
+apps/web/src/components/ # Reusable React components
+apps/web/src/hooks/      # Custom React hooks
+apps/web/src/i18n/       # Internationalization (code + locales)
+apps/web/src/lib/        # Web libraries and utilities
+apps/web/src/store/      # Web global state (Zustand)
+apps/web/content/        # Fumadocs MDX content (docs + blog)
+apps/backend/            # Backend worker and job processing
+apps/video-stt-worker/   # Video speech-to-text worker
+db/                      # Shared Drizzle schema/client and Atlas migrations
 ```
 
 ### Core Architecture
-- **Next.js App Router**: Modern routing with server/client components
-- **NextAuth.js**: Authentication with GitHub, Google, Passkey, and Mailgun providers
+- **TanStack Start + Router**: File-based routing with SSR and server routes (Vite build)
+- **Better Auth**: Authentication with GitHub, Google, Passkey, and Mailgun providers (Drizzle adapter)
 - **Drizzle + PostgreSQL + Atlas**: Shared schema/client with Atlas DDL migrations
 - **Zustand**: Client-side state management (drafts, publishing, chat history)
 - **Credit System**: Built-in payment and usage tracking with Stripe/Alipay integration
@@ -143,7 +138,7 @@ db/                    # Shared Drizzle schema/client and Atlas migrations
 
 ### Key Components
 
-#### Authentication (`apps/web/auth.ts`)
+#### Authentication (`apps/web/src/lib/auth.ts`)
 - Multi-provider auth (GitHub, Google, Passkey, Mailgun)
 - Automatic user credit allocation (0.5 for signup, 1.0 for GitHub)
 - Custom user session extensions
@@ -153,40 +148,40 @@ db/                    # Shared Drizzle schema/client and Atlas migrations
 - Atlas migrations live in `db/atlas/migrations/`; run `pnpm db:build:source` before diffs/lint
 - Production migrations run via `atlas migrate apply` directly in the leaperone-releases deploy workflow (no prisma shim)
 
-#### State Management (`apps/web/store/`)
+#### State Management (`apps/web/src/store/`)
 - `draft.store.ts`: Draft creation and publishing platform selection
 - `publish.store.ts`: Publishing workflow management
 - `chat.history.store.ts`: AI chat history persistence
 
-#### Credit System (`apps/web/actions/credit/`)
+#### Credit System (`apps/web/src/actions/credit/`)
 - Real-time credit tracking and deduction
 - Integration with Stripe and Alipay for recharging
 - Usage analytics and admin management
-- Centralized pricing configuration in `apps/web/actions/credit/types.ts`
+- Centralized pricing configuration in `apps/web/src/actions/credit/types.ts`
 
-#### Extension Integration (`apps/web/lib/extension/`, `apps/web/app/api/extension/`)
+#### Extension Integration (`apps/web/src/lib/extension/`, `apps/web/src/routes/api/extension/`)
 - Browser extension client management
 - Task queuing and execution
 - Real-time communication via API endpoints
 
-#### Content Publishing (`apps/web/app/dashboard/publish/`)
+#### Content Publishing (`apps/web/src/routes/dashboard/publish/`)
 - Multi-platform publishing (supports various social media platforms)
 - Draft management with AI-assisted content creation
 - Image generation and media library integration
 
-#### Analytics (`apps/web/app/dashboard/analytics/`)
+#### Analytics (`apps/web/src/routes/dashboard/`)
 - Web analytics tracking with custom event collection
 - Geographic and device analytics
 - Real-time visitor tracking
 
 ### Internationalization
-- `apps/web/i18n/`: Full i18n support with English and Chinese locales
+- `apps/web/src/i18n/`: Full i18n support with English and Chinese locales
 - Client/server-side translation switching
 - Localized UI components throughout
 
 ### API Structure
-- `apps/web/app/api/`: REST endpoints for extension, analytics, authentication
-- `apps/web/actions/`: Server actions for database operations
+- `apps/web/src/routes/api/`: REST endpoints for extension, analytics, authentication
+- `apps/web/src/actions/`: Server functions for database operations
 - Type-safe API contracts with Zod validation
 
 ### Development Patterns
@@ -221,8 +216,7 @@ db/                    # Shared Drizzle schema/client and Atlas migrations
 - When asked to "封装成一个组件", export in the **same file**, don't create a new file
 
 ### Performance Optimization
-- **Minimize `use client`** - prefer React Server Components (RSC)
-- **Minimize `useEffect` and `setState`** - favor server-side logic
+- **Minimize `useEffect` and `setState`** - favor server-side logic (loaders, server functions)
 - **Wrap client components** in `<Suspense>` boundaries with fallback
 - **Use dynamic imports** for heavy/non-critical components
 - Optimize images: use WebP format, include size data, implement lazy loading
@@ -302,22 +296,22 @@ addToast({
 
 ## Pricing System
 
-### Current Pricing (defined in `apps/web/actions/credit/types.ts`)
+### Current Pricing (defined in `apps/web/src/actions/credit/types.ts`)
 
 **Image Generation**: $0.04 per image
-- Implementation: `apps/web/app/dashboard/draw/image/action.ts`, `apps/web/lib/image.ts`
+- Implementation: `apps/web/src/actions/draw/`, `apps/web/src/lib/image.ts`
 - Formula: `PRICING.IMAGE_GENERATION × number_of_images`
 
 **Poster Generation**: $0.04 per poster
-- Implementation: `apps/web/app/dashboard/draw/poster/action.ts`
+- Implementation: `apps/web/src/actions/draw/`
 
 **AI Text Generation (DeepSeek)**:
 - Input: $0.00000027 per token
 - Output: $0.0000011 per token
-- Implementation: `apps/web/app/api/draft/ai/creation/route.ts`
+- Implementation: `apps/web/src/routes/api/draft/`
 
 **Audio Transcription**: $0.000034 per second
-- Implementation: `apps/web/app/api/internal/audio/transcriptions/route.ts`
+- Implementation: `apps/web/src/routes/api/internal/audio/`
 
 **File Hosting**: $0.04 per GB transfer
 
@@ -328,10 +322,10 @@ addToast({
 - **Tracking**: All usage logged in `creditUsage` table with usage types
 
 ### Key Pricing Files
-- `apps/web/actions/credit/types.ts` - All pricing constants and types
-- `apps/web/actions/credit/index.ts` - Credit operations (deduct, add, batch)
-- `apps/web/actions/credit/worker.ts` - Worker process credit deduction
-- `apps/web/actions/credit/recharge.ts` - Stripe/Alipay recharge functionality
+- `apps/web/src/actions/credit/types.ts` - All pricing constants and types
+- `apps/web/src/actions/credit/index.ts` - Credit operations (deduct, add, batch)
+- `apps/web/src/actions/credit/worker.ts` - Worker process credit deduction
+- `apps/web/src/actions/credit/recharge.ts` - Stripe/Alipay recharge functionality
 
 ## PostHog Analytics
 
@@ -355,19 +349,17 @@ TikHub provides APIs for extracting video/audio from social media platforms (Dou
   - `refresh_project_oas` - Refresh OAS from server
 
 **Current usage in project**:
-- `apps/web/lib/tikhub.ts` - TikHub API client wrapper
-- `apps/web/app/api/video/extract/route.ts` - Video extraction endpoint using TikHub
+- `apps/web/src/lib/tikhub.ts` - TikHub API client wrapper
+- `apps/web/src/routes/api/video/` - Video extraction endpoint using TikHub
 
 ## Important Notes
 
 - Uses **pnpm exclusively** (enforced by preinstall hook)
-- Node version managed via `.nvmrc` (v19.7.0)
 - **ESLint** for JS/TS linting, **Stylelint** for CSS, **Prettier** for formatting
 - **lint-staged + husky** for pre-commit hooks
 - Three separate databases (Main, Region, Bilibili)
 - **Don't run `pnpm build`** during development, just use lint to check
-- Uses **next-safe-action** for type-safe server actions
-- Custom authentication implementation (session-based, not NextAuth)
+- Authentication is **Better Auth** (session-based) with the Drizzle adapter
 
 ## CI error check
 The CI is run in `https://github.com/leaperone/leaperone-releases/actions/workflows/deploy-twssomeren.yml`. You can check the CI status and logs by clicking the "Actions" tab. If error, check the logs and fix the issue.

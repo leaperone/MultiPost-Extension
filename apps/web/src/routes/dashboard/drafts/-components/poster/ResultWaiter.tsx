@@ -5,7 +5,7 @@ import { Fragment, lazy, Suspense, useEffect, useRef, useState } from 'react';
 import { getPosterGeneration, updatePosterGeneration } from '../../../../../actions/draw/poster';
 import { PosterGenerationStatus } from '../../../../../actions/draw/poster/types';
 import { Download, Pencil, Check, Clock, Palette, ImageIcon } from 'lucide-react';
-import { useTranslation } from '@/src/i18n/client';
+import { useTranslation } from '@/i18n/client';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 
