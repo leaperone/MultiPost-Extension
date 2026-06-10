@@ -6,7 +6,7 @@ import { ResultWaiter } from '../image/ResultWaiter';
 import { ImageGenerationSchema, ImageGenerationStatus } from '../../../../../actions/draw/image/types';
 import { toast } from 'sonner';
 import { FileImage, Download } from 'lucide-react';
-import { useTranslation } from '@/i18n/client';
+import { useTranslation } from '@/src/i18n/client';
 import { newImageGeneration } from '../../../../../actions/draw/image';
 
 const Viewer = lazy(() => import('react-viewer'));

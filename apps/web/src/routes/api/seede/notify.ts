@@ -1,7 +1,7 @@
 import { createFileRoute } from '@tanstack/react-router';
 import { z } from 'zod';
 
-import { PRICING } from '@/actions/credit/types';
+import { PRICING } from '@/src/actions/credit/types';
 
 import { deductCredit } from '../../../actions/credit/_core';
 import { PosterGenerationStatus } from '../../../actions/draw/poster/types';

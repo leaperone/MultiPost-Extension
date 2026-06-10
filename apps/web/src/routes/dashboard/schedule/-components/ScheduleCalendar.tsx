@@ -6,7 +6,7 @@ import { useEffect, useState, useRef, useCallback } from 'react';
 import { getScheduledTasks, getPublishTaskDetail } from '../../../../actions/publish-task';
 import { Spinner, Card } from '@heroui/react';
 import TaskDetailModal from './TaskDetailModal';
-import { useTranslation } from '@/i18n/client';
+import { useTranslation } from '@/src/i18n/client';
 
 interface CalendarEvent {
   id: string;

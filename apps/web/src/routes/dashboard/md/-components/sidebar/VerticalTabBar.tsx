@@ -3,7 +3,7 @@
 import { Tabs, Tab } from '@heroui/react'
 import { FileCode2, FileText, Sparkles, Bot, ImageIcon, FrameIcon } from 'lucide-react'
 import { useMdDraftStore } from '@/store/md-draft.store'
-import { useTranslation } from '@/i18n/client'
+import { useTranslation } from '@/src/i18n/client'
 
 const tabs = [
   { key: 'editor', icon: FileCode2, labelKey: 'sidebar.menu.markdown' as const, ns: 'dashboard' as const },

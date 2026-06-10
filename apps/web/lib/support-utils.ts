@@ -1,7 +1,7 @@
 'use client';
 
-import { getSupportUploadUrl } from '@/actions/support';
-import type { SupportStatus, SupportMessageRole, SupportCategory } from '@/actions/support/types';
+import { getSupportUploadUrl } from '@/src/actions/support';
+import type { SupportStatus, SupportMessageRole, SupportCategory } from '@/src/actions/support/types';
 
 // --- Image compression ---
 
@@ -61,7 +61,7 @@ export async function compressDataUrlToBlob(dataUrl: string, maxSize = 512 * 102
 
 /** Upload a blob as a support attachment, returns the S3 key */
 export async function uploadSupportImage(blob: Blob, conversationId?: string): Promise<string> {
-  const result = await getSupportUploadUrl(conversationId);
+  const result = await getSupportUploadUrl({ data: { conversationId } });
   if (!result.success) {
     throw new Error(result.error || 'Failed to get upload URL');
   }

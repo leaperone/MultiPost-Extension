@@ -29,7 +29,7 @@ import {
   type SeedeMaterialData,
   type SeedeDocumentData,
 } from '../../../../../actions/draw/poster/types';
-import { useTranslation } from '@/i18n/client';
+import { useTranslation } from '@/src/i18n/client';
 import { useEffect, useState, useRef } from 'react';
 import { getAvailableModels, uploadAsset, uploadDocument, parseDocument } from '../../../../../actions/draw/poster';
 import { useChat } from 'ai/react';

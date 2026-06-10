@@ -11,7 +11,7 @@ import { useSortable } from '@dnd-kit/sortable';
 import { Icon } from '@iconify/react';
 import axios from 'axios';
 import { nanoid } from 'nanoid';
-import { useTranslation } from '@/i18n/client';
+import { useTranslation } from '@/src/i18n/client';
 import DirectPublishModal from './DriectPublishModal';
 
 const Viewer = React.lazy(() => import('react-viewer'));

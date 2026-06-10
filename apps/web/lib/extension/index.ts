@@ -4,7 +4,10 @@
  * through window message events
  */
 
-import { PublishPostData, SchedulePublishPostData } from '@/app/api/extension/types';
+import type {
+  PublishPostData,
+  SchedulePublishPostData,
+} from '@/src/routes/api/extension/-types';
 import { v4 as uuidv4 } from 'uuid';
 
 export interface SyncData {

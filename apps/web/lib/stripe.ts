@@ -1,6 +1,7 @@
 import { Stripe } from 'stripe';
-import { auth } from '@/auth';
 import Decimal from 'decimal.js';
+
+import { getSession } from '@/src/lib/session';
 
 // 初始化Stripe客户端
 const stripeClient = new Stripe(process.env.STRIPE_SECRET_KEY || 'secret', {
@@ -15,7 +16,7 @@ const stripeClient = new Stripe(process.env.STRIPE_SECRET_KEY || 'secret', {
  * @returns
  */
 export async function createStripeCheckoutSession(orderId: string, amount: Decimal, returnUrl: string) {
-  const user_session = await auth();
+  const user_session = await getSession();
   if (!user_session?.user?.email) {
     return {
       success: false,

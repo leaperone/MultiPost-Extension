@@ -1,7 +1,7 @@
 import { createFileRoute } from '@tanstack/react-router';
 import { z } from 'zod';
 
-import { PRICING } from '@/actions/credit/types';
+import { PRICING } from '@/src/actions/credit/types';
 
 import { preflightResponse } from '../../../../../lib/cors';
 import { runSocialProxyWithFallback, searchParamsObject, socialErrorResponse } from '../-common';

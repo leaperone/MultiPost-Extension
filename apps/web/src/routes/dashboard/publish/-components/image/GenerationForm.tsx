@@ -4,7 +4,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { Controller, useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { ImageGenerationSchema, ImageSize, Style, Color, Composition } from '../../../../../actions/draw/image/types';
-import { useTranslation } from '@/i18n/client';
+import { useTranslation } from '@/src/i18n/client';
 import React, { useState } from 'react';
 import { useChat } from 'ai/react';
 import { parsePromptResponse } from '@/lib/ai-response-parser';

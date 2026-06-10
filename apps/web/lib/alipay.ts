@@ -1,4 +1,4 @@
-import { dollarToYuan } from '@/actions/credit/types';
+import { dollarToYuan } from '@/src/actions/credit/types';
 import { Decimal } from '@prisma/client/runtime/library';
 import ky from 'ky';
 

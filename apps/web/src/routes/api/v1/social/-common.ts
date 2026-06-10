@@ -1,5 +1,5 @@
 import { fetchTikhub } from '@/lib/tikhub';
-import type { UsageType } from '@/actions/credit/types';
+import type { UsageType } from '@/src/actions/credit/types';
 
 import { deductCredit } from '../../../../actions/credit/_core';
 import { authKey } from '../../../../lib/authKey';

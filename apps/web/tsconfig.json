@@ -14,23 +14,29 @@
     "isolatedModules": true,
     "jsx": "react-jsx",
     "incremental": true,
-    "plugins": [{ "name": "next" }],
     "paths": {
       "collections/*": ["./.source/*"],
       "@/prisma/*": ["../../prisma/*"],
+      "@/src/*": ["./src/*"],
       "@/*": ["./*"]
     }
   },
   "include": [
-    "next-env.d.ts",
     "src/**/*.ts",
     "src/**/*.tsx",
-    "src/routeTree.gen.ts",
+    "lib/**/*.ts",
+    "lib/**/*.tsx",
+    "components/**/*.ts",
+    "components/**/*.tsx",
+    "store/**/*.ts",
+    "store/**/*.tsx",
+    "hooks/**/*.ts",
+    "hooks/**/*.tsx",
+    ".source/**/*.ts",
+    "hero.ts",
+    "source.config.ts",
     "vite.config.ts",
-    "**/*.ts",
-    "**/*.tsx",
-    ".next/types/**/*.ts",
-    ".next/dev/types/**/*.ts"
+    "*.d.ts"
   ],
-  "exclude": ["node_modules"]
+  "exclude": ["node_modules", "dist"]
 }

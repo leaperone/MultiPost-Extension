@@ -2,7 +2,7 @@
 
 import { Card, CardBody, Button, cn, Tooltip } from '@heroui/react';
 import { TrashIcon, FileTextIcon, Plus } from 'lucide-react';
-import { useTranslation } from '@/i18n/client';
+import { useTranslation } from '@/src/i18n/client';
 import { useMdDraftStore } from '@/store/md-draft.store';
 import { useState } from 'react';
 

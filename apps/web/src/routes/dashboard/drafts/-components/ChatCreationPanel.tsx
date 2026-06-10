@@ -16,7 +16,7 @@ import React, { useCallback, useEffect, useRef, useState } from 'react';
 import ReactMarkdown from 'react-markdown';
 import { useChatHistoryStore } from '@/store/chat.history.store';
 import { useDraftStore } from '@/store/draft.store';
-import { useTranslation } from '@/i18n/client';
+import { useTranslation } from '@/src/i18n/client';
 import { parseTitleContentResponse } from '@/lib/ai-response-parser';
 
 interface ChatCreationPanelProps {

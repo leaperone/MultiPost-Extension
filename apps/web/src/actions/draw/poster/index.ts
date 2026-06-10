@@ -2,7 +2,7 @@ import { createServerFn } from '@tanstack/react-start';
 import { z } from 'zod';
 
 import { multipostDb } from '../../../lib/db';
-import { PRICING } from '@/actions/credit/types';
+import { PRICING } from '@/src/actions/credit/types';
 import type { Prisma } from '@/prisma/client_multipost';
 import { deductCredit } from '../../credit/_core';
 import { getSession } from '../../../lib/session';

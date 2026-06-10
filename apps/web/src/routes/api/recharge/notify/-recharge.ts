@@ -1,4 +1,4 @@
-import { RechargeStatus } from '@/actions/credit/types';
+import { RechargeStatus } from '@/src/actions/credit/types';
 
 import { addCreditInTransaction } from '../../../../actions/credit/_core';
 import { multipostDb } from '../../../../lib/db';

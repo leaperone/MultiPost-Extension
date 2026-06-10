@@ -3,7 +3,7 @@ import { Modal, ModalContent, ModalHeader, ModalBody, Tabs, Tab, Card, addToast,
 import { useNavigate } from '@tanstack/react-router';
 import { listAllImages } from '../../../../../actions/draw/image';
 import { listAllPosters } from '../../../../../actions/draw/poster';
-import { useTranslation } from '@/i18n/client';
+import { useTranslation } from '@/src/i18n/client';
 import { Plus, ImageIcon } from 'lucide-react';
 import { ImageGeneration, ImageGenerationLog } from '../../../../../actions/draw/image/types';
 

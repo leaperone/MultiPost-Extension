@@ -30,8 +30,8 @@ import {
 import { useState, useEffect, useMemo } from 'react';
 import { cancelPublishTask, restartPublishTask } from '../../../../actions/publish-task';
 import { getSocialMediaAccountByPlatformId } from '../../../../actions/social-media-accounts';
-import { useTranslation } from '@/i18n/client';
-import { useLocale } from '@/i18n/locale-provider';
+import { useTranslation } from '@/src/i18n/client';
+import { useLocale } from '@/src/i18n/locale-provider';
 import { Tooltip } from '@heroui/react';
 import PublishErrorReportDialog, {
   type PublishErrorReportContext,

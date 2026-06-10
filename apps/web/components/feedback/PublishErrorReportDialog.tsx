@@ -17,7 +17,7 @@ import {
 import { MegaphoneIcon, UploadCloudIcon, XIcon } from 'lucide-react';
 import { Link } from '@tanstack/react-router';
 
-import { useTranslation } from '@/i18n/client';
+import { useTranslation } from '@/src/i18n/client';
 import { reportPublishError } from '../../src/actions/feedback/report-publish-error';
 import { getFeedbackUploadUrl } from '../../src/actions/feedback/upload';
 import {

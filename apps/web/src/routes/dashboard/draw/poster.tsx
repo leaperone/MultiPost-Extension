@@ -12,8 +12,8 @@ import {
   updatePosterGeneration,
 } from '../../../actions/draw/poster';
 import { GenerationForm } from './-components/poster/GenerationForm';
-import { useTranslation } from '@/i18n/client';
-import { useLocale } from '@/i18n/locale-provider';
+import { useTranslation } from '@/src/i18n/client';
+import { useLocale } from '@/src/i18n/locale-provider';
 import { ImageIcon, Download, Calendar, Maximize2, RefreshCcw, Pencil, X, Clock, Eye } from 'lucide-react';
 import { lazy, Suspense } from 'react';
 import { routeMeta } from '../../../lib/seo';

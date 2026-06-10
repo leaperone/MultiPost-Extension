@@ -2,7 +2,7 @@
 
 import { Button, Tooltip } from '@heroui/react'
 import { Send, MonitorSmartphone, CalendarClock } from 'lucide-react'
-import { useTranslation } from '@/i18n/client'
+import { useTranslation } from '@/src/i18n/client'
 import { useMdDraftStore } from '@/store/md-draft.store'
 import EditorActionBar from './EditorActionBar'
 import PreviewerActionBar from './PreviewerActionBar'

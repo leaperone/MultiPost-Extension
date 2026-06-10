@@ -17,7 +17,7 @@ import {
   ImageIcon,
 } from 'lucide-react';
 import React, { useState, useRef, useEffect, useCallback } from 'react';
-import { useTranslation } from '@/i18n/client';
+import { useTranslation } from '@/src/i18n/client';
 import { Icon } from '@iconify/react';
 import { cn } from '@/lib/utils';
 

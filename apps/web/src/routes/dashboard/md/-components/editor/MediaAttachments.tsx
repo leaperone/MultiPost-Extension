@@ -20,7 +20,7 @@ import {
 import { CSS } from '@dnd-kit/utilities'
 import axios from 'axios'
 import { nanoid } from 'nanoid'
-import { useTranslation } from '@/i18n/client'
+import { useTranslation } from '@/src/i18n/client'
 import { useMdDraftStore } from '@/store/md-draft.store'
 import type { DraftFileDataClient } from '@/lib/types/draft'
 

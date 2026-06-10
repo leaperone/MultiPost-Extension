@@ -6,7 +6,7 @@ import { magicLink } from 'better-auth/plugins';
 import { tanstackStartCookies } from 'better-auth/tanstack-start';
 import { nanoid } from 'nanoid';
 
-import { RechargeStatus, RechargeType } from '@/actions/credit/types';
+import { RechargeStatus, RechargeType } from '@/src/actions/credit/types';
 import { sendVerificationRequest as sendVerificationRequestDev } from '@/lib/devauth';
 import { sendVerificationRequest as sendVerificationRequestMailgun } from '@/lib/mailgun';
 import type { SigninMethod } from '@/lib/posthog/events';

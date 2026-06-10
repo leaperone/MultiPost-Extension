@@ -1,6 +1,6 @@
 'use client';
 
-import { useTranslation } from '@/i18n/client';
+import { useTranslation } from '@/src/i18n/client';
 import { Button, Popover, PopoverTrigger, PopoverContent, Select, SelectItem, Slider } from '@heroui/react';
 import { Download } from 'lucide-react';
 import { useState } from 'react';

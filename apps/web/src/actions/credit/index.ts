@@ -6,8 +6,8 @@ import { z } from 'zod';
 import { multipostDb } from '../../lib/db';
 import { requestAlipayUrl } from '@/lib/alipay';
 import { createStripeCheckoutSession } from '@/lib/stripe';
-import type { CreditInfo } from '@/actions/credit/types';
-import { RechargeStatus, RechargeType } from '@/actions/credit/types';
+import type { CreditInfo } from '@/src/actions/credit/types';
+import { RechargeStatus, RechargeType } from '@/src/actions/credit/types';
 import { getSession } from '../../lib/session';
 
 interface RechargeResponse {

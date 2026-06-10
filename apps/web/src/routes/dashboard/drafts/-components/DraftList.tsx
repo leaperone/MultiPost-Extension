@@ -2,7 +2,7 @@
 
 import { Card, CardBody, Button, cn, Tooltip } from '@heroui/react';
 import { TrashIcon, FileTextIcon } from 'lucide-react';
-import { useTranslation } from '@/i18n/client';
+import { useTranslation } from '@/src/i18n/client';
 import { Draft } from '../-types';
 
 export function DraftList({
