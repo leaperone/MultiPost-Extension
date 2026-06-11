@@ -1,6 +1,7 @@
 'use client';
 
 import { lazy, Suspense, useState, useEffect, useCallback, useRef } from 'react';
+import { useVirtualizer } from '@tanstack/react-virtual';
 import { Button, Progress, Spinner, Image } from '@heroui/react';
 import { Image as ImageIcon, Eye, Plus, X, Upload, RefreshCcw } from 'lucide-react';
 import { getUserImageFiles } from '../-actions';
@@ -135,6 +136,20 @@ function UploadProgressItem({ uploadItem }: { uploadItem: UploadProgress }) {
   );
 }
 
+// The library is embedded in panels that own the scrolling (e.g. the md editor
+// sidebar), so the virtualizer must attach to the nearest scrollable ancestor.
+function getScrollParent(node: HTMLElement | null): HTMLElement | null {
+  let current = node?.parentElement ?? null;
+  while (current) {
+    const { overflowY } = window.getComputedStyle(current);
+    if (overflowY === 'auto' || overflowY === 'scroll') return current;
+    current = current.parentElement;
+  }
+  return null;
+}
+
+const GRID_GAP = 24;
+
 async function getImageUrl(imageFile: FileHosting): Promise<string> {
   if (imageFile.previewUrl) {
     return imageFile.previewUrl;
@@ -245,11 +260,44 @@ export default function MediaLibrary({ onSelectImage }: MediaLibraryProps) {
   const [uploadProgress, setUploadProgress] = useState<UploadProgress[]>([]);
   const containerRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [gridEl, setGridEl] = useState<HTMLDivElement | null>(null);
+  const [scrollEl, setScrollEl] = useState<HTMLElement | null>(null);
+  const [gridWidth, setGridWidth] = useState(0);
 
   useEffect(() => {
     fetchImageFiles();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  useEffect(() => {
+    if (!gridEl) return;
+
+    setScrollEl(getScrollParent(gridEl));
+
+    const observer = new ResizeObserver((entries) => {
+      setGridWidth(entries[0].contentRect.width);
+    });
+    observer.observe(gridEl);
+    return () => observer.disconnect();
+  }, [gridEl]);
+
+  const columnCount = gridWidth >= 640 ? 3 : gridWidth >= 400 ? 2 : 1;
+  const itemSize = gridWidth > 0 ? (gridWidth - GRID_GAP * (columnCount - 1)) / columnCount : 0;
+  const rowCount = Math.ceil(imageFiles.length / columnCount);
+
+  const rowVirtualizer = useVirtualizer({
+    count: rowCount,
+    getScrollElement: () => scrollEl,
+    estimateSize: () => itemSize + GRID_GAP,
+    overscan: 3,
+    scrollMargin: gridEl?.offsetTop ?? 0,
+  });
+
+  useEffect(() => {
+    // estimateSize changes are not picked up automatically by the virtualizer.
+    rowVirtualizer.measure();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [itemSize, columnCount]);
 
   useEffect(() => {
     if (!containerRef.current || !hasMore || loadingMore) return;
@@ -477,16 +525,36 @@ export default function MediaLibrary({ onSelectImage }: MediaLibraryProps) {
         </div>
       ) : (
         <>
-          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-            {imageFiles.map((imageFile, index) => (
-              <ImagePreview
-                key={imageFile.id}
-                imageFile={imageFile}
-                onPreview={() => handlePreviewImage(imageFile, index)}
-                onAddToDraft={() => handleAddToDraft(imageFile)}
-                onDelete={() => handleDeleteImage(imageFile)}
-              />
-            ))}
+          <div
+            ref={setGridEl}
+            className="relative w-full"
+            style={{ height: gridWidth > 0 ? rowVirtualizer.getTotalSize() : undefined }}>
+            {gridWidth > 0 &&
+              rowVirtualizer.getVirtualItems().map((virtualRow) => {
+                const rowStart = virtualRow.index * columnCount;
+                const rowItems = imageFiles.slice(rowStart, rowStart + columnCount);
+
+                return (
+                  <div
+                    key={virtualRow.key}
+                    className="absolute left-0 top-0 grid w-full"
+                    style={{
+                      gridTemplateColumns: `repeat(${columnCount}, minmax(0, 1fr))`,
+                      gap: GRID_GAP,
+                      transform: `translateY(${virtualRow.start - rowVirtualizer.options.scrollMargin}px)`,
+                    }}>
+                    {rowItems.map((imageFile, columnIndex) => (
+                      <ImagePreview
+                        key={imageFile.id}
+                        imageFile={imageFile}
+                        onPreview={() => handlePreviewImage(imageFile, rowStart + columnIndex)}
+                        onAddToDraft={() => handleAddToDraft(imageFile)}
+                        onDelete={() => handleDeleteImage(imageFile)}
+                      />
+                    ))}
+                  </div>
+                );
+              })}
           </div>
 
           {hasMore && !loading && (
