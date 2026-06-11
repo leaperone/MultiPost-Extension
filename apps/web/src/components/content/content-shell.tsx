@@ -88,7 +88,7 @@ function filterNodes(nodes: ContentTreeNode[], query: string): ContentTreeNode[]
       return node.name.toLowerCase().includes(q) ? [node] : [];
     }
     const children = filterNodes(node.children, query);
-    const selfMatch = (node.name ?? '').toLowerCase().includes(q) || node.index?.name.toLowerCase().includes(q);
+    const selfMatch = (node.name ?? '').toLowerCase().includes(q) || node.index?.name?.toLowerCase().includes(q);
     if (children.length === 0 && !selfMatch) return [];
     return [{ ...node, children: selfMatch ? node.children : children, defaultOpen: true }];
   });
