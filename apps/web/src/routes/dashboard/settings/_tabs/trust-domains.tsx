@@ -1,7 +1,7 @@
 import { Button, Card } from '@heroui/react';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { createFileRoute } from '@tanstack/react-router';
 import { AlertTriangle, Globe, Shield, XIcon } from 'lucide-react';
-import { useEffect, useState } from 'react';
 
 import { sendRequest } from '@/lib/extension';
 import { cn } from '@/lib/utils';
@@ -26,81 +26,49 @@ export const Route = createFileRoute('/dashboard/settings/_tabs/trust-domains')(
   component: TrustDomainsPage,
 });
 
+const TRUSTED_DOMAINS_QUERY_KEY = ['extension', 'trusted-domains'] as const;
+
 function TrustDomainsPage() {
   const { t } = useTranslation('settings');
-  const [domains, setDomains] = useState<TrustedDomain[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [mounted, setMounted] = useState(false);
+  const queryClient = useQueryClient();
 
-  useEffect(() => {
-    setMounted(true);
-  }, []);
-
-  const fetchTrustedDomains = async () => {
-    if (!mounted) return;
-
-    try {
-      setIsLoading(true);
+  const domainsQuery = useQuery({
+    queryKey: TRUSTED_DOMAINS_QUERY_KEY,
+    queryFn: async () => {
       const response = await sendRequest<void, TrustedDomainsResponse>(
         'MUTLIPOST_EXTENSION_GET_TRUSTED_DOMAINS',
         undefined,
         10000,
       );
+      return Array.isArray(response?.trustedDomains) ? response.trustedDomains : [];
+    },
+  });
 
-      if (response && Array.isArray(response.trustedDomains)) {
-        setDomains(response.trustedDomains);
-      } else {
-        setDomains([]);
-      }
-      setError(null);
-    } catch {
-      setError('Failed to fetch trusted domains list');
-      setDomains([]);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handleDeleteDomain = async (domainId: string) => {
-    if (!mounted) return;
-
-    if (!domainId) {
-      setError('Domain ID is required');
-      return;
-    }
-
-    try {
-      setIsLoading(true);
+  const deleteDomain = useMutation({
+    mutationFn: async (domainId: string) => {
       const response = await sendRequest<{ domainId: string }, DeleteDomainResponse>(
         'MUTLIPOST_EXTENSION_DELETE_TRUSTED_DOMAIN',
         { domainId },
       );
-
-      if (response?.success) {
-        if (Array.isArray(response.trustedDomains)) {
-          setDomains(response.trustedDomains);
-        } else {
-          await fetchTrustedDomains();
-        }
-        setError(null);
-      } else {
-        setError(response?.message || 'Failed to delete domain');
+      if (!response?.success) {
+        throw new Error(response?.message || 'Failed to delete domain');
       }
-    } catch {
-      setError('Failed to delete domain');
-    } finally {
-      setIsLoading(false);
-    }
-  };
+      return response.trustedDomains;
+    },
+    onSuccess: (nextDomains) => {
+      if (Array.isArray(nextDomains)) {
+        queryClient.setQueryData(TRUSTED_DOMAINS_QUERY_KEY, nextDomains);
+      } else {
+        void queryClient.invalidateQueries({ queryKey: TRUSTED_DOMAINS_QUERY_KEY });
+      }
+    },
+  });
 
-  useEffect(() => {
-    if (mounted) {
-      void fetchTrustedDomains();
-    }
-  }, [mounted]);
+  const error = domainsQuery.isError
+    ? 'Failed to fetch trusted domains list'
+    : deleteDomain.error?.message ?? null;
 
-  if (!mounted) {
+  if (domainsQuery.isPending) {
     return (
       <div className="mx-auto max-w-5xl">
         <div className="mb-8">
@@ -114,7 +82,7 @@ function TrustDomainsPage() {
     );
   }
 
-  const safeDomains = Array.isArray(domains) ? domains : [];
+  const safeDomains = domainsQuery.data ?? [];
 
   return (
     <div className="mx-auto max-w-5xl">
@@ -160,7 +128,7 @@ function TrustDomainsPage() {
             <div>
               <p className="text-sm text-muted-foreground">{t('trust_domains.stats.extension_status')}</p>
               <p className="text-2xl font-bold text-foreground">
-                {mounted
+                {domainsQuery.isSuccess
                   ? t('trust_domains.status_labels.connected')
                   : t('trust_domains.status_labels.disconnected')}
               </p>
@@ -216,13 +184,10 @@ function TrustDomainsPage() {
                   size="sm"
                   color="danger"
                   variant="light"
-                  isLoading={isLoading}
+                  isLoading={deleteDomain.isPending}
                   onPress={() => {
-                    if (!domain.id) {
-                      setError('No domain ID available');
-                      return;
-                    }
-                    void handleDeleteDomain(domain.id);
+                    if (!domain.id) return;
+                    deleteDomain.mutate(domain.id);
                   }}
                   className="shadow-none">
                   <XIcon className="size-4" />

@@ -1,5 +1,6 @@
 import { createServerFn } from '@tanstack/react-start';
-import { createRootRoute, HeadContent, Outlet, Scripts } from '@tanstack/react-router';
+import { createRootRouteWithContext, HeadContent, Outlet, Scripts } from '@tanstack/react-router';
+import type { QueryClient } from '@tanstack/react-query';
 
 import fumadocsCss from 'fumadocs-ui/style.css?url';
 import interCss from '@fontsource/inter/latin.css?url';
@@ -25,7 +26,11 @@ const loadLocale = createServerFn({ method: 'GET' }).handler(async () => ({
 const isProduction = process.env.NODE_ENV === 'production';
 const isDevelopment = process.env.NODE_ENV === 'development';
 
-export const Route = createRootRoute({
+interface RouterContext {
+  queryClient: QueryClient;
+}
+
+export const Route = createRootRouteWithContext<RouterContext>()({
   loader: async () => {
     const { locale } = await loadLocale();
     // Components render through the shared i18next instance during SSR, so the
