@@ -8,17 +8,19 @@ import {
   Activity,
   HardDriveDownload,
   HardDriveUpload,
-  SquareX
+  RefreshCw,
+  SquareX,
+  Timer
 } from 'lucide-react'
 import { useTheme } from 'next-themes'
-import { useEffect, useState, useCallback } from 'react'
+import { useEffect, useState } from 'react'
 import { UpdateChecker } from '../UpdateChecker'
 import { Button } from '../ui/button'
 import { Card } from '../ui/card'
 import { Switch } from '../ui/switch'
 import { SimpleSelect } from '../ui/select'
 import { toast } from '../ui/sonner'
-import type { KeepAliveStatus } from '../../../../shared/types'
+import type { KeepAliveAccountResult, KeepAliveStatus } from '../../../../shared/types'
 
 // Settings keys
 const CLOSE_ALL_BEHAVIOR_KEY = 'multipost:closeAllBehavior'
@@ -271,32 +273,87 @@ function formatTime(ts: number): string {
   return `${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`
 }
 
+const KEEPALIVE_INTERVAL_OPTIONS = [
+  { value: '1', label: '每 1 小时' },
+  { value: '2', label: '每 2 小时' },
+  { value: '4', label: '每 4 小时' },
+  { value: '8', label: '每 8 小时' },
+  { value: '12', label: '每 12 小时' }
+]
+
+// "online / logged-out / unknown" buckets: a failed visit or a failed login
+// check both mean "we couldn't confirm", never "logged out".
+function describeKeepAliveResults(results: KeepAliveAccountResult[]): string | null {
+  if (results.length === 0) return null
+  const online = results.filter((r) => r.success && r.stillLoggedIn && !r.checkFailed).length
+  const loggedOut = results.filter((r) => r.success && !r.stillLoggedIn && !r.checkFailed)
+  const unknown = results.length - online - loggedOut.length
+  const parts = [`${online} 个在线`]
+  if (loggedOut.length > 0) {
+    parts.push(`${loggedOut.length} 个掉线（${loggedOut.map((r) => r.displayName).join('、')}）`)
+  }
+  if (unknown > 0) {
+    parts.push(`${unknown} 个状态未知`)
+  }
+  return parts.join('，')
+}
+
+function formatEta(ts: number): string {
+  const diffMinutes = Math.max(1, Math.round((ts - Date.now()) / 60000))
+  if (diffMinutes < 60) return `约 ${diffMinutes} 分钟后`
+  return `约 ${Math.round(diffMinutes / 60)} 小时后`
+}
+
 function KeepAliveSetting(): React.ReactElement {
   const [status, setStatus] = useState<KeepAliveStatus | null>(null)
   const [triggering, setTriggering] = useState(false)
 
-  const fetchStatus = useCallback(async () => {
-    try {
-      const s = await window.api.keepAlive.getStatus()
-      setStatus(s)
-    } catch {
-      // ignore
+  useEffect(() => {
+    let cancelled = false
+    window.api.keepAlive
+      .getStatus()
+      .then((s) => {
+        if (!cancelled) setStatus(s)
+      })
+      .catch(() => {
+        // ignore
+      })
+    const unsubscribe = window.api.keepAlive.onStatusChanged(setStatus)
+    return () => {
+      cancelled = true
+      unsubscribe()
     }
   }, [])
 
-  useEffect(() => {
-    fetchStatus()
-  }, [fetchStatus])
+  const handleToggle = async (enabled: boolean): Promise<void> => {
+    setStatus((prev) => (prev ? { ...prev, enabled } : prev))
+    try {
+      setStatus(await window.api.keepAlive.setConfig({ enabled }))
+    } catch (error) {
+      console.error('Failed to set keep-alive enabled:', error)
+      setStatus((prev) => (prev ? { ...prev, enabled: !enabled } : prev))
+      toast.error('无法修改自动保活设置', { description: '请稍后重试' })
+    }
+  }
+
+  const handleIntervalChange = async (value: string): Promise<void> => {
+    const intervalHours = Number(value)
+    if (!Number.isInteger(intervalHours)) return
+    try {
+      setStatus(await window.api.keepAlive.setConfig({ intervalHours }))
+    } catch (error) {
+      console.error('Failed to set keep-alive interval:', error)
+      toast.error('无法修改保活间隔', { description: '请稍后重试' })
+    }
+  }
 
   const handleTrigger = async (): Promise<void> => {
     setTriggering(true)
     try {
       const result = await window.api.keepAlive.trigger()
       setStatus(result)
-      const successCount = result.lastResults.filter((r) => r.success).length
-      const failCount = result.lastResults.filter((r) => !r.success).length
       toast('已完成一轮在线保持', {
-        description: `成功 ${successCount}，失败 ${failCount}`
+        description: describeKeepAliveResults(result.lastResults) ?? '没有已登录的账号'
       })
     } catch {
       toast.error('无法保持账号在线', { description: '请稍后重试' })
@@ -305,21 +362,50 @@ function KeepAliveSetting(): React.ReactElement {
     }
   }
 
-  const description = `在后台定期访问各平台，防止登录过期${
-    status?.lastRunAt ? `（上次执行 ${formatTime(status.lastRunAt)}）` : ''
-  }`
+  const enabled = status?.enabled ?? true
+  const isBusy = triggering || (status?.isRunning ?? false)
+
+  const autoDescription = enabled
+    ? `定期在后台访问各平台刷新登录状态，掉线时会提醒你${
+        status?.nextRunAt ? `（下次执行${formatEta(status.nextRunAt)}）` : ''
+      }`
+    : '已关闭，平台登录状态可能在数天内过期'
+
+  const lastRunSummary = status?.lastRunAt
+    ? `上次执行 ${formatTime(status.lastRunAt)}${(() => {
+        const summary = describeKeepAliveResults(status.lastResults)
+        return summary ? `：${summary}` : '，没有已登录的账号'
+      })()}`
+    : '手动执行一轮保活，并检测所有账号的登录状态'
 
   return (
-    <SettingItem icon={Activity} title="保持账号在线" description={description}>
-      <Button
-        variant="secondary"
-        size="sm"
-        isLoading={triggering || (status?.isRunning ?? false)}
-        onClick={handleTrigger}
-      >
-        {triggering || status?.isRunning ? '执行中' : '立即执行'}
-      </Button>
-    </SettingItem>
+    <>
+      <SettingItem icon={Activity} title="自动保持账号在线" description={autoDescription}>
+        <Switch checked={enabled} onCheckedChange={handleToggle} disabled={!status} />
+      </SettingItem>
+      {enabled && (
+        <SettingItem
+          icon={Timer}
+          title="保活间隔"
+          description="实际执行时间会在所选间隔上下随机浮动，更接近真人使用习惯"
+        >
+          <SimpleSelect
+            value={String(status?.intervalHours ?? 4)}
+            onValueChange={(value) => {
+              void handleIntervalChange(value)
+            }}
+            options={KEEPALIVE_INTERVAL_OPTIONS}
+            disabled={!status}
+            className="h-8 w-32 shrink-0 text-xs"
+          />
+        </SettingItem>
+      )}
+      <SettingItem icon={RefreshCw} title="立即执行一轮" description={lastRunSummary}>
+        <Button variant="secondary" size="sm" isLoading={isBusy} onClick={handleTrigger}>
+          {isBusy ? '执行中' : '立即执行'}
+        </Button>
+      </SettingItem>
+    </>
   )
 }
 

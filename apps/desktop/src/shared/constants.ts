@@ -1236,5 +1236,8 @@ export const IPC_CHANNELS = {
 
   // KeepAlive
   KEEPALIVE_GET_STATUS: 'keepAlive:getStatus',
-  KEEPALIVE_TRIGGER: 'keepAlive:trigger'
+  KEEPALIVE_TRIGGER: 'keepAlive:trigger',
+  KEEPALIVE_SET_CONFIG: 'keepAlive:setConfig',
+  KEEPALIVE_STATUS_EVENT: 'multipost:keepalive:status',
+  KEEPALIVE_ACCOUNT_LOGGED_OUT_EVENT: 'multipost:keepalive:accountLoggedOut'
 } as const

@@ -1,4 +1,4 @@
-import { app, BrowserWindow, ipcMain, nativeTheme, protocol, session } from 'electron'
+import { app, BrowserWindow, ipcMain, nativeTheme, Notification, protocol, session } from 'electron'
 import { join } from 'path'
 import { existsSync, readdirSync, rmSync, statSync } from 'fs'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
@@ -15,6 +15,8 @@ import { openExternalUrl } from './browser/externalUrl'
 import { loadWindowState, trackWindowState } from './windowState'
 import { getCloseWindowBehavior } from './appSettings'
 import { createTray } from './tray'
+import { IPC_CHANNELS, PLATFORMS } from '../shared/constants'
+import { toPublicAccount, type Account } from '../shared/types'
 import log from 'electron-log/main'
 
 // Unified logging: console.* in the main process lands in
@@ -80,6 +82,23 @@ function showMainWindow(): void {
   if (mainWindow.isMinimized()) mainWindow.restore()
   mainWindow.show()
   mainWindow.focus()
+}
+
+// The in-app toast covers the focused-window case; a system notification is
+// what reaches the user while the app sits in the tray or behind other windows.
+function notifyAccountLoggedOut(account: Account): void {
+  if (mainWindow && !mainWindow.isDestroyed() && mainWindow.isVisible() && mainWindow.isFocused()) {
+    return
+  }
+  if (!Notification.isSupported()) return
+  const platformName = PLATFORMS[account.platform]?.name || account.platform
+  const who = account.displayName || account.username || ''
+  const notification = new Notification({
+    title: '账号登录已过期',
+    body: `${platformName}${who ? ` · ${who}` : ''} 已掉线，请打开 MultiPost 重新登录`
+  })
+  notification.on('click', showMainWindow)
+  notification.show()
 }
 const keepAliveService = new KeepAliveService()
 let proxyCleanupStarted = false
@@ -330,7 +349,17 @@ app.whenReady().then(async () => {
   if (browserViewManager) {
     const manager = browserViewManager
     keepAliveService.start({
-      getLoginStatus: (accountId, platform) => manager.getLoginStatus(accountId, platform)
+      getLoginStatus: (accountId, platform) => manager.getLoginStatus(accountId, platform),
+      onAccountLoggedOut: (account) => {
+        const publicAccount = toPublicAccount(account)
+        // Same event the manual "检测" path emits, so account lists hot-update
+        manager.broadcastToUi(IPC_CHANNELS.ACCOUNT_UPDATED_EVENT, publicAccount)
+        manager.broadcastToUi(IPC_CHANNELS.KEEPALIVE_ACCOUNT_LOGGED_OUT_EVENT, publicAccount)
+        notifyAccountLoggedOut(publicAccount)
+      },
+      onStatusChanged: (status) => {
+        manager.broadcastToUi(IPC_CHANNELS.KEEPALIVE_STATUS_EVENT, status)
+      }
     })
   }
 

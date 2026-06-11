@@ -29,7 +29,12 @@ import { DatabaseService } from '../database'
 import type { KeepAliveService } from '../keepalive'
 import { closeAllAnonymizedProxies, normalizeProxyConfig } from '../proxy/accountProxy'
 import { allowLocalFile } from '../browser/sessionHardening'
-import { getCloseWindowBehavior, setCloseWindowBehavior } from '../appSettings'
+import {
+  getCloseWindowBehavior,
+  setCloseWindowBehavior,
+  KEEPALIVE_MIN_INTERVAL_HOURS,
+  KEEPALIVE_MAX_INTERVAL_HOURS
+} from '../appSettings'
 
 type BrowserViewManagerGetter = () => BrowserViewManager | null
 
@@ -1383,5 +1388,33 @@ export function registerIpcHandlers(
 
   ipcMain.handle(IPC_CHANNELS.KEEPALIVE_TRIGGER, async () => {
     return keepAliveService.triggerOnce()
+  })
+
+  ipcMain.handle(IPC_CHANNELS.KEEPALIVE_SET_CONFIG, async (_, config: unknown) => {
+    if (!config || typeof config !== 'object') {
+      throw new Error('Invalid argument: config must be an object')
+    }
+    const { enabled, intervalHours } = config as Record<string, unknown>
+    const patch: { enabled?: boolean; intervalHours?: number } = {}
+    if (enabled !== undefined) {
+      if (typeof enabled !== 'boolean') {
+        throw new Error('Invalid argument: enabled must be a boolean')
+      }
+      patch.enabled = enabled
+    }
+    if (intervalHours !== undefined) {
+      if (
+        typeof intervalHours !== 'number' ||
+        !Number.isInteger(intervalHours) ||
+        intervalHours < KEEPALIVE_MIN_INTERVAL_HOURS ||
+        intervalHours > KEEPALIVE_MAX_INTERVAL_HOURS
+      ) {
+        throw new Error(
+          `Invalid argument: intervalHours must be an integer between ${KEEPALIVE_MIN_INTERVAL_HOURS} and ${KEEPALIVE_MAX_INTERVAL_HOURS}`
+        )
+      }
+      patch.intervalHours = intervalHours
+    }
+    return keepAliveService.applyConfig(patch)
   })
 }

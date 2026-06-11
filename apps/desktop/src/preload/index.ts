@@ -24,7 +24,8 @@ import type {
   GroupTab,
   PublishGroupSummary,
   PublishGroup,
-  KeepAliveStatus
+  KeepAliveStatus,
+  KeepAliveConfig
 } from '../shared/types'
 
 // Custom APIs for renderer
@@ -394,7 +395,24 @@ const api = {
   keepAlive: {
     getStatus: (): Promise<KeepAliveStatus> =>
       ipcRenderer.invoke(IPC_CHANNELS.KEEPALIVE_GET_STATUS),
-    trigger: (): Promise<KeepAliveStatus> => ipcRenderer.invoke(IPC_CHANNELS.KEEPALIVE_TRIGGER)
+    trigger: (): Promise<KeepAliveStatus> => ipcRenderer.invoke(IPC_CHANNELS.KEEPALIVE_TRIGGER),
+    setConfig: (config: Partial<KeepAliveConfig>): Promise<KeepAliveStatus> =>
+      ipcRenderer.invoke(IPC_CHANNELS.KEEPALIVE_SET_CONFIG, config),
+    onStatusChanged: (callback: (status: KeepAliveStatus) => void) => {
+      const listener = (_: Electron.IpcRendererEvent, status: KeepAliveStatus): void =>
+        callback(status)
+      ipcRenderer.on(IPC_CHANNELS.KEEPALIVE_STATUS_EVENT, listener)
+      return (): void => {
+        ipcRenderer.removeListener(IPC_CHANNELS.KEEPALIVE_STATUS_EVENT, listener)
+      }
+    },
+    onAccountLoggedOut: (callback: (account: Account) => void) => {
+      const listener = (_: Electron.IpcRendererEvent, account: Account): void => callback(account)
+      ipcRenderer.on(IPC_CHANNELS.KEEPALIVE_ACCOUNT_LOGGED_OUT_EVENT, listener)
+      return (): void => {
+        ipcRenderer.removeListener(IPC_CHANNELS.KEEPALIVE_ACCOUNT_LOGGED_OUT_EVENT, listener)
+      }
+    }
   }
 }
 

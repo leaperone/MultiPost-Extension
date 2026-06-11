@@ -1,6 +1,7 @@
 import { app } from 'electron'
 import { existsSync, readFileSync, writeFileSync } from 'fs'
 import { join } from 'path'
+import type { KeepAliveConfig } from '../shared/types'
 
 /**
  * Main-process settings that must be readable outside the renderer (e.g. at
@@ -11,6 +12,7 @@ export type CloseWindowBehavior = 'minimize' | 'quit'
 
 interface AppSettings {
   closeWindowBehavior?: CloseWindowBehavior
+  keepAlive?: Partial<KeepAliveConfig>
 }
 
 function settingsPath(): string {
@@ -44,4 +46,28 @@ export function setCloseWindowBehavior(behavior: CloseWindowBehavior): void {
   const settings = readSettings()
   settings.closeWindowBehavior = behavior
   writeSettings(settings)
+}
+
+export const KEEPALIVE_DEFAULT_INTERVAL_HOURS = 4
+export const KEEPALIVE_MIN_INTERVAL_HOURS = 1
+export const KEEPALIVE_MAX_INTERVAL_HOURS = 24
+
+/** Keep-alive defaults to on: unattended session refresh is the product's core promise. */
+export function getKeepAliveConfig(): KeepAliveConfig {
+  const raw = readSettings().keepAlive
+  const intervalHours =
+    typeof raw?.intervalHours === 'number' && Number.isFinite(raw.intervalHours)
+      ? Math.min(
+          Math.max(Math.round(raw.intervalHours), KEEPALIVE_MIN_INTERVAL_HOURS),
+          KEEPALIVE_MAX_INTERVAL_HOURS
+        )
+      : KEEPALIVE_DEFAULT_INTERVAL_HOURS
+  return { enabled: raw?.enabled !== false, intervalHours }
+}
+
+export function setKeepAliveConfig(config: Partial<KeepAliveConfig>): KeepAliveConfig {
+  const settings = readSettings()
+  settings.keepAlive = { ...getKeepAliveConfig(), ...config }
+  writeSettings(settings)
+  return getKeepAliveConfig()
 }

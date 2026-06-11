@@ -573,17 +573,27 @@ export interface UpdateStatus {
 }
 
 // KeepAlive types
+export interface KeepAliveConfig {
+  enabled: boolean
+  intervalHours: number
+}
+
 export interface KeepAliveAccountResult {
   accountId: string
   platform: PlatformType
   displayName: string
   success: boolean
   stillLoggedIn: boolean
+  /** The login check itself errored: status unknown, nothing written to DB */
+  checkFailed?: boolean
   error?: string
 }
 
 export interface KeepAliveStatus {
   isRunning: boolean
+  enabled: boolean
+  intervalHours: number
   lastRunAt: number | null
+  nextRunAt: number | null
   lastResults: KeepAliveAccountResult[]
 }

@@ -28,6 +28,8 @@ import { SettingsPage } from '../pages/SettingsPage'
 import { AboutPage } from '../pages/AboutPage'
 import { Button } from '../ui/button'
 import { Tooltip } from '../ui/tooltip'
+import { toast } from '../ui/sonner'
+import { PLATFORMS } from '@shared/constants'
 import type { Draft, SyncContentType } from '@shared/types'
 
 interface NavItem {
@@ -244,6 +246,18 @@ export function NativeShell(): React.ReactElement {
   useEffect(() => {
     void refreshAccounts()
   }, [refreshAccounts])
+
+  // Keep-alive detected an expired session; the shell is the one always-mounted
+  // surface, so the logged-out alert lives here instead of any single page.
+  useEffect(() => {
+    return window.api.keepAlive.onAccountLoggedOut((account) => {
+      const platformName = PLATFORMS[account.platform]?.name || account.platform
+      const who = account.displayName || account.username || ''
+      toast.error('账号登录已过期', {
+        description: `${platformName}${who ? ` · ${who}` : ''} 已掉线，请到账号页重新登录。`
+      })
+    })
+  }, [])
 
   return (
     <div className="flex h-full min-h-0 bg-background text-foreground">

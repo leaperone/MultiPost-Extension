@@ -1,7 +1,14 @@
 import { BrowserView, session } from 'electron'
 import { PLATFORMS } from '../../shared/constants'
-import type { Account, PlatformType, KeepAliveAccountResult, KeepAliveStatus } from '../../shared/types'
+import type {
+  Account,
+  PlatformType,
+  KeepAliveAccountResult,
+  KeepAliveConfig,
+  KeepAliveStatus
+} from '../../shared/types'
 import { DatabaseService } from '../database'
+import { getKeepAliveConfig, setKeepAliveConfig } from '../appSettings'
 import { isSupportedBrowserNavigationUrl, openExternalUrl } from '../browser/externalUrl'
 import { hardenSession } from '../browser/sessionHardening'
 import {
@@ -11,16 +18,26 @@ import {
 } from '../proxy/accountProxy'
 
 interface KeepAliveOptions {
-  intervalMs?: number
-  delayMs?: number
   getLoginStatus: (accountId: string, platform: PlatformType) => Promise<boolean>
+  /** Fires when a round flips an account from logged-in to logged-out */
+  onAccountLoggedOut?: (account: Account) => void
+  /** Fires at round start/end and on config changes, for live UI updates */
+  onStatusChanged?: (status: KeepAliveStatus) => void
 }
 
-const DEFAULT_INTERVAL_MS = 4 * 60 * 60 * 1000 // 4 hours
-const DEFAULT_DELAY_MS = 30 * 1000 // 30 seconds after startup
+const STARTUP_DELAY_MIN_MS = 30 * 1000
+const STARTUP_DELAY_MAX_MS = 90 * 1000
 const PAGE_WAIT_MS = 15 * 1000 // wait for JS/cookie refresh
 const PAGE_TIMEOUT_MS = 30 * 1000 // total timeout per account
-const ACCOUNT_GAP_MS = 5 * 1000 // gap between accounts
+const ACCOUNT_GAP_MIN_MS = 3 * 1000
+const ACCOUNT_GAP_MAX_MS = 10 * 1000
+// Runs are jittered ±25% around the configured interval so platform-side
+// traffic analysis never sees a metronome-precise visitor.
+const INTERVAL_JITTER_RATIO = 0.25
+
+function randomBetween(min: number, max: number): number {
+  return min + Math.random() * (max - min)
+}
 
 type NavigationGuardableWebContents = Electron.WebContents & {
   on(
@@ -55,37 +72,84 @@ export class KeepAliveService {
   private timer: NodeJS.Timeout | null = null
   private isRunning = false
   private lastRunAt: number | null = null
+  private nextRunAt: number | null = null
   private lastResults: KeepAliveAccountResult[] = []
   private getLoginStatus: ((accountId: string, platform: PlatformType) => Promise<boolean>) | null =
     null
+  private onAccountLoggedOut: ((account: Account) => void) | null = null
+  private onStatusChanged: ((status: KeepAliveStatus) => void) | null = null
 
   start(options: KeepAliveOptions): void {
     this.stop()
     this.getLoginStatus = options.getLoginStatus
+    this.onAccountLoggedOut = options.onAccountLoggedOut ?? null
+    this.onStatusChanged = options.onStatusChanged ?? null
 
-    const intervalMs = options.intervalMs ?? DEFAULT_INTERVAL_MS
-    const delayMs = options.delayMs ?? DEFAULT_DELAY_MS
+    const config = getKeepAliveConfig()
+    if (!config.enabled) {
+      console.log('[KeepAlive] Disabled by user setting, not scheduling')
+      return
+    }
 
-    // First run after delay
-    setTimeout(() => {
-      this.triggerOnce()
-      // Then repeat at interval
-      this.timer = setInterval(() => {
-        this.triggerOnce()
-      }, intervalMs)
-    }, delayMs)
-
+    const delayMs = randomBetween(STARTUP_DELAY_MIN_MS, STARTUP_DELAY_MAX_MS)
+    this.scheduleNext(delayMs)
     console.log(
-      `[KeepAlive] Started. First run in ${delayMs / 1000}s, then every ${intervalMs / 1000 / 60 / 60}h`
+      `[KeepAlive] Started. First run in ${Math.round(delayMs / 1000)}s, then every ~${config.intervalHours}h (jittered)`
     )
   }
 
   stop(): void {
+    this.clearTimer()
+    console.log('[KeepAlive] Stopped')
+  }
+
+  /** Persist a config change and reschedule accordingly; returns the new status. */
+  applyConfig(config: Partial<KeepAliveConfig>): KeepAliveStatus {
+    const wasScheduled = this.timer !== null
+    const applied = setKeepAliveConfig(config)
+
+    if (!applied.enabled) {
+      this.clearTimer()
+      console.log('[KeepAlive] Disabled by user')
+    } else if (!wasScheduled) {
+      // Just switched on: run soon so the user sees it take effect
+      this.scheduleNext(randomBetween(STARTUP_DELAY_MIN_MS, STARTUP_DELAY_MAX_MS))
+      console.log('[KeepAlive] Enabled by user')
+    } else {
+      this.scheduleNext(this.jitteredIntervalMs(applied.intervalHours))
+      console.log(`[KeepAlive] Interval changed to ~${applied.intervalHours}h`)
+    }
+
+    const status = this.getStatus()
+    this.onStatusChanged?.(status)
+    return status
+  }
+
+  private clearTimer(): void {
     if (this.timer) {
-      clearInterval(this.timer)
+      clearTimeout(this.timer)
       this.timer = null
     }
-    console.log('[KeepAlive] Stopped')
+    this.nextRunAt = null
+  }
+
+  private jitteredIntervalMs(intervalHours: number): number {
+    const baseMs = intervalHours * 60 * 60 * 1000
+    return randomBetween(baseMs * (1 - INTERVAL_JITTER_RATIO), baseMs * (1 + INTERVAL_JITTER_RATIO))
+  }
+
+  private scheduleNext(delayMs: number): void {
+    this.clearTimer()
+    this.nextRunAt = Date.now() + delayMs
+    this.timer = setTimeout(() => {
+      void this.triggerOnce().finally(() => {
+        // Re-read config: it may have changed while the round was running
+        const config = getKeepAliveConfig()
+        if (config.enabled) {
+          this.scheduleNext(this.jitteredIntervalMs(config.intervalHours))
+        }
+      })
+    }, delayMs)
   }
 
   async triggerOnce(): Promise<KeepAliveStatus> {
@@ -95,6 +159,7 @@ export class KeepAliveService {
     }
 
     this.isRunning = true
+    this.onStatusChanged?.(this.getStatus())
     console.log('[KeepAlive] Starting keep-alive round...')
 
     try {
@@ -116,9 +181,10 @@ export class KeepAliveService {
         const result = await this.processAccount(account)
         results.push(result)
 
-        // Gap between accounts
+        // Randomized gap between accounts, same anti-fingerprinting idea as the
+        // jittered round interval
         if (loggedInAccounts.indexOf(account) < loggedInAccounts.length - 1) {
-          await this.sleep(ACCOUNT_GAP_MS)
+          await this.sleep(randomBetween(ACCOUNT_GAP_MIN_MS, ACCOUNT_GAP_MAX_MS))
         }
       }
 
@@ -128,20 +194,26 @@ export class KeepAliveService {
       const successCount = results.filter((r) => r.success).length
       const failCount = results.filter((r) => !r.success).length
       const logoutCount = results.filter((r) => r.success && !r.stillLoggedIn).length
+      const unknownCount = results.filter((r) => r.checkFailed).length
       console.log(
-        `[KeepAlive] Round complete: ${successCount} success, ${failCount} failed, ${logoutCount} logged out`
+        `[KeepAlive] Round complete: ${successCount} success, ${failCount} failed, ${logoutCount} logged out, ${unknownCount} unknown`
       )
 
       return this.getStatus()
     } finally {
       this.isRunning = false
+      this.onStatusChanged?.(this.getStatus())
     }
   }
 
   getStatus(): KeepAliveStatus {
+    const config = getKeepAliveConfig()
     return {
       isRunning: this.isRunning,
+      enabled: config.enabled,
+      intervalHours: config.intervalHours,
       lastRunAt: this.lastRunAt,
+      nextRunAt: this.timer ? this.nextRunAt : null,
       lastResults: this.lastResults
     }
   }
@@ -194,26 +266,29 @@ export class KeepAliveService {
       // Wait for JS/cookie refresh
       await this.sleep(PAGE_WAIT_MS)
 
-      // Check login status
+      // Check login status. A failed check means "unknown", not "logged out":
+      // we leave the DB alone but surface checkFailed so the UI can say so.
       let stillLoggedIn = true
+      let checkFailed = false
       if (this.getLoginStatus) {
         try {
           stillLoggedIn = await this.getLoginStatus(account.id, account.platform)
         } catch {
-          // If login check fails, assume still logged in (don't update DB unnecessarily)
+          checkFailed = true
           stillLoggedIn = true
         }
       }
 
       // Update DB if status changed
-      if (!stillLoggedIn && account.isLoggedIn) {
+      if (!checkFailed && !stillLoggedIn && account.isLoggedIn) {
         const db = DatabaseService.getInstance()
-        db.updateAccount(account.id, { isLoggedIn: false })
+        const updated = db.updateAccount(account.id, { isLoggedIn: false })
         console.log(`[KeepAlive] ${account.platform} (${displayName}): session expired`)
+        this.onAccountLoggedOut?.(updated ?? { ...account, isLoggedIn: false })
       }
 
       console.log(
-        `[KeepAlive] ${account.platform} (${displayName}): OK, loggedIn=${stillLoggedIn}`
+        `[KeepAlive] ${account.platform} (${displayName}): OK, loggedIn=${stillLoggedIn}${checkFailed ? ' (check failed)' : ''}`
       )
 
       return {
@@ -221,7 +296,8 @@ export class KeepAliveService {
         platform: account.platform,
         displayName,
         success: true,
-        stillLoggedIn
+        stillLoggedIn,
+        ...(checkFailed ? { checkFailed } : {})
       }
     } catch (err) {
       const errorMsg = err instanceof Error ? err.message : String(err)
