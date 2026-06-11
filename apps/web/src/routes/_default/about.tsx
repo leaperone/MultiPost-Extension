@@ -211,12 +211,12 @@ function AboutPage() {
       <section className="rounded-2xl bg-gradient-to-r from-blue-500/10 to-purple-500/10 p-8 text-center">
         <h2 className="mb-4 text-2xl font-semibold">准备好提升您的内容发布效率了吗？</h2>
         <p className="mb-6 text-foreground/70">
-          立即安装 MultiPost 浏览器扩展，体验一键多平台发布的便捷。
+          立即下载 MultiPost 桌面客户端，体验一键多平台发布的便捷。
         </p>
         <div className="flex flex-wrap justify-center gap-4">
           <Link href="/install">
             <Button color="primary" size="lg">
-              安装扩展
+              下载客户端
             </Button>
           </Link>
           <Link href="https://github.com/leaper-one/MultiPost-Extension" target="_blank">

@@ -150,8 +150,8 @@
   "finalCta": {
     "title": "Stop repeating yourself. Start today.",
     "description": "Join content creators worldwide who publish smarter, not harder",
-    "install": "Install Extension",
-    "desktop": "Desktop App",
+    "install": "Install Browser Extension",
+    "desktop": "Download Desktop App",
     "github": "Star on GitHub"
   },
   "hero": {
@@ -201,7 +201,7 @@
     "subtitle": "No login required. Install the browser extension and publish to multiple platforms with one click.",
     "hero": {
       "title": "Tired of posting the same content on every platform?",
-      "subtitle": "MultiPost publishes to Weibo, Twitter, LinkedIn, Instagram & 10+ more platforms in one click. 100% open source, free forever.",
+      "subtitle": "MultiPost publishes to Weibo, Twitter, LinkedIn, Instagram & 44+ more platforms in one click. 100% open source, free forever.",
       "supportedPlatforms": "Works with all major social platforms",
       "benefits": {
         "efficiency": {
