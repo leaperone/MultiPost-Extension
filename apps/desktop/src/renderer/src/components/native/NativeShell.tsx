@@ -1,6 +1,5 @@
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
-import { Button, Tooltip } from '@heroui/react'
 import {
   ChevronsLeft,
   ChevronsRight,
@@ -8,6 +7,7 @@ import {
   FileTextIcon,
   HomeIcon,
   InfoIcon,
+  Loader2,
   MessageCircleHeartIcon,
   NotebookPenIcon,
   PodcastIcon,
@@ -18,6 +18,7 @@ import {
 
 import { useUiStore, type NativeView } from '../../store/ui.store'
 import { useAccountsStore } from '../../store/accounts.store'
+import { usePublishStore, isTerminalTargetStatus } from '../../store/publish.store'
 import { HomeView } from './HomeView'
 import { PublishView } from './PublishView'
 import { AccountsPage } from '../pages/AccountsPage'
@@ -25,7 +26,9 @@ import { DraftsPage } from '../pages/DraftsPage'
 import { HistoryPage } from '../pages/HistoryPage'
 import { SettingsPage } from '../pages/SettingsPage'
 import { AboutPage } from '../pages/AboutPage'
-import type { Draft } from '@shared/types'
+import { Button } from '../ui/button'
+import { Tooltip } from '../ui/tooltip'
+import type { Draft, SyncContentType } from '@shared/types'
 
 interface NavItem {
   view: NativeView
@@ -52,15 +55,24 @@ const FOOTER_NAV: NavItem[] = [
   { view: 'about', label: '关于', icon: <InfoIcon className="size-4" /> }
 ]
 
+const CONTENT_TYPE_VIEW: Record<SyncContentType, NativeView> = {
+  DYNAMIC: 'publish-dynamic',
+  VIDEO: 'publish-video',
+  ARTICLE: 'publish-article',
+  PODCAST: 'publish-podcast'
+}
+
 function SidebarItem({
   item,
   isActive,
   isCollapsed,
+  trailing,
   onSelect
 }: {
   item: NavItem
   isActive: boolean
   isCollapsed: boolean
+  trailing?: React.ReactNode
   onSelect: () => void
 }): React.ReactElement {
   const button = (
@@ -80,12 +92,18 @@ function SidebarItem({
       )}
       <span className="relative z-10 shrink-0">{item.icon}</span>
       {!isCollapsed && <span className="relative z-10 truncate">{item.label}</span>}
+      {trailing &&
+        (isCollapsed ? (
+          <span className="absolute right-1 top-1 z-10 flex items-center">{trailing}</span>
+        ) : (
+          <span className="relative z-10 ml-auto flex shrink-0 items-center">{trailing}</span>
+        ))}
     </button>
   )
 
   if (isCollapsed) {
     return (
-      <Tooltip content={item.label} placement="right" delay={300} closeDelay={0}>
+      <Tooltip content={item.label} side="right">
         {button}
       </Tooltip>
     )
@@ -98,12 +116,14 @@ function SidebarSection({
   items,
   activeView,
   isCollapsed,
+  renderTrailing,
   onSelect
 }: {
   title?: string
   items: NavItem[]
   activeView: NativeView
   isCollapsed: boolean
+  renderTrailing?: (view: NativeView) => React.ReactNode
   onSelect: (view: NativeView) => void
 }): React.ReactElement {
   return (
@@ -120,6 +140,7 @@ function SidebarSection({
           item={item}
           isActive={activeView === item.view}
           isCollapsed={isCollapsed}
+          trailing={renderTrailing?.(item.view)}
           onSelect={() => onSelect(item.view)}
         />
       ))}
@@ -186,6 +207,40 @@ export function NativeShell(): React.ReactElement {
   const toggleSidebar = useUiStore((state) => state.toggleSidebar)
   const refreshAccounts = useAccountsStore((state) => state.refresh)
 
+  // Publish run indicator: spinner while any target is still working, and a
+  // red dot once a finished run contains failures the user hasn't looked at.
+  const publishTargets = usePublishStore((state) => state.targets)
+  const activeContentType = usePublishStore((state) => state.activeContentType)
+  const activeGroupId = usePublishStore((state) => state.activeGroupId)
+  const [seenFailureGroupId, setSeenFailureGroupId] = useState<string | null>(null)
+
+  const publishView = activeContentType ? CONTENT_TYPE_VIEW[activeContentType] : null
+  const hasRunningPublish = publishTargets.some((target) => !isTerminalTargetStatus(target.status))
+  const hasUnresolvedFailure =
+    publishTargets.length > 0 &&
+    !hasRunningPublish &&
+    publishTargets.some((target) => target.status === 'failed')
+
+  useEffect(() => {
+    if (hasUnresolvedFailure && publishView && activeView === publishView) {
+      setSeenFailureGroupId(activeGroupId)
+    }
+  }, [hasUnresolvedFailure, publishView, activeView, activeGroupId])
+
+  const showFailureDot =
+    hasUnresolvedFailure && activeGroupId !== null && seenFailureGroupId !== activeGroupId
+
+  const renderPublishTrailing = (view: NativeView): React.ReactNode => {
+    if (!publishView || view !== publishView) return null
+    if (hasRunningPublish) {
+      return <Loader2 className="size-3 animate-spin text-muted-foreground" />
+    }
+    if (showFailureDot) {
+      return <span className="size-1.5 rounded-full bg-destructive" />
+    }
+    return null
+  }
+
   useEffect(() => {
     void refreshAccounts()
   }, [refreshAccounts])
@@ -195,7 +250,7 @@ export function NativeShell(): React.ReactElement {
       <motion.aside
         animate={{ width: isCollapsed ? 56 : 208 }}
         transition={{ type: 'spring', stiffness: 380, damping: 36 }}
-        className="flex shrink-0 flex-col border-r bg-background"
+        className="flex shrink-0 flex-col border-r bg-[hsl(var(--sidebar-background))]"
       >
         <div className="flex min-h-0 flex-1 flex-col gap-0.5 overflow-y-auto p-2">
           <SidebarSection
@@ -209,6 +264,7 @@ export function NativeShell(): React.ReactElement {
             items={PUBLISH_NAV}
             activeView={activeView}
             isCollapsed={isCollapsed}
+            renderTrailing={renderPublishTrailing}
             onSelect={navigate}
           />
         </div>
@@ -221,14 +277,14 @@ export function NativeShell(): React.ReactElement {
             onSelect={navigate}
           />
           <Button
-            isIconOnly
-            size="sm"
-            variant="light"
+            size="icon-sm"
+            variant="ghost"
             className="mt-1 self-start text-muted-foreground"
-            onPress={toggleSidebar}
+            onClick={toggleSidebar}
+            aria-label={isCollapsed ? '展开侧栏' : '收起侧栏'}
             title={isCollapsed ? '展开侧栏' : '收起侧栏'}
           >
-            {isCollapsed ? <ChevronsRight className="size-4" /> : <ChevronsLeft className="size-4" />}
+            {isCollapsed ? <ChevronsRight /> : <ChevronsLeft />}
           </Button>
         </div>
       </motion.aside>

@@ -48,7 +48,7 @@ export function AccountAvatar({
       )}
       {showImage && showPlatformBadge && (
         <span
-          className="absolute -bottom-0.5 -right-0.5 flex items-center justify-center rounded-full border border-background bg-background shadow-sm"
+          className="absolute -bottom-0.5 -right-0.5 flex items-center justify-center rounded-full border border-background bg-background ring-1 ring-border"
           style={{ width: badgeSize, height: badgeSize }}
         >
           <PlatformIcon platform={platform} size={Math.round(badgeSize * 0.7)} />

@@ -1,21 +1,44 @@
 import { useState, useEffect, useCallback } from 'react'
-import { History, CheckCircle, XCircle, Clock, ExternalLink, Trash2, RefreshCw } from 'lucide-react'
-import { Button } from '@heroui/react'
-import { Card, CardBody, CardHeader } from '@heroui/react'
-import { Chip } from '@heroui/react'
-import { Tabs, Tab } from '@heroui/react'
-import { addToast } from '@heroui/react'
+import { History, CheckCircle, XCircle, Circle, ExternalLink, Trash2, RefreshCw } from 'lucide-react'
 import { PLATFORMS } from '@shared/constants'
 import type { PublishHistory, PublishHistoryStatus, PlatformType } from '@shared/types'
+import { Button } from '../ui/button'
+import { Badge } from '../ui/badge'
+import { Tabs, TabsList, TabsTrigger } from '../ui/tabs'
+import { Tooltip } from '../ui/tooltip'
+import { ConfirmDialog } from '../ui/confirm-dialog'
+import { Spinner } from '../ui/spinner'
+import { toast } from '../ui/sonner'
 
-const statusConfig: Record<
-  PublishHistoryStatus,
-  { label: string; icon: React.ReactNode; color: 'success' | 'danger' | 'warning' | 'default' }
-> = {
-  success: { label: '成功', icon: <CheckCircle className="size-3" />, color: 'success' },
-  failed: { label: '失败', icon: <XCircle className="size-3" />, color: 'danger' },
-  pending: { label: '等待中', icon: <Clock className="size-3" />, color: 'warning' }
+// 状态只靠 Lucide 图标 + 文字表达(The One Red Rule):失败才允许警示红
+const STATUS_META: Record<PublishHistoryStatus, { label: string; className: string }> = {
+  success: { label: '成功', className: 'text-foreground' },
+  failed: { label: '失败', className: 'text-destructive' },
+  pending: { label: '等待中', className: 'text-muted-foreground' }
 }
+
+function StatusIndicator({ status }: { status: PublishHistoryStatus }): React.ReactElement {
+  const meta = STATUS_META[status]
+  return (
+    <span className={`inline-flex shrink-0 items-center gap-1 text-xs ${meta.className}`}>
+      {status === 'success' ? (
+        <CheckCircle className="size-3.5" />
+      ) : status === 'failed' ? (
+        <XCircle className="size-3.5" />
+      ) : (
+        <Circle className="size-3.5" />
+      )}
+      {meta.label}
+    </span>
+  )
+}
+
+const STATUS_TABS: Array<{ key: PublishHistoryStatus | 'all'; label: string }> = [
+  { key: 'all', label: '全部' },
+  { key: 'success', label: '成功' },
+  { key: 'failed', label: '失败' },
+  { key: 'pending', label: '等待中' }
+]
 
 function formatTime(timestamp: number): string {
   const date = new Date(timestamp)
@@ -38,6 +61,7 @@ export function HistoryPage(): React.ReactElement {
   const [history, setHistory] = useState<PublishHistory[]>([])
   const [loading, setLoading] = useState(true)
   const [selectedStatus, setSelectedStatus] = useState<PublishHistoryStatus | 'all'>('all')
+  const [itemToDelete, setItemToDelete] = useState<PublishHistory | null>(null)
 
   const loadHistory = useCallback(async () => {
     try {
@@ -49,11 +73,7 @@ export function HistoryPage(): React.ReactElement {
       setHistory(data)
     } catch (error) {
       console.error('Failed to load history:', error)
-      addToast({
-        title: '加载失败',
-        description: '无法加载发布历史',
-        hideIcon: true
-      })
+      toast.error('无法加载发布历史', { description: '请点击刷新重试' })
     } finally {
       setLoading(false)
     }
@@ -67,18 +87,10 @@ export function HistoryPage(): React.ReactElement {
     try {
       await window.api.history.delete(id)
       setHistory((prev) => prev.filter((h) => h.id !== id))
-      addToast({
-        title: '删除成功',
-        description: '发布记录已删除',
-        hideIcon: true
-      })
+      toast('发布记录已删除')
     } catch (error) {
       console.error('Failed to delete history:', error)
-      addToast({
-        title: '删除失败',
-        description: '无法删除发布记录',
-        hideIcon: true
-      })
+      toast.error('无法删除发布记录', { description: '请稍后重试' })
     }
   }
 
@@ -100,108 +112,116 @@ export function HistoryPage(): React.ReactElement {
 
   const successCount = history.filter((h) => h.status === 'success').length
   const failedCount = history.filter((h) => h.status === 'failed').length
+  const isFiltered = selectedStatus !== 'all'
 
   return (
-    <div className="flex flex-col h-full p-4 gap-4 overflow-auto">
+    <div className="flex h-full flex-col gap-4">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold">发布历史</h1>
-        <div className="flex items-center gap-2">
-          <Chip variant="flat" color="success">
-            {successCount} 成功
-          </Chip>
-          <Chip variant="flat" color="danger">
-            {failedCount} 失败
-          </Chip>
-          <Button size="sm" variant="bordered" isIconOnly onPress={loadHistory}>
-            <RefreshCw className="size-4" />
-          </Button>
+        <h1 className="text-2xl font-semibold tracking-tight">发布历史</h1>
+        <div className="flex items-center gap-3">
+          <span className="text-sm text-muted-foreground">
+            {successCount} 成功 ·{' '}
+            <span className={failedCount > 0 ? 'text-destructive' : undefined}>
+              {failedCount}
+            </span>{' '}
+            失败
+          </span>
+          <Tooltip content="刷新列表">
+            <Button size="icon-sm" variant="outline" aria-label="刷新列表" onClick={loadHistory}>
+              <RefreshCw />
+            </Button>
+          </Tooltip>
         </div>
       </div>
 
       <Tabs
-        selectedKey={selectedStatus}
-        onSelectionChange={(key) => setSelectedStatus(key as PublishHistoryStatus | 'all')}
+        value={selectedStatus}
+        onValueChange={(value) => setSelectedStatus(value as PublishHistoryStatus | 'all')}
       >
-        <Tab key="all" title="全部" />
-        <Tab key="success" title="成功" />
-        <Tab key="failed" title="失败" />
-        <Tab key="pending" title="等待中" />
+        <TabsList>
+          {STATUS_TABS.map((tab) => (
+            <TabsTrigger key={tab.key} value={tab.key}>
+              {tab.label}
+            </TabsTrigger>
+          ))}
+        </TabsList>
       </Tabs>
 
       {loading ? (
-        <div className="flex items-center justify-center h-40">
-          <span className="text-muted-foreground">加载中...</span>
+        <div className="flex h-40 items-center justify-center">
+          <Spinner label="加载中" />
         </div>
       ) : history.length === 0 ? (
-        <div className="flex flex-col items-center justify-center h-40 gap-4">
-          <History className="size-12 text-muted-foreground" />
-          <p className="text-muted-foreground">暂无发布记录</p>
-          <p className="text-sm text-muted-foreground">发布内容后会在这里显示记录</p>
+        <div className="flex h-56 flex-col items-center justify-center gap-3 rounded-lg bg-muted">
+          <div className="flex size-14 items-center justify-center rounded-full bg-background text-muted-foreground">
+            <History className="size-7" />
+          </div>
+          <p className="font-medium">
+            {isFiltered ? '这个状态下没有记录' : '还没有发布记录'}
+          </p>
+          <p className="text-sm text-muted-foreground">
+            {isFiltered ? '试试切换到全部' : '发布内容后，记录会出现在这里'}
+          </p>
         </div>
       ) : (
-        <div className="flex flex-col gap-6">
+        <div className="flex flex-col gap-5">
           {Object.entries(groupedHistory).map(([date, items]) => (
             <div key={date} className="flex flex-col gap-2">
-              <h2 className="text-sm font-medium text-muted-foreground sticky top-0 bg-background py-1">
-                {date}
-              </h2>
-              <div className="flex flex-col gap-2">
+              <h2 className="text-xs font-medium text-muted-foreground">{date}</h2>
+              <div className="divide-y rounded-lg border">
                 {items.map((item) => {
-                  const status = statusConfig[item.status]
                   const platform = PLATFORMS[item.platform as PlatformType]
                   return (
-                    <Card key={item.id} className="shadow-none border">
-                      <CardHeader className="flex gap-3 pb-0">
-                        <div className="flex flex-col flex-1">
-                          <div className="flex items-center gap-2">
-                            <p className="text-md font-semibold line-clamp-1">
-                              {item.title || '无标题'}
-                            </p>
-                            <Chip size="sm" color={status.color} variant="flat">
-                              {status.icon}
-                              {status.label}
-                            </Chip>
-                          </div>
-                          <div className="flex items-center gap-2 mt-1">
-                            <Chip size="sm" variant="bordered">
-                              {platform?.name || item.platform}
-                            </Chip>
-                            <span className="text-xs text-muted-foreground">
-                              {formatTime(item.publishedAt || item.createdAt)}
-                            </span>
-                          </div>
+                    <div key={item.id} className="flex items-start gap-3 px-4 py-3">
+                      <div className="flex min-w-0 flex-1 flex-col gap-1">
+                        <div className="flex min-w-0 items-center gap-2">
+                          <span className="truncate text-sm font-medium">
+                            {item.title || '无标题'}
+                          </span>
+                          <Badge variant="outline" size="sm" className="shrink-0">
+                            {platform?.name || item.platform}
+                          </Badge>
                         </div>
-                      </CardHeader>
-                      <CardBody className="pt-2">
-                        <p className="text-sm text-muted-foreground line-clamp-2">{item.content}</p>
-                        {item.status === 'failed' && item.errorMessage && (
-                          <p className="text-sm text-danger mt-2">错误：{item.errorMessage}</p>
+                        {item.content && (
+                          <p className="line-clamp-1 text-xs text-muted-foreground">
+                            {item.content}
+                          </p>
                         )}
-                        <div className="flex items-center gap-2 mt-3">
-                          {item.platformPostUrl && (
+                        {item.status === 'failed' && item.errorMessage && (
+                          <p className="text-xs text-destructive">
+                            失败原因：{item.errorMessage}
+                          </p>
+                        )}
+                      </div>
+                      <div className="flex shrink-0 items-center gap-3 pt-0.5">
+                        <StatusIndicator status={item.status} />
+                        <span className="text-xs text-muted-foreground">
+                          {formatTime(item.publishedAt || item.createdAt)}
+                        </span>
+                        {item.platformPostUrl && (
+                          <Tooltip content="查看帖子">
                             <Button
-                              size="sm"
-                              variant="flat"
-                              color="primary"
-                              onPress={() => handleOpenPost(item.platformPostUrl!)}
+                              size="icon-sm"
+                              variant="ghost"
+                              aria-label="查看帖子"
+                              onClick={() => handleOpenPost(item.platformPostUrl!)}
                             >
-                              <ExternalLink className="size-4" />
-                              查看帖子
+                              <ExternalLink />
                             </Button>
-                          )}
-                          <div className="flex-1" />
+                          </Tooltip>
+                        )}
+                        <Tooltip content="删除记录">
                           <Button
-                            size="sm"
-                            variant="flat"
-                            color="danger"
-                            isIconOnly
-                            onPress={() => handleDelete(item.id)}
+                            size="icon-sm"
+                            variant="destructive-ghost"
+                            aria-label="删除记录"
+                            onClick={() => setItemToDelete(item)}
                           >
-                            <Trash2 className="size-4" />
+                            <Trash2 />
                           </Button>
-                        </div>
-                      </CardBody>
-                    </Card>
+                        </Tooltip>
+                      </div>
+                    </div>
                   )
                 })}
               </div>
@@ -209,6 +229,19 @@ export function HistoryPage(): React.ReactElement {
           ))}
         </div>
       )}
+
+      <ConfirmDialog
+        open={itemToDelete !== null}
+        onOpenChange={(open) => {
+          if (!open) setItemToDelete(null)
+        }}
+        title={`删除发布记录「${itemToDelete?.title || '无标题'}」？`}
+        description="只删除本地记录，不影响平台上已发布的内容。"
+        confirmText="删除"
+        onConfirm={async () => {
+          if (itemToDelete) await handleDelete(itemToDelete.id)
+        }}
+      />
     </div>
   )
 }

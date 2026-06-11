@@ -1,5 +1,10 @@
 import { useState, useCallback, useEffect, useMemo, useRef } from 'react'
-import { Button, Card, Input, Textarea, Spinner, Tooltip, addToast } from '@heroui/react'
+import { Button } from '../ui/button'
+import { Card } from '../ui/card'
+import { Input } from '../ui/input'
+import { Textarea } from '../ui/textarea'
+import { Tooltip } from '../ui/tooltip'
+import { toast } from '../ui/sonner'
 import {
   ArrowLeft,
   ArrowRight,
@@ -21,7 +26,7 @@ import type { PlatformType, ArticleData, SyncContentData, FileData, Draft, Publi
 import {
   AccountSelector,
   useAccountSelection,
-  AutoSubmitToggle,
+  PublishModeSelector,
   PublishProgressCard,
   TagInput,
   CoverUpload,
@@ -82,6 +87,10 @@ interface ArticlePublishPageProps {
   onCancelPublish?: () => void
   onRetryAccount?: (accountId: string) => void
   onCancelAccount?: (accountId: string) => void
+  /** 手动确认模式下进度卡「全部发布」的提交通道。 */
+  onSubmitAll?: () => void
+  /** 全部成功后「清空并开始新内容」需要顺带清掉进度状态。 */
+  onClearProgress?: () => void
   initialDraft?: Draft
   onDraftSaved?: () => void
 }
@@ -95,6 +104,8 @@ export function ArticlePublishPage({
   onCancelPublish,
   onRetryAccount,
   onCancelAccount,
+  onSubmitAll,
+  onClearProgress,
   initialDraft,
   onDraftSaved
 }: ArticlePublishPageProps): React.ReactElement {
@@ -174,11 +185,7 @@ export function ArticlePublishPage({
     setAutoSubmit(false)
     setCurrentDraftId(null)
     clearFormCache('ARTICLE')
-    addToast({
-      title: '已清空',
-      description: '表单内容与自动缓存已清空',
-      hideIcon: true
-    })
+    toast('已清空', { description: '表单内容与自动缓存都清掉了，可以开始写新文章。' })
   }, [])
 
   // Load initial draft data (content holds the markdown source)
@@ -250,11 +257,7 @@ export function ArticlePublishPage({
 
   const handleSaveDraft = useCallback(async () => {
     if (!title.trim() || !content.trim()) {
-      addToast({
-        title: '保存失败',
-        description: '请输入标题和内容后再保存',
-        hideIcon: true
-      })
+      toast('标题和内容都填上才能保存', { description: '补全后再点保存草稿。' })
       return
     }
 
@@ -277,18 +280,12 @@ export function ArticlePublishPage({
         setCurrentDraftId(newDraft.id)
       }
 
-      addToast({
-        title: '保存成功',
-        description: '草稿已保存',
-        hideIcon: true
-      })
+      toast('已保存草稿')
       onDraftSaved?.()
     } catch (error) {
       console.error('Failed to save draft:', error)
-      addToast({
-        title: '保存失败',
-        description: '无法保存草稿',
-        hideIcon: true
+      toast.error('草稿没存上', {
+        description: '内容还在表单里，稍后再点一次保存草稿。'
       })
     } finally {
       setIsSavingDraft(false)
@@ -300,6 +297,26 @@ export function ArticlePublishPage({
   const canPublish = hasSelectedTargets && isContentValid && !isPublishing
   const canSaveDraft = isContentValid && !isPublishing && !isSavingDraft
 
+  // 全部发布成功后的「清空并开始新内容」：清表单 + 清进度，回到第 1 步
+  const handleStartNew = useCallback(() => {
+    handleClearForm()
+    onClearProgress?.()
+    setStep('compose')
+  }, [handleClearForm, onClearProgress])
+
+  // 第 2 步 Cmd/Ctrl+Enter 触发发布(按钮禁用时不触发)
+  useEffect(() => {
+    if (step !== 'configure') return
+    const handleKeyDown = (e: KeyboardEvent): void => {
+      if ((e.metaKey || e.ctrlKey) && e.key === 'Enter' && canPublish) {
+        e.preventDefault()
+        handlePublish()
+      }
+    }
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [step, canPublish, handlePublish])
+
   const showEditor = mode !== 'preview'
   const showPreview = mode !== 'edit'
 
@@ -307,7 +324,7 @@ export function ArticlePublishPage({
   if (step === 'compose') {
     return (
       <div className="flex flex-col gap-6">
-        <Card className="flex flex-col gap-5 p-6 shadow-none border">
+        <Card className="flex flex-col gap-5 p-6">
           <div className="flex items-center justify-between">
             <h2 className="text-lg font-semibold">发布文章</h2>
             <span className="text-xs text-muted-foreground">第 1 步 · 撰写内容</span>
@@ -317,8 +334,8 @@ export function ArticlePublishPage({
             label="文章标题"
             placeholder="输入文章标题..."
             value={title}
-            onValueChange={setTitle}
-            isDisabled={isPublishing}
+            onChange={(e) => setTitle(e.target.value)}
+            disabled={isPublishing}
           />
 
           {/* Markdown 编辑器：工具栏 + 编辑/分屏/预览 */}
@@ -326,7 +343,7 @@ export function ArticlePublishPage({
             <div className="flex items-center justify-between gap-2 border-b bg-foreground/[0.02] px-2 py-1.5">
               <div className="flex items-center gap-0.5">
                 {TOOLBAR_ACTIONS.map((action) => (
-                  <Tooltip key={action.key} content={action.label} delay={400} closeDelay={0}>
+                  <Tooltip key={action.key} content={action.label}>
                     <button
                       type="button"
                       disabled={isPublishing || mode === 'preview'}
@@ -348,7 +365,7 @@ export function ArticlePublishPage({
                     title={option.label}
                     className={`flex items-center gap-1 rounded-md px-2 py-1 text-xs transition-colors ${
                       mode === option.key
-                        ? 'bg-background text-foreground shadow-sm'
+                        ? 'bg-background text-foreground border'
                         : 'text-foreground/50 hover:text-foreground'
                     }`}
                   >
@@ -388,35 +405,28 @@ export function ArticlePublishPage({
           </div>
 
           <div className="flex gap-3">
-            <Button
-              variant="light"
-              size="lg"
-              onPress={handleClearForm}
-              isDisabled={isPublishing}
-              startContent={<Eraser className="size-4" />}
-            >
+            <Button variant="ghost" size="lg" onClick={handleClearForm} disabled={isPublishing}>
+              <Eraser />
               清空
             </Button>
             <Button
-              variant="bordered"
+              variant="outline"
               size="lg"
-              onPress={handleSaveDraft}
-              isDisabled={!canSaveDraft}
+              onClick={handleSaveDraft}
+              disabled={!canSaveDraft}
               isLoading={isSavingDraft}
-              startContent={!isSavingDraft && <Save className="size-4" />}
             >
+              {!isSavingDraft && <Save />}
               保存草稿
             </Button>
             <Button
-              color="primary"
-              variant="solid"
               className="flex-1"
               size="lg"
-              onPress={() => setStep('configure')}
-              isDisabled={!isContentValid}
-              endContent={<ArrowRight className="size-4" />}
+              onClick={() => setStep('configure')}
+              disabled={!isContentValid}
             >
               下一步
+              <ArrowRight />
             </Button>
           </div>
         </Card>
@@ -428,28 +438,24 @@ export function ArticlePublishPage({
   return (
     <div className="flex flex-col gap-6">
       <div className="flex items-center justify-between">
-        <Button
-          variant="light"
-          onPress={() => setStep('compose')}
-          isDisabled={isPublishing}
-          startContent={<ArrowLeft className="size-4" />}
-        >
+        <Button variant="ghost" onClick={() => setStep('compose')} disabled={isPublishing}>
+          <ArrowLeft />
           上一步
         </Button>
         <span className="text-xs text-muted-foreground">第 2 步 · 发布设置</span>
       </div>
 
       <div className="grid grid-cols-1 items-start gap-6 lg:grid-cols-2">
-        <Card className="flex flex-col gap-5 p-6 shadow-none border">
+        <Card className="flex flex-col gap-5 p-6">
           <h2 className="text-lg font-semibold">发布信息</h2>
 
           <Textarea
             label="摘要（可选）"
             placeholder="输入文章摘要..."
             value={digest}
-            onValueChange={setDigest}
-            minRows={2}
-            isDisabled={isPublishing}
+            onChange={(e) => setDigest(e.target.value)}
+            rows={2}
+            disabled={isPublishing}
           />
 
           <CoverUpload
@@ -472,26 +478,24 @@ export function ArticlePublishPage({
             isDisabled={isPublishing}
           />
 
-          <AutoSubmitToggle
-            isSelected={autoSubmit}
-            onValueChange={setAutoSubmit}
-            isDisabled={isPublishing}
+          <PublishModeSelector
+            autoSubmit={autoSubmit}
+            onChange={setAutoSubmit}
+            disabled={isPublishing}
           />
 
-          <Button
-            color="primary"
-            variant="solid"
-            size="lg"
-            onPress={handlePublish}
-            isDisabled={!canPublish}
-            isLoading={isPublishing}
-            spinner={<Spinner size="sm" color="current" />}
-          >
-            {isPublishing ? '发布中...' : '发布文章'}
+          <Button size="lg" onClick={handlePublish} disabled={!canPublish} isLoading={isPublishing}>
+            {isPublishing
+              ? autoSubmit
+                ? '发布中…'
+                : '填充中…'
+              : autoSubmit
+                ? '发布'
+                : '填充到各平台'}
           </Button>
         </Card>
 
-        <Card className="flex flex-col gap-4 p-6 shadow-none border lg:sticky lg:top-0">
+        <Card className="flex flex-col gap-4 p-6 lg:sticky lg:top-0">
           <span className="text-sm font-medium text-muted-foreground">内容预览</span>
           <h3 className="text-xl font-semibold tracking-tight">{title || '未命名文章'}</h3>
           {digest && <p className="text-sm text-muted-foreground">{digest}</p>}
@@ -510,6 +514,8 @@ export function ArticlePublishPage({
         onCancelPublish={onCancelPublish}
         onRetryAccount={onRetryAccount}
         onCancelAccount={onCancelAccount}
+        onSubmitAll={onSubmitAll}
+        onStartNew={handleStartNew}
       />
     </div>
   )

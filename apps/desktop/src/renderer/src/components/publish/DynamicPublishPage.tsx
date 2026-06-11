@@ -1,16 +1,10 @@
 import { useState, useCallback, useEffect, useMemo } from 'react'
-import {
-  Button,
-  Card,
-  Image,
-  Input,
-  Modal,
-  ModalBody,
-  ModalContent,
-  Textarea,
-  Spinner,
-  addToast
-} from '@heroui/react'
+import { Button } from '../ui/button'
+import { Card } from '../ui/card'
+import { Dialog, DialogContent, DialogTitle } from '../ui/dialog'
+import { Input } from '../ui/input'
+import { Textarea } from '../ui/textarea'
+import { toast } from '../ui/sonner'
 import {
   ArrowLeft,
   ArrowRight,
@@ -28,7 +22,7 @@ import { createLocalFileUrl } from '../../../../shared/types'
 import {
   AccountSelector,
   useAccountSelection,
-  AutoSubmitToggle,
+  PublishModeSelector,
   PublishProgressCard,
   TagInput,
   type AccountPublishState,
@@ -89,6 +83,30 @@ function appendMedia(
   return next
 }
 
+/** 两步流共用的图片大图预览(合并自原先两份重复的 Modal)。 */
+function ImagePreviewDialog({
+  image,
+  onClose
+}: {
+  image: LocalMedia | null
+  onClose: () => void
+}): React.ReactElement {
+  return (
+    <Dialog open={image !== null} onOpenChange={(open) => !open && onClose()}>
+      <DialogContent className="max-w-3xl items-center">
+        <DialogTitle className="sr-only">图片预览</DialogTitle>
+        {image && (
+          <img
+            src={image.url}
+            alt={image.name}
+            className="max-h-[75vh] w-auto rounded-lg object-contain"
+          />
+        )}
+      </DialogContent>
+    </Dialog>
+  )
+}
+
 interface DynamicPublishPageProps {
   onStartPublish: (
     platforms: PlatformType[],
@@ -105,6 +123,10 @@ interface DynamicPublishPageProps {
   onCancelPublish?: () => void
   onRetryAccount?: (accountId: string) => void
   onCancelAccount?: (accountId: string) => void
+  /** 手动确认模式下进度卡「全部发布」的提交通道。 */
+  onSubmitAll?: () => void
+  /** 全部成功后「清空并开始新内容」需要顺带清掉进度状态。 */
+  onClearProgress?: () => void
   initialDraft?: Draft
   onDraftSaved?: () => void
 }
@@ -118,6 +140,8 @@ export function DynamicPublishPage({
   onCancelPublish,
   onRetryAccount,
   onCancelAccount,
+  onSubmitAll,
+  onClearProgress,
   initialDraft,
   onDraftSaved
 }: DynamicPublishPageProps): React.ReactElement {
@@ -176,10 +200,8 @@ export function DynamicPublishPage({
       setVideos(videoResult.valid.map((path) => mediaFromPath(path, 'video')))
       const dropped = imageResult.dropped + videoResult.dropped
       if (dropped > 0) {
-        addToast({
-          title: '部分媒体已失效',
-          description: `${dropped} 个文件已不存在，已从恢复的内容中移除`,
-          hideIcon: true
+        toast('部分媒体已失效', {
+          description: `${dropped} 个文件在磁盘上找不到了，已从恢复的内容中移除。`
         })
       }
     })()
@@ -215,11 +237,7 @@ export function DynamicPublishPage({
     setAutoSubmit(false)
     setCurrentDraftId(null)
     clearFormCache('DYNAMIC')
-    addToast({
-      title: '已清空',
-      description: '表单内容与自动缓存已清空',
-      hideIcon: true
-    })
+    toast('已清空', { description: '表单内容与自动缓存都清掉了，可以开始写新内容。' })
   }, [])
 
   // Load initial draft data
@@ -381,11 +399,7 @@ export function DynamicPublishPage({
 
   const handleSaveDraft = useCallback(async () => {
     if (!content.trim()) {
-      addToast({
-        title: '保存失败',
-        description: '请输入内容后再保存',
-        hideIcon: true
-      })
+      toast('还没有内容可保存', { description: '先写点内容，再点保存草稿。' })
       return
     }
 
@@ -408,18 +422,12 @@ export function DynamicPublishPage({
         setCurrentDraftId(newDraft.id)
       }
 
-      addToast({
-        title: '保存成功',
-        description: '草稿已保存',
-        hideIcon: true
-      })
+      toast('已保存草稿')
       onDraftSaved?.()
     } catch (error) {
       console.error('Failed to save draft:', error)
-      addToast({
-        title: '保存失败',
-        description: '无法保存草稿',
-        hideIcon: true
+      toast.error('草稿没存上', {
+        description: '内容还在表单里，稍后再点一次保存草稿。'
       })
     } finally {
       setIsSavingDraft(false)
@@ -432,41 +440,59 @@ export function DynamicPublishPage({
   const canSaveDraft = isContentValid && !isPublishing && !isSavingDraft
   const totalCharCount = title.length + content.length
 
+  // 全部发布成功后的「清空并开始新内容」：清表单 + 清进度，回到第 1 步
+  const handleStartNew = useCallback(() => {
+    handleClearForm()
+    onClearProgress?.()
+    setStep('compose')
+  }, [handleClearForm, onClearProgress])
+
+  // 第 2 步 Cmd/Ctrl+Enter 触发发布(按钮禁用时不触发)
+  useEffect(() => {
+    if (step !== 'configure') return
+    const handleKeyDown = (e: KeyboardEvent): void => {
+      if ((e.metaKey || e.ctrlKey) && e.key === 'Enter' && canPublish) {
+        e.preventDefault()
+        handlePublish()
+      }
+    }
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [step, canPublish, handlePublish])
+
   // 第 1 步 · 创作：标题 + 大输入区 + 媒体
   if (step === 'compose') {
     return (
     <div className="flex flex-col gap-6" onPaste={handlePaste}>
-      <Card className="p-6 shadow-none border">
-        <div className="mb-5 flex items-center justify-between">
+      <Card className="flex flex-col gap-5 p-6">
+        <div className="flex items-center justify-between">
           <h2 className="text-lg font-semibold">发布动态</h2>
           <span className="text-xs text-muted-foreground">第 1 步 · 创作内容</span>
         </div>
 
-        <div className="mb-5">
-          <Input
-            label="标题（可选）"
-            placeholder="输入标题..."
-            value={title}
-            onValueChange={setTitle}
-            isDisabled={isPublishing}
-          />
-        </div>
+        <Input
+          label="标题（可选）"
+          placeholder="输入标题..."
+          value={title}
+          onChange={(e) => setTitle(e.target.value)}
+          disabled={isPublishing}
+        />
 
-        <div className="mb-5">
+        <div className="flex flex-col gap-1">
           <Textarea
             label="内容"
             placeholder="输入要发布的内容..."
             value={content}
-            onValueChange={setContent}
-            minRows={14}
-            isDisabled={isPublishing}
+            onChange={(e) => setContent(e.target.value)}
+            rows={14}
+            disabled={isPublishing}
           />
-          <p className="mt-1 text-right text-xs text-foreground/40">{totalCharCount} 字符</p>
+          <p className="text-right text-xs text-muted-foreground">{totalCharCount} 字符</p>
         </div>
 
         {/* 媒体上传区：图片 + 视频共用一个拖拽区域 */}
         <div
-          className={`mb-5 rounded-xl transition-colors ${isDraggingMedia ? 'bg-foreground/[0.04]' : ''}`}
+          className={`rounded-xl transition-colors ${isDraggingMedia ? 'bg-foreground/[0.04]' : ''}`}
           onDragOver={(e) => {
             e.preventDefault()
             setIsDraggingMedia(true)
@@ -492,14 +518,7 @@ export function DynamicPublishPage({
                   onClick={() => setPreviewImage(img)}
                   title="查看大图"
                 >
-                  <Image
-                    src={img.url}
-                    alt={img.name}
-                    width={100}
-                    height={100}
-                    radius="none"
-                    className="size-[100px] object-cover"
-                  />
+                  <img src={img.url} alt={img.name} className="size-[100px] object-cover" />
                 </button>
                 <span className="absolute bottom-1 left-1 z-20 rounded bg-black/50 px-1 text-[10px] text-white">
                   {index + 1}
@@ -588,65 +607,41 @@ export function DynamicPublishPage({
             )}
           </div>
           {videos.length > 0 && (
-            <p className="mt-2 text-xs text-warning">仅少量海外平台（如 X、Instagram）支持动态视频</p>
+            <p className="mt-2 text-xs text-muted-foreground">
+              仅少量海外平台（如 X、Instagram）支持动态视频
+            </p>
           )}
-          <p className="mt-2 text-xs text-foreground/40">点击添加，或将图片/视频拖拽、粘贴到此处</p>
+          <p className="mt-2 text-xs text-muted-foreground">点击添加，或将图片/视频拖拽、粘贴到此处</p>
         </div>
 
         <div className="flex gap-3">
-          <Button
-            variant="light"
-            size="lg"
-            onPress={handleClearForm}
-            isDisabled={isPublishing}
-            startContent={<Eraser className="size-4" />}
-          >
+          <Button variant="ghost" size="lg" onClick={handleClearForm} disabled={isPublishing}>
+            <Eraser />
             清空
           </Button>
           <Button
-            variant="bordered"
+            variant="outline"
             size="lg"
-            onPress={handleSaveDraft}
-            isDisabled={!canSaveDraft}
+            onClick={handleSaveDraft}
+            disabled={!canSaveDraft}
             isLoading={isSavingDraft}
-            startContent={!isSavingDraft && <Save className="size-4" />}
           >
+            {!isSavingDraft && <Save />}
             保存草稿
           </Button>
           <Button
-            color="primary"
-            variant="solid"
             className="flex-1"
             size="lg"
-            onPress={() => setStep('configure')}
-            isDisabled={!isContentValid}
-            endContent={<ArrowRight className="size-4" />}
+            onClick={() => setStep('configure')}
+            disabled={!isContentValid}
           >
             下一步
+            <ArrowRight />
           </Button>
         </div>
       </Card>
 
-      {/* 图片大图预览 */}
-      <Modal
-        isOpen={previewImage !== null}
-        onOpenChange={(open) => {
-          if (!open) setPreviewImage(null)
-        }}
-        size="3xl"
-      >
-        <ModalContent>
-          <ModalBody className="flex items-center justify-center p-4">
-            {previewImage && (
-              <img
-                src={previewImage.url}
-                alt={previewImage.name}
-                className="max-h-[75vh] w-auto rounded-lg object-contain"
-              />
-            )}
-          </ModalBody>
-        </ModalContent>
-      </Modal>
+      <ImagePreviewDialog image={previewImage} onClose={() => setPreviewImage(null)} />
     </div>
     )
   }
@@ -655,19 +650,15 @@ export function DynamicPublishPage({
   return (
     <div className="flex flex-col gap-6">
       <div className="flex items-center justify-between">
-        <Button
-          variant="light"
-          onPress={() => setStep('compose')}
-          isDisabled={isPublishing}
-          startContent={<ArrowLeft className="size-4" />}
-        >
+        <Button variant="ghost" onClick={() => setStep('compose')} disabled={isPublishing}>
+          <ArrowLeft />
           上一步
         </Button>
         <span className="text-xs text-muted-foreground">第 2 步 · 发布设置</span>
       </div>
 
       <div className="grid grid-cols-1 items-start gap-6 lg:grid-cols-2">
-        <Card className="flex flex-col gap-5 p-6 shadow-none border">
+        <Card className="flex flex-col gap-5 p-6">
           <h2 className="text-lg font-semibold">发布信息</h2>
 
           <TagInput value={tags} onChange={setTags} isDisabled={isPublishing} />
@@ -681,26 +672,24 @@ export function DynamicPublishPage({
             isDisabled={isPublishing}
           />
 
-          <AutoSubmitToggle
-            isSelected={autoSubmit}
-            onValueChange={setAutoSubmit}
-            isDisabled={isPublishing}
+          <PublishModeSelector
+            autoSubmit={autoSubmit}
+            onChange={setAutoSubmit}
+            disabled={isPublishing}
           />
 
-          <Button
-            color="primary"
-            variant="solid"
-            size="lg"
-            onPress={handlePublish}
-            isDisabled={!canPublish}
-            isLoading={isPublishing}
-            spinner={<Spinner size="sm" color="current" />}
-          >
-            {isPublishing ? '发布中...' : '发布动态'}
+          <Button size="lg" onClick={handlePublish} disabled={!canPublish} isLoading={isPublishing}>
+            {isPublishing
+              ? autoSubmit
+                ? '发布中…'
+                : '填充中…'
+              : autoSubmit
+                ? '发布'
+                : '填充到各平台'}
           </Button>
         </Card>
 
-        <Card className="flex flex-col gap-4 p-6 shadow-none border lg:sticky lg:top-0">
+        <Card className="flex flex-col gap-4 p-6 lg:sticky lg:top-0">
           <span className="text-sm font-medium text-muted-foreground">内容预览</span>
           {title && <h3 className="text-xl font-semibold tracking-tight">{title}</h3>}
           <p className="max-h-[40vh] overflow-y-auto whitespace-pre-wrap text-sm leading-relaxed">
@@ -716,14 +705,7 @@ export function DynamicPublishPage({
                   onClick={() => setPreviewImage(img)}
                   title="查看大图"
                 >
-                  <Image
-                    src={img.url}
-                    alt={img.name}
-                    width={72}
-                    height={72}
-                    radius="none"
-                    className="size-[72px] object-cover"
-                  />
+                  <img src={img.url} alt={img.name} className="size-[72px] object-cover" />
                 </button>
               ))}
               {videos.map((video) => (
@@ -747,28 +729,11 @@ export function DynamicPublishPage({
         onCancelPublish={onCancelPublish}
         onRetryAccount={onRetryAccount}
         onCancelAccount={onCancelAccount}
+        onSubmitAll={onSubmitAll}
+        onStartNew={handleStartNew}
       />
 
-      {/* 图片大图预览 */}
-      <Modal
-        isOpen={previewImage !== null}
-        onOpenChange={(open) => {
-          if (!open) setPreviewImage(null)
-        }}
-        size="3xl"
-      >
-        <ModalContent>
-          <ModalBody className="flex items-center justify-center p-4">
-            {previewImage && (
-              <img
-                src={previewImage.url}
-                alt={previewImage.name}
-                className="max-h-[75vh] w-auto rounded-lg object-contain"
-              />
-            )}
-          </ModalBody>
-        </ModalContent>
-      </Modal>
+      <ImagePreviewDialog image={previewImage} onClose={() => setPreviewImage(null)} />
     </div>
   )
 }

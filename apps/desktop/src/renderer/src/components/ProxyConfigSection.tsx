@@ -1,6 +1,9 @@
 import { useState } from 'react'
-import { Button, Checkbox, Input, Select, SelectItem } from '@heroui/react'
 import { ChevronDown, ChevronRight, Network } from 'lucide-react'
+import { Button } from './ui/button'
+import { Checkbox } from './ui/checkbox'
+import { Input } from './ui/input'
+import { SimpleSelect } from './ui/select'
 import type { ProxyConfig } from '@shared/types'
 
 export interface ProxyConfigDraft {
@@ -89,68 +92,68 @@ export function ProxyConfigSection({
     <div className="flex flex-col gap-3">
       <Button
         type="button"
-        variant="bordered"
-        className="w-full justify-between border"
-        startContent={<Network className="size-4" />}
-        endContent={expanded ? <ChevronDown className="size-4" /> : <ChevronRight className="size-4" />}
-        onPress={() => setExpanded((current) => !current)}
+        variant="outline"
+        className="w-full justify-between"
+        aria-expanded={expanded}
+        onClick={() => setExpanded((current) => !current)}
       >
-        代理（可选）
+        <span className="flex items-center gap-2">
+          <Network className="size-4" />
+          代理（可选）
+        </span>
+        {expanded ? <ChevronDown className="size-4" /> : <ChevronRight className="size-4" />}
       </Button>
 
       {expanded && (
-        <div className="flex flex-col gap-3 rounded-xl bg-foreground/[0.03] p-3">
-          <Checkbox isSelected={value.enabled} onValueChange={(enabled) => update({ enabled })}>
-            启用代理
-          </Checkbox>
+        <div className="flex flex-col gap-3 rounded-lg bg-muted/50 p-3">
+          <Checkbox
+            checked={value.enabled}
+            onCheckedChange={(enabled) => update({ enabled: enabled === true })}
+            label="启用代理"
+          />
 
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-            <Select
+            <SimpleSelect
               label="协议"
-              variant="bordered"
-              selectedKeys={[value.protocol]}
-              isDisabled={!value.enabled}
-              onChange={(event) =>
-                update({ protocol: (event.target.value || 'http') as ProxyConfig['protocol'] })
+              value={value.protocol}
+              disabled={!value.enabled}
+              options={PROXY_PROTOCOLS.map((protocol) => ({
+                value: protocol.key,
+                label: protocol.label
+              }))}
+              onValueChange={(protocol) =>
+                update({ protocol: (protocol || 'http') as ProxyConfig['protocol'] })
               }
-            >
-              {PROXY_PROTOCOLS.map((protocol) => (
-                <SelectItem key={protocol.key}>{protocol.label}</SelectItem>
-              ))}
-            </Select>
+            />
 
             <Input
               label="Host"
-              variant="bordered"
               value={value.host}
-              isDisabled={!value.enabled}
-              className="sm:col-span-2"
+              disabled={!value.enabled}
+              wrapperClassName="sm:col-span-2"
               onChange={(event) => update({ host: event.target.value })}
             />
 
             <Input
               label="Port"
               type="number"
-              variant="bordered"
               value={value.port}
-              isDisabled={!value.enabled}
+              disabled={!value.enabled}
               onChange={(event) => update({ port: event.target.value })}
             />
 
             <Input
               label="Username"
-              variant="bordered"
               value={value.username}
-              isDisabled={!value.enabled}
+              disabled={!value.enabled}
               onChange={(event) => update({ username: event.target.value })}
             />
 
             <Input
               label="Password"
               type="password"
-              variant="bordered"
               value={value.password}
-              isDisabled={!value.enabled}
+              disabled={!value.enabled}
               placeholder={value.hasSavedPassword ? '已保存，留空则不修改' : undefined}
               onChange={(event) => update({ password: event.target.value })}
             />

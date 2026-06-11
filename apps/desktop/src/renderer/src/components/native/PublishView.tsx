@@ -24,6 +24,8 @@ export function PublishView({ contentType }: { contentType: SyncContentType }): 
   const summary = usePublishStore((state) => state.summary)
   const skipTarget = usePublishStore((state) => state.skipTarget)
   const retryTarget = usePublishStore((state) => state.retryTarget)
+  const submitAllReady = usePublishStore((state) => state.submitAllReady)
+  const clearProgress = usePublishStore((state) => state.clearProgress)
   const draftToEdit = useUiStore((state) => state.draftToEdit)
   const setDraftToEdit = useUiStore((state) => state.setDraftToEdit)
 
@@ -88,7 +90,9 @@ export function PublishView({ contentType }: { contentType: SyncContentType }): 
     onViewAccount: handleViewAccount,
     onCancelPublish: handleCancelPublish,
     onRetryAccount: (accountId: string) => void retryTarget(accountId),
-    onCancelAccount: (accountId: string) => void skipTarget(accountId)
+    onCancelAccount: (accountId: string) => void skipTarget(accountId),
+    onSubmitAll: () => void submitAllReady(),
+    onClearProgress: clearProgress
   }
 
   switch (contentType) {

@@ -1,24 +1,7 @@
 import { useEffect, useState } from 'react'
-import { Globe, Github, ExternalLink, Heart, Zap, Shield, Users } from 'lucide-react'
-import { Button } from '@heroui/react'
-
-const features = [
-  {
-    icon: Zap,
-    title: '一键多平台发布',
-    description: '支持微博、小红书、抖音、B站等 50+ 主流平台，一次编辑，多平台同步发布'
-  },
-  {
-    icon: Shield,
-    title: '安全可靠',
-    description: '本地运行，数据安全有保障，不上传任何敏感信息到云端'
-  },
-  {
-    icon: Users,
-    title: '多账号管理',
-    description: '支持同一平台多账号管理，轻松切换不同账号发布内容'
-  }
-]
+import { Globe, Github, ExternalLink, Heart } from 'lucide-react'
+import { Button } from '../ui/button'
+import logo from '../../assets/logo.png'
 
 const links = [
   {
@@ -49,55 +32,35 @@ export function AboutPage(): React.ReactElement {
   }, [])
 
   return (
-    <div className="max-w-2xl mx-auto space-y-8">
+    <div className="mx-auto flex max-w-2xl flex-col gap-8">
       {/* Header */}
-      <div className="text-center space-y-4">
-        <div className="inline-flex items-center justify-center size-20 rounded-2xl bg-primary/10 mb-4">
-          <Globe className="size-10 text-primary" />
-        </div>
-        <h1 className="text-3xl font-bold">MultiPost</h1>
-        <p className="text-muted-foreground text-lg">多平台内容发布工具</p>
-        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-muted text-sm">
+      <div className="flex flex-col items-center gap-3 text-center">
+        <img src={logo} alt="MultiPost" className="size-20 rounded-2xl" />
+        <h1 className="text-xl font-semibold">MultiPost</h1>
+        <p className="text-muted-foreground">多平台内容发布工具</p>
+        <div className="inline-flex items-center gap-2 rounded-full bg-muted px-3 py-1 text-sm">
           <span>版本</span>
           <span className="font-mono font-medium">{appVersion ? `v${appVersion}` : '...'}</span>
         </div>
       </div>
 
       {/* Description */}
-      <p className="text-foreground leading-relaxed text-center max-w-xl mx-auto">
-        MultiPost 是一款专为内容创作者打造的桌面应用，帮助你高效管理和发布内容到多个社交媒体平台。
-        无论你是自媒体博主、品牌运营还是内容营销人员，都能通过 MultiPost 显著提升工作效率。
+      <p className="mx-auto max-w-xl text-center text-sm leading-relaxed text-foreground">
+        MultiPost 是一款把动态、视频、文章、播客一次发布到多个平台的桌面工具。
+        它完全在你的电脑上本地运行，账号登录状态、草稿和发布历史都只保存在本机，不会上传到云端。
       </p>
 
-      {/* Features */}
-      <div className="space-y-4">
-        <h2 className="text-xl font-semibold">核心功能</h2>
-        <div className="flex flex-col gap-5">
-          {features.map((feature) => (
-            <div key={feature.title} className="flex gap-4">
-              <div className="flex-shrink-0 size-10 rounded-xl bg-foreground/[0.05] flex items-center justify-center">
-                <feature.icon className="size-5 text-foreground" />
-              </div>
-              <div>
-                <h3 className="font-medium mb-1">{feature.title}</h3>
-                <p className="text-sm text-muted-foreground">{feature.description}</p>
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
-
       {/* Links */}
-      <div className="space-y-4">
-        <h2 className="text-xl font-semibold">相关链接</h2>
+      <div className="flex flex-col gap-4">
+        <h2 className="text-base font-semibold">相关链接</h2>
         <div className="flex flex-wrap gap-3">
           {links.map((link) => (
             <Button
               key={link.label}
-              variant="bordered"
-              onPress={() => window.open(link.url, '_blank')}
-              startContent={<link.icon className="size-4" />}
+              variant="outline"
+              onClick={() => window.open(link.url, '_blank')}
             >
+              <link.icon />
               {link.label}
             </Button>
           ))}
@@ -105,19 +68,19 @@ export function AboutPage(): React.ReactElement {
       </div>
 
       {/* Footer */}
-      <div className="text-center pt-4 border-t border-border">
-        <p className="text-sm text-muted-foreground flex items-center justify-center gap-1">
-          Made with <Heart className="size-4 text-danger fill-danger" /> by{' '}
+      <div className="flex flex-col gap-2 border-t pt-4 text-center">
+        <p className="flex items-center justify-center gap-1 text-sm text-muted-foreground">
+          Made with <Heart className="size-4" /> by{' '}
           <a
             href="https://leaper.one"
             target="_blank"
             rel="noopener noreferrer"
-            className="text-primary hover:underline"
+            className="text-foreground hover:underline"
           >
             Leaper One
           </a>
         </p>
-        <p className="text-xs text-muted-foreground mt-2">
+        <p className="text-xs text-muted-foreground">
           Copyright © 2024 MultiPost. All rights reserved.
         </p>
       </div>

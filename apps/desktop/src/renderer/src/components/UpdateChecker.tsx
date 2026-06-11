@@ -1,6 +1,9 @@
 import { useState, useEffect, useCallback } from 'react'
-import { addToast, Button, Chip, Progress } from '@heroui/react'
 import { Download, RefreshCw, CheckCircle, AlertCircle, Loader2 } from 'lucide-react'
+import { Button } from './ui/button'
+import { Badge } from './ui/badge'
+import { Progress } from './ui/progress'
+import { toast } from './ui/sonner'
 import type { UpdateStatus, UpdateInfo } from '../../../shared/types'
 
 interface UpdateCheckerProps {
@@ -35,11 +38,7 @@ export function UpdateChecker({ compact = false }: UpdateCheckerProps): React.Re
       console.error('Failed to check for updates:', error)
       const message = error instanceof Error ? error.message : String(error)
       setStatus({ status: 'error', error: message })
-      addToast({
-        title: '检查更新失败',
-        description: message,
-        hideIcon: true
-      })
+      toast.error('检查更新失败', { description: message })
     }
   }, [])
 
@@ -48,10 +47,8 @@ export function UpdateChecker({ compact = false }: UpdateCheckerProps): React.Re
       await window.api.updater.downloadUpdate()
     } catch (error) {
       console.error('Failed to download update:', error)
-      addToast({
-        title: '下载更新失败',
-        description: error instanceof Error ? error.message : String(error),
-        hideIcon: true
+      toast.error('下载更新失败', {
+        description: error instanceof Error ? error.message : String(error)
       })
     }
   }, [])
@@ -67,13 +64,13 @@ export function UpdateChecker({ compact = false }: UpdateCheckerProps): React.Re
       case 'downloading':
         return <Download className="size-4 animate-pulse" />
       case 'available':
-        return <Download className="size-4 text-primary" />
+        return <Download className="size-4 text-foreground" />
       case 'downloaded':
-        return <CheckCircle className="size-4 text-success" />
+        return <CheckCircle className="size-4 text-foreground" />
       case 'error':
-        return <AlertCircle className="size-4 text-danger" />
+        return <AlertCircle className="size-4 text-destructive" />
       case 'not-available':
-        return <CheckCircle className="size-4 text-success" />
+        return <CheckCircle className="size-4 text-foreground" />
       default:
         return <RefreshCw className="size-4" />
     }
@@ -105,13 +102,13 @@ export function UpdateChecker({ compact = false }: UpdateCheckerProps): React.Re
         return null
       case 'available':
         return (
-          <Button size="sm" color="primary" onPress={handleDownload}>
+          <Button size="sm" variant="default" onClick={handleDownload}>
             下载更新
           </Button>
         )
       case 'downloaded':
         return (
-          <Button size="sm" color="success" onPress={handleInstall}>
+          <Button size="sm" variant="default" onClick={handleInstall}>
             重启安装
           </Button>
         )
@@ -120,7 +117,7 @@ export function UpdateChecker({ compact = false }: UpdateCheckerProps): React.Re
       case 'idle':
       default:
         return (
-          <Button size="sm" variant="flat" onPress={handleCheckForUpdates}>
+          <Button size="sm" variant="secondary" onClick={handleCheckForUpdates}>
             检查更新
           </Button>
         )
@@ -128,9 +125,9 @@ export function UpdateChecker({ compact = false }: UpdateCheckerProps): React.Re
   }
 
   const versionChip = appVersion ? (
-    <Chip size="sm" variant="flat" className="font-mono">
+    <Badge size="sm" className="font-mono">
       v{appVersion}
-    </Chip>
+    </Badge>
   ) : null
 
   if (compact) {
@@ -157,12 +154,7 @@ export function UpdateChecker({ compact = false }: UpdateCheckerProps): React.Re
 
       {status.status === 'downloading' && status.progress && (
         <div className="space-y-1">
-          <Progress
-            value={status.progress.percent}
-            size="sm"
-            color="primary"
-            aria-label="下载进度"
-          />
+          <Progress value={status.progress.percent} aria-label="下载进度" />
           <div className="flex justify-between text-xs text-muted-foreground">
             <span>
               {formatBytes(status.progress.transferred)} / {formatBytes(status.progress.total)}

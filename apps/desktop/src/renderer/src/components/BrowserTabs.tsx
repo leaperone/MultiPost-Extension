@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
 import { useTabsStore } from '../store/tabs.store'
-import { Button } from '@heroui/react'
+import { Button } from './ui/button'
 import {
   X,
   ChevronLeft,
@@ -13,77 +13,27 @@ import {
   FileEdit,
   LockKeyhole,
   Globe2,
-  Loader2
+  Loader2,
+  Circle,
+  CheckCircle,
+  XCircle,
+  type LucideIcon
 } from 'lucide-react'
 import type { BrowserTab, GroupTab, PublishTargetStatus } from '../../../shared/types'
 import { PLATFORMS } from '../../../shared/constants'
 
-const PLATFORM_ACCENTS: Record<string, string> = {
-  weibo: '#e6162d',
-  xiaohongshu: '#ff2442',
-  twitter: '#111827',
-  douyin: '#00bcd4',
-  bilibili: '#00a1d6',
-  zhihu: '#1677ff',
-  wechat: '#07c160',
-  weixinchannel: '#07c160',
-  xueqiu: '#1f6feb',
-  okjike: '#ffe411',
-  kuaishou: '#ff4906',
-  baijiahao: '#2932e1',
-  toutiao: '#f04142',
-  toutiaohao: '#f04142',
-  v2ex: '#778087',
-  douban: '#2e963d',
-  juejin: '#1e80ff',
-  instagram: '#e4405f',
-  facebook: '#1877f2',
-  linkedin: '#0a66c2',
-  reddit: '#ff4500',
-  threads: '#111827',
-  bluesky: '#1185fe',
-  substack: '#ff6719',
-  youtube: '#ff0000',
-  tiktok: '#00bcd4',
-  medium: '#111827',
-  wordpress: '#21759b',
-  spotify: '#1db954'
-}
-
-const FALLBACK_ACCENTS = ['#2563eb', '#dc2626', '#16a34a', '#9333ea', '#ea580c', '#0891b2']
-
-const STATUS_COLORS: Record<PublishTargetStatus, string> = {
-  pending: 'bg-muted-foreground/50',
-  filling: 'bg-warning animate-pulse',
-  ready: 'bg-success/70',
-  success: 'bg-success',
-  failed: 'bg-danger',
-  cancelled: 'bg-muted-foreground/40'
-}
-
-const STATUS_BORDER_COLORS: Record<PublishTargetStatus, string> = {
-  pending: 'border-border',
-  filling: 'border-warning/60',
-  ready: 'border-success/50',
-  success: 'border-success/60',
-  failed: 'border-danger/60',
-  cancelled: 'border-border'
+// 状态靠图标 + 文字表达,不靠颜色块(The One Red Rule:仅失败用警示红)
+const STATUS_META: Record<PublishTargetStatus, { icon: LucideIcon; className: string; label: string }> = {
+  pending: { icon: Circle, className: 'text-muted-foreground', label: '等待' },
+  filling: { icon: Loader2, className: 'animate-spin text-muted-foreground', label: '填充中' },
+  ready: { icon: CheckCircle, className: 'text-foreground', label: '就绪' },
+  success: { icon: CheckCircle, className: 'text-foreground', label: '已发布' },
+  failed: { icon: XCircle, className: 'text-destructive', label: '失败' },
+  cancelled: { icon: Circle, className: 'text-muted-foreground', label: '已取消' }
 }
 
 interface BrowserTabsProps {
   className?: string
-}
-
-function getPlatformAccent(platform?: string): string {
-  if (!platform) return '#64748b'
-  const configured = PLATFORM_ACCENTS[platform]
-  if (configured) return configured
-
-  let hash = 0
-  for (const char of platform) {
-    hash = (hash * 31 + char.charCodeAt(0)) % FALLBACK_ACCENTS.length
-  }
-  return FALLBACK_ACCENTS[hash]
 }
 
 function getTabDisplayTitle(tab: BrowserTab): string {
@@ -245,15 +195,11 @@ function TabFavicon({ tab, className = 'size-4' }: { tab: BrowserTab; className?
   }
 
   const platformInfo = PLATFORMS[tab.platform]
-  const accent = getPlatformAccent(tab.platform)
   const faviconUrl = tab.faviconUrl || platformInfo?.faviconUrl
 
   if (faviconUrl && !imgError) {
     return (
-      <span
-        className={`${className} inline-flex items-center justify-center rounded-md`}
-        style={{ backgroundColor: `${accent}14` }}
-      >
+      <span className={`${className} inline-flex items-center justify-center rounded-md bg-muted`}>
         <img
           src={faviconUrl}
           alt=""
@@ -268,8 +214,7 @@ function TabFavicon({ tab, className = 'size-4' }: { tab: BrowserTab; className?
   const platformName = platformInfo?.name || tab.platform
   return (
     <span
-      className={`${className} inline-flex items-center justify-center rounded-md text-[10px] font-semibold`}
-      style={{ backgroundColor: `${accent}18`, color: accent }}
+      className={`${className} inline-flex items-center justify-center rounded-md bg-muted text-[10px] font-semibold text-foreground`}
     >
       {platformName.charAt(0).toUpperCase()}
     </span>
@@ -300,8 +245,8 @@ function TabItem({
         rounded-t-lg border px-2.5 text-foreground/80 transition-colors
         ${
           tab.isActive
-            ? 'border-b-background bg-background text-foreground shadow-sm'
-            : 'border-transparent bg-transparent hover:bg-foreground/[0.04]'
+            ? 'border-b-background bg-background text-foreground'
+            : 'border-transparent bg-transparent hover:bg-muted'
         }
       `}
       onClick={onSwitch}
@@ -315,7 +260,7 @@ function TabItem({
       title={host ? `${displayTitle} - ${host}` : displayTitle}
     >
       {tab.isGroup ? (
-        <span className="inline-flex size-4 items-center justify-center rounded-md bg-warning/10 text-warning">
+        <span className="inline-flex size-4 items-center justify-center rounded-md bg-muted text-muted-foreground">
           <Layers className="size-3.5" />
         </span>
       ) : (
@@ -352,26 +297,23 @@ function GroupTabItem({
   onClose: () => void
 }) {
   const platformInfo = PLATFORMS[tab.platform]
-  const accent = getPlatformAccent(tab.platform)
+  const status = STATUS_META[tab.status]
+  const StatusIcon = status.icon
 
   return (
     <div
       className={`
         app-no-drag flex h-7 min-w-[108px] max-w-[168px] cursor-pointer select-none items-center gap-1.5
         rounded-md border px-2 text-foreground/80 transition-colors
-        ${tab.isActive ? 'bg-background shadow-sm' : 'border-transparent hover:bg-foreground/[0.04]'}
-        ${tab.isActive ? STATUS_BORDER_COLORS[tab.status] : 'border-transparent'}
+        ${tab.isActive ? 'border-border bg-background text-foreground' : 'border-transparent hover:bg-muted'}
       `}
       onClick={onSwitch}
-      title={`${tab.displayName} - ${platformInfo?.name || tab.platform} (${tab.status})`}
+      title={`${tab.displayName} - ${platformInfo?.name || tab.platform}（${status.label}）`}
     >
-      <span className={`size-2 rounded-full ${STATUS_COLORS[tab.status]}`} />
+      <StatusIcon className={`size-3 shrink-0 ${status.className}`} aria-label={status.label} />
 
       {platformInfo?.faviconUrl ? (
-        <span
-          className="inline-flex size-4 items-center justify-center rounded"
-          style={{ backgroundColor: `${accent}14` }}
-        >
+        <span className="inline-flex size-4 items-center justify-center rounded bg-muted">
           <img
             src={platformInfo.faviconUrl}
             alt=""
@@ -380,10 +322,7 @@ function GroupTabItem({
           />
         </span>
       ) : (
-        <span
-          className="inline-flex size-4 items-center justify-center rounded text-[9px] font-semibold"
-          style={{ backgroundColor: `${accent}18`, color: accent }}
-        >
+        <span className="inline-flex size-4 items-center justify-center rounded bg-muted text-[9px] font-semibold text-foreground">
           {(platformInfo?.name || tab.platform).charAt(0).toUpperCase()}
         </span>
       )}
@@ -421,7 +360,7 @@ function GroupTabBar({
 }) {
   return (
     <div className="app-no-drag flex min-w-0 items-center gap-1">
-      <div className="flex min-w-0 items-center gap-1 overflow-x-auto scrollbar-hide">
+      <div className="flex min-w-0 flex-1 items-center gap-1 overflow-x-auto scrollbar-hide">
         {groupTabs.map((tab) => (
           <GroupTabItem
             key={tab.id}
@@ -433,26 +372,13 @@ function GroupTabBar({
       </div>
 
       <div className="flex shrink-0 items-center gap-1">
-        <Button
-          size="sm"
-          variant="flat"
-          isIconOnly
-          className="h-7 min-w-7 rounded-md text-muted-foreground"
-          onPress={onFillAll}
-          title="填充所有"
-        >
-          <FileEdit className="size-3.5" />
+        <Button size="sm" variant="secondary" className="h-7 px-2" onClick={onFillAll}>
+          <FileEdit />
+          填充所有
         </Button>
-        <Button
-          size="sm"
-          variant="solid"
-          color="primary"
-          isIconOnly
-          className="h-7 min-w-7 rounded-md"
-          onPress={onSubmitAll}
-          title="发布所有"
-        >
-          <Play className="size-3.5" />
+        <Button size="sm" variant="default" className="h-7 px-2" onClick={onSubmitAll}>
+          <Play />
+          发布所有
         </Button>
       </div>
     </div>
@@ -473,37 +399,37 @@ function NavigationControls({
   return (
     <div className="app-no-drag flex shrink-0 items-center gap-1">
       <Button
-        size="sm"
-        variant="light"
-        isIconOnly
-        className="h-7 min-w-7 rounded-md text-muted-foreground"
-        isDisabled={!activeTab?.canGoBack}
-        onPress={onGoBack}
+        size="icon-sm"
+        variant="ghost"
+        className="text-muted-foreground"
+        disabled={!activeTab?.canGoBack}
+        onClick={onGoBack}
+        aria-label="后退"
         title="后退"
       >
-        <ChevronLeft className="size-4" />
+        <ChevronLeft />
       </Button>
       <Button
-        size="sm"
-        variant="light"
-        isIconOnly
-        className="h-7 min-w-7 rounded-md text-muted-foreground"
-        isDisabled={!activeTab?.canGoForward}
-        onPress={onGoForward}
+        size="icon-sm"
+        variant="ghost"
+        className="text-muted-foreground"
+        disabled={!activeTab?.canGoForward}
+        onClick={onGoForward}
+        aria-label="前进"
         title="前进"
       >
-        <ChevronRight className="size-4" />
+        <ChevronRight />
       </Button>
       <Button
-        size="sm"
-        variant="light"
-        isIconOnly
-        className="h-7 min-w-7 rounded-md text-muted-foreground"
-        isDisabled={!activeTab}
-        onPress={onRefresh}
+        size="icon-sm"
+        variant="ghost"
+        className="text-muted-foreground"
+        disabled={!activeTab}
+        onClick={onRefresh}
+        aria-label="刷新"
         title="刷新"
       >
-        <RotateCw className="size-4" />
+        <RotateCw />
       </Button>
     </div>
   )
@@ -541,7 +467,7 @@ function AddressBar({
   return (
     <form
       className={`
-        app-no-drag flex h-8 min-w-0 flex-1 items-center gap-2 rounded-lg border bg-background px-2.5 shadow-sm
+        app-no-drag flex h-8 min-w-[120px] flex-1 items-center gap-2 rounded-lg border bg-background px-2.5
         ${activeTab ? 'focus-within:border-foreground/30' : 'opacity-70'}
       `}
       onSubmit={handleSubmit}
@@ -549,7 +475,7 @@ function AddressBar({
       {isNavigating ? (
         <Loader2 className="size-4 shrink-0 animate-spin text-muted-foreground" />
       ) : security === 'secure' ? (
-        <LockKeyhole className="size-4 shrink-0 text-success" />
+        <LockKeyhole className="size-4 shrink-0 text-muted-foreground" />
       ) : (
         <Globe2 className="size-4 shrink-0 text-muted-foreground" />
       )}
@@ -627,7 +553,8 @@ export function BrowserTabs({ className }: BrowserTabsProps): React.ReactElement
         )}
 
         {activeGroupId && groupTabs.length > 0 && (
-          <div className="hidden min-w-0 max-w-[42%] shrink border-l pl-2 xl:block">
+          // 始终渲染(窄窗口手动发布不能没有入口);空间不足时组标签区横向滚动,操作按钮保持可见
+          <div className="min-w-0 max-w-[55%] shrink border-l pl-2">
             <GroupTabBar
               groupTabs={groupTabs}
               onSwitchTab={switchGroupTab}

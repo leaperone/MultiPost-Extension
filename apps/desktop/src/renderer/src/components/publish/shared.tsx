@@ -1,4 +1,9 @@
-import { Button, Card, Checkbox, Chip, Input } from '@heroui/react'
+import { Badge } from '../ui/badge'
+import { Button } from '../ui/button'
+import { Card } from '../ui/card'
+import { Checkbox } from '../ui/checkbox'
+import { Input } from '../ui/input'
+import { Tooltip } from '../ui/tooltip'
 import {
   CheckCircle,
   XCircle,
@@ -211,30 +216,31 @@ export function TagInput({
 
   return (
     <div className="flex flex-col gap-2">
-      <div className="flex flex-wrap items-center gap-2">
-        {value.map((tag) => (
-          <Chip
-            key={tag}
-            size="sm"
-            variant="flat"
-            onClose={isDisabled ? undefined : () => onChange(value.filter((t) => t !== tag))}
-          >
-            {tag}
-          </Chip>
-        ))}
-      </div>
+      <label className="text-xs font-medium text-foreground">{label}</label>
+      {value.length > 0 && (
+        <div className="flex flex-wrap items-center gap-2">
+          {value.map((tag) => (
+            <Badge
+              key={tag}
+              size="sm"
+              onClose={isDisabled ? undefined : () => onChange(value.filter((t) => t !== tag))}
+            >
+              {tag}
+            </Badge>
+          ))}
+        </div>
+      )}
       <div className="flex items-center gap-1">
         <Input
-          label={label}
           placeholder={placeholder}
           value={inputValue}
-          onValueChange={setInputValue}
+          onChange={(e) => setInputValue(e.target.value)}
           onKeyDown={handleKeyDown}
-          isDisabled={isDisabled}
+          disabled={isDisabled}
         />
         {inputValue.trim() && (
-          <Button isIconOnly variant="light" size="sm" onPress={addTag} title="添加标签">
-            <Plus className="size-4" />
+          <Button variant="ghost" size="icon-sm" onClick={addTag} aria-label="添加标签" title="添加标签">
+            <Plus />
           </Button>
         )}
       </div>
@@ -326,7 +332,7 @@ export function CoverUpload({
             setIsDragging(false)
           }}
           className={`flex items-center justify-center gap-2 p-4 border-2 border-dashed rounded-lg cursor-pointer transition-colors ${
-            isDragging ? 'border-primary bg-primary/5' : 'border-default-300 hover:border-primary/50'
+            isDragging ? 'border-foreground bg-muted' : 'hover:border-foreground/40'
           } ${isDisabled ? 'opacity-60 cursor-not-allowed' : ''}`}
         >
           <ImageIcon className="size-5 text-muted-foreground" />
@@ -336,14 +342,14 @@ export function CoverUpload({
         <div className="relative inline-block self-start">
           <img src={file.url} alt={label} className="h-24 w-auto rounded-lg object-cover" />
           <Button
-            variant="solid"
-            size="sm"
-            isIconOnly
-            onPress={onRemove}
-            isDisabled={isDisabled}
-            className="absolute -top-2 -right-2 size-6 min-w-0 rounded-full bg-danger"
+            variant="secondary"
+            size="icon-sm"
+            onClick={onRemove}
+            disabled={isDisabled}
+            aria-label={`移除${label}`}
+            className="absolute -top-2 -right-2 size-6 rounded-full border [&_svg]:size-3"
           >
-            <X className="size-3" />
+            <X />
           </Button>
         </div>
       )}
@@ -364,11 +370,11 @@ export function getStatusIcon(status: PublishStatus): React.ReactNode {
     case 'pending':
       return <Circle className="size-4 text-muted-foreground" />
     case 'processing':
-      return <Loader2 className="size-4 text-primary animate-spin" />
+      return <Loader2 className="size-4 text-foreground animate-spin" />
     case 'completed':
-      return <CheckCircle className="size-4 text-success" />
+      return <CheckCircle className="size-4 text-foreground" />
     case 'failed':
-      return <XCircle className="size-4 text-danger" />
+      return <XCircle className="size-4 text-destructive" />
     case 'cancelled':
       return <StopCircle className="size-4 text-muted-foreground" />
     default:
@@ -385,7 +391,7 @@ export function getDefaultMessage(status: PublishStatus): string {
     case 'completed':
       return '已发布'
     case 'failed':
-      return '发生错误'
+      return '发布失败，可重试'
     case 'cancelled':
       return '已取消'
     default:
@@ -475,8 +481,8 @@ export function AccountSelector({
 
   if (loading) {
     return (
-      <div className="mb-5">
-        <label className="block text-sm font-medium mb-3">选择发布账号</label>
+      <div className="flex flex-col gap-3">
+        <label className="text-sm font-medium">选择发布账号</label>
         <div className="p-4 text-center text-muted-foreground text-sm">加载中...</div>
       </div>
     )
@@ -485,21 +491,19 @@ export function AccountSelector({
   const totalSelected = selectedAccountIds.size + selectedOtherPlatforms.size
 
   return (
-    <div className="mb-5">
-      <div className="flex items-center justify-between mb-3">
-        <label className="text-sm font-medium">
-          选择发布账号
-          {totalSelected > 0 && (
-            <span className="ml-2 text-muted-foreground font-normal">
-              已选 {totalSelected} 个账号
-            </span>
-          )}
-        </label>
-      </div>
+    <div className="flex flex-col gap-3">
+      <label className="text-sm font-medium">
+        选择发布账号
+        {totalSelected > 0 && (
+          <span className="ml-2 text-muted-foreground font-normal">
+            已选 {totalSelected} 个账号
+          </span>
+        )}
+      </label>
 
       {/* Saved accounts section - now using checkboxes for multi-select */}
       {platformsWithAccounts.length > 0 ? (
-        <div className="space-y-4">
+        <div className="flex flex-col gap-4">
           {platformsWithAccounts.map((platform) => {
             const platformInfo = PLATFORMS[platform]
             const platformAccounts = (accountsByPlatform.get(platform) || []).filter(
@@ -507,8 +511,8 @@ export function AccountSelector({
             )
 
             return (
-              <div key={platform}>
-                <div className="flex items-center gap-2 mb-2">
+              <div key={platform} className="flex flex-col gap-2">
+                <div className="flex items-center gap-2">
                   <PlatformIcon platform={platform} size={16} />
                   <span className="text-xs font-medium text-muted-foreground">
                     {getPlatformPublishTarget(platform, contentType)?.name || platformInfo?.name || platform}
@@ -518,19 +522,21 @@ export function AccountSelector({
                   {platformAccounts.map((account) => {
                     const isSelected = selectedAccountIds.has(account.id)
                     return (
-                      <label
+                      <div
                         key={account.id}
-                        className={`flex items-center gap-2 px-3 py-2 rounded-xl cursor-pointer transition-all ${
+                        onClick={() => !isDisabled && onAccountToggle(account.id)}
+                        className={`flex items-center gap-2 px-3 py-2 rounded-xl cursor-pointer transition-colors ${
                           isSelected
                             ? 'bg-primary/10 ring-1 ring-primary/40'
                             : 'bg-foreground/[0.03] hover:bg-foreground/[0.06]'
                         } ${isDisabled ? 'opacity-60 cursor-not-allowed' : ''}`}
                       >
                         <Checkbox
-                          isSelected={isSelected}
-                          onValueChange={() => onAccountToggle(account.id)}
-                          isDisabled={isDisabled}
-                          size="sm"
+                          checked={isSelected}
+                          onCheckedChange={() => onAccountToggle(account.id)}
+                          onClick={(e) => e.stopPropagation()}
+                          disabled={isDisabled}
+                          aria-label={`选择账号 ${account.displayName || account.username}`}
                         />
                         <AccountAvatar
                           avatar={account.avatar}
@@ -539,11 +545,11 @@ export function AccountSelector({
                         />
                         <span className="text-sm">{account.displayName || account.username}</span>
                         {account.isDefault && (
-                          <Chip size="sm" variant="flat" color="warning">
+                          <Badge size="sm" variant="outline">
                             默认
-                          </Chip>
+                          </Badge>
                         )}
-                      </label>
+                      </div>
                     )
                   })}
                 </div>
@@ -552,7 +558,7 @@ export function AccountSelector({
           })}
         </div>
       ) : (
-        <div className="p-4 text-center text-muted-foreground text-sm bg-muted rounded-lg flex flex-col items-center gap-2 mb-3">
+        <div className="p-4 text-center text-muted-foreground text-sm bg-muted rounded-lg flex flex-col items-center gap-2">
           <AlertCircle className="size-5" />
           <span>暂无已登录的账号</span>
           <span className="text-xs">请先在"账号管理"中添加账号，或使用下方"其他平台"</span>
@@ -561,7 +567,7 @@ export function AccountSelector({
 
       {/* Other platforms section */}
       {onOtherPlatformToggle && otherAvailablePlatforms.length > 0 && (
-        <div className="mt-4">
+        <div className="flex flex-col gap-3">
           <button
             type="button"
             onClick={() => setShowOtherPlatforms(!showOtherPlatforms)}
@@ -575,36 +581,36 @@ export function AccountSelector({
             )}
             <span>其他平台</span>
             {selectedOtherPlatforms.size > 0 && (
-              <Chip size="sm" variant="flat">
-                已选 {selectedOtherPlatforms.size}
-              </Chip>
+              <Badge size="sm">已选 {selectedOtherPlatforms.size}</Badge>
             )}
             <span className="text-xs">（需自行处理登录）</span>
           </button>
 
           {showOtherPlatforms && (
-            <div className="mt-3 p-3 rounded-xl bg-foreground/[0.03] space-y-4">
+            <div className="flex flex-col gap-4 p-3 rounded-xl bg-foreground/[0.03]">
               {otherPlatformsByCategory.map((category) => (
-                <div key={category.id}>
-                  <div className="text-xs text-muted-foreground mb-2">{category.name}</div>
+                <div key={category.id} className="flex flex-col gap-2">
+                  <div className="text-xs text-muted-foreground">{category.name}</div>
                   <div className="flex flex-wrap gap-2">
                     {category.platforms.map((platform) => {
                       const platformInfo = PLATFORMS[platform]
                       const isSelected = selectedOtherPlatforms.has(platform)
                       return (
-                        <label
+                        <div
                           key={platform}
-                          className={`flex items-center gap-2 px-3 py-2 rounded-xl cursor-pointer transition-all ${
+                          onClick={() => !isDisabled && onOtherPlatformToggle(platform)}
+                          className={`flex items-center gap-2 px-3 py-2 rounded-xl cursor-pointer transition-colors ${
                             isSelected
                               ? 'bg-primary/10 ring-1 ring-primary/40'
                               : 'bg-background hover:bg-foreground/[0.06]'
                           } ${isDisabled ? 'opacity-60 cursor-not-allowed' : ''}`}
                         >
                           <Checkbox
-                            isSelected={isSelected}
-                            onValueChange={() => onOtherPlatformToggle(platform)}
-                            isDisabled={isDisabled}
-                            size="sm"
+                            checked={isSelected}
+                            onCheckedChange={() => onOtherPlatformToggle(platform)}
+                            onClick={(e) => e.stopPropagation()}
+                            disabled={isDisabled}
+                            aria-label={`选择平台 ${platformInfo?.name || platform}`}
                           />
                           <PlatformIcon platform={platform} size={16} />
                           <span className="text-sm">
@@ -612,7 +618,7 @@ export function AccountSelector({
                               platformInfo?.name ||
                               platform}
                           </span>
-                        </label>
+                        </div>
                       )
                     })}
                   </div>
@@ -794,8 +800,8 @@ export function PlatformSelector({
   }, [availablePlatforms])
 
   return (
-    <div className="mb-5">
-      <div className="flex items-center justify-between mb-3">
+    <div className="flex flex-col gap-3">
+      <div className="flex items-center justify-between">
         <label className="text-sm font-medium">
           发布到
           {selectedPlatforms.size > 0 && (
@@ -809,16 +815,16 @@ export function PlatformSelector({
             <Button
               variant="ghost"
               size="sm"
-              onPress={onSelectAll}
-              isDisabled={isDisabled || selectedPlatforms.size === availablePlatforms.length}
+              onClick={onSelectAll}
+              disabled={isDisabled || selectedPlatforms.size === availablePlatforms.length}
             >
               全选
             </Button>
             <Button
               variant="ghost"
               size="sm"
-              onPress={onClearAll}
-              isDisabled={isDisabled || selectedPlatforms.size === 0}
+              onClick={onClearAll}
+              disabled={isDisabled || selectedPlatforms.size === 0}
             >
               清空
             </Button>
@@ -830,27 +836,29 @@ export function PlatformSelector({
           当前内容类型没有可用的平台
         </div>
       ) : (
-        <div className="space-y-4">
+        <div className="flex flex-col gap-4">
           {categorizedPlatforms.map((category) => (
-            <div key={category.id}>
-              <div className="text-xs text-muted-foreground mb-2">{category.name}</div>
+            <div key={category.id} className="flex flex-col gap-2">
+              <div className="text-xs text-muted-foreground">{category.name}</div>
               <div className="flex flex-wrap gap-2">
                 {category.platforms.map((platform) => {
                   const isSelected = selectedPlatforms.has(platform)
                   return (
-                    <label
+                    <div
                       key={platform}
-                      className={`flex items-center gap-2 px-3 py-2 rounded-xl cursor-pointer transition-all ${
+                      onClick={() => !isDisabled && onPlatformToggle(platform)}
+                      className={`flex items-center gap-2 px-3 py-2 rounded-xl cursor-pointer transition-colors ${
                         isSelected
                           ? 'bg-primary/10 ring-1 ring-primary/40'
                           : 'bg-foreground/[0.03] hover:bg-foreground/[0.06]'
                       } ${isDisabled ? 'opacity-60 cursor-not-allowed' : ''}`}
                     >
                       <Checkbox
-                        isSelected={isSelected}
-                        onValueChange={() => onPlatformToggle(platform)}
-                        isDisabled={isDisabled}
-                        size="sm"
+                        checked={isSelected}
+                        onCheckedChange={() => onPlatformToggle(platform)}
+                        onClick={(e) => e.stopPropagation()}
+                        disabled={isDisabled}
+                        aria-label={`选择平台 ${PLATFORMS[platform]?.name || platform}`}
                       />
                       <PlatformIcon platform={platform} size={16} />
                       <span className="text-sm">
@@ -858,7 +866,7 @@ export function PlatformSelector({
                           PLATFORMS[platform]?.name ||
                           platform}
                       </span>
-                    </label>
+                    </div>
                   )
                 })}
               </div>
@@ -870,31 +878,60 @@ export function PlatformSelector({
   )
 }
 
-// Auto submit toggle component
-interface AutoSubmitToggleProps {
-  isSelected: boolean
-  onValueChange: (value: boolean) => void
-  isDisabled?: boolean
+// Publish-verb selector: replaces the old "自动发布" checkbox with two
+// mutually exclusive modes. State still maps onto the persisted autoSubmit
+// boolean (true = 发布, false = 填充后我自己确认).
+interface PublishModeSelectorProps {
+  autoSubmit: boolean
+  onChange: (value: boolean) => void
+  disabled?: boolean
 }
 
-export function AutoSubmitToggle({
-  isSelected,
-  onValueChange,
-  isDisabled = false
-}: AutoSubmitToggleProps): React.ReactElement {
+const PUBLISH_MODES: Array<{ value: boolean; label: string; hint: string }> = [
+  {
+    value: true,
+    label: '发布',
+    hint: '内容填进各平台后直接替你发出去，全程不用守着。'
+  },
+  {
+    value: false,
+    label: '填充后我自己确认',
+    hint: '只把内容填进各平台，不会替你发出；逐个检查满意后，回到这里点「全部发布」。'
+  }
+]
+
+export function PublishModeSelector({
+  autoSubmit,
+  onChange,
+  disabled = false
+}: PublishModeSelectorProps): React.ReactElement {
+  const activeMode = PUBLISH_MODES.find((mode) => mode.value === autoSubmit) ?? PUBLISH_MODES[1]
   return (
-    <div className="mb-5">
-      <Checkbox
-        isSelected={isSelected}
-        onValueChange={onValueChange}
-        isDisabled={isDisabled}
-        size="sm"
-      >
-        <span className="text-sm">自动发布</span>
-        <span className="text-xs text-muted-foreground ml-1">
-          （填充内容后自动点击发送按钮）
-        </span>
-      </Checkbox>
+    <div className="flex flex-col gap-2">
+      <label className="text-sm font-medium">发布方式</label>
+      <div role="radiogroup" aria-label="发布方式" className="flex rounded-lg border p-0.5">
+        {PUBLISH_MODES.map((mode) => {
+          const isActive = mode.value === autoSubmit
+          return (
+            <button
+              key={mode.label}
+              type="button"
+              role="radio"
+              aria-checked={isActive}
+              disabled={disabled}
+              onClick={() => onChange(mode.value)}
+              className={`flex-1 rounded-md px-3 py-1.5 text-sm transition-colors duration-150 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50 ${
+                isActive
+                  ? 'bg-muted font-medium text-foreground'
+                  : 'text-muted-foreground hover:text-foreground'
+              }`}
+            >
+              {mode.label}
+            </button>
+          )
+        })}
+      </div>
+      <p className="text-xs text-muted-foreground">{activeMode.hint}</p>
     </div>
   )
 }
@@ -908,6 +945,10 @@ interface PublishProgressCardProps {
   onCancelPublish?: () => void
   onRetryAccount?: (accountId: string) => void
   onCancelAccount?: (accountId: string) => void
+  /** Submits every filled-and-waiting target（手动确认模式的「全部发布」入口）. */
+  onSubmitAll?: () => void
+  /** Clears the form + progress so the user can start the next piece of content. */
+  onStartNew?: () => void
 }
 
 function isTerminalTarget(status: PublishTargetStatus): boolean {
@@ -919,13 +960,13 @@ function getTargetStatusIcon(status: PublishTargetStatus): React.ReactNode {
     case 'pending':
       return <Circle className="size-4 text-muted-foreground" />
     case 'filling':
-      return <Loader2 className="size-4 text-primary animate-spin" />
+      return <Loader2 className="size-4 text-foreground animate-spin" />
     case 'ready':
-      return <CheckCircle className="size-4 text-success/70" />
+      return <CheckCircle className="size-4 text-muted-foreground" />
     case 'success':
-      return <CheckCircle className="size-4 text-success" />
+      return <CheckCircle className="size-4 text-foreground" />
     case 'failed':
-      return <XCircle className="size-4 text-danger" />
+      return <XCircle className="size-4 text-destructive" />
     case 'cancelled':
       return <StopCircle className="size-4 text-muted-foreground" />
     default:
@@ -944,7 +985,10 @@ function getTargetStatusText(state: AccountPublishState): string {
     case 'success':
       return '发布成功'
     case 'failed':
-      return state.error || '发布失败'
+      return (
+        state.error ||
+        `${PLATFORMS[state.platform]?.name || state.platform}发布失败，可点击右侧重试`
+      )
     case 'cancelled':
       return '已跳过'
     default:
@@ -959,7 +1003,9 @@ export function PublishProgressCard({
   onViewAccount,
   onCancelPublish,
   onRetryAccount,
-  onCancelAccount
+  onCancelAccount,
+  onSubmitAll,
+  onStartNew
 }: PublishProgressCardProps): React.ReactElement | null {
   const [isCollapsed, setIsCollapsed] = useState(false)
 
@@ -981,10 +1027,25 @@ export function PublishProgressCard({
     return { success, failed, cancelled, total: publishStates.length }
   }, [publishStates])
 
+  const readyCount = useMemo(
+    () => publishStates.filter((s) => s.status === 'ready').length,
+    [publishStates]
+  )
+
+  const allSucceeded = allDone && progressSummary.success === progressSummary.total
+
+  const successUrls = useMemo(
+    () =>
+      publishStates
+        .filter((s) => s.status === 'success' && s.postUrl)
+        .map((s) => s.postUrl as string),
+    [publishStates]
+  )
+
   if (publishStates.length === 0) return null
 
   return (
-    <Card className="p-6 shadow-none border">
+    <Card className="flex flex-col gap-4 p-6">
       <div
         className="flex items-center justify-between cursor-pointer"
         onClick={() => setIsCollapsed(!isCollapsed)}
@@ -1001,32 +1062,31 @@ export function PublishProgressCard({
           <span className="text-sm text-muted-foreground">
             {progressSummary.success}/{progressSummary.total} 成功
             {progressSummary.failed > 0 && (
-              <span className="text-danger ml-1">, {progressSummary.failed} 失败</span>
+              <span className="text-destructive ml-1">, {progressSummary.failed} 失败</span>
             )}
             {progressSummary.cancelled > 0 && (
               <span className="ml-1">, {progressSummary.cancelled} 跳过</span>
             )}
           </span>
           {isPublishing && onCancelPublish && (
-            // Wrapper stops the DOM click from bubbling to the collapsible header's
-            // toggle (PressEvent has no stopPropagation); Button keeps onPress for cancel.
-            <span className="inline-flex" onClick={(e) => e.stopPropagation()}>
-              <Button
-                variant="flat"
-                color="danger"
-                size="sm"
-                onPress={() => onCancelPublish()}
-                startContent={<StopCircle className="size-4" />}
-              >
-                取消
-              </Button>
-            </span>
+            <Button
+              variant="destructive-ghost"
+              size="sm"
+              onClick={(e) => {
+                // Keep the click from also toggling the collapsible header.
+                e.stopPropagation()
+                onCancelPublish()
+              }}
+            >
+              <StopCircle />
+              取消
+            </Button>
           )}
         </div>
       </div>
 
       {!isCollapsed && (
-        <ul className="space-y-0 mt-4">
+        <ul className="flex flex-col">
           {publishStates.map((state) => {
             const platformInfo = PLATFORMS[state.platform]
             // Display: platform name + account display name (if multiple accounts)
@@ -1046,7 +1106,7 @@ export function PublishProgressCard({
                 </span>
                 <span
                   className={`flex-1 truncate text-sm ${
-                    state.status === 'failed' ? 'text-danger' : 'text-muted-foreground'
+                    state.status === 'failed' ? 'text-destructive' : 'text-muted-foreground'
                   }`}
                   title={statusText}
                 >
@@ -1055,42 +1115,42 @@ export function PublishProgressCard({
                 <div className="flex items-center gap-1 flex-shrink-0">
                   {state.status === 'success' && state.postUrl && (
                     <Button
-                      variant="light"
+                      variant="ghost"
                       size="sm"
-                      onPress={() => window.open(state.postUrl, '_blank')}
+                      onClick={() => window.open(state.postUrl, '_blank')}
                     >
                       查看链接
                     </Button>
                   )}
                   {onCancelAccount && !isTerminalTarget(state.status) && (
                     <Button
-                      variant="light"
+                      variant="ghost"
                       size="sm"
-                      onPress={() => onCancelAccount(state.accountId)}
+                      onClick={() => onCancelAccount(state.accountId)}
                     >
                       跳过
                     </Button>
                   )}
                   {onRetryAccount && (state.status === 'failed' || state.status === 'cancelled') && (
                     <Button
-                      variant="flat"
-                      color="primary"
+                      variant="secondary"
                       size="sm"
-                      onPress={() => onRetryAccount(state.accountId)}
+                      onClick={() => onRetryAccount(state.accountId)}
                     >
                       重试
                     </Button>
                   )}
                   {onViewAccount && (
-                    <Button
-                      variant="light"
-                      size="sm"
-                      isIconOnly
-                      onPress={() => onViewAccount(state.accountId)}
-                      title="查看该账号的发布页面"
-                    >
-                      <Eye className="size-4" />
-                    </Button>
+                    <Tooltip content="查看该账号的发布页面">
+                      <Button
+                        variant="ghost"
+                        size="icon-sm"
+                        onClick={() => onViewAccount(state.accountId)}
+                        aria-label="查看该账号的发布页面"
+                      >
+                        <Eye />
+                      </Button>
+                    </Tooltip>
                   )}
                 </div>
               </li>
@@ -1099,9 +1159,37 @@ export function PublishProgressCard({
         </ul>
       )}
 
-      {/* 发布总结：全部目标结束后给一份"实际发生了什么"的报告 */}
-      {summary && !isCollapsed && (
-        <div className="mt-4 flex flex-col gap-2 rounded-xl bg-foreground/[0.03] p-4">
+      {/* 手动确认模式：内容已填好等待提交时，把「全部发布」入口放进卡片本身 */}
+      {!isCollapsed && readyCount > 0 && onSubmitAll && (
+        <div className="flex flex-col gap-2">
+          <Button onClick={onSubmitAll}>全部发布</Button>
+          <p className="text-xs text-muted-foreground">
+            会把已填充好的 {readyCount} 个账号依次发出；也可以先点上方的眼睛图标逐个检查。
+          </p>
+        </div>
+      )}
+
+      {/* 全部成功的收尾：给一句确定的话和下一步动作 */}
+      {!isCollapsed && allSucceeded && (
+        <div className="flex flex-col gap-3 rounded-xl bg-foreground/[0.03] p-4">
+          <span className="text-sm font-medium text-foreground">都发出去了，去忙别的吧。</span>
+          <div className="flex flex-wrap gap-2">
+            {onStartNew && <Button onClick={onStartNew}>清空并开始新内容</Button>}
+            {successUrls.length > 0 && (
+              <Button
+                variant="outline"
+                onClick={() => successUrls.forEach((url) => window.open(url, '_blank'))}
+              >
+                查看链接
+              </Button>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* 发布总结：未全数成功时给一份"实际发生了什么"的报告 */}
+      {summary && !isCollapsed && !allSucceeded && (
+        <div className="flex flex-col gap-2 rounded-xl bg-foreground/[0.03] p-4">
           <span className="text-sm font-medium">本次发布总结</span>
           <p className="text-sm text-muted-foreground">
             共 {summary.targets.length} 个账号：成功{' '}
@@ -1116,7 +1204,7 @@ export function PublishProgressCard({
                 .map((t) => (
                   <li key={t.accountId} className="flex items-baseline gap-2 text-xs">
                     <span className="shrink-0 font-medium">{t.displayName}</span>
-                    <span className="truncate text-danger" title={t.error}>
+                    <span className="truncate text-destructive" title={t.error}>
                       {t.error || '未知错误'}
                     </span>
                   </li>

@@ -1,11 +1,15 @@
 import { useState, useCallback, useRef, useEffect, useMemo } from 'react'
-import { Button, Card, Input, Textarea, Spinner, addToast } from '@heroui/react'
+import { Button } from '../ui/button'
+import { Card } from '../ui/card'
+import { Input } from '../ui/input'
+import { Textarea } from '../ui/textarea'
+import { toast } from '../ui/sonner'
 import { ArrowLeft, ArrowRight, Eraser, Upload, X, Image, Save, Music } from 'lucide-react'
 import type { PlatformType, PodcastData, SyncContentData, FileData, Draft, PublishGroupSummary } from '../../../../shared/types'
 import {
   AccountSelector,
   useAccountSelection,
-  AutoSubmitToggle,
+  PublishModeSelector,
   PublishProgressCard,
   TagInput,
   formatFileSize,
@@ -31,6 +35,10 @@ interface PodcastPublishPageProps {
   onCancelPublish?: () => void
   onRetryAccount?: (accountId: string) => void
   onCancelAccount?: (accountId: string) => void
+  /** 手动确认模式下进度卡「全部发布」的提交通道。 */
+  onSubmitAll?: () => void
+  /** 全部成功后「清空并开始新内容」需要顺带清掉进度状态。 */
+  onClearProgress?: () => void
   initialDraft?: Draft
   onDraftSaved?: () => void
 }
@@ -60,6 +68,8 @@ export function PodcastPublishPage({
   onCancelPublish,
   onRetryAccount,
   onCancelAccount,
+  onSubmitAll,
+  onClearProgress,
   initialDraft,
   onDraftSaved
 }: PodcastPublishPageProps): React.ReactElement {
@@ -153,11 +163,7 @@ export function PodcastPublishPage({
     setAutoSubmit(false)
     setCurrentDraftId(null)
     clearFormCache('PODCAST')
-    addToast({
-      title: '已清空',
-      description: '表单内容与自动缓存已清空',
-      hideIcon: true
-    })
+    toast('已清空', { description: '表单内容与自动缓存都清掉了，可以开始新一期。' })
   }, [])
 
   useEffect(() => {
@@ -198,10 +204,8 @@ export function PodcastPublishPage({
       return await window.api.app.getFileInfo(filePath)
     } catch (error) {
       console.error('Failed to read file info:', error)
-      addToast({
-        title: '文件读取失败',
-        description: '无法读取本地文件信息',
-        hideIcon: true
+      toast.error('这个文件读不出来', {
+        description: '确认文件还在原来的位置，然后重新选择一次。'
       })
       return null
     }
@@ -223,10 +227,8 @@ export function PodcastPublishPage({
       if (!file) return
       const filePath = getDraggedFilePath(file)
       if (!filePath) {
-        addToast({
-          title: '请选择本地文件',
-          description: '请点击上传区域选择音频文件，以便桌面端获取本地路径',
-          hideIcon: true
+        toast('没拿到这个文件的本地路径', {
+          description: '点击上传区域、从本地选择音频文件即可。'
         })
         event.target.value = ''
         return
@@ -248,10 +250,8 @@ export function PodcastPublishPage({
       if (!file) return
       const filePath = getDraggedFilePath(file)
       if (!filePath) {
-        addToast({
-          title: '拖拽上传不可用',
-          description: '请点击上传区域选择音频文件',
-          hideIcon: true
+        toast('拖拽没能拿到文件路径', {
+          description: '点击上传区域、从本地选择音频文件即可。'
         })
         return
       }
@@ -296,10 +296,8 @@ export function PodcastPublishPage({
       if (!file) return
       const filePath = getDraggedFilePath(file)
       if (!filePath) {
-        addToast({
-          title: '请选择本地文件',
-          description: '请点击上传区域选择封面图片',
-          hideIcon: true
+        toast('没拿到这个文件的本地路径', {
+          description: '点击上传区域、从本地选择封面图片即可。'
         })
         event.target.value = ''
         return
@@ -343,11 +341,7 @@ export function PodcastPublishPage({
 
   const handleSaveDraft = useCallback(async () => {
     if (!title.trim()) {
-      addToast({
-        title: '保存失败',
-        description: '请输入标题后再保存',
-        hideIcon: true
-      })
+      toast('还没有标题', { description: '先给这期播客起个标题，再点保存草稿。' })
       return
     }
 
@@ -371,18 +365,12 @@ export function PodcastPublishPage({
         setCurrentDraftId(newDraft.id)
       }
 
-      addToast({
-        title: '保存成功',
-        description: '草稿已保存',
-        hideIcon: true
-      })
+      toast('已保存草稿')
       onDraftSaved?.()
     } catch (error) {
       console.error('Failed to save draft:', error)
-      addToast({
-        title: '保存失败',
-        description: '无法保存草稿',
-        hideIcon: true
+      toast.error('草稿没存上', {
+        description: '内容还在表单里，稍后再点一次保存草稿。'
       })
     } finally {
       setIsSavingDraft(false)
@@ -394,18 +382,38 @@ export function PodcastPublishPage({
   const canPublish = hasSelectedTargets && isContentValid && !isPublishing
   const canSaveDraft = title.trim().length > 0 && !isPublishing && !isSavingDraft
 
+  // 全部发布成功后的「清空并开始新内容」：清表单 + 清进度，回到第 1 步
+  const handleStartNew = useCallback(() => {
+    handleClearForm()
+    onClearProgress?.()
+    setStep('compose')
+  }, [handleClearForm, onClearProgress])
+
+  // 第 2 步 Cmd/Ctrl+Enter 触发发布(按钮禁用时不触发)
+  useEffect(() => {
+    if (step !== 'configure') return
+    const handleKeyDown = (e: KeyboardEvent): void => {
+      if ((e.metaKey || e.ctrlKey) && e.key === 'Enter' && canPublish) {
+        e.preventDefault()
+        handlePublish()
+      }
+    }
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [step, canPublish, handlePublish])
+
   // 第 1 步 · 创作：大上传区 + 标题/描述
   if (step === 'compose') {
     return (
       <div className="flex flex-col gap-6">
-        <Card className="flex flex-col gap-5 p-6 shadow-none border">
+        <Card className="flex flex-col gap-5 p-6">
           <div className="flex items-center justify-between">
             <h2 className="text-lg font-semibold">发布播客</h2>
             <span className="text-xs text-muted-foreground">第 1 步 · 上传与编辑</span>
           </div>
 
-          <div>
-            <label className="block mb-2 text-sm font-medium">音频文件</label>
+          <div className="flex flex-col gap-2">
+            <label className="text-sm font-medium">音频文件</label>
             <input
               ref={audioInputRef}
               type="file"
@@ -420,16 +428,12 @@ export function PodcastPublishPage({
                 onDrop={handleAudioDrop}
                 onDragOver={handleAudioDragOver}
                 onDragLeave={handleAudioDragLeave}
-                className={`flex min-h-[40vh] flex-col items-center justify-center p-8 border-2 border-dashed rounded-lg cursor-pointer transition-colors ${
-                  isDraggingAudio
-                    ? 'border-primary bg-primary/5'
-                    : 'border-default-300 hover:border-primary/50'
+                className={`flex min-h-[40vh] flex-col items-center justify-center gap-2 p-8 border-2 border-dashed rounded-lg cursor-pointer transition-colors ${
+                  isDraggingAudio ? 'border-foreground bg-muted' : 'hover:border-foreground/40'
                 } ${isPublishing ? 'opacity-60 cursor-not-allowed' : ''}`}
               >
-                <Upload className="size-10 text-muted-foreground mb-3" />
-                <p className="text-sm text-muted-foreground mb-1">
-                  点击或拖拽音频文件到此处上传
-                </p>
+                <Upload className="size-10 text-muted-foreground" />
+                <p className="text-sm text-muted-foreground">点击或拖拽音频文件到此处上传</p>
                 <p className="text-xs text-muted-foreground">支持 MP3, WAV, M4A, AAC 等格式</p>
               </div>
             ) : (
@@ -447,13 +451,13 @@ export function PodcastPublishPage({
                   </div>
                   <Button
                     variant="ghost"
-                    size="sm"
-                    isIconOnly
-                    onPress={handleRemoveAudio}
-                    isDisabled={isPublishing}
+                    size="icon-sm"
+                    onClick={handleRemoveAudio}
+                    disabled={isPublishing}
+                    aria-label="移除音频"
                     className="flex-shrink-0"
                   >
-                    <X className="size-4" />
+                    <X />
                   </Button>
                 </div>
               </div>
@@ -464,49 +468,42 @@ export function PodcastPublishPage({
             label="播客标题"
             placeholder="输入播客标题..."
             value={title}
-            onValueChange={setTitle}
-            isDisabled={isPublishing}
+            onChange={(e) => setTitle(e.target.value)}
+            disabled={isPublishing}
           />
 
           <Textarea
             label="播客描述"
             placeholder="输入播客描述..."
             value={description}
-            onValueChange={setDescription}
-            minRows={6}
-            isDisabled={isPublishing}
+            onChange={(e) => setDescription(e.target.value)}
+            rows={6}
+            disabled={isPublishing}
           />
 
           <div className="flex gap-3">
-            <Button
-              variant="light"
-              size="lg"
-              onPress={handleClearForm}
-              isDisabled={isPublishing}
-              startContent={<Eraser className="size-4" />}
-            >
+            <Button variant="ghost" size="lg" onClick={handleClearForm} disabled={isPublishing}>
+              <Eraser />
               清空
             </Button>
             <Button
-              variant="bordered"
+              variant="outline"
               size="lg"
-              onPress={handleSaveDraft}
-              isDisabled={!canSaveDraft}
+              onClick={handleSaveDraft}
+              disabled={!canSaveDraft}
               isLoading={isSavingDraft}
-              startContent={!isSavingDraft && <Save className="size-4" />}
             >
+              {!isSavingDraft && <Save />}
               保存草稿
             </Button>
             <Button
-              color="primary"
-              variant="solid"
               className="flex-1"
               size="lg"
-              onPress={() => setStep('configure')}
-              isDisabled={!isContentValid}
-              endContent={<ArrowRight className="size-4" />}
+              onClick={() => setStep('configure')}
+              disabled={!isContentValid}
             >
               下一步
+              <ArrowRight />
             </Button>
           </div>
         </Card>
@@ -518,23 +515,19 @@ export function PodcastPublishPage({
   return (
     <div className="flex flex-col gap-6">
       <div className="flex items-center justify-between">
-        <Button
-          variant="light"
-          onPress={() => setStep('compose')}
-          isDisabled={isPublishing}
-          startContent={<ArrowLeft className="size-4" />}
-        >
+        <Button variant="ghost" onClick={() => setStep('compose')} disabled={isPublishing}>
+          <ArrowLeft />
           上一步
         </Button>
         <span className="text-xs text-muted-foreground">第 2 步 · 发布设置</span>
       </div>
 
       <div className="grid grid-cols-1 items-start gap-6 lg:grid-cols-2">
-        <Card className="flex flex-col gap-5 p-6 shadow-none border">
+        <Card className="flex flex-col gap-5 p-6">
           <h2 className="text-lg font-semibold">发布信息</h2>
 
-          <div>
-            <label className="block mb-2 text-sm font-medium">
+          <div className="flex flex-col gap-2">
+            <label className="text-sm font-medium">
               封面图片 <span className="text-muted-foreground font-normal">（可选）</span>
             </label>
             <input
@@ -559,7 +552,7 @@ export function PodcastPublishPage({
                   if (fileData) setCoverFile(fileData)
                 }}
                 onDragOver={(event) => event.preventDefault()}
-                className={`flex items-center justify-center gap-2 p-4 border-2 border-dashed rounded-lg cursor-pointer transition-colors border-default-300 hover:border-primary/50 ${isPublishing ? 'opacity-60 cursor-not-allowed' : ''}`}
+                className={`flex items-center justify-center gap-2 p-4 border-2 border-dashed rounded-lg cursor-pointer transition-colors hover:border-foreground/40 ${isPublishing ? 'opacity-60 cursor-not-allowed' : ''}`}
               >
                 <Image className="size-5 text-muted-foreground" />
                 <span className="text-sm text-muted-foreground">点击或拖拽图片到此处</span>
@@ -572,14 +565,14 @@ export function PodcastPublishPage({
                   className="h-24 w-auto rounded-lg object-cover"
                 />
                 <Button
-                  variant="solid"
-                  size="sm"
-                  isIconOnly
-                  onPress={handleRemoveCover}
-                  isDisabled={isPublishing}
-                  className="absolute -top-2 -right-2 size-6 min-w-0 rounded-full bg-danger"
+                  variant="secondary"
+                  size="icon-sm"
+                  onClick={handleRemoveCover}
+                  disabled={isPublishing}
+                  aria-label="移除封面"
+                  className="absolute -top-2 -right-2 size-6 rounded-full border [&_svg]:size-3"
                 >
-                  <X className="size-3" />
+                  <X />
                 </Button>
               </div>
             )}
@@ -596,26 +589,24 @@ export function PodcastPublishPage({
             isDisabled={isPublishing}
           />
 
-          <AutoSubmitToggle
-            isSelected={autoSubmit}
-            onValueChange={setAutoSubmit}
-            isDisabled={isPublishing}
+          <PublishModeSelector
+            autoSubmit={autoSubmit}
+            onChange={setAutoSubmit}
+            disabled={isPublishing}
           />
 
-          <Button
-            color="primary"
-            variant="solid"
-            size="lg"
-            onPress={handlePublish}
-            isDisabled={!canPublish}
-            isLoading={isPublishing}
-            spinner={<Spinner size="sm" color="current" />}
-          >
-            {isPublishing ? '发布中...' : '发布播客'}
+          <Button size="lg" onClick={handlePublish} disabled={!canPublish} isLoading={isPublishing}>
+            {isPublishing
+              ? autoSubmit
+                ? '发布中…'
+                : '填充中…'
+              : autoSubmit
+                ? '发布'
+                : '填充到各平台'}
           </Button>
         </Card>
 
-        <Card className="flex flex-col gap-4 p-6 shadow-none border lg:sticky lg:top-0">
+        <Card className="flex flex-col gap-4 p-6 lg:sticky lg:top-0">
           <span className="text-sm font-medium text-muted-foreground">内容预览</span>
           {coverFile && (
             <img
@@ -642,6 +633,8 @@ export function PodcastPublishPage({
         onCancelPublish={onCancelPublish}
         onRetryAccount={onRetryAccount}
         onCancelAccount={onCancelAccount}
+        onSubmitAll={onSubmitAll}
+        onStartNew={handleStartNew}
       />
     </div>
   )

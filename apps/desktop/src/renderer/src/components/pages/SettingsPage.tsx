@@ -1,7 +1,6 @@
 import {
   Settings,
   Monitor,
-  Database,
   Sun,
   Moon,
   LayoutGrid,
@@ -11,10 +10,13 @@ import {
   HardDriveUpload,
   SquareX
 } from 'lucide-react'
-import { Switch, Button, Select, SelectItem, addToast } from '@heroui/react'
 import { useTheme } from 'next-themes'
 import { useEffect, useState, useCallback } from 'react'
 import { UpdateChecker } from '../UpdateChecker'
+import { Button } from '../ui/button'
+import { Switch } from '../ui/switch'
+import { SimpleSelect } from '../ui/select'
+import { toast } from '../ui/sonner'
 import type { KeepAliveStatus } from '../../../../shared/types'
 
 // Settings keys
@@ -31,14 +33,14 @@ interface SettingItemProps {
 
 function SettingItem({ icon: Icon, title, description, children }: SettingItemProps): React.ReactElement {
   return (
-    <div className="flex items-center justify-between py-4">
+    <div className="flex items-center justify-between gap-4 py-4">
       <div className="flex items-start gap-3">
-        <div className="size-9 rounded-lg bg-muted flex items-center justify-center flex-shrink-0">
+        <div className="flex size-9 flex-shrink-0 items-center justify-center rounded-lg bg-muted">
           <Icon className="size-4 text-muted-foreground" />
         </div>
         <div>
-          <h3 className="font-medium text-sm">{title}</h3>
-          <p className="text-xs text-muted-foreground mt-0.5">{description}</p>
+          <h3 className="text-sm font-medium">{title}</h3>
+          <p className="mt-0.5 text-xs text-muted-foreground">{description}</p>
         </div>
       </div>
       {children}
@@ -81,7 +83,7 @@ function ThemeSwitcher(): React.ReactElement | null {
   if (!mounted) return null
 
   return (
-    <Button variant="flat" size="sm" onPress={() => setTheme(getNextTheme(theme))}>
+    <Button variant="secondary" size="sm" onClick={() => setTheme(getNextTheme(theme))}>
       <ThemeIcon theme={theme} resolvedTheme={resolvedTheme} />
       <span>{themeLabels[theme || 'system']}</span>
     </Button>
@@ -110,13 +112,13 @@ function AutoLaunchSetting(): React.ReactElement {
     } catch (error) {
       console.error('Failed to set auto launch:', error)
       setEnabled(!value)
-      addToast({ title: '设置失败', description: '无法修改开机自启动', hideIcon: true })
+      toast.error('无法修改开机自启动', { description: '请稍后重试' })
     }
   }
 
   return (
     <SettingItem icon={Monitor} title="开机自启动" description="系统启动时自动运行 MultiPost">
-      <Switch size="sm" isSelected={enabled} onValueChange={handleChange} isDisabled={!loaded} />
+      <Switch checked={enabled} onCheckedChange={handleChange} disabled={!loaded} />
     </SettingItem>
   )
 }
@@ -142,19 +144,17 @@ function CloseAllBehaviorSetting(): React.ReactElement {
       title="关闭所有标签后"
       description="选择关闭所有平台标签后的行为"
     >
-      <Select
-        size="sm"
-        selectedKeys={[behavior]}
-        onSelectionChange={(keys) => {
-          const selected = Array.from(keys)[0] as CloseAllBehavior
-          if (selected) handleChange(selected)
+      <SimpleSelect
+        value={behavior}
+        onValueChange={(value) => {
+          if (value === 'return' || value === 'stay') handleChange(value)
         }}
-        className="w-36"
-        aria-label="关闭所有标签后的行为"
-      >
-        <SelectItem key="return">返回发布页面</SelectItem>
-        <SelectItem key="stay">保持浏览器区域</SelectItem>
-      </Select>
+        options={[
+          { value: 'return', label: '返回发布页面' },
+          { value: 'stay', label: '保持浏览器区域' }
+        ]}
+        className="h-8 w-40 shrink-0 text-xs"
+      />
     </SettingItem>
   )
 }
@@ -179,7 +179,7 @@ function CloseWindowBehaviorSetting(): React.ReactElement {
       await window.api.app.setCloseBehavior(value)
     } catch (error) {
       console.error('Failed to set close behavior:', error)
-      addToast({ title: '设置失败', description: '无法修改关闭窗口行为', hideIcon: true })
+      toast.error('无法修改关闭窗口行为', { description: '请稍后重试' })
     }
   }
 
@@ -187,23 +187,20 @@ function CloseWindowBehaviorSetting(): React.ReactElement {
     <SettingItem
       icon={SquareX}
       title="关闭主窗口时"
-      description="保持后台运行可继续账号保活与定时任务"
+      description="保持后台运行时，会继续保持账号在线并执行定时任务"
     >
-      <Select
-        size="sm"
-        selectedKeys={[behavior]}
-        isDisabled={!loaded}
-        onSelectionChange={(keys) => {
-          const selected = Array.from(keys)[0] as 'minimize' | 'quit'
-          if (selected) void handleChange(selected)
+      <SimpleSelect
+        value={behavior}
+        onValueChange={(value) => {
+          if (value === 'minimize' || value === 'quit') void handleChange(value)
         }}
-        className="w-36"
-        aria-label="关闭主窗口时的行为"
-        disallowEmptySelection
-      >
-        <SelectItem key="minimize">保持后台运行</SelectItem>
-        <SelectItem key="quit">退出应用</SelectItem>
-      </Select>
+        options={[
+          { value: 'minimize', label: '保持后台运行' },
+          { value: 'quit', label: '退出应用' }
+        ]}
+        disabled={!loaded}
+        className="h-8 w-40 shrink-0 text-xs"
+      />
     </SettingItem>
   )
 }
@@ -217,11 +214,11 @@ function DataBackupSetting(): React.ReactElement {
     try {
       const exported = await window.api.app.exportData()
       if (exported) {
-        addToast({ title: '导出成功', description: '数据备份已保存', hideIcon: true })
+        toast('数据备份已保存')
       }
     } catch (error) {
       console.error('Failed to export data:', error)
-      addToast({ title: '导出失败', description: '无法导出数据备份', hideIcon: true })
+      toast.error('无法导出数据备份', { description: '请稍后重试' })
     } finally {
       setExporting(false)
     }
@@ -234,10 +231,9 @@ function DataBackupSetting(): React.ReactElement {
       await window.api.app.importData()
     } catch (error) {
       console.error('Failed to import data:', error)
-      addToast({
-        title: '导入失败',
-        description: error instanceof Error ? error.message : '无法导入数据备份',
-        hideIcon: true
+      toast.error('无法导入数据备份', {
+        description:
+          error instanceof Error ? `${error.message}，请确认备份文件后重试` : '请确认备份文件后重试'
       })
     } finally {
       setImporting(false)
@@ -251,7 +247,7 @@ function DataBackupSetting(): React.ReactElement {
         title="导出数据备份"
         description="导出账号配置、草稿与发布历史（不含平台登录状态）"
       >
-        <Button variant="flat" size="sm" isLoading={exporting} onPress={handleExport}>
+        <Button variant="secondary" size="sm" isLoading={exporting} onClick={handleExport}>
           导出
         </Button>
       </SettingItem>
@@ -260,7 +256,7 @@ function DataBackupSetting(): React.ReactElement {
         title="导入数据备份"
         description="导入备份会替换当前数据并重启应用"
       >
-        <Button variant="flat" size="sm" isLoading={importing} onPress={handleImport}>
+        <Button variant="secondary" size="sm" isLoading={importing} onClick={handleImport}>
           导入
         </Button>
       </SettingItem>
@@ -298,29 +294,27 @@ function KeepAliveSetting(): React.ReactElement {
       setStatus(result)
       const successCount = result.lastResults.filter((r) => r.success).length
       const failCount = result.lastResults.filter((r) => !r.success).length
-      addToast({
-        title: '保活完成',
-        description: `成功 ${successCount}，失败 ${failCount}`,
-        hideIcon: true
+      toast('已完成一轮在线保持', {
+        description: `成功 ${successCount}，失败 ${failCount}`
       })
     } catch {
-      addToast({ title: '保活失败', description: '执行保活任务时出错', hideIcon: true })
+      toast.error('无法保持账号在线', { description: '请稍后重试' })
     } finally {
       setTriggering(false)
     }
   }
 
-  const description = status?.lastRunAt
-    ? `上次执行: ${formatTime(status.lastRunAt)}`
-    : '定期访问平台保持登录状态'
+  const description = `在后台定期访问各平台，防止登录过期${
+    status?.lastRunAt ? `（上次执行 ${formatTime(status.lastRunAt)}）` : ''
+  }`
 
   return (
-    <SettingItem icon={Activity} title="账号保活" description={description}>
+    <SettingItem icon={Activity} title="保持账号在线" description={description}>
       <Button
-        variant="flat"
+        variant="secondary"
         size="sm"
         isLoading={triggering || (status?.isRunning ?? false)}
-        onPress={handleTrigger}
+        onClick={handleTrigger}
       >
         {triggering || status?.isRunning ? '执行中' : '立即执行'}
       </Button>
@@ -330,26 +324,24 @@ function KeepAliveSetting(): React.ReactElement {
 
 export function SettingsPage(): React.ReactElement {
   return (
-    <div className="max-w-2xl mx-auto space-y-8">
+    <div className="mx-auto flex max-w-2xl flex-col gap-8">
       {/* Header */}
-      <div className="space-y-2">
-        <div className="flex items-center gap-3">
-          <div className="size-10 rounded-lg bg-primary/10 flex items-center justify-center">
-            <Settings className="size-5 text-primary" />
-          </div>
-          <div>
-            <h1 className="text-2xl font-bold">设置</h1>
-            <p className="text-muted-foreground">自定义你的应用体验</p>
-          </div>
+      <div className="flex items-center gap-3">
+        <div className="flex size-10 items-center justify-center rounded-lg bg-muted">
+          <Settings className="size-5 text-foreground" />
+        </div>
+        <div>
+          <h1 className="text-2xl font-semibold tracking-tight">设置</h1>
+          <p className="text-muted-foreground">自定义你的应用体验</p>
         </div>
       </div>
 
       {/* General Settings */}
-      <div className="space-y-1">
-        <h2 className="text-sm font-medium text-muted-foreground uppercase tracking-wider px-1">
+      <div className="flex flex-col gap-1">
+        <h2 className="px-1 text-sm font-medium uppercase tracking-wider text-muted-foreground">
           通用设置
         </h2>
-        <div className="bg-card rounded-lg border border-border px-4 divide-y divide-border">
+        <div className="divide-y rounded-lg border bg-background px-4">
           <SettingItem icon={Sun} title="外观主题" description="切换浅色、深色或跟随系统">
             <ThemeSwitcher />
           </SettingItem>
@@ -360,55 +352,43 @@ export function SettingsPage(): React.ReactElement {
       </div>
 
       {/* Publish Settings */}
-      <div className="space-y-1">
-        <h2 className="text-sm font-medium text-muted-foreground uppercase tracking-wider px-1">
+      <div className="flex flex-col gap-1">
+        <h2 className="px-1 text-sm font-medium uppercase tracking-wider text-muted-foreground">
           发布设置
         </h2>
-        <div className="bg-card rounded-lg border border-border px-4 divide-y divide-border">
+        <div className="divide-y rounded-lg border bg-background px-4">
           <CloseAllBehaviorSetting />
         </div>
       </div>
 
       {/* Data Settings */}
-      <div className="space-y-1">
-        <h2 className="text-sm font-medium text-muted-foreground uppercase tracking-wider px-1">
+      <div className="flex flex-col gap-1">
+        <h2 className="px-1 text-sm font-medium uppercase tracking-wider text-muted-foreground">
           数据与隐私
         </h2>
-        <div className="bg-card rounded-lg border border-border px-4 divide-y divide-border">
-          <SettingItem
-            icon={Database}
-            title="本地数据存储"
-            description="所有数据均存储在本地，不会上传到云端"
-          >
-            <span className="text-xs text-muted-foreground">已启用</span>
-          </SettingItem>
+        <div className="divide-y rounded-lg border bg-background px-4">
           <DataBackupSetting />
         </div>
       </div>
 
       {/* Update Settings */}
-      <div className="space-y-1">
-        <h2 className="text-sm font-medium text-muted-foreground uppercase tracking-wider px-1">
+      <div className="flex flex-col gap-1">
+        <h2 className="px-1 text-sm font-medium uppercase tracking-wider text-muted-foreground">
           软件更新
         </h2>
-        <div className="bg-card rounded-lg border border-border p-4">
-          <div className="flex items-start gap-3 mb-4">
-            <div className="size-9 rounded-lg bg-muted flex items-center justify-center flex-shrink-0">
+        <div className="flex flex-col gap-4 rounded-lg border bg-background p-4">
+          <div className="flex items-start gap-3">
+            <div className="flex size-9 flex-shrink-0 items-center justify-center rounded-lg bg-muted">
               <Download className="size-4 text-muted-foreground" />
             </div>
             <div>
-              <h3 className="font-medium text-sm">检查更新</h3>
-              <p className="text-xs text-muted-foreground mt-0.5">检查是否有新版本可用</p>
+              <h3 className="text-sm font-medium">检查更新</h3>
+              <p className="mt-0.5 text-xs text-muted-foreground">检查是否有新版本可用</p>
             </div>
           </div>
           <UpdateChecker />
         </div>
       </div>
-
-      {/* Note */}
-      <p className="text-xs text-center text-muted-foreground">
-        更多设置功能正在开发中...
-      </p>
     </div>
   )
 }

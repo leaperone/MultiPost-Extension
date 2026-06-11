@@ -1,7 +1,5 @@
 @import "tailwindcss";
 @import "tw-animate-css";
-@plugin "../../hero.ts";
-@source "../../../../node_modules/@heroui/theme/dist/**/*.{js,ts,jsx,tsx}";
 
 @custom-variant dark (&:is(.dark *));
 
@@ -117,12 +115,12 @@
     /* Sidebar - Dark Mode */
     --sidebar-background: 0 0% 5%;
     --sidebar-foreground: 240 4.8% 95.9%;
-    --sidebar-primary: 224.3 76.3% 48%;
-    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-primary: 0 0% 98%;
+    --sidebar-primary-foreground: 0 0% 9%;
     --sidebar-accent: 0 0% 14.9%;
     --sidebar-accent-foreground: 240 4.8% 95.9%;
     --sidebar-border: 0 0% 14.9%;
-    --sidebar-ring: 217.2 91.2% 59.8%;
+    --sidebar-ring: 0 0% 83.1%;
   }
 }
 
@@ -173,39 +171,15 @@
   -webkit-app-region: no-drag;
 }
 
-/* Sidebar overrides - Light mode */
-[data-slot="sidebar"],
-[data-slot="sidebar-inner"],
-[data-sidebar="sidebar"],
-.group.peer[data-slot="sidebar"] {
-  background-color: hsl(var(--sidebar-background)) !important;
-}
-
-[data-slot="sidebar"] span,
-[data-slot="sidebar"] button,
-[data-slot="sidebar"] div,
-[data-slot="sidebar-inner"] span,
-[data-slot="sidebar-inner"] button,
-[data-slot="sidebar-inner"] div,
-[data-sidebar="menu-button"],
-[data-sidebar="menu-button"] span,
-[data-sidebar="group-label"] {
-  color: hsl(var(--sidebar-foreground)) !important;
-}
-
-[data-sidebar="menu-button"]:hover,
-[data-sidebar="menu-button"][data-active="true"] {
-  background-color: hsl(var(--sidebar-accent)) !important;
-  color: hsl(var(--sidebar-accent-foreground)) !important;
-}
-
-[data-sidebar="menu-button"]:hover span,
-[data-sidebar="menu-button"][data-active="true"] span {
-  color: hsl(var(--sidebar-accent-foreground)) !important;
-}
-
-[data-sidebar="group-label"] {
-  color: hsl(var(--muted-foreground)) !important;
+/* 无障碍基线:尊重系统减少动态偏好(JS 动画由 MotionConfig reducedMotion 处理) */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
 }
 
 /* Markdown 预览排版（发布文章页） */
@@ -242,8 +216,9 @@
 .article-preview li { margin: 0.25em 0; }
 .article-preview blockquote {
   margin: 0.8em 0;
-  border-left: 3px solid hsl(var(--border));
-  padding-left: 1em;
+  background: hsl(var(--muted) / 60%);
+  border-radius: 6px;
+  padding: 0.6em 1em;
   color: hsl(var(--muted-foreground));
 }
 .article-preview code {

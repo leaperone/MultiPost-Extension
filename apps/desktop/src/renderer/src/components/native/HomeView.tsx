@@ -1,9 +1,9 @@
 import { useEffect, useState } from 'react'
 import { motion } from 'framer-motion'
-import { Button, Card, Chip } from '@heroui/react'
 import {
   ArrowRightIcon,
   CheckCircle2Icon,
+  CircleIcon,
   ClockIcon,
   FileTextIcon,
   MessageCircleHeartIcon,
@@ -22,6 +22,9 @@ import { PLATFORMS } from '@shared/constants'
 import { useAccountsStore } from '../../store/accounts.store'
 import { useUiStore, type NativeView } from '../../store/ui.store'
 import { AccountAvatar } from '../AccountAvatar'
+import { Button } from '../ui/button'
+import { Card } from '../ui/card'
+import { Badge } from '../ui/badge'
 
 interface QuickAction {
   view: NativeView
@@ -101,7 +104,7 @@ const ONBOARDING_STEPS: OnboardingStep[] = [
   },
   {
     title: '一键发布',
-    description: '勾选要发布的账号，开启自动发布即可一键多发',
+    description: '勾选要发布的账号，确认后即可一键多发',
     icon: <SendIcon className="size-4" />,
     view: 'publish-dynamic',
     action: '试一试'
@@ -121,7 +124,7 @@ function OnboardingGuide({
   if (isDismissed) return null
 
   return (
-    <Card className="relative border p-5 shadow-none">
+    <Card className="relative p-5">
       <button
         type="button"
         className="absolute right-3 top-3 rounded-full p-1 text-muted-foreground transition-colors hover:bg-foreground/[0.06] hover:text-foreground"
@@ -129,6 +132,7 @@ function OnboardingGuide({
           localStorage.setItem(ONBOARDING_DISMISSED_KEY, '1')
           setIsDismissed(true)
         }}
+        aria-label="不再显示"
         title="不再显示"
       >
         <XIcon className="size-4" />
@@ -136,7 +140,7 @@ function OnboardingGuide({
       <h2 className="text-sm font-medium">三步上手 MultiPost</h2>
       <div className="mt-4 grid grid-cols-1 gap-3 md:grid-cols-3">
         {ONBOARDING_STEPS.map((step, index) => (
-          <div key={step.title} className="flex flex-col gap-2 rounded-xl bg-foreground/[0.03] p-4">
+          <div key={step.title} className="flex flex-col gap-2 rounded-lg bg-foreground/[0.03] p-4">
             <div className="flex items-center gap-2">
               <span className="flex size-7 items-center justify-center rounded-full bg-foreground/[0.05] text-xs font-medium">
                 {index + 1}
@@ -151,12 +155,12 @@ function OnboardingGuide({
             </p>
             <Button
               size="sm"
-              variant="bordered"
+              variant="outline"
               className="self-start"
-              endContent={<ArrowRightIcon className="size-4" />}
-              onPress={() => onNavigate(step.view)}
+              onClick={() => onNavigate(step.view)}
             >
               {step.action}
+              <ArrowRightIcon />
             </Button>
           </div>
         ))}
@@ -192,6 +196,7 @@ export function HomeView(): React.ReactElement {
   }, [])
 
   const loggedInCount = accounts.filter((account) => account.isLoggedIn).length
+  const offlineCount = accounts.length - loggedInCount
 
   return (
     <motion.div
@@ -224,9 +229,9 @@ export function HomeView(): React.ReactElement {
             onClick={() => navigate(action.view)}
             whileHover={{ y: -2 }}
             whileTap={{ scale: 0.98 }}
-            className="group flex flex-col gap-3 rounded-2xl border bg-background p-4 text-left transition-shadow hover:shadow-sm"
+            className="group flex flex-col gap-3 rounded-lg border bg-background p-4 text-left transition-colors hover:bg-foreground/[0.02]"
           >
-            <span className="flex size-10 items-center justify-center rounded-xl bg-foreground/[0.05] text-foreground transition-colors group-hover:bg-foreground group-hover:text-background">
+            <span className="flex size-10 items-center justify-center rounded-lg bg-foreground/[0.05] text-foreground transition-colors group-hover:bg-foreground group-hover:text-background">
               {action.icon}
             </span>
             <span>
@@ -239,8 +244,8 @@ export function HomeView(): React.ReactElement {
 
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
         {/* Accounts overview */}
-        <motion.div variants={listItem}>
-          <Card className="h-full border p-5 shadow-none">
+        <motion.div variants={listItem} className="h-full">
+          <Card className="flex h-full flex-col p-5">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <UsersIcon className="size-4 text-muted-foreground" />
@@ -248,24 +253,20 @@ export function HomeView(): React.ReactElement {
               </div>
               <Button
                 size="sm"
-                variant="light"
+                variant="ghost"
                 className="text-muted-foreground"
-                endContent={<ArrowRightIcon className="size-4" />}
-                onPress={() => navigate('accounts')}
+                onClick={() => navigate('accounts')}
               >
                 管理
+                <ArrowRightIcon />
               </Button>
             </div>
 
             {accounts.length === 0 ? (
               <div className="flex flex-1 flex-col items-center justify-center gap-3 py-8 text-center">
                 <p className="text-sm text-muted-foreground">还没有添加账号</p>
-                <Button
-                  size="sm"
-                  variant="bordered"
-                  startContent={<PlusIcon className="size-4" />}
-                  onPress={() => navigate('accounts')}
-                >
+                <Button size="sm" variant="outline" onClick={() => navigate('accounts')}>
+                  <PlusIcon />
                   添加账号
                 </Button>
               </div>
@@ -276,8 +277,13 @@ export function HomeView(): React.ReactElement {
                     {accounts.slice(0, 8).map((account) => (
                       <span
                         key={account.id}
-                        title={account.displayName || account.username}
-                        className="rounded-full border-2 border-background"
+                        title={
+                          (account.displayName || account.username || '') +
+                          (account.isLoggedIn ? '' : '（需要重新登录）')
+                        }
+                        className={`rounded-full border-2 border-background ${
+                          account.isLoggedIn ? '' : 'grayscale'
+                        }`}
                       >
                         <AccountAvatar
                           avatar={account.avatar}
@@ -295,14 +301,24 @@ export function HomeView(): React.ReactElement {
                 <p className="text-xs text-muted-foreground">
                   共 {accounts.length} 个账号，{loggedInCount} 个在线
                 </p>
+                {offlineCount > 0 && (
+                  <button
+                    type="button"
+                    className="inline-flex items-center gap-1 self-start text-xs text-destructive hover:underline"
+                    onClick={() => navigate('accounts')}
+                  >
+                    {offlineCount} 个账号需要重新登录
+                    <ArrowRightIcon className="size-3" />
+                  </button>
+                )}
               </div>
             )}
           </Card>
         </motion.div>
 
         {/* Recent history */}
-        <motion.div variants={listItem}>
-          <Card className="h-full border p-5 shadow-none">
+        <motion.div variants={listItem} className="h-full">
+          <Card className="flex h-full flex-col p-5">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <ClockIcon className="size-4 text-muted-foreground" />
@@ -310,12 +326,12 @@ export function HomeView(): React.ReactElement {
               </div>
               <Button
                 size="sm"
-                variant="light"
+                variant="ghost"
                 className="text-muted-foreground"
-                endContent={<ArrowRightIcon className="size-4" />}
-                onPress={() => navigate('history')}
+                onClick={() => navigate('history')}
               >
                 全部
+                <ArrowRightIcon />
               </Button>
             </div>
 
@@ -332,13 +348,15 @@ export function HomeView(): React.ReactElement {
                   >
                     {item.status === 'success' ? (
                       <CheckCircle2Icon className="size-4 shrink-0 text-foreground" />
+                    ) : item.status === 'failed' ? (
+                      <XCircleIcon className="size-4 shrink-0 text-destructive" />
                     ) : (
-                      <XCircleIcon className="size-4 shrink-0 text-muted-foreground" />
+                      <CircleIcon className="size-4 shrink-0 text-muted-foreground" />
                     )}
                     <span className="min-w-0 flex-1 truncate">{item.title || '无标题'}</span>
-                    <Chip size="sm" variant="flat" className="h-5 shrink-0 px-1 text-[11px]">
+                    <Badge variant="outline" size="sm" className="shrink-0">
                       {PLATFORMS[item.platform]?.name || item.platform}
-                    </Chip>
+                    </Badge>
                     <span className="shrink-0 text-xs text-muted-foreground">
                       {formatHistoryTime(item.createdAt)}
                     </span>

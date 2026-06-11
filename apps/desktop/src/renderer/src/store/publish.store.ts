@@ -1,5 +1,5 @@
 import { create } from 'zustand'
-import { addToast } from '@heroui/react'
+import { toast } from '../components/ui/sonner'
 import type {
   GroupTab,
   PlatformType,
@@ -40,6 +40,8 @@ interface PublishState {
   startPublish: (params: StartPublishParams) => Promise<boolean>
   skipTarget: (accountId: string) => Promise<void>
   retryTarget: (accountId: string) => Promise<void>
+  /** Submits every filled-and-waiting target of the active group（手动确认模式的「全部发布」）. */
+  submitAllReady: () => Promise<void>
   clearProgress: () => void
 }
 
@@ -78,7 +80,9 @@ export const usePublishStore = create<PublishState>((set, get) => ({
         }))
 
       if (targets.length === 0 && (selectedOtherPlatforms?.size ?? 0) === 0) {
-        addToast({ title: '请选择账号', description: '至少选择一个发布目标', hideIcon: true })
+        toast('还没选择发布目标', {
+          description: '勾选至少一个账号或平台后再发布。'
+        })
         return false
       }
 
@@ -109,7 +113,10 @@ export const usePublishStore = create<PublishState>((set, get) => ({
       return true
     } catch (error) {
       console.error('Failed to start publish:', error)
-      addToast({ title: '发布失败', description: '无法创建发布任务，请重试', hideIcon: true })
+      const reason = error instanceof Error ? error.message : ''
+      toast.error('发布任务没能创建', {
+        description: `${reason ? `${reason}。` : ''}请再点一次发布；若反复失败，重启应用后重试。`
+      })
       return false
     } finally {
       set({ isStarting: false })
@@ -134,7 +141,22 @@ export const usePublishStore = create<PublishState>((set, get) => ({
       await window.api.publishGroup.retryTarget(activeGroupId, accountId)
     } catch (error) {
       console.error('Failed to retry publish target:', error)
-      addToast({ title: '重试失败', description: '无法重新执行该账号的发布', hideIcon: true })
+      toast.error('重试没能开始', {
+        description: '该账号的发布未能重新执行，稍等片刻再点一次重试。'
+      })
+    }
+  },
+
+  submitAllReady: async () => {
+    const { activeGroupId } = get()
+    if (!activeGroupId) return
+    try {
+      await window.api.publishGroup.submitAll(activeGroupId)
+    } catch (error) {
+      console.error('Failed to submit all ready targets:', error)
+      toast.error('发布指令没发出去', {
+        description: '已填充的内容仍保留在各平台页面，稍后再点一次「全部发布」。'
+      })
     }
   },
 
