@@ -271,6 +271,7 @@ export interface Draft {
   content: string
   htmlContent?: string
   images?: string[]
+  videos?: string[]
   video?: string
   cover?: string
   tags?: string[]

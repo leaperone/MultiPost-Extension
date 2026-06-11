@@ -1,15 +1,23 @@
-import { useState, useCallback, useRef, useEffect } from 'react'
+import { useState, useCallback, useEffect } from 'react'
 import { Button, Card, Input, Textarea, Spinner, addToast } from '@heroui/react'
-import { Upload, X, Video, Image, Save } from 'lucide-react'
+import { Upload, X, Video, Save } from 'lucide-react'
 import type { PlatformType, VideoData, SyncContentData, FileData, Draft } from '../../../../shared/types'
 import {
   AccountSelector,
   useAccountSelection,
   AutoSubmitToggle,
   PublishProgressCard,
+  TagInput,
+  CoverUpload,
+  fileDataFromDrop,
+  fileDataFromPath,
   formatFileSize,
   type AccountPublishState
 } from './shared'
+
+const VIDEO_FILE_FILTERS = [
+  { name: '视频', extensions: ['mp4', 'mov', 'avi', 'mkv', 'webm', 'flv', 'm4v'] }
+]
 
 interface VideoPublishPageProps {
   onStartPublish: (
@@ -43,16 +51,15 @@ export function VideoPublishPage({
 }: VideoPublishPageProps): React.ReactElement {
   const [title, setTitle] = useState('')
   const [description, setDescription] = useState('')
-  const [tags, setTags] = useState('')
+  const [tags, setTags] = useState<string[]>([])
   const [videoFile, setVideoFile] = useState<FileData | null>(null)
   const [coverFile, setCoverFile] = useState<FileData | null>(null)
+  const [horizontalCover, setHorizontalCover] = useState<FileData | null>(null)
+  const [verticalCover, setVerticalCover] = useState<FileData | null>(null)
   const [isDraggingVideo, setIsDraggingVideo] = useState(false)
   const [autoSubmit, setAutoSubmit] = useState(false)
   const [isSavingDraft, setIsSavingDraft] = useState(false)
   const [currentDraftId, setCurrentDraftId] = useState<string | null>(null)
-
-  const videoInputRef = useRef<HTMLInputElement>(null)
-  const coverInputRef = useRef<HTMLInputElement>(null)
 
   // Use account selection hook
   const {
@@ -63,119 +70,60 @@ export function VideoPublishPage({
     handleOtherPlatformToggle
   } = useAccountSelection('VIDEO')
 
-  // Load initial draft data
+  // Load initial draft data; media files are restored from their saved paths
   useEffect(() => {
-    if (initialDraft) {
-      setTitle(initialDraft.title || '')
-      setDescription(initialDraft.content || '')
-      setTags(initialDraft.tags?.join(', ') || '')
-      setCurrentDraftId(initialDraft.id)
+    if (!initialDraft) return
+    setTitle(initialDraft.title || '')
+    setDescription(initialDraft.content || '')
+    setTags(initialDraft.tags || [])
+    setCurrentDraftId(initialDraft.id)
+
+    let cancelled = false
+    const restoreMedia = async (): Promise<void> => {
+      if (initialDraft.video) {
+        const fileData = await fileDataFromPath(initialDraft.video)
+        if (fileData && !cancelled) setVideoFile(fileData)
+      }
+      if (initialDraft.cover) {
+        const fileData = await fileDataFromPath(initialDraft.cover)
+        if (fileData && !cancelled) setCoverFile(fileData)
+      }
+    }
+    void restoreMedia()
+    return () => {
+      cancelled = true
     }
   }, [initialDraft])
 
-  // Video file handling
-  const handleVideoFileSelect = useCallback(
-    (file: File) => {
-      if (!file.type.startsWith('video/')) {
-        console.error('Not a video file')
-        return
-      }
-      const fileData: FileData = {
-        name: file.name,
-        url: URL.createObjectURL(file),
-        type: file.type,
-        size: file.size
-      }
-      if (videoFile?.url) {
-        URL.revokeObjectURL(videoFile.url)
-      }
-      setVideoFile(fileData)
-    },
-    [videoFile]
-  )
-
-  const handleVideoInputChange = useCallback(
-    (e: React.ChangeEvent<HTMLInputElement>) => {
-      const file = e.target.files?.[0]
-      if (file) {
-        handleVideoFileSelect(file)
-      }
-    },
-    [handleVideoFileSelect]
-  )
+  // Video file handling — always resolved to a local path
+  const handlePickVideo = useCallback(async () => {
+    if (isPublishing) return
+    const [filePath] = await window.api.app.selectFile({ filters: VIDEO_FILE_FILTERS })
+    if (!filePath) return
+    const fileData = await fileDataFromPath(filePath)
+    if (fileData) setVideoFile(fileData)
+  }, [isPublishing])
 
   const handleVideoDrop = useCallback(
-    (e: React.DragEvent) => {
+    async (e: React.DragEvent) => {
       e.preventDefault()
       setIsDraggingVideo(false)
+      if (isPublishing) return
       const file = e.dataTransfer.files[0]
-      if (file) {
-        handleVideoFileSelect(file)
+      if (!file) return
+      const fileData = await fileDataFromDrop(file)
+      if (fileData) {
+        setVideoFile(fileData)
+      } else {
+        addToast({
+          title: '无法读取文件',
+          description: '请点击上传区域选择本地视频文件',
+          hideIcon: true
+        })
       }
     },
-    [handleVideoFileSelect]
+    [isPublishing]
   )
-
-  const handleVideoDragOver = useCallback((e: React.DragEvent) => {
-    e.preventDefault()
-    setIsDraggingVideo(true)
-  }, [])
-
-  const handleVideoDragLeave = useCallback((e: React.DragEvent) => {
-    e.preventDefault()
-    setIsDraggingVideo(false)
-  }, [])
-
-  const handleRemoveVideo = useCallback(() => {
-    if (videoFile?.url) {
-      URL.revokeObjectURL(videoFile.url)
-    }
-    setVideoFile(null)
-    if (videoInputRef.current) {
-      videoInputRef.current.value = ''
-    }
-  }, [videoFile])
-
-  // Cover image handling
-  const handleCoverSelect = useCallback(
-    (file: File) => {
-      if (!file.type.startsWith('image/')) {
-        console.error('Not an image file')
-        return
-      }
-      const fileData: FileData = {
-        name: file.name,
-        url: URL.createObjectURL(file),
-        type: file.type,
-        size: file.size
-      }
-      if (coverFile?.url) {
-        URL.revokeObjectURL(coverFile.url)
-      }
-      setCoverFile(fileData)
-    },
-    [coverFile]
-  )
-
-  const handleCoverInputChange = useCallback(
-    (e: React.ChangeEvent<HTMLInputElement>) => {
-      const file = e.target.files?.[0]
-      if (file) {
-        handleCoverSelect(file)
-      }
-    },
-    [handleCoverSelect]
-  )
-
-  const handleRemoveCover = useCallback(() => {
-    if (coverFile?.url) {
-      URL.revokeObjectURL(coverFile.url)
-    }
-    setCoverFile(null)
-    if (coverInputRef.current) {
-      coverInputRef.current.value = ''
-    }
-  }, [coverFile])
 
   const handlePublish = useCallback(() => {
     if (selectedPlatforms.size === 0 || !title.trim() || !videoFile) return
@@ -185,10 +133,9 @@ export function VideoPublishPage({
       content: description.trim(),
       video: videoFile,
       cover: coverFile || undefined,
-      tags: tags
-        .split(/[,，]/)
-        .map((t) => t.trim())
-        .filter(Boolean)
+      horizontalCover: horizontalCover || undefined,
+      verticalCover: verticalCover || undefined,
+      tags
     }
 
     onStartPublish(
@@ -199,7 +146,7 @@ export function VideoPublishPage({
       selectedAccountIds,
       selectedOtherPlatforms
     )
-  }, [selectedAccountIds, selectedOtherPlatforms, selectedPlatforms, title, description, videoFile, coverFile, tags, autoSubmit, onStartPublish])
+  }, [selectedAccountIds, selectedOtherPlatforms, selectedPlatforms, title, description, videoFile, coverFile, horizontalCover, verticalCover, tags, autoSubmit, onStartPublish])
 
   const handleSaveDraft = useCallback(async () => {
     if (!title.trim()) {
@@ -217,10 +164,9 @@ export function VideoPublishPage({
         title: title.trim(),
         contentType: 'VIDEO' as const,
         content: description.trim(),
-        tags: tags
-          .split(/[,，]/)
-          .map((t) => t.trim())
-          .filter(Boolean),
+        tags,
+        video: videoFile?.path,
+        cover: coverFile?.path,
         selectedPlatforms: Array.from(selectedPlatforms)
       }
 
@@ -233,7 +179,7 @@ export function VideoPublishPage({
 
       addToast({
         title: '保存成功',
-        description: '草稿已保存（视频文件需重新选择）',
+        description: '草稿已保存',
         hideIcon: true
       })
       onDraftSaved?.()
@@ -247,7 +193,7 @@ export function VideoPublishPage({
     } finally {
       setIsSavingDraft(false)
     }
-  }, [title, description, tags, selectedPlatforms, currentDraftId, onDraftSaved])
+  }, [title, description, tags, videoFile, coverFile, selectedPlatforms, currentDraftId, onDraftSaved])
 
   const isContentValid = title.trim().length > 0 && videoFile !== null
   const hasSelectedTargets = selectedAccountIds.size > 0 || selectedOtherPlatforms.size > 0
@@ -262,20 +208,18 @@ export function VideoPublishPage({
         {/* Video Upload Area */}
         <div className="mb-5">
           <label className="block mb-2 text-sm font-medium">视频文件</label>
-          <input
-            ref={videoInputRef}
-            type="file"
-            accept="video/*"
-            onChange={handleVideoInputChange}
-            className="hidden"
-            disabled={isPublishing}
-          />
           {!videoFile ? (
             <div
-              onClick={() => !isPublishing && videoInputRef.current?.click()}
+              onClick={handlePickVideo}
               onDrop={handleVideoDrop}
-              onDragOver={handleVideoDragOver}
-              onDragLeave={handleVideoDragLeave}
+              onDragOver={(e) => {
+                e.preventDefault()
+                setIsDraggingVideo(true)
+              }}
+              onDragLeave={(e) => {
+                e.preventDefault()
+                setIsDraggingVideo(false)
+              }}
               className={`flex flex-col items-center justify-center p-8 border-2 border-dashed rounded-lg cursor-pointer transition-colors ${
                 isDraggingVideo
                   ? 'border-primary bg-primary/5'
@@ -303,7 +247,7 @@ export function VideoPublishPage({
                   variant="ghost"
                   size="sm"
                   isIconOnly
-                  onPress={handleRemoveVideo}
+                  onPress={() => setVideoFile(null)}
                   isDisabled={isPublishing}
                   className="flex-shrink-0"
                 >
@@ -316,44 +260,34 @@ export function VideoPublishPage({
 
         {/* Cover Image Upload */}
         <div className="mb-5">
-          <label className="block mb-2 text-sm font-medium">
-            封面图片 <span className="text-muted-foreground font-normal">（可选）</span>
-          </label>
-          <input
-            ref={coverInputRef}
-            type="file"
-            accept="image/*"
-            onChange={handleCoverInputChange}
-            className="hidden"
-            disabled={isPublishing}
+          <CoverUpload
+            label="封面图片"
+            hint="（可选）"
+            file={coverFile}
+            onSelect={setCoverFile}
+            onRemove={() => setCoverFile(null)}
+            isDisabled={isPublishing}
           />
-          {!coverFile ? (
-            <div
-              onClick={() => !isPublishing && coverInputRef.current?.click()}
-              className={`flex items-center justify-center gap-2 p-4 border-2 border-dashed rounded-lg cursor-pointer transition-colors border-default-300 hover:border-primary/50 ${isPublishing ? 'opacity-60 cursor-not-allowed' : ''}`}
-            >
-              <Image className="size-5 text-muted-foreground" />
-              <span className="text-sm text-muted-foreground">点击上传封面图片</span>
-            </div>
-          ) : (
-            <div className="relative inline-block">
-              <img
-                src={coverFile.url}
-                alt="Cover"
-                className="h-24 w-auto rounded-lg object-cover"
-              />
-              <Button
-                variant="solid"
-                size="sm"
-                isIconOnly
-                onPress={handleRemoveCover}
-                isDisabled={isPublishing}
-                className="absolute -top-2 -right-2 size-6 min-w-0 rounded-full bg-danger"
-              >
-                <X className="size-3" />
-              </Button>
-            </div>
-          )}
+        </div>
+
+        {/* Per-orientation covers; only some platforms (e.g. 大鱼号) consume them */}
+        <div className="mb-5 grid grid-cols-1 gap-4 md:grid-cols-2">
+          <CoverUpload
+            label="横版封面"
+            hint="（可选，部分平台使用）"
+            file={horizontalCover}
+            onSelect={setHorizontalCover}
+            onRemove={() => setHorizontalCover(null)}
+            isDisabled={isPublishing}
+          />
+          <CoverUpload
+            label="竖版封面"
+            hint="（可选，部分平台使用）"
+            file={verticalCover}
+            onSelect={setVerticalCover}
+            onRemove={() => setVerticalCover(null)}
+            isDisabled={isPublishing}
+          />
         </div>
 
         <div className="mb-5">
@@ -378,13 +312,7 @@ export function VideoPublishPage({
         </div>
 
         <div className="mb-5">
-          <Input
-            label="标签（用逗号分隔）"
-            placeholder="标签1, 标签2, 标签3"
-            value={tags}
-            onValueChange={setTags}
-            isDisabled={isPublishing}
-          />
+          <TagInput value={tags} onChange={setTags} isDisabled={isPublishing} />
         </div>
 
         <AccountSelector

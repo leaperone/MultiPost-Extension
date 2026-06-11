@@ -20,6 +20,9 @@ import {
   useAccountSelection,
   AutoSubmitToggle,
   PublishProgressCard,
+  TagInput,
+  CoverUpload,
+  fileDataFromPath,
   type AccountPublishState
 } from './shared'
 
@@ -90,6 +93,8 @@ export function ArticlePublishPage({
   const [title, setTitle] = useState('')
   const [digest, setDigest] = useState('')
   const [content, setContent] = useState('')
+  const [tags, setTags] = useState<string[]>([])
+  const [coverFile, setCoverFile] = useState<FileData | null>(null)
   const [mode, setMode] = useState<EditorMode>('split')
   const [autoSubmit, setAutoSubmit] = useState(false)
   const [isSavingDraft, setIsSavingDraft] = useState(false)
@@ -107,10 +112,21 @@ export function ArticlePublishPage({
 
   // Load initial draft data (content holds the markdown source)
   useEffect(() => {
-    if (initialDraft) {
-      setTitle(initialDraft.title || '')
-      setContent(initialDraft.content || '')
-      setCurrentDraftId(initialDraft.id)
+    if (!initialDraft) return
+    setTitle(initialDraft.title || '')
+    setContent(initialDraft.content || '')
+    setTags(initialDraft.tags || [])
+    setCurrentDraftId(initialDraft.id)
+
+    let cancelled = false
+    const restoreCover = async (): Promise<void> => {
+      if (!initialDraft.cover) return
+      const fileData = await fileDataFromPath(initialDraft.cover)
+      if (fileData && !cancelled) setCoverFile(fileData)
+    }
+    void restoreCover()
+    return () => {
+      cancelled = true
     }
   }, [initialDraft])
 
@@ -145,9 +161,10 @@ export function ArticlePublishPage({
     const articleData: ArticleData = {
       title: title.trim(),
       digest: digest.trim(),
-      cover: { name: '', url: '' } as FileData,
+      cover: coverFile || ({ name: '', url: '' } as FileData),
       htmlContent: renderMarkdown(content.trim()),
-      markdownContent: content.trim()
+      markdownContent: content.trim(),
+      tags: tags.length > 0 ? tags : undefined
     }
 
     onStartPublish(
@@ -158,7 +175,7 @@ export function ArticlePublishPage({
       selectedAccountIds,
       selectedOtherPlatforms
     )
-  }, [selectedAccountIds, selectedOtherPlatforms, selectedPlatforms, title, digest, content, autoSubmit, onStartPublish])
+  }, [selectedAccountIds, selectedOtherPlatforms, selectedPlatforms, title, digest, content, tags, coverFile, autoSubmit, onStartPublish])
 
   const handleSaveDraft = useCallback(async () => {
     if (!title.trim() || !content.trim()) {
@@ -177,6 +194,8 @@ export function ArticlePublishPage({
         contentType: 'ARTICLE' as const,
         content: content.trim(),
         htmlContent: renderMarkdown(content.trim()),
+        tags,
+        cover: coverFile?.path,
         selectedPlatforms: Array.from(selectedPlatforms)
       }
 
@@ -203,7 +222,7 @@ export function ArticlePublishPage({
     } finally {
       setIsSavingDraft(false)
     }
-  }, [title, content, selectedPlatforms, currentDraftId, onDraftSaved])
+  }, [title, content, tags, coverFile, selectedPlatforms, currentDraftId, onDraftSaved])
 
   const isContentValid = title.trim().length > 0 && content.trim().length > 0
   const hasSelectedTargets = selectedAccountIds.size > 0 || selectedOtherPlatforms.size > 0
@@ -303,6 +322,21 @@ export function ArticlePublishPage({
           <div className="flex items-center justify-end border-t bg-foreground/[0.02] px-3 py-1 text-xs text-foreground/40">
             {content.length} 字符
           </div>
+        </div>
+
+        <div className="mb-5">
+          <CoverUpload
+            label="封面图片"
+            hint="（可选，部分平台使用）"
+            file={coverFile}
+            onSelect={setCoverFile}
+            onRemove={() => setCoverFile(null)}
+            isDisabled={isPublishing}
+          />
+        </div>
+
+        <div className="mb-5">
+          <TagInput value={tags} onChange={setTags} isDisabled={isPublishing} />
         </div>
 
         <AccountSelector

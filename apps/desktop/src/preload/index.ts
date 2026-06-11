@@ -218,7 +218,11 @@ const api = {
     }): Promise<string[]> => ipcRenderer.invoke(IPC_CHANNELS.APP_SELECT_FILE, options),
     // Resolve the filesystem path of a dropped File (drag & drop uploads);
     // blob URLs are useless across BrowserViews, the fill scripts need paths.
-    getPathForFile: (file: File): string => webUtils.getPathForFile(file)
+    getPathForFile: (file: File): string => webUtils.getPathForFile(file),
+    // Persist a clipboard bitmap (screenshot paste) to a temp PNG; returns its
+    // path, or null when the clipboard holds no image.
+    saveClipboardImage: (): Promise<string | null> =>
+      ipcRenderer.invoke(IPC_CHANNELS.APP_SAVE_CLIPBOARD_IMAGE)
   },
 
   // Layout

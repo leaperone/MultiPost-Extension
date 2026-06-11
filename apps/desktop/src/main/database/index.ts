@@ -55,35 +55,50 @@ export class DatabaseService {
   private runMigrations(): void {
     if (!this.db) throw new Error('Database not initialized')
 
-    // Check if accounts table exists
+    this.migrateAccountsTable()
+    this.migrateDraftsTable()
+  }
+
+  private tableColumns(table: string): string[] | null {
+    if (!this.db) throw new Error('Database not initialized')
+
     const tableExists = this.db
-      .prepare("SELECT name FROM sqlite_master WHERE type='table' AND name='accounts'")
-      .get()
+      .prepare("SELECT name FROM sqlite_master WHERE type='table' AND name=?")
+      .get(table)
+    if (!tableExists) return null
 
-    if (!tableExists) {
-      // No existing accounts table, skip migrations
-      return
-    }
+    const columns = this.db.prepare(`PRAGMA table_info(${table})`).all() as { name: string }[]
+    return columns.map((c) => c.name)
+  }
 
-    // Get existing columns in accounts table
-    const columns = this.db.prepare('PRAGMA table_info(accounts)').all() as { name: string }[]
-    const columnNames = columns.map((c) => c.name)
+  private migrateAccountsTable(): void {
+    const columnNames = this.tableColumns('accounts')
+    if (!columnNames) return
 
     // Add missing columns to accounts table
     if (!columnNames.includes('group_id')) {
-      this.db.exec('ALTER TABLE accounts ADD COLUMN group_id TEXT')
+      this.db!.exec('ALTER TABLE accounts ADD COLUMN group_id TEXT')
     }
     if (!columnNames.includes('session_partition')) {
-      this.db.exec("ALTER TABLE accounts ADD COLUMN session_partition TEXT DEFAULT ''")
+      this.db!.exec("ALTER TABLE accounts ADD COLUMN session_partition TEXT DEFAULT ''")
     }
     if (!columnNames.includes('is_default')) {
-      this.db.exec('ALTER TABLE accounts ADD COLUMN is_default INTEGER DEFAULT 0')
+      this.db!.exec('ALTER TABLE accounts ADD COLUMN is_default INTEGER DEFAULT 0')
     }
     if (!columnNames.includes('proxy_config')) {
-      this.db.exec('ALTER TABLE accounts ADD COLUMN proxy_config TEXT')
+      this.db!.exec('ALTER TABLE accounts ADD COLUMN proxy_config TEXT')
     }
     if (!columnNames.includes('remark')) {
-      this.db.exec('ALTER TABLE accounts ADD COLUMN remark TEXT')
+      this.db!.exec('ALTER TABLE accounts ADD COLUMN remark TEXT')
+    }
+  }
+
+  private migrateDraftsTable(): void {
+    const columnNames = this.tableColumns('drafts')
+    if (!columnNames) return
+
+    if (!columnNames.includes('videos')) {
+      this.db!.exec('ALTER TABLE drafts ADD COLUMN videos TEXT')
     }
   }
 
@@ -132,6 +147,7 @@ export class DatabaseService {
         content TEXT NOT NULL,
         html_content TEXT,
         images TEXT,
+        videos TEXT,
         video TEXT,
         cover TEXT,
         tags TEXT,
@@ -489,8 +505,8 @@ export class DatabaseService {
     if (!this.db) throw new Error('Database not initialized')
 
     const stmt = this.db.prepare(`
-      INSERT INTO drafts (id, title, content_type, content, html_content, images, video, cover, tags, selected_platforms, created_at, updated_at)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      INSERT INTO drafts (id, title, content_type, content, html_content, images, videos, video, cover, tags, selected_platforms, created_at, updated_at)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `)
 
     stmt.run(
@@ -500,6 +516,7 @@ export class DatabaseService {
       draft.content,
       draft.htmlContent || null,
       draft.images ? JSON.stringify(draft.images) : null,
+      draft.videos ? JSON.stringify(draft.videos) : null,
       draft.video || null,
       draft.cover || null,
       draft.tags ? JSON.stringify(draft.tags) : null,
@@ -552,6 +569,7 @@ export class DatabaseService {
         content = ?,
         html_content = ?,
         images = ?,
+        videos = ?,
         video = ?,
         cover = ?,
         tags = ?,
@@ -566,6 +584,7 @@ export class DatabaseService {
       updated.content,
       updated.htmlContent || null,
       updated.images ? JSON.stringify(updated.images) : null,
+      updated.videos ? JSON.stringify(updated.videos) : null,
       updated.video || null,
       updated.cover || null,
       updated.tags ? JSON.stringify(updated.tags) : null,
@@ -837,6 +856,7 @@ export class DatabaseService {
       content: row.content,
       htmlContent: row.html_content || undefined,
       images: row.images ? JSON.parse(row.images) : undefined,
+      videos: row.videos ? JSON.parse(row.videos) : undefined,
       video: row.video || undefined,
       cover: row.cover || undefined,
       tags: row.tags ? JSON.parse(row.tags) : undefined,
@@ -938,6 +958,7 @@ interface DraftRow {
   content: string
   html_content: string | null
   images: string | null
+  videos: string | null
   video: string | null
   cover: string | null
   tags: string | null

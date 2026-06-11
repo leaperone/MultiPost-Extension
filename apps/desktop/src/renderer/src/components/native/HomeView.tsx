@@ -9,9 +9,12 @@ import {
   MessageCircleHeartIcon,
   PlusIcon,
   PodcastIcon,
+  SendIcon,
+  UserPlusIcon,
   UsersIcon,
   VideoIcon,
-  XCircleIcon
+  XCircleIcon,
+  XIcon
 } from 'lucide-react'
 
 import type { PublishHistory } from '@shared/types'
@@ -71,6 +74,97 @@ function formatHistoryTime(timestamp: number): string {
   return new Date(timestamp).toLocaleDateString('zh-CN')
 }
 
+const ONBOARDING_DISMISSED_KEY = 'multipost.onboardingDismissed'
+
+interface OnboardingStep {
+  title: string
+  description: string
+  icon: React.ReactNode
+  view: NativeView
+  action: string
+}
+
+const ONBOARDING_STEPS: OnboardingStep[] = [
+  {
+    title: '添加账号',
+    description: '在账号页登录各平台账号，登录状态会自动保持',
+    icon: <UserPlusIcon className="size-4" />,
+    view: 'accounts',
+    action: '去添加'
+  },
+  {
+    title: '创作内容',
+    description: '选择动态/视频/文章/播客，支持拖拽、粘贴上传素材',
+    icon: <MessageCircleHeartIcon className="size-4" />,
+    view: 'publish-dynamic',
+    action: '去创作'
+  },
+  {
+    title: '一键发布',
+    description: '勾选要发布的账号，开启自动发布即可一键多发',
+    icon: <SendIcon className="size-4" />,
+    view: 'publish-dynamic',
+    action: '试一试'
+  }
+]
+
+// First-use guide: visible until the user adds an account or dismisses it.
+function OnboardingGuide({
+  onNavigate
+}: {
+  onNavigate: (view: NativeView) => void
+}): React.ReactElement | null {
+  const [isDismissed, setIsDismissed] = useState(
+    () => localStorage.getItem(ONBOARDING_DISMISSED_KEY) === '1'
+  )
+
+  if (isDismissed) return null
+
+  return (
+    <Card className="relative border p-5 shadow-none">
+      <button
+        type="button"
+        className="absolute right-3 top-3 rounded-full p-1 text-muted-foreground transition-colors hover:bg-foreground/[0.06] hover:text-foreground"
+        onClick={() => {
+          localStorage.setItem(ONBOARDING_DISMISSED_KEY, '1')
+          setIsDismissed(true)
+        }}
+        title="不再显示"
+      >
+        <XIcon className="size-4" />
+      </button>
+      <h2 className="text-sm font-medium">三步上手 MultiPost</h2>
+      <div className="mt-4 grid grid-cols-1 gap-3 md:grid-cols-3">
+        {ONBOARDING_STEPS.map((step, index) => (
+          <div key={step.title} className="flex flex-col gap-2 rounded-xl border p-4">
+            <div className="flex items-center gap-2">
+              <span className="flex size-7 items-center justify-center rounded-full bg-foreground/[0.05] text-xs font-medium">
+                {index + 1}
+              </span>
+              <span className="flex items-center gap-1.5 text-sm font-medium">
+                {step.icon}
+                {step.title}
+              </span>
+            </div>
+            <p className="flex-1 text-xs leading-relaxed text-muted-foreground">
+              {step.description}
+            </p>
+            <Button
+              size="sm"
+              variant="bordered"
+              className="self-start"
+              endContent={<ArrowRightIcon className="size-4" />}
+              onPress={() => onNavigate(step.view)}
+            >
+              {step.action}
+            </Button>
+          </div>
+        ))}
+      </div>
+    </Card>
+  )
+}
+
 function greetingByHour(): string {
   const hour = new Date().getHours()
   if (hour < 6) return '夜深了'
@@ -114,6 +208,11 @@ export function HomeView(): React.ReactElement {
             把内容一键发布到所有平台，今天想发点什么？
           </p>
         </div>
+      </motion.div>
+
+      {/* First-use onboarding */}
+      <motion.div variants={listItem}>
+        <OnboardingGuide onNavigate={navigate} />
       </motion.div>
 
       {/* Quick actions */}

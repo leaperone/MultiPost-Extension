@@ -1,4 +1,4 @@
-import { Button, Card, Checkbox, Chip } from '@heroui/react'
+import { Button, Card, Checkbox, Chip, Input } from '@heroui/react'
 import {
   CheckCircle,
   XCircle,
@@ -8,10 +8,13 @@ import {
   StopCircle,
   ChevronDown,
   ChevronUp,
-  AlertCircle
+  AlertCircle,
+  Plus,
+  Image as ImageIcon,
+  X
 } from 'lucide-react'
 import { useState, useEffect, useMemo, useCallback } from 'react'
-import type { Account, PlatformType, SyncContentType } from '../../../../shared/types'
+import type { Account, FileData, PlatformType, SyncContentType } from '../../../../shared/types'
 import {
   getPlatformPublishTarget,
   getPlatformPublishTargetsByContentType,
@@ -192,6 +195,187 @@ export const PLATFORM_CATEGORIES: PlatformCategory[] = [
     ]
   }
 ]
+
+// Chip-style tag input, mirroring the web app's HeroTagInput interaction:
+// Enter or comma confirms a tag, Backspace on empty input removes the last one.
+interface TagInputProps {
+  value: string[]
+  onChange: (value: string[]) => void
+  label?: string
+  placeholder?: string
+  isDisabled?: boolean
+}
+
+export function TagInput({
+  value,
+  onChange,
+  label = '标签',
+  placeholder = '输入标签，回车或逗号确认',
+  isDisabled = false
+}: TagInputProps): React.ReactElement {
+  const [inputValue, setInputValue] = useState('')
+
+  const addTag = useCallback(() => {
+    const newTag = inputValue.trim()
+    if (newTag && !value.includes(newTag)) {
+      onChange([...value, newTag])
+    }
+    setInputValue('')
+  }, [inputValue, value, onChange])
+
+  const handleKeyDown = useCallback(
+    (e: React.KeyboardEvent<HTMLInputElement>) => {
+      if (e.key === 'Enter' || e.key === ',') {
+        e.preventDefault()
+        addTag()
+      } else if (e.key === 'Backspace' && !inputValue && value.length > 0) {
+        onChange(value.slice(0, -1))
+      }
+    },
+    [addTag, inputValue, value, onChange]
+  )
+
+  return (
+    <div className="flex flex-col gap-2">
+      <div className="flex flex-wrap items-center gap-2">
+        {value.map((tag) => (
+          <Chip
+            key={tag}
+            size="sm"
+            variant="flat"
+            onClose={isDisabled ? undefined : () => onChange(value.filter((t) => t !== tag))}
+          >
+            {tag}
+          </Chip>
+        ))}
+      </div>
+      <div className="flex items-center gap-1">
+        <Input
+          label={label}
+          placeholder={placeholder}
+          value={inputValue}
+          onValueChange={setInputValue}
+          onKeyDown={handleKeyDown}
+          isDisabled={isDisabled}
+        />
+        {inputValue.trim() && (
+          <Button isIconOnly variant="light" size="sm" onPress={addTag} title="添加标签">
+            <Plus className="size-4" />
+          </Button>
+        )}
+      </div>
+    </div>
+  )
+}
+
+/** Resolve a dropped File to FileData via its filesystem path; blob URLs
+ * can't cross into platform BrowserViews, so fill scripts need local-file://. */
+export async function fileDataFromDrop(file: File): Promise<FileData | null> {
+  let filePath = ''
+  try {
+    filePath = window.api.app.getPathForFile(file)
+  } catch {
+    filePath = ''
+  }
+  if (!filePath) return null
+  return fileDataFromPath(filePath)
+}
+
+export async function fileDataFromPath(filePath: string): Promise<FileData | null> {
+  try {
+    return await window.api.app.getFileInfo(filePath)
+  } catch (error) {
+    console.error('Failed to read file info:', error)
+    return null
+  }
+}
+
+export const COVER_FILE_FILTERS = [{ name: '图片', extensions: ['png', 'jpg', 'jpeg', 'webp'] }]
+
+// Optional cover slot with click-to-pick and drag & drop
+interface CoverUploadProps {
+  label: string
+  hint?: string
+  file: FileData | null
+  onSelect: (file: FileData) => void
+  onRemove: () => void
+  isDisabled: boolean
+}
+
+export function CoverUpload({
+  label,
+  hint,
+  file,
+  onSelect,
+  onRemove,
+  isDisabled
+}: CoverUploadProps): React.ReactElement {
+  const [isDragging, setIsDragging] = useState(false)
+
+  const handlePick = useCallback(async () => {
+    if (isDisabled) return
+    const [filePath] = await window.api.app.selectFile({ filters: COVER_FILE_FILTERS })
+    if (!filePath) return
+    const fileData = await fileDataFromPath(filePath)
+    if (fileData) onSelect(fileData)
+  }, [isDisabled, onSelect])
+
+  const handleDrop = useCallback(
+    async (e: React.DragEvent) => {
+      e.preventDefault()
+      setIsDragging(false)
+      if (isDisabled) return
+      const dropped = e.dataTransfer.files[0]
+      if (!dropped) return
+      const fileData = await fileDataFromDrop(dropped)
+      if (fileData) onSelect(fileData)
+    },
+    [isDisabled, onSelect]
+  )
+
+  return (
+    <div className="flex flex-col gap-2">
+      <label className="text-sm font-medium">
+        {label}
+        {hint && <span className="ml-1 font-normal text-muted-foreground">{hint}</span>}
+      </label>
+      {!file ? (
+        <div
+          onClick={handlePick}
+          onDrop={handleDrop}
+          onDragOver={(e) => {
+            e.preventDefault()
+            setIsDragging(true)
+          }}
+          onDragLeave={(e) => {
+            e.preventDefault()
+            setIsDragging(false)
+          }}
+          className={`flex items-center justify-center gap-2 p-4 border-2 border-dashed rounded-lg cursor-pointer transition-colors ${
+            isDragging ? 'border-primary bg-primary/5' : 'border-default-300 hover:border-primary/50'
+          } ${isDisabled ? 'opacity-60 cursor-not-allowed' : ''}`}
+        >
+          <ImageIcon className="size-5 text-muted-foreground" />
+          <span className="text-sm text-muted-foreground">点击或拖拽图片到此处</span>
+        </div>
+      ) : (
+        <div className="relative inline-block self-start">
+          <img src={file.url} alt={label} className="h-24 w-auto rounded-lg object-cover" />
+          <Button
+            variant="solid"
+            size="sm"
+            isIconOnly
+            onPress={onRemove}
+            isDisabled={isDisabled}
+            className="absolute -top-2 -right-2 size-6 min-w-0 rounded-full bg-danger"
+          >
+            <X className="size-3" />
+          </Button>
+        </div>
+      )}
+    </div>
+  )
+}
 
 export function formatFileSize(bytes: number): string {
   if (bytes === 0) return '0 B'

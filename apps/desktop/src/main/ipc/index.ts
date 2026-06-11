@@ -1,4 +1,4 @@
-import { IpcMain, app, dialog } from 'electron'
+import { IpcMain, app, clipboard, dialog } from 'electron'
 import * as fs from 'fs'
 import * as path from 'path'
 import { v4 as uuidv4 } from 'uuid'
@@ -600,6 +600,21 @@ export function registerIpcHandlers(
       return result.filePaths
     }
   )
+
+  // Save clipboard bitmap (e.g. a screenshot) to a temp PNG so paste-to-upload
+  // gets a real filesystem path — fill scripts can only fetch local-file:// URLs.
+  ipcMain.handle(IPC_CHANNELS.APP_SAVE_CLIPBOARD_IMAGE, async () => {
+    const image = clipboard.readImage()
+    if (image.isEmpty()) {
+      return null
+    }
+
+    const dir = path.join(app.getPath('temp'), 'multipost-pasted')
+    await fs.promises.mkdir(dir, { recursive: true })
+    const filePath = path.join(dir, `pasted-${Date.now()}-${uuidv4().slice(0, 8)}.png`)
+    await fs.promises.writeFile(filePath, image.toPNG())
+    return filePath
+  })
 
   // Layout handlers
   ipcMain.handle(IPC_CHANNELS.LAYOUT_SET_SIDEBAR_WIDTH, async (_, width: number) => {

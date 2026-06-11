@@ -7,6 +7,7 @@ import {
   useAccountSelection,
   AutoSubmitToggle,
   PublishProgressCard,
+  TagInput,
   formatFileSize,
   type AccountPublishState
 } from './shared'
@@ -39,14 +40,11 @@ const COVER_FILE_FILTERS = [
 ]
 
 function getDraggedFilePath(file: File): string | null {
-  return (file as File & { path?: string }).path || null
-}
-
-function parseTags(value: string): string[] {
-  return value
-    .split(/[,，]/)
-    .map((tag) => tag.trim())
-    .filter(Boolean)
+  try {
+    return window.api.app.getPathForFile(file) || null
+  } catch {
+    return null
+  }
 }
 
 export function PodcastPublishPage({
@@ -62,7 +60,7 @@ export function PodcastPublishPage({
 }: PodcastPublishPageProps): React.ReactElement {
   const [title, setTitle] = useState('')
   const [description, setDescription] = useState('')
-  const [tags, setTags] = useState('')
+  const [tags, setTags] = useState<string[]>([])
   const [audioFile, setAudioFile] = useState<FileData | null>(null)
   const [coverFile, setCoverFile] = useState<FileData | null>(null)
   const [isDraggingAudio, setIsDraggingAudio] = useState(false)
@@ -82,11 +80,35 @@ export function PodcastPublishPage({
   } = useAccountSelection('PODCAST')
 
   useEffect(() => {
-    if (initialDraft) {
-      setTitle(initialDraft.title || '')
-      setDescription(initialDraft.content || '')
-      setTags(initialDraft.tags?.join(', ') || '')
-      setCurrentDraftId(initialDraft.id)
+    if (!initialDraft) return
+    setTitle(initialDraft.title || '')
+    setDescription(initialDraft.content || '')
+    setTags(initialDraft.tags || [])
+    setCurrentDraftId(initialDraft.id)
+
+    // The draft's `video` column doubles as the podcast audio path.
+    let cancelled = false
+    const restoreMedia = async (): Promise<void> => {
+      if (initialDraft.video) {
+        try {
+          const fileData = await window.api.app.getFileInfo(initialDraft.video)
+          if (!cancelled) setAudioFile(fileData)
+        } catch (error) {
+          console.error('Failed to restore draft audio:', error)
+        }
+      }
+      if (initialDraft.cover) {
+        try {
+          const fileData = await window.api.app.getFileInfo(initialDraft.cover)
+          if (!cancelled) setCoverFile(fileData)
+        } catch (error) {
+          console.error('Failed to restore draft cover:', error)
+        }
+      }
+    }
+    void restoreMedia()
+    return () => {
+      cancelled = true
     }
   }, [initialDraft])
 
@@ -225,7 +247,7 @@ export function PodcastPublishPage({
       description: description.trim(),
       audio: audioFile,
       cover: coverFile || undefined,
-      tags: parseTags(tags)
+      tags
     }
 
     onStartPublish(
@@ -254,7 +276,10 @@ export function PodcastPublishPage({
         title: title.trim(),
         contentType: 'PODCAST' as const,
         content: description.trim(),
-        tags: parseTags(tags),
+        tags,
+        // Reuse the video column for the audio path; drafts are local-only.
+        video: audioFile?.path,
+        cover: coverFile?.path,
         selectedPlatforms: Array.from(selectedPlatforms)
       }
 
@@ -267,7 +292,7 @@ export function PodcastPublishPage({
 
       addToast({
         title: '保存成功',
-        description: '草稿已保存（音频和封面文件需重新选择）',
+        description: '草稿已保存',
         hideIcon: true
       })
       onDraftSaved?.()
@@ -364,10 +389,21 @@ export function PodcastPublishPage({
           {!coverFile ? (
             <div
               onClick={() => !isPublishing && handleSelectCover()}
+              onDrop={async (event) => {
+                event.preventDefault()
+                if (isPublishing) return
+                const file = event.dataTransfer.files[0]
+                if (!file) return
+                const filePath = getDraggedFilePath(file)
+                if (!filePath) return
+                const fileData = await loadFileData(filePath)
+                if (fileData) setCoverFile(fileData)
+              }}
+              onDragOver={(event) => event.preventDefault()}
               className={`flex items-center justify-center gap-2 p-4 border-2 border-dashed rounded-lg cursor-pointer transition-colors border-default-300 hover:border-primary/50 ${isPublishing ? 'opacity-60 cursor-not-allowed' : ''}`}
             >
               <Image className="size-5 text-muted-foreground" />
-              <span className="text-sm text-muted-foreground">点击上传封面图片</span>
+              <span className="text-sm text-muted-foreground">点击或拖拽图片到此处</span>
             </div>
           ) : (
             <div className="relative inline-block">
@@ -412,13 +448,7 @@ export function PodcastPublishPage({
         </div>
 
         <div className="mb-5">
-          <Input
-            label="标签（用逗号分隔）"
-            placeholder="标签1, 标签2, 标签3"
-            value={tags}
-            onValueChange={setTags}
-            isDisabled={isPublishing}
-          />
+          <TagInput value={tags} onChange={setTags} isDisabled={isPublishing} />
         </div>
 
         <AccountSelector

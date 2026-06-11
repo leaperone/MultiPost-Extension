@@ -1197,6 +1197,7 @@ export const IPC_CHANNELS = {
   APP_READ_FILE_AS_DATA_URL: 'app:readFileAsDataURL',
   APP_GET_FILE_INFO: 'app:getFileInfo',
   APP_SELECT_FILE: 'app:selectFile',
+  APP_SAVE_CLIPBOARD_IMAGE: 'app:saveClipboardImage',
 
   // Layout
   LAYOUT_SET_SIDEBAR_WIDTH: 'layout:setSidebarWidth',
