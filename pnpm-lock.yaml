@@ -718,9 +718,6 @@ importers:
       styled-components:
         specifier: 6.1.15
         version: 6.1.15(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
-      swr:
-        specifier: ^2.3.3
-        version: 2.3.3(react@19.2.3)
       tailwind-merge:
         specifier: ^2.6.0
         version: 2.6.0
