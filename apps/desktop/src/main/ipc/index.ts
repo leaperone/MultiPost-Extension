@@ -210,6 +210,13 @@ export function registerIpcHandlers(
     }
   )
 
+  // Re-detect login status + nickname/avatar for one account
+  ipcMain.handle(IPC_CHANNELS.ACCOUNT_REFRESH_INFO, async (_, id: string) => {
+    const manager = getBrowserViewManager()
+    if (!manager) throw new Error('BrowserViewManager not initialized')
+    return manager.refreshAccountInfo(id)
+  })
+
   // Browser handlers
   ipcMain.handle(
     IPC_CHANNELS.BROWSER_OPEN,
@@ -540,6 +547,18 @@ export function registerIpcHandlers(
   // App handlers
   ipcMain.handle(IPC_CHANNELS.APP_GET_VERSION, async () => {
     return app.getVersion()
+  })
+
+  ipcMain.handle(IPC_CHANNELS.APP_GET_AUTO_LAUNCH, async () => {
+    return app.getLoginItemSettings().openAtLogin
+  })
+
+  ipcMain.handle(IPC_CHANNELS.APP_SET_AUTO_LAUNCH, async (_, enabled: unknown) => {
+    if (typeof enabled !== 'boolean') {
+      throw new Error('Invalid argument: enabled must be a boolean')
+    }
+    app.setLoginItemSettings({ openAtLogin: enabled })
+    return app.getLoginItemSettings().openAtLogin
   })
 
   ipcMain.handle(IPC_CHANNELS.APP_GET_PLATFORMS, async () => {

@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react'
-import { Button, Progress } from '@heroui/react'
+import { addToast, Button, Chip, Progress } from '@heroui/react'
 import { Download, RefreshCw, CheckCircle, AlertCircle, Loader2 } from 'lucide-react'
 import type { UpdateStatus, UpdateInfo } from '../../../shared/types'
 
@@ -27,10 +27,19 @@ export function UpdateChecker({ compact = false }: UpdateCheckerProps): React.Re
   }, [])
 
   const handleCheckForUpdates = useCallback(async () => {
+    // Show feedback immediately; the main process pushes the real status next.
+    setStatus({ status: 'checking' })
     try {
       await window.api.updater.checkForUpdates()
     } catch (error) {
       console.error('Failed to check for updates:', error)
+      const message = error instanceof Error ? error.message : String(error)
+      setStatus({ status: 'error', error: message })
+      addToast({
+        title: '检查更新失败',
+        description: message,
+        hideIcon: true
+      })
     }
   }, [])
 
@@ -39,6 +48,11 @@ export function UpdateChecker({ compact = false }: UpdateCheckerProps): React.Re
       await window.api.updater.downloadUpdate()
     } catch (error) {
       console.error('Failed to download update:', error)
+      addToast({
+        title: '下载更新失败',
+        description: error instanceof Error ? error.message : String(error),
+        hideIcon: true
+      })
     }
   }, [])
 
@@ -80,7 +94,7 @@ export function UpdateChecker({ compact = false }: UpdateCheckerProps): React.Re
       case 'error':
         return status.error || '检查更新失败'
       default:
-        return `当前版本 ${appVersion}`
+        return '点击按钮检查是否有新版本'
     }
   }
 
@@ -113,11 +127,18 @@ export function UpdateChecker({ compact = false }: UpdateCheckerProps): React.Re
     }
   }
 
+  const versionChip = appVersion ? (
+    <Chip size="sm" variant="flat" className="font-mono">
+      v{appVersion}
+    </Chip>
+  ) : null
+
   if (compact) {
     return (
       <div className="flex items-center gap-2">
         {renderStatusIcon()}
         <span className="text-sm">{renderStatusText()}</span>
+        {versionChip}
         {renderAction()}
       </div>
     )
@@ -129,6 +150,7 @@ export function UpdateChecker({ compact = false }: UpdateCheckerProps): React.Re
         <div className="flex items-center gap-2">
           {renderStatusIcon()}
           <span className="text-sm">{renderStatusText()}</span>
+          {versionChip}
         </div>
         {renderAction()}
       </div>

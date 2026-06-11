@@ -1,4 +1,4 @@
-import { Settings, Monitor, Bell, Globe, Database, Shield, Sun, Moon, LayoutGrid, Download, Activity } from 'lucide-react'
+import { Settings, Monitor, Database, Sun, Moon, LayoutGrid, Download, Activity } from 'lucide-react'
 import { Switch, Button, Select, SelectItem, addToast } from '@heroui/react'
 import { useTheme } from 'next-themes'
 import { useEffect, useState, useCallback } from 'react'
@@ -73,6 +73,39 @@ function ThemeSwitcher(): React.ReactElement | null {
       <ThemeIcon theme={theme} resolvedTheme={resolvedTheme} />
       <span>{themeLabels[theme || 'system']}</span>
     </Button>
+  )
+}
+
+function AutoLaunchSetting(): React.ReactElement {
+  const [enabled, setEnabled] = useState(false)
+  const [loaded, setLoaded] = useState(false)
+
+  useEffect(() => {
+    window.api.app
+      .getAutoLaunch()
+      .then((value) => {
+        setEnabled(value)
+        setLoaded(true)
+      })
+      .catch(() => setLoaded(true))
+  }, [])
+
+  const handleChange = async (value: boolean): Promise<void> => {
+    setEnabled(value)
+    try {
+      const applied = await window.api.app.setAutoLaunch(value)
+      setEnabled(applied)
+    } catch (error) {
+      console.error('Failed to set auto launch:', error)
+      setEnabled(!value)
+      addToast({ title: '设置失败', description: '无法修改开机自启动', hideIcon: true })
+    }
+  }
+
+  return (
+    <SettingItem icon={Monitor} title="开机自启动" description="系统启动时自动运行 MultiPost">
+      <Switch size="sm" isSelected={enabled} onValueChange={handleChange} isDisabled={!loaded} />
+    </SettingItem>
   )
 }
 
@@ -199,27 +232,7 @@ export function SettingsPage(): React.ReactElement {
           <SettingItem icon={Sun} title="外观主题" description="切换浅色、深色或跟随系统">
             <ThemeSwitcher />
           </SettingItem>
-          <SettingItem
-            icon={Monitor}
-            title="开机自启动"
-            description="系统启动时自动运行 MultiPost"
-          >
-            <Switch size="sm" />
-          </SettingItem>
-          <SettingItem
-            icon={Bell}
-            title="桌面通知"
-            description="发布完成时显示桌面通知"
-          >
-            <Switch size="sm" defaultSelected />
-          </SettingItem>
-          <SettingItem
-            icon={Globe}
-            title="自动检查更新"
-            description="定期检查并提示新版本"
-          >
-            <Switch size="sm" defaultSelected />
-          </SettingItem>
+          <AutoLaunchSetting />
           <KeepAliveSetting />
         </div>
       </div>
@@ -246,13 +259,6 @@ export function SettingsPage(): React.ReactElement {
             description="所有数据均存储在本地，不会上传到云端"
           >
             <span className="text-xs text-muted-foreground">已启用</span>
-          </SettingItem>
-          <SettingItem
-            icon={Shield}
-            title="匿名使用统计"
-            description="帮助我们改进产品，不收集个人信息"
-          >
-            <Switch size="sm" />
           </SettingItem>
         </div>
       </div>

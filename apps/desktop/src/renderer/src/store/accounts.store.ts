@@ -49,3 +49,15 @@ export const useAccountsStore = create<AccountsState>((set, get) => ({
     await window.api.browser.open(accountId, url)
   }
 }))
+
+// Keep the store in sync with background re-detections from the main process
+// (e.g. login status + avatar refreshed after an account tab closes).
+if (typeof window !== 'undefined' && window.api?.account?.onUpdated) {
+  window.api.account.onUpdated((updated) => {
+    useAccountsStore.setState((state) => ({
+      accounts: state.accounts.map((account) =>
+        account.id === updated.id ? updated : account
+      )
+    }))
+  })
+}

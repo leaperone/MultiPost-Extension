@@ -21,7 +21,7 @@ import type { PublishHistory } from '@shared/types'
 import { PLATFORMS } from '@shared/constants'
 import { useAccountsStore } from '../../store/accounts.store'
 import { useUiStore, type NativeView } from '../../store/ui.store'
-import { PlatformIcon } from '../publish/shared'
+import { AccountAvatar } from '../AccountAvatar'
 
 interface QuickAction {
   view: NativeView
@@ -136,7 +136,7 @@ function OnboardingGuide({
       <h2 className="text-sm font-medium">三步上手 MultiPost</h2>
       <div className="mt-4 grid grid-cols-1 gap-3 md:grid-cols-3">
         {ONBOARDING_STEPS.map((step, index) => (
-          <div key={step.title} className="flex flex-col gap-2 rounded-xl border p-4">
+          <div key={step.title} className="flex flex-col gap-2 rounded-xl bg-foreground/[0.03] p-4">
             <div className="flex items-center gap-2">
               <span className="flex size-7 items-center justify-center rounded-full bg-foreground/[0.05] text-xs font-medium">
                 {index + 1}
@@ -272,15 +272,19 @@ export function HomeView(): React.ReactElement {
             ) : (
               <div className="mt-4 flex flex-col gap-3">
                 <div className="flex items-center gap-2">
-                  {/* 账号头像暂不展示，统一用平台 icon 标识 */}
                   <div className="flex -space-x-2">
                     {accounts.slice(0, 8).map((account) => (
                       <span
                         key={account.id}
                         title={account.displayName || account.username}
-                        className="flex size-8 items-center justify-center rounded-full border-2 border-background bg-foreground/[0.05]"
+                        className="rounded-full border-2 border-background"
                       >
-                        <PlatformIcon platform={account.platform} size={16} />
+                        <AccountAvatar
+                          avatar={account.avatar}
+                          platform={account.platform}
+                          size={30}
+                          showPlatformBadge={false}
+                        />
                       </span>
                     ))}
                   </div>

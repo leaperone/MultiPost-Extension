@@ -20,49 +20,12 @@ import {
   getPlatformPublishTargetsByContentType,
   PLATFORMS
 } from '../../../../shared/constants'
+import { PlatformIcon } from '../PlatformIcon'
+import { AccountAvatar } from '../AccountAvatar'
 
-// Platform icon component with fallback mechanism
-export function PlatformIcon({ platform, size = 20 }: { platform: PlatformType; size?: number }) {
-  const [faviconError, setFaviconError] = useState(false)
-  const platformInfo = PLATFORMS[platform]
-
-  if (!platformInfo) return null
-
-  // Get first letter for fallback
-  const fallbackLetter = platformInfo.name.charAt(0).toUpperCase()
-  const fallbackStyle = {
-    width: size,
-    height: size,
-    fontSize: size * 0.6,
-    lineHeight: `${size}px`
-  }
-
-  // Platform favicons load directly from each site; iconify was dropped
-  // because its online icon API fails silently (blank icon, no onError).
-  if (platformInfo.faviconUrl && !faviconError) {
-    return (
-      <img
-        src={platformInfo.faviconUrl}
-        alt={platformInfo.name}
-        width={size}
-        height={size}
-        className="rounded-sm object-contain"
-        referrerPolicy="no-referrer"
-        onError={() => setFaviconError(true)}
-      />
-    )
-  }
-
-  // Final fallback: first letter of platform name
-  return (
-    <div
-      className="flex items-center justify-center rounded bg-muted text-muted-foreground font-medium"
-      style={fallbackStyle}
-    >
-      {fallbackLetter}
-    </div>
-  )
-}
+// PlatformIcon moved to its own file so leaf components (e.g. AccountAvatar)
+// can use it without importing this whole module; re-exported for callers.
+export { PlatformIcon }
 
 export type PublishStatus = 'idle' | 'pending' | 'processing' | 'completed' | 'failed' | 'cancelled'
 
@@ -454,6 +417,14 @@ export function AccountSelector({
       }
     }
     loadAccounts()
+
+    // Login status / avatar can change while this page stays mounted
+    // (e.g. the user logs in via an account tab and closes it).
+    return window.api.account.onUpdated((updated) => {
+      setAccounts((prev) =>
+        prev.map((account) => (account.id === updated.id ? updated : account))
+      )
+    })
   }, [])
 
   // Group accounts by platform and filter by content type support
@@ -525,10 +496,10 @@ export function AccountSelector({
             )
 
             return (
-              <div key={platform} className="p-3 rounded-lg border bg-background">
+              <div key={platform}>
                 <div className="flex items-center gap-2 mb-2">
-                  <PlatformIcon platform={platform} size={18} />
-                  <span className="text-sm font-medium">
+                  <PlatformIcon platform={platform} size={16} />
+                  <span className="text-xs font-medium text-muted-foreground">
                     {getPlatformPublishTarget(platform, contentType)?.name || platformInfo?.name || platform}
                   </span>
                 </div>
@@ -538,10 +509,10 @@ export function AccountSelector({
                     return (
                       <label
                         key={account.id}
-                        className={`flex items-center gap-2 px-3 py-2 rounded-lg border cursor-pointer transition-all ${
+                        className={`flex items-center gap-2 px-3 py-2 rounded-xl cursor-pointer transition-all ${
                           isSelected
-                            ? 'border-primary bg-primary/5'
-                            : 'bg-background hover:border-foreground/30'
+                            ? 'bg-primary/10 ring-1 ring-primary/40'
+                            : 'bg-foreground/[0.03] hover:bg-foreground/[0.06]'
                         } ${isDisabled ? 'opacity-60 cursor-not-allowed' : ''}`}
                       >
                         <Checkbox
@@ -550,10 +521,11 @@ export function AccountSelector({
                           isDisabled={isDisabled}
                           size="sm"
                         />
-                        {/* 账号头像暂不展示，统一用平台 icon 标识 */}
-                        <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-foreground/[0.05]">
-                          <PlatformIcon platform={account.platform} size={18} />
-                        </span>
+                        <AccountAvatar
+                          avatar={account.avatar}
+                          platform={account.platform}
+                          size={30}
+                        />
                         <span className="text-sm">{account.displayName || account.username}</span>
                         {account.isDefault && (
                           <Chip size="sm" variant="flat" color="warning">
@@ -569,7 +541,7 @@ export function AccountSelector({
           })}
         </div>
       ) : (
-        <div className="p-4 text-center text-muted-foreground text-sm bg-muted rounded-lg border border-dashed flex flex-col items-center gap-2 mb-3">
+        <div className="p-4 text-center text-muted-foreground text-sm bg-muted rounded-lg flex flex-col items-center gap-2 mb-3">
           <AlertCircle className="size-5" />
           <span>暂无已登录的账号</span>
           <span className="text-xs">请先在"账号管理"中添加账号，或使用下方"其他平台"</span>
@@ -600,7 +572,7 @@ export function AccountSelector({
           </button>
 
           {showOtherPlatforms && (
-            <div className="mt-3 p-3 rounded-lg border bg-muted/30 space-y-4">
+            <div className="mt-3 p-3 rounded-xl bg-foreground/[0.03] space-y-4">
               {otherPlatformsByCategory.map((category) => (
                 <div key={category.id}>
                   <div className="text-xs text-muted-foreground mb-2">{category.name}</div>
@@ -611,10 +583,10 @@ export function AccountSelector({
                       return (
                         <label
                           key={platform}
-                          className={`flex items-center gap-2 px-3 py-2 rounded-lg border cursor-pointer transition-all ${
+                          className={`flex items-center gap-2 px-3 py-2 rounded-xl cursor-pointer transition-all ${
                             isSelected
-                              ? 'border-primary bg-primary/5'
-                              : 'bg-background hover:border-foreground/30'
+                              ? 'bg-primary/10 ring-1 ring-primary/40'
+                              : 'bg-background hover:bg-foreground/[0.06]'
                           } ${isDisabled ? 'opacity-60 cursor-not-allowed' : ''}`}
                         >
                           <Checkbox
@@ -673,6 +645,14 @@ export function useAccountSelection(contentType: SyncContentType) {
       }
     }
     loadAccounts()
+
+    // Merge background account refreshes (login status, nickname, avatar)
+    // without disturbing the user's current selection.
+    return window.api.account.onUpdated((updated) => {
+      setAccounts((prev) =>
+        prev.map((account) => (account.id === updated.id ? updated : account))
+      )
+    })
   }, [contentType])
 
   const handleAccountToggle = useCallback((accountId: string) => {
@@ -795,7 +775,7 @@ export function PlatformSelector({
         )}
       </div>
       {availablePlatforms.length === 0 ? (
-        <div className="p-4 text-center text-muted-foreground text-sm bg-muted rounded-lg border border-dashed">
+        <div className="p-4 text-center text-muted-foreground text-sm bg-muted rounded-lg">
           当前内容类型没有可用的平台
         </div>
       ) : (
@@ -809,10 +789,10 @@ export function PlatformSelector({
                   return (
                     <label
                       key={platform}
-                      className={`flex items-center gap-2 px-3 py-2 rounded-lg border cursor-pointer transition-all ${
+                      className={`flex items-center gap-2 px-3 py-2 rounded-xl cursor-pointer transition-all ${
                         isSelected
-                          ? 'border-primary bg-primary/5'
-                          : 'bg-background hover:border-foreground/30'
+                          ? 'bg-primary/10 ring-1 ring-primary/40'
+                          : 'bg-foreground/[0.03] hover:bg-foreground/[0.06]'
                       } ${isDisabled ? 'opacity-60 cursor-not-allowed' : ''}`}
                     >
                       <Checkbox

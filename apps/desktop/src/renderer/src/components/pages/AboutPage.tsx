@@ -1,7 +1,6 @@
+import { useEffect, useState } from 'react'
 import { Globe, Github, ExternalLink, Heart, Zap, Shield, Users } from 'lucide-react'
 import { Button } from '@heroui/react'
-
-const APP_VERSION = '0.1.0'
 
 const features = [
   {
@@ -23,8 +22,8 @@ const features = [
 
 const links = [
   {
-    label: 'GitHub 仓库',
-    url: 'https://github.com/leaper-one/multipost-desktop',
+    label: 'GitHub Releases',
+    url: 'https://github.com/leaperone/MultiPost-Desktop-Release/releases',
     icon: Github
   },
   {
@@ -40,6 +39,15 @@ const links = [
 ]
 
 export function AboutPage(): React.ReactElement {
+  const [appVersion, setAppVersion] = useState('')
+
+  useEffect(() => {
+    window.api.app
+      .getVersion()
+      .then(setAppVersion)
+      .catch((error) => console.error('Failed to get app version:', error))
+  }, [])
+
   return (
     <div className="max-w-2xl mx-auto space-y-8">
       {/* Header */}
@@ -51,29 +59,24 @@ export function AboutPage(): React.ReactElement {
         <p className="text-muted-foreground text-lg">多平台内容发布工具</p>
         <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-muted text-sm">
           <span>版本</span>
-          <span className="font-mono font-medium">{APP_VERSION}</span>
+          <span className="font-mono font-medium">{appVersion ? `v${appVersion}` : '...'}</span>
         </div>
       </div>
 
       {/* Description */}
-      <div className="bg-card rounded-xl border border-border p-6">
-        <p className="text-foreground leading-relaxed">
-          MultiPost 是一款专为内容创作者打造的桌面应用，帮助你高效管理和发布内容到多个社交媒体平台。
-          无论你是自媒体博主、品牌运营还是内容营销人员，都能通过 MultiPost 显著提升工作效率。
-        </p>
-      </div>
+      <p className="text-foreground leading-relaxed text-center max-w-xl mx-auto">
+        MultiPost 是一款专为内容创作者打造的桌面应用，帮助你高效管理和发布内容到多个社交媒体平台。
+        无论你是自媒体博主、品牌运营还是内容营销人员，都能通过 MultiPost 显著提升工作效率。
+      </p>
 
       {/* Features */}
       <div className="space-y-4">
         <h2 className="text-xl font-semibold">核心功能</h2>
-        <div className="grid gap-4">
+        <div className="flex flex-col gap-5">
           {features.map((feature) => (
-            <div
-              key={feature.title}
-              className="flex gap-4 p-4 bg-card rounded-lg border border-border"
-            >
-              <div className="flex-shrink-0 size-10 rounded-lg bg-primary/10 flex items-center justify-center">
-                <feature.icon className="size-5 text-primary" />
+            <div key={feature.title} className="flex gap-4">
+              <div className="flex-shrink-0 size-10 rounded-xl bg-foreground/[0.05] flex items-center justify-center">
+                <feature.icon className="size-5 text-foreground" />
               </div>
               <div>
                 <h3 className="font-medium mb-1">{feature.title}</h3>

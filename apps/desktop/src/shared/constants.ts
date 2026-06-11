@@ -1115,6 +1115,8 @@ export const IPC_CHANNELS = {
   ACCOUNT_DELETE: 'account:delete',
   ACCOUNT_UPDATE: 'account:update',
   ACCOUNT_SET_DEFAULT: 'account:setDefault',
+  ACCOUNT_REFRESH_INFO: 'account:refreshInfo',
+  ACCOUNT_UPDATED_EVENT: 'multipost:account:updated',
 
   // Browser
   BROWSER_OPEN: 'browser:open',
@@ -1193,6 +1195,8 @@ export const IPC_CHANNELS = {
 
   // App
   APP_GET_VERSION: 'app:getVersion',
+  APP_GET_AUTO_LAUNCH: 'app:getAutoLaunch',
+  APP_SET_AUTO_LAUNCH: 'app:setAutoLaunch',
   APP_GET_PLATFORMS: 'app:getPlatforms',
   APP_READ_FILE_AS_DATA_URL: 'app:readFileAsDataURL',
   APP_GET_FILE_INFO: 'app:getFileInfo',

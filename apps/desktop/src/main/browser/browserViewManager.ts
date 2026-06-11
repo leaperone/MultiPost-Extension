@@ -4,6 +4,7 @@ import { v4 as uuidv4 } from 'uuid'
 import { is } from '@electron-toolkit/utils'
 import {
   createLocalFileUrl,
+  type Account,
   type PlatformType,
   type SyncContentType,
   type SyncContentData,
@@ -18,10 +19,10 @@ import {
   type PublishStatusSnapshot,
   type PublishTargetResult
 } from '../../shared/types'
-import { PLATFORMS, PLATFORM_PUBLISH_URLS } from '../../shared/constants'
+import { IPC_CHANNELS, PLATFORMS, PLATFORM_PUBLISH_URLS } from '../../shared/constants'
 import { getAdapter } from '../platforms'
 import { getMimeType } from '../utils/mime'
-import { getDesktopRequestHeaders, hardenSession, registerLocalFileProtocol } from './sessionHardening'
+import { hardenSession, registerLocalFileProtocol } from './sessionHardening'
 import { DatabaseService } from '../database'
 import {
   executeExtensionFill,
@@ -42,6 +43,11 @@ import {
   withAccountProxySession
 } from '../proxy/accountProxy'
 import { isSupportedBrowserNavigationUrl, openExternalUrl } from './externalUrl'
+import {
+  fetchSessionUserInfo,
+  matchesLoginCookies,
+  PLATFORM_LOGIN_COOKIES
+} from './accountUserInfo'
 
 interface ManagedBrowserView {
   view: BrowserView
@@ -296,10 +302,12 @@ export class BrowserViewManager {
     return domains.some((domain) => this.hasCookieForDomain(cookies, domain))
   }
 
-  private sendPublishEvent(
-    channel: 'multipost:publish:progress' | 'multipost:publish:complete' | 'multipost:publish:error',
-    payload: PublishEventPayload
-  ): void {
+  /**
+   * Broadcast an event to every webContents hosting app UI. The main window
+   * itself only holds a blank page (all UI lives in BrowserViews), so events
+   * sent solely to mainWindow.webContents would never reach the renderer.
+   */
+  broadcastToUi(channel: string, payload: unknown): void {
     const sent = new Set<number>()
     const sendTo = (webContents: Electron.WebContents | undefined): void => {
       if (!webContents || webContents.isDestroyed() || sent.has(webContents.id)) {
@@ -312,6 +320,13 @@ export class BrowserViewManager {
     sendTo(this.tabBarView?.webContents)
     sendTo(this.webDashboardView?.webContents)
     sendTo(this.mainWindow.webContents)
+  }
+
+  private sendPublishEvent(
+    channel: 'multipost:publish:progress' | 'multipost:publish:complete' | 'multipost:publish:error',
+    payload: PublishEventPayload
+  ): void {
+    this.broadcastToUi(channel, payload)
   }
 
   private toWebPublishStatus(status: PublishTargetStatus): PublishEventStatus {
@@ -1464,20 +1479,25 @@ export class BrowserViewManager {
     accountId: string,
     platform: PlatformType
   ): Promise<{ username: string; displayName?: string; avatar?: string } | null> {
-    // Try using the open BrowserView first
+    // Try using the open BrowserView first (DOM scrapers can see more than
+    // plain APIs on some platforms), but never let a flaky scraper block the
+    // session-based fallback.
     const managed = this.views.get(accountId)
     if (managed) {
       const adapter = getAdapter(platform)
       if (adapter) {
-        console.log('[BrowserViewManager] fetchUserInfo: using view for', platform)
-        const result = await adapter.getUserInfo(managed.view)
-        console.log('[BrowserViewManager] fetchUserInfo result:', result)
-        return result
+        try {
+          const result = await adapter.getUserInfo(managed.view)
+          if (result) {
+            return result
+          }
+        } catch (error) {
+          console.error('[BrowserViewManager] adapter getUserInfo failed for', platform, error)
+        }
       }
     }
 
     // Fallback: fetch user info directly from session cookies (no view needed)
-    console.log('[BrowserViewManager] fetchUserInfo: no view, using session cookies for', platform)
     return this.fetchUserInfoFromSession(accountId, platform)
   }
 
@@ -1490,63 +1510,17 @@ export class BrowserViewManager {
   ): Promise<{ username: string; displayName?: string; avatar?: string } | null> {
     try {
       const account = DatabaseService.getInstance().getAccount(accountId)
-      const partition = account?.sessionPartition || `persist:account-${accountId}`
-      const ses = session.fromPartition(partition)
+      // Mirror getLoginStatus: accounts migrated from the legacy partition
+      // format keep their cookies there, so fetch from whichever has them.
+      const newPartition = account?.sessionPartition || `persist:account-${accountId}`
+      let ses = session.fromPartition(newPartition)
+      if ((await ses.cookies.get({})).length === 0) {
+        ses = session.fromPartition(`persist:${platform}-${accountId}`)
+      }
       hardenSession(ses)
-      return await withAccountProxySession(ses, account, async () => {
-        if (platform === 'bilibili') {
-          const cookies = await ses.cookies.get({ domain: '.bilibili.com' })
-          const sessdata = cookies.find((c) => c.name === 'SESSDATA')
-          if (!sessdata) return null
-
-          const cookieHeader = cookies.map((c) => `${c.name}=${c.value}`).join('; ')
-          const response = await ses.fetch('https://api.bilibili.com/x/web-interface/nav', {
-            headers: getDesktopRequestHeaders({
-              Cookie: cookieHeader,
-              Referer: 'https://www.bilibili.com/'
-            })
-          })
-          const data = await response.json()
-
-          if (data.data?.isLogin) {
-            const result = {
-              username: String(data.data.mid),
-              displayName: data.data.uname,
-              avatar: data.data.face
-            }
-            console.log('[BrowserViewManager] fetchUserInfoFromSession result:', result)
-            return result
-          }
-        }
-
-        if (platform === 'xiaohongshu') {
-          const cookies = await ses.cookies.get({ domain: '.xiaohongshu.com' })
-          const webSession = cookies.find((c) => c.name === 'web_session')
-          if (!webSession) return null
-
-          const cookieHeader = cookies.map((c) => `${c.name}=${c.value}`).join('; ')
-          const response = await ses.fetch('https://edith.xiaohongshu.com/api/sns/web/v2/user/me', {
-            headers: getDesktopRequestHeaders({
-              Cookie: cookieHeader,
-              Origin: 'https://www.xiaohongshu.com',
-              Referer: 'https://www.xiaohongshu.com/'
-            })
-          })
-          const data = await response.json()
-
-          if (data.data?.nickname) {
-            const result = {
-              username: data.data.red_id || data.data.nickname,
-              displayName: data.data.nickname,
-              avatar: data.data.imageb
-            }
-            console.log('[BrowserViewManager] fetchUserInfoFromSession xiaohongshu result:', result)
-            return result
-          }
-        }
-
-        // TODO: Add session-based user info fetch for other platforms
-        return null
+      const targetSession = ses
+      return await withAccountProxySession(targetSession, account, async () => {
+        return fetchSessionUserInfo(targetSession, platform)
       })
     } catch (e) {
       console.error('[BrowserViewManager] fetchUserInfoFromSession error:', e)
@@ -1566,48 +1540,24 @@ export class BrowserViewManager {
     const newPartition = account?.sessionPartition || `persist:account-${accountId}`
     const oldPartition = `persist:${platform}-${accountId}`
 
-    console.log(`[getLoginStatus] Checking ${platform} account ${accountId}`)
-    console.log(`[getLoginStatus] New partition: ${newPartition}`)
-    console.log(`[getLoginStatus] Old partition: ${oldPartition}`)
-
     // Check new partition first
     let ses = session.fromPartition(newPartition)
     let cookies = await ses.cookies.get({})
-    console.log(`[getLoginStatus] Cookies in new partition: ${cookies.length}`)
 
     // If no cookies in new partition, try old partition
     if (cookies.length === 0) {
       ses = session.fromPartition(oldPartition)
       cookies = await ses.cookies.get({})
-      console.log(`[getLoginStatus] Cookies in old partition: ${cookies.length}`)
     }
 
-    // Debug: show relevant cookies for bilibili
-    if (platform === 'bilibili') {
-      const sessdata = cookies.find(c => c.name === 'SESSDATA')
-      console.log(`[getLoginStatus] SESSDATA cookie:`, sessdata ? 'found' : 'not found')
-      if (sessdata) {
-        console.log(`[getLoginStatus] SESSDATA domain:`, sessdata.domain)
-      }
-      // Show all bilibili cookies
-      const biliCookies = cookies.filter(c => c.domain?.includes('bilibili'))
-      console.log(`[getLoginStatus] Bilibili cookies:`, biliCookies.map(c => c.name))
+    // Platforms with a known signature cookie get an exact check
+    const loginCookieRules = PLATFORM_LOGIN_COOKIES[platform]
+    if (loginCookieRules) {
+      return matchesLoginCookies(cookies, loginCookieRules)
     }
 
     // Platform-specific login detection
     switch (platform) {
-      case 'weibo':
-        return cookies.some((c) => c.name === 'SUB' && c.domain?.includes('weibo.com'))
-      case 'xiaohongshu':
-        return cookies.some((c) => c.name === 'web_session' && c.domain?.includes('xiaohongshu.com'))
-      case 'twitter':
-        return cookies.some((c) => c.name === 'auth_token' && c.domain?.includes('twitter.com'))
-      case 'bilibili':
-        return cookies.some((c) => c.name === 'SESSDATA' && c.domain?.includes('bilibili.com'))
-      case 'zhihu':
-        return cookies.some((c) => c.name === 'z_c0' && c.domain?.includes('zhihu.com'))
-      case 'zsxq':
-        return cookies.some((c) => c.name === 'zsxq_access_token' && c.domain?.includes('zsxq.com'))
       case 'qqmusic':
         // TODO(verify-login): confirm QQ音乐播客 real-login cookie/storage signals.
         return this.hasCookieForAnyDomain(cookies, ['tencentmusic.com'])
@@ -1632,6 +1582,40 @@ export class BrowserViewManager {
       default:
         return cookies.length > 0
     }
+  }
+
+  /**
+   * Re-detect login status and refresh user info (nickname/avatar) for an
+   * account, persist the result and notify the UI. Used by the manual
+   * "检测" action and automatically after an account tab closes, so the
+   * account list reflects reality right after the user logs in.
+   */
+  async refreshAccountInfo(accountId: string): Promise<Account | null> {
+    const db = DatabaseService.getInstance()
+    const account = db.getAccount(accountId)
+    if (!account) return null
+
+    const isLoggedIn = await this.getLoginStatus(accountId, account.platform)
+    const updates: Partial<Account> = { isLoggedIn }
+    if (isLoggedIn) {
+      updates.lastLoginAt = Date.now()
+      try {
+        const userInfo = await this.fetchUserInfo(accountId, account.platform)
+        if (userInfo) {
+          updates.username = userInfo.username
+          if (userInfo.displayName) updates.displayName = userInfo.displayName
+          if (userInfo.avatar) updates.avatar = userInfo.avatar
+        }
+      } catch (error) {
+        console.error(`[BrowserViewManager] refreshAccountInfo(${accountId}) failed:`, error)
+      }
+    }
+
+    const updated = db.updateAccount(accountId, updates)
+    if (updated) {
+      this.broadcastToUi(IPC_CHANNELS.ACCOUNT_UPDATED_EVENT, updated)
+    }
+    return updated
   }
 
   /**
@@ -2815,6 +2799,12 @@ export class BrowserViewManager {
     const wasActive = this.activeViewId === accountId
 
     await this.closeView(accountId)
+
+    // The user may have just logged in inside this tab; re-detect in the
+    // background so the account list reflects the new state immediately.
+    void this.refreshAccountInfo(accountId).catch((error) => {
+      console.error('[BrowserViewManager] post-close account refresh failed:', error)
+    })
 
     // If closed the active tab, switch to home or another tab
     if (wasActive) {

@@ -11,6 +11,33 @@ import { startDebugServer } from './debug-server'
 import { getDesktopUserAgent, handleLocalFileRequest, hardenSession } from './browser/sessionHardening'
 import { closeAllAnonymizedProxies } from './proxy/accountProxy'
 import { openExternalUrl } from './browser/externalUrl'
+import { loadWindowState, trackWindowState } from './windowState'
+
+// Process-level safety net: log instead of silently dying. Electron would
+// otherwise show a generic crash dialog (uncaughtException) or nothing at all
+// (unhandledRejection), which is hostile for a production desktop app.
+process.on('uncaughtException', (error) => {
+  console.error('[Main] Uncaught exception:', error)
+})
+process.on('unhandledRejection', (reason) => {
+  console.error('[Main] Unhandled rejection:', reason)
+})
+
+// Single instance: a second launch focuses the existing window instead of
+// spawning a parallel app fighting over the same SQLite db and sessions.
+const hasSingleInstanceLock = app.requestSingleInstanceLock()
+if (!hasSingleInstanceLock) {
+  app.quit()
+}
+app.on('second-instance', () => {
+  if (mainWindow && !mainWindow.isDestroyed()) {
+    if (mainWindow.isMinimized()) mainWindow.restore()
+    mainWindow.show()
+    mainWindow.focus()
+  } else if (app.isReady()) {
+    createWindow()
+  }
+})
 
 // 在 app.whenReady() 之前注册 local-file:// 协议
 protocol.registerSchemesAsPrivileged([
@@ -90,13 +117,15 @@ function getWindowChromeColors(): WindowChromeColors {
 function createWindow(): void {
   const isDarwin = process.platform === 'darwin'
   const chromeColors = getWindowChromeColors()
+  const persistedState = loadWindowState()
 
   mainWindow = new BrowserWindow({
-    width: 1200,
-    height: 800,
+    width: persistedState?.bounds.width ?? 1200,
+    height: persistedState?.bounds.height ?? 800,
+    ...(persistedState ? { x: persistedState.bounds.x, y: persistedState.bounds.y } : {}),
     minWidth: 920,
     minHeight: 600,
-    center: true,
+    center: !persistedState,
     show: false,
     autoHideMenuBar: true,
     backgroundColor: chromeColors.background,
@@ -118,6 +147,11 @@ function createWindow(): void {
     }
   })
 
+  if (persistedState?.isMaximized) {
+    mainWindow.maximize()
+  }
+  trackWindowState(mainWindow)
+
   mainWindow.on('ready-to-show', () => {
     mainWindow?.show()
     // Update BrowserView bounds after the native window finishes showing.
@@ -129,6 +163,10 @@ function createWindow(): void {
   mainWindow.webContents.setWindowOpenHandler((details) => {
     void openExternalUrl(details.url)
     return { action: 'deny' }
+  })
+
+  mainWindow.on('closed', () => {
+    mainWindow = null
   })
 
   // Initialize BrowserView manager (handles all tabs including home)
@@ -183,7 +221,10 @@ app.whenReady().then(async () => {
 
   // Initialize auto-updater after window is created
   if (mainWindow) {
-    initAutoUpdater(mainWindow)
+    // UI lives in BrowserViews, so updater status must be broadcast through the manager
+    initAutoUpdater(mainWindow, (channel, payload) =>
+      browserViewManager?.broadcastToUi(channel, payload)
+    )
 
     // Check for updates after app starts (only in production)
     if (!is.dev) {

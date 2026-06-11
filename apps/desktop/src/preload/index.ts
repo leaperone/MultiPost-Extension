@@ -51,7 +51,17 @@ const api = {
     update: (id: string, data: Partial<Account>): Promise<Account> =>
       ipcRenderer.invoke(IPC_CHANNELS.ACCOUNT_UPDATE, id, data),
     setDefault: (id: string, platform: PlatformType): Promise<void> =>
-      ipcRenderer.invoke(IPC_CHANNELS.ACCOUNT_SET_DEFAULT, id, platform)
+      ipcRenderer.invoke(IPC_CHANNELS.ACCOUNT_SET_DEFAULT, id, platform),
+    // Re-detect login status + nickname/avatar from the account session
+    refreshInfo: (id: string): Promise<Account | null> =>
+      ipcRenderer.invoke(IPC_CHANNELS.ACCOUNT_REFRESH_INFO, id),
+    onUpdated: (callback: (account: Account) => void) => {
+      const listener = (_: Electron.IpcRendererEvent, account: Account): void => callback(account)
+      ipcRenderer.on(IPC_CHANNELS.ACCOUNT_UPDATED_EVENT, listener)
+      return (): void => {
+        ipcRenderer.removeListener(IPC_CHANNELS.ACCOUNT_UPDATED_EVENT, listener)
+      }
+    }
   },
 
   // Browser view management
@@ -209,6 +219,9 @@ const api = {
   // App info
   app: {
     getVersion: (): Promise<string> => ipcRenderer.invoke(IPC_CHANNELS.APP_GET_VERSION),
+    getAutoLaunch: (): Promise<boolean> => ipcRenderer.invoke(IPC_CHANNELS.APP_GET_AUTO_LAUNCH),
+    setAutoLaunch: (enabled: boolean): Promise<boolean> =>
+      ipcRenderer.invoke(IPC_CHANNELS.APP_SET_AUTO_LAUNCH, enabled),
     getPlatforms: (): Promise<PlatformInfo[]> => ipcRenderer.invoke(IPC_CHANNELS.APP_GET_PLATFORMS),
     getFileInfo: (filePath: string): Promise<FileData> =>
       ipcRenderer.invoke(IPC_CHANNELS.APP_GET_FILE_INFO, filePath),

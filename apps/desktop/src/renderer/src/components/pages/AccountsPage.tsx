@@ -7,6 +7,7 @@ import {
   LogIn,
   Pencil,
   Plus,
+  RefreshCw,
   Search,
   ShieldCheck,
   Star,
@@ -35,6 +36,7 @@ import {
 } from '@shared/constants'
 import type { Account, AccountGroup, PlatformType, SyncContentType } from '@shared/types'
 import { PLATFORM_CATEGORIES, PlatformIcon } from '../publish/shared'
+import { AccountAvatar } from '../AccountAvatar'
 import {
   createProxyConfigDraft,
   proxyDraftToConfig,
@@ -124,6 +126,83 @@ export function AccountsPage({ onLoginAccount }: AccountsPageProps): React.React
   useEffect(() => {
     loadData()
   }, [loadData])
+
+  // The main process re-detects accounts in the background (e.g. right after
+  // a login tab closes); merge those updates into the list live.
+  useEffect(() => {
+    return window.api.account.onUpdated((updated) => {
+      setAccounts((prev) =>
+        prev.map((account) => (account.id === updated.id ? updated : account))
+      )
+    })
+  }, [])
+
+  const [refreshingIds, setRefreshingIds] = useState<Set<string>>(new Set())
+  const [isRefreshingAll, setIsRefreshingAll] = useState(false)
+
+  const handleRefreshAccount = useCallback(async (account: Account) => {
+    setRefreshingIds((prev) => new Set(prev).add(account.id))
+    try {
+      const updated = await window.api.account.refreshInfo(account.id)
+      if (updated) {
+        setAccounts((prev) => prev.map((a) => (a.id === updated.id ? updated : a)))
+        addToast({
+          title: updated.isLoggedIn ? '检测完成' : '未检测到登录',
+          description: updated.isLoggedIn
+            ? `已更新 ${updated.displayName || updated.username} 的账号信息`
+            : '请点击"去登录"完成平台登录',
+          hideIcon: true
+        })
+      }
+    } catch (error) {
+      console.error('Failed to refresh account info:', error)
+      addToast({
+        title: '检测失败',
+        description: error instanceof Error ? error.message : '无法检测账号状态',
+        hideIcon: true
+      })
+    } finally {
+      setRefreshingIds((prev) => {
+        const next = new Set(prev)
+        next.delete(account.id)
+        return next
+      })
+    }
+  }, [])
+
+  const handleRefreshAll = useCallback(async () => {
+    if (accounts.length === 0) return
+    setIsRefreshingAll(true)
+    try {
+      const results = await Promise.allSettled(
+        accounts.map((account) => window.api.account.refreshInfo(account.id))
+      )
+      const updatedAccounts = results
+        .filter(
+          (result): result is PromiseFulfilledResult<Account | null> =>
+            result.status === 'fulfilled'
+        )
+        .map((result) => result.value)
+        .filter((account): account is Account => Boolean(account))
+      const failedCount = results.filter((result) => result.status === 'rejected').length
+
+      setAccounts((prev) =>
+        prev.map((account) => updatedAccounts.find((u) => u.id === account.id) || account)
+      )
+      const loggedIn = updatedAccounts.filter((account) => account.isLoggedIn).length
+      addToast({
+        title: failedCount > 0 ? '检测完成（部分失败）' : '检测完成',
+        description:
+          `共 ${accounts.length} 个账号，${loggedIn} 个在线` +
+          (failedCount > 0 ? `，${failedCount} 个检测失败` : ''),
+        hideIcon: true
+      })
+    } catch (error) {
+      console.error('Failed to refresh all accounts:', error)
+    } finally {
+      setIsRefreshingAll(false)
+    }
+  }, [accounts])
 
   const closeAddAccountModal = () => {
     onAddAccountClose()
@@ -341,6 +420,16 @@ export function AccountsPage({ onLoginAccount }: AccountsPageProps): React.React
           </div>
         </div>
         <div className="flex shrink-0 gap-2">
+          <Button
+            size="sm"
+            variant="bordered"
+            onPress={handleRefreshAll}
+            isLoading={isRefreshingAll}
+            isDisabled={accounts.length === 0}
+          >
+            {!isRefreshingAll && <RefreshCw className="size-4" />}
+            检测全部
+          </Button>
           <Button size="sm" variant="bordered" onPress={onAddGroupOpen}>
             <FolderPlus className="size-4" />
             新建分组
@@ -352,35 +441,23 @@ export function AccountsPage({ onLoginAccount }: AccountsPageProps): React.React
         </div>
       </div>
 
-      <div className="grid grid-cols-2 gap-3 xl:grid-cols-4">
-        <div className="rounded-lg border bg-background p-4">
-          <div className="flex items-center justify-between text-default-500">
-            <span className="text-xs">账号</span>
-            <Users className="size-4" />
+      <div className="flex flex-wrap items-center gap-x-8 gap-y-2 rounded-xl bg-background px-5 py-4 border">
+        {[
+          { label: '账号', value: accountStats.total, icon: <Users className="size-4" /> },
+          {
+            label: '已登录',
+            value: accountStats.loggedIn,
+            icon: <CheckCircle2 className="size-4 text-success" />
+          },
+          { label: '平台', value: accountStats.platformCount, icon: <ShieldCheck className="size-4" /> },
+          { label: '分组', value: accountStats.groups, icon: <FolderPlus className="size-4" /> }
+        ].map((stat) => (
+          <div key={stat.label} className="flex items-center gap-2.5">
+            <span className="text-default-400">{stat.icon}</span>
+            <span className="text-xl font-semibold tabular-nums">{stat.value}</span>
+            <span className="text-xs text-default-500">{stat.label}</span>
           </div>
-          <div className="mt-2 text-2xl font-semibold">{accountStats.total}</div>
-        </div>
-        <div className="rounded-lg border bg-background p-4">
-          <div className="flex items-center justify-between text-default-500">
-            <span className="text-xs">已登录</span>
-            <CheckCircle2 className="size-4 text-success" />
-          </div>
-          <div className="mt-2 text-2xl font-semibold">{accountStats.loggedIn}</div>
-        </div>
-        <div className="rounded-lg border bg-background p-4">
-          <div className="flex items-center justify-between text-default-500">
-            <span className="text-xs">平台</span>
-            <ShieldCheck className="size-4" />
-          </div>
-          <div className="mt-2 text-2xl font-semibold">{accountStats.platformCount}</div>
-        </div>
-        <div className="rounded-lg border bg-background p-4">
-          <div className="flex items-center justify-between text-default-500">
-            <span className="text-xs">分组</span>
-            <FolderPlus className="size-4" />
-          </div>
-          <div className="mt-2 text-2xl font-semibold">{accountStats.groups}</div>
-        </div>
+        ))}
       </div>
 
       <Tabs
@@ -445,12 +522,12 @@ export function AccountsPage({ onLoginAccount }: AccountsPageProps): React.React
             const accountLabel = getAccountLabel(account)
 
             return (
-              <Card key={account.id} className="border shadow-none">
+              <Card
+                key={account.id}
+                className="border shadow-none transition-shadow duration-200 hover:shadow-sm"
+              >
                 <CardHeader className="flex flex-row items-start gap-4 pb-3">
-                  {/* 账号头像暂不展示，统一用平台 icon 标识 */}
-                  <div className="flex size-12 shrink-0 items-center justify-center rounded-full bg-foreground/[0.05]">
-                    <PlatformIcon platform={account.platform} size={26} />
-                  </div>
+                  <AccountAvatar avatar={account.avatar} platform={account.platform} size={48} />
                   <div className="min-w-0 flex-1">
                     <div className="flex min-w-0 items-center gap-2">
                       <button
@@ -511,6 +588,18 @@ export function AccountsPage({ onLoginAccount }: AccountsPageProps): React.React
                       startContent={<LogIn className="size-4" />}
                     >
                       {account.isLoggedIn ? '重新登录' : '去登录'}
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="bordered"
+                      onPress={() => handleRefreshAccount(account)}
+                      isLoading={refreshingIds.has(account.id)}
+                      startContent={
+                        refreshingIds.has(account.id) ? null : <RefreshCw className="size-4" />
+                      }
+                      title="重新检测登录状态和账号信息"
+                    >
+                      检测
                     </Button>
                     <Select
                       size="sm"
@@ -584,7 +673,7 @@ export function AccountsPage({ onLoginAccount }: AccountsPageProps): React.React
               </div>
             </div>
 
-            <div className="min-h-0 flex-1 overflow-auto rounded-lg border bg-default-50/50 p-3">
+            <div className="min-h-0 flex-1 overflow-auto rounded-xl bg-default-50/50 p-3">
               {filteredPlatformsByCategory.length === 0 ? (
                 <div className="flex h-44 flex-col items-center justify-center gap-2 text-default-500">
                   <Search className="size-8" />
@@ -613,13 +702,13 @@ export function AccountsPage({ onLoginAccount }: AccountsPageProps): React.React
                               key={platform}
                               type="button"
                               onClick={() => setSelectedPlatform(platform)}
-                              className={`flex min-h-28 items-start gap-3 rounded-lg border bg-background p-3 text-left transition-all ${
+                              className={`flex min-h-28 items-start gap-3 rounded-xl p-3 text-left transition-all ${
                                 isSelected
-                                  ? 'border-primary shadow-sm ring-1 ring-primary/30'
-                                  : 'hover:border-default-400'
+                                  ? 'bg-primary/10 ring-1 ring-primary/40'
+                                  : 'bg-background hover:shadow-sm hover:bg-foreground/[0.02]'
                               }`}
                             >
-                              <div className="flex size-11 shrink-0 items-center justify-center rounded-lg border bg-default-50">
+                              <div className="flex size-11 shrink-0 items-center justify-center rounded-lg bg-default-100">
                                 <PlatformIcon platform={platform} size={24} />
                               </div>
                               <div className="min-w-0 flex-1">

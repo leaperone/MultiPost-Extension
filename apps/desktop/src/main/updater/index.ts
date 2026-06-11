@@ -25,13 +25,22 @@ const UPDATE_SOURCES = [
   }
 ]
 
+type UpdaterBroadcast = (channel: string, payload: unknown) => void
+
 let mainWindow: BrowserWindow | null = null
+let broadcastToUi: UpdaterBroadcast | null = null
 let currentStatus: UpdateStatus = { status: 'idle' }
 let currentSourceIndex = 0
 let isManualCheck = false
 
 function sendStatusToRenderer(status: UpdateStatus): void {
   currentStatus = status
+  // App UI lives in BrowserViews (the main window only hosts a blank page),
+  // so status must be broadcast to those webContents to be seen at all.
+  if (broadcastToUi) {
+    broadcastToUi(IPC_CHANNELS.UPDATER_STATUS, status)
+    return
+  }
   if (mainWindow && !mainWindow.isDestroyed()) {
     mainWindow.webContents.send(IPC_CHANNELS.UPDATER_STATUS, status)
   }
@@ -72,8 +81,9 @@ function resetSourceIndex(): void {
   setUpdateSource(0)
 }
 
-export function initAutoUpdater(window: BrowserWindow): void {
+export function initAutoUpdater(window: BrowserWindow, broadcast?: UpdaterBroadcast): void {
   mainWindow = window
+  broadcastToUi = broadcast ?? null
 
   // Configure auto-updater
   autoUpdater.autoDownload = false
