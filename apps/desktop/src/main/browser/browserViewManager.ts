@@ -1,5 +1,5 @@
 import {
-  BrowserView,
+  WebContentsView,
   BrowserWindow,
   Notification,
   session,
@@ -31,6 +31,7 @@ import {
 } from '../../shared/types'
 import { IPC_CHANNELS, PLATFORMS, PLATFORM_PUBLISH_URLS } from '../../shared/constants'
 import { getAdapter } from '../platforms'
+import { publishLogger } from '../logger'
 import { getMimeType } from '../utils/mime'
 import {
   allowLocalFile,
@@ -65,7 +66,7 @@ import {
 } from './accountUserInfo'
 
 interface ManagedBrowserView {
-  view: BrowserView
+  view: WebContentsView
   accountId: string
   platform: PlatformType
   isVisible: boolean
@@ -76,14 +77,14 @@ interface ManagedBrowserView {
 
 // Platform-based views (without accountId)
 interface PlatformBrowserView {
-  view: BrowserView
+  view: WebContentsView
   platform: PlatformType
   isVisible: boolean
 }
 
 // Executor views (keyed by accountId for multi-account support)
 interface ExecutorBrowserView {
-  view: BrowserView
+  view: WebContentsView
   accountId: string
   platform: PlatformType
   isVisible: boolean
@@ -99,7 +100,7 @@ interface PublishGroupView {
   views: Map<
     string,
     {
-      view: BrowserView
+      view: WebContentsView
       accountId: string
       platform: PlatformType
       displayName: string
@@ -161,7 +162,7 @@ const PUBLISH_SNAPSHOT_TTL_MS = 10 * 60 * 1000
 
 // Home tab constants - the home tab renders the native renderer UI.
 // The web dashboard is an optional, closable tab backed by a lazily
-// created BrowserView.
+// created WebContentsView.
 const HOME_TAB_ID = '__home__'
 const WEB_TAB_ID = '__web__'
 
@@ -180,11 +181,11 @@ export class BrowserViewManager {
   // Active executor is now tracked by accountId
   private activeExecutorId: string | null = null
   private sidebarWidth: number = DEFAULT_SIDEBAR_WIDTH
-  // Optional web dashboard BrowserView - created lazily when the user opens
+  // Optional web dashboard WebContentsView - created lazily when the user opens
   // the web workspace tab; the home tab itself is rendered natively.
-  private webDashboardView: BrowserView | null = null
-  // Tab bar BrowserView - always on top
-  private tabBarView: BrowserView | null = null
+  private webDashboardView: WebContentsView | null = null
+  // Tab bar WebContentsView - always on top
+  private tabBarView: WebContentsView | null = null
   // Publish Groups - 发布 Group 管理
   private publishGroups: Map<string, PublishGroupView> = new Map()
   private executorPublishRuns: Map<string, ExecutorPublishRun> = new Map()
@@ -210,7 +211,7 @@ export class BrowserViewManager {
     this.mainWindow.on('maximize', updateBounds)
     this.mainWindow.on('unmaximize', updateBounds)
     // Re-assert bounds when the window becomes visible again: while occluded
-    // (e.g. locked screen) Chromium defers BrowserView resizes, so bounds
+    // (e.g. locked screen) Chromium defers WebContentsView resizes, so bounds
     // changed in the background may not have reached the renderer.
     this.mainWindow.on('show', updateBounds)
     this.mainWindow.on('focus', updateBounds)
@@ -227,7 +228,7 @@ export class BrowserViewManager {
     }
 
     event?.preventDefault()
-    console.warn(`[BrowserViewManager] Blocked unsupported navigation from ${source}:`, url)
+    publishLogger.warn(`Blocked unsupported navigation from ${source}:`, url)
     void openExternalUrl(url)
     return true
   }
@@ -242,7 +243,7 @@ export class BrowserViewManager {
     webContents.on('will-redirect', guard)
   }
 
-  private installThirdPartyWindowOpenHandler(view: BrowserView, ses: Session): void {
+  private installThirdPartyWindowOpenHandler(view: WebContentsView, ses: Session): void {
     view.webContents.setWindowOpenHandler(({ url, disposition }) => {
       if (disposition === 'new-window') {
         return {
@@ -276,10 +277,10 @@ export class BrowserViewManager {
 
       try {
         void view.webContents.loadURL(url).catch((error) => {
-          console.warn('[BrowserViewManager] Failed to navigate window-open URL:', error)
+          publishLogger.warn('Failed to navigate window-open URL:', error)
         })
       } catch (error) {
-        console.warn('[BrowserViewManager] Failed to navigate window-open URL:', error)
+        publishLogger.warn('Failed to navigate window-open URL:', error)
       }
       return { action: 'deny' }
     })
@@ -899,7 +900,7 @@ export class BrowserViewManager {
 
     for (const target of group.views.values()) {
       if (target.isVisible) {
-        this.mainWindow.removeBrowserView(target.view)
+        this.mainWindow.contentView.removeChildView(target.view)
         target.isVisible = false
       }
       if (!target.view.webContents.isDestroyed()) {
@@ -954,8 +955,8 @@ export class BrowserViewManager {
 
     // The renderer view doubles as browser chrome and native home UI: it
     // covers the whole window while the home tab is active and shrinks to
-    // the tab strip when a content BrowserView is shown.
-    this.tabBarView = new BrowserView({
+    // the tab strip when a content WebContentsView is shown.
+    this.tabBarView = new WebContentsView({
       webPreferences: {
         preload: join(__dirname, '../preload/index.js'),
         contextIsolation: true,
@@ -980,7 +981,7 @@ export class BrowserViewManager {
       width: width,
       height: height
     })
-    this.mainWindow.addBrowserView(this.tabBarView)
+    this.mainWindow.contentView.addChildView(this.tabBarView)
 
     // Load tab bar renderer
     const isDev = !!(process.env.ELECTRON_RENDERER_URL)
@@ -990,7 +991,7 @@ export class BrowserViewManager {
       await this.tabBarView.webContents.loadFile(join(__dirname, '../renderer/index.html'))
     }
     this.debugAttachConsoleCapture(this.tabBarView.webContents, 'tabbar')
-    console.log('[BrowserViewManager] Tab bar view created')
+    publishLogger.info('Tab bar view created')
 
     // Set native home as active
     this.activeViewId = HOME_TAB_ID
@@ -999,18 +1000,18 @@ export class BrowserViewManager {
     // Setup IPC handlers for web dashboard navigation
     this.setupWebDashboardIpcHandlers()
 
-    console.log('[BrowserViewManager] Native home tab initialized')
+    publishLogger.info('Native home tab initialized')
   }
 
   /**
-   * Create the web dashboard BrowserView on first use.
+   * Create the web dashboard WebContentsView on first use.
    */
-  private async ensureWebDashboardView(): Promise<BrowserView> {
+  private async ensureWebDashboardView(): Promise<WebContentsView> {
     if (this.webDashboardView) return this.webDashboardView
 
     const [width, height] = this.mainWindow.getContentSize()
 
-    const view = new BrowserView({
+    const view = new WebContentsView({
       webPreferences: {
         preload: join(__dirname, '../preload/webview.js'),
         contextIsolation: true,
@@ -1027,7 +1028,6 @@ export class BrowserViewManager {
       width: width,
       height: height - TABBAR_HEIGHT
     })
-    view.setAutoResize({ width: false, height: false })
 
     // Handle new window requests (e.g. auth callback, target="_blank" links)
     // Keep same-origin navigation inside the view, open external links in system browser
@@ -1062,11 +1062,11 @@ export class BrowserViewManager {
     this.debugAttachConsoleCapture(view.webContents, 'web-dashboard')
 
     const homeUrl = `${WEB_DASHBOARD_BASE_URL}/dashboard`
-    console.log('[BrowserViewManager] Loading web dashboard:', homeUrl)
+    publishLogger.info('Loading web dashboard:', homeUrl)
     // A failed load (offline, dev server down) must not abort tab activation;
     // the view shows Chromium's error page and the user can reload.
     await view.webContents.loadURL(homeUrl).catch((error) => {
-      console.error('[BrowserViewManager] Web dashboard load failed:', error)
+      publishLogger.error('Web dashboard load failed:', error)
     })
 
     return view
@@ -1083,7 +1083,7 @@ export class BrowserViewManager {
       const url = `${WEB_DASHBOARD_BASE_URL}${fullPath}`
       if (!this.blockUnsupportedNavigation(url, 'web-dashboard:navigateTo')) {
         view.webContents.loadURL(url).catch((error) => {
-          console.error('[BrowserViewManager] Web dashboard navigation failed:', error)
+          publishLogger.error('Web dashboard navigation failed:', error)
         })
       }
     }
@@ -1091,16 +1091,16 @@ export class BrowserViewManager {
     // Hide account, publish group, platform and executor views
     for (const managed of this.views.values()) {
       if (managed.isVisible) {
-        this.mainWindow.removeBrowserView(managed.view)
+        this.mainWindow.contentView.removeChildView(managed.view)
         managed.isVisible = false
       }
     }
     this.hideAllGroupViews()
     this.hideAuxiliarySurfaces()
 
-    this.mainWindow.addBrowserView(view)
+    this.mainWindow.contentView.addChildView(view)
     if (this.tabBarView) {
-      this.mainWindow.setTopBrowserView(this.tabBarView)
+      this.mainWindow.contentView.addChildView(this.tabBarView)
     }
 
     this.activeViewId = WEB_TAB_ID
@@ -1116,7 +1116,7 @@ export class BrowserViewManager {
     if (!this.webDashboardView) return
 
     const wasActive = this.activeViewId === WEB_TAB_ID
-    this.mainWindow.removeBrowserView(this.webDashboardView)
+    this.mainWindow.contentView.removeChildView(this.webDashboardView)
     const webContents = this.webDashboardView.webContents as Electron.WebContents & {
       destroy?: () => void
     }
@@ -1141,13 +1141,13 @@ export class BrowserViewManager {
     // the active IDs stay intact so publish flows can re-show their view.
     for (const managed of this.platformViews.values()) {
       if (managed.isVisible) {
-        this.mainWindow.removeBrowserView(managed.view)
+        this.mainWindow.contentView.removeChildView(managed.view)
         managed.isVisible = false
       }
     }
     for (const managed of this.executorViews.values()) {
       if (managed.isVisible) {
-        this.mainWindow.removeBrowserView(managed.view)
+        this.mainWindow.contentView.removeChildView(managed.view)
         managed.isVisible = false
       }
     }
@@ -1160,7 +1160,7 @@ export class BrowserViewManager {
     for (const group of this.publishGroups.values()) {
       for (const target of group.views.values()) {
         if (target.isVisible) {
-          this.mainWindow.removeBrowserView(target.view)
+          this.mainWindow.contentView.removeChildView(target.view)
           target.isVisible = false
         }
       }
@@ -1202,7 +1202,7 @@ export class BrowserViewManager {
       if (this.activeViewId === WEB_TAB_ID) {
         void this.switchToHome()
       } else if (this.webDashboardView) {
-        this.mainWindow.removeBrowserView(this.webDashboardView)
+        this.mainWindow.contentView.removeChildView(this.webDashboardView)
       }
     })
 
@@ -1269,7 +1269,7 @@ export class BrowserViewManager {
   /**
    * Get the home view
    */
-  getWebDashboardView(): BrowserView | null {
+  getWebDashboardView(): WebContentsView | null {
     return this.webDashboardView
   }
 
@@ -1289,16 +1289,16 @@ export class BrowserViewManager {
   }
 
   /**
-   * Create or get a BrowserView for an account
+   * Create or get a WebContentsView for an account
    */
-  async openView(accountId: string, platform: PlatformType, url?: string): Promise<BrowserView> {
-    console.log('[BrowserViewManager] openView called:', { accountId, platform, url })
+  async openView(accountId: string, platform: PlatformType, url?: string): Promise<WebContentsView> {
+    publishLogger.info('openView called:', { accountId, platform, url })
     const account = DatabaseService.getInstance().getAccount(accountId)
 
     // Check if view already exists
     const existing = this.views.get(accountId)
     if (existing) {
-      console.log('[BrowserViewManager] View exists, showing it')
+      publishLogger.info('View exists, showing it')
       await this.showView(accountId)
       if (url) {
         await this.navigate(accountId, url)
@@ -1308,17 +1308,17 @@ export class BrowserViewManager {
       return existing.view
     }
 
-    console.log('[BrowserViewManager] Creating new view')
+    publishLogger.info('Creating new view')
     // Get session partition from account database for session isolation
     // This ensures login state is preserved across different features
     const partition = account?.sessionPartition || `persist:account-${accountId}`
-    console.log('[BrowserViewManager] Using session partition:', partition)
+    publishLogger.info('Using session partition:', partition)
     const ses = session.fromPartition(partition)
     hardenSession(ses)
     await applyAccountProxy(ses, account)
 
-    // Create BrowserView with isolated session
-    const view = new BrowserView({
+    // Create WebContentsView with isolated session
+    const view = new WebContentsView({
       webPreferences: {
         // Security: third-party platform pages get NO app preload — do not expose
         // window.api / window.electron (raw ipcRenderer) to untrusted remote content.
@@ -1331,11 +1331,11 @@ export class BrowserViewManager {
     this.installNavigationGuard(view.webContents, `account:${accountId}`)
 
     // Set bounds (full width, only reserve space for tab bar)
-    // MainWebView is hidden when BrowserView is shown, so no sidebar offset needed
+    // MainWebView is hidden when WebContentsView is shown, so no sidebar offset needed
     // Use getContentSize() instead of getBounds() for correct dimensions
     const [width, height] = this.mainWindow.getContentSize()
     const topOffset = TABBAR_HEIGHT
-    console.log('[BrowserViewManager] Setting bounds:', { x: 0, y: topOffset, width, height: height - topOffset })
+    publishLogger.info('Setting bounds:', { x: 0, y: topOffset, width, height: height - topOffset })
     view.setBounds({
       x: 0,
       y: topOffset,
@@ -1343,8 +1343,7 @@ export class BrowserViewManager {
       height: height - topOffset
     })
     // Disable auto-resize, we manage bounds manually via resize listener
-    view.setAutoResize({ width: false, height: false })
-    console.log('[BrowserViewManager] View created with bounds offset y:', topOffset)
+    publishLogger.info('View created with bounds offset y:', topOffset)
     this.installThirdPartyWindowOpenHandler(view, ses)
     trackAccountProxyForWebContents(view.webContents)
 
@@ -1360,26 +1359,26 @@ export class BrowserViewManager {
       isHome: false // isHome is only for the virtual home tab
     })
 
-    // Hide home view when showing other BrowserView
+    // Hide home view when showing other WebContentsView
     if (this.webDashboardView) {
-      this.mainWindow.removeBrowserView(this.webDashboardView)
+      this.mainWindow.contentView.removeChildView(this.webDashboardView)
     }
 
     // Hide all other content views (the freshly registered one stays visible)
     for (const [id, managed] of this.views) {
       if (id !== accountId && managed.isVisible) {
-        this.mainWindow.removeBrowserView(managed.view)
+        this.mainWindow.contentView.removeChildView(managed.view)
         managed.isVisible = false
       }
     }
 
     // Add new view to window
-    this.mainWindow.addBrowserView(view)
-    console.log('[BrowserViewManager] Added new BrowserView')
+    this.mainWindow.contentView.addChildView(view)
+    publishLogger.info('Added new WebContentsView')
 
     // Ensure tab bar stays on top
     if (this.tabBarView) {
-      this.mainWindow.setTopBrowserView(this.tabBarView)
+      this.mainWindow.contentView.addChildView(this.tabBarView)
     }
 
     // Hide other views
@@ -1390,9 +1389,9 @@ export class BrowserViewManager {
     this.updateAllViewBounds()
 
     // Navigate to URL
-    console.log('[BrowserViewManager] Loading URL:', targetUrl)
+    publishLogger.info('Loading URL:', targetUrl)
     await view.webContents.loadURL(targetUrl)
-    console.log('[BrowserViewManager] URL loaded successfully')
+    publishLogger.info('URL loaded successfully')
 
     // Listen for navigation events
     view.webContents.on('did-navigate', (_event, navigatedUrl) => {
@@ -1435,19 +1434,19 @@ export class BrowserViewManager {
 
     // Notify UI immediately that a new tab was created
     this.notifyTabsChanged()
-    console.log('[BrowserViewManager] Tabs changed notification sent')
+    publishLogger.info('Tabs changed notification sent')
 
     return view
   }
 
   /**
-   * Close and remove a BrowserView
+   * Close and remove a WebContentsView
    */
   async closeView(accountId: string): Promise<void> {
     const managed = this.views.get(accountId)
     if (!managed) return
 
-    this.mainWindow.removeBrowserView(managed.view)
+    this.mainWindow.contentView.removeChildView(managed.view)
     // Destroy the webContents
     await releaseAccountProxyForWebContents(managed.view.webContents)
     managed.view.webContents.close()
@@ -1474,7 +1473,7 @@ export class BrowserViewManager {
   }
 
   /**
-   * Show a specific BrowserView
+   * Show a specific WebContentsView
    */
   async showView(accountId: string): Promise<void> {
     const managed = this.views.get(accountId)
@@ -1482,18 +1481,18 @@ export class BrowserViewManager {
 
     // Hide web dashboard, platform and executor views
     if (this.webDashboardView) {
-      this.mainWindow.removeBrowserView(this.webDashboardView)
+      this.mainWindow.contentView.removeChildView(this.webDashboardView)
     }
     this.hideAuxiliarySurfaces()
 
     this.hideAllExcept(accountId)
-    this.mainWindow.addBrowserView(managed.view)
+    this.mainWindow.contentView.addChildView(managed.view)
     managed.isVisible = true
     this.activeViewId = accountId
 
     // Ensure tab bar stays on top
     if (this.tabBarView) {
-      this.mainWindow.setTopBrowserView(this.tabBarView)
+      this.mainWindow.contentView.addChildView(this.tabBarView)
     }
 
     // Shrink the renderer view back to the tab strip if we left native home
@@ -1503,13 +1502,13 @@ export class BrowserViewManager {
   }
 
   /**
-   * Hide a specific BrowserView
+   * Hide a specific WebContentsView
    */
   async hideView(accountId: string): Promise<void> {
     const managed = this.views.get(accountId)
     if (!managed) return
 
-    this.mainWindow.removeBrowserView(managed.view)
+    this.mainWindow.contentView.removeChildView(managed.view)
     managed.isVisible = false
 
     if (this.activeViewId === accountId) {
@@ -1526,7 +1525,7 @@ export class BrowserViewManager {
   private hideAllExcept(accountId: string): void {
     for (const [id, managed] of this.views) {
       if (id !== accountId && managed.isVisible) {
-        this.mainWindow.removeBrowserView(managed.view)
+        this.mainWindow.contentView.removeChildView(managed.view)
         managed.isVisible = false
       }
     }
@@ -1591,7 +1590,7 @@ export class BrowserViewManager {
   }
 
   /**
-   * Execute JavaScript in the BrowserView
+   * Execute JavaScript in the WebContentsView
    */
   async executeScript<T = unknown>(accountId: string, script: string): Promise<T> {
     const managed = this.views.get(accountId)
@@ -1603,13 +1602,13 @@ export class BrowserViewManager {
 
   /**
    * Fetch user info from the platform via adapter's getUserInfo
-   * Requires the BrowserView to be open and loaded for the account
+   * Requires the WebContentsView to be open and loaded for the account
    */
   async fetchUserInfo(
     accountId: string,
     platform: PlatformType
   ): Promise<{ username: string; displayName?: string; avatar?: string } | null> {
-    // Try using the open BrowserView first (DOM scrapers can see more than
+    // Try using the open WebContentsView first (DOM scrapers can see more than
     // plain APIs on some platforms), but never let a flaky scraper block the
     // session-based fallback.
     const managed = this.views.get(accountId)
@@ -1622,7 +1621,7 @@ export class BrowserViewManager {
             return result
           }
         } catch (error) {
-          console.error('[BrowserViewManager] adapter getUserInfo failed for', platform, error)
+          publishLogger.error('adapter getUserInfo failed for', platform, error)
         }
       }
     }
@@ -1632,7 +1631,7 @@ export class BrowserViewManager {
   }
 
   /**
-   * Fetch user info directly using session cookies without needing a BrowserView
+   * Fetch user info directly using session cookies without needing a WebContentsView
    */
   private async fetchUserInfoFromSession(
     accountId: string,
@@ -1653,7 +1652,7 @@ export class BrowserViewManager {
         return fetchSessionUserInfo(targetSession, platform)
       })
     } catch (e) {
-      console.error('[BrowserViewManager] fetchUserInfoFromSession error:', e)
+      publishLogger.error('fetchUserInfoFromSession error:', e)
       return null
     }
   }
@@ -1728,7 +1727,7 @@ export class BrowserViewManager {
           if (userInfo.avatar) updates.avatar = userInfo.avatar
         }
       } catch (error) {
-        console.error(`[BrowserViewManager] refreshAccountInfo(${accountId}) failed:`, error)
+        publishLogger.error(`refreshAccountInfo(${accountId}) failed:`, error)
       }
     }
 
@@ -1793,7 +1792,7 @@ export class BrowserViewManager {
         height: chromeHeight
       })
       // Ensure tab bar stays on top
-      this.mainWindow.setTopBrowserView(this.tabBarView)
+      this.mainWindow.contentView.addChildView(this.tabBarView)
     }
 
     // All content views start below the tab bar
@@ -1859,14 +1858,14 @@ export class BrowserViewManager {
   // ============================================
 
   /**
-   * Open or get a BrowserView for a platform (without account binding)
+   * Open or get a WebContentsView for a platform (without account binding)
    * Session partition: persist:{platform}-default
    */
   async openPlatformView(
     platform: PlatformType,
     contentType?: SyncContentType,
     url?: string
-  ): Promise<BrowserView> {
+  ): Promise<WebContentsView> {
     // Check if view already exists
     const existing = this.platformViews.get(platform)
     if (existing) {
@@ -1887,8 +1886,8 @@ export class BrowserViewManager {
     // sessionHardening (only app-handed-out paths are servable).
     registerLocalFileProtocol(ses)
 
-    // Create BrowserView with isolated session
-    const view = new BrowserView({
+    // Create WebContentsView with isolated session
+    const view = new WebContentsView({
       webPreferences: {
         // Security: third-party platform pages get NO app preload — do not expose
         // window.api / window.electron (raw ipcRenderer) to untrusted remote content.
@@ -1910,7 +1909,6 @@ export class BrowserViewManager {
       height: height - topOffset
     })
     // Disable auto-resize, we manage bounds manually via resize listener
-    view.setAutoResize({ width: false, height: false })
     this.installThirdPartyWindowOpenHandler(view, ses)
 
     // Store the managed view (not visible initially)
@@ -2054,32 +2052,32 @@ export class BrowserViewManager {
   }
 
   /**
-   * Show a platform BrowserView
+   * Show a platform WebContentsView
    */
   async showPlatformView(platform: PlatformType): Promise<void> {
     const managed = this.platformViews.get(platform)
     if (!managed) return
 
     this.hideAllPlatformViewsExcept(platform)
-    this.mainWindow.addBrowserView(managed.view)
+    this.mainWindow.contentView.addChildView(managed.view)
     managed.isVisible = true
     this.activePlatformId = platform
 
     // Ensure tab bar stays on top and shrink the renderer chrome
     if (this.tabBarView) {
-      this.mainWindow.setTopBrowserView(this.tabBarView)
+      this.mainWindow.contentView.addChildView(this.tabBarView)
     }
     this.updateAllViewBounds()
   }
 
   /**
-   * Hide a platform BrowserView
+   * Hide a platform WebContentsView
    */
   async hidePlatformView(platform: PlatformType): Promise<void> {
     const managed = this.platformViews.get(platform)
     if (!managed) return
 
-    this.mainWindow.removeBrowserView(managed.view)
+    this.mainWindow.contentView.removeChildView(managed.view)
     managed.isVisible = false
 
     if (this.activePlatformId === platform) {
@@ -2096,14 +2094,14 @@ export class BrowserViewManager {
   private hideAllPlatformViewsExcept(platform: PlatformType): void {
     for (const [id, managed] of this.platformViews) {
       if (id !== platform && managed.isVisible) {
-        this.mainWindow.removeBrowserView(managed.view)
+        this.mainWindow.contentView.removeChildView(managed.view)
         managed.isVisible = false
       }
     }
     // Also hide account-based views
     for (const managed of this.views.values()) {
       if (managed.isVisible) {
-        this.mainWindow.removeBrowserView(managed.view)
+        this.mainWindow.contentView.removeChildView(managed.view)
         managed.isVisible = false
       }
     }
@@ -2116,14 +2114,14 @@ export class BrowserViewManager {
   hideAllPlatformViews(): void {
     for (const managed of this.platformViews.values()) {
       if (managed.isVisible) {
-        this.mainWindow.removeBrowserView(managed.view)
+        this.mainWindow.contentView.removeChildView(managed.view)
         managed.isVisible = false
       }
     }
     // Also hide account-based views
     for (const managed of this.views.values()) {
       if (managed.isVisible) {
-        this.mainWindow.removeBrowserView(managed.view)
+        this.mainWindow.contentView.removeChildView(managed.view)
         managed.isVisible = false
       }
     }
@@ -2146,7 +2144,7 @@ export class BrowserViewManager {
   }
 
   /**
-   * Execute JavaScript in a platform BrowserView
+   * Execute JavaScript in a platform WebContentsView
    */
   async executePlatformScript<T = unknown>(platform: PlatformType, script: string): Promise<T> {
     const managed = this.platformViews.get(platform)
@@ -2254,13 +2252,13 @@ export class BrowserViewManager {
   }
 
   /**
-   * Close a platform BrowserView
+   * Close a platform WebContentsView
    */
   async closePlatformView(platform: PlatformType): Promise<void> {
     const managed = this.platformViews.get(platform)
     if (!managed) return
 
-    this.mainWindow.removeBrowserView(managed.view)
+    this.mainWindow.contentView.removeChildView(managed.view)
     managed.view.webContents.close()
     this.platformViews.delete(platform)
     this.clearPublishPayloadsForPrefix(this.platformPublishPayloads, `${platform}:`)
@@ -2330,14 +2328,14 @@ export class BrowserViewManager {
     if (this.activePlatformId && this.activePlatformId !== platform) {
       const current = this.platformViews.get(this.activePlatformId)
       if (current && current.isVisible) {
-        this.mainWindow.removeBrowserView(current.view)
+        this.mainWindow.contentView.removeChildView(current.view)
         current.isVisible = false
       }
     }
 
     // Show target view
     if (!target.isVisible) {
-      this.mainWindow.addBrowserView(target.view)
+      this.mainWindow.contentView.addChildView(target.view)
       target.isVisible = true
       // Re-apply bounds in case window was resized
       const [width, height] = this.mainWindow.getContentSize()
@@ -2370,11 +2368,11 @@ export class BrowserViewManager {
     }
   }
 
-  // ========== Executor BrowserView Management ==========
+  // ========== Executor WebContentsView Management ==========
   // Executor views are keyed by accountId to support multiple accounts per platform
 
   /**
-   * Open an executor BrowserView for an account
+   * Open an executor WebContentsView for an account
    * @param accountId - The account ID (used as key for executor view)
    * @param platform - The platform type
    * @param contentType - Optional content type to determine the URL
@@ -2385,7 +2383,7 @@ export class BrowserViewManager {
     platform: PlatformType,
     contentType?: SyncContentType,
     sessionPartition?: string
-  ): Promise<BrowserView> {
+  ): Promise<WebContentsView> {
     const account = DatabaseService.getInstance().getAccount(accountId)
 
     // Check if view already exists for this account
@@ -2406,8 +2404,8 @@ export class BrowserViewManager {
     registerLocalFileProtocol(ses)
     await applyAccountProxy(ses, account)
 
-    // Create BrowserView
-    const view = new BrowserView({
+    // Create WebContentsView
+    const view = new WebContentsView({
       webPreferences: {
         // Security: third-party platform pages get NO app preload — do not expose
         // window.api / window.electron (raw ipcRenderer) to untrusted remote content.
@@ -2430,7 +2428,6 @@ export class BrowserViewManager {
     })
 
     // Disable auto-resize, we manage bounds manually via resize listener
-    view.setAutoResize({ width: false, height: false })
     this.installThirdPartyWindowOpenHandler(view, ses)
     trackAccountProxyForWebContents(view.webContents)
 
@@ -2453,7 +2450,7 @@ export class BrowserViewManager {
   }
 
   /**
-   * Show an executor BrowserView by accountId
+   * Show an executor WebContentsView by accountId
    */
   async showExecutorView(accountId: string): Promise<void> {
     const managed = this.executorViews.get(accountId)
@@ -2466,13 +2463,13 @@ export class BrowserViewManager {
     this.hideAllPlatformViews()
 
     // Show this view
-    this.mainWindow.addBrowserView(managed.view)
+    this.mainWindow.contentView.addChildView(managed.view)
     managed.isVisible = true
     this.activeExecutorId = accountId
 
     // Ensure tab bar stays on top
     if (this.tabBarView) {
-      this.mainWindow.setTopBrowserView(this.tabBarView)
+      this.mainWindow.contentView.addChildView(this.tabBarView)
     }
 
     // Shrink the renderer chrome and apply consistent content bounds
@@ -2480,13 +2477,13 @@ export class BrowserViewManager {
   }
 
   /**
-   * Hide an executor BrowserView by accountId
+   * Hide an executor WebContentsView by accountId
    */
   async hideExecutorView(accountId: string): Promise<void> {
     const managed = this.executorViews.get(accountId)
     if (!managed) return
 
-    this.mainWindow.removeBrowserView(managed.view)
+    this.mainWindow.contentView.removeChildView(managed.view)
     managed.isVisible = false
 
     if (this.activeExecutorId === accountId) {
@@ -2503,7 +2500,7 @@ export class BrowserViewManager {
   private hideAllExecutorViewsExcept(accountId: string): void {
     for (const [id, managed] of this.executorViews) {
       if (id !== accountId && managed.isVisible) {
-        this.mainWindow.removeBrowserView(managed.view)
+        this.mainWindow.contentView.removeChildView(managed.view)
         managed.isVisible = false
       }
     }
@@ -2515,7 +2512,7 @@ export class BrowserViewManager {
   hideAllExecutorViews(): void {
     for (const managed of this.executorViews.values()) {
       if (managed.isVisible) {
-        this.mainWindow.removeBrowserView(managed.view)
+        this.mainWindow.contentView.removeChildView(managed.view)
         managed.isVisible = false
       }
     }
@@ -2526,13 +2523,13 @@ export class BrowserViewManager {
   }
 
   /**
-   * Close an executor BrowserView by accountId
+   * Close an executor WebContentsView by accountId
    */
   async closeExecutorView(accountId: string): Promise<void> {
     const managed = this.executorViews.get(accountId)
     if (!managed) return
 
-    this.mainWindow.removeBrowserView(managed.view)
+    this.mainWindow.contentView.removeChildView(managed.view)
     await releaseAccountProxyForWebContents(managed.view.webContents)
     managed.view.webContents.close()
     this.executorViews.delete(accountId)
@@ -2578,7 +2575,7 @@ export class BrowserViewManager {
   }
 
   /**
-   * Fill content in an executor BrowserView using platform adapter
+   * Fill content in an executor WebContentsView using platform adapter
    */
   async fillExecutorContent(
     accountId: string,
@@ -2680,7 +2677,7 @@ export class BrowserViewManager {
   }
 
   /**
-   * Submit content in an executor BrowserView
+   * Submit content in an executor WebContentsView
    */
   async submitExecutorContent(
     accountId: string,
@@ -2751,7 +2748,7 @@ export class BrowserViewManager {
   // ========== Browser Tab Management ==========
 
   /**
-   * Check if any BrowserView is currently visible
+   * Check if any WebContentsView is currently visible
    */
   hasVisibleView(): boolean {
     for (const managed of this.views.values()) {
@@ -2802,7 +2799,7 @@ export class BrowserViewManager {
       })
     }
 
-    // Add all platform BrowserView tabs
+    // Add all platform WebContentsView tabs
     for (const [id, managed] of this.views) {
       tabs.push({
         id,
@@ -2909,28 +2906,28 @@ export class BrowserViewManager {
   }
 
   /**
-   * Switch to the native home tab: hide every content BrowserView so the
+   * Switch to the native home tab: hide every content WebContentsView so the
    * renderer view (expanded to full window) becomes the visible surface.
    */
   async switchToHome(): Promise<void> {
     // Hide all platform views
     for (const managed of this.views.values()) {
       if (managed.isVisible) {
-        this.mainWindow.removeBrowserView(managed.view)
+        this.mainWindow.contentView.removeChildView(managed.view)
         managed.isVisible = false
       }
     }
 
     // Hide web dashboard, publish group, platform and executor views
     if (this.webDashboardView) {
-      this.mainWindow.removeBrowserView(this.webDashboardView)
+      this.mainWindow.contentView.removeChildView(this.webDashboardView)
     }
     this.hideAllGroupViews()
     this.hideAuxiliarySurfaces()
 
     // Ensure tab bar stays on top
     if (this.tabBarView) {
-      this.mainWindow.setTopBrowserView(this.tabBarView)
+      this.mainWindow.contentView.addChildView(this.tabBarView)
     }
 
     this.activeViewId = HOME_TAB_ID
@@ -2945,7 +2942,7 @@ export class BrowserViewManager {
   async closeTab(accountId: string): Promise<boolean> {
     // Cannot close home tab
     if (accountId === HOME_TAB_ID) {
-      console.log('[BrowserViewManager] Cannot close home tab')
+      publishLogger.info('Cannot close home tab')
       return false
     }
 
@@ -2965,7 +2962,7 @@ export class BrowserViewManager {
     // The user may have just logged in inside this tab; re-detect in the
     // background so the account list reflects the new state immediately.
     void this.refreshAccountInfo(accountId).catch((error) => {
-      console.error('[BrowserViewManager] post-close account refresh failed:', error)
+      publishLogger.error('post-close account refresh failed:', error)
     })
 
     // If closed the active tab, switch to home or another tab
@@ -3045,7 +3042,7 @@ export class BrowserViewManager {
    */
   private notifyTabsChanged(): void {
     const tabs = this.getTabs()
-    // Send to tab bar BrowserView
+    // Send to tab bar WebContentsView
     if (this.tabBarView && !this.tabBarView.webContents.isDestroyed()) {
       this.tabBarView.webContents.send('multipost:browser:tabsChanged', tabs)
     }
@@ -3071,7 +3068,7 @@ export class BrowserViewManager {
   private async destroyPublishGroupViews(group: PublishGroupView): Promise<void> {
     for (const target of group.views.values()) {
       if (target.isVisible) {
-        this.mainWindow.removeBrowserView(target.view)
+        this.mainWindow.contentView.removeChildView(target.view)
         target.isVisible = false
       }
       if (!target.view.webContents.isDestroyed()) {
@@ -3098,7 +3095,7 @@ export class BrowserViewManager {
     const groupId = `group-${uuidv4()}`
     const groupName = `发布 #${this.groupCounter}`
 
-    console.log(`[BrowserViewManager] Creating publish group: ${groupName}`)
+    publishLogger.info(`Creating publish group: ${groupName}`)
 
     // Create the group
     const group: PublishGroupView = {
@@ -3131,7 +3128,7 @@ export class BrowserViewManager {
         return true
       })
 
-      // Create BrowserView for each target account
+      // Create WebContentsView for each target account
       for (const target of uniqueTargets) {
         const { accountId, platform, displayName } = target
 
@@ -3151,19 +3148,19 @@ export class BrowserViewManager {
         const newCookies = await newSes.cookies.get({})
 
         if (newCookies.length > 0) {
-          console.log(`[BrowserViewManager] Using new partition (${newCookies.length} cookies): ${newPartition}`)
+          publishLogger.info(`Using new partition (${newCookies.length} cookies): ${newPartition}`)
         } else {
           const oldSes = session.fromPartition(oldPartition)
           const oldCookies = await oldSes.cookies.get({})
           if (oldCookies.length > 0) {
-            console.log(`[BrowserViewManager] Falling back to old partition (${oldCookies.length} cookies): ${oldPartition}`)
+            publishLogger.info(`Falling back to old partition (${oldCookies.length} cookies): ${oldPartition}`)
             partition = oldPartition
           } else {
-            console.log(`[BrowserViewManager] No cookies in either partition, using new: ${newPartition}`)
+            publishLogger.info(`No cookies in either partition, using new: ${newPartition}`)
           }
         }
 
-        console.log(`[BrowserViewManager] Account ${displayName} using partition: ${partition}`)
+        publishLogger.info(`Account ${displayName} using partition: ${partition}`)
         const ses = session.fromPartition(partition)
         hardenSession(ses)
         // local-file:// requests are gated by the capability allowlist in
@@ -3173,8 +3170,8 @@ export class BrowserViewManager {
         await acquireAccountProxyForSession(ses)
         temporaryProxySession = ses
 
-        // Create BrowserView
-        const view = new BrowserView({
+        // Create WebContentsView
+        const view = new WebContentsView({
           webPreferences: {
             // Security: third-party platform pages get NO app preload — do not expose
             // window.api / window.electron (raw ipcRenderer) to untrusted remote content.
@@ -3192,7 +3189,6 @@ export class BrowserViewManager {
           width: width,
           height: height - topOffset
         })
-        view.setAutoResize({ width: false, height: false })
         this.installThirdPartyWindowOpenHandler(view, ses)
         trackAccountProxyForWebContents(view.webContents)
 
@@ -3213,7 +3209,7 @@ export class BrowserViewManager {
 
         // Navigate to publish URL
         const publishUrl = this.getPublishUrl(platform, contentType)
-        console.log(`[BrowserViewManager] Loading ${displayName}: ${publishUrl}`)
+        publishLogger.info(`Loading ${displayName}: ${publishUrl}`)
         await view.webContents.loadURL(publishUrl)
       }
 
@@ -3248,7 +3244,7 @@ export class BrowserViewManager {
       if (this.publishGroups.get(groupId) !== group) return
 
       try {
-        console.log(`[BrowserViewManager] Auto-filling content for group: ${groupName}`)
+        publishLogger.info(`Auto-filling content for group: ${groupName}`)
         const fillResults = await this.fillGroupContent(groupId)
 
         // 自动发布：提交所有已就绪的目标；失败/跳过的留在进度卡里供重试，
@@ -3263,10 +3259,10 @@ export class BrowserViewManager {
                 .filter(([, result]) => result.handled && result.ok && result.skipAdapterSubmit)
                 .map(([accountId]) => accountId)
             )
-            console.log(`[BrowserViewManager] Auto-publishing group: ${groupName} (${readyCount} ready)`)
+            publishLogger.info(`Auto-publishing group: ${groupName} (${readyCount} ready)`)
             await this.submitGroupAll(groupId, { skipAdapterSubmitFor })
           } else {
-            console.log(`[BrowserViewManager] No ready targets, skipping auto-publish for group: ${groupName}`)
+            publishLogger.info(`No ready targets, skipping auto-publish for group: ${groupName}`)
             this.emitGroupRunFinished(groupId)
           }
           // Auto-close only a fully successful run; partial results must stay
@@ -3277,7 +3273,7 @@ export class BrowserViewManager {
           }
         }
       } catch (error) {
-        console.error(`[BrowserViewManager] Auto-fill failed for group ${groupId}:`, error)
+        publishLogger.error(`Auto-fill failed for group ${groupId}:`, error)
       }
     }, 0)
 
@@ -3293,14 +3289,14 @@ export class BrowserViewManager {
 
     // Hide web dashboard, platform and executor views
     if (this.webDashboardView) {
-      this.mainWindow.removeBrowserView(this.webDashboardView)
+      this.mainWindow.contentView.removeChildView(this.webDashboardView)
     }
     this.hideAuxiliarySurfaces()
 
     // Hide all other views
     for (const managed of this.views.values()) {
       if (managed.isVisible) {
-        this.mainWindow.removeBrowserView(managed.view)
+        this.mainWindow.contentView.removeChildView(managed.view)
         managed.isVisible = false
       }
     }
@@ -3310,7 +3306,7 @@ export class BrowserViewManager {
       if (id !== groupId) {
         for (const target of g.views.values()) {
           if (target.isVisible) {
-            this.mainWindow.removeBrowserView(target.view)
+            this.mainWindow.contentView.removeChildView(target.view)
             target.isVisible = false
           }
         }
@@ -3321,14 +3317,14 @@ export class BrowserViewManager {
     if (group.activeAccountId) {
       const target = group.views.get(group.activeAccountId)
       if (target) {
-        this.mainWindow.addBrowserView(target.view)
+        this.mainWindow.contentView.addChildView(target.view)
         target.isVisible = true
       }
     }
 
     // Ensure tab bar stays on top
     if (this.tabBarView) {
-      this.mainWindow.setTopBrowserView(this.tabBarView)
+      this.mainWindow.contentView.addChildView(this.tabBarView)
     }
 
     this.activeGroupId = groupId
@@ -3355,18 +3351,18 @@ export class BrowserViewManager {
     if (group.activeAccountId && group.activeAccountId !== accountId) {
       const currentTarget = group.views.get(group.activeAccountId)
       if (currentTarget && currentTarget.isVisible) {
-        this.mainWindow.removeBrowserView(currentTarget.view)
+        this.mainWindow.contentView.removeChildView(currentTarget.view)
         currentTarget.isVisible = false
       }
     }
 
     // Show new active view
-    this.mainWindow.addBrowserView(target.view)
+    this.mainWindow.contentView.addChildView(target.view)
     target.isVisible = true
 
     // Ensure tab bar stays on top
     if (this.tabBarView) {
-      this.mainWindow.setTopBrowserView(this.tabBarView)
+      this.mainWindow.contentView.addChildView(this.tabBarView)
     }
 
     group.activeAccountId = accountId
@@ -3392,7 +3388,7 @@ export class BrowserViewManager {
 
     // Remove from window if visible
     if (target.isVisible) {
-      this.mainWindow.removeBrowserView(target.view)
+      this.mainWindow.contentView.removeChildView(target.view)
     }
 
     // Destroy the view
@@ -3430,7 +3426,7 @@ export class BrowserViewManager {
     // Remove all views
     for (const target of group.views.values()) {
       if (target.isVisible) {
-        this.mainWindow.removeBrowserView(target.view)
+        this.mainWindow.contentView.removeChildView(target.view)
       }
       await releaseAccountProxyForWebContents(target.view.webContents)
       target.view.webContents.close()
@@ -3457,16 +3453,16 @@ export class BrowserViewManager {
     if (!group) return
 
     const delaySec = group.autoCloseDelay
-    console.log(`[BrowserViewManager] Auto-close countdown: ${delaySec}s for group ${groupId}`)
+    publishLogger.info(`Auto-close countdown: ${delaySec}s for group ${groupId}`)
 
     this.notifyGroupTabsChanged(groupId)
 
     setTimeout(async () => {
       try {
         await this.closePublishGroup(groupId)
-        console.log(`[BrowserViewManager] Auto-closed group ${groupId}`)
+        publishLogger.info(`Auto-closed group ${groupId}`)
       } catch (error) {
-        console.error(`[BrowserViewManager] Auto-close failed for group ${groupId}:`, error)
+        publishLogger.error(`Auto-close failed for group ${groupId}:`, error)
       }
     }, delaySec * 1000)
   }
@@ -3740,7 +3736,7 @@ export class BrowserViewManager {
         this.setGroupTargetStatus(groupId, accountId, 'ready', {
           extensionKey: extensionResult.extensionKey
         })
-        console.log(`[BrowserViewManager] Filled content for ${target.displayName} via extension injector`)
+        publishLogger.info(`Filled content for ${target.displayName} via extension injector`)
         return extensionResult
       }
 
@@ -3748,7 +3744,7 @@ export class BrowserViewManager {
       if (!adapter) {
         const error = `No adapter found for platform: ${target.platform}`
         this.setGroupTargetStatus(groupId, accountId, 'failed', { error })
-        console.error(error)
+        publishLogger.error(error)
         return null
       }
 
@@ -3760,7 +3756,7 @@ export class BrowserViewManager {
       }
 
       this.setGroupTargetStatus(groupId, accountId, 'ready')
-      console.log(`[BrowserViewManager] Filled content for ${target.displayName}`)
+      publishLogger.info(`Filled content for ${target.displayName}`)
       return null
     } catch (error) {
       if (isCancelled()) {
@@ -3770,7 +3766,7 @@ export class BrowserViewManager {
           error: this.formatPublishError(error)
         })
       }
-      console.error(`Failed to fill content for ${accountId}:`, error)
+      publishLogger.error(`Failed to fill content for ${accountId}:`, error)
       return null
     }
   }
@@ -3820,7 +3816,7 @@ export class BrowserViewManager {
       await target.view.webContents.loadURL(publishUrl)
     } catch (error) {
       // ERR_ABORTED etc. — fillSingleGroupTarget's readiness wait will judge
-      console.warn(`[BrowserViewManager] Retry reload for ${accountId}:`, error)
+      publishLogger.warn(`Retry reload for ${accountId}:`, error)
     }
 
     const normalizedData = this.normalizeContentData(group.data)
@@ -3954,7 +3950,7 @@ export class BrowserViewManager {
           suppressFinishEvent: true
         })
       } catch (error) {
-        console.error(`Failed to submit for ${accountId}:`, error)
+        publishLogger.error(`Failed to submit for ${accountId}:`, error)
       }
     }
 

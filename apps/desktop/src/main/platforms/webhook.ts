@@ -1,4 +1,4 @@
-import type { BrowserView } from 'electron'
+import type { WebContentsView } from 'electron'
 import type { PublishResult, SyncContentType, SyncContentData, DynamicData } from '../../shared/types'
 import { BasePlatformAdapter } from './base'
 
@@ -73,24 +73,24 @@ export class WebhookAdapter extends BasePlatformAdapter {
     `
   }
 
-  async checkLoginStatus(_view: BrowserView): Promise<boolean> {
+  async checkLoginStatus(_view: WebContentsView): Promise<boolean> {
     // Webhook 不需要登录
     return true
   }
 
   async getUserInfo(
-    _view: BrowserView
+    _view: WebContentsView
   ): Promise<{ username: string; displayName?: string; avatar?: string } | null> {
     return { username: 'webhook', displayName: 'Webhook', avatar: '' }
   }
 
-  async navigateToPublishPage(view: BrowserView, _contentType?: SyncContentType): Promise<void> {
+  async navigateToPublishPage(view: WebContentsView, _contentType?: SyncContentType): Promise<void> {
     await view.webContents.loadURL(this.publishUrl)
     await this.waitForNavigation(view)
   }
 
   async fillContent(
-    view: BrowserView,
+    view: WebContentsView,
     contentType: SyncContentType,
     data: SyncContentData
   ): Promise<void> {
@@ -98,7 +98,7 @@ export class WebhookAdapter extends BasePlatformAdapter {
   }
 
   // Webhook 的实际发送通过 IPC 在主进程中处理
-  async submit(_view: BrowserView, _contentType?: SyncContentType): Promise<PublishResult> {
+  async submit(_view: WebContentsView, _contentType?: SyncContentType): Promise<PublishResult> {
     // Webhook 发送逻辑应该在主进程中通过 IPC 处理
     // 这里只返回成功，实际发送由调用方处理
     return { success: true }

@@ -1,0 +1,152 @@
+---
+title: 发布 Publish
+description: 创建发布任务、轮询状态、提交与重试
+---
+
+> 所有端点都需要 Bearer Token 鉴权。地址前缀为 `http://127.0.0.1:19528`。
+
+发布是一个**异步**过程：创建任务后会为每个账号打开一个浏览器视图、填充内容，随后（可选）自动提交。接口立即返回一个 `groupId`，你需要轮询状态直到每个目标进入终态。
+
+## 创建发布任务
+
+```http
+POST /v1/publish
+```
+
+请求体：
+
+| 字段 | 类型 | 说明 |
+| --- | --- | --- |
+| `contentType` | string | `DYNAMIC` / `VIDEO` / `ARTICLE` / `PODCAST` |
+| `accountIds` | string[] | 目标账号 id（来自 [账号列表](./accounts)） |
+| `data` | object | 内容载荷，结构随 `contentType` 而定，见下 |
+| `autoSubmit` | boolean | 填充后是否自动提交，默认 `false` |
+
+媒体字段（图片、视频、封面、音频）接受两种写法：
+
+- **本地绝对路径**：`"/Users/me/pic.jpg"`
+- **http(s) URL**：`"https://example.com/pic.jpg"`（会自动下载到本机）
+
+也可写成对象形式 `{ "url": "https://…", "name": "封面.jpg" }`。不支持 `blob:` URL。
+
+### 各内容类型的 data 结构
+
+```jsonc
+// DYNAMIC（动态/图文）
+{ "title": "可选标题", "content": "正文", "images": ["/abs/1.jpg"], "videos": [], "tags": ["标签"] }
+
+// VIDEO（视频）
+{ "title": "标题", "content": "简介", "video": "/abs/v.mp4", "cover": "/abs/cover.jpg", "tags": [] }
+
+// ARTICLE（文章，markdownContent 或 htmlContent 二选一）
+{ "title": "标题", "digest": "摘要", "cover": "/abs/cover.jpg", "markdownContent": "# 正文", "tags": [] }
+
+// PODCAST（播客）
+{ "title": "标题", "description": "简介", "audio": "/abs/audio.mp3", "cover": "/abs/cover.jpg", "tags": [] }
+```
+
+### 示例
+
+```bash
+curl -X POST 'http://127.0.0.1:19528/v1/publish' \
+  -H "Authorization: Bearer $MULTIPOST_DESKTOP_TOKEN" \
+  -H 'Content-Type: application/json' \
+  -d '{
+    "contentType": "DYNAMIC",
+    "accountIds": ["a1b2c3d4", "e5f6g7h8"],
+    "autoSubmit": false,
+    "data": { "content": "大家好，这是通过 API 发布的动态", "images": ["/Users/me/pic.jpg"] }
+  }'
+```
+
+**202 Accepted**
+
+```json
+{
+  "groupId": "group-…",
+  "status": {
+    "taskId": "group-…",
+    "status": "preparing",
+    "targets": [
+      { "platform": "weibo", "accountId": "a1b2c3d4", "status": "pending" }
+    ],
+    "updatedAt": 1733900000000
+  }
+}
+```
+
+<Callout type="warn">
+当某个账号的平台不支持该内容类型时，返回 `400 unsupported_content_type`。建议先用 `GET /v1/platforms` 校验。
+</Callout>
+
+## 查询发布状态
+
+```http
+GET /v1/publish/{groupId}
+```
+
+```bash
+curl 'http://127.0.0.1:19528/v1/publish/group-xxx' \
+  -H "Authorization: Bearer $MULTIPOST_DESKTOP_TOKEN"
+```
+
+**200**
+
+```json
+{
+  "taskId": "group-xxx",
+  "groupId": "group-xxx",
+  "status": "publishing",
+  "open": true,
+  "targets": [
+    { "platform": "weibo", "accountId": "a1b2c3d4", "status": "success", "postUrl": "https://weibo.com/…" },
+    { "platform": "xiaohongshu", "accountId": "e5f6g7h8", "status": "failed", "error": "登录已过期" }
+  ],
+  "updatedAt": 1733900012000
+}
+```
+
+每个目标的 `status` 取值：`pending` / `filling` / `ready` / `success` / `failed` / `cancelled`。
+`success`、`failed`、`cancelled` 为终态。`open` 表示发布组窗口是否仍然打开。
+
+<Callout>
+状态快照在发布组关闭后仍会保留约 10 分钟，超时后查询返回 `404 publish_not_found`。
+</Callout>
+
+## 列出进行中的发布组
+
+```http
+GET /v1/publish
+```
+
+## 提交 / 重试 / 关闭
+
+当 `autoSubmit=false` 时，内容填充完成（目标进入 `ready`）后由你确认提交：
+
+```http
+POST /v1/publish/{groupId}/submit                         # 提交全部就绪目标
+POST /v1/publish/{groupId}/targets/{accountId}/submit     # 仅提交某个账号
+POST /v1/publish/{groupId}/targets/{accountId}/retry      # 重试失败的账号
+DELETE /v1/publish/{groupId}                              # 关闭发布组及其视图
+```
+
+```bash
+curl -X POST 'http://127.0.0.1:19528/v1/publish/group-xxx/submit' \
+  -H "Authorization: Bearer $MULTIPOST_DESKTOP_TOKEN"
+```
+
+提交、重试均返回最新的状态快照（结构同查询状态）。
+
+## 发布历史
+
+```http
+GET /v1/history
+GET /v1/history/{id}
+```
+
+可选查询参数：`platform`、`status`（`success`/`failed`/`pending`）、`limit`、`offset`。
+
+```bash
+curl 'http://127.0.0.1:19528/v1/history?status=success&limit=20' \
+  -H "Authorization: Bearer $MULTIPOST_DESKTOP_TOKEN"
+```

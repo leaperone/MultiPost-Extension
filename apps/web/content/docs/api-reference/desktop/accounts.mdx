@@ -1,0 +1,103 @@
+---
+title: 账号 Accounts
+description: 拉取账号列表、详情，刷新登录状态
+---
+
+> 所有端点都需要 Bearer Token 鉴权。地址前缀为 `http://127.0.0.1:19528`。
+
+## 列出账号
+
+```http
+GET /v1/accounts
+```
+
+可选查询参数：
+
+| 参数 | 说明 |
+| --- | --- |
+| `platform` | 按平台过滤，如 `weibo`、`xiaohongshu` |
+| `groupId` | 按账号分组过滤 |
+
+```bash
+curl 'http://127.0.0.1:19528/v1/accounts?platform=weibo' \
+  -H "Authorization: Bearer $MULTIPOST_DESKTOP_TOKEN"
+```
+
+**200**
+
+```json
+{
+  "accounts": [
+    {
+      "id": "a1b2c3d4",
+      "platform": "weibo",
+      "username": "weibo_user",
+      "displayName": "我的微博",
+      "remark": "主账号",
+      "avatar": "https://…",
+      "isLoggedIn": true,
+      "isDefault": true,
+      "createdAt": 1733900000000,
+      "updatedAt": 1733900000000
+    }
+  ]
+}
+```
+
+<Callout>
+账号对象不会返回代理密码等敏感字段。`id` 是后续创建发布任务时要用的 `accountId`。
+</Callout>
+
+## 获取单个账号
+
+```http
+GET /v1/accounts/{id}
+```
+
+```bash
+curl 'http://127.0.0.1:19528/v1/accounts/a1b2c3d4' \
+  -H "Authorization: Bearer $MULTIPOST_DESKTOP_TOKEN"
+```
+
+账号不存在时返回 `404`：
+
+```json
+{ "error": { "code": "account_not_found", "message": "Account not found: a1b2c3d4" } }
+```
+
+## 刷新登录状态
+
+重新打开账号会话访问对应平台，更新登录态、昵称与头像。该操作会真实加载页面，通常需要几秒。
+
+```http
+POST /v1/accounts/{id}/refresh
+```
+
+```bash
+curl -X POST 'http://127.0.0.1:19528/v1/accounts/a1b2c3d4/refresh' \
+  -H "Authorization: Bearer $MULTIPOST_DESKTOP_TOKEN"
+```
+
+**200** — 返回刷新后的账号对象（结构同上）。
+
+## 平台清单
+
+列出所有支持的平台及其支持的内容类型，便于在创建发布任务前校验。
+
+```http
+GET /v1/platforms
+```
+
+**200**
+
+```json
+{
+  "platforms": [
+    {
+      "id": "weibo",
+      "name": "微博",
+      "supportedContentTypes": ["DYNAMIC", "ARTICLE", "VIDEO"]
+    }
+  ]
+}
+```

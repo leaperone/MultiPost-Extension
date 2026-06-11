@@ -1,4 +1,4 @@
-import { BrowserView, session } from 'electron'
+import { WebContentsView, session } from 'electron'
 import { PLATFORMS } from '../../shared/constants'
 import type {
   Account,
@@ -11,6 +11,7 @@ import { DatabaseService } from '../database'
 import { getKeepAliveConfig, setKeepAliveConfig } from '../appSettings'
 import { isSupportedBrowserNavigationUrl, openExternalUrl } from '../browser/externalUrl'
 import { hardenSession } from '../browser/sessionHardening'
+import { keepaliveLogger } from '../logger'
 import {
   applyAccountProxy,
   releaseAccountProxyForWebContents,
@@ -46,7 +47,7 @@ type NavigationGuardableWebContents = Electron.WebContents & {
   ): Electron.WebContents
 }
 
-function installKeepAliveNavigationGuard(view: BrowserView, source: string): void {
+function installKeepAliveNavigationGuard(view: WebContentsView, source: string): void {
   const webContents = view.webContents
   const guardNavigation = (event: Electron.Event, url: string): void => {
     if (isSupportedBrowserNavigationUrl(url)) {
@@ -54,7 +55,7 @@ function installKeepAliveNavigationGuard(view: BrowserView, source: string): voi
     }
 
     event.preventDefault()
-    console.warn(`[KeepAlive] Blocked unsupported navigation from ${source}:`, url)
+    keepaliveLogger.warn(`Blocked unsupported navigation from ${source}:`, url)
     void openExternalUrl(url)
   }
 
@@ -62,7 +63,7 @@ function installKeepAliveNavigationGuard(view: BrowserView, source: string): voi
   ;(webContents as NavigationGuardableWebContents).on('will-frame-navigate', guardNavigation)
   webContents.on('will-redirect', guardNavigation)
   webContents.setWindowOpenHandler(({ url }) => {
-    console.warn(`[KeepAlive] Blocked window open from ${source}:`, url)
+    keepaliveLogger.warn(`Blocked window open from ${source}:`, url)
     void openExternalUrl(url)
     return { action: 'deny' }
   })
@@ -87,20 +88,20 @@ export class KeepAliveService {
 
     const config = getKeepAliveConfig()
     if (!config.enabled) {
-      console.log('[KeepAlive] Disabled by user setting, not scheduling')
+      keepaliveLogger.info('Disabled by user setting, not scheduling')
       return
     }
 
     const delayMs = randomBetween(STARTUP_DELAY_MIN_MS, STARTUP_DELAY_MAX_MS)
     this.scheduleNext(delayMs)
-    console.log(
-      `[KeepAlive] Started. First run in ${Math.round(delayMs / 1000)}s, then every ~${config.intervalHours}h (jittered)`
+    keepaliveLogger.info(
+      `Started. First run in ${Math.round(delayMs / 1000)}s, then every ~${config.intervalHours}h (jittered)`
     )
   }
 
   stop(): void {
     this.clearTimer()
-    console.log('[KeepAlive] Stopped')
+    keepaliveLogger.info('Stopped')
   }
 
   /** Persist a config change and reschedule accordingly; returns the new status. */
@@ -110,14 +111,14 @@ export class KeepAliveService {
 
     if (!applied.enabled) {
       this.clearTimer()
-      console.log('[KeepAlive] Disabled by user')
+      keepaliveLogger.info('Disabled by user')
     } else if (!wasScheduled) {
       // Just switched on: run soon so the user sees it take effect
       this.scheduleNext(randomBetween(STARTUP_DELAY_MIN_MS, STARTUP_DELAY_MAX_MS))
-      console.log('[KeepAlive] Enabled by user')
+      keepaliveLogger.info('Enabled by user')
     } else {
       this.scheduleNext(this.jitteredIntervalMs(applied.intervalHours))
-      console.log(`[KeepAlive] Interval changed to ~${applied.intervalHours}h`)
+      keepaliveLogger.info(`Interval changed to ~${applied.intervalHours}h`)
     }
 
     const status = this.getStatus()
@@ -154,13 +155,13 @@ export class KeepAliveService {
 
   async triggerOnce(): Promise<KeepAliveStatus> {
     if (this.isRunning) {
-      console.log('[KeepAlive] Already running, skipping')
+      keepaliveLogger.info('Already running, skipping')
       return this.getStatus()
     }
 
     this.isRunning = true
     this.onStatusChanged?.(this.getStatus())
-    console.log('[KeepAlive] Starting keep-alive round...')
+    keepaliveLogger.info('Starting keep-alive round...')
 
     try {
       const db = DatabaseService.getInstance()
@@ -168,13 +169,13 @@ export class KeepAliveService {
       const loggedInAccounts = allAccounts.filter((a) => a.isLoggedIn)
 
       if (loggedInAccounts.length === 0) {
-        console.log('[KeepAlive] No logged-in accounts, skipping')
+        keepaliveLogger.info('No logged-in accounts, skipping')
         this.lastRunAt = Date.now()
         this.lastResults = []
         return this.getStatus()
       }
 
-      console.log(`[KeepAlive] Processing ${loggedInAccounts.length} logged-in accounts...`)
+      keepaliveLogger.info(`Processing ${loggedInAccounts.length} logged-in accounts...`)
       const results: KeepAliveAccountResult[] = []
 
       for (const account of loggedInAccounts) {
@@ -195,8 +196,8 @@ export class KeepAliveService {
       const failCount = results.filter((r) => !r.success).length
       const logoutCount = results.filter((r) => r.success && !r.stillLoggedIn).length
       const unknownCount = results.filter((r) => r.checkFailed).length
-      console.log(
-        `[KeepAlive] Round complete: ${successCount} success, ${failCount} failed, ${logoutCount} logged out, ${unknownCount} unknown`
+      keepaliveLogger.info(
+        `Round complete: ${successCount} success, ${failCount} failed, ${logoutCount} logged out, ${unknownCount} unknown`
       )
 
       return this.getStatus()
@@ -223,7 +224,7 @@ export class KeepAliveService {
     const displayName = account.displayName || account.username || account.platform
 
     if (!platformInfo) {
-      console.log(`[KeepAlive] Unknown platform: ${account.platform}, skipping`)
+      keepaliveLogger.info(`Unknown platform: ${account.platform}, skipping`)
       return {
         accountId: account.id,
         platform: account.platform,
@@ -235,16 +236,16 @@ export class KeepAliveService {
     }
 
     const url = platformInfo.url
-    console.log(`[KeepAlive] Processing ${account.platform} (${displayName}): ${url}`)
+    keepaliveLogger.info(`Processing ${account.platform} (${displayName}): ${url}`)
 
-    let view: BrowserView | null = null
+    let view: WebContentsView | null = null
     try {
       const partition = account.sessionPartition || `persist:account-${account.id}`
       const ses = session.fromPartition(partition)
       hardenSession(ses)
       await applyAccountProxy(ses, account)
 
-      view = new BrowserView({
+      view = new WebContentsView({
         webPreferences: {
           session: ses,
           contextIsolation: true,
@@ -283,12 +284,12 @@ export class KeepAliveService {
       if (!checkFailed && !stillLoggedIn && account.isLoggedIn) {
         const db = DatabaseService.getInstance()
         const updated = db.updateAccount(account.id, { isLoggedIn: false })
-        console.log(`[KeepAlive] ${account.platform} (${displayName}): session expired`)
+        keepaliveLogger.info(`${account.platform} (${displayName}): session expired`)
         this.onAccountLoggedOut?.(updated ?? { ...account, isLoggedIn: false })
       }
 
-      console.log(
-        `[KeepAlive] ${account.platform} (${displayName}): OK, loggedIn=${stillLoggedIn}${checkFailed ? ' (check failed)' : ''}`
+      keepaliveLogger.info(
+        `${account.platform} (${displayName}): OK, loggedIn=${stillLoggedIn}${checkFailed ? ' (check failed)' : ''}`
       )
 
       return {
@@ -301,7 +302,7 @@ export class KeepAliveService {
       }
     } catch (err) {
       const errorMsg = err instanceof Error ? err.message : String(err)
-      console.log(`[KeepAlive] ${account.platform} (${displayName}): error - ${errorMsg}`)
+      keepaliveLogger.info(`${account.platform} (${displayName}): error - ${errorMsg}`)
 
       return {
         accountId: account.id,

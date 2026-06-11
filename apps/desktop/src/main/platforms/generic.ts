@@ -1,4 +1,4 @@
-import type { BrowserView } from 'electron'
+import type { WebContentsView } from 'electron'
 import type {
   PublishResult,
   SyncContentType,
@@ -581,7 +581,7 @@ export class GenericAdapter extends BasePlatformAdapter {
     `
   }
 
-  async checkLoginStatus(view: BrowserView): Promise<boolean> {
+  async checkLoginStatus(view: WebContentsView): Promise<boolean> {
     try {
       const cookies = await view.webContents.session.cookies.get({
         domain: this.config.cookieDomain
@@ -593,7 +593,7 @@ export class GenericAdapter extends BasePlatformAdapter {
   }
 
   async getUserInfo(
-    view: BrowserView
+    view: WebContentsView
   ): Promise<{ username: string; displayName?: string; avatar?: string } | null> {
     try {
       // Generic user info extraction - tries common patterns
@@ -648,7 +648,7 @@ export class GenericAdapter extends BasePlatformAdapter {
     }
   }
 
-  async navigateToPublishPage(view: BrowserView, contentType?: SyncContentType): Promise<void> {
+  async navigateToPublishPage(view: WebContentsView, contentType?: SyncContentType): Promise<void> {
     const urls = PLATFORM_PUBLISH_URLS[this.platform]
     const url = contentType && urls?.[contentType] ? urls[contentType] : this.publishUrl
 
@@ -661,14 +661,14 @@ export class GenericAdapter extends BasePlatformAdapter {
   }
 
   async fillContent(
-    view: BrowserView,
+    view: WebContentsView,
     contentType: SyncContentType,
     data: SyncContentData
   ): Promise<void> {
     await this.executeScript(view, this.getFillScript(contentType, data))
   }
 
-  async submit(view: BrowserView, _contentType?: SyncContentType): Promise<PublishResult> {
+  async submit(view: WebContentsView, _contentType?: SyncContentType): Promise<PublishResult> {
     try {
       const submitTexts = this.config.submitTexts || ['发布', 'Publish', 'Post', '发送']
 

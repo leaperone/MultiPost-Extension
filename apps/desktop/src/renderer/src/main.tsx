@@ -4,7 +4,12 @@ import { MotionConfig } from 'framer-motion'
 import { ThemeProvider as NextThemesProvider } from 'next-themes'
 import App from './App'
 import { Toaster } from './components/ui/sonner'
+import { initRendererLogging } from './lib/logger'
 import './styles/global.css'
+
+// Before first render: console.error/warn and uncaught errors should be
+// captured into renderer.log from the very first frame.
+initRendererLogging()
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>

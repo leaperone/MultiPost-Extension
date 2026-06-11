@@ -1239,5 +1239,16 @@ export const IPC_CHANNELS = {
   KEEPALIVE_TRIGGER: 'keepAlive:trigger',
   KEEPALIVE_SET_CONFIG: 'keepAlive:setConfig',
   KEEPALIVE_STATUS_EVENT: 'multipost:keepalive:status',
-  KEEPALIVE_ACCOUNT_LOGGED_OUT_EVENT: 'multipost:keepalive:accountLoggedOut'
+  KEEPALIVE_ACCOUNT_LOGGED_OUT_EVENT: 'multipost:keepalive:accountLoggedOut',
+
+  // External operations API (local HTTP + MCP server)
+  EXTERNAL_API_GET_SETTINGS: 'externalApi:getSettings',
+  EXTERNAL_API_SET_SETTINGS: 'externalApi:setSettings',
+  EXTERNAL_API_REGENERATE_TOKEN: 'externalApi:regenerateToken',
+
+  // Debug logging
+  DEBUG_LOG_GET: 'debugLog:get',
+  DEBUG_LOG_SET: 'debugLog:set',
+  LOG_FROM_RENDERER: 'log:fromRenderer',
+  LOG_OPEN_DIR: 'log:openDir'
 } as const

@@ -597,3 +597,10 @@ export interface KeepAliveStatus {
   nextRunAt: number | null
   lastResults: KeepAliveAccountResult[]
 }
+
+// External operations API (local HTTP + MCP server) settings
+export interface ExternalApiSettings {
+  enabled: boolean
+  port: number
+  token: string
+}

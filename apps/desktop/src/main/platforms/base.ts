@@ -1,4 +1,4 @@
-import type { BrowserView } from 'electron'
+import type { WebContentsView } from 'electron'
 import type {
   PublishResult,
   PlatformType,
@@ -18,19 +18,19 @@ export interface PlatformAdapter {
 
   /**
    * Get JavaScript code that fills content into the publish form
-   * Used for simple mode without needing a BrowserView reference
+   * Used for simple mode without needing a WebContentsView reference
    */
   getFillScript(contentType: SyncContentType, data: SyncContentData): string
 
   /**
    * Check if user is logged in
    */
-  checkLoginStatus(view: BrowserView): Promise<boolean>
+  checkLoginStatus(view: WebContentsView): Promise<boolean>
 
   /**
    * Get user info after login
    */
-  getUserInfo(view: BrowserView): Promise<{
+  getUserInfo(view: WebContentsView): Promise<{
     username: string
     displayName?: string
     avatar?: string
@@ -39,13 +39,13 @@ export interface PlatformAdapter {
   /**
    * Navigate to the publishing page
    */
-  navigateToPublishPage(view: BrowserView, contentType?: SyncContentType): Promise<void>
+  navigateToPublishPage(view: WebContentsView, contentType?: SyncContentType): Promise<void>
 
   /**
    * Fill content into the publish form
    */
   fillContent(
-    view: BrowserView,
+    view: WebContentsView,
     contentType: SyncContentType,
     data: SyncContentData
   ): Promise<void>
@@ -53,23 +53,23 @@ export interface PlatformAdapter {
   /**
    * Upload images
    */
-  uploadImages?(view: BrowserView, imagePaths: string[]): Promise<void>
+  uploadImages?(view: WebContentsView, imagePaths: string[]): Promise<void>
 
   /**
    * Upload video
    */
-  uploadVideo?(view: BrowserView, videoPath: string): Promise<void>
+  uploadVideo?(view: WebContentsView, videoPath: string): Promise<void>
 
   /**
    * Submit the post
    */
-  submit(view: BrowserView, contentType?: SyncContentType): Promise<PublishResult>
+  submit(view: WebContentsView, contentType?: SyncContentType): Promise<PublishResult>
 
   /**
    * Full publish flow
    */
   publish(
-    view: BrowserView,
+    view: WebContentsView,
     contentType: SyncContentType,
     data: SyncContentData
   ): Promise<PublishResult>
@@ -90,33 +90,33 @@ export abstract class BasePlatformAdapter implements PlatformAdapter {
    */
   abstract getFillScript(contentType: SyncContentType, data: SyncContentData): string
 
-  abstract checkLoginStatus(view: BrowserView): Promise<boolean>
+  abstract checkLoginStatus(view: WebContentsView): Promise<boolean>
 
-  abstract getUserInfo(view: BrowserView): Promise<{
+  abstract getUserInfo(view: WebContentsView): Promise<{
     username: string
     displayName?: string
     avatar?: string
   } | null>
 
-  abstract navigateToPublishPage(view: BrowserView, contentType?: SyncContentType): Promise<void>
+  abstract navigateToPublishPage(view: WebContentsView, contentType?: SyncContentType): Promise<void>
 
   abstract fillContent(
-    view: BrowserView,
+    view: WebContentsView,
     contentType: SyncContentType,
     data: SyncContentData
   ): Promise<void>
 
-  abstract submit(view: BrowserView, contentType?: SyncContentType): Promise<PublishResult>
+  abstract submit(view: WebContentsView, contentType?: SyncContentType): Promise<PublishResult>
 
   // Optional methods that subclasses can implement
-  uploadImages?(view: BrowserView, imagePaths: string[]): Promise<void>
-  uploadVideo?(view: BrowserView, videoPath: string): Promise<void>
+  uploadImages?(view: WebContentsView, imagePaths: string[]): Promise<void>
+  uploadVideo?(view: WebContentsView, videoPath: string): Promise<void>
 
   /**
-   * Execute JavaScript in the BrowserView with error handling
+   * Execute JavaScript in the WebContentsView with error handling
    */
   protected async executeScript<T = unknown>(
-    view: BrowserView,
+    view: WebContentsView,
     script: string
   ): Promise<T> {
     try {
@@ -131,7 +131,7 @@ export abstract class BasePlatformAdapter implements PlatformAdapter {
    * Wait for an element to appear
    */
   protected async waitForElement(
-    view: BrowserView,
+    view: WebContentsView,
     selector: string,
     timeout = 10000
   ): Promise<boolean> {
@@ -152,7 +152,7 @@ export abstract class BasePlatformAdapter implements PlatformAdapter {
   /**
    * Wait for navigation to complete
    */
-  protected async waitForNavigation(view: BrowserView, timeout = 10000): Promise<void> {
+  protected async waitForNavigation(view: WebContentsView, timeout = 10000): Promise<void> {
     return new Promise((resolve, reject) => {
       const timer = setTimeout(() => {
         view.webContents.removeListener('did-finish-load', handler)
@@ -187,7 +187,7 @@ export abstract class BasePlatformAdapter implements PlatformAdapter {
    * Default publish implementation
    */
   async publish(
-    view: BrowserView,
+    view: WebContentsView,
     contentType: SyncContentType,
     data: SyncContentData
   ): Promise<PublishResult> {

@@ -1,0 +1,69 @@
+---
+title: Overview & Getting Started
+description: Call HTTP / MCP endpoints exposed locally by the MultiPost desktop app
+---
+
+The MultiPost **desktop app** can expose a set of HTTP endpoints and an MCP server on your machine so scripts, automation tools or AI agents can drive it directly: list accounts, create publish tasks, poll publish status, read runtime logs, and more.
+
+Unlike the [cloud API](/docs/api-reference) (`https://api.multipost.app`), this local API runs on your own computer and operates the platform accounts already logged in inside the desktop app — **nothing goes through any server**.
+
+## Why a local API
+
+The desktop app keeps every platform account's login state, browser views and publish scripts running locally. The external API reuses those capabilities directly, which means:
+
+- account cookies and login state never leave your computer;
+- the caller and the app must be on the same machine (binds `127.0.0.1` only);
+- the app must be running (the API is not a standalone background daemon).
+
+## Enable the server
+
+1. Open the desktop app → **Settings → External API**.
+2. Turn on the "Enable External API" switch.
+3. Copy the **service URL** (default `http://127.0.0.1:19528`) and the **access token** shown on the page.
+
+<Callout type="warn">
+The access token is effectively a key to every logged-in account. Never put it in front-end code or public repositories. If it leaks, click "Regenerate" on the settings page to invalidate the old token immediately.
+</Callout>
+
+## Basics
+
+- **Service URL:** `http://127.0.0.1:19528` (port configurable in settings)
+- **Auth:** every request except `GET /` and `GET /v1/health` requires a Bearer Token.
+- **Format:** JSON (`application/json`); a few endpoints (e.g. screenshots) return binary.
+- **Binding:** `127.0.0.1` only. For remote access use SSH port forwarding — never expose the server publicly.
+
+## Authentication
+
+Add this header to every request:
+
+```http
+Authorization: Bearer mp-xxxxxxxxxxxxxxxxxxxxxxxx
+```
+
+Health check (no auth):
+
+```bash
+curl http://127.0.0.1:19528/v1/health
+```
+
+Authenticated call:
+
+```bash
+curl http://127.0.0.1:19528/v1/platforms \
+  -H "Authorization: Bearer $MULTIPOST_DESKTOP_TOKEN"
+```
+
+A failed auth returns `401` with the unified error shape:
+
+```json
+{ "error": { "code": "unauthorized", "message": "Invalid or missing Bearer token" } }
+```
+
+## Modules
+
+<Cards>
+  <Card title="Accounts" href="./accounts" description="List/get accounts, refresh login status" />
+  <Card title="Publish" href="./publish" description="Create tasks, poll status, submit and retry" />
+  <Card title="MCP Server" href="./mcp" description="One-line setup in Claude Code / Cursor" />
+  <Card title="Debug" href="./debug" description="Logs, screenshots, script execution and DevTools" />
+</Cards>

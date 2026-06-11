@@ -29,9 +29,11 @@
     "release": "./scripts/release-hybrid.sh"
   },
   "dependencies": {
+    "@cfworker/json-schema": "^4.1.1",
     "@electron-toolkit/preload": "^3.0.1",
     "@electron-toolkit/utils": "^4.0.0",
     "@iconify/react": "^6.0.2",
+    "@modelcontextprotocol/sdk": "^1.29.0",
     "@radix-ui/react-checkbox": "^1.1.4",
     "@radix-ui/react-dialog": "^1.1.15",
     "@radix-ui/react-progress": "^1.1.9",
@@ -55,6 +57,7 @@
     "sonner": "^1.7.4",
     "tailwind-merge": "^3.4.0",
     "uuid": "^11.0.5",
+    "zod": "^4.4.3",
     "zustand": "^5.0.3"
   },
   "devDependencies": {

@@ -1,0 +1,102 @@
+---
+title: 调试 Debug
+description: 日志、截图、脚本执行与 DevTools
+---
+
+> 所有端点都需要 Bearer Token 鉴权。地址前缀为 `http://127.0.0.1:19528`。
+
+这组端点用于排查发布过程中的问题 —— 查看页面跑出了什么、抓控制台日志、看截图、必要时直接在视图里执行脚本。它们与开发版内置的调试服务能力一致，但带鉴权且在正式版也可用。
+
+## 检视视图与发布组
+
+```http
+GET /v1/debug/views
+```
+
+返回当前所有浏览器视图、标签页和发布组（id、平台、URL、状态）。
+
+```http
+GET /v1/debug/groups/{groupId}
+```
+
+返回某个发布组的原始内容数据与归一化后的数据。
+
+## 控制台日志
+
+应用与各平台视图的 `console` 输出会进入一个 500 条的环形缓冲区。
+
+```http
+GET    /v1/debug/logs          # 查询，支持 source / level / since / limit 过滤
+DELETE /v1/debug/logs          # 清空
+```
+
+| 参数 | 说明 |
+| --- | --- |
+| `source` | 按来源子串过滤，如 `group:微博` |
+| `level` | `verbose` / `info` / `warning` / `error` |
+| `since` | 毫秒时间戳，只返回此后日志 |
+| `limit` | 返回最近 N 条 |
+
+```bash
+curl 'http://127.0.0.1:19528/v1/debug/logs?level=error&limit=50' \
+  -H "Authorization: Bearer $MULTIPOST_DESKTOP_TOKEN"
+```
+
+## 应用主进程日志
+
+读取主进程滚动日志文件（electron-log）的末尾若干行。
+
+```http
+GET /v1/debug/app-logs?limit=200
+```
+
+```json
+{ "file": "/Users/me/Library/.../logs/main.log", "lines": ["…", "…"] }
+```
+
+## 截图
+
+```http
+GET /v1/debug/screenshot                                  # 主窗口
+GET /v1/debug/screenshot?groupId=group-xxx&accountId=a1   # 某个发布目标视图
+```
+
+返回 `image/png` 二进制：
+
+```bash
+curl 'http://127.0.0.1:19528/v1/debug/screenshot' \
+  -H "Authorization: Bearer $MULTIPOST_DESKTOP_TOKEN" \
+  -o shot.png
+```
+
+## 在视图中执行脚本
+
+```http
+POST /v1/debug/exec          # { "viewId": "a1b2c3d4", "script": "location.href" }
+POST /v1/debug/exec-group    # { "groupId": "group-xxx", "accountId": "a1", "script": "…" }
+```
+
+`viewId` 可以是账号 id，或特殊值 `__home__`（工作台视图）。返回脚本的执行结果。
+
+```bash
+curl -X POST 'http://127.0.0.1:19528/v1/debug/exec' \
+  -H "Authorization: Bearer $MULTIPOST_DESKTOP_TOKEN" \
+  -H 'Content-Type: application/json' \
+  -d '{ "viewId": "__home__", "script": "document.title" }'
+```
+
+## DevTools
+
+```http
+POST /v1/debug/devtools      # { "groupId": "group-xxx", "accountId": "a1" }
+```
+
+为指定发布目标视图开关一个独立的 DevTools 窗口，便于人工排查。
+
+## Cookies（仅预览）
+
+```http
+GET /v1/debug/groups/{groupId}/cookies?accountId=a1&domain=weibo.com
+```
+
+出于安全考虑，只返回 cookie 名称、域名和**截断后的值预览**，不会返回完整 cookie 值。

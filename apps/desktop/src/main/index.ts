@@ -9,6 +9,8 @@ import { initAutoUpdater, registerUpdaterIpcHandlers, checkForUpdatesSilently } 
 import { createMenu } from './menu'
 import { KeepAliveService } from './keepalive'
 import { startDebugServer } from './debug-server'
+import { initOperations } from './services/operations'
+import { stopExternalApiServer, syncExternalApiServer } from './api-server'
 import { getDesktopUserAgent, handleLocalFileRequest, hardenSession } from './browser/sessionHardening'
 import { closeAllAnonymizedProxies } from './proxy/accountProxy'
 import { openExternalUrl } from './browser/externalUrl'
@@ -18,18 +20,12 @@ import { createTray } from './tray'
 import { IPC_CHANNELS, PLATFORMS } from '../shared/constants'
 import { toPublicAccount, type Account } from '../shared/types'
 import log from 'electron-log/main'
+import { initLogging } from './logger'
 
-// Unified logging: console.* in the main process lands in
-// userData/logs/main.log with rotation, so production issues are diagnosable
-// from a file users can actually send us.
-// preload:false is critical — electron-log otherwise injects a logging preload
-// (window.__electronLog) into every future session, including the untrusted
-// platform BrowserViews that are supposed to receive no app preload at all.
-log.initialize({ preload: false, spyRendererConsole: false })
-log.transports.file.maxSize = 5 * 1024 * 1024
-log.transports.file.resolvePathFn = () => join(app.getPath('userData'), 'logs', 'main.log')
-log.transports.file.writeOptions = { ...log.transports.file.writeOptions, mode: 0o600 }
-Object.assign(console, log.functions)
+// Unified logging: console.* and scoped module loggers land in per-module
+// files under userData/logs (main/renderer/keepalive/publish/ipc) with
+// rotation, so production issues are diagnosable from files users can send us.
+initLogging()
 
 // Process-level safety net: log instead of silently dying. Electron would
 // otherwise show a generic crash dialog (uncaughtException) or nothing at all
@@ -168,6 +164,7 @@ function cleanupAccountProxies(): void {
 
 app.on('will-quit', (event) => {
   cleanupPastedClipboardFiles()
+  void stopExternalApiServer()
 
   if (proxyCleanupComplete) {
     return
@@ -370,6 +367,15 @@ app.whenReady().then(async () => {
       () => browserViewManager
     )
   }
+
+  // External operations API (REST + MCP) — opt-in, loopback-only
+  initOperations(
+    () => browserViewManager,
+    () => mainWindow
+  )
+  syncExternalApiServer().catch((error) => {
+    console.error('[Main] Failed to start external API server:', error)
+  })
 
   createTray(showMainWindow)
 

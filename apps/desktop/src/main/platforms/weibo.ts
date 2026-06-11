@@ -1,4 +1,4 @@
-import type { BrowserView } from 'electron'
+import type { WebContentsView } from 'electron'
 import type {
   PublishResult,
   SyncContentType,
@@ -254,7 +254,7 @@ export class WeiboAdapter extends BasePlatformAdapter {
     `
   }
 
-  async checkLoginStatus(view: BrowserView): Promise<boolean> {
+  async checkLoginStatus(view: WebContentsView): Promise<boolean> {
     const cookies = await view.webContents.session.cookies.get({
       domain: '.weibo.com'
     })
@@ -262,7 +262,7 @@ export class WeiboAdapter extends BasePlatformAdapter {
   }
 
   async getUserInfo(
-    view: BrowserView
+    view: WebContentsView
   ): Promise<{ username: string; displayName?: string; avatar?: string } | null> {
     try {
       const currentUrl = view.webContents.getURL()
@@ -302,7 +302,7 @@ export class WeiboAdapter extends BasePlatformAdapter {
     }
   }
 
-  async navigateToPublishPage(view: BrowserView, contentType?: SyncContentType): Promise<void> {
+  async navigateToPublishPage(view: WebContentsView, contentType?: SyncContentType): Promise<void> {
     const url = contentType
       ? PLATFORM_PUBLISH_URLS.weibo[contentType] || this.publishUrl
       : this.publishUrl
@@ -315,14 +315,14 @@ export class WeiboAdapter extends BasePlatformAdapter {
   }
 
   async fillContent(
-    view: BrowserView,
+    view: WebContentsView,
     contentType: SyncContentType,
     data: SyncContentData
   ): Promise<void> {
     await this.executeScript(view, this.getFillScript(contentType, data))
   }
 
-  async submit(view: BrowserView, _contentType?: SyncContentType): Promise<PublishResult> {
+  async submit(view: WebContentsView, _contentType?: SyncContentType): Promise<PublishResult> {
     try {
       // Wait 10 seconds before submitting (as per extension logic)
       await this.sleep(10000)

@@ -1,0 +1,90 @@
+---
+title: Debug
+description: Logs, screenshots, script execution and DevTools
+---
+
+> All endpoints require a Bearer Token. Base URL is `http://127.0.0.1:19528`.
+
+These endpoints help diagnose publishing issues — see what a page produced, capture console logs and screenshots, and run scripts inside a view when needed. They mirror the dev-only debug server but are token-gated and available in production builds.
+
+## Inspect views and groups
+
+```http
+GET /v1/debug/views
+```
+
+Returns all browser views, tabs and publish groups (id, platform, URL, status).
+
+```http
+GET /v1/debug/groups/{groupId}
+```
+
+Returns a group's raw and normalized content data.
+
+## Console logs
+
+`console` output from the app and platform views goes into a 500-entry ring buffer.
+
+```http
+GET    /v1/debug/logs          # query; filter by source / level / since / limit
+DELETE /v1/debug/logs          # clear
+```
+
+| Param | Description |
+| --- | --- |
+| `source` | Filter by source substring, e.g. `group:weibo` |
+| `level` | `verbose` / `info` / `warning` / `error` |
+| `since` | ms timestamp; only logs after it |
+| `limit` | Return the last N entries |
+
+## Main-process logs
+
+Tail the last N lines of the rotating main-process log file (electron-log).
+
+```http
+GET /v1/debug/app-logs?limit=200
+```
+
+```json
+{ "file": "/Users/me/Library/.../logs/main.log", "lines": ["…", "…"] }
+```
+
+## Screenshots
+
+```http
+GET /v1/debug/screenshot                                  # main window
+GET /v1/debug/screenshot?groupId=group-xxx&accountId=a1   # a publish target view
+```
+
+Returns `image/png` binary:
+
+```bash
+curl 'http://127.0.0.1:19528/v1/debug/screenshot' \
+  -H "Authorization: Bearer $MULTIPOST_DESKTOP_TOKEN" \
+  -o shot.png
+```
+
+## Execute scripts in a view
+
+```http
+POST /v1/debug/exec          # { "viewId": "a1b2c3d4", "script": "location.href" }
+POST /v1/debug/exec-group    # { "groupId": "group-xxx", "accountId": "a1", "script": "…" }
+```
+
+`viewId` can be an account id or the special value `__home__` (the dashboard view). Returns the script result.
+
+## DevTools
+
+```http
+POST /v1/debug/devtools      # { "groupId": "group-xxx", "accountId": "a1" }
+```
+
+Toggles a detached DevTools window for the given publish target view.
+
+## Cookies (preview only)
+
+```http
+GET /v1/debug/groups/{groupId}/cookies?accountId=a1&domain=weibo.com
+```
+
+For safety, only the cookie name, domain and a **truncated value preview** are returned — never the full cookie value.

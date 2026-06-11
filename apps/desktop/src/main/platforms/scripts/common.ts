@@ -1,6 +1,6 @@
 /**
  * Common utility functions for platform scripts
- * These scripts will be injected into BrowserView pages
+ * These scripts will be injected into WebContentsView pages
  */
 
 /**

@@ -1,0 +1,89 @@
+---
+title: Accounts
+description: List/get accounts, refresh login status
+---
+
+> All endpoints require a Bearer Token. Base URL is `http://127.0.0.1:19528`.
+
+## List accounts
+
+```http
+GET /v1/accounts
+```
+
+Optional query params:
+
+| Param | Description |
+| --- | --- |
+| `platform` | Filter by platform, e.g. `weibo`, `xiaohongshu` |
+| `groupId` | Filter by account group |
+
+```bash
+curl 'http://127.0.0.1:19528/v1/accounts?platform=weibo' \
+  -H "Authorization: Bearer $MULTIPOST_DESKTOP_TOKEN"
+```
+
+**200**
+
+```json
+{
+  "accounts": [
+    {
+      "id": "a1b2c3d4",
+      "platform": "weibo",
+      "username": "weibo_user",
+      "displayName": "My Weibo",
+      "remark": "Main",
+      "avatar": "https://…",
+      "isLoggedIn": true,
+      "isDefault": true,
+      "createdAt": 1733900000000,
+      "updatedAt": 1733900000000
+    }
+  ]
+}
+```
+
+<Callout>
+Account objects never include sensitive fields such as the proxy password. The `id` is the `accountId` you use when creating publish tasks.
+</Callout>
+
+## Get one account
+
+```http
+GET /v1/accounts/{id}
+```
+
+Returns `404` when the account does not exist:
+
+```json
+{ "error": { "code": "account_not_found", "message": "Account not found: a1b2c3d4" } }
+```
+
+## Refresh login status
+
+Re-opens the account session, visits the platform and updates login state, nickname and avatar. This loads a real page and usually takes a few seconds.
+
+```http
+POST /v1/accounts/{id}/refresh
+```
+
+**200** — returns the refreshed account object (same shape as above).
+
+## Platforms
+
+List all supported platforms and their supported content types, useful for validation before creating a publish task.
+
+```http
+GET /v1/platforms
+```
+
+**200**
+
+```json
+{
+  "platforms": [
+    { "id": "weibo", "name": "Weibo", "supportedContentTypes": ["DYNAMIC", "ARTICLE", "VIDEO"] }
+  ]
+}
+```

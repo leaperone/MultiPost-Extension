@@ -1,0 +1,68 @@
+---
+title: MCP 服务
+description: 在 Claude Code / Cursor 等 AI 工具中接入 MultiPost 桌面端
+---
+
+桌面客户端在开启外部 API 后，会在 `http://127.0.0.1:19528/mcp` 暴露一个 [MCP](https://modelcontextprotocol.io)（Model Context Protocol）服务，采用 **Streamable HTTP** 传输。任何支持 MCP 的 AI 工具都可以一行配置接入，让模型直接拉取账号、创建发布任务、读取日志。
+
+## 接入配置
+
+在设置页「外部 API」区块可以直接复制下面这段配置（已自动填好端口与令牌）：
+
+```json
+{
+  "mcpServers": {
+    "multipost-desktop": {
+      "url": "http://127.0.0.1:19528/mcp",
+      "headers": { "Authorization": "Bearer mp-xxxxxxxxxxxx" }
+    }
+  }
+}
+```
+
+### Claude Code
+
+```bash
+claude mcp add --transport http multipost-desktop http://127.0.0.1:19528/mcp \
+  --header "Authorization: Bearer mp-xxxxxxxxxxxx"
+```
+
+### Cursor / 其他客户端
+
+把上面的 JSON 写入对应工具的 MCP 配置文件即可（如 Cursor 的 `~/.cursor/mcp.json`）。
+
+<Callout type="warn">
+令牌即权限。把它写进配置文件后，请像对待密码一样保管这些文件。令牌泄露时，在设置页「重新生成」即可作废旧令牌。
+</Callout>
+
+## 可用工具（Tools）
+
+| 工具 | 作用 |
+| --- | --- |
+| `list_accounts` / `get_account` | 列出 / 查询账号 |
+| `refresh_account` | 刷新账号登录状态与资料 |
+| `list_platforms` | 列出平台及其支持的内容类型 |
+| `create_publish` | 创建发布任务（异步，返回 groupId） |
+| `get_publish_status` | 轮询发布状态 |
+| `list_publish_groups` | 列出进行中的发布组 |
+| `submit_publish` / `submit_publish_target` | 提交全部 / 单个目标 |
+| `retry_publish_target` | 重试失败目标 |
+| `close_publish` | 关闭发布组 |
+| `list_publish_history` | 查询发布历史 |
+| `list_views` / `get_group_data` | 检视当前视图与发布组数据 |
+| `execute_script` / `execute_group_script` | 在视图中执行 JS |
+| `get_console_logs` / `clear_console_logs` / `get_app_logs` | 读取 / 清空日志 |
+| `take_screenshot` | 截图主窗口或某个发布目标 |
+| `toggle_devtools` | 开关某个发布目标的 DevTools |
+
+<Callout>
+`create_publish` 是异步工具：它会立即返回 `groupId`，请提示模型随后用 `get_publish_status` 轮询，直到所有目标进入终态。
+</Callout>
+
+## 典型对话流程
+
+1. `list_accounts` 拿到要发布的账号 id；
+2. `create_publish`（`autoSubmit: false`）创建任务；
+3. `get_publish_status` 轮询，直到目标变为 `ready`；
+4. 人工确认后 `submit_publish` 提交；
+5. `get_publish_status` 确认是否 `success`，失败则 `retry_publish_target`。

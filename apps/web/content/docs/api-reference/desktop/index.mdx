@@ -1,0 +1,69 @@
+---
+title: 概览与开启方式
+description: 在 MultiPost 桌面客户端本机调用 HTTP / MCP 接口
+---
+
+MultiPost **桌面客户端**可以在本机暴露一组 HTTP 接口和一个 MCP 服务，让你用脚本、自动化工具或 AI Agent 直接驱动它：拉取账号信息、创建发布任务、查询发布状态、读取运行日志等。
+
+与 [云端 API](/docs/api-reference)（`https://api.multipost.app`）不同，本地 API 跑在你自己的电脑上，直接操作桌面客户端里已经登录好的平台账号，**不经过任何服务器**。
+
+## 为什么是本地接口
+
+桌面客户端把每个平台账号的登录态、浏览器视图和发布脚本都放在本机运行。外部 API 直接复用这些能力，所以：
+
+- 账号 Cookie、登录态永远不离开你的电脑；
+- 调用方与客户端必须在同一台机器上（默认只监听 `127.0.0.1`）；
+- 客户端必须处于运行状态（API 不是一个独立的后台守护进程）。
+
+## 开启服务
+
+1. 打开桌面客户端 → **设置 → 外部 API**。
+2. 打开「开启外部 API」开关。
+3. 复制页面上展示的 **服务地址**（默认 `http://127.0.0.1:19528`）和 **访问令牌**。
+
+<Callout type="warn">
+访问令牌等同于操作你所有已登录账号的钥匙。请勿写入前端代码或公开仓库；一旦泄露，在设置页点击「重新生成」即可立即作废旧令牌。
+</Callout>
+
+## 基础信息
+
+- **服务地址：** `http://127.0.0.1:19528`（端口可在设置页修改）
+- **鉴权方式：** 除 `GET /` 与 `GET /v1/health` 外，所有请求都要求携带 Bearer Token。
+- **请求/响应格式：** JSON（`application/json`）；截图等少数端点返回二进制。
+- **绑定地址：** 仅 `127.0.0.1`。如需远程调用，请用 SSH 端口转发，不要把服务暴露到公网。
+
+## 鉴权
+
+在每个请求里加上这条 HTTP 头：
+
+```http
+Authorization: Bearer mp-xxxxxxxxxxxxxxxxxxxxxxxx
+```
+
+探活示例（无需鉴权）：
+
+```bash
+curl http://127.0.0.1:19528/v1/health
+```
+
+带鉴权调用示例：
+
+```bash
+curl http://127.0.0.1:19528/v1/platforms \
+  -H "Authorization: Bearer $MULTIPOST_DESKTOP_TOKEN"
+```
+
+鉴权失败返回 `401`，统一错误结构为：
+
+```json
+{ "error": { "code": "unauthorized", "message": "Invalid or missing Bearer token" } }
+```
+
+## 模块
+
+<Cards>
+  <Card title="账号 Accounts" href="./accounts" description="拉取账号列表、详情，刷新登录状态" />
+  <Card title="发布 Publish" href="./publish" description="创建发布任务、轮询状态、提交与重试" />
+  <Card title="MCP 服务" href="./mcp" description="在 Claude Code / Cursor 中一键接入" />
+  <Card title="调试 Debug" href="./debug" description="日志、截图、脚本执行与 DevTools" />
+</Cards>

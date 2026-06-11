@@ -1,0 +1,68 @@
+---
+title: MCP Server
+description: Connect the MultiPost desktop app to Claude Code / Cursor and other AI tools
+---
+
+Once the external API is enabled, the desktop app exposes an [MCP](https://modelcontextprotocol.io) (Model Context Protocol) server at `http://127.0.0.1:19528/mcp` over **Streamable HTTP**. Any MCP-capable AI tool can connect with a one-line config and let the model list accounts, create publish tasks, and read logs directly.
+
+## Setup
+
+The Settings → External API section lets you copy this config with the port and token already filled in:
+
+```json
+{
+  "mcpServers": {
+    "multipost-desktop": {
+      "url": "http://127.0.0.1:19528/mcp",
+      "headers": { "Authorization": "Bearer mp-xxxxxxxxxxxx" }
+    }
+  }
+}
+```
+
+### Claude Code
+
+```bash
+claude mcp add --transport http multipost-desktop http://127.0.0.1:19528/mcp \
+  --header "Authorization: Bearer mp-xxxxxxxxxxxx"
+```
+
+### Cursor / other clients
+
+Write the JSON above into the tool's MCP config file (e.g. Cursor's `~/.cursor/mcp.json`).
+
+<Callout type="warn">
+The token is the permission. Once it is in a config file, treat that file like a password. If the token leaks, regenerate it on the settings page.
+</Callout>
+
+## Available tools
+
+| Tool | Purpose |
+| --- | --- |
+| `list_accounts` / `get_account` | List / get accounts |
+| `refresh_account` | Refresh login status and profile |
+| `list_platforms` | List platforms and supported content types |
+| `create_publish` | Create a publish task (async, returns groupId) |
+| `get_publish_status` | Poll publish status |
+| `list_publish_groups` | List open publish groups |
+| `submit_publish` / `submit_publish_target` | Submit all / one target |
+| `retry_publish_target` | Retry a failed target |
+| `close_publish` | Close a publish group |
+| `list_publish_history` | Query publish history |
+| `list_views` / `get_group_data` | Inspect current views and group data |
+| `execute_script` / `execute_group_script` | Run JS in a view |
+| `get_console_logs` / `clear_console_logs` / `get_app_logs` | Read / clear logs |
+| `take_screenshot` | Screenshot the main window or a publish target |
+| `toggle_devtools` | Toggle DevTools for a publish target |
+
+<Callout>
+`create_publish` is async: it returns a `groupId` immediately. Tell the model to then poll `get_publish_status` until all targets are terminal.
+</Callout>
+
+## A typical flow
+
+1. `list_accounts` to get target account ids;
+2. `create_publish` (`autoSubmit: false`) to create the task;
+3. `get_publish_status` until targets become `ready`;
+4. confirm, then `submit_publish`;
+5. `get_publish_status` to verify `success`; on failure, `retry_publish_target`.

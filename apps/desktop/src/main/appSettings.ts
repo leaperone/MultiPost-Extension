@@ -1,7 +1,8 @@
 import { app } from 'electron'
+import { randomBytes } from 'crypto'
 import { existsSync, readFileSync, writeFileSync } from 'fs'
 import { join } from 'path'
-import type { KeepAliveConfig } from '../shared/types'
+import type { ExternalApiSettings, KeepAliveConfig } from '../shared/types'
 
 /**
  * Main-process settings that must be readable outside the renderer (e.g. at
@@ -13,6 +14,8 @@ export type CloseWindowBehavior = 'minimize' | 'quit'
 interface AppSettings {
   closeWindowBehavior?: CloseWindowBehavior
   keepAlive?: Partial<KeepAliveConfig>
+  externalApi?: Partial<ExternalApiSettings>
+  debugLog?: boolean
 }
 
 function settingsPath(): string {
@@ -48,6 +51,17 @@ export function setCloseWindowBehavior(behavior: CloseWindowBehavior): void {
   writeSettings(settings)
 }
 
+/** Debug logging defaults to off: verbose file logs are opt-in for diagnosing issues. */
+export function getDebugLogEnabled(): boolean {
+  return readSettings().debugLog === true
+}
+
+export function setDebugLogEnabled(enabled: boolean): void {
+  const settings = readSettings()
+  settings.debugLog = enabled
+  writeSettings(settings)
+}
+
 export const KEEPALIVE_DEFAULT_INTERVAL_HOURS = 4
 export const KEEPALIVE_MIN_INTERVAL_HOURS = 1
 export const KEEPALIVE_MAX_INTERVAL_HOURS = 24
@@ -70,4 +84,48 @@ export function setKeepAliveConfig(config: Partial<KeepAliveConfig>): KeepAliveC
   settings.keepAlive = { ...getKeepAliveConfig(), ...config }
   writeSettings(settings)
   return getKeepAliveConfig()
+}
+
+export const EXTERNAL_API_DEFAULT_PORT = 19528
+
+function generateExternalApiToken(): string {
+  return `mp-${randomBytes(24).toString('base64url')}`
+}
+
+/**
+ * External API defaults to OFF — exposing a publish-capable HTTP surface is
+ * strictly opt-in. The token is minted lazily on first read so the settings
+ * page can show it before the server has ever been enabled.
+ */
+export function getExternalApiSettings(): ExternalApiSettings {
+  const settings = readSettings()
+  const raw = settings.externalApi
+  const port =
+    typeof raw?.port === 'number' && Number.isInteger(raw.port) && raw.port >= 1024 && raw.port <= 65535
+      ? raw.port
+      : EXTERNAL_API_DEFAULT_PORT
+  let token = typeof raw?.token === 'string' && raw.token.length >= 16 ? raw.token : ''
+  if (!token) {
+    token = generateExternalApiToken()
+    settings.externalApi = { ...raw, token }
+    writeSettings(settings)
+  }
+  return { enabled: raw?.enabled === true, port, token }
+}
+
+export function setExternalApiSettings(
+  config: Partial<Omit<ExternalApiSettings, 'token'>>
+): ExternalApiSettings {
+  const settings = readSettings()
+  settings.externalApi = { ...getExternalApiSettings(), ...config }
+  writeSettings(settings)
+  return getExternalApiSettings()
+}
+
+/** Invalidate the old token immediately; callers must re-read settings. */
+export function regenerateExternalApiToken(): ExternalApiSettings {
+  const settings = readSettings()
+  settings.externalApi = { ...getExternalApiSettings(), token: generateExternalApiToken() }
+  writeSettings(settings)
+  return getExternalApiSettings()
 }

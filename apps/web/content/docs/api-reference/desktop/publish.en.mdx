@@ -1,0 +1,135 @@
+---
+title: Publish
+description: Create tasks, poll status, submit and retry
+---
+
+> All endpoints require a Bearer Token. Base URL is `http://127.0.0.1:19528`.
+
+Publishing is **asynchronous**: creating a task opens one browser view per account, fills the content and (optionally) submits it. The endpoint returns a `groupId` immediately; poll the status until every target reaches a terminal state.
+
+## Create a publish task
+
+```http
+POST /v1/publish
+```
+
+Request body:
+
+| Field | Type | Description |
+| --- | --- | --- |
+| `contentType` | string | `DYNAMIC` / `VIDEO` / `ARTICLE` / `PODCAST` |
+| `accountIds` | string[] | Target account ids (from [Accounts](./accounts)) |
+| `data` | object | Content payload; shape depends on `contentType` (below) |
+| `autoSubmit` | boolean | Submit automatically after fill, default `false` |
+
+Media fields (images, video, cover, audio) accept either form:
+
+- **Absolute local path**: `"/Users/me/pic.jpg"`
+- **http(s) URL**: `"https://example.com/pic.jpg"` (downloaded locally)
+
+You may also use the object form `{ "url": "https://…", "name": "cover.jpg" }`. `blob:` URLs are not supported.
+
+### `data` shape per content type
+
+```jsonc
+// DYNAMIC
+{ "title": "optional", "content": "body", "images": ["/abs/1.jpg"], "videos": [], "tags": ["tag"] }
+
+// VIDEO
+{ "title": "Title", "content": "desc", "video": "/abs/v.mp4", "cover": "/abs/cover.jpg", "tags": [] }
+
+// ARTICLE (markdownContent or htmlContent)
+{ "title": "Title", "digest": "summary", "cover": "/abs/cover.jpg", "markdownContent": "# Body", "tags": [] }
+
+// PODCAST
+{ "title": "Title", "description": "desc", "audio": "/abs/audio.mp3", "cover": "/abs/cover.jpg", "tags": [] }
+```
+
+### Example
+
+```bash
+curl -X POST 'http://127.0.0.1:19528/v1/publish' \
+  -H "Authorization: Bearer $MULTIPOST_DESKTOP_TOKEN" \
+  -H 'Content-Type: application/json' \
+  -d '{
+    "contentType": "DYNAMIC",
+    "accountIds": ["a1b2c3d4", "e5f6g7h8"],
+    "autoSubmit": false,
+    "data": { "content": "Hello, posted via the API", "images": ["/Users/me/pic.jpg"] }
+  }'
+```
+
+**202 Accepted**
+
+```json
+{
+  "groupId": "group-…",
+  "status": {
+    "taskId": "group-…",
+    "status": "preparing",
+    "targets": [{ "platform": "weibo", "accountId": "a1b2c3d4", "status": "pending" }],
+    "updatedAt": 1733900000000
+  }
+}
+```
+
+<Callout type="warn">
+If a target account's platform does not support the content type, you get `400 unsupported_content_type`. Validate with `GET /v1/platforms` first.
+</Callout>
+
+## Poll publish status
+
+```http
+GET /v1/publish/{groupId}
+```
+
+**200**
+
+```json
+{
+  "taskId": "group-xxx",
+  "groupId": "group-xxx",
+  "status": "publishing",
+  "open": true,
+  "targets": [
+    { "platform": "weibo", "accountId": "a1b2c3d4", "status": "success", "postUrl": "https://weibo.com/…" },
+    { "platform": "xiaohongshu", "accountId": "e5f6g7h8", "status": "failed", "error": "Session expired" }
+  ],
+  "updatedAt": 1733900012000
+}
+```
+
+Per-target `status`: `pending` / `filling` / `ready` / `success` / `failed` / `cancelled`.
+`success`, `failed`, `cancelled` are terminal. `open` indicates whether the group window is still open.
+
+<Callout>
+The status snapshot is retained for ~10 minutes after the group closes; after that the query returns `404 publish_not_found`.
+</Callout>
+
+## List open publish groups
+
+```http
+GET /v1/publish
+```
+
+## Submit / retry / close
+
+When `autoSubmit=false`, targets stop at `ready` after fill and you confirm submission:
+
+```http
+POST /v1/publish/{groupId}/submit                         # submit all ready targets
+POST /v1/publish/{groupId}/targets/{accountId}/submit     # submit one account
+POST /v1/publish/{groupId}/targets/{accountId}/retry      # retry a failed account
+DELETE /v1/publish/{groupId}                              # close the group and its views
+```
+
+Submit and retry both return the latest status snapshot (same shape as the status query).
+
+## Publish history
+
+```http
+GET /v1/history
+GET /v1/history/{id}
+```
+
+Optional query params: `platform`, `status` (`success`/`failed`/`pending`), `limit`, `offset`.

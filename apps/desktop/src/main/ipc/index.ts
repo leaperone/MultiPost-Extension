@@ -1,4 +1,4 @@
-import { IpcMain, app, clipboard, dialog } from 'electron'
+import { IpcMain, app, clipboard, dialog, shell } from 'electron'
 import * as fs from 'fs'
 import * as path from 'path'
 import { v4 as uuidv4 } from 'uuid'
@@ -32,9 +32,16 @@ import { allowLocalFile } from '../browser/sessionHardening'
 import {
   getCloseWindowBehavior,
   setCloseWindowBehavior,
+  getExternalApiSettings,
+  setExternalApiSettings,
+  regenerateExternalApiToken,
+  getDebugLogEnabled,
+  setDebugLogEnabled,
   KEEPALIVE_MIN_INTERVAL_HOURS,
   KEEPALIVE_MAX_INTERVAL_HOURS
 } from '../appSettings'
+import { syncExternalApiServer } from '../api-server'
+import { applyDebugLogSetting, getLogsDir, ipcLogger, rendererLogger } from '../logger'
 
 type BrowserViewManagerGetter = () => BrowserViewManager | null
 
@@ -242,17 +249,17 @@ export function registerIpcHandlers(
   ipcMain.handle(
     IPC_CHANNELS.BROWSER_OPEN,
     async (_, accountId: string, url?: string) => {
-      console.log('[IPC] BROWSER_OPEN called:', { accountId, hasUrl: Boolean(url) })
+      ipcLogger.info('BROWSER_OPEN called:', { accountId, hasUrl: Boolean(url) })
       const manager = getBrowserViewManager()
-      console.log('[IPC] BrowserViewManager:', manager ? 'initialized' : 'null')
+      ipcLogger.info('BrowserViewManager:', manager ? 'initialized' : 'null')
       if (!manager) throw new Error('BrowserViewManager not initialized')
 
       const account = db.getAccount(accountId)
-      console.log('[IPC] BROWSER_OPEN account:', formatAccountForLog(account))
+      ipcLogger.info('BROWSER_OPEN account:', formatAccountForLog(account))
       if (!account) throw new Error(`Account not found: ${accountId}`)
 
       await manager.openView(accountId, account.platform, url)
-      console.log('[IPC] BROWSER_OPEN completed')
+      ipcLogger.info('BROWSER_OPEN completed')
     }
   )
 
@@ -293,7 +300,7 @@ export function registerIpcHandlers(
   )
 
   ipcMain.handle(IPC_CHANNELS.BROWSER_GET_LOGIN_STATUS, async (_, accountId: string) => {
-    console.log('[IPC] BROWSER_GET_LOGIN_STATUS called for:', accountId)
+    ipcLogger.info('BROWSER_GET_LOGIN_STATUS called for:', accountId)
     const manager = getBrowserViewManager()
     if (!manager) throw new Error('BrowserViewManager not initialized')
 
@@ -301,12 +308,12 @@ export function registerIpcHandlers(
     if (!account) throw new Error(`Account not found: ${accountId}`)
 
     const isLoggedIn = await manager.getLoginStatus(accountId, account.platform)
-    console.log('[IPC] Login status result:', isLoggedIn)
+    ipcLogger.info('Login status result:', isLoggedIn)
 
     // Update account in database
     if (account.isLoggedIn !== isLoggedIn) {
       db.updateAccount(accountId, { isLoggedIn })
-      console.log('[IPC] Updated account isLoggedIn to:', isLoggedIn)
+      ipcLogger.info('Updated account isLoggedIn to:', isLoggedIn)
     }
 
     // Fetch real user info when logged in and info is missing
@@ -319,10 +326,10 @@ export function registerIpcHandlers(
             displayName: userInfo.displayName,
             avatar: userInfo.avatar
           })
-          console.log('[IPC] Updated account user info:', userInfo)
+          ipcLogger.info('Updated account user info:', userInfo)
         }
       } catch (e) {
-        console.error('[IPC] Failed to fetch user info:', e)
+        ipcLogger.error('Failed to fetch user info:', e)
       }
     }
 
@@ -649,7 +656,7 @@ export function registerIpcHandlers(
       try {
         fs.copyFileSync(safetyPath, dbPath)
       } catch (rollbackError) {
-        console.error('Failed to roll back database after import error:', rollbackError)
+        ipcLogger.error('Failed to roll back database after import error:', rollbackError)
       }
       await db.initialize()
       throw error
@@ -658,7 +665,7 @@ export function registerIpcHandlers(
     // Restart so every subsystem reloads from the imported database.
     // app.exit() skips will-quit, so release proxy child processes here first.
     await closeAllAnonymizedProxies().catch((error) => {
-      console.warn('Failed to clean up proxies before relaunch:', error)
+      ipcLogger.warn('Failed to clean up proxies before relaunch:', error)
     })
     app.relaunch()
     app.exit(0)
@@ -676,7 +683,7 @@ export function registerIpcHandlers(
       const mimeType = getMimeType(filePath)
       return `data:${mimeType};base64,${buffer.toString('base64')}`
     } catch (error) {
-      console.error('Failed to read file as data URL:', filePath, error)
+      ipcLogger.error('Failed to read file as data URL:', filePath, error)
       throw error
     }
   })
@@ -697,7 +704,7 @@ export function registerIpcHandlers(
         size: stats.size
       }
     } catch (error) {
-      console.error('Failed to get file info:', filePath, error)
+      ipcLogger.error('Failed to get file info:', filePath, error)
       throw error
     }
   })
@@ -1416,5 +1423,84 @@ export function registerIpcHandlers(
       patch.intervalHours = intervalHours
     }
     return keepAliveService.applyConfig(patch)
+  })
+
+  // ========== External API Handlers ==========
+
+  ipcMain.handle(IPC_CHANNELS.EXTERNAL_API_GET_SETTINGS, async () => {
+    return getExternalApiSettings()
+  })
+
+  ipcMain.handle(IPC_CHANNELS.EXTERNAL_API_SET_SETTINGS, async (_, config: unknown) => {
+    if (!config || typeof config !== 'object') {
+      throw new Error('Invalid argument: config must be an object')
+    }
+    const { enabled, port } = config as Record<string, unknown>
+    const patch: { enabled?: boolean; port?: number } = {}
+    if (enabled !== undefined) {
+      if (typeof enabled !== 'boolean') {
+        throw new Error('Invalid argument: enabled must be a boolean')
+      }
+      patch.enabled = enabled
+    }
+    if (port !== undefined) {
+      if (typeof port !== 'number' || !Number.isInteger(port) || port < 1024 || port > 65535) {
+        throw new Error('Invalid argument: port must be an integer between 1024 and 65535')
+      }
+      patch.port = port
+    }
+    const settings = setExternalApiSettings(patch)
+    // Surface listen failures (e.g. port already in use) to the settings page
+    // and roll the toggle back so UI state matches reality.
+    try {
+      await syncExternalApiServer()
+    } catch (error) {
+      setExternalApiSettings({ enabled: false })
+      await syncExternalApiServer().catch(() => undefined)
+      throw new Error(`无法启动外部 API 服务：${formatIpcError(error)}`)
+    }
+    return settings
+  })
+
+  ipcMain.handle(IPC_CHANNELS.EXTERNAL_API_REGENERATE_TOKEN, async () => {
+    const settings = regenerateExternalApiToken()
+    await syncExternalApiServer().catch(() => undefined)
+    return settings
+  })
+
+  // ========== Debug Log Handlers ==========
+
+  ipcMain.handle(IPC_CHANNELS.DEBUG_LOG_GET, async () => {
+    return getDebugLogEnabled()
+  })
+
+  ipcMain.handle(IPC_CHANNELS.DEBUG_LOG_SET, async (_, enabled: unknown) => {
+    if (typeof enabled !== 'boolean') {
+      throw new Error('Invalid argument: enabled must be a boolean')
+    }
+    setDebugLogEnabled(enabled)
+    // Takes effect live — restarting the app to flip a log level would make
+    // the bug being chased disappear.
+    applyDebugLogSetting(enabled)
+    return getDebugLogEnabled()
+  })
+
+  ipcMain.handle(IPC_CHANNELS.LOG_OPEN_DIR, async () => {
+    // The dir only exists after the first file write; create it so the
+    // button works even on a fresh install.
+    fs.mkdirSync(getLogsDir(), { recursive: true })
+    await shell.openPath(getLogsDir())
+  })
+
+  // One-way renderer → renderer.log. Only the trusted main-window preload can
+  // reach this channel, but defensive limits keep a runaway render loop from
+  // flooding the disk: strings only, capped count and length.
+  ipcMain.on(IPC_CHANNELS.LOG_FROM_RENDERER, (_, level: unknown, args: unknown) => {
+    if (level !== 'error' && level !== 'warn' && level !== 'info' && level !== 'debug') return
+    if (!Array.isArray(args) || args.length === 0) return
+    const safeArgs = args
+      .slice(0, 10)
+      .map((arg) => (typeof arg === 'string' ? arg.slice(0, 8192) : String(arg).slice(0, 256)))
+    rendererLogger[level](...safeArgs)
   })
 }

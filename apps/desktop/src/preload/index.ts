@@ -25,6 +25,7 @@ import type {
   PublishGroupSummary,
   PublishGroup,
   KeepAliveStatus,
+  ExternalApiSettings,
   KeepAliveConfig
 } from '../shared/types'
 
@@ -412,6 +413,29 @@ const api = {
       return (): void => {
         ipcRenderer.removeListener(IPC_CHANNELS.KEEPALIVE_ACCOUNT_LOGGED_OUT_EVENT, listener)
       }
+    }
+  },
+
+  // External operations API (local HTTP + MCP server)
+  externalApi: {
+    getSettings: (): Promise<ExternalApiSettings> =>
+      ipcRenderer.invoke(IPC_CHANNELS.EXTERNAL_API_GET_SETTINGS),
+    setSettings: (config: { enabled?: boolean; port?: number }): Promise<ExternalApiSettings> =>
+      ipcRenderer.invoke(IPC_CHANNELS.EXTERNAL_API_SET_SETTINGS, config),
+    regenerateToken: (): Promise<ExternalApiSettings> =>
+      ipcRenderer.invoke(IPC_CHANNELS.EXTERNAL_API_REGENERATE_TOKEN)
+  },
+
+  // Debug logging: user-facing toggle plus a one-way log pipe so renderer
+  // logs land in userData/logs/renderer.log
+  debugLog: {
+    get: (): Promise<boolean> => ipcRenderer.invoke(IPC_CHANNELS.DEBUG_LOG_GET),
+    set: (enabled: boolean): Promise<boolean> =>
+      ipcRenderer.invoke(IPC_CHANNELS.DEBUG_LOG_SET, enabled),
+    openLogsDir: (): Promise<void> => ipcRenderer.invoke(IPC_CHANNELS.LOG_OPEN_DIR),
+    // fire-and-forget by design: logging must never block the UI thread
+    send: (level: 'error' | 'warn' | 'info' | 'debug', args: string[]): void => {
+      ipcRenderer.send(IPC_CHANNELS.LOG_FROM_RENDERER, level, args)
     }
   }
 }

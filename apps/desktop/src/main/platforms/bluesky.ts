@@ -1,4 +1,4 @@
-import type { BrowserView } from 'electron'
+import type { WebContentsView } from 'electron'
 import type {
   PublishResult,
   SyncContentType,
@@ -163,7 +163,7 @@ export class BlueskyAdapter extends BasePlatformAdapter {
     `
   }
 
-  async checkLoginStatus(view: BrowserView): Promise<boolean> {
+  async checkLoginStatus(view: WebContentsView): Promise<boolean> {
     const cookies = await view.webContents.session.cookies.get({
       domain: '.bsky.app'
     })
@@ -171,7 +171,7 @@ export class BlueskyAdapter extends BasePlatformAdapter {
   }
 
   async getUserInfo(
-    view: BrowserView
+    view: WebContentsView
   ): Promise<{ username: string; displayName?: string; avatar?: string } | null> {
     try {
       return await this.executeScript<{
@@ -195,20 +195,20 @@ export class BlueskyAdapter extends BasePlatformAdapter {
     }
   }
 
-  async navigateToPublishPage(view: BrowserView, _contentType?: SyncContentType): Promise<void> {
+  async navigateToPublishPage(view: WebContentsView, _contentType?: SyncContentType): Promise<void> {
     await view.webContents.loadURL(this.publishUrl)
     await this.waitForNavigation(view)
   }
 
   async fillContent(
-    view: BrowserView,
+    view: WebContentsView,
     contentType: SyncContentType,
     data: SyncContentData
   ): Promise<void> {
     await this.executeScript(view, this.getFillScript(contentType, data))
   }
 
-  async submit(view: BrowserView, _contentType?: SyncContentType): Promise<PublishResult> {
+  async submit(view: WebContentsView, _contentType?: SyncContentType): Promise<PublishResult> {
     try {
       await this.sleep(5000)
 

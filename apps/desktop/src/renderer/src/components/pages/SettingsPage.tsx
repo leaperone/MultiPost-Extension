@@ -10,7 +10,14 @@ import {
   HardDriveUpload,
   RefreshCw,
   SquareX,
-  Timer
+  Timer,
+  Bug,
+  FolderOpen,
+  Plug,
+  KeyRound,
+  Copy,
+  Eye,
+  EyeOff
 } from 'lucide-react'
 import { useTheme } from 'next-themes'
 import { useEffect, useState } from 'react'
@@ -18,9 +25,16 @@ import { UpdateChecker } from '../UpdateChecker'
 import { Button } from '../ui/button'
 import { Card } from '../ui/card'
 import { Switch } from '../ui/switch'
+import { Input } from '../ui/input'
 import { SimpleSelect } from '../ui/select'
 import { toast } from '../ui/sonner'
-import type { KeepAliveAccountResult, KeepAliveStatus } from '../../../../shared/types'
+import { ConfirmDialog } from '../ui/confirm-dialog'
+import { setDebugLogEnabled as setRendererDebugLogEnabled } from '../../lib/logger'
+import type {
+  ExternalApiSettings,
+  KeepAliveAccountResult,
+  KeepAliveStatus
+} from '../../../../shared/types'
 
 // Settings keys
 const CLOSE_ALL_BEHAVIOR_KEY = 'multipost:closeAllBehavior'
@@ -267,6 +281,68 @@ function DataBackupSetting(): React.ReactElement {
   )
 }
 
+function DebugLogSetting(): React.ReactElement {
+  const [enabled, setEnabled] = useState(false)
+  const [loaded, setLoaded] = useState(false)
+
+  useEffect(() => {
+    window.api.debugLog
+      .get()
+      .then((value) => {
+        setEnabled(value)
+        setLoaded(true)
+      })
+      .catch(() => setLoaded(true))
+  }, [])
+
+  const handleChange = async (value: boolean): Promise<void> => {
+    setEnabled(value)
+    try {
+      const applied = await window.api.debugLog.set(value)
+      setEnabled(applied)
+      setRendererDebugLogEnabled(applied)
+    } catch (error) {
+      console.error('Failed to set debug log:', error)
+      setEnabled(!value)
+      toast.error('无法修改调试日志设置', { description: '请稍后重试' })
+    }
+  }
+
+  const handleOpenLogsDir = async (): Promise<void> => {
+    try {
+      await window.api.debugLog.openLogsDir()
+    } catch (error) {
+      console.error('Failed to open logs dir:', error)
+      toast.error('无法打开日志文件夹', { description: '请稍后重试' })
+    }
+  }
+
+  return (
+    <>
+      <SettingItem
+        icon={Bug}
+        title="调试日志"
+        description={
+          enabled
+            ? '正在记录详细日志，问题定位完成后建议关闭'
+            : '开启后记录详细的运行日志，用于排查问题'
+        }
+      >
+        <Switch checked={enabled} onCheckedChange={handleChange} disabled={!loaded} />
+      </SettingItem>
+      <SettingItem
+        icon={FolderOpen}
+        title="日志文件"
+        description="日志按模块拆分为主程序、界面、发布、保活、通信五个文件，反馈问题时可打包发送"
+      >
+        <Button variant="secondary" size="sm" onClick={() => void handleOpenLogsDir()}>
+          打开日志文件夹
+        </Button>
+      </SettingItem>
+    </>
+  )
+}
+
 function formatTime(ts: number): string {
   const d = new Date(ts)
   const pad = (n: number): string => String(n).padStart(2, '0')
@@ -409,6 +485,187 @@ function KeepAliveSetting(): React.ReactElement {
   )
 }
 
+function maskToken(token: string): string {
+  if (token.length <= 12) return token
+  return `${token.slice(0, 6)}${'•'.repeat(8)}${token.slice(-4)}`
+}
+
+function ExternalApiSetting(): React.ReactElement {
+  const [settings, setSettings] = useState<ExternalApiSettings | null>(null)
+  const [toggling, setToggling] = useState(false)
+  const [revealed, setRevealed] = useState(false)
+  const [regenerateOpen, setRegenerateOpen] = useState(false)
+
+  useEffect(() => {
+    let cancelled = false
+    window.api.externalApi
+      .getSettings()
+      .then((value) => {
+        if (!cancelled) setSettings(value)
+      })
+      .catch(() => {
+        // ignore
+      })
+    return () => {
+      cancelled = true
+    }
+  }, [])
+
+  const handleToggle = async (enabled: boolean): Promise<void> => {
+    setToggling(true)
+    setSettings((prev) => (prev ? { ...prev, enabled } : prev))
+    try {
+      const next = await window.api.externalApi.setSettings({ enabled })
+      setSettings(next)
+      toast(enabled ? '外部 API 已开启' : '外部 API 已关闭')
+    } catch (error) {
+      setSettings((prev) => (prev ? { ...prev, enabled: !enabled } : prev))
+      toast.error('无法切换外部 API', {
+        description: error instanceof Error ? error.message : '请稍后重试'
+      })
+    } finally {
+      setToggling(false)
+    }
+  }
+
+  const handleCopy = async (text: string, label: string): Promise<void> => {
+    try {
+      await navigator.clipboard.writeText(text)
+      toast(`${label}已复制`)
+    } catch {
+      toast.error('复制失败', { description: '请手动选择复制' })
+    }
+  }
+
+  const handleRegenerate = async (): Promise<void> => {
+    try {
+      const next = await window.api.externalApi.regenerateToken()
+      setSettings(next)
+      setRevealed(true)
+      toast('已重新生成访问令牌', { description: '旧令牌已立即失效' })
+    } catch {
+      toast.error('无法重新生成令牌', { description: '请稍后重试' })
+    }
+  }
+
+  const enabled = settings?.enabled ?? false
+  const baseUrl = settings ? `http://127.0.0.1:${settings.port}` : ''
+  const token = settings?.token ?? ''
+  const mcpConfig = settings
+    ? JSON.stringify(
+        {
+          mcpServers: {
+            'multipost-desktop': {
+              url: `${baseUrl}/mcp`,
+              headers: { Authorization: `Bearer ${token}` }
+            }
+          }
+        },
+        null,
+        2
+      )
+    : ''
+
+  return (
+    <>
+      <SettingItem
+        icon={Plug}
+        title="开启外部 API"
+        description="在本机暴露 HTTP 接口与 MCP 服务，供脚本或 AI 工具拉取账号、创建发布任务。仅监听 127.0.0.1"
+      >
+        <Switch checked={enabled} onCheckedChange={handleToggle} disabled={!settings || toggling} />
+      </SettingItem>
+
+      {enabled && settings && (
+        <div className="flex flex-col gap-4 py-4">
+          <div className="flex flex-col gap-2">
+            <span className="text-xs font-medium text-muted-foreground">服务地址</span>
+            <div className="flex items-center gap-2">
+              <Input readOnly value={baseUrl} className="h-8 font-mono text-xs" />
+              <Button
+                variant="secondary"
+                size="sm"
+                onClick={() => void handleCopy(baseUrl, '服务地址')}
+              >
+                <Copy className="size-4" />
+              </Button>
+            </div>
+          </div>
+
+          <div className="flex flex-col gap-2">
+            <span className="text-xs font-medium text-muted-foreground">访问令牌（Bearer Token）</span>
+            <div className="flex items-center gap-2">
+              <Input
+                readOnly
+                value={revealed ? token : maskToken(token)}
+                className="h-8 font-mono text-xs"
+              />
+              <Button variant="secondary" size="sm" onClick={() => setRevealed((v) => !v)}>
+                {revealed ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
+              </Button>
+              <Button
+                variant="secondary"
+                size="sm"
+                onClick={() => void handleCopy(token, '访问令牌')}
+              >
+                <Copy className="size-4" />
+              </Button>
+              <Button variant="secondary" size="sm" onClick={() => setRegenerateOpen(true)}>
+                <KeyRound className="size-4" />
+              </Button>
+            </div>
+            <p className="text-xs text-muted-foreground">
+              请求需携带 <code className="rounded bg-muted px-1 py-0.5">Authorization: Bearer …</code>
+              。请妥善保管，泄露后可重新生成令牌使旧令牌失效。
+            </p>
+          </div>
+
+          <div className="flex flex-col gap-2">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-medium text-muted-foreground">
+                MCP 接入配置（Claude Code / Cursor 等）
+              </span>
+              <Button
+                variant="secondary"
+                size="sm"
+                onClick={() => void handleCopy(mcpConfig, 'MCP 配置')}
+              >
+                <Copy className="size-4" />
+                复制
+              </Button>
+            </div>
+            <pre className="overflow-x-auto rounded-lg bg-muted p-3 font-mono text-xs text-muted-foreground">
+              {mcpConfig}
+            </pre>
+            <p className="text-xs text-muted-foreground">
+              完整接口文档见{' '}
+              <button
+                type="button"
+                className="underline underline-offset-2"
+                onClick={() =>
+                  window.api.browser.openWebDashboard('/docs/api-reference/desktop')
+                }
+              >
+                使用文档
+              </button>
+              。
+            </p>
+          </div>
+        </div>
+      )}
+
+      <ConfirmDialog
+        open={regenerateOpen}
+        onOpenChange={setRegenerateOpen}
+        title="重新生成访问令牌？"
+        description="当前令牌将立即失效，所有使用旧令牌的脚本或工具都需要更新为新令牌。"
+        confirmText="重新生成"
+        onConfirm={handleRegenerate}
+      />
+    </>
+  )
+}
+
 export function SettingsPage(): React.ReactElement {
   return (
     <div className="mx-auto flex w-full max-w-3xl flex-col gap-8 xl:max-w-4xl">
@@ -448,6 +705,16 @@ export function SettingsPage(): React.ReactElement {
         </Card>
       </div>
 
+      {/* External API */}
+      <div className="flex flex-col gap-1">
+        <h2 className="px-1 text-sm font-medium uppercase tracking-wider text-muted-foreground">
+          外部 API
+        </h2>
+        <Card className="divide-y divide-border/60 px-5">
+          <ExternalApiSetting />
+        </Card>
+      </div>
+
       {/* Data Settings */}
       <div className="flex flex-col gap-1">
         <h2 className="px-1 text-sm font-medium uppercase tracking-wider text-muted-foreground">
@@ -455,6 +722,7 @@ export function SettingsPage(): React.ReactElement {
         </h2>
         <Card className="divide-y divide-border/60 px-5">
           <DataBackupSetting />
+          <DebugLogSetting />
         </Card>
       </div>
 
