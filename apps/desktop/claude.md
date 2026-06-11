@@ -39,20 +39,25 @@ pnpm lint         # 运行 ESLint (开发时用这个检查，不要跑 build)
 
 ## UI/Styling Guidelines
 
-**Component Libraries:** HeroUI (@heroui/react), Radix UI, Lucide React (icons), Framer Motion, Tailwind CSS, Shadcn UI ContextMenu
+设计规范见仓库根目录 **PRODUCT.md / DESIGN.md**(North Star「本地中控台」,桌面端是全产品视觉基准)。
+
+**Component Libraries:** 自研基础件 `src/renderer/src/components/ui/`(shadcn/Radix 风格扁平),Radix UI,Lucide React (icons),Framer Motion,Tailwind CSS,sonner (toast)。**HeroUI 已于 2026-06 全量退役,禁止重新引入 @heroui/***。
 
 **Design System - Minimalist Black & White:**
 - Only use Tailwind semantic colors: `bg-background`, `text-foreground`, `text-muted-foreground`
+- **The One Red Rule**: 唯一色相是 `text-destructive`,仅用于失败/破坏性;成功用 `text-foreground` 图标+文字;禁 success/warning 彩色
+- **The Flat-By-Default Rule**: 静态表面零 shadow;仅 popover/dialog 浮层允许阴影(基础件已内置)
 - Borders: Only `border` class, never `border-gray-xxx`
-- No colored backgrounds
-- Card: `<Card className="shadow-none border">`
+- 字重只用 400/500/600,禁 `font-bold`
+- 破坏性操作必须经 `ui/confirm-dialog`(点名对象、说清后果)
 
 **Layout:** Mobile-first, use `flex`/`grid` + `gap` for spacing, avoid margins
 
 **Toast:**
 ```tsx
-import { addToast } from "@heroui/react";
-addToast({ title: "Title", description: "Desc", hideIcon: true });
+import { toast } from './components/ui/sonner'  // 路径按相对层级
+toast('已保存草稿')
+toast.error('发布失败', { description: '小红书:登录已过期,去账号页重新登录后重试。' })
 ```
 
 **Icons:** Lucide React, only add `className='size-4'` when button size is 'sm'

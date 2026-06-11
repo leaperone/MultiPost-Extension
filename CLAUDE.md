@@ -444,3 +444,14 @@ Doc ref: https://github.com/coreyhaines31/marketingskills
 | 技能 | 用途 | 调用方式 |
 |------|------|----------|
 | `web-design-guidelines` | Web 界面设计规范检查 | `/web-design-guidelines` |
+
+---
+
+## Design Context
+
+设计相关工作开始前先读项目根目录的两份文件:
+
+- **PRODUCT.md** — 策略层:register(product)、用户画像、品牌个性(亲切·省心·陪伴)、反面参考、5 条设计原则。
+- **DESIGN.md** — 视觉层:North Star「本地中控台」、灰阶 token、组件规范、Do's and Don'ts。
+
+要点:桌面端(apps/desktop renderer)的视觉语言是基准,Web 向其靠拢;**HeroUI 处于退役通道,新代码禁止新增 @heroui/react 引用**,新组件按 shadcn/Radix 原生扁平实现。
