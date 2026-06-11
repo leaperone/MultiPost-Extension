@@ -10,7 +10,9 @@ import {
   Switch,
   Textarea,
 } from '@heroui/react';
-import { Message, useChat } from 'ai/react';
+import { useChat } from '@ai-sdk/react';
+import { DefaultChatTransport, type UIMessage } from 'ai';
+import { createTextMessage, getMessageText, withMessageText } from '@/lib/ai-chat';
 import { Check, CheckCircle, Clipboard, CornerDownLeft, Plus, RefreshCw, Settings, X, Clock } from 'lucide-react';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import ReactMarkdown from 'react-markdown';
@@ -40,13 +42,7 @@ export default function ChatCreationPanel() {
     [setStoreTitle, setStoreContent],
   );
 
-  const initialMessages: Message[] = [
-    {
-      id: '0',
-      role: 'assistant',
-      content: t('aiCreation.initialMessage'),
-    },
-  ];
+  const initialMessages: UIMessage[] = [createTextMessage('assistant', t('aiCreation.initialMessage'), '0')];
   const { isAutoApplyChanges, setIsAutoApplyChanges } = useDraftStore();
   const { getChatHistory, setChatHistory, getSuggestions, setSuggestions } = useChatHistoryStore();
 
@@ -59,15 +55,12 @@ export default function ChatCreationPanel() {
     }>
   >([]);
 
-  const { messages, input, handleInputChange, handleSubmit, isLoading, setMessages, append, stop, setInput } = useChat({
-    api: '/api/draft/ai/creation',
-    initialMessages: getChatHistory(draftId).length > 0 ? getChatHistory(draftId) : initialMessages,
-    body: {
-      draftTitle,
-      draftContent,
-    },
-    onFinish: (message) => {
-      const content = message.content;
+  const [input, setInput] = useState('');
+  const { messages, status, setMessages, sendMessage, stop } = useChat({
+    transport: new DefaultChatTransport({ api: '/api/draft/ai/creation' }),
+    messages: getChatHistory(draftId).length > 0 ? getChatHistory(draftId) : initialMessages,
+    onFinish: ({ message, messages: finishedMessages }) => {
+      const content = getMessageText(message);
       let title: string | undefined;
       let newContent: string | undefined;
       let thoughts: string | undefined;
@@ -81,7 +74,7 @@ export default function ChatCreationPanel() {
 
         if (thoughts) {
           setMessages((prevMessages) =>
-            prevMessages.map((m) => (m.id === message.id ? { ...m, content: thoughts! } : m)),
+            prevMessages.map((m) => (m.id === message.id ? withMessageText(m, thoughts!) : m)),
           );
         }
       }
@@ -125,7 +118,7 @@ export default function ChatCreationPanel() {
         );
       }
 
-      setChatHistory(draftId, messages);
+      setChatHistory(draftId, finishedMessages);
 
       setTimeout(() => {
         if (inputRef.current) {
@@ -134,6 +127,15 @@ export default function ChatCreationPanel() {
       }, 100);
     },
   });
+
+  const isLoading = status === 'submitted' || status === 'streaming';
+
+  const sendUserMessage = useCallback(
+    (text: string) => {
+      void sendMessage({ text }, { body: { draftTitle, draftContent } });
+    },
+    [sendMessage, draftTitle, draftContent],
+  );
 
   useEffect(() => {
     if (draftId) {
@@ -187,7 +189,7 @@ export default function ChatCreationPanel() {
       let hasChanges = false;
       messages.forEach((m) => {
         if (m.role === 'user' && prev[m.id] === undefined) {
-          newEntries[m.id] = m.content;
+          newEntries[m.id] = getMessageText(m);
           hasChanges = true;
         }
       });
@@ -219,13 +221,8 @@ export default function ChatCreationPanel() {
       return;
     }
 
-    const newMessages = messages.slice(0, messageIndex);
-    setMessages(newMessages);
-
-    append({
-      role: 'user',
-      content: newContent,
-    });
+    setMessages(messages.slice(0, messageIndex));
+    sendUserMessage(newContent);
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -260,8 +257,8 @@ export default function ChatCreationPanel() {
     );
   };
 
-  const handleCopy = (message: Message) => {
-    const textToCopy = (message.parts ?? [])
+  const handleCopy = (message: UIMessage) => {
+    const textToCopy = message.parts
       .filter((part) => part.type === 'text')
       .map((part) => part.text)
       .join('\n');
@@ -323,11 +320,8 @@ export default function ChatCreationPanel() {
 
     const nextItem = todoQueue[0];
     setTodoQueue((prev) => prev.slice(1));
-    append({
-      role: 'user',
-      content: nextItem.content,
-    });
-  }, [todoQueue, isLoading, append]);
+    sendUserMessage(nextItem.content);
+  }, [todoQueue, isLoading, sendUserMessage]);
 
   const [shouldAutoProcess, setShouldAutoProcess] = useState(true);
 
@@ -346,10 +340,7 @@ export default function ChatCreationPanel() {
       if (isLoading) {
         addToTodoQueue(queueInput);
       } else {
-        append({
-          role: 'user',
-          content: queueInput.trim(),
-        });
+        sendUserMessage(queueInput.trim());
         setQueueInput('');
       }
     }
@@ -459,7 +450,7 @@ export default function ChatCreationPanel() {
                         );
                       },
                     }}>
-                    {m.content}
+                    {getMessageText(m)}
                   </ReactMarkdown>
                 </div>
                 {(() => {
@@ -595,7 +586,8 @@ export default function ChatCreationPanel() {
               e.preventDefault();
               setShouldAutoProcess(true);
               if (input.trim()) {
-                handleSubmit(e);
+                sendUserMessage(input.trim());
+                setInput('');
               } else if (todoQueue.length > 0) {
                 processNextTodoItem();
               }
@@ -604,7 +596,7 @@ export default function ChatCreationPanel() {
               <Textarea
                 ref={inputRef}
                 value={input}
-                onChange={handleInputChange}
+                onChange={(e) => setInput(e.target.value)}
                 onKeyDown={handleKeyDown}
                 placeholder={
                   todoQueue.length > 0

@@ -1,7 +1,7 @@
 import { createOpenAI } from '@ai-sdk/openai';
 import { createFileRoute } from '@tanstack/react-router';
-import type { CoreMessage } from 'ai';
-import { streamText } from 'ai';
+import type { UIMessage } from 'ai';
+import { convertToModelMessages, streamText } from 'ai';
 
 import { unauthenticatedResponse } from '../../../../lib/response';
 
@@ -99,9 +99,9 @@ async function POST({ request }: { request: Request }) {
     });
   }
 
-  let data: { messages: CoreMessage[]; currentPrompt?: string };
+  let data: { messages: UIMessage[]; currentPrompt?: string };
   try {
-    data = JSON.parse(bodyText) as { messages: CoreMessage[]; currentPrompt?: string };
+    data = JSON.parse(bodyText) as { messages: UIMessage[]; currentPrompt?: string };
   } catch {
     return new Response(JSON.stringify({ message: 'Invalid JSON in request body.' }), {
       status: 400,
@@ -112,11 +112,11 @@ async function POST({ request }: { request: Request }) {
   const { messages, currentPrompt } = data;
   const systemPrompt = getSystemPrompt(currentPrompt || '');
 
-  const result = await streamText({
+  const result = streamText({
     model: openai('gpt-5-nano'),
     system: systemPrompt,
-    messages,
+    messages: await convertToModelMessages(messages),
   });
 
-  return result.toDataStreamResponse();
+  return result.toUIMessageStreamResponse();
 }

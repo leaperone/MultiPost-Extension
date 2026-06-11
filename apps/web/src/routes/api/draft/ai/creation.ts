@@ -1,7 +1,7 @@
 import { createOpenAI } from '@ai-sdk/openai';
 import { createFileRoute } from '@tanstack/react-router';
-import type { CoreMessage } from 'ai';
-import { streamText } from 'ai';
+import type { UIMessage } from 'ai';
+import { convertToModelMessages, streamText } from 'ai';
 
 import { unauthenticatedResponse } from '../../../../lib/response';
 
@@ -110,10 +110,10 @@ async function POST({ request }: { request: Request }) {
     });
   }
 
-  let data: { messages: CoreMessage[]; draftTitle?: string; draftContent?: string };
+  let data: { messages: UIMessage[]; draftTitle?: string; draftContent?: string };
   try {
     data = JSON.parse(bodyText) as {
-      messages: CoreMessage[];
+      messages: UIMessage[];
       draftTitle?: string;
       draftContent?: string;
     };
@@ -127,11 +127,11 @@ async function POST({ request }: { request: Request }) {
   const { messages, draftTitle, draftContent } = data;
   const systemPrompt = getSystemPrompt(draftTitle || '', draftContent || '');
 
-  const result = await streamText({
+  const result = streamText({
     model: openai('gpt-5-nano'),
     system: systemPrompt,
-    messages,
+    messages: await convertToModelMessages(messages),
   });
 
-  return result.toDataStreamResponse();
+  return result.toUIMessageStreamResponse();
 }

@@ -6,7 +6,9 @@ import { z } from 'zod';
 import { ImageGenerationSchema, ImageSize, Style, Color, Composition } from '../../../../../actions/draw/image/types';
 import { useTranslation } from '@/i18n/client';
 import React, { useState } from 'react';
-import { useChat } from 'ai/react';
+import { useChat } from '@ai-sdk/react';
+import { DefaultChatTransport } from 'ai';
+import { getMessageText } from '@/lib/ai-chat';
 import { parsePromptResponse } from '@/lib/ai-response-parser';
 
 interface GenerationFormProps {
@@ -35,20 +37,19 @@ export function GenerationForm({ onSubmit, loading, extraPrompt, initPrompt }: G
   // useChat for AI prompt optimization
   const {
     messages: aiMessages,
-    isLoading: aiOptimizing,
-    append: appendAiMessage,
+    status: aiStatus,
+    sendMessage: sendAiMessage,
   } = useChat({
-    api: '/api/draw/image/prompt',
-    initialMessages: [],
-    body: {},
-    onFinish: (message) => {
+    transport: new DefaultChatTransport({ api: '/api/draw/image/prompt' }),
+    onFinish: ({ message }) => {
       // Use ai-response-parser to extract optimized prompt from AI response
-      const result = parsePromptResponse<{ prompt: string }>(message.content);
+      const result = parsePromptResponse<{ prompt: string }>(getMessageText(message));
       if (result.success && result.data?.prompt) {
         setOptimizedPrompt(result.data.prompt);
       }
     },
   });
+  const aiOptimizing = aiStatus === 'submitted' || aiStatus === 'streaming';
   const [optimizedPrompt, setOptimizedPrompt] = useState<string | null>(null);
 
   /**
@@ -57,7 +58,7 @@ export function GenerationForm({ onSubmit, loading, extraPrompt, initPrompt }: G
   const handleOptimizePrompt = () => {
     setOptimizedPrompt(null);
     const currentPrompt = extraPrompt ? `${form.getValues('prompt')} ${extraPrompt}` : form.getValues('prompt');
-    appendAiMessage({ role: 'user', content: currentPrompt });
+    void sendAiMessage({ text: currentPrompt });
   };
 
   /**
@@ -120,7 +121,7 @@ export function GenerationForm({ onSubmit, loading, extraPrompt, initPrompt }: G
             const lastAssistantMsg = [...lastSix].reverse().find((m) => m.role === 'assistant');
             return lastAssistantMsg ? (
               <div className="mt-2 rounded-lg bg-default-100 p-3 text-sm text-foreground">
-                {lastAssistantMsg.content}
+                {getMessageText(lastAssistantMsg)}
               </div>
             ) : null;
           })()}

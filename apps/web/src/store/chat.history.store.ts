@@ -1,4 +1,4 @@
-import { Message } from 'ai/react';
+import type { UIMessage } from 'ai';
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 
@@ -12,7 +12,7 @@ interface Suggestion {
 }
 
 interface ChatHistoryState {
-  chatHistories: Record<string, Message[]>;
+  chatHistories: Record<string, UIMessage[]>;
   suggestions: Record<string, Suggestion[]>;
 }
 
@@ -22,12 +22,31 @@ const initialState: ChatHistoryState = {
 };
 
 interface ChatHistoryStore extends ChatHistoryState {
-  getChatHistory: (draftId: string) => Message[];
-  setChatHistory: (draftId: string, messages: Message[]) => void;
+  getChatHistory: (draftId: string) => UIMessage[];
+  setChatHistory: (draftId: string, messages: UIMessage[]) => void;
   clearChatHistory: (draftId: string) => void;
   getSuggestions: (draftId: string) => Suggestion[];
   setSuggestions: (draftId: string, suggestions: Suggestion[]) => void;
   clearSuggestions: (draftId: string) => void;
+}
+
+/** Pre-v5 AI SDK messages were persisted with a flat `content` string. */
+interface LegacyMessage {
+  id: string;
+  role: UIMessage['role'];
+  content?: string;
+  parts?: UIMessage['parts'];
+}
+
+function toUIMessage(message: LegacyMessage): UIMessage {
+  if (Array.isArray(message.parts)) {
+    return { id: message.id, role: message.role, parts: message.parts };
+  }
+  return {
+    id: message.id,
+    role: message.role,
+    parts: [{ type: 'text', text: message.content ?? '' }],
+  };
 }
 
 export const useChatHistoryStore = create(
@@ -39,7 +58,7 @@ export const useChatHistoryStore = create(
         return get().chatHistories[draftId] || [];
       },
 
-      setChatHistory: (draftId: string, messages: Message[]) => {
+      setChatHistory: (draftId: string, messages: UIMessage[]) => {
         const slicedMessages = messages.slice(-MAX_MESSAGES_PER_DRAFT);
         set((state) => ({
           chatHistories: {
@@ -84,6 +103,21 @@ export const useChatHistoryStore = create(
     }),
     {
       name: 'chat-history-storage',
+      version: 1,
+      migrate: (persistedState) => {
+        const state = persistedState as ChatHistoryStore & {
+          chatHistories: Record<string, LegacyMessage[]>;
+        };
+        return {
+          ...state,
+          chatHistories: Object.fromEntries(
+            Object.entries(state.chatHistories ?? {}).map(([draftId, messages]) => [
+              draftId,
+              (messages ?? []).map(toUIMessage),
+            ]),
+          ),
+        };
+      },
     },
   ),
 );

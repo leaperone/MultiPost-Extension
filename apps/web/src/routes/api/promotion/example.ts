@@ -47,7 +47,7 @@ async function POST({ request }: { request: Request }) {
     }
 
     const { text } = await generateText({
-      model: openai(process.env.DEEPSEEK_MODEL || 'deepseek-chat', {}),
+      model: openai(process.env.DEEPSEEK_MODEL || 'deepseek-chat'),
       system: sysPrompt,
       prompt: `任务描述：${task.description} 推广码：${code} 关键词：${task.keywords} 参考文案：${task.examples} 任务类型：${PromotionTaskTypeLabelMap[task.taskType as keyof typeof PromotionTaskTypeLabelMap]}`,
     });
