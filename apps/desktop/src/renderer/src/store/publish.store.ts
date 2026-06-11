@@ -73,6 +73,10 @@ function publishToastId(groupId: string): string {
 // 按 groupId + 内容签名去重，内容没变就不重渲染。
 let lastToastSignature: { groupId: string; signature: string } | null = null
 
+// group tab 是异步出现的，必须先「见过」当前 active group 的 tab，
+// 之后的消失才算「被关闭」（见文件底部的 onTabsChanged 监听）。
+let hasSeenActiveGroupTab = false
+
 function resetToastCache(): void {
   lastToastSignature = null
 }
@@ -199,6 +203,7 @@ export const usePublishStore = create<PublishState>((set, get) => ({
           toast.dismiss(publishToastId(previousGroupId))
         }
         resetToastCache()
+        hasSeenActiveGroupTab = false
         set({
           activeGroupId: groupId,
           activeContentType: contentType,
@@ -353,10 +358,7 @@ window.api.publishGroup.onGroupSummary((summary) => {
 })
 
 // 用户可以从标签栏直接关闭发布组（main 只更新 tabs、不发 summary），
-// 不监听这里的话进行中的粘性 toast 会永久残留。group tab 是异步出现的，
-// 必须先「见过」它，之后的消失才算关闭。
-let hasSeenActiveGroupTab = false
-
+// 不监听这里的话进行中的粘性 toast 会永久残留。
 window.api.browser.onTabsChanged((tabs: BrowserTab[]) => {
   const { activeGroupId, summary, clearProgress } = usePublishStore.getState()
   if (!activeGroupId) {
