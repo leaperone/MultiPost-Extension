@@ -47,7 +47,10 @@ export default defineConfig({
     remarkPlugins: (plugins) => [
       ...plugins,
       remarkGfm as Pluggable,
-      remarkMath as Pluggable,
+      // Single-dollar math is disabled: docs/blog content uses `$` for
+      // currency (e.g. "$0.5"), which otherwise gets mangled into KaTeX
+      // math mode. Block math via `$$ ... $$` still works.
+      [remarkMath, { singleDollarTextMath: false }] as Pluggable,
     ],
     rehypePlugins: (plugins) => [
       ...plugins,
