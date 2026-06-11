@@ -32,7 +32,7 @@ export function AboutPage(): React.ReactElement {
   }, [])
 
   return (
-    <div className="mx-auto flex max-w-2xl flex-col gap-8">
+    <div className="mx-auto flex w-full max-w-2xl flex-col gap-8">
       {/* Header */}
       <div className="flex flex-col items-center gap-3 text-center">
         <img src={logo} alt="MultiPost" className="size-20 rounded-2xl" />
@@ -57,7 +57,7 @@ export function AboutPage(): React.ReactElement {
           {links.map((link) => (
             <Button
               key={link.label}
-              variant="outline"
+              variant="secondary"
               onClick={() => window.open(link.url, '_blank')}
             >
               <link.icon />
@@ -68,7 +68,7 @@ export function AboutPage(): React.ReactElement {
       </div>
 
       {/* Footer */}
-      <div className="flex flex-col gap-2 border-t pt-4 text-center">
+      <div className="flex flex-col gap-2 pt-4 text-center">
         <p className="flex items-center justify-center gap-1 text-sm text-muted-foreground">
           Made with <Heart className="size-4" /> by{' '}
           <a

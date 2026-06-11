@@ -14,6 +14,7 @@ import { useTheme } from 'next-themes'
 import { useEffect, useState, useCallback } from 'react'
 import { UpdateChecker } from '../UpdateChecker'
 import { Button } from '../ui/button'
+import { Card } from '../ui/card'
 import { Switch } from '../ui/switch'
 import { SimpleSelect } from '../ui/select'
 import { toast } from '../ui/sonner'
@@ -33,8 +34,8 @@ interface SettingItemProps {
 
 function SettingItem({ icon: Icon, title, description, children }: SettingItemProps): React.ReactElement {
   return (
-    <div className="flex items-center justify-between gap-4 py-4">
-      <div className="flex items-start gap-3">
+    <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-3 py-4">
+      <div className="flex min-w-0 flex-1 basis-56 items-start gap-3">
         <div className="flex size-9 flex-shrink-0 items-center justify-center rounded-lg bg-muted">
           <Icon className="size-4 text-muted-foreground" />
         </div>
@@ -324,7 +325,7 @@ function KeepAliveSetting(): React.ReactElement {
 
 export function SettingsPage(): React.ReactElement {
   return (
-    <div className="mx-auto flex max-w-2xl flex-col gap-8">
+    <div className="mx-auto flex w-full max-w-3xl flex-col gap-8 xl:max-w-4xl">
       {/* Header */}
       <div className="flex items-center gap-3">
         <div className="flex size-10 items-center justify-center rounded-lg bg-muted">
@@ -341,14 +342,14 @@ export function SettingsPage(): React.ReactElement {
         <h2 className="px-1 text-sm font-medium uppercase tracking-wider text-muted-foreground">
           通用设置
         </h2>
-        <div className="divide-y rounded-lg border bg-background px-4">
+        <Card className="divide-y divide-border/60 px-5">
           <SettingItem icon={Sun} title="外观主题" description="切换浅色、深色或跟随系统">
             <ThemeSwitcher />
           </SettingItem>
           <AutoLaunchSetting />
           <CloseWindowBehaviorSetting />
           <KeepAliveSetting />
-        </div>
+        </Card>
       </div>
 
       {/* Publish Settings */}
@@ -356,9 +357,9 @@ export function SettingsPage(): React.ReactElement {
         <h2 className="px-1 text-sm font-medium uppercase tracking-wider text-muted-foreground">
           发布设置
         </h2>
-        <div className="divide-y rounded-lg border bg-background px-4">
+        <Card className="divide-y divide-border/60 px-5">
           <CloseAllBehaviorSetting />
-        </div>
+        </Card>
       </div>
 
       {/* Data Settings */}
@@ -366,9 +367,9 @@ export function SettingsPage(): React.ReactElement {
         <h2 className="px-1 text-sm font-medium uppercase tracking-wider text-muted-foreground">
           数据与隐私
         </h2>
-        <div className="divide-y rounded-lg border bg-background px-4">
+        <Card className="divide-y divide-border/60 px-5">
           <DataBackupSetting />
-        </div>
+        </Card>
       </div>
 
       {/* Update Settings */}
@@ -376,7 +377,7 @@ export function SettingsPage(): React.ReactElement {
         <h2 className="px-1 text-sm font-medium uppercase tracking-wider text-muted-foreground">
           软件更新
         </h2>
-        <div className="flex flex-col gap-4 rounded-lg border bg-background p-4">
+        <Card className="flex flex-col gap-4 p-5">
           <div className="flex items-start gap-3">
             <div className="flex size-9 flex-shrink-0 items-center justify-center rounded-lg bg-muted">
               <Download className="size-4 text-muted-foreground" />
@@ -387,7 +388,7 @@ export function SettingsPage(): React.ReactElement {
             </div>
           </div>
           <UpdateChecker />
-        </div>
+        </Card>
       </div>
     </div>
   )

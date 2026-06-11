@@ -405,81 +405,87 @@ export function PodcastPublishPage({
   // 第 1 步 · 创作：大上传区 + 标题/描述
   if (step === 'compose') {
     return (
-      <div className="flex flex-col gap-6">
+      <div className="mx-auto flex w-full max-w-screen-2xl flex-col gap-6">
+        {/* 页面级标题直接坐在画布上，不进卡片 */}
+        <div className="flex items-end justify-between">
+          <h2 className="text-xl font-semibold">发布播客</h2>
+          <span className="text-xs text-muted-foreground">第 1 步 · 上传与编辑</span>
+        </div>
+
         <Card className="flex flex-col gap-5 p-6">
-          <div className="flex items-center justify-between">
-            <h2 className="text-lg font-semibold">发布播客</h2>
-            <span className="text-xs text-muted-foreground">第 1 步 · 上传与编辑</span>
-          </div>
-
-          <div className="flex flex-col gap-2">
-            <label className="text-sm font-medium">音频文件</label>
-            <input
-              ref={audioInputRef}
-              type="file"
-              accept="audio/*,.mp3,.wav,.m4a,.aac,.ogg,.flac"
-              onChange={handleAudioInputChange}
-              className="hidden"
-              disabled={isPublishing}
-            />
-            {!audioFile ? (
-              <div
-                onClick={() => !isPublishing && handleSelectAudio()}
-                onDrop={handleAudioDrop}
-                onDragOver={handleAudioDragOver}
-                onDragLeave={handleAudioDragLeave}
-                className={`flex min-h-[40vh] flex-col items-center justify-center gap-2 p-8 border-2 border-dashed rounded-lg cursor-pointer transition-colors ${
-                  isDraggingAudio ? 'border-foreground bg-muted' : 'hover:border-foreground/40'
-                } ${isPublishing ? 'opacity-60 cursor-not-allowed' : ''}`}
-              >
-                <Upload className="size-10 text-muted-foreground" />
-                <p className="text-sm text-muted-foreground">点击或拖拽音频文件到此处上传</p>
-                <p className="text-xs text-muted-foreground">支持 MP3, WAV, M4A, AAC 等格式</p>
-              </div>
-            ) : (
-              <div className="relative border rounded-lg overflow-hidden">
-                <div className="p-4">
-                  <audio src={audioFile.url} controls className="w-full" />
+          {/* 宽屏双栏：左边音频，右边标题/描述；窄窗落回单列 */}
+          <div className="grid grid-cols-1 gap-6 xl:grid-cols-2">
+            <div className="flex flex-col gap-2">
+              <label className="text-xs font-medium text-muted-foreground">音频文件</label>
+              <input
+                ref={audioInputRef}
+                type="file"
+                accept="audio/*,.mp3,.wav,.m4a,.aac,.ogg,.flac"
+                onChange={handleAudioInputChange}
+                className="hidden"
+                disabled={isPublishing}
+              />
+              {!audioFile ? (
+                <div
+                  onClick={() => !isPublishing && handleSelectAudio()}
+                  onDrop={handleAudioDrop}
+                  onDragOver={handleAudioDragOver}
+                  onDragLeave={handleAudioDragLeave}
+                  className={`flex min-h-[40vh] flex-1 flex-col items-center justify-center gap-2 rounded-xl border border-dashed border-border p-8 cursor-pointer transition-colors ${
+                    isDraggingAudio ? 'bg-foreground/[0.05]' : 'bg-foreground/[0.02] hover:bg-foreground/[0.05]'
+                  } ${isPublishing ? 'opacity-60 cursor-not-allowed' : ''}`}
+                >
+                  <Upload className="size-10 text-muted-foreground" />
+                  <p className="text-sm text-muted-foreground">点击或拖拽音频文件到此处上传</p>
+                  <p className="text-xs text-muted-foreground">支持 MP3, WAV, M4A, AAC 等格式</p>
                 </div>
-                <div className="p-3 bg-muted/50 flex items-center justify-between">
-                  <div className="flex items-center gap-2 min-w-0">
-                    <Music className="size-4 text-muted-foreground flex-shrink-0" />
-                    <span className="text-sm truncate">{audioFile.name}</span>
-                    <span className="text-xs text-muted-foreground flex-shrink-0">
-                      {formatFileSize(audioFile.size || 0)}
-                    </span>
+              ) : (
+                <div className="overflow-hidden rounded-xl bg-foreground/[0.03]">
+                  <div className="p-4">
+                    <audio src={audioFile.url} controls className="w-full" />
                   </div>
-                  <Button
-                    variant="ghost"
-                    size="icon-sm"
-                    onClick={handleRemoveAudio}
-                    disabled={isPublishing}
-                    aria-label="移除音频"
-                    className="flex-shrink-0"
-                  >
-                    <X />
-                  </Button>
+                  <div className="p-3 flex items-center justify-between">
+                    <div className="flex items-center gap-2 min-w-0">
+                      <Music className="size-4 text-muted-foreground flex-shrink-0" />
+                      <span className="text-sm truncate">{audioFile.name}</span>
+                      <span className="text-xs text-muted-foreground flex-shrink-0">
+                        {formatFileSize(audioFile.size || 0)}
+                      </span>
+                    </div>
+                    <Button
+                      variant="ghost"
+                      size="icon-sm"
+                      onClick={handleRemoveAudio}
+                      disabled={isPublishing}
+                      aria-label="移除音频"
+                      className="flex-shrink-0"
+                    >
+                      <X />
+                    </Button>
+                  </div>
                 </div>
-              </div>
-            )}
+              )}
+            </div>
+
+            <div className="flex flex-col gap-5">
+              <Input
+                label="播客标题"
+                placeholder="输入播客标题..."
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
+                disabled={isPublishing}
+              />
+
+              <Textarea
+                label="播客描述"
+                placeholder="输入播客描述..."
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                rows={6}
+                disabled={isPublishing}
+              />
+            </div>
           </div>
-
-          <Input
-            label="播客标题"
-            placeholder="输入播客标题..."
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-            disabled={isPublishing}
-          />
-
-          <Textarea
-            label="播客描述"
-            placeholder="输入播客描述..."
-            value={description}
-            onChange={(e) => setDescription(e.target.value)}
-            rows={6}
-            disabled={isPublishing}
-          />
 
           <div className="flex gap-3">
             <Button variant="ghost" size="lg" onClick={handleClearForm} disabled={isPublishing}>
@@ -513,7 +519,7 @@ export function PodcastPublishPage({
 
   // 第 2 步 · 发布：左侧发布信息，右侧内容预览
   return (
-    <div className="flex flex-col gap-6">
+    <div className="mx-auto flex w-full max-w-screen-2xl flex-col gap-6">
       <div className="flex items-center justify-between">
         <Button variant="ghost" onClick={() => setStep('compose')} disabled={isPublishing}>
           <ArrowLeft />
@@ -522,13 +528,13 @@ export function PodcastPublishPage({
         <span className="text-xs text-muted-foreground">第 2 步 · 发布设置</span>
       </div>
 
-      <div className="grid grid-cols-1 items-start gap-6 lg:grid-cols-2">
+      <div className="grid grid-cols-1 items-start gap-6 xl:grid-cols-2">
         <Card className="flex flex-col gap-5 p-6">
-          <h2 className="text-lg font-semibold">发布信息</h2>
+          <h2 className="text-base font-semibold">发布信息</h2>
 
           <div className="flex flex-col gap-2">
-            <label className="text-sm font-medium">
-              封面图片 <span className="text-muted-foreground font-normal">（可选）</span>
+            <label className="text-xs font-medium text-muted-foreground">
+              封面图片 <span className="font-normal">（可选）</span>
             </label>
             <input
               ref={coverInputRef}
@@ -552,17 +558,17 @@ export function PodcastPublishPage({
                   if (fileData) setCoverFile(fileData)
                 }}
                 onDragOver={(event) => event.preventDefault()}
-                className={`flex items-center justify-center gap-2 p-4 border-2 border-dashed rounded-lg cursor-pointer transition-colors hover:border-foreground/40 ${isPublishing ? 'opacity-60 cursor-not-allowed' : ''}`}
+                className={`flex items-center justify-center gap-2 rounded-xl border border-dashed border-border bg-foreground/[0.02] p-4 cursor-pointer transition-colors hover:bg-foreground/[0.05] ${isPublishing ? 'opacity-60 cursor-not-allowed' : ''}`}
               >
                 <Image className="size-5 text-muted-foreground" />
                 <span className="text-sm text-muted-foreground">点击或拖拽图片到此处</span>
               </div>
             ) : (
-              <div className="relative inline-block">
+              <div className="relative inline-block self-start">
                 <img
                   src={coverFile.url}
                   alt="Cover"
-                  className="h-24 w-auto rounded-lg object-cover"
+                  className="h-24 w-auto rounded-lg object-cover ring-1 ring-foreground/5"
                 />
                 <Button
                   variant="secondary"
@@ -570,7 +576,7 @@ export function PodcastPublishPage({
                   onClick={handleRemoveCover}
                   disabled={isPublishing}
                   aria-label="移除封面"
-                  className="absolute -top-2 -right-2 size-6 rounded-full border [&_svg]:size-3"
+                  className="absolute -top-2 -right-2 size-6 rounded-full shadow-sm [&_svg]:size-3"
                 >
                   <X />
                 </Button>
@@ -606,13 +612,13 @@ export function PodcastPublishPage({
           </Button>
         </Card>
 
-        <Card className="flex flex-col gap-4 p-6 lg:sticky lg:top-0">
-          <span className="text-sm font-medium text-muted-foreground">内容预览</span>
+        <Card className="flex flex-col gap-4 p-6 xl:sticky xl:top-0">
+          <span className="text-xs font-medium text-muted-foreground">内容预览</span>
           {coverFile && (
             <img
               src={coverFile.url}
               alt="Cover"
-              className="h-32 w-auto self-start rounded-lg object-cover"
+              className="h-32 w-auto self-start rounded-lg object-cover ring-1 ring-foreground/5"
             />
           )}
           {audioFile && <audio src={audioFile.url} controls className="w-full" />}

@@ -52,9 +52,9 @@ export function UpdateNotification(): React.ReactElement | null {
   const version = (status.info as UpdateInfo)?.version || ''
 
   return (
-    <div className="border-t bg-background text-foreground">
-      <div className="max-w-screen-xl mx-auto px-4 py-2 flex items-center justify-between gap-4">
-        <div className="flex items-center gap-3 flex-1 min-w-0">
+    <div className="border-t border-border/60 bg-card text-foreground">
+      <div className="mx-auto flex max-w-screen-xl flex-wrap items-center justify-between gap-x-4 gap-y-2 px-4 py-2">
+        <div className="flex min-w-0 flex-1 basis-56 items-center gap-3">
           {status.status === 'downloading' ? (
             <Download className="size-4 animate-pulse flex-shrink-0 text-muted-foreground" />
           ) : (
@@ -76,7 +76,7 @@ export function UpdateNotification(): React.ReactElement | null {
           )}
         </div>
 
-        <div className="flex items-center gap-2 flex-shrink-0">
+        <div className="ml-auto flex flex-shrink-0 items-center gap-2">
           {status.status === 'available' && (
             <Button size="sm" variant="default" onClick={handleDownload}>
               立即下载

@@ -86,7 +86,7 @@ function SidebarItem({
       {isActive && (
         <motion.span
           layoutId="sidebar-active-pill"
-          className="absolute inset-0 rounded-lg bg-foreground/[0.06]"
+          className="absolute inset-0 rounded-lg bg-card"
           transition={{ type: 'spring', stiffness: 500, damping: 38 }}
         />
       )}
@@ -133,7 +133,7 @@ function SidebarSection({
           {title}
         </p>
       )}
-      {title && isCollapsed && <div className="my-2 border-t" />}
+      {title && isCollapsed && <div className="my-2 border-t border-border/60" />}
       {items.map((item) => (
         <SidebarItem
           key={item.view}
@@ -250,7 +250,7 @@ export function NativeShell(): React.ReactElement {
       <motion.aside
         animate={{ width: isCollapsed ? 56 : 208 }}
         transition={{ type: 'spring', stiffness: 380, damping: 36 }}
-        className="flex shrink-0 flex-col border-r bg-[hsl(var(--sidebar-background))]"
+        className="flex shrink-0 flex-col bg-[hsl(var(--sidebar-background))]"
       >
         <div className="flex min-h-0 flex-1 flex-col gap-0.5 overflow-y-auto p-2">
           <SidebarSection
@@ -269,7 +269,7 @@ export function NativeShell(): React.ReactElement {
           />
         </div>
 
-        <div className="flex flex-col gap-0.5 border-t p-2">
+        <div className="flex flex-col gap-0.5 border-t border-border/60 p-2">
           <SidebarSection
             items={FOOTER_NAV}
             activeView={activeView}
@@ -297,7 +297,7 @@ export function NativeShell(): React.ReactElement {
             initial="initial"
             animate="enter"
             exit="exit"
-            className="mx-auto h-full max-w-5xl p-6"
+            className="h-full p-5 md:p-6 lg:p-8"
           >
             <ActivePage view={activeView} />
           </motion.div>

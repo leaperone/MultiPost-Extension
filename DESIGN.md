@@ -96,10 +96,10 @@ MultiPost 的界面是一座安静、可托付的本地中控台:创作者坐进
 **Key Characteristics:**
 
 - 纯灰阶 + 单一功能红,状态靠图标与文字而非色块
-- 全扁平表面,1px hairline 分隔,浮层才允许阴影
-- 系统字体栈,桌面原生感
-- 高密度但不拥挤:gap 布局,无 margin 间距
-- 组件目标形态是 shadcn/Radix 原生扁平,HeroUI 处于退役通道
+- 软表面层次:淡灰画布 + 白色大圆角 surface,靠底色差分层,不靠线框;浮层才允许阴影
+- 系统字体栈,桌面原生感(macOS 设置页式的柔和层次)
+- 高密度但不拥挤:gap 布局,无 margin 间距;布局随窗口尺寸自由适配
+- 组件目标形态是 shadcn/Radix 原生软扁平(HeroUI 已退役)
 
 ## 2. Colors
 
@@ -112,10 +112,11 @@ MultiPost 的界面是一座安静、可托付的本地中控台:创作者坐进
 
 ### Neutral
 
-- **薄雾 Mist** (#f5f5f5): secondary/muted/accent 三位一体的浅灰,hover 态、标签底、代码块底。
+- **画布 Canvas** (#f8f8f8 / 暗色 #0a0a0a): 窗口底色与侧栏共用,所有内容浮于其上。
+- **表面 Surface** (#ffffff / 暗色 #141414): 内容组的白色大圆角面板(bg-card),与画布的底色差就是层次本身。
+- **薄雾 Mist** (#f1f1f1): hover 态、标签底、填充式输入框底。
 - **静默文本 Quiet Text** (#737373): 辅助说明、占位符、时间戳。muted-foreground。
-- **发丝线 Hairline** (#e5e5e5): 全部边框与分隔线。只有这一种边框色。
-- **侧栏霾 Sidebar Haze** (#fafafa): 侧栏背景,与画布形成最轻的层次差。
+- **发丝线 Hairline** (#e5e5e5): 仅用于必须描边的少数场景(表格、拖拽框);不再是默认分隔手段。
 
 ### Tertiary
 
@@ -148,15 +149,17 @@ MultiPost 的界面是一座安静、可托付的本地中控台:创作者坐进
 
 ## 4. Elevation
 
-系统默认零阴影:静态表面(卡片、表单区、列表)一律扁平,靠 1px hairline 边框和 Mist/Sidebar Haze 的微弱底色差表达层次。阴影是「浮起」这一物理事实的专属信号。
+层次的语言是**底色差**:淡灰画布(Canvas)上浮着白色大圆角表面(Surface),表面之内再用 Mist 填充块表达控件。静态表面零阴影、零描边;阴影是「浮起」这一物理事实的专属信号。
 
 ### Shadow Vocabulary
 
-- **浮层影 Floating** (`box-shadow: 0 4px 16px rgb(0 0 0 / 0.08)`): 仅 popover、dropdown、dialog、context menu 等真正脱离文档流悬浮的层。
+- **浮层影 Floating** (`box-shadow: 0 8px 32px rgb(0 0 0 / 0.12)`): 仅 popover、dropdown、dialog、toast 等真正脱离文档流悬浮的层,大半径柔和扩散。
 
 ### Named Rules
 
-**The Flat-By-Default Rule.** 任何静态表面出现 box-shadow 都是错误。卡片写法固定为 `shadow-none border`。只有会消失的浮层才配得上影子。
+**The Soft Surface Rule.** 一屏的容器层级最多两级:画布 → 表面。表面内部禁止再出现描边盒子(线框套线框是硬性违规);内部分组用间距、Mist 填充块、hover 底色和 divide 细分线表达。
+
+**The Flat-By-Default Rule.** 任何静态表面出现 box-shadow 都是错误。卡片写法固定为 `rounded-xl bg-card`(不描边)。只有会消失的浮层才配得上影子。
 
 ## 5. Components
 
@@ -172,16 +175,17 @@ MultiPost 的界面是一座安静、可托付的本地中控台:创作者坐进
 
 ### Cards / Containers
 
-- **Corner Style:** 8px
-- **Background:** Paper(#ffffff)
-- **Border:** 1px Hairline(#e5e5e5),固定写法 `shadow-none border`
-- **Internal Padding:** 16px;不准嵌套卡片
+- **Corner Style:** 12px(rounded-xl)
+- **Background:** Surface(#ffffff / 暗色 #141414),浮于淡灰画布之上
+- **Border:** 无。层次靠画布与表面的底色差(The Soft Surface Rule)
+- **Internal Padding:** 16-20px;不准嵌套卡片、不准在表面内再画描边盒子
+- **Responsive:** 表单类内容 max-w 居中呼吸,列表/编辑器类随窗口伸展;多列布局按断点折叠
 
 ### Inputs / Fields
 
-- **Style:** Paper 底 + 1px Hairline 边,6px 圆角;表单区整体不额外加边框
-- **Focus:** 边框转 foreground 色或 2px ring,无 glow
-- **Error:** 警示红边框 + 图标 + 可行动的文字说明,不只变红
+- **Style:** 填充式无边框:Mist 底(foreground/5%)、10px 圆角;表单区整体不加边框
+- **Focus:** 底色微深 + 2px 柔和 ring(ring/20),无 glow
+- **Error:** 警示红 ring + 图标 + 可行动的文字说明,不只变红
 
 ### Chips / Tags
 
@@ -202,7 +206,8 @@ MultiPost 的界面是一座安静、可托付的本地中控台:创作者坐进
 ### Do:
 
 - **Do** 以桌面端(apps/desktop renderer)的视觉语言为基准;Web 向桌面靠拢。
-- **Do** 固定卡片写法 `shadow-none border`,层次靠 hairline 和底色差。
+- **Do** 固定卡片写法 `rounded-xl bg-card`(无边框),层次靠画布/表面底色差。
+- **Do** 布局随窗口尺寸自由适配:宽屏多列、窄屏单列,编辑器类界面撑满可用空间。
 - **Do** 用 Lucide 图标 + 文字表达一切状态;失败信息必须包含原因与下一步。
 - **Do** 用 `flex`/`grid` + `gap` 布局,移动优先;不用 margin 做元素间距。
 - **Do** 新组件按 shadcn/Radix 原生扁平实现,语义 token 引色。
@@ -215,4 +220,5 @@ MultiPost 的界面是一座安静、可托付的本地中控台:创作者坐进
 - **Don't** 出现「玩具感/卡通风」:大圆角果冻色、表情包式插画。
 - **Don't** 使用原始色阶类名(border-gray-xxx、bg-blue-50)或除警示红之外的任何状态色块。
 - **Don't** 给静态表面加 box-shadow、给卡片嵌套卡片、用 border-left 色条做强调。
+- **Don't** 线框套线框:表面(bg-card)内部再出现任何描边盒子。内部分组用间距、Mist 块、divide 细分线。
 - **Don't** 用渐变文字(background-clip: text)或大数字指标卡的 SaaS 模板套路。

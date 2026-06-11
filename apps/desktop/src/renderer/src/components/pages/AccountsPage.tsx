@@ -81,7 +81,7 @@ function PlatformContentBadges({ platform }: { platform: PlatformType }): React.
   return (
     <div className="flex flex-wrap gap-1.5">
       {getPlatformContentTypes(platform).map((contentType) => (
-        <Badge key={contentType} size="sm" variant="outline">
+        <Badge key={contentType} size="sm">
           {CONTENT_TYPE_LABELS[contentType]}
         </Badge>
       ))}
@@ -464,9 +464,9 @@ export function AccountsPage({ onLoginAccount }: AccountsPageProps): React.React
   )
 
   return (
-    <div className="flex h-full min-h-0">
-      {/* 左侧：平台 / 分组筛选栏 */}
-      <aside className="flex w-60 shrink-0 flex-col gap-4 overflow-y-auto border-r p-4">
+    <div className="flex h-full min-h-0 gap-6">
+      {/* 左侧：平台 / 分组筛选栏（坐画布上，靠填充态与右侧软表面自然分界） */}
+      <aside className="hidden w-56 shrink-0 flex-col gap-4 overflow-y-auto md:flex">
         <SearchInput value={railSearch} onChange={setRailSearch} placeholder="搜索平台" />
 
         <div className="flex flex-col gap-0.5">
@@ -476,7 +476,7 @@ export function AccountsPage({ onLoginAccount }: AccountsPageProps): React.React
             onClick={() => setPlatformFilter('all')}
             className={`flex items-center justify-between rounded-lg px-2.5 py-2 text-sm transition-colors ${
               platformFilter === 'all'
-                ? 'bg-foreground/[0.06] font-medium'
+                ? 'bg-card font-medium'
                 : 'hover:bg-foreground/[0.03]'
             }`}
           >
@@ -493,7 +493,7 @@ export function AccountsPage({ onLoginAccount }: AccountsPageProps): React.React
               onClick={() => setPlatformFilter(entry.platform)}
               className={`flex items-center justify-between rounded-lg px-2.5 py-2 text-sm transition-colors ${
                 platformFilter === entry.platform
-                  ? 'bg-foreground/[0.06] font-medium'
+                  ? 'bg-card font-medium'
                   : 'hover:bg-foreground/[0.03]'
               }`}
             >
@@ -528,7 +528,7 @@ export function AccountsPage({ onLoginAccount }: AccountsPageProps): React.React
             onClick={() => setSelectedGroup(null)}
             className={`flex items-center gap-2 rounded-lg px-2.5 py-2 text-sm transition-colors ${
               selectedGroup === null
-                ? 'bg-foreground/[0.06] font-medium'
+                ? 'bg-card font-medium'
                 : 'hover:bg-foreground/[0.03]'
             }`}
           >
@@ -538,7 +538,7 @@ export function AccountsPage({ onLoginAccount }: AccountsPageProps): React.React
             <div
               key={group.id}
               className={`group flex items-center rounded-lg transition-colors ${
-                selectedGroup === group.id ? 'bg-foreground/[0.06]' : 'hover:bg-foreground/[0.03]'
+                selectedGroup === group.id ? 'bg-card' : 'hover:bg-foreground/[0.03]'
               }`}
             >
               <button
@@ -571,7 +571,7 @@ export function AccountsPage({ onLoginAccount }: AccountsPageProps): React.React
       </aside>
 
       {/* 主区：工具栏 + 账号列表 */}
-      <div className="flex min-w-0 flex-1 flex-col gap-4 overflow-y-auto p-5">
+      <div className="flex min-w-0 flex-1 flex-col gap-4 overflow-y-auto">
         <div>
           <h1 className="text-2xl font-semibold tracking-tight">账号管理</h1>
           <p className="mt-1 text-sm text-muted-foreground">
@@ -596,7 +596,7 @@ export function AccountsPage({ onLoginAccount }: AccountsPageProps): React.React
           <div className="flex-1" />
           <Button
             size="sm"
-            variant="outline"
+            variant="secondary"
             onClick={handleRefreshAll}
             isLoading={isRefreshingAll}
             disabled={accounts.length === 0}
@@ -613,11 +613,11 @@ export function AccountsPage({ onLoginAccount }: AccountsPageProps): React.React
         </div>
 
         {loading ? (
-          <div className="flex h-56 items-center justify-center rounded-lg bg-muted">
+          <div className="flex h-56 items-center justify-center rounded-xl bg-muted">
             <span className="text-sm text-muted-foreground">加载中...</span>
           </div>
         ) : accounts.length === 0 ? (
-          <div className="flex h-72 flex-col items-center justify-center gap-4 rounded-lg bg-muted">
+          <div className="flex h-72 flex-col items-center justify-center gap-4 rounded-xl bg-muted">
             <div className="flex size-14 items-center justify-center rounded-full bg-background text-muted-foreground">
               <Users className="size-7" />
             </div>
@@ -631,19 +631,19 @@ export function AccountsPage({ onLoginAccount }: AccountsPageProps): React.React
             </Button>
           </div>
         ) : visibleAccounts.length === 0 ? (
-          <div className="flex h-56 flex-col items-center justify-center gap-2 rounded-lg bg-muted text-muted-foreground">
+          <div className="flex h-56 flex-col items-center justify-center gap-2 rounded-xl bg-muted text-muted-foreground">
             <Search className="size-7" />
             <span className="text-sm">没有匹配的账号，试试调整筛选条件</span>
           </div>
         ) : (
           <Card className="overflow-hidden">
-            <div className="grid grid-cols-[minmax(0,2.4fr)_minmax(0,1.1fr)_160px_148px] items-center gap-3 border-b bg-foreground/[0.02] px-4 py-2.5 text-xs font-medium text-muted-foreground">
-              <span>账号信息</span>
-              <span>平台</span>
-              <span>分组</span>
-              <span className="text-right">操作</span>
-            </div>
-            <div className="divide-y">
+            <div className="divide-y divide-border/60">
+              <div className="hidden items-center gap-3 px-4 py-2.5 text-xs font-medium text-muted-foreground md:grid md:grid-cols-[minmax(0,2fr)_minmax(0,1fr)_148px] lg:grid-cols-[minmax(0,2.4fr)_minmax(0,1.1fr)_160px_148px]">
+                <span>账号信息</span>
+                <span>平台</span>
+                <span className="hidden lg:inline">分组</span>
+                <span className="text-right">操作</span>
+              </div>
               {visibleAccounts.map((account) => {
                 const platformInfo = PLATFORMS[account.platform]
                 const accountLabel = getAccountLabel(account)
@@ -651,7 +651,7 @@ export function AccountsPage({ onLoginAccount }: AccountsPageProps): React.React
                 return (
                   <div
                     key={account.id}
-                    className="grid grid-cols-[minmax(0,2.4fr)_minmax(0,1.1fr)_160px_148px] items-center gap-3 px-4 py-3 transition-colors hover:bg-foreground/[0.02]"
+                    className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3 px-4 py-3 transition-colors hover:bg-foreground/[0.03] md:grid-cols-[minmax(0,2fr)_minmax(0,1fr)_148px] lg:grid-cols-[minmax(0,2.4fr)_minmax(0,1.1fr)_160px_148px]"
                   >
                     <div className="flex min-w-0 items-center gap-3">
                       <AccountAvatar
@@ -669,7 +669,7 @@ export function AccountsPage({ onLoginAccount }: AccountsPageProps): React.React
                             {accountLabel}
                           </button>
                           {account.isDefault && (
-                            <Badge variant="outline" size="sm" className="shrink-0">
+                            <Badge size="sm" className="shrink-0">
                               默认
                             </Badge>
                           )}
@@ -698,22 +698,25 @@ export function AccountsPage({ onLoginAccount }: AccountsPageProps): React.React
                       </div>
                     </div>
 
-                    <div className="flex min-w-0 items-center gap-2">
+                    {/* 次要列：窄窗时隐藏，信息收缩进首列 */}
+                    <div className="hidden min-w-0 items-center gap-2 md:flex">
                       <PlatformIcon platform={account.platform} size={18} />
                       <span className="truncate text-sm">
                         {platformInfo?.name || account.platform}
                       </span>
                     </div>
 
-                    <SimpleSelect
-                      value={account.groupId || UNGROUPED_VALUE}
-                      onValueChange={(value) =>
-                        handleAssignGroup(account.id, value === UNGROUPED_VALUE ? null : value)
-                      }
-                      options={groupSelectOptions}
-                      placeholder="未分组"
-                      className="h-8 text-xs"
-                    />
+                    <div className="hidden lg:block">
+                      <SimpleSelect
+                        value={account.groupId || UNGROUPED_VALUE}
+                        onValueChange={(value) =>
+                          handleAssignGroup(account.id, value === UNGROUPED_VALUE ? null : value)
+                        }
+                        options={groupSelectOptions}
+                        placeholder="未分组"
+                        className="h-8 w-full text-xs"
+                      />
+                    </div>
 
                     <div className="flex items-center justify-end gap-0.5">
                       <Tooltip content="检测登录状态">
@@ -792,7 +795,7 @@ export function AccountsPage({ onLoginAccount }: AccountsPageProps): React.React
                     <Button
                       key={filter.key}
                       size="sm"
-                      variant={contentTypeFilter === filter.key ? 'default' : 'outline'}
+                      variant={contentTypeFilter === filter.key ? 'default' : 'secondary'}
                       onClick={() => setContentTypeFilter(filter.key)}
                     >
                       {filter.label}
@@ -819,7 +822,7 @@ export function AccountsPage({ onLoginAccount }: AccountsPageProps): React.React
                             {category.platforms.length}
                           </span>
                         </div>
-                        <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 xl:grid-cols-3">
+                        <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
                           {category.platforms.map((platform) => {
                             const platformInfo = PLATFORMS[platform]
                             const isSelected = selectedPlatform === platform
@@ -830,31 +833,27 @@ export function AccountsPage({ onLoginAccount }: AccountsPageProps): React.React
                                 key={platform}
                                 type="button"
                                 onClick={() => setSelectedPlatform(platform)}
-                                className={`flex min-h-28 items-start gap-3 rounded-lg p-3 text-left transition-colors ${
-                                  isSelected
-                                    ? 'bg-primary/10 ring-1 ring-primary/40'
-                                    : 'bg-background hover:bg-foreground/[0.02]'
+                                className={`flex flex-col gap-2 rounded-lg p-3 text-left transition-colors ${
+                                  isSelected ? 'bg-card' : 'hover:bg-card/60'
                                 }`}
                               >
-                                <div className="flex size-11 shrink-0 items-center justify-center rounded-lg bg-muted">
-                                  <PlatformIcon platform={platform} size={24} />
-                                </div>
-                                <div className="min-w-0 flex-1">
-                                  <div className="flex min-w-0 items-center gap-2">
-                                    <span className="truncate text-sm font-semibold">
-                                      {platformInfo?.name || platform}
-                                    </span>
-                                    {isSelected && (
-                                      <CheckCircle2 className="size-4 shrink-0 text-primary" />
-                                    )}
+                                <div className="flex w-full items-center justify-between gap-2">
+                                  <div className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-muted">
+                                    <PlatformIcon platform={platform} size={20} />
                                   </div>
-                                  <div className="mt-1 truncate text-xs text-muted-foreground">
+                                  {isSelected && (
+                                    <CheckCircle2 className="size-4 shrink-0 text-primary" />
+                                  )}
+                                </div>
+                                <div className="w-full min-w-0">
+                                  <span className="block truncate text-sm font-medium">
+                                    {platformInfo?.name || platform}
+                                  </span>
+                                  <span className="mt-0.5 block truncate text-xs text-muted-foreground">
                                     {accountKey}
-                                  </div>
-                                  <div className="mt-2">
-                                    <PlatformContentBadges platform={platform} />
-                                  </div>
+                                  </span>
                                 </div>
+                                <PlatformContentBadges platform={platform} />
                               </button>
                             )
                           })}
@@ -875,7 +874,7 @@ export function AccountsPage({ onLoginAccount }: AccountsPageProps): React.React
                 取消
               </Button>
               <Button
-                variant="outline"
+                variant="secondary"
                 onClick={() => handleAddAccount(true)}
                 disabled={!selectedPlatform}
               >

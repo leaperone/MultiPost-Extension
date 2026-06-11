@@ -4,6 +4,7 @@ import { CONTENT_TYPE_LABELS } from '@shared/constants'
 import type { Draft, SyncContentType } from '@shared/types'
 import { Button } from '../ui/button'
 import { Badge } from '../ui/badge'
+import { Card } from '../ui/card'
 import { Tabs, TabsList, TabsTrigger } from '../ui/tabs'
 import { Tooltip } from '../ui/tooltip'
 import { ConfirmDialog } from '../ui/confirm-dialog'
@@ -78,7 +79,7 @@ export function DraftsPage({ onEditDraft }: DraftsPageProps): React.ReactElement
   const isFiltered = selectedType !== 'all'
 
   return (
-    <div className="flex h-full flex-col gap-4">
+    <div className="mx-auto flex h-full w-full max-w-3xl flex-col gap-4 xl:max-w-4xl">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-semibold tracking-tight">草稿箱</h1>
         <span className="text-sm text-muted-foreground">{drafts.length} 篇草稿</span>
@@ -102,7 +103,7 @@ export function DraftsPage({ onEditDraft }: DraftsPageProps): React.ReactElement
           <Spinner label="加载中" />
         </div>
       ) : drafts.length === 0 ? (
-        <div className="flex h-56 flex-col items-center justify-center gap-3 rounded-lg bg-muted">
+        <div className="flex h-56 flex-col items-center justify-center gap-3 rounded-xl bg-muted">
           <div className="flex size-14 items-center justify-center rounded-full bg-background text-muted-foreground">
             <FileText className="size-7" />
           </div>
@@ -114,15 +115,18 @@ export function DraftsPage({ onEditDraft }: DraftsPageProps): React.ReactElement
           </p>
         </div>
       ) : (
-        <div className="divide-y rounded-lg border">
+        <Card className="divide-y divide-border/60 overflow-hidden">
           {drafts.map((draft) => (
-            <div key={draft.id} className="flex items-start gap-3 px-4 py-3">
-              <div className="flex min-w-0 flex-1 flex-col gap-1">
+            <div
+              key={draft.id}
+              className="flex flex-wrap items-start gap-x-3 gap-y-2 px-4 py-3 transition-colors hover:bg-foreground/[0.03]"
+            >
+              <div className="flex min-w-0 flex-1 basis-56 flex-col gap-1">
                 <div className="flex min-w-0 items-center gap-2">
                   <span className="truncate text-sm font-medium">
                     {draft.title || '无标题'}
                   </span>
-                  <Badge variant="outline" size="sm" className="shrink-0">
+                  <Badge size="sm" className="shrink-0">
                     {CONTENT_TYPE_LABELS[draft.contentType] || draft.contentType}
                   </Badge>
                 </div>
@@ -132,23 +136,23 @@ export function DraftsPage({ onEditDraft }: DraftsPageProps): React.ReactElement
                 {draft.selectedPlatforms && draft.selectedPlatforms.length > 0 && (
                   <div className="flex flex-wrap gap-1">
                     {draft.selectedPlatforms.slice(0, 3).map((p) => (
-                      <Badge key={p} variant="outline" size="sm">
+                      <Badge key={p} size="sm">
                         {p}
                       </Badge>
                     ))}
                     {draft.selectedPlatforms.length > 3 && (
-                      <Badge variant="outline" size="sm">
+                      <Badge size="sm">
                         +{draft.selectedPlatforms.length - 3}
                       </Badge>
                     )}
                   </div>
                 )}
               </div>
-              <div className="flex shrink-0 items-center gap-3 pt-0.5">
+              <div className="ml-auto flex shrink-0 items-center gap-3 pt-0.5">
                 <span className="text-xs text-muted-foreground">
                   {formatTime(draft.updatedAt)}
                 </span>
-                <Button size="sm" variant="outline" onClick={() => handleEdit(draft)}>
+                <Button size="sm" variant="secondary" onClick={() => handleEdit(draft)}>
                   <Edit />
                   编辑
                 </Button>
@@ -165,7 +169,7 @@ export function DraftsPage({ onEditDraft }: DraftsPageProps): React.ReactElement
               </div>
             </div>
           ))}
-        </div>
+        </Card>
       )}
 
       <ConfirmDialog

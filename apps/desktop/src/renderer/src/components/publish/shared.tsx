@@ -216,7 +216,7 @@ export function TagInput({
 
   return (
     <div className="flex flex-col gap-2">
-      <label className="text-xs font-medium text-foreground">{label}</label>
+      <label className="text-xs font-medium text-muted-foreground">{label}</label>
       {value.length > 0 && (
         <div className="flex flex-wrap items-center gap-2">
           {value.map((tag) => (
@@ -315,9 +315,9 @@ export function CoverUpload({
 
   return (
     <div className="flex flex-col gap-2">
-      <label className="text-sm font-medium">
+      <label className="text-xs font-medium text-muted-foreground">
         {label}
-        {hint && <span className="ml-1 font-normal text-muted-foreground">{hint}</span>}
+        {hint && <span className="ml-1 font-normal">{hint}</span>}
       </label>
       {!file ? (
         <div
@@ -331,8 +331,8 @@ export function CoverUpload({
             e.preventDefault()
             setIsDragging(false)
           }}
-          className={`flex items-center justify-center gap-2 p-4 border-2 border-dashed rounded-lg cursor-pointer transition-colors ${
-            isDragging ? 'border-foreground bg-muted' : 'hover:border-foreground/40'
+          className={`flex items-center justify-center gap-2 rounded-xl border border-dashed border-border p-4 cursor-pointer transition-colors ${
+            isDragging ? 'bg-foreground/[0.05]' : 'bg-foreground/[0.02] hover:bg-foreground/[0.05]'
           } ${isDisabled ? 'opacity-60 cursor-not-allowed' : ''}`}
         >
           <ImageIcon className="size-5 text-muted-foreground" />
@@ -340,14 +340,18 @@ export function CoverUpload({
         </div>
       ) : (
         <div className="relative inline-block self-start">
-          <img src={file.url} alt={label} className="h-24 w-auto rounded-lg object-cover" />
+          <img
+            src={file.url}
+            alt={label}
+            className="h-24 w-auto rounded-lg object-cover ring-1 ring-foreground/5"
+          />
           <Button
             variant="secondary"
             size="icon-sm"
             onClick={onRemove}
             disabled={isDisabled}
             aria-label={`移除${label}`}
-            className="absolute -top-2 -right-2 size-6 rounded-full border [&_svg]:size-3"
+            className="absolute -top-2 -right-2 size-6 rounded-full shadow-sm [&_svg]:size-3"
           >
             <X />
           </Button>
@@ -482,7 +486,7 @@ export function AccountSelector({
   if (loading) {
     return (
       <div className="flex flex-col gap-3">
-        <label className="text-sm font-medium">选择发布账号</label>
+        <label className="text-xs font-medium text-muted-foreground">选择发布账号</label>
         <div className="p-4 text-center text-muted-foreground text-sm">加载中...</div>
       </div>
     )
@@ -492,13 +496,9 @@ export function AccountSelector({
 
   return (
     <div className="flex flex-col gap-3">
-      <label className="text-sm font-medium">
+      <label className="text-xs font-medium text-muted-foreground">
         选择发布账号
-        {totalSelected > 0 && (
-          <span className="ml-2 text-muted-foreground font-normal">
-            已选 {totalSelected} 个账号
-          </span>
-        )}
+        {totalSelected > 0 && <span className="ml-2 font-normal">已选 {totalSelected} 个账号</span>}
       </label>
 
       {/* Saved accounts section - now using checkboxes for multi-select */}
@@ -527,7 +527,7 @@ export function AccountSelector({
                         onClick={() => !isDisabled && onAccountToggle(account.id)}
                         className={`flex items-center gap-2 px-3 py-2 rounded-xl cursor-pointer transition-colors ${
                           isSelected
-                            ? 'bg-primary/10 ring-1 ring-primary/40'
+                            ? 'bg-foreground/[0.08]'
                             : 'bg-foreground/[0.03] hover:bg-foreground/[0.06]'
                         } ${isDisabled ? 'opacity-60 cursor-not-allowed' : ''}`}
                       >
@@ -544,11 +544,7 @@ export function AccountSelector({
                           size={30}
                         />
                         <span className="text-sm">{account.displayName || account.username}</span>
-                        {account.isDefault && (
-                          <Badge size="sm" variant="outline">
-                            默认
-                          </Badge>
-                        )}
+                        {account.isDefault && <Badge size="sm">默认</Badge>}
                       </div>
                     )
                   })}
@@ -558,7 +554,7 @@ export function AccountSelector({
           })}
         </div>
       ) : (
-        <div className="p-4 text-center text-muted-foreground text-sm bg-muted rounded-lg flex flex-col items-center gap-2">
+        <div className="p-4 text-center text-muted-foreground text-sm bg-foreground/[0.03] rounded-xl flex flex-col items-center gap-2">
           <AlertCircle className="size-5" />
           <span>暂无已登录的账号</span>
           <span className="text-xs">请先在"账号管理"中添加账号，或使用下方"其他平台"</span>
@@ -601,7 +597,7 @@ export function AccountSelector({
                           onClick={() => !isDisabled && onOtherPlatformToggle(platform)}
                           className={`flex items-center gap-2 px-3 py-2 rounded-xl cursor-pointer transition-colors ${
                             isSelected
-                              ? 'bg-primary/10 ring-1 ring-primary/40'
+                              ? 'bg-card'
                               : 'bg-background hover:bg-foreground/[0.06]'
                           } ${isDisabled ? 'opacity-60 cursor-not-allowed' : ''}`}
                         >
@@ -802,12 +798,10 @@ export function PlatformSelector({
   return (
     <div className="flex flex-col gap-3">
       <div className="flex items-center justify-between">
-        <label className="text-sm font-medium">
+        <label className="text-xs font-medium text-muted-foreground">
           发布到
           {selectedPlatforms.size > 0 && (
-            <span className="ml-2 text-muted-foreground font-normal">
-              已选 {selectedPlatforms.size} 个平台
-            </span>
+            <span className="ml-2 font-normal">已选 {selectedPlatforms.size} 个平台</span>
           )}
         </label>
         {availablePlatforms.length > 0 && (
@@ -832,7 +826,7 @@ export function PlatformSelector({
         )}
       </div>
       {availablePlatforms.length === 0 ? (
-        <div className="p-4 text-center text-muted-foreground text-sm bg-muted rounded-lg">
+        <div className="p-4 text-center text-muted-foreground text-sm bg-foreground/[0.03] rounded-xl">
           当前内容类型没有可用的平台
         </div>
       ) : (
@@ -849,7 +843,7 @@ export function PlatformSelector({
                       onClick={() => !isDisabled && onPlatformToggle(platform)}
                       className={`flex items-center gap-2 px-3 py-2 rounded-xl cursor-pointer transition-colors ${
                         isSelected
-                          ? 'bg-primary/10 ring-1 ring-primary/40'
+                          ? 'bg-foreground/[0.08]'
                           : 'bg-foreground/[0.03] hover:bg-foreground/[0.06]'
                       } ${isDisabled ? 'opacity-60 cursor-not-allowed' : ''}`}
                     >
@@ -908,8 +902,8 @@ export function PublishModeSelector({
   const activeMode = PUBLISH_MODES.find((mode) => mode.value === autoSubmit) ?? PUBLISH_MODES[1]
   return (
     <div className="flex flex-col gap-2">
-      <label className="text-sm font-medium">发布方式</label>
-      <div role="radiogroup" aria-label="发布方式" className="flex rounded-lg border p-0.5">
+      <label className="text-xs font-medium text-muted-foreground">发布方式</label>
+      <div role="radiogroup" aria-label="发布方式" className="flex rounded-xl bg-muted p-1">
         {PUBLISH_MODES.map((mode) => {
           const isActive = mode.value === autoSubmit
           return (
@@ -920,9 +914,9 @@ export function PublishModeSelector({
               aria-checked={isActive}
               disabled={disabled}
               onClick={() => onChange(mode.value)}
-              className={`flex-1 rounded-md px-3 py-1.5 text-sm transition-colors duration-150 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50 ${
+              className={`flex-1 rounded-lg px-3 py-1.5 text-sm transition-colors duration-150 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50 ${
                 isActive
-                  ? 'bg-muted font-medium text-foreground'
+                  ? 'bg-card font-medium text-foreground'
                   : 'text-muted-foreground hover:text-foreground'
               }`}
             >
@@ -1008,6 +1002,20 @@ export function PublishProgressCard({
   onStartNew
 }: PublishProgressCardProps): React.ReactElement | null {
   const [isCollapsed, setIsCollapsed] = useState(false)
+  const cardRef = useRef<HTMLDivElement>(null)
+  const hasAutoScrolledRef = useRef(false)
+
+  // 小窗口下点发布后进度卡常在视口外；每轮发布开始时滚过去一次，之后不再打扰。
+  useEffect(() => {
+    if (publishStates.length === 0) {
+      hasAutoScrolledRef.current = false
+      return
+    }
+    if (!hasAutoScrolledRef.current) {
+      hasAutoScrolledRef.current = true
+      cardRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' })
+    }
+  }, [publishStates.length])
 
   const allDone = useMemo(
     () => publishStates.length > 0 && publishStates.every((s) => isTerminalTarget(s.status)),
@@ -1045,7 +1053,7 @@ export function PublishProgressCard({
   if (publishStates.length === 0) return null
 
   return (
-    <Card className="flex flex-col gap-4 p-6">
+    <Card ref={cardRef} className="flex flex-col gap-4 p-6">
       <div
         className="flex items-center justify-between cursor-pointer"
         onClick={() => setIsCollapsed(!isCollapsed)}
@@ -1086,7 +1094,7 @@ export function PublishProgressCard({
       </div>
 
       {!isCollapsed && (
-        <ul className="flex flex-col">
+        <ul className="flex flex-col divide-y divide-border/60">
           {publishStates.map((state) => {
             const platformInfo = PLATFORMS[state.platform]
             // Display: platform name + account display name (if multiple accounts)
@@ -1097,7 +1105,7 @@ export function PublishProgressCard({
             return (
               <li
                 key={state.accountId}
-                className="flex items-center gap-3 py-3 border-b last:border-b-0"
+                className="flex items-center gap-3 py-3 transition-colors hover:bg-foreground/[0.03]"
               >
                 <span className="flex-shrink-0">{getTargetStatusIcon(state.status)}</span>
                 <PlatformIcon platform={state.platform} size={16} />

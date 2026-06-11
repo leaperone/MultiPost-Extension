@@ -14,7 +14,7 @@ export function Toaster(): React.ReactElement {
       toastOptions={{
         classNames: {
           toast:
-            '!bg-background !text-foreground !border !border-border !rounded-lg !shadow-[0_4px_16px_rgb(0_0_0/0.08)]',
+            '!bg-card !text-foreground !border-0 !rounded-xl !shadow-[0_8px_32px_rgb(0_0_0/0.14)]',
           title: '!text-sm !font-medium !text-foreground',
           description: '!text-xs !text-muted-foreground',
           actionButton: '!bg-primary !text-primary-foreground !rounded-md',

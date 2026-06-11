@@ -185,7 +185,7 @@ interface WindowChromeColors {
 function getWindowChromeColors(): WindowChromeColors {
   return nativeTheme.shouldUseDarkColors
     ? { background: '#0a0a0a', symbol: '#a3a3a3' }
-    : { background: '#ffffff', symbol: '#404040' }
+    : { background: '#f8f8f8', symbol: '#404040' }
 }
 
 function createWindow(): void {

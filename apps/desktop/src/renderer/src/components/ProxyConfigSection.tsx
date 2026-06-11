@@ -92,7 +92,7 @@ export function ProxyConfigSection({
     <div className="flex flex-col gap-3">
       <Button
         type="button"
-        variant="outline"
+        variant="secondary"
         className="w-full justify-between"
         aria-expanded={expanded}
         onClick={() => setExpanded((current) => !current)}

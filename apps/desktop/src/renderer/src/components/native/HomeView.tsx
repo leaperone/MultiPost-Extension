@@ -155,7 +155,7 @@ function OnboardingGuide({
             </p>
             <Button
               size="sm"
-              variant="outline"
+              variant="secondary"
               className="self-start"
               onClick={() => onNavigate(step.view)}
             >
@@ -203,7 +203,7 @@ export function HomeView(): React.ReactElement {
       variants={listContainer}
       initial="initial"
       animate="enter"
-      className="flex flex-col gap-6"
+      className="mx-auto flex w-full max-w-screen-xl flex-col gap-6"
     >
       {/* Greeting */}
       <motion.div variants={listItem} className="flex items-end justify-between">
@@ -229,7 +229,7 @@ export function HomeView(): React.ReactElement {
             onClick={() => navigate(action.view)}
             whileHover={{ y: -2 }}
             whileTap={{ scale: 0.98 }}
-            className="group flex flex-col gap-3 rounded-lg border bg-background p-4 text-left transition-colors hover:bg-foreground/[0.02]"
+            className="group relative flex flex-col gap-3 overflow-hidden rounded-xl bg-card p-4 text-left before:pointer-events-none before:absolute before:inset-0 before:bg-foreground/[0.03] before:opacity-0 before:transition-opacity hover:before:opacity-100"
           >
             <span className="flex size-10 items-center justify-center rounded-lg bg-foreground/[0.05] text-foreground transition-colors group-hover:bg-foreground group-hover:text-background">
               {action.icon}
@@ -265,7 +265,7 @@ export function HomeView(): React.ReactElement {
             {accounts.length === 0 ? (
               <div className="flex flex-1 flex-col items-center justify-center gap-3 py-8 text-center">
                 <p className="text-sm text-muted-foreground">还没有添加账号</p>
-                <Button size="sm" variant="outline" onClick={() => navigate('accounts')}>
+                <Button size="sm" variant="secondary" onClick={() => navigate('accounts')}>
                   <PlusIcon />
                   添加账号
                 </Button>
@@ -281,7 +281,7 @@ export function HomeView(): React.ReactElement {
                           (account.displayName || account.username || '') +
                           (account.isLoggedIn ? '' : '（需要重新登录）')
                         }
-                        className={`rounded-full border-2 border-background ${
+                        className={`rounded-full border-2 border-card ${
                           account.isLoggedIn ? '' : 'grayscale'
                         }`}
                       >
@@ -340,11 +340,11 @@ export function HomeView(): React.ReactElement {
                 <p className="text-sm text-muted-foreground">还没有发布记录</p>
               </div>
             ) : (
-              <ul className="mt-3 flex flex-col">
+              <ul className="mt-3 flex flex-col divide-y divide-border/60">
                 {recentHistory.map((item) => (
                   <li
                     key={item.id}
-                    className="flex items-center gap-3 border-b py-2.5 text-sm last:border-b-0"
+                    className="flex items-center gap-3 py-2.5 text-sm"
                   >
                     {item.status === 'success' ? (
                       <CheckCircle2Icon className="size-4 shrink-0 text-foreground" />
@@ -354,7 +354,7 @@ export function HomeView(): React.ReactElement {
                       <CircleIcon className="size-4 shrink-0 text-muted-foreground" />
                     )}
                     <span className="min-w-0 flex-1 truncate">{item.title || '无标题'}</span>
-                    <Badge variant="outline" size="sm" className="shrink-0">
+                    <Badge size="sm" className="shrink-0">
                       {PLATFORMS[item.platform]?.name || item.platform}
                     </Badge>
                     <span className="shrink-0 text-xs text-muted-foreground">

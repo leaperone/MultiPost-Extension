@@ -14,7 +14,7 @@ const SelectTrigger = forwardRef<
   <SelectPrimitive.Trigger
     ref={ref}
     className={cn(
-      'flex h-9 w-full items-center justify-between gap-2 rounded-md border bg-background px-3 text-sm text-foreground transition-colors duration-150 ease-out focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background disabled:cursor-not-allowed disabled:opacity-50 data-[placeholder]:text-muted-foreground [&>span]:truncate',
+      'flex h-9 w-full items-center justify-between gap-2 rounded-lg border-0 bg-foreground/[0.05] px-3 text-sm text-foreground transition-[background-color,box-shadow] duration-150 ease-out hover:bg-foreground/[0.07] focus:outline-none focus-visible:ring-2 focus-visible:ring-ring/20 disabled:cursor-not-allowed disabled:opacity-50 data-[placeholder]:text-muted-foreground [&>span]:truncate',
       className
     )}
     {...props}
@@ -37,7 +37,7 @@ const SelectContent = forwardRef<
       position={position}
       sideOffset={4}
       className={cn(
-        'z-50 max-h-72 min-w-[var(--radix-select-trigger-width)] overflow-y-auto rounded-md border bg-popover p-1 text-popover-foreground shadow-[0_4px_16px_rgb(0_0_0/0.08)]',
+        'z-50 max-h-72 min-w-[var(--radix-select-trigger-width)] overflow-y-auto rounded-xl bg-popover p-1.5 text-popover-foreground shadow-[0_8px_32px_rgb(0_0_0/0.12)]',
         className
       )}
       {...props}

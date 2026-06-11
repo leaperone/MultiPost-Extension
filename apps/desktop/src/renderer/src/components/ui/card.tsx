@@ -1,10 +1,13 @@
 import { forwardRef } from 'react'
 import { cn } from '../../lib/utils'
 
-/** 扁平卡片:固定 border、零阴影(The Flat-By-Default Rule);禁止嵌套 Card */
+/**
+ * 软表面容器(The Soft Surface Rule):白色大圆角面板浮在淡灰画布上,
+ * 不描边、零阴影,层次靠底色差;禁止嵌套 Card、禁止再给内部元素包线框
+ */
 export const Card = forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement>>(
   ({ className, ...props }, ref) => (
-    <div ref={ref} className={cn('rounded-lg border bg-background', className)} {...props} />
+    <div ref={ref} className={cn('rounded-xl bg-card', className)} {...props} />
   )
 )
 Card.displayName = 'Card'

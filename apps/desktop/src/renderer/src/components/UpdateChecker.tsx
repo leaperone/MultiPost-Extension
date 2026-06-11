@@ -143,8 +143,8 @@ export function UpdateChecker({ compact = false }: UpdateCheckerProps): React.Re
 
   return (
     <div className="space-y-3">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2">
+      <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2">
+        <div className="flex min-w-0 items-center gap-2">
           {renderStatusIcon()}
           <span className="text-sm">{renderStatusText()}</span>
           {versionChip}

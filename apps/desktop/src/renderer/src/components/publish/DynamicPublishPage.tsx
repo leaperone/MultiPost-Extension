@@ -463,62 +463,67 @@ export function DynamicPublishPage({
   // 第 1 步 · 创作：标题 + 大输入区 + 媒体
   if (step === 'compose') {
     return (
-    <div className="flex flex-col gap-6" onPaste={handlePaste}>
+    <div className="mx-auto flex w-full max-w-screen-2xl flex-col gap-6" onPaste={handlePaste}>
+      {/* 页面级标题直接坐在画布上，不进卡片 */}
+      <div className="flex items-end justify-between">
+        <h2 className="text-xl font-semibold">发布动态</h2>
+        <span className="text-xs text-muted-foreground">第 1 步 · 创作内容</span>
+      </div>
+
       <Card className="flex flex-col gap-5 p-6">
-        <div className="flex items-center justify-between">
-          <h2 className="text-lg font-semibold">发布动态</h2>
-          <span className="text-xs text-muted-foreground">第 1 步 · 创作内容</span>
-        </div>
+        {/* 宽屏双栏：左边写字，右边管媒体；窄窗自然落回单列 */}
+        <div className="grid grid-cols-1 gap-6 xl:grid-cols-2">
+          <div className="flex flex-col gap-5">
+            <Input
+              label="标题（可选）"
+              placeholder="输入标题..."
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              disabled={isPublishing}
+            />
 
-        <Input
-          label="标题（可选）"
-          placeholder="输入标题..."
-          value={title}
-          onChange={(e) => setTitle(e.target.value)}
-          disabled={isPublishing}
-        />
+            <div className="flex flex-col gap-1">
+              <Textarea
+                label="内容"
+                placeholder="输入要发布的内容..."
+                value={content}
+                onChange={(e) => setContent(e.target.value)}
+                rows={14}
+                disabled={isPublishing}
+              />
+              <p className="text-right text-xs text-muted-foreground">{totalCharCount} 字符</p>
+            </div>
+          </div>
 
-        <div className="flex flex-col gap-1">
-          <Textarea
-            label="内容"
-            placeholder="输入要发布的内容..."
-            value={content}
-            onChange={(e) => setContent(e.target.value)}
-            rows={14}
-            disabled={isPublishing}
-          />
-          <p className="text-right text-xs text-muted-foreground">{totalCharCount} 字符</p>
-        </div>
-
-        {/* 媒体上传区：图片 + 视频共用一个拖拽区域 */}
-        <div
-          className={`rounded-xl transition-colors ${isDraggingMedia ? 'bg-foreground/[0.04]' : ''}`}
-          onDragOver={(e) => {
-            e.preventDefault()
-            setIsDraggingMedia(true)
-          }}
-          onDragLeave={(e) => {
-            e.preventDefault()
-            setIsDraggingMedia(false)
-          }}
-          onDrop={handleMediaDrop}
-        >
-          <p className="mb-2 text-sm text-foreground/60">
+          {/* 媒体上传区：图片 + 视频共用一个拖拽区域 */}
+          <div
+            className={`rounded-xl transition-colors ${isDraggingMedia ? 'bg-foreground/[0.04]' : ''}`}
+            onDragOver={(e) => {
+              e.preventDefault()
+              setIsDraggingMedia(true)
+            }}
+            onDragLeave={(e) => {
+              e.preventDefault()
+              setIsDraggingMedia(false)
+            }}
+            onDrop={handleMediaDrop}
+          >
+          <p className="mb-2 text-xs font-medium text-muted-foreground">
             图片（{images.length}/{MAX_IMAGES}）
           </p>
-          <div className="flex flex-wrap gap-3">
+          <div className="grid grid-cols-3 gap-3 sm:grid-cols-4 xl:grid-cols-5">
             {images.map((img, index) => (
               <div
                 key={img.path}
-                className="group relative aspect-square w-[100px] overflow-hidden rounded-2xl border bg-muted"
+                className="group relative aspect-square w-full overflow-hidden rounded-lg bg-muted ring-1 ring-foreground/5"
               >
                 <button
                   type="button"
-                  className="block cursor-zoom-in"
+                  className="block size-full cursor-zoom-in"
                   onClick={() => setPreviewImage(img)}
                   title="查看大图"
                 >
-                  <img src={img.url} alt={img.name} className="size-[100px] object-cover" />
+                  <img src={img.url} alt={img.name} className="size-full object-cover" />
                 </button>
                 <span className="absolute bottom-1 left-1 z-20 rounded bg-black/50 px-1 text-[10px] text-white">
                   {index + 1}
@@ -559,7 +564,9 @@ export function DynamicPublishPage({
                 type="button"
                 disabled={isPublishing}
                 onClick={handlePickImages}
-                className="flex aspect-square w-[100px] cursor-pointer flex-col items-center justify-center gap-1 rounded-2xl border border-dashed text-foreground/50 transition-colors hover:bg-foreground/[0.04] hover:text-foreground/80"
+                className={`flex aspect-square w-full cursor-pointer flex-col items-center justify-center gap-1 rounded-xl border border-dashed border-border text-foreground/50 transition-colors hover:text-foreground/80 ${
+                  isDraggingMedia ? 'bg-foreground/[0.05]' : 'bg-foreground/[0.02] hover:bg-foreground/[0.05]'
+                }`}
               >
                 <ImagePlus className="size-5" />
                 <span className="text-xs">添加图片</span>
@@ -567,20 +574,20 @@ export function DynamicPublishPage({
             )}
           </div>
 
-          <p className="mb-2 mt-4 text-sm text-foreground/60">
+          <p className="mb-2 mt-4 text-xs font-medium text-muted-foreground">
             视频（{videos.length}/{MAX_VIDEOS}）
           </p>
-          <div className="flex flex-wrap gap-3">
+          <div className="grid grid-cols-3 gap-3 sm:grid-cols-4 xl:grid-cols-5">
             {videos.map((video) => (
               <div
                 key={video.path}
-                className="group relative aspect-square w-[100px] overflow-hidden rounded-2xl border bg-muted"
+                className="group relative aspect-square w-full overflow-hidden rounded-lg bg-muted ring-1 ring-foreground/5"
               >
-                <video src={video.url} muted className="size-[100px] object-cover" />
+                <video src={video.url} muted className="size-full object-cover" />
                 <span className="pointer-events-none absolute inset-0 z-10 flex items-center justify-center">
                   <Play className="size-5 text-white drop-shadow" />
                 </span>
-                <span className="absolute bottom-1 left-1 z-20 max-w-[88px] truncate rounded bg-black/50 px-1 text-[10px] text-white">
+                <span className="absolute bottom-1 left-1 z-20 max-w-[85%] truncate rounded bg-black/50 px-1 text-[10px] text-white">
                   {video.name}
                 </span>
                 <button
@@ -599,7 +606,9 @@ export function DynamicPublishPage({
                 type="button"
                 disabled={isPublishing}
                 onClick={handlePickVideos}
-                className="flex aspect-square w-[100px] cursor-pointer flex-col items-center justify-center gap-1 rounded-2xl border border-dashed text-foreground/50 transition-colors hover:bg-foreground/[0.04] hover:text-foreground/80"
+                className={`flex aspect-square w-full cursor-pointer flex-col items-center justify-center gap-1 rounded-xl border border-dashed border-border text-foreground/50 transition-colors hover:text-foreground/80 ${
+                  isDraggingMedia ? 'bg-foreground/[0.05]' : 'bg-foreground/[0.02] hover:bg-foreground/[0.05]'
+                }`}
               >
                 <Video className="size-5" />
                 <span className="text-xs">添加视频</span>
@@ -612,6 +621,7 @@ export function DynamicPublishPage({
             </p>
           )}
           <p className="mt-2 text-xs text-muted-foreground">点击添加，或将图片/视频拖拽、粘贴到此处</p>
+          </div>
         </div>
 
         <div className="flex gap-3">
@@ -648,7 +658,7 @@ export function DynamicPublishPage({
 
   // 第 2 步 · 发布：左侧发布信息，右侧内容预览
   return (
-    <div className="flex flex-col gap-6">
+    <div className="mx-auto flex w-full max-w-screen-2xl flex-col gap-6">
       <div className="flex items-center justify-between">
         <Button variant="ghost" onClick={() => setStep('compose')} disabled={isPublishing}>
           <ArrowLeft />
@@ -657,9 +667,9 @@ export function DynamicPublishPage({
         <span className="text-xs text-muted-foreground">第 2 步 · 发布设置</span>
       </div>
 
-      <div className="grid grid-cols-1 items-start gap-6 lg:grid-cols-2">
+      <div className="grid grid-cols-1 items-start gap-6 xl:grid-cols-2">
         <Card className="flex flex-col gap-5 p-6">
-          <h2 className="text-lg font-semibold">发布信息</h2>
+          <h2 className="text-base font-semibold">发布信息</h2>
 
           <TagInput value={tags} onChange={setTags} isDisabled={isPublishing} />
 
@@ -689,8 +699,8 @@ export function DynamicPublishPage({
           </Button>
         </Card>
 
-        <Card className="flex flex-col gap-4 p-6 lg:sticky lg:top-0">
-          <span className="text-sm font-medium text-muted-foreground">内容预览</span>
+        <Card className="flex flex-col gap-4 p-6 xl:sticky xl:top-0">
+          <span className="text-xs font-medium text-muted-foreground">内容预览</span>
           {title && <h3 className="text-xl font-semibold tracking-tight">{title}</h3>}
           <p className="max-h-[40vh] overflow-y-auto whitespace-pre-wrap text-sm leading-relaxed">
             {content}
@@ -701,7 +711,7 @@ export function DynamicPublishPage({
                 <button
                   key={img.path}
                   type="button"
-                  className="cursor-zoom-in overflow-hidden rounded-lg"
+                  className="cursor-zoom-in overflow-hidden rounded-lg ring-1 ring-foreground/5"
                   onClick={() => setPreviewImage(img)}
                   title="查看大图"
                 >
@@ -709,7 +719,10 @@ export function DynamicPublishPage({
                 </button>
               ))}
               {videos.map((video) => (
-                <div key={video.path} className="relative size-[72px] overflow-hidden rounded-lg">
+                <div
+                  key={video.path}
+                  className="relative size-[72px] overflow-hidden rounded-lg ring-1 ring-foreground/5"
+                >
                   <video src={video.url} muted className="size-full object-cover" />
                   <span className="pointer-events-none absolute inset-0 flex items-center justify-center">
                     <Play className="size-4 text-white drop-shadow" />

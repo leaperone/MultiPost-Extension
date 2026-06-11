@@ -242,11 +242,11 @@ function TabItem({
       transition={{ type: 'spring', stiffness: 500, damping: 40 }}
       className={`
         app-no-drag group flex h-8 min-w-[132px] max-w-[220px] cursor-pointer select-none items-center gap-2
-        rounded-t-lg border px-2.5 text-foreground/80 transition-colors
+        rounded-lg px-2.5 text-foreground/80 transition-colors
         ${
           tab.isActive
-            ? 'border-b-background bg-background text-foreground'
-            : 'border-transparent bg-transparent hover:bg-muted'
+            ? 'bg-card text-foreground'
+            : 'bg-transparent hover:bg-foreground/[0.04]'
         }
       `}
       onClick={onSwitch}
@@ -304,8 +304,8 @@ function GroupTabItem({
     <div
       className={`
         app-no-drag flex h-7 min-w-[108px] max-w-[168px] cursor-pointer select-none items-center gap-1.5
-        rounded-md border px-2 text-foreground/80 transition-colors
-        ${tab.isActive ? 'border-border bg-background text-foreground' : 'border-transparent hover:bg-muted'}
+        rounded-lg px-2 text-foreground/80 transition-colors
+        ${tab.isActive ? 'bg-card text-foreground' : 'hover:bg-foreground/[0.04]'}
       `}
       onClick={onSwitch}
       title={`${tab.displayName} - ${platformInfo?.name || tab.platform}（${status.label}）`}
@@ -467,8 +467,8 @@ function AddressBar({
   return (
     <form
       className={`
-        app-no-drag flex h-8 min-w-[120px] flex-1 items-center gap-2 rounded-lg border bg-background px-2.5
-        ${activeTab ? 'focus-within:border-foreground/30' : 'opacity-70'}
+        app-no-drag flex h-8 min-w-[120px] flex-1 items-center gap-2 rounded-lg bg-foreground/[0.05] px-2.5 transition-colors
+        ${activeTab ? 'focus-within:bg-foreground/[0.08]' : 'opacity-70'}
       `}
       onSubmit={handleSubmit}
     >
@@ -515,10 +515,10 @@ export function BrowserTabs({ className }: BrowserTabsProps): React.ReactElement
   const isNativeHomeActive = !activeTab || activeTab.isHome
 
   return (
-    <div className={`h-[72px] border-b bg-background/95 text-foreground ${className || ''}`}>
-      <div className="app-drag flex h-9 items-end gap-1 px-2 pt-1">
+    <div className={`h-[72px] bg-background text-foreground ${className || ''}`}>
+      <div className="app-drag flex h-9 items-center gap-1 px-2 pt-1">
         <div className="w-[78px] shrink-0" />
-        <div className="flex min-w-0 flex-1 items-end gap-1 overflow-x-auto scrollbar-hide">
+        <div className="flex min-w-0 flex-1 items-center gap-1 overflow-x-auto scrollbar-hide">
           <AnimatePresence initial={false}>
             {tabs.map((tab) => (
               <TabItem
@@ -554,7 +554,7 @@ export function BrowserTabs({ className }: BrowserTabsProps): React.ReactElement
 
         {activeGroupId && groupTabs.length > 0 && (
           // 始终渲染(窄窗口手动发布不能没有入口);空间不足时组标签区横向滚动,操作按钮保持可见
-          <div className="min-w-0 max-w-[55%] shrink border-l pl-2">
+          <div className="min-w-0 max-w-[55%] shrink border-l border-border/60 pl-2">
             <GroupTabBar
               groupTabs={groupTabs}
               onSwitchTab={switchGroupTab}

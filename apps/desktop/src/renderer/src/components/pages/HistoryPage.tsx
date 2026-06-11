@@ -4,6 +4,7 @@ import { PLATFORMS } from '@shared/constants'
 import type { PublishHistory, PublishHistoryStatus, PlatformType } from '@shared/types'
 import { Button } from '../ui/button'
 import { Badge } from '../ui/badge'
+import { Card } from '../ui/card'
 import { Tabs, TabsList, TabsTrigger } from '../ui/tabs'
 import { Tooltip } from '../ui/tooltip'
 import { ConfirmDialog } from '../ui/confirm-dialog'
@@ -115,7 +116,7 @@ export function HistoryPage(): React.ReactElement {
   const isFiltered = selectedStatus !== 'all'
 
   return (
-    <div className="flex h-full flex-col gap-4">
+    <div className="mx-auto flex h-full w-full max-w-3xl flex-col gap-4 xl:max-w-4xl">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-semibold tracking-tight">发布历史</h1>
         <div className="flex items-center gap-3">
@@ -127,7 +128,7 @@ export function HistoryPage(): React.ReactElement {
             失败
           </span>
           <Tooltip content="刷新列表">
-            <Button size="icon-sm" variant="outline" aria-label="刷新列表" onClick={loadHistory}>
+            <Button size="icon-sm" variant="secondary" aria-label="刷新列表" onClick={loadHistory}>
               <RefreshCw />
             </Button>
           </Tooltip>
@@ -152,7 +153,7 @@ export function HistoryPage(): React.ReactElement {
           <Spinner label="加载中" />
         </div>
       ) : history.length === 0 ? (
-        <div className="flex h-56 flex-col items-center justify-center gap-3 rounded-lg bg-muted">
+        <div className="flex h-56 flex-col items-center justify-center gap-3 rounded-xl bg-muted">
           <div className="flex size-14 items-center justify-center rounded-full bg-background text-muted-foreground">
             <History className="size-7" />
           </div>
@@ -167,18 +168,22 @@ export function HistoryPage(): React.ReactElement {
         <div className="flex flex-col gap-5">
           {Object.entries(groupedHistory).map(([date, items]) => (
             <div key={date} className="flex flex-col gap-2">
-              <h2 className="text-xs font-medium text-muted-foreground">{date}</h2>
-              <div className="divide-y rounded-lg border">
+              {/* 日期作 muted 小标题坐画布上，记录组是一块软表面 */}
+              <h2 className="px-1 text-xs font-medium text-muted-foreground">{date}</h2>
+              <Card className="divide-y divide-border/60 overflow-hidden">
                 {items.map((item) => {
                   const platform = PLATFORMS[item.platform as PlatformType]
                   return (
-                    <div key={item.id} className="flex items-start gap-3 px-4 py-3">
-                      <div className="flex min-w-0 flex-1 flex-col gap-1">
+                    <div
+                      key={item.id}
+                      className="flex flex-wrap items-start gap-x-3 gap-y-2 px-4 py-3 transition-colors hover:bg-foreground/[0.03]"
+                    >
+                      <div className="flex min-w-0 flex-1 basis-56 flex-col gap-1">
                         <div className="flex min-w-0 items-center gap-2">
                           <span className="truncate text-sm font-medium">
                             {item.title || '无标题'}
                           </span>
-                          <Badge variant="outline" size="sm" className="shrink-0">
+                          <Badge size="sm" className="shrink-0">
                             {platform?.name || item.platform}
                           </Badge>
                         </div>
@@ -193,7 +198,7 @@ export function HistoryPage(): React.ReactElement {
                           </p>
                         )}
                       </div>
-                      <div className="flex shrink-0 items-center gap-3 pt-0.5">
+                      <div className="ml-auto flex shrink-0 items-center gap-3 pt-0.5">
                         <StatusIndicator status={item.status} />
                         <span className="text-xs text-muted-foreground">
                           {formatTime(item.publishedAt || item.createdAt)}
@@ -224,7 +229,7 @@ export function HistoryPage(): React.ReactElement {
                     </div>
                   )
                 })}
-              </div>
+              </Card>
             </div>
           ))}
         </div>

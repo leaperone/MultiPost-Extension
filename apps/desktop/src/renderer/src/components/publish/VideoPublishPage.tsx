@@ -312,78 +312,84 @@ export function VideoPublishPage({
   // 第 1 步 · 创作：大上传区 + 标题/描述
   if (step === 'compose') {
     return (
-      <div className="flex flex-col gap-6">
+      <div className="mx-auto flex w-full max-w-screen-2xl flex-col gap-6">
+        {/* 页面级标题直接坐在画布上，不进卡片 */}
+        <div className="flex items-end justify-between">
+          <h2 className="text-xl font-semibold">发布视频</h2>
+          <span className="text-xs text-muted-foreground">第 1 步 · 上传与编辑</span>
+        </div>
+
         <Card className="flex flex-col gap-5 p-6">
-          <div className="flex items-center justify-between">
-            <h2 className="text-lg font-semibold">发布视频</h2>
-            <span className="text-xs text-muted-foreground">第 1 步 · 上传与编辑</span>
-          </div>
-
-          {/* Video Upload Area */}
-          <div className="flex flex-col gap-2">
-            <label className="text-sm font-medium">视频文件</label>
-            {!videoFile ? (
-              <div
-                onClick={handlePickVideo}
-                onDrop={handleVideoDrop}
-                onDragOver={(e) => {
-                  e.preventDefault()
-                  setIsDraggingVideo(true)
-                }}
-                onDragLeave={(e) => {
-                  e.preventDefault()
-                  setIsDraggingVideo(false)
-                }}
-                className={`flex min-h-[40vh] flex-col items-center justify-center gap-2 p-8 border-2 border-dashed rounded-lg cursor-pointer transition-colors ${
-                  isDraggingVideo ? 'border-foreground bg-muted' : 'hover:border-foreground/40'
-                } ${isPublishing ? 'opacity-60 cursor-not-allowed' : ''}`}
-              >
-                <Upload className="size-10 text-muted-foreground" />
-                <p className="text-sm text-muted-foreground">点击或拖拽视频文件到此处上传</p>
-                <p className="text-xs text-muted-foreground">支持 MP4, MOV, AVI 等格式</p>
-              </div>
-            ) : (
-              <div className="relative border rounded-lg overflow-hidden">
-                <video src={videoFile.url} controls className="w-full max-h-[44vh] bg-black" />
-                <div className="p-3 bg-muted/50 flex items-center justify-between">
-                  <div className="flex items-center gap-2 min-w-0">
-                    <Video className="size-4 text-muted-foreground flex-shrink-0" />
-                    <span className="text-sm truncate">{videoFile.name}</span>
-                    <span className="text-xs text-muted-foreground flex-shrink-0">
-                      {formatFileSize(videoFile.size || 0)}
-                    </span>
-                  </div>
-                  <Button
-                    variant="ghost"
-                    size="icon-sm"
-                    onClick={() => setVideoFile(null)}
-                    disabled={isPublishing}
-                    aria-label="移除视频"
-                    className="flex-shrink-0"
-                  >
-                    <X />
-                  </Button>
+          {/* 宽屏双栏：左边视频，右边标题/描述；窄窗落回单列 */}
+          <div className="grid grid-cols-1 gap-6 xl:grid-cols-2">
+            {/* Video Upload Area */}
+            <div className="flex flex-col gap-2">
+              <label className="text-xs font-medium text-muted-foreground">视频文件</label>
+              {!videoFile ? (
+                <div
+                  onClick={handlePickVideo}
+                  onDrop={handleVideoDrop}
+                  onDragOver={(e) => {
+                    e.preventDefault()
+                    setIsDraggingVideo(true)
+                  }}
+                  onDragLeave={(e) => {
+                    e.preventDefault()
+                    setIsDraggingVideo(false)
+                  }}
+                  className={`flex min-h-[40vh] flex-1 flex-col items-center justify-center gap-2 rounded-xl border border-dashed border-border p-8 cursor-pointer transition-colors ${
+                    isDraggingVideo ? 'bg-foreground/[0.05]' : 'bg-foreground/[0.02] hover:bg-foreground/[0.05]'
+                  } ${isPublishing ? 'opacity-60 cursor-not-allowed' : ''}`}
+                >
+                  <Upload className="size-10 text-muted-foreground" />
+                  <p className="text-sm text-muted-foreground">点击或拖拽视频文件到此处上传</p>
+                  <p className="text-xs text-muted-foreground">支持 MP4, MOV, AVI 等格式</p>
                 </div>
-              </div>
-            )}
+              ) : (
+                <div className="overflow-hidden rounded-xl bg-muted ring-1 ring-foreground/5">
+                  <video src={videoFile.url} controls className="w-full max-h-[44vh] bg-black" />
+                  <div className="p-3 flex items-center justify-between">
+                    <div className="flex items-center gap-2 min-w-0">
+                      <Video className="size-4 text-muted-foreground flex-shrink-0" />
+                      <span className="text-sm truncate">{videoFile.name}</span>
+                      <span className="text-xs text-muted-foreground flex-shrink-0">
+                        {formatFileSize(videoFile.size || 0)}
+                      </span>
+                    </div>
+                    <Button
+                      variant="ghost"
+                      size="icon-sm"
+                      onClick={() => setVideoFile(null)}
+                      disabled={isPublishing}
+                      aria-label="移除视频"
+                      className="flex-shrink-0"
+                    >
+                      <X />
+                    </Button>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            <div className="flex flex-col gap-5">
+              <Input
+                label="视频标题"
+                placeholder="输入视频标题..."
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
+                disabled={isPublishing}
+              />
+
+              <Textarea
+                label="视频描述"
+                placeholder="输入视频描述..."
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                rows={6}
+                disabled={isPublishing}
+              />
+            </div>
           </div>
-
-          <Input
-            label="视频标题"
-            placeholder="输入视频标题..."
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-            disabled={isPublishing}
-          />
-
-          <Textarea
-            label="视频描述"
-            placeholder="输入视频描述..."
-            value={description}
-            onChange={(e) => setDescription(e.target.value)}
-            rows={6}
-            disabled={isPublishing}
-          />
 
           <div className="flex gap-3">
             <Button variant="ghost" size="lg" onClick={handleClearForm} disabled={isPublishing}>
@@ -417,7 +423,7 @@ export function VideoPublishPage({
 
   // 第 2 步 · 发布：左侧发布信息，右侧内容预览
   return (
-    <div className="flex flex-col gap-6">
+    <div className="mx-auto flex w-full max-w-screen-2xl flex-col gap-6">
       <div className="flex items-center justify-between">
         <Button variant="ghost" onClick={() => setStep('compose')} disabled={isPublishing}>
           <ArrowLeft />
@@ -426,9 +432,9 @@ export function VideoPublishPage({
         <span className="text-xs text-muted-foreground">第 2 步 · 发布设置</span>
       </div>
 
-      <div className="grid grid-cols-1 items-start gap-6 lg:grid-cols-2">
+      <div className="grid grid-cols-1 items-start gap-6 xl:grid-cols-2">
         <Card className="flex flex-col gap-5 p-6">
-          <h2 className="text-lg font-semibold">发布信息</h2>
+          <h2 className="text-base font-semibold">发布信息</h2>
 
           <CoverUpload
             label="封面图片"
@@ -487,8 +493,8 @@ export function VideoPublishPage({
           </Button>
         </Card>
 
-        <Card className="flex flex-col gap-4 p-6 lg:sticky lg:top-0">
-          <span className="text-sm font-medium text-muted-foreground">内容预览</span>
+        <Card className="flex flex-col gap-4 p-6 xl:sticky xl:top-0">
+          <span className="text-xs font-medium text-muted-foreground">内容预览</span>
           {videoFile && (
             <video src={videoFile.url} controls className="w-full max-h-[40vh] rounded-lg bg-black" />
           )}

@@ -1,8 +1,6 @@
 import { useState, useCallback, useEffect, useMemo, useRef } from 'react'
 import { Button } from '../ui/button'
 import { Card } from '../ui/card'
-import { Input } from '../ui/input'
-import { Textarea } from '../ui/textarea'
 import { Tooltip } from '../ui/tooltip'
 import { toast } from '../ui/sonner'
 import {
@@ -13,13 +11,14 @@ import {
   Eraser,
   Eye,
   Heading2,
+  ImageIcon,
   Italic,
   Link2,
   List,
   PencilLine,
   Quote,
   Save,
-  SquareSplitHorizontal
+  X
 } from 'lucide-react'
 import { marked } from 'marked'
 import type { PlatformType, ArticleData, SyncContentData, FileData, Draft, PublishGroupSummary } from '../../../../shared/types'
@@ -29,15 +28,18 @@ import {
   PublishModeSelector,
   PublishProgressCard,
   TagInput,
-  CoverUpload,
+  fileDataFromDrop,
   fileDataFromPath,
+  COVER_FILE_FILTERS,
   type AccountPublishState,
   type InitialAccountSelection,
   type PublishStep
 } from './shared'
 import { clearFormCache, loadFormCache, saveFormCache } from '../../lib/formCache'
+import { cn } from '../../lib/utils'
 
-type EditorMode = 'edit' | 'split' | 'preview'
+/** 窄屏(<lg)下工作台只显示一栏,由 segmented 切换;≥lg 始终左右分栏 */
+type WorkbenchPane = 'edit' | 'preview'
 
 interface ToolbarAction {
   key: string
@@ -51,24 +53,100 @@ interface ToolbarAction {
 }
 
 const TOOLBAR_ACTIONS: ToolbarAction[] = [
-  { key: 'bold', label: '加粗', icon: <Bold className="size-4" />, prefix: '**', suffix: '**', placeholder: '加粗文本' },
-  { key: 'italic', label: '斜体', icon: <Italic className="size-4" />, prefix: '*', suffix: '*', placeholder: '斜体文本' },
-  { key: 'heading', label: '标题', icon: <Heading2 className="size-4" />, prefix: '## ', suffix: '', placeholder: '标题', block: true },
-  { key: 'quote', label: '引用', icon: <Quote className="size-4" />, prefix: '> ', suffix: '', placeholder: '引用内容', block: true },
-  { key: 'list', label: '列表', icon: <List className="size-4" />, prefix: '- ', suffix: '', placeholder: '列表项', block: true },
-  { key: 'code', label: '代码块', icon: <Code className="size-4" />, prefix: '```\n', suffix: '\n```', placeholder: '代码', block: true },
-  { key: 'link', label: '链接', icon: <Link2 className="size-4" />, prefix: '[', suffix: '](https://)', placeholder: '链接文字' }
+  { key: 'bold', label: '加粗', icon: <Bold />, prefix: '**', suffix: '**', placeholder: '加粗文本' },
+  { key: 'italic', label: '斜体', icon: <Italic />, prefix: '*', suffix: '*', placeholder: '斜体文本' },
+  { key: 'heading', label: '标题', icon: <Heading2 />, prefix: '## ', suffix: '', placeholder: '标题', block: true },
+  { key: 'quote', label: '引用', icon: <Quote />, prefix: '> ', suffix: '', placeholder: '引用内容', block: true },
+  { key: 'list', label: '列表', icon: <List />, prefix: '- ', suffix: '', placeholder: '列表项', block: true },
+  { key: 'code', label: '代码块', icon: <Code />, prefix: '```\n', suffix: '\n```', placeholder: '代码', block: true },
+  { key: 'link', label: '链接', icon: <Link2 />, prefix: '[', suffix: '](https://)', placeholder: '链接文字' }
 ]
 
-const MODE_OPTIONS: Array<{ key: EditorMode; label: string; icon: React.ReactNode }> = [
-  { key: 'edit', label: '编辑', icon: <PencilLine className="size-4" /> },
-  { key: 'split', label: '分屏', icon: <SquareSplitHorizontal className="size-4" /> },
-  { key: 'preview', label: '预览', icon: <Eye className="size-4" /> }
+const PANE_OPTIONS: Array<{ key: WorkbenchPane; label: string; icon: React.ReactNode }> = [
+  { key: 'edit', label: '编辑', icon: <PencilLine className="size-3.5" /> },
+  { key: 'preview', label: '预览', icon: <Eye className="size-3.5" /> }
 ]
 
 function renderMarkdown(markdown: string): string {
   // Content is authored locally by the user, so raw HTML passthrough is fine
   return marked.parse(markdown, { async: false, gfm: true, breaks: true })
+}
+
+// CoverUpload(shared)的描边拖拽框版式塞不进紧凑文档头,这里内联一个
+// 缩略图版:无文件时是一块 Mist 填充的小按钮,有文件时显示缩略图 + 移除钮。
+interface CompactCoverUploadProps {
+  file: FileData | null
+  onSelect: (file: FileData) => void
+  onRemove: () => void
+  disabled: boolean
+}
+
+function CompactCoverUpload({ file, onSelect, onRemove, disabled }: CompactCoverUploadProps): React.ReactElement {
+  const [isDragging, setIsDragging] = useState(false)
+
+  const handlePick = useCallback(async () => {
+    if (disabled) return
+    const [filePath] = await window.api.app.selectFile({ filters: COVER_FILE_FILTERS })
+    if (!filePath) return
+    const fileData = await fileDataFromPath(filePath)
+    if (fileData) onSelect(fileData)
+  }, [disabled, onSelect])
+
+  const handleDrop = useCallback(
+    async (e: React.DragEvent) => {
+      e.preventDefault()
+      setIsDragging(false)
+      if (disabled) return
+      const dropped = e.dataTransfer.files[0]
+      if (!dropped) return
+      const fileData = await fileDataFromDrop(dropped)
+      if (fileData) onSelect(fileData)
+    },
+    [disabled, onSelect]
+  )
+
+  if (file) {
+    return (
+      <div className="group relative shrink-0">
+        <img src={file.url} alt="文章封面" className="h-12 w-20 rounded-lg object-cover" />
+        <button
+          type="button"
+          onClick={onRemove}
+          disabled={disabled}
+          aria-label="移除封面"
+          className="absolute -right-1.5 -top-1.5 hidden size-5 items-center justify-center rounded-full bg-foreground text-background group-hover:flex disabled:opacity-50"
+        >
+          <X className="size-3" />
+        </button>
+      </div>
+    )
+  }
+
+  return (
+    <Tooltip content="封面图片（可选，点击或拖拽图片）">
+      <button
+        type="button"
+        onClick={() => void handlePick()}
+        onDrop={(e) => void handleDrop(e)}
+        onDragOver={(e) => {
+          e.preventDefault()
+          setIsDragging(true)
+        }}
+        onDragLeave={(e) => {
+          e.preventDefault()
+          setIsDragging(false)
+        }}
+        disabled={disabled}
+        aria-label="上传封面"
+        className={cn(
+          'flex h-12 w-20 shrink-0 items-center justify-center rounded-lg bg-muted text-muted-foreground transition-colors hover:bg-muted/70 hover:text-foreground disabled:pointer-events-none disabled:opacity-50',
+          isDragging && 'bg-muted/70 text-foreground'
+        )}
+      >
+        <ImageIcon className="size-4" />
+      </button>
+    </Tooltip>
+  )
 }
 
 interface ArticlePublishPageProps {
@@ -116,7 +194,7 @@ export function ArticlePublishPage({
   const [content, setContent] = useState(cachedForm?.content || '')
   const [tags, setTags] = useState<string[]>(cachedForm?.tags || [])
   const [coverFile, setCoverFile] = useState<FileData | null>(null)
-  const [mode, setMode] = useState<EditorMode>('split')
+  const [pane, setPane] = useState<WorkbenchPane>('edit')
   const [step, setStep] = useState<PublishStep>('compose')
   const [autoSubmit, setAutoSubmit] = useState(cachedForm?.autoSubmit ?? false)
   const [isSavingDraft, setIsSavingDraft] = useState(false)
@@ -214,6 +292,9 @@ export function ArticlePublishPage({
     (action: ToolbarAction) => {
       const textarea = editorRef.current
       if (!textarea) return
+
+      // 窄屏正在看预览时点工具按钮,先切回编辑栏,让插入结果立刻可见
+      setPane('edit')
 
       const { selectionStart, selectionEnd, value } = textarea
       const selected = value.slice(selectionStart, selectionEnd) || action.placeholder
@@ -317,101 +398,119 @@ export function ArticlePublishPage({
     return () => window.removeEventListener('keydown', handleKeyDown)
   }, [step, canPublish, handlePublish])
 
-  const showEditor = mode !== 'preview'
-  const showPreview = mode !== 'edit'
-
-  // 第 1 步 · 撰写：沉浸式 Markdown 编辑
+  // 第 1 步 · 编辑器工作台:顶部文档头 + 全高编辑/预览分栏 + 底部操作条。
+  // 容器吃满 h-full,编辑与预览各自滚动,页面本身不出现外层滚动。
   if (step === 'compose') {
     return (
-      <div className="flex flex-col gap-6">
-        <Card className="flex flex-col gap-5 p-6">
-          <div className="flex items-center justify-between">
-            <h2 className="text-lg font-semibold">发布文章</h2>
-            <span className="text-xs text-muted-foreground">第 1 步 · 撰写内容</span>
-          </div>
+      <div className="flex h-full min-h-0 flex-col">
+        <Card className="flex min-h-0 flex-1 flex-col divide-y overflow-hidden">
+          {/* 顶部紧凑文档头:大标题 + 单行摘要 + 封面缩略 */}
+          <div className="flex flex-col gap-1.5 px-5 py-4">
+            <div className="flex items-center gap-3">
+              <input
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
+                disabled={isPublishing}
+                placeholder="文章标题"
+                aria-label="文章标题"
+                className="min-w-0 flex-1 bg-transparent text-xl font-semibold tracking-tight outline-none placeholder:text-muted-foreground/50 disabled:opacity-50"
+              />
 
-          <Input
-            label="文章标题"
-            placeholder="输入文章标题..."
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-            disabled={isPublishing}
-          />
-
-          {/* Markdown 编辑器：工具栏 + 编辑/分屏/预览 */}
-          <div className="overflow-hidden rounded-xl border">
-            <div className="flex items-center justify-between gap-2 border-b bg-foreground/[0.02] px-2 py-1.5">
-              <div className="flex items-center gap-0.5">
-                {TOOLBAR_ACTIONS.map((action) => (
-                  <Tooltip key={action.key} content={action.label}>
-                    <button
-                      type="button"
-                      disabled={isPublishing || mode === 'preview'}
-                      onClick={() => applyToolbarAction(action)}
-                      className="rounded-md p-1.5 text-foreground/60 transition-colors hover:bg-foreground/[0.06] hover:text-foreground disabled:opacity-40"
-                    >
-                      {action.icon}
-                    </button>
-                  </Tooltip>
-                ))}
-              </div>
-
-              <div className="flex items-center gap-0.5 rounded-lg bg-foreground/[0.04] p-0.5">
-                {MODE_OPTIONS.map((option) => (
+              {/* <lg 单栏时的「编辑|预览」切换 */}
+              <div className="flex shrink-0 items-center gap-0.5 rounded-lg bg-muted p-0.5 lg:hidden">
+                {PANE_OPTIONS.map((option) => (
                   <button
                     key={option.key}
                     type="button"
-                    onClick={() => setMode(option.key)}
-                    title={option.label}
-                    className={`flex items-center gap-1 rounded-md px-2 py-1 text-xs transition-colors ${
-                      mode === option.key
-                        ? 'bg-background text-foreground border'
-                        : 'text-foreground/50 hover:text-foreground'
-                    }`}
+                    onClick={() => setPane(option.key)}
+                    aria-label={option.label}
+                    className={cn(
+                      'flex items-center gap-1 rounded-md px-2 py-1 text-xs transition-colors',
+                      pane === option.key
+                        ? 'bg-card text-foreground'
+                        : 'text-muted-foreground hover:text-foreground'
+                    )}
                   >
                     {option.icon}
                     <span className="hidden sm:inline">{option.label}</span>
                   </button>
                 ))}
               </div>
+
+              <CompactCoverUpload
+                file={coverFile}
+                onSelect={setCoverFile}
+                onRemove={() => setCoverFile(null)}
+                disabled={isPublishing}
+              />
             </div>
 
-            <div className={`grid min-h-[60vh] ${mode === 'split' ? 'grid-cols-2' : 'grid-cols-1'}`}>
-              {showEditor && (
-                <textarea
-                  ref={editorRef}
-                  value={content}
-                  onChange={(e) => setContent(e.target.value)}
-                  disabled={isPublishing}
-                  placeholder={'# 标题\n\n用 Markdown 书写文章内容...'}
-                  spellCheck={false}
-                  className={`min-h-[60vh] w-full resize-y bg-transparent p-4 font-mono text-sm leading-relaxed outline-none placeholder:text-foreground/30 ${
-                    mode === 'split' ? 'border-r' : ''
-                  }`}
-                />
-              )}
-              {showPreview && (
-                <div
-                  className="article-preview min-h-[60vh] overflow-y-auto p-4 text-sm"
-                  // 本地撰写内容的实时预览
-                  dangerouslySetInnerHTML={{ __html: previewHtml }}
-                />
-              )}
-            </div>
-
-            <div className="flex items-center justify-end border-t bg-foreground/[0.02] px-3 py-1 text-xs text-foreground/40">
-              {content.length} 字符
-            </div>
+            <input
+              value={digest}
+              onChange={(e) => setDigest(e.target.value)}
+              disabled={isPublishing}
+              placeholder="一句话摘要（可选，部分平台使用）"
+              aria-label="文章摘要"
+              className="w-full bg-transparent text-sm text-muted-foreground outline-none placeholder:text-muted-foreground/40 disabled:opacity-50"
+            />
           </div>
 
-          <div className="flex gap-3">
-            <Button variant="ghost" size="lg" onClick={handleClearForm} disabled={isPublishing}>
+          {/* 主体:≥lg 左编辑右预览,<lg 由 segmented 决定单栏 */}
+          <div className="flex min-h-0 flex-1">
+            <textarea
+              ref={editorRef}
+              value={content}
+              onChange={(e) => setContent(e.target.value)}
+              disabled={isPublishing}
+              placeholder={'# 标题\n\n用 Markdown 书写文章内容...'}
+              spellCheck={false}
+              aria-label="Markdown 编辑器"
+              className={cn(
+                'h-full min-w-0 flex-1 resize-none bg-transparent p-5 font-mono text-[0.8125rem] leading-relaxed text-foreground outline-none placeholder:text-muted-foreground/50 disabled:opacity-50',
+                pane === 'preview' && 'hidden lg:block'
+              )}
+            />
+            <div
+              className={cn(
+                'article-preview h-full min-w-0 flex-1 overflow-y-auto p-5 text-sm lg:border-l',
+                pane === 'edit' && 'hidden lg:block'
+              )}
+              // 本地撰写内容的实时预览
+              dangerouslySetInnerHTML={{ __html: previewHtml }}
+            />
+          </div>
+
+          {/* 底部操作条:markdown 工具 + 字数 + 草稿/清空/下一步 */}
+          <div className="flex flex-wrap items-center gap-2 px-3 py-2.5">
+            <div className="flex items-center gap-0.5">
+              {TOOLBAR_ACTIONS.map((action) => (
+                <Tooltip key={action.key} content={action.label}>
+                  <Button
+                    variant="ghost"
+                    size="icon-sm"
+                    disabled={isPublishing}
+                    onClick={() => applyToolbarAction(action)}
+                    aria-label={action.label}
+                    className="text-muted-foreground hover:text-foreground"
+                  >
+                    {action.icon}
+                  </Button>
+                </Tooltip>
+              ))}
+            </div>
+
+            <span className="px-1 text-xs tabular-nums text-muted-foreground">
+              第 1 步 · 撰写 · {content.length} 字符
+            </span>
+
+            <div className="min-w-2 flex-1" />
+
+            <Button variant="ghost" onClick={handleClearForm} disabled={isPublishing}>
               <Eraser />
               清空
             </Button>
             <Button
-              variant="outline"
-              size="lg"
+              variant="secondary"
               onClick={handleSaveDraft}
               disabled={!canSaveDraft}
               isLoading={isSavingDraft}
@@ -419,12 +518,7 @@ export function ArticlePublishPage({
               {!isSavingDraft && <Save />}
               保存草稿
             </Button>
-            <Button
-              className="flex-1"
-              size="lg"
-              onClick={() => setStep('configure')}
-              disabled={!isContentValid}
-            >
+            <Button onClick={() => setStep('configure')} disabled={!isContentValid}>
               下一步
               <ArrowRight />
             </Button>
@@ -434,7 +528,7 @@ export function ArticlePublishPage({
     )
   }
 
-  // 第 2 步 · 发布：左侧发布信息，右侧内容预览
+  // 第 2 步 · 发布:左侧发布信息,右侧内容预览
   return (
     <div className="flex flex-col gap-6">
       <div className="flex items-center justify-between">
@@ -448,24 +542,6 @@ export function ArticlePublishPage({
       <div className="grid grid-cols-1 items-start gap-6 lg:grid-cols-2">
         <Card className="flex flex-col gap-5 p-6">
           <h2 className="text-lg font-semibold">发布信息</h2>
-
-          <Textarea
-            label="摘要（可选）"
-            placeholder="输入文章摘要..."
-            value={digest}
-            onChange={(e) => setDigest(e.target.value)}
-            rows={2}
-            disabled={isPublishing}
-          />
-
-          <CoverUpload
-            label="封面图片"
-            hint="（可选，部分平台使用）"
-            file={coverFile}
-            onSelect={setCoverFile}
-            onRemove={() => setCoverFile(null)}
-            isDisabled={isPublishing}
-          />
 
           <TagInput value={tags} onChange={setTags} isDisabled={isPublishing} />
 
@@ -497,8 +573,15 @@ export function ArticlePublishPage({
 
         <Card className="flex flex-col gap-4 p-6 lg:sticky lg:top-0">
           <span className="text-sm font-medium text-muted-foreground">内容预览</span>
-          <h3 className="text-xl font-semibold tracking-tight">{title || '未命名文章'}</h3>
-          {digest && <p className="text-sm text-muted-foreground">{digest}</p>}
+          <div className="flex items-start gap-3">
+            <div className="flex min-w-0 flex-1 flex-col gap-1">
+              <h3 className="text-xl font-semibold tracking-tight">{title || '未命名文章'}</h3>
+              {digest && <p className="text-sm text-muted-foreground">{digest}</p>}
+            </div>
+            {coverFile && (
+              <img src={coverFile.url} alt="文章封面" className="h-12 w-20 shrink-0 rounded-lg object-cover" />
+            )}
+          </div>
           <div
             className="article-preview max-h-[60vh] overflow-y-auto text-sm"
             dangerouslySetInnerHTML={{ __html: previewHtml }}
