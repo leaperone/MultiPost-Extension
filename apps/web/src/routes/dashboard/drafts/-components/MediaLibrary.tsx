@@ -83,7 +83,8 @@ function ImagePreview({ imageFile, onPreview, onAddToDraft, onDelete }: ImagePre
           variant="flat"
           isLoading={deleting}
           className="border border-danger-300 bg-danger-500/20 text-danger-600 backdrop-blur-xs hover:bg-danger-500/30"
-          onPress={handleDelete}>
+          onPress={handleDelete}
+        >
           <X className="size-4" />
         </Button>
       </div>
@@ -94,7 +95,8 @@ function ImagePreview({ imageFile, onPreview, onAddToDraft, onDelete }: ImagePre
           size="lg"
           variant="flat"
           className="border border-background/30 bg-background/20 text-background backdrop-blur-xs hover:bg-background/30"
-          onPress={onPreview}>
+          onPress={onPreview}
+        >
           <Eye className="size-5" />
         </Button>
 
@@ -103,7 +105,8 @@ function ImagePreview({ imageFile, onPreview, onAddToDraft, onDelete }: ImagePre
           size="lg"
           variant="flat"
           className="border border-background/30 bg-background/20 text-background backdrop-blur-xs hover:bg-background/30"
-          onPress={onAddToDraft}>
+          onPress={onAddToDraft}
+        >
           <Plus className="size-5" />
         </Button>
       </div>
@@ -284,13 +287,22 @@ export default function MediaLibrary({ onSelectImage }: MediaLibraryProps) {
   const columnCount = gridWidth >= 640 ? 3 : gridWidth >= 400 ? 2 : 1;
   const itemSize = gridWidth > 0 ? (gridWidth - GRID_GAP * (columnCount - 1)) / columnCount : 0;
   const rowCount = Math.ceil(imageFiles.length / columnCount);
+  // Fall back to a plain grid until a scrollable ancestor is found and measured.
+  const isVirtualized = scrollEl !== null && gridWidth > 0;
+
+  // offsetTop is only valid relative to offsetParent, which may differ from the
+  // scroll container, so measure the actual distance between the two.
+  const scrollMargin =
+    gridEl && scrollEl
+      ? gridEl.getBoundingClientRect().top - scrollEl.getBoundingClientRect().top + scrollEl.scrollTop
+      : 0;
 
   const rowVirtualizer = useVirtualizer({
     count: rowCount,
     getScrollElement: () => scrollEl,
     estimateSize: () => itemSize + GRID_GAP,
     overscan: 3,
-    scrollMargin: gridEl?.offsetTop ?? 0,
+    scrollMargin,
   });
 
   useEffect(() => {
@@ -481,20 +493,23 @@ export default function MediaLibrary({ onSelectImage }: MediaLibraryProps) {
   return (
     <div
       className="space-y-4"
-      ref={containerRef}>
+      ref={containerRef}
+    >
       <div className="flex items-center justify-center">
         <div className="flex w-full items-center gap-2">
           <Button
             fullWidth
             isLoading={uploading}
-            onPress={() => fileInputRef.current?.click()}>
+            onPress={() => fileInputRef.current?.click()}
+          >
             <Upload />
           </Button>
           <Button
             fullWidth
             isIconOnly
             onPress={() => fetchImageFiles()}
-            isLoading={loading}>
+            isLoading={loading}
+          >
             <RefreshCcw />
           </Button>
         </div>
@@ -525,12 +540,28 @@ export default function MediaLibrary({ onSelectImage }: MediaLibraryProps) {
         </div>
       ) : (
         <>
-          <div
-            ref={setGridEl}
-            className="relative w-full"
-            style={{ height: gridWidth > 0 ? rowVirtualizer.getTotalSize() : undefined }}>
-            {gridWidth > 0 &&
-              rowVirtualizer.getVirtualItems().map((virtualRow) => {
+          {!isVirtualized ? (
+            <div
+              ref={setGridEl}
+              className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3"
+            >
+              {imageFiles.map((imageFile, index) => (
+                <ImagePreview
+                  key={imageFile.id}
+                  imageFile={imageFile}
+                  onPreview={() => handlePreviewImage(imageFile, index)}
+                  onAddToDraft={() => handleAddToDraft(imageFile)}
+                  onDelete={() => handleDeleteImage(imageFile)}
+                />
+              ))}
+            </div>
+          ) : (
+            <div
+              ref={setGridEl}
+              className="relative w-full"
+              style={{ height: rowVirtualizer.getTotalSize() }}
+            >
+              {rowVirtualizer.getVirtualItems().map((virtualRow) => {
                 const rowStart = virtualRow.index * columnCount;
                 const rowItems = imageFiles.slice(rowStart, rowStart + columnCount);
 
@@ -542,7 +573,8 @@ export default function MediaLibrary({ onSelectImage }: MediaLibraryProps) {
                       gridTemplateColumns: `repeat(${columnCount}, minmax(0, 1fr))`,
                       gap: GRID_GAP,
                       transform: `translateY(${virtualRow.start - rowVirtualizer.options.scrollMargin}px)`,
-                    }}>
+                    }}
+                  >
                     {rowItems.map((imageFile, columnIndex) => (
                       <ImagePreview
                         key={imageFile.id}
@@ -555,7 +587,8 @@ export default function MediaLibrary({ onSelectImage }: MediaLibraryProps) {
                   </div>
                 );
               })}
-          </div>
+            </div>
+          )}
 
           {hasMore && !loading && (
             <div className="scroll-sentinel flex justify-center py-4">{loadingMore && <Spinner size="sm" />}</div>

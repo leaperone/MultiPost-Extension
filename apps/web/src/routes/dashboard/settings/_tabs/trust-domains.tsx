@@ -184,7 +184,7 @@ function TrustDomainsPage() {
                   size="sm"
                   color="danger"
                   variant="light"
-                  isLoading={deleteDomain.isPending}
+                  isLoading={deleteDomain.isPending && deleteDomain.variables === domain.id}
                   onPress={() => {
                     if (!domain.id) return;
                     deleteDomain.mutate(domain.id);

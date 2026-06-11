@@ -105,6 +105,9 @@ export const useChatHistoryStore = create(
       name: 'chat-history-storage',
       version: 1,
       migrate: (persistedState) => {
+        if (!persistedState || typeof persistedState !== 'object') {
+          return { ...initialState } as ChatHistoryStore;
+        }
         const state = persistedState as ChatHistoryStore & {
           chatHistories: Record<string, LegacyMessage[]>;
         };
