@@ -27,8 +27,9 @@ import {
 import { BrowserViewManager } from '../browser/browserViewManager'
 import { DatabaseService } from '../database'
 import type { KeepAliveService } from '../keepalive'
-import { normalizeProxyConfig } from '../proxy/accountProxy'
+import { closeAllAnonymizedProxies, normalizeProxyConfig } from '../proxy/accountProxy'
 import { allowLocalFile } from '../browser/sessionHardening'
+import { getCloseWindowBehavior, setCloseWindowBehavior } from '../appSettings'
 
 type BrowserViewManagerGetter = () => BrowserViewManager | null
 
@@ -576,6 +577,89 @@ export function registerIpcHandlers(
     return app.getLoginItemSettings().openAtLogin
   })
 
+  ipcMain.handle(IPC_CHANNELS.APP_GET_CLOSE_BEHAVIOR, async () => {
+    return getCloseWindowBehavior()
+  })
+
+  ipcMain.handle(IPC_CHANNELS.APP_SET_CLOSE_BEHAVIOR, async (_, behavior: unknown) => {
+    if (behavior !== 'minimize' && behavior !== 'quit') {
+      throw new Error('Invalid argument: behavior must be "minimize" or "quit"')
+    }
+    setCloseWindowBehavior(behavior)
+    return getCloseWindowBehavior()
+  })
+
+  // Data backup: an online copy of the SQLite database (accounts, drafts,
+  // history, proxy config). Platform login state lives in session partitions
+  // and is machine-bound, so it is intentionally not part of the backup.
+  ipcMain.handle(IPC_CHANNELS.APP_EXPORT_DATA, async () => {
+    const date = new Date()
+    const stamp = `${date.getFullYear()}${String(date.getMonth() + 1).padStart(2, '0')}${String(date.getDate()).padStart(2, '0')}`
+    const result = await dialog.showSaveDialog({
+      title: '导出数据备份',
+      defaultPath: `multipost-backup-${stamp}.db`,
+      filters: [{ name: 'MultiPost 备份', extensions: ['db'] }]
+    })
+    if (result.canceled || !result.filePath) return false
+    await DatabaseService.getInstance().backupTo(result.filePath)
+    return true
+  })
+
+  ipcMain.handle(IPC_CHANNELS.APP_IMPORT_DATA, async () => {
+    const result = await dialog.showOpenDialog({
+      title: '导入数据备份',
+      properties: ['openFile'],
+      filters: [{ name: 'MultiPost 备份', extensions: ['db'] }]
+    })
+    const [backupPath] = result.filePaths
+    if (result.canceled || !backupPath) return false
+
+    // Sanity-check the file is actually a SQLite database before replacing
+    const header = Buffer.alloc(16)
+    const fd = fs.openSync(backupPath, 'r')
+    try {
+      fs.readSync(fd, header, 0, 16, 0)
+    } finally {
+      fs.closeSync(fd)
+    }
+    if (!header.toString('utf-8').startsWith('SQLite format 3')) {
+      throw new Error('所选文件不是有效的 MultiPost 备份')
+    }
+
+    const db = DatabaseService.getInstance()
+    const dbPath = db.getDatabasePath()
+    // Safety copy BEFORE closing: if it fails, the live database is untouched
+    const safetyPath = `${dbPath}.pre-import-${Date.now()}`
+    fs.copyFileSync(dbPath, safetyPath)
+    db.close()
+    try {
+      // Stale WAL/SHM files would shadow the imported data
+      for (const suffix of ['-wal', '-shm']) {
+        const sidecar = `${dbPath}${suffix}`
+        if (fs.existsSync(sidecar)) fs.rmSync(sidecar, { force: true })
+      }
+      fs.copyFileSync(backupPath, dbPath)
+    } catch (error) {
+      // Roll back and reopen so the app keeps working without the import
+      try {
+        fs.copyFileSync(safetyPath, dbPath)
+      } catch (rollbackError) {
+        console.error('Failed to roll back database after import error:', rollbackError)
+      }
+      await db.initialize()
+      throw error
+    }
+
+    // Restart so every subsystem reloads from the imported database.
+    // app.exit() skips will-quit, so release proxy child processes here first.
+    await closeAllAnonymizedProxies().catch((error) => {
+      console.warn('Failed to clean up proxies before relaunch:', error)
+    })
+    app.relaunch()
+    app.exit(0)
+    return true
+  })
+
   ipcMain.handle(IPC_CHANNELS.APP_GET_PLATFORMS, async () => {
     return Object.values(PLATFORMS)
   })
@@ -636,15 +720,17 @@ export function registerIpcHandlers(
     }
   )
 
-  // Save clipboard bitmap (e.g. a screenshot) to a temp PNG so paste-to-upload
+  // Save clipboard bitmap (e.g. a screenshot) to a PNG so paste-to-upload
   // gets a real filesystem path — fill scripts can only fetch local-file:// URLs.
+  // Lives under userData (not temp): the publish form cache may reference these
+  // paths across restarts, and temp is wiped on quit.
   ipcMain.handle(IPC_CHANNELS.APP_SAVE_CLIPBOARD_IMAGE, async () => {
     const image = clipboard.readImage()
     if (image.isEmpty()) {
       return null
     }
 
-    const dir = path.join(app.getPath('temp'), 'multipost-pasted')
+    const dir = path.join(app.getPath('userData'), 'pasted-images')
     await fs.promises.mkdir(dir, { recursive: true })
     const filePath = path.join(dir, `pasted-${Date.now()}-${uuidv4().slice(0, 8)}.png`)
     await fs.promises.writeFile(filePath, image.toPNG())
@@ -1185,6 +1271,30 @@ export function registerIpcHandlers(
     if (!manager) throw new Error('BrowserViewManager not initialized')
     await manager.submitGroupAll(groupId)
   })
+
+  ipcMain.handle(IPC_CHANNELS.PUBLISH_CANCEL, async (_, taskId: string) => {
+    const manager = getBrowserViewManager()
+    if (!manager) throw new Error('BrowserViewManager not initialized')
+    await manager.cancelPublish(taskId)
+  })
+
+  ipcMain.handle(
+    IPC_CHANNELS.PUBLISH_GROUP_SKIP_TARGET,
+    async (_, groupId: string, accountId: string) => {
+      const manager = getBrowserViewManager()
+      if (!manager) throw new Error('BrowserViewManager not initialized')
+      manager.skipGroupTarget(groupId, accountId)
+    }
+  )
+
+  ipcMain.handle(
+    IPC_CHANNELS.PUBLISH_GROUP_RETRY_TARGET,
+    async (_, groupId: string, accountId: string) => {
+      const manager = getBrowserViewManager()
+      if (!manager) throw new Error('BrowserViewManager not initialized')
+      await manager.retryGroupTarget(groupId, accountId)
+    }
+  )
 
   ipcMain.handle(
     IPC_CHANNELS.PUBLISH_GROUP_UPDATE_STATUS,

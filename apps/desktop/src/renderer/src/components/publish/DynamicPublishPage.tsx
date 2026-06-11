@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect } from 'react'
+import { useState, useCallback, useEffect, useMemo } from 'react'
 import {
   Button,
   Card,
@@ -11,8 +11,19 @@ import {
   Spinner,
   addToast
 } from '@heroui/react'
-import { ChevronLeft, ChevronRight, ImagePlus, Play, Save, Video, X } from 'lucide-react'
-import type { PlatformType, DynamicData, FileData, SyncContentData, Draft } from '../../../../shared/types'
+import {
+  ArrowLeft,
+  ArrowRight,
+  ChevronLeft,
+  ChevronRight,
+  Eraser,
+  ImagePlus,
+  Play,
+  Save,
+  Video,
+  X
+} from 'lucide-react'
+import type { PlatformType, DynamicData, FileData, SyncContentData, Draft, PublishGroupSummary } from '../../../../shared/types'
 import { createLocalFileUrl } from '../../../../shared/types'
 import {
   AccountSelector,
@@ -20,8 +31,11 @@ import {
   AutoSubmitToggle,
   PublishProgressCard,
   TagInput,
-  type AccountPublishState
+  type AccountPublishState,
+  type InitialAccountSelection,
+  type PublishStep
 } from './shared'
+import { clearFormCache, loadFormCache, saveFormCache, validateCachedPaths } from '../../lib/formCache'
 
 const IMAGE_EXTENSIONS = ['jpg', 'jpeg', 'png', 'gif', 'webp', 'bmp', 'heic', 'avif']
 const VIDEO_EXTENSIONS = ['mp4', 'mov', 'avi', 'mkv', 'webm', 'flv', 'm4v']
@@ -85,6 +99,7 @@ interface DynamicPublishPageProps {
     selectedOtherPlatforms?: Set<PlatformType>
   ) => void
   publishStates: AccountPublishState[]
+  summary?: PublishGroupSummary | null
   isPublishing: boolean
   onViewAccount?: (accountId: string) => void
   onCancelPublish?: () => void
@@ -97,6 +112,7 @@ interface DynamicPublishPageProps {
 export function DynamicPublishPage({
   onStartPublish,
   publishStates,
+  summary,
   isPublishing,
   onViewAccount,
   onCancelPublish,
@@ -105,16 +121,32 @@ export function DynamicPublishPage({
   initialDraft,
   onDraftSaved
 }: DynamicPublishPageProps): React.ReactElement {
-  const [title, setTitle] = useState('')
-  const [content, setContent] = useState('')
-  const [tags, setTags] = useState<string[]>([])
+  // Auto-saved snapshot restores after accidental close; an explicit draft edit wins over it.
+  const [cachedForm] = useState(() => (initialDraft ? null : loadFormCache('DYNAMIC')))
+  const [title, setTitle] = useState(cachedForm?.title || '')
+  const [content, setContent] = useState(cachedForm?.content || '')
+  const [tags, setTags] = useState<string[]>(cachedForm?.tags || [])
   const [images, setImages] = useState<LocalMedia[]>([])
   const [videos, setVideos] = useState<LocalMedia[]>([])
   const [isDraggingMedia, setIsDraggingMedia] = useState(false)
   const [previewImage, setPreviewImage] = useState<LocalMedia | null>(null)
-  const [autoSubmit, setAutoSubmit] = useState(false)
+  const [step, setStep] = useState<PublishStep>('compose')
+  const [autoSubmit, setAutoSubmit] = useState(cachedForm?.autoSubmit ?? false)
   const [isSavingDraft, setIsSavingDraft] = useState(false)
-  const [currentDraftId, setCurrentDraftId] = useState<string | null>(null)
+  const [currentDraftId, setCurrentDraftId] = useState<string | null>(
+    cachedForm?.currentDraftId ?? null
+  )
+
+  const initialSelection = useMemo<InitialAccountSelection | undefined>(
+    () =>
+      cachedForm
+        ? {
+            accountIds: cachedForm.selectedAccountIds,
+            otherPlatforms: cachedForm.selectedOtherPlatforms as PlatformType[] | undefined
+          }
+        : undefined,
+    [cachedForm]
+  )
 
   // Use account selection hook
   const {
@@ -123,7 +155,72 @@ export function DynamicPublishPage({
     selectedPlatforms,
     handleAccountToggle,
     handleOtherPlatformToggle
-  } = useAccountSelection('DYNAMIC')
+  } = useAccountSelection('DYNAMIC', initialSelection)
+
+  // Cached media paths may be stale (deleted files) and the local-file://
+  // allowlist resets every launch, so validate + re-register before previewing.
+  useEffect(() => {
+    if (!cachedForm) return
+    const imagePaths = cachedForm.images || []
+    const videoPaths = cachedForm.videos || []
+    if (imagePaths.length === 0 && videoPaths.length === 0) return
+
+    let cancelled = false
+    void (async () => {
+      const [imageResult, videoResult] = await Promise.all([
+        validateCachedPaths(imagePaths),
+        validateCachedPaths(videoPaths)
+      ])
+      if (cancelled) return
+      setImages(imageResult.valid.map((path) => mediaFromPath(path, 'image')))
+      setVideos(videoResult.valid.map((path) => mediaFromPath(path, 'video')))
+      const dropped = imageResult.dropped + videoResult.dropped
+      if (dropped > 0) {
+        addToast({
+          title: '部分媒体已失效',
+          description: `${dropped} 个文件已不存在，已从恢复的内容中移除`,
+          hideIcon: true
+        })
+      }
+    })()
+    return () => {
+      cancelled = true
+    }
+  }, [])
+
+  // Continuously snapshot the form; debounced so typing doesn't thrash localStorage.
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      saveFormCache('DYNAMIC', {
+        title,
+        content,
+        tags,
+        images: images.map((img) => img.path),
+        videos: videos.map((video) => video.path),
+        selectedAccountIds: Array.from(selectedAccountIds),
+        selectedOtherPlatforms: Array.from(selectedOtherPlatforms),
+        currentDraftId,
+        autoSubmit
+      })
+    }, 600)
+    return () => clearTimeout(timer)
+  }, [title, content, tags, images, videos, selectedAccountIds, selectedOtherPlatforms, currentDraftId, autoSubmit])
+
+  const handleClearForm = useCallback(() => {
+    setTitle('')
+    setContent('')
+    setTags([])
+    setImages([])
+    setVideos([])
+    setAutoSubmit(false)
+    setCurrentDraftId(null)
+    clearFormCache('DYNAMIC')
+    addToast({
+      title: '已清空',
+      description: '表单内容与自动缓存已清空',
+      hideIcon: true
+    })
+  }, [])
 
   // Load initial draft data
   useEffect(() => {
@@ -335,10 +432,15 @@ export function DynamicPublishPage({
   const canSaveDraft = isContentValid && !isPublishing && !isSavingDraft
   const totalCharCount = title.length + content.length
 
-  return (
+  // 第 1 步 · 创作：标题 + 大输入区 + 媒体
+  if (step === 'compose') {
+    return (
     <div className="flex flex-col gap-6" onPaste={handlePaste}>
       <Card className="p-6 shadow-none border">
-        <h2 className="text-lg font-semibold mb-5">发布动态</h2>
+        <div className="mb-5 flex items-center justify-between">
+          <h2 className="text-lg font-semibold">发布动态</h2>
+          <span className="text-xs text-muted-foreground">第 1 步 · 创作内容</span>
+        </div>
 
         <div className="mb-5">
           <Input
@@ -356,14 +458,10 @@ export function DynamicPublishPage({
             placeholder="输入要发布的内容..."
             value={content}
             onValueChange={setContent}
-            minRows={8}
+            minRows={14}
             isDisabled={isPublishing}
           />
           <p className="mt-1 text-right text-xs text-foreground/40">{totalCharCount} 字符</p>
-        </div>
-
-        <div className="mb-5">
-          <TagInput value={tags} onChange={setTags} isDisabled={isPublishing} />
         </div>
 
         {/* 媒体上传区：图片 + 视频共用一个拖拽区域 */}
@@ -386,7 +484,7 @@ export function DynamicPublishPage({
             {images.map((img, index) => (
               <div
                 key={img.path}
-                className="group relative aspect-square w-[100px] overflow-hidden rounded-2xl border bg-default-100"
+                className="group relative aspect-square w-[100px] overflow-hidden rounded-2xl border bg-muted"
               >
                 <button
                   type="button"
@@ -457,7 +555,7 @@ export function DynamicPublishPage({
             {videos.map((video) => (
               <div
                 key={video.path}
-                className="group relative aspect-square w-[100px] overflow-hidden rounded-2xl border bg-default-100"
+                className="group relative aspect-square w-[100px] overflow-hidden rounded-2xl border bg-muted"
               >
                 <video src={video.url} muted className="size-[100px] object-cover" />
                 <span className="pointer-events-none absolute inset-0 z-10 flex items-center justify-center">
@@ -495,22 +593,16 @@ export function DynamicPublishPage({
           <p className="mt-2 text-xs text-foreground/40">点击添加，或将图片/视频拖拽、粘贴到此处</p>
         </div>
 
-        <AccountSelector
-          contentType="DYNAMIC"
-          selectedAccountIds={selectedAccountIds}
-          onAccountToggle={handleAccountToggle}
-          selectedOtherPlatforms={selectedOtherPlatforms}
-          onOtherPlatformToggle={handleOtherPlatformToggle}
-          isDisabled={isPublishing}
-        />
-
-        <AutoSubmitToggle
-          isSelected={autoSubmit}
-          onValueChange={setAutoSubmit}
-          isDisabled={isPublishing}
-        />
-
         <div className="flex gap-3">
+          <Button
+            variant="light"
+            size="lg"
+            onPress={handleClearForm}
+            isDisabled={isPublishing}
+            startContent={<Eraser className="size-4" />}
+          >
+            清空
+          </Button>
           <Button
             variant="bordered"
             size="lg"
@@ -526,6 +618,79 @@ export function DynamicPublishPage({
             variant="solid"
             className="flex-1"
             size="lg"
+            onPress={() => setStep('configure')}
+            isDisabled={!isContentValid}
+            endContent={<ArrowRight className="size-4" />}
+          >
+            下一步
+          </Button>
+        </div>
+      </Card>
+
+      {/* 图片大图预览 */}
+      <Modal
+        isOpen={previewImage !== null}
+        onOpenChange={(open) => {
+          if (!open) setPreviewImage(null)
+        }}
+        size="3xl"
+      >
+        <ModalContent>
+          <ModalBody className="flex items-center justify-center p-4">
+            {previewImage && (
+              <img
+                src={previewImage.url}
+                alt={previewImage.name}
+                className="max-h-[75vh] w-auto rounded-lg object-contain"
+              />
+            )}
+          </ModalBody>
+        </ModalContent>
+      </Modal>
+    </div>
+    )
+  }
+
+  // 第 2 步 · 发布：左侧发布信息，右侧内容预览
+  return (
+    <div className="flex flex-col gap-6">
+      <div className="flex items-center justify-between">
+        <Button
+          variant="light"
+          onPress={() => setStep('compose')}
+          isDisabled={isPublishing}
+          startContent={<ArrowLeft className="size-4" />}
+        >
+          上一步
+        </Button>
+        <span className="text-xs text-muted-foreground">第 2 步 · 发布设置</span>
+      </div>
+
+      <div className="grid grid-cols-1 items-start gap-6 lg:grid-cols-2">
+        <Card className="flex flex-col gap-5 p-6 shadow-none border">
+          <h2 className="text-lg font-semibold">发布信息</h2>
+
+          <TagInput value={tags} onChange={setTags} isDisabled={isPublishing} />
+
+          <AccountSelector
+            contentType="DYNAMIC"
+            selectedAccountIds={selectedAccountIds}
+            onAccountToggle={handleAccountToggle}
+            selectedOtherPlatforms={selectedOtherPlatforms}
+            onOtherPlatformToggle={handleOtherPlatformToggle}
+            isDisabled={isPublishing}
+          />
+
+          <AutoSubmitToggle
+            isSelected={autoSubmit}
+            onValueChange={setAutoSubmit}
+            isDisabled={isPublishing}
+          />
+
+          <Button
+            color="primary"
+            variant="solid"
+            size="lg"
             onPress={handlePublish}
             isDisabled={!canPublish}
             isLoading={isPublishing}
@@ -533,11 +698,50 @@ export function DynamicPublishPage({
           >
             {isPublishing ? '发布中...' : '发布动态'}
           </Button>
-        </div>
-      </Card>
+        </Card>
+
+        <Card className="flex flex-col gap-4 p-6 shadow-none border lg:sticky lg:top-0">
+          <span className="text-sm font-medium text-muted-foreground">内容预览</span>
+          {title && <h3 className="text-xl font-semibold tracking-tight">{title}</h3>}
+          <p className="max-h-[40vh] overflow-y-auto whitespace-pre-wrap text-sm leading-relaxed">
+            {content}
+          </p>
+          {(images.length > 0 || videos.length > 0) && (
+            <div className="flex flex-wrap gap-2">
+              {images.map((img) => (
+                <button
+                  key={img.path}
+                  type="button"
+                  className="cursor-zoom-in overflow-hidden rounded-lg"
+                  onClick={() => setPreviewImage(img)}
+                  title="查看大图"
+                >
+                  <Image
+                    src={img.url}
+                    alt={img.name}
+                    width={72}
+                    height={72}
+                    radius="none"
+                    className="size-[72px] object-cover"
+                  />
+                </button>
+              ))}
+              {videos.map((video) => (
+                <div key={video.path} className="relative size-[72px] overflow-hidden rounded-lg">
+                  <video src={video.url} muted className="size-full object-cover" />
+                  <span className="pointer-events-none absolute inset-0 flex items-center justify-center">
+                    <Play className="size-4 text-white drop-shadow" />
+                  </span>
+                </div>
+              ))}
+            </div>
+          )}
+        </Card>
+      </div>
 
       <PublishProgressCard
         publishStates={publishStates}
+        summary={summary}
         isPublishing={isPublishing}
         onViewAccount={onViewAccount}
         onCancelPublish={onCancelPublish}

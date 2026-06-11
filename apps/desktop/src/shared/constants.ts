@@ -1197,6 +1197,10 @@ export const IPC_CHANNELS = {
   APP_GET_VERSION: 'app:getVersion',
   APP_GET_AUTO_LAUNCH: 'app:getAutoLaunch',
   APP_SET_AUTO_LAUNCH: 'app:setAutoLaunch',
+  APP_GET_CLOSE_BEHAVIOR: 'app:getCloseBehavior',
+  APP_SET_CLOSE_BEHAVIOR: 'app:setCloseBehavior',
+  APP_EXPORT_DATA: 'app:exportData',
+  APP_IMPORT_DATA: 'app:importData',
   APP_REGISTER_LOCAL_FILES: 'app:registerLocalFiles',
   APP_GET_PLATFORMS: 'app:getPlatforms',
   APP_READ_FILE_AS_DATA_URL: 'app:readFileAsDataURL',
@@ -1226,6 +1230,8 @@ export const IPC_CHANNELS = {
   PUBLISH_GROUP_FILL: 'publishGroup:fill',
   PUBLISH_GROUP_SUBMIT_ONE: 'publishGroup:submitOne',
   PUBLISH_GROUP_SUBMIT_ALL: 'publishGroup:submitAll',
+  PUBLISH_GROUP_SKIP_TARGET: 'publishGroup:skipTarget',
+  PUBLISH_GROUP_RETRY_TARGET: 'publishGroup:retryTarget',
   PUBLISH_GROUP_UPDATE_STATUS: 'publishGroup:updateStatus',
 
   // KeepAlive

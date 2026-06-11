@@ -1,5 +1,6 @@
 import { app, BrowserWindow, ipcMain, nativeTheme, protocol, session } from 'electron'
 import { join } from 'path'
+import { existsSync, readdirSync, rmSync, statSync } from 'fs'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import { registerIpcHandlers } from './ipc'
 import { BrowserViewManager } from './browser/browserViewManager'
@@ -12,6 +13,8 @@ import { getDesktopUserAgent, handleLocalFileRequest, hardenSession } from './br
 import { closeAllAnonymizedProxies } from './proxy/accountProxy'
 import { openExternalUrl } from './browser/externalUrl'
 import { loadWindowState, trackWindowState } from './windowState'
+import { getCloseWindowBehavior } from './appSettings'
+import { createTray } from './tray'
 import log from 'electron-log/main'
 
 // Unified logging: console.* in the main process lands in
@@ -70,9 +73,63 @@ app.commandLine.appendSwitch('force-webrtc-ip-handling-policy', 'default_public_
 
 let mainWindow: BrowserWindow | null = null
 let browserViewManager: BrowserViewManager | null = null
+let isQuitting = false
+
+function showMainWindow(): void {
+  if (!mainWindow || mainWindow.isDestroyed()) return
+  if (mainWindow.isMinimized()) mainWindow.restore()
+  mainWindow.show()
+  mainWindow.focus()
+}
 const keepAliveService = new KeepAliveService()
 let proxyCleanupStarted = false
 let proxyCleanupComplete = false
+
+function cleanupPastedClipboardFiles(): void {
+  try {
+    // Legacy location only — current pasted images live in userData (see
+    // cleanupOrphanedPastedImages) so the publish form cache survives restarts.
+    rmSync(join(app.getPath('temp'), 'multipost-pasted'), { recursive: true, force: true })
+  } catch (error) {
+    console.warn('[Main] Failed to clean up pasted clipboard files:', error)
+  }
+}
+
+const PASTED_IMAGE_RETENTION_MS = 7 * 24 * 60 * 60 * 1000
+
+// Pasted screenshots persist in userData so form-cache restore works across
+// restarts, which means they would otherwise accumulate forever. Sweep files
+// past the retention window unless a saved draft still references them; the
+// renderer's restore path already tolerates (and reports) missing files.
+function cleanupOrphanedPastedImages(): void {
+  try {
+    const dir = join(app.getPath('userData'), 'pasted-images')
+    if (!existsSync(dir)) return
+
+    const referenced = new Set<string>()
+    for (const draft of DatabaseService.getInstance().listDrafts()) {
+      const paths = [...(draft.images || []), ...(draft.videos || []), draft.video, draft.cover]
+      for (const path of paths) {
+        if (path) referenced.add(path)
+      }
+    }
+
+    const now = Date.now()
+    for (const name of readdirSync(dir)) {
+      const filePath = join(dir, name)
+      if (referenced.has(filePath)) continue
+      try {
+        if (now - statSync(filePath).mtimeMs > PASTED_IMAGE_RETENTION_MS) {
+          rmSync(filePath, { force: true })
+        }
+      } catch {
+        // Skip files that vanish mid-sweep
+      }
+    }
+  } catch (error) {
+    console.warn('[Main] Failed to clean up orphaned pasted images:', error)
+  }
+}
 
 function cleanupAccountProxies(): void {
   if (proxyCleanupStarted || proxyCleanupComplete) {
@@ -91,6 +148,8 @@ function cleanupAccountProxies(): void {
 }
 
 app.on('will-quit', (event) => {
+  cleanupPastedClipboardFiles()
+
   if (proxyCleanupComplete) {
     return
   }
@@ -120,11 +179,13 @@ interface WindowChromeColors {
 }
 
 // The renderer chrome follows the system theme (next-themes), so the native
-// window background and title bar overlay must follow it too.
+// window background and title bar overlay must follow it too. Values mirror
+// the --background token in renderer global.css (light 100% / dark 3.9%);
+// any drift shows up as a colored seam around the page.
 function getWindowChromeColors(): WindowChromeColors {
   return nativeTheme.shouldUseDarkColors
-    ? { background: '#101014', symbol: '#cbd5e1' }
-    : { background: '#f7f8fa', symbol: '#334155' }
+    ? { background: '#0a0a0a', symbol: '#a3a3a3' }
+    : { background: '#ffffff', symbol: '#404040' }
 }
 
 function createWindow(): void {
@@ -178,6 +239,22 @@ function createWindow(): void {
     return { action: 'deny' }
   })
 
+  // Close keeps the app running in the background (tray on Windows/Linux,
+  // Dock on macOS) unless the user opted into quit-on-close.
+  mainWindow.on('close', (event) => {
+    if (isQuitting) return
+    if (getCloseWindowBehavior() === 'minimize') {
+      event.preventDefault()
+      mainWindow?.hide()
+      return
+    }
+    // quit-on-close must also quit on macOS, where window-all-closed doesn't
+    if (process.platform === 'darwin') {
+      isQuitting = true
+      app.quit()
+    }
+  })
+
   mainWindow.on('closed', () => {
     mainWindow = null
   })
@@ -217,6 +294,8 @@ app.whenReady().then(async () => {
 
   // Initialize database
   await DatabaseService.getInstance().initialize()
+
+  cleanupOrphanedPastedImages()
 
   // Register IPC handlers
   registerIpcHandlers(ipcMain, () => browserViewManager, keepAliveService)
@@ -263,9 +342,20 @@ app.whenReady().then(async () => {
     )
   }
 
+  createTray(showMainWindow)
+
   app.on('activate', function () {
-    if (BrowserWindow.getAllWindows().length === 0) createWindow()
+    if (BrowserWindow.getAllWindows().length === 0) {
+      createWindow()
+    } else {
+      // The window is usually just hidden (close = keep running)
+      showMainWindow()
+    }
   })
+})
+
+app.on('before-quit', () => {
+  isQuitting = true
 })
 
 app.on('window-all-closed', () => {

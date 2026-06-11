@@ -99,7 +99,7 @@ export function ProxyConfigSection({
       </Button>
 
       {expanded && (
-        <div className="flex flex-col gap-3 border p-3">
+        <div className="flex flex-col gap-3 rounded-xl bg-foreground/[0.03] p-3">
           <Checkbox isSelected={value.enabled} onValueChange={(enabled) => update({ enabled })}>
             启用代理
           </Checkbox>

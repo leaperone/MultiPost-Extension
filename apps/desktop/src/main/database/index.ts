@@ -59,6 +59,16 @@ export class DatabaseService {
     this.migrateDraftsTable()
   }
 
+  getDatabasePath(): string {
+    return join(app.getPath('userData'), 'data', 'multipost.db')
+  }
+
+  /** Online backup (WAL-safe) to an arbitrary destination file. */
+  async backupTo(filePath: string): Promise<void> {
+    if (!this.db) throw new Error('Database not initialized')
+    await this.db.backup(filePath)
+  }
+
   private tableColumns(table: string): string[] | null {
     if (!this.db) throw new Error('Database not initialized')
 
@@ -398,10 +408,14 @@ export class DatabaseService {
   setDefaultAccount(id: string, platform: PlatformType): void {
     if (!this.db) throw new Error('Database not initialized')
 
-    // Reset all accounts for this platform
-    this.db.prepare('UPDATE accounts SET is_default = 0 WHERE platform = ?').run(platform)
-    // Set the new default
-    this.db.prepare('UPDATE accounts SET is_default = 1 WHERE id = ?').run(id)
+    const db = this.db
+    const setDefault = db.transaction(() => {
+      // Reset all accounts for this platform
+      db.prepare('UPDATE accounts SET is_default = 0 WHERE platform = ?').run(platform)
+      // Set the new default
+      db.prepare('UPDATE accounts SET is_default = 1 WHERE id = ?').run(id)
+    })
+    setDefault()
   }
 
   // Task methods

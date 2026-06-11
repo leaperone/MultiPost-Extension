@@ -107,7 +107,7 @@ export function AboutPage(): React.ReactElement {
       {/* Footer */}
       <div className="text-center pt-4 border-t border-border">
         <p className="text-sm text-muted-foreground flex items-center justify-center gap-1">
-          Made with <Heart className="size-4 text-red-500 fill-red-500" /> by{' '}
+          Made with <Heart className="size-4 text-danger fill-danger" /> by{' '}
           <a
             href="https://leaper.one"
             target="_blank"

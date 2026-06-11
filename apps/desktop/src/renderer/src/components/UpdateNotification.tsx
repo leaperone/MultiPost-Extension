@@ -82,7 +82,7 @@ export function UpdateNotification(): React.ReactElement | null {
             <Button
               size="sm"
               variant="flat"
-              className="bg-white/20 text-white hover:bg-white/30"
+              className="bg-primary-foreground/20 text-primary-foreground hover:bg-primary-foreground/30"
               onPress={handleDownload}
             >
               立即下载
@@ -93,7 +93,7 @@ export function UpdateNotification(): React.ReactElement | null {
             <Button
               size="sm"
               variant="flat"
-              className="bg-white/20 text-white hover:bg-white/30"
+              className="bg-primary-foreground/20 text-primary-foreground hover:bg-primary-foreground/30"
               startContent={<RefreshCw className="size-3" />}
               onPress={handleInstall}
             >
@@ -105,7 +105,7 @@ export function UpdateNotification(): React.ReactElement | null {
             isIconOnly
             size="sm"
             variant="light"
-            className="text-white/80 hover:text-white hover:bg-white/10"
+            className="text-primary-foreground/80 hover:text-primary-foreground hover:bg-primary-foreground/10"
             onPress={() => setDismissed(true)}
           >
             <X className="size-4" />

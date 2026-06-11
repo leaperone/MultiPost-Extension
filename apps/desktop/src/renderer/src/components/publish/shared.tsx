@@ -13,8 +13,15 @@ import {
   Image as ImageIcon,
   X
 } from 'lucide-react'
-import { useState, useEffect, useMemo, useCallback } from 'react'
-import type { Account, FileData, PlatformType, SyncContentType } from '../../../../shared/types'
+import { useState, useEffect, useMemo, useCallback, useRef } from 'react'
+import type {
+  Account,
+  FileData,
+  PlatformType,
+  PublishGroupSummary,
+  PublishTargetStatus,
+  SyncContentType
+} from '../../../../shared/types'
 import {
   getPlatformPublishTarget,
   getPlatformPublishTargetsByContentType,
@@ -36,13 +43,17 @@ export interface PlatformPublishState {
   message?: string
 }
 
-// New account-based state for multi-account support
+// New account-based state for multi-account support; mirrors the publish
+// group's per-target state in the main process (status + executing step).
 export interface AccountPublishState {
   accountId: string
   platform: PlatformType
   displayName?: string
-  status: PublishStatus
-  message?: string
+  status: PublishTargetStatus
+  /** Live description of the executing step（等待页面加载/填充内容/提交发布）. */
+  step?: string
+  error?: string
+  postUrl?: string
 }
 
 // Platform categories for better organization
@@ -351,7 +362,7 @@ export function formatFileSize(bytes: number): string {
 export function getStatusIcon(status: PublishStatus): React.ReactNode {
   switch (status) {
     case 'pending':
-      return <Circle className="size-4 text-default-400" />
+      return <Circle className="size-4 text-muted-foreground" />
     case 'processing':
       return <Loader2 className="size-4 text-primary animate-spin" />
     case 'completed':
@@ -616,9 +627,30 @@ export function AccountSelector({
 }
 
 // Hook for managing account selection (supports multi-select per platform)
-export function useAccountSelection(contentType: SyncContentType) {
+/**
+ * Two-step publish flow shared by all publish pages: compose first (immersive
+ * editing), then configure (publish metadata + accounts on the left, content
+ * preview on the right).
+ */
+export type PublishStep = 'compose' | 'configure'
+
+export interface InitialAccountSelection {
+  accountIds?: string[]
+  otherPlatforms?: PlatformType[]
+}
+
+export function useAccountSelection(
+  contentType: SyncContentType,
+  /** Cached selection to restore instead of the per-platform defaults; read once on mount. */
+  initialSelection?: InitialAccountSelection
+) {
+  // Locked at mount so an unstable object literal from the caller can't
+  // re-trigger the account-loading effect (and wipe the user's selection).
+  const initialSelectionRef = useRef(initialSelection)
   const [selectedAccountIds, setSelectedAccountIds] = useState<Set<string>>(new Set())
-  const [selectedOtherPlatforms, setSelectedOtherPlatforms] = useState<Set<PlatformType>>(new Set())
+  const [selectedOtherPlatforms, setSelectedOtherPlatforms] = useState<Set<PlatformType>>(
+    () => new Set(initialSelectionRef.current?.otherPlatforms || [])
+  )
   const [accounts, setAccounts] = useState<Account[]>([])
 
   // Load accounts
@@ -627,6 +659,25 @@ export function useAccountSelection(contentType: SyncContentType) {
       try {
         const accountList = await window.api.account.list()
         setAccounts(accountList)
+
+        // A restored selection wins over defaults, filtered to accounts that
+        // still exist and can publish this content type.
+        const cachedIds = initialSelectionRef.current?.accountIds
+        if (cachedIds && cachedIds.length > 0) {
+          const restorable = new Set<string>()
+          for (const account of accountList) {
+            if (
+              cachedIds.includes(account.id) &&
+              getPlatformPublishTarget(account.platform, contentType)
+            ) {
+              restorable.add(account.id)
+            }
+          }
+          if (restorable.size > 0) {
+            setSelectedAccountIds(restorable)
+            return
+          }
+        }
 
         // Auto-select default accounts for each platform
         const defaults = new Set<string>()
@@ -852,15 +903,59 @@ export function AutoSubmitToggle({
 interface PublishProgressCardProps {
   publishStates: AccountPublishState[]
   isPublishing: boolean
+  summary?: PublishGroupSummary | null
   onViewAccount?: (accountId: string) => void
   onCancelPublish?: () => void
   onRetryAccount?: (accountId: string) => void
   onCancelAccount?: (accountId: string) => void
 }
 
+function isTerminalTarget(status: PublishTargetStatus): boolean {
+  return status === 'success' || status === 'failed' || status === 'cancelled'
+}
+
+function getTargetStatusIcon(status: PublishTargetStatus): React.ReactNode {
+  switch (status) {
+    case 'pending':
+      return <Circle className="size-4 text-muted-foreground" />
+    case 'filling':
+      return <Loader2 className="size-4 text-primary animate-spin" />
+    case 'ready':
+      return <CheckCircle className="size-4 text-success/70" />
+    case 'success':
+      return <CheckCircle className="size-4 text-success" />
+    case 'failed':
+      return <XCircle className="size-4 text-danger" />
+    case 'cancelled':
+      return <StopCircle className="size-4 text-muted-foreground" />
+    default:
+      return null
+  }
+}
+
+function getTargetStatusText(state: AccountPublishState): string {
+  switch (state.status) {
+    case 'pending':
+      return state.step || '等待执行'
+    case 'filling':
+      return state.step || '填充内容…'
+    case 'ready':
+      return state.step || '已填充，等待发布'
+    case 'success':
+      return '发布成功'
+    case 'failed':
+      return state.error || '发布失败'
+    case 'cancelled':
+      return '已跳过'
+    default:
+      return ''
+  }
+}
+
 export function PublishProgressCard({
   publishStates,
   isPublishing,
+  summary,
   onViewAccount,
   onCancelPublish,
   onRetryAccount,
@@ -868,25 +963,22 @@ export function PublishProgressCard({
 }: PublishProgressCardProps): React.ReactElement | null {
   const [isCollapsed, setIsCollapsed] = useState(false)
 
+  const allDone = useMemo(
+    () => publishStates.length > 0 && publishStates.every((s) => isTerminalTarget(s.status)),
+    [publishStates]
+  )
+
   useEffect(() => {
-    if (!isPublishing && publishStates.length > 0) {
-      const allDone = publishStates.every(
-        (s) => s.status === 'completed' || s.status === 'failed' || s.status === 'cancelled'
-      )
-      if (allDone) {
-        const timer = setTimeout(() => setIsCollapsed(true), 2000)
-        return () => clearTimeout(timer)
-      }
-    }
-    if (isPublishing) {
+    if (!allDone) {
       setIsCollapsed(false)
     }
-  }, [isPublishing, publishStates])
+  }, [allDone])
 
   const progressSummary = useMemo(() => {
-    const completed = publishStates.filter((s) => s.status === 'completed').length
+    const success = publishStates.filter((s) => s.status === 'success').length
     const failed = publishStates.filter((s) => s.status === 'failed').length
-    return { completed, failed, total: publishStates.length }
+    const cancelled = publishStates.filter((s) => s.status === 'cancelled').length
+    return { success, failed, cancelled, total: publishStates.length }
   }, [publishStates])
 
   if (publishStates.length === 0) return null
@@ -898,7 +990,7 @@ export function PublishProgressCard({
         onClick={() => setIsCollapsed(!isCollapsed)}
       >
         <div className="flex items-center gap-2">
-          <h3 className="text-base font-semibold">发布进度</h3>
+          <h3 className="text-base font-semibold">{allDone ? '发布结果' : '发布进度'}</h3>
           {isCollapsed ? (
             <ChevronDown className="size-4 text-muted-foreground" />
           ) : (
@@ -907,9 +999,12 @@ export function PublishProgressCard({
         </div>
         <div className="flex items-center gap-2">
           <span className="text-sm text-muted-foreground">
-            {progressSummary.completed}/{progressSummary.total} 成功
+            {progressSummary.success}/{progressSummary.total} 成功
             {progressSummary.failed > 0 && (
               <span className="text-danger ml-1">, {progressSummary.failed} 失败</span>
+            )}
+            {progressSummary.cancelled > 0 && (
+              <span className="ml-1">, {progressSummary.cancelled} 跳过</span>
             )}
           </span>
           {isPublishing && onCancelPublish && (
@@ -938,29 +1033,45 @@ export function PublishProgressCard({
             const displayLabel = state.displayName
               ? `${platformInfo?.name || state.platform} (${state.displayName})`
               : platformInfo?.name || state.platform
+            const statusText = getTargetStatusText(state)
             return (
               <li
                 key={state.accountId}
                 className="flex items-center gap-3 py-3 border-b last:border-b-0"
               >
-                <span className="flex-shrink-0">{getStatusIcon(state.status)}</span>
+                <span className="flex-shrink-0">{getTargetStatusIcon(state.status)}</span>
                 <PlatformIcon platform={state.platform} size={16} />
-                <span className="font-medium min-w-[80px]">{displayLabel}</span>
-                <span className="text-sm text-muted-foreground flex-1">
-                  {state.message || getDefaultMessage(state.status)}
+                <span className="min-w-[80px] max-w-[40%] truncate font-medium" title={displayLabel}>
+                  {displayLabel}
+                </span>
+                <span
+                  className={`flex-1 truncate text-sm ${
+                    state.status === 'failed' ? 'text-danger' : 'text-muted-foreground'
+                  }`}
+                  title={statusText}
+                >
+                  {statusText}
                 </span>
                 <div className="flex items-center gap-1 flex-shrink-0">
-                  {onCancelAccount && state.status === 'pending' && isPublishing && (
+                  {state.status === 'success' && state.postUrl && (
                     <Button
-                      variant="flat"
-                      color="danger"
+                      variant="light"
+                      size="sm"
+                      onPress={() => window.open(state.postUrl, '_blank')}
+                    >
+                      查看链接
+                    </Button>
+                  )}
+                  {onCancelAccount && !isTerminalTarget(state.status) && (
+                    <Button
+                      variant="light"
                       size="sm"
                       onPress={() => onCancelAccount(state.accountId)}
                     >
-                      取消
+                      跳过
                     </Button>
                   )}
-                  {onRetryAccount && state.status === 'failed' && (
+                  {onRetryAccount && (state.status === 'failed' || state.status === 'cancelled') && (
                     <Button
                       variant="flat"
                       color="primary"
@@ -976,6 +1087,7 @@ export function PublishProgressCard({
                       size="sm"
                       isIconOnly
                       onPress={() => onViewAccount(state.accountId)}
+                      title="查看该账号的发布页面"
                     >
                       <Eye className="size-4" />
                     </Button>
@@ -985,6 +1097,36 @@ export function PublishProgressCard({
             )
           })}
         </ul>
+      )}
+
+      {/* 发布总结：全部目标结束后给一份"实际发生了什么"的报告 */}
+      {summary && !isCollapsed && (
+        <div className="mt-4 flex flex-col gap-2 rounded-xl bg-foreground/[0.03] p-4">
+          <span className="text-sm font-medium">本次发布总结</span>
+          <p className="text-sm text-muted-foreground">
+            共 {summary.targets.length} 个账号：成功{' '}
+            {summary.targets.filter((t) => t.status === 'success').length} · 失败{' '}
+            {summary.targets.filter((t) => t.status === 'failed').length} · 跳过{' '}
+            {summary.targets.filter((t) => t.status === 'cancelled').length}
+          </p>
+          {summary.targets.some((t) => t.status === 'failed') && (
+            <ul className="flex flex-col gap-1">
+              {summary.targets
+                .filter((t) => t.status === 'failed')
+                .map((t) => (
+                  <li key={t.accountId} className="flex items-baseline gap-2 text-xs">
+                    <span className="shrink-0 font-medium">{t.displayName}</span>
+                    <span className="truncate text-danger" title={t.error}>
+                      {t.error || '未知错误'}
+                    </span>
+                  </li>
+                ))}
+            </ul>
+          )}
+          {summary.targets.some((t) => t.status === 'failed' || t.status === 'cancelled') && (
+            <p className="text-xs text-muted-foreground">未完成的账号可在上方逐个重试。</p>
+          )}
+        </div>
       )}
     </Card>
   )

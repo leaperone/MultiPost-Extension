@@ -1,7 +1,7 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import type { Draft, PlatformType, SyncContentData, SyncContentType } from '@shared/types'
 
-import { usePublishStore } from '../../store/publish.store'
+import { isTerminalTargetStatus, usePublishStore } from '../../store/publish.store'
 import { useUiStore } from '../../store/ui.store'
 import { DynamicPublishPage } from '../publish/DynamicPublishPage'
 import { VideoPublishPage } from '../publish/VideoPublishPage'
@@ -9,13 +9,21 @@ import { ArticlePublishPage } from '../publish/ArticlePublishPage'
 import { PodcastPublishPage } from '../publish/PodcastPublishPage'
 
 /**
- * Bridges the per-content-type publish forms to the publish-group flow: the
- * created group tab takes over fill/submit progress, so the legacy in-page
- * progress card stays empty by design.
+ * Bridges the per-content-type publish forms to the publish-group flow. The
+ * group's per-target progress (status + executing step + errors) is mirrored
+ * into the in-page progress card, with per-account skip/retry and a final
+ * run summary.
  */
 export function PublishView({ contentType }: { contentType: SyncContentType }): React.ReactElement {
   const startPublish = usePublishStore((state) => state.startPublish)
   const isStarting = usePublishStore((state) => state.isStarting)
+  const activeGroupId = usePublishStore((state) => state.activeGroupId)
+  const activeContentType = usePublishStore((state) => state.activeContentType)
+  const autoPublish = usePublishStore((state) => state.autoPublish)
+  const targets = usePublishStore((state) => state.targets)
+  const summary = usePublishStore((state) => state.summary)
+  const skipTarget = usePublishStore((state) => state.skipTarget)
+  const retryTarget = usePublishStore((state) => state.retryTarget)
   const draftToEdit = useUiStore((state) => state.draftToEdit)
   const setDraftToEdit = useUiStore((state) => state.setDraftToEdit)
 
@@ -48,9 +56,39 @@ export function PublishView({ contentType }: { contentType: SyncContentType }): 
     [startPublish]
   )
 
+  const handleViewAccount = useCallback(
+    (accountId: string) => {
+      if (!activeGroupId) return
+      void window.api.publishGroup
+        .show(activeGroupId)
+        .then(() => window.api.publishGroup.switchTab(activeGroupId, accountId))
+        .catch((error) => console.error('Failed to open group tab:', error))
+    },
+    [activeGroupId]
+  )
+
+  const handleCancelPublish = useCallback(() => {
+    if (!activeGroupId) return
+    void window.api.publish.cancel(activeGroupId).catch((error: unknown) => {
+      console.error('Failed to cancel publish group:', error)
+    })
+  }, [activeGroupId])
+
+  // Only this page's run is shown here; another content type's run stays in
+  // its own page. The form locks while an auto-publish run is still working.
+  const isRunForThisPage = activeContentType === contentType
+  const hasActiveRun = useMemo(
+    () => targets.some((target) => !isTerminalTargetStatus(target.status)),
+    [targets]
+  )
   const commonProps = {
-    publishStates: [],
-    isPublishing: isStarting
+    publishStates: isRunForThisPage ? targets : [],
+    isPublishing: isStarting || (isRunForThisPage && autoPublish && hasActiveRun),
+    summary: isRunForThisPage ? summary : null,
+    onViewAccount: handleViewAccount,
+    onCancelPublish: handleCancelPublish,
+    onRetryAccount: (accountId: string) => void retryTarget(accountId),
+    onCancelAccount: (accountId: string) => void skipTarget(accountId)
   }
 
   switch (contentType) {

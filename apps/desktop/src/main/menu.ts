@@ -14,6 +14,19 @@ export function createMenu(): void {
             checkForUpdates()
           }
         },
+        {
+          label: '偏好设置...',
+          accelerator: 'CmdOrCtrl+,',
+          click: (): void => {
+            const manager = getBrowserViewManager()
+            if (!manager) {
+              return
+            }
+            void manager.switchToHome().then(() => {
+              manager.broadcastToUi('multipost:ui:navigate', { view: 'settings' })
+            })
+          }
+        },
         { type: 'separator' },
         {
           label: '隐藏 MultiPost',

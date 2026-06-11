@@ -22,12 +22,21 @@ import type {
   UpdateStatus,
   UpdateInfo,
   GroupTab,
+  PublishGroupSummary,
   PublishGroup,
   KeepAliveStatus
 } from '../shared/types'
 
 // Custom APIs for renderer
 const api = {
+  onUiNavigate: (callback: (data: { view: string }) => void) => {
+    const listener = (_: Electron.IpcRendererEvent, data: { view: string }): void => callback(data)
+    ipcRenderer.on('multipost:ui:navigate', listener)
+    return (): void => {
+      ipcRenderer.removeListener('multipost:ui:navigate', listener)
+    }
+  },
+
   // Account group management
   group: {
     list: (): Promise<AccountGroup[]> => ipcRenderer.invoke(IPC_CHANNELS.GROUP_LIST),
@@ -157,6 +166,9 @@ const api = {
         data,
         autoSubmit
       ),
+    // Cancels a whole publish run (group or executor task) and closes its views
+    cancel: (taskId: string): Promise<void> =>
+      ipcRenderer.invoke(IPC_CHANNELS.PUBLISH_CANCEL, taskId),
     onProgress: (callback: (payload: PublishEventPayload) => void) => {
       const listener = (_: Electron.IpcRendererEvent, payload: PublishEventPayload) => callback(payload)
       ipcRenderer.on('multipost:publish:progress', listener)
@@ -222,6 +234,13 @@ const api = {
     getAutoLaunch: (): Promise<boolean> => ipcRenderer.invoke(IPC_CHANNELS.APP_GET_AUTO_LAUNCH),
     setAutoLaunch: (enabled: boolean): Promise<boolean> =>
       ipcRenderer.invoke(IPC_CHANNELS.APP_SET_AUTO_LAUNCH, enabled),
+    getCloseBehavior: (): Promise<'minimize' | 'quit'> =>
+      ipcRenderer.invoke(IPC_CHANNELS.APP_GET_CLOSE_BEHAVIOR),
+    setCloseBehavior: (behavior: 'minimize' | 'quit'): Promise<'minimize' | 'quit'> =>
+      ipcRenderer.invoke(IPC_CHANNELS.APP_SET_CLOSE_BEHAVIOR, behavior),
+    // Backup/restore the local database; resolves false when the user cancels
+    exportData: (): Promise<boolean> => ipcRenderer.invoke(IPC_CHANNELS.APP_EXPORT_DATA),
+    importData: (): Promise<boolean> => ipcRenderer.invoke(IPC_CHANNELS.APP_IMPORT_DATA),
     getPlatforms: (): Promise<PlatformInfo[]> => ipcRenderer.invoke(IPC_CHANNELS.APP_GET_PLATFORMS),
     getFileInfo: (filePath: string): Promise<FileData> =>
       ipcRenderer.invoke(IPC_CHANNELS.APP_GET_FILE_INFO, filePath),
@@ -345,6 +364,12 @@ const api = {
     submitAll: (groupId: string): Promise<void> =>
       ipcRenderer.invoke(IPC_CHANNELS.PUBLISH_GROUP_SUBMIT_ALL, groupId),
 
+    skipTarget: (groupId: string, accountId: string): Promise<void> =>
+      ipcRenderer.invoke(IPC_CHANNELS.PUBLISH_GROUP_SKIP_TARGET, groupId, accountId),
+
+    retryTarget: (groupId: string, accountId: string): Promise<void> =>
+      ipcRenderer.invoke(IPC_CHANNELS.PUBLISH_GROUP_RETRY_TARGET, groupId, accountId),
+
     // Events
     onGroupTabsChanged: (
       callback: (data: { groupId: string; tabs: GroupTab[]; status?: string }) => void
@@ -355,6 +380,13 @@ const api = {
       ) => callback(data)
       ipcRenderer.on('multipost:browser:groupTabsChanged', listener)
       return () => ipcRenderer.removeListener('multipost:browser:groupTabsChanged', listener)
+    },
+
+    onGroupSummary: (callback: (summary: PublishGroupSummary) => void) => {
+      const listener = (_: Electron.IpcRendererEvent, summary: PublishGroupSummary) =>
+        callback(summary)
+      ipcRenderer.on('multipost:publish:groupSummary', listener)
+      return () => ipcRenderer.removeListener('multipost:publish:groupSummary', listener)
     }
   },
 

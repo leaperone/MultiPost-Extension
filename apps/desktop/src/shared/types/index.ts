@@ -477,6 +477,26 @@ export interface GroupTab {
   displayName: string
   status: PublishTargetStatus
   isActive: boolean
+  /** Human-readable description of the step currently executing (等待页面加载/填充内容/提交中). */
+  step?: string
+  error?: string
+  postUrl?: string
+}
+
+// 发布 Group 结束后的总结（每个目标的最终结果）
+export interface PublishGroupSummary {
+  groupId: string
+  groupName: string
+  contentType: SyncContentType
+  finishedAt: number
+  targets: Array<{
+    accountId: string
+    platform: PlatformType
+    displayName: string
+    status: PublishTargetStatus
+    error?: string
+    postUrl?: string
+  }>
 }
 
 // 发布 Group 配置

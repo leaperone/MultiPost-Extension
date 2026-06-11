@@ -3,6 +3,24 @@ import { UpdateNotification } from './components/UpdateNotification'
 import { BrowserTabs } from './components/BrowserTabs'
 import { NativeShell } from './components/native/NativeShell'
 import { useTabsStore } from './store/tabs.store'
+import { useUiStore, type NativeView } from './store/ui.store'
+
+const NATIVE_VIEWS = new Set<NativeView>([
+  'home',
+  'publish-dynamic',
+  'publish-video',
+  'publish-article',
+  'publish-podcast',
+  'accounts',
+  'drafts',
+  'history',
+  'settings',
+  'about'
+])
+
+function isNativeView(value: string): value is NativeView {
+  return NATIVE_VIEWS.has(value as NativeView)
+}
 
 /**
  * Desktop App - 浏览器架构
@@ -13,6 +31,13 @@ import { useTabsStore } from './store/tabs.store'
  */
 function App(): React.ReactElement {
   useEffect(() => useTabsStore.getState().init(), [])
+  useEffect(() => {
+    return window.api.onUiNavigate(({ view }) => {
+      if (isNativeView(view)) {
+        useUiStore.getState().navigate(view)
+      }
+    })
+  }, [])
 
   return (
     <div className="flex h-screen flex-col bg-background">

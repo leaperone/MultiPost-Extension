@@ -1,4 +1,16 @@
-import { Settings, Monitor, Database, Sun, Moon, LayoutGrid, Download, Activity } from 'lucide-react'
+import {
+  Settings,
+  Monitor,
+  Database,
+  Sun,
+  Moon,
+  LayoutGrid,
+  Download,
+  Activity,
+  HardDriveDownload,
+  HardDriveUpload,
+  SquareX
+} from 'lucide-react'
 import { Switch, Button, Select, SelectItem, addToast } from '@heroui/react'
 import { useTheme } from 'next-themes'
 import { useEffect, useState, useCallback } from 'react'
@@ -147,6 +159,115 @@ function CloseAllBehaviorSetting(): React.ReactElement {
   )
 }
 
+function CloseWindowBehaviorSetting(): React.ReactElement {
+  const [behavior, setBehavior] = useState<'minimize' | 'quit'>('minimize')
+  const [loaded, setLoaded] = useState(false)
+
+  useEffect(() => {
+    window.api.app
+      .getCloseBehavior()
+      .then((value) => {
+        setBehavior(value)
+        setLoaded(true)
+      })
+      .catch(() => setLoaded(true))
+  }, [])
+
+  const handleChange = async (value: 'minimize' | 'quit'): Promise<void> => {
+    setBehavior(value)
+    try {
+      await window.api.app.setCloseBehavior(value)
+    } catch (error) {
+      console.error('Failed to set close behavior:', error)
+      addToast({ title: '设置失败', description: '无法修改关闭窗口行为', hideIcon: true })
+    }
+  }
+
+  return (
+    <SettingItem
+      icon={SquareX}
+      title="关闭主窗口时"
+      description="保持后台运行可继续账号保活与定时任务"
+    >
+      <Select
+        size="sm"
+        selectedKeys={[behavior]}
+        isDisabled={!loaded}
+        onSelectionChange={(keys) => {
+          const selected = Array.from(keys)[0] as 'minimize' | 'quit'
+          if (selected) void handleChange(selected)
+        }}
+        className="w-36"
+        aria-label="关闭主窗口时的行为"
+        disallowEmptySelection
+      >
+        <SelectItem key="minimize">保持后台运行</SelectItem>
+        <SelectItem key="quit">退出应用</SelectItem>
+      </Select>
+    </SettingItem>
+  )
+}
+
+function DataBackupSetting(): React.ReactElement {
+  const [exporting, setExporting] = useState(false)
+  const [importing, setImporting] = useState(false)
+
+  const handleExport = async (): Promise<void> => {
+    setExporting(true)
+    try {
+      const exported = await window.api.app.exportData()
+      if (exported) {
+        addToast({ title: '导出成功', description: '数据备份已保存', hideIcon: true })
+      }
+    } catch (error) {
+      console.error('Failed to export data:', error)
+      addToast({ title: '导出失败', description: '无法导出数据备份', hideIcon: true })
+    } finally {
+      setExporting(false)
+    }
+  }
+
+  const handleImport = async (): Promise<void> => {
+    setImporting(true)
+    try {
+      // On success the app relaunches itself, so there is no "done" toast
+      await window.api.app.importData()
+    } catch (error) {
+      console.error('Failed to import data:', error)
+      addToast({
+        title: '导入失败',
+        description: error instanceof Error ? error.message : '无法导入数据备份',
+        hideIcon: true
+      })
+    } finally {
+      setImporting(false)
+    }
+  }
+
+  return (
+    <>
+      <SettingItem
+        icon={HardDriveDownload}
+        title="导出数据备份"
+        description="导出账号配置、草稿与发布历史（不含平台登录状态）"
+      >
+        <Button variant="flat" size="sm" isLoading={exporting} onPress={handleExport}>
+          导出
+        </Button>
+      </SettingItem>
+      <SettingItem
+        icon={HardDriveUpload}
+        title="导入数据备份"
+        description="导入备份会替换当前数据并重启应用"
+      >
+        <Button variant="flat" size="sm" isLoading={importing} onPress={handleImport}>
+          导入
+        </Button>
+      </SettingItem>
+    </>
+  )
+}
+
 function formatTime(ts: number): string {
   const d = new Date(ts)
   const pad = (n: number): string => String(n).padStart(2, '0')
@@ -233,6 +354,7 @@ export function SettingsPage(): React.ReactElement {
             <ThemeSwitcher />
           </SettingItem>
           <AutoLaunchSetting />
+          <CloseWindowBehaviorSetting />
           <KeepAliveSetting />
         </div>
       </div>
@@ -260,6 +382,7 @@ export function SettingsPage(): React.ReactElement {
           >
             <span className="text-xs text-muted-foreground">已启用</span>
           </SettingItem>
+          <DataBackupSetting />
         </div>
       </div>
 

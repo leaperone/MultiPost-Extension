@@ -9,6 +9,9 @@ export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), '')
   console.log('[Config] MULTIPOST_WEB_URL:', env.MULTIPOST_WEB_URL)
 
+  // Raise the source-reading bar for shipped builds, but keep dev stack traces readable
+  const minify = mode === 'production' ? ('esbuild' as const) : false
+
   return {
     main: {
       plugins: [injectorBundlesVirtualModulePlugin(), externalizeDepsPlugin()],
@@ -22,6 +25,7 @@ export default defineConfig(({ mode }) => {
         }
       },
       build: {
+        minify,
         rollupOptions: {
           external: ['better-sqlite3']
         }
@@ -35,6 +39,7 @@ export default defineConfig(({ mode }) => {
         }
       },
       build: {
+        minify,
         rollupOptions: {
           input: {
             index: resolve('src/preload/index.ts'),
@@ -51,7 +56,10 @@ export default defineConfig(({ mode }) => {
           '@': resolve('src/renderer/src')
         }
       },
-      plugins: [tailwindcss(), react()]
+      plugins: [tailwindcss(), react()],
+      build: {
+        minify
+      }
     }
   }
 })

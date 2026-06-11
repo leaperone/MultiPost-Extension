@@ -1,23 +1,19 @@
 import { useState, useEffect, useCallback, useMemo } from 'react'
 import {
   CheckCircle2,
-  Circle,
   FolderPlus,
-  KeyRound,
   LogIn,
   Pencil,
   Plus,
   RefreshCw,
   Search,
-  ShieldCheck,
   Star,
   Trash2,
   Users
 } from 'lucide-react'
 import { Button } from '@heroui/react'
-import { Card, CardBody, CardHeader } from '@heroui/react'
+import { Card } from '@heroui/react'
 import { Chip } from '@heroui/react'
-import { Tabs, Tab } from '@heroui/react'
 import {
   Modal,
   ModalContent,
@@ -49,6 +45,14 @@ interface AccountsPageProps {
 }
 
 type ContentTypeFilter = 'ALL' | SyncContentType
+
+type StatusFilter = 'all' | 'online' | 'offline'
+
+const STATUS_FILTERS: Array<{ key: StatusFilter; label: string }> = [
+  { key: 'all', label: '全部状态' },
+  { key: 'online', label: '已登录' },
+  { key: 'offline', label: '未登录' }
+]
 
 const CONTENT_TYPE_FILTERS: Array<{ key: ContentTypeFilter; label: string }> = [
   { key: 'ALL', label: '全部' },
@@ -101,6 +105,12 @@ export function AccountsPage({ onLoginAccount }: AccountsPageProps): React.React
   const [editProxyDraft, setEditProxyDraft] = useState<ProxyConfigDraft>(() =>
     createProxyConfigDraft()
   )
+
+  // List filters (platform rail + toolbar), modeled after mature account managers
+  const [platformFilter, setPlatformFilter] = useState<PlatformType | 'all'>('all')
+  const [statusFilter, setStatusFilter] = useState<StatusFilter>('all')
+  const [accountSearch, setAccountSearch] = useState('')
+  const [railSearch, setRailSearch] = useState('')
 
   const loadData = useCallback(async () => {
     try {
@@ -405,21 +415,187 @@ export function AccountsPage({ onLoginAccount }: AccountsPageProps): React.React
     return categorized
   }, [contentTypeFilter, platformSearch])
 
+  // Platforms that actually have accounts, with counts, for the left rail
+  const platformEntries = useMemo(() => {
+    const counts = new Map<PlatformType, number>()
+    for (const account of accounts) {
+      counts.set(account.platform, (counts.get(account.platform) || 0) + 1)
+    }
+    const query = railSearch.trim().toLowerCase()
+    return Array.from(counts.entries())
+      .map(([platform, count]) => ({
+        platform,
+        count,
+        name: PLATFORMS[platform]?.name || platform
+      }))
+      .filter(
+        (entry) =>
+          !query ||
+          entry.name.toLowerCase().includes(query) ||
+          entry.platform.toLowerCase().includes(query)
+      )
+      .sort((a, b) => b.count - a.count || a.name.localeCompare(b.name, 'zh-Hans-CN'))
+  }, [accounts, railSearch])
+
+  const visibleAccounts = useMemo(() => {
+    const query = accountSearch.trim().toLowerCase()
+    return accounts.filter((account) => {
+      if (platformFilter !== 'all' && account.platform !== platformFilter) return false
+      if (statusFilter === 'online' && !account.isLoggedIn) return false
+      if (statusFilter === 'offline' && account.isLoggedIn) return false
+      if (query) {
+        const label = getAccountLabel(account).toLowerCase()
+        const username = (account.username || '').toLowerCase()
+        if (!label.includes(query) && !username.includes(query)) return false
+      }
+      return true
+    })
+  }, [accounts, platformFilter, statusFilter, accountSearch])
+
   return (
-    <div className="flex h-full flex-col gap-5 overflow-auto bg-default-50/40 p-5">
-      <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
-        <div>
-          <div className="flex items-center gap-3">
-            <div className="flex size-11 items-center justify-center rounded-xl border bg-background text-primary">
-              <KeyRound className="size-5" />
-            </div>
-            <div>
-              <h1 className="text-2xl font-semibold tracking-normal">账号管理</h1>
-              <p className="text-sm text-default-500">管理登录状态、默认账号、分组和代理配置</p>
-            </div>
-          </div>
+    <div className="flex h-full min-h-0">
+      {/* 左侧：平台 / 分组筛选栏 */}
+      <aside className="flex w-60 shrink-0 flex-col gap-4 overflow-y-auto border-r p-4">
+        <Input
+          size="sm"
+          value={railSearch}
+          onValueChange={setRailSearch}
+          placeholder="搜索平台"
+          startContent={<Search className="size-4 text-muted-foreground" />}
+        />
+
+        <div className="flex flex-col gap-0.5">
+          <span className="px-2.5 pb-1 text-xs font-medium text-muted-foreground">平台</span>
+          <button
+            type="button"
+            onClick={() => setPlatformFilter('all')}
+            className={`flex items-center justify-between rounded-lg px-2.5 py-2 text-sm transition-colors ${
+              platformFilter === 'all'
+                ? 'bg-foreground/[0.06] font-medium'
+                : 'hover:bg-foreground/[0.03]'
+            }`}
+          >
+            <span className="flex items-center gap-2">
+              <Users className="size-4 text-muted-foreground" />
+              全部平台
+            </span>
+            <span className="text-xs tabular-nums text-muted-foreground">{accounts.length}</span>
+          </button>
+          {platformEntries.map((entry) => (
+            <button
+              key={entry.platform}
+              type="button"
+              onClick={() => setPlatformFilter(entry.platform)}
+              className={`flex items-center justify-between rounded-lg px-2.5 py-2 text-sm transition-colors ${
+                platformFilter === entry.platform
+                  ? 'bg-foreground/[0.06] font-medium'
+                  : 'hover:bg-foreground/[0.03]'
+              }`}
+            >
+              <span className="flex min-w-0 items-center gap-2">
+                <PlatformIcon platform={entry.platform} size={16} />
+                <span className="truncate">{entry.name}</span>
+              </span>
+              <span className="text-xs tabular-nums text-muted-foreground">{entry.count}</span>
+            </button>
+          ))}
+          {platformEntries.length === 0 && accounts.length > 0 && (
+            <span className="px-2.5 py-2 text-xs text-muted-foreground">没有匹配的平台</span>
+          )}
         </div>
-        <div className="flex shrink-0 gap-2">
+
+        <div className="flex flex-col gap-0.5">
+          <div className="flex items-center justify-between px-2.5 pb-1">
+            <span className="text-xs font-medium text-muted-foreground">分组</span>
+            <button
+              type="button"
+              onClick={onAddGroupOpen}
+              title="新建分组"
+              className="rounded p-1 text-muted-foreground transition-colors hover:bg-foreground/[0.06] hover:text-foreground"
+            >
+              <FolderPlus className="size-3.5" />
+            </button>
+          </div>
+          <button
+            type="button"
+            onClick={() => setSelectedGroup(null)}
+            className={`flex items-center gap-2 rounded-lg px-2.5 py-2 text-sm transition-colors ${
+              selectedGroup === null
+                ? 'bg-foreground/[0.06] font-medium'
+                : 'hover:bg-foreground/[0.03]'
+            }`}
+          >
+            全部分组
+          </button>
+          {groups.map((group) => (
+            <div
+              key={group.id}
+              className={`group flex items-center rounded-lg transition-colors ${
+                selectedGroup === group.id ? 'bg-foreground/[0.06]' : 'hover:bg-foreground/[0.03]'
+              }`}
+            >
+              <button
+                type="button"
+                onClick={() => setSelectedGroup(group.id)}
+                className={`flex min-w-0 flex-1 items-center gap-2 px-2.5 py-2 text-left text-sm ${
+                  selectedGroup === group.id ? 'font-medium' : ''
+                }`}
+              >
+                {group.color && (
+                  <span className="size-2 shrink-0 rounded-full" style={{ backgroundColor: group.color }} />
+                )}
+                <span className="truncate">{group.name}</span>
+              </button>
+              <button
+                type="button"
+                className="mr-1.5 rounded p-0.5 opacity-0 transition-opacity hover:bg-foreground/[0.08] group-hover:opacity-100"
+                onClick={() => handleDeleteGroup(group.id)}
+                title="删除分组"
+              >
+                <Trash2 className="size-3" />
+              </button>
+            </div>
+          ))}
+          {groups.length === 0 && (
+            <span className="px-2.5 py-1 text-xs text-muted-foreground">暂无分组</span>
+          )}
+        </div>
+      </aside>
+
+      {/* 主区：工具栏 + 账号列表 */}
+      <div className="flex min-w-0 flex-1 flex-col gap-4 overflow-y-auto p-5">
+        <div>
+          <h1 className="text-2xl font-semibold tracking-tight">账号管理</h1>
+          <p className="mt-1 text-sm text-muted-foreground">
+            {accountStats.total} 个账号 · {accountStats.loggedIn} 个已登录 ·{' '}
+            {accountStats.platformCount} 个平台
+          </p>
+        </div>
+
+        <div className="flex flex-wrap items-center gap-2">
+          <Select
+            size="sm"
+            aria-label="登录状态筛选"
+            selectedKeys={[statusFilter]}
+            onChange={(e) => setStatusFilter((e.target.value as StatusFilter) || 'all')}
+            className="w-32 shrink-0"
+            disallowEmptySelection
+          >
+            {STATUS_FILTERS.map((filter) => (
+              <SelectItem key={filter.key}>{filter.label}</SelectItem>
+            ))}
+          </Select>
+          <Input
+            size="sm"
+            value={accountSearch}
+            onValueChange={setAccountSearch}
+            placeholder="搜索账号名称"
+            startContent={<Search className="size-4 text-muted-foreground" />}
+            className="w-56"
+            isClearable
+            onClear={() => setAccountSearch('')}
+          />
+          <div className="flex-1" />
           <Button
             size="sm"
             variant="bordered"
@@ -430,224 +606,169 @@ export function AccountsPage({ onLoginAccount }: AccountsPageProps): React.React
             {!isRefreshingAll && <RefreshCw className="size-4" />}
             检测全部
           </Button>
-          <Button size="sm" variant="bordered" onPress={onAddGroupOpen}>
-            <FolderPlus className="size-4" />
-            新建分组
-          </Button>
           <Button size="sm" color="primary" onPress={onAddAccountOpen}>
             <Plus className="size-4" />
             添加账号
           </Button>
         </div>
-      </div>
 
-      <div className="flex flex-wrap items-center gap-x-8 gap-y-2 rounded-xl bg-background px-5 py-4 border">
-        {[
-          { label: '账号', value: accountStats.total, icon: <Users className="size-4" /> },
-          {
-            label: '已登录',
-            value: accountStats.loggedIn,
-            icon: <CheckCircle2 className="size-4 text-success" />
-          },
-          { label: '平台', value: accountStats.platformCount, icon: <ShieldCheck className="size-4" /> },
-          { label: '分组', value: accountStats.groups, icon: <FolderPlus className="size-4" /> }
-        ].map((stat) => (
-          <div key={stat.label} className="flex items-center gap-2.5">
-            <span className="text-default-400">{stat.icon}</span>
-            <span className="text-xl font-semibold tabular-nums">{stat.value}</span>
-            <span className="text-xs text-default-500">{stat.label}</span>
+        {loading ? (
+          <div className="flex h-56 items-center justify-center rounded-lg bg-muted">
+            <span className="text-sm text-muted-foreground">加载中...</span>
           </div>
-        ))}
-      </div>
-
-      <Tabs
-        selectedKey={selectedGroup || 'all'}
-        onSelectionChange={(key) => setSelectedGroup(key === 'all' ? null : String(key))}
-        classNames={{
-          tabList: 'bg-background border',
-          cursor: 'bg-primary',
-          tabContent: 'group-data-[selected=true]:text-primary-foreground'
-        }}
-      >
-        <Tab key="all" title={`全部 ${accountStats.total}`} />
-        {groups.map((group) => (
-          <Tab
-            key={group.id}
-            title={
-              <div className="flex items-center gap-2">
-                {group.color && (
-                  <span
-                    className="size-2 rounded-full"
-                    style={{ backgroundColor: group.color }}
-                  />
-                )}
-                <span>{group.name}</span>
-                <button
-                  className="ml-1 rounded p-0.5 opacity-50 hover:bg-background/30 hover:opacity-100"
-                  onClick={(e) => {
-                    e.stopPropagation()
-                    handleDeleteGroup(group.id)
-                  }}
-                >
-                  <Trash2 className="size-3" />
-                </button>
-              </div>
-            }
-          />
-        ))}
-      </Tabs>
-
-      {loading ? (
-        <div className="flex h-56 items-center justify-center rounded-lg border bg-background">
-          <span className="text-sm text-default-500">加载中...</span>
-        </div>
-      ) : accounts.length === 0 ? (
-        <div className="flex h-72 flex-col items-center justify-center gap-4 rounded-lg border border-dashed bg-background">
-          <div className="flex size-14 items-center justify-center rounded-xl bg-default-100 text-default-500">
-            <Users className="size-7" />
+        ) : accounts.length === 0 ? (
+          <div className="flex h-72 flex-col items-center justify-center gap-4 rounded-lg bg-muted">
+            <div className="flex size-14 items-center justify-center rounded-xl bg-background text-muted-foreground">
+              <Users className="size-7" />
+            </div>
+            <div className="text-center">
+              <p className="font-medium">暂无账号</p>
+              <p className="text-sm text-muted-foreground">选择平台后会创建独立登录会话</p>
+            </div>
+            <Button size="sm" color="primary" onPress={onAddAccountOpen}>
+              <Plus className="size-4" />
+              添加第一个账号
+            </Button>
           </div>
-          <div className="text-center">
-            <p className="font-medium">暂无账号</p>
-            <p className="text-sm text-default-500">选择平台后会创建独立登录会话</p>
+        ) : visibleAccounts.length === 0 ? (
+          <div className="flex h-56 flex-col items-center justify-center gap-2 rounded-lg bg-muted text-muted-foreground">
+            <Search className="size-7" />
+            <span className="text-sm">没有匹配的账号，试试调整筛选条件</span>
           </div>
-          <Button size="sm" color="primary" onPress={onAddAccountOpen}>
-            <Plus className="size-4" />
-            添加第一个账号
-          </Button>
-        </div>
-      ) : (
-        <div className="grid grid-cols-1 gap-4 xl:grid-cols-2">
-          {accounts.map((account) => {
-            const platformInfo = PLATFORMS[account.platform]
-            const accountLabel = getAccountLabel(account)
+        ) : (
+          <Card className="overflow-visible border shadow-none">
+            <div className="grid grid-cols-[minmax(0,2.4fr)_minmax(0,1.1fr)_160px_148px] items-center gap-3 border-b bg-foreground/[0.02] px-4 py-2.5 text-xs font-medium text-muted-foreground">
+              <span>账号信息</span>
+              <span>平台</span>
+              <span>分组</span>
+              <span className="text-right">操作</span>
+            </div>
+            <div className="divide-y">
+              {visibleAccounts.map((account) => {
+                const platformInfo = PLATFORMS[account.platform]
+                const accountLabel = getAccountLabel(account)
 
-            return (
-              <Card
-                key={account.id}
-                className="border shadow-none transition-shadow duration-200 hover:shadow-sm"
-              >
-                <CardHeader className="flex flex-row items-start gap-4 pb-3">
-                  <AccountAvatar avatar={account.avatar} platform={account.platform} size={48} />
-                  <div className="min-w-0 flex-1">
-                    <div className="flex min-w-0 items-center gap-2">
-                      <button
-                        className="truncate text-left text-base font-semibold hover:underline"
-                        onClick={() => handleEditAccount(account)}
-                        title="点击编辑名称"
-                      >
-                        {accountLabel}
-                      </button>
-                      <Button
-                        size="sm"
-                        variant="light"
-                        isIconOnly
-                        className="h-7 min-w-7"
-                        onPress={() => handleEditAccount(account)}
-                        title="编辑名称"
-                      >
-                        <Pencil className="size-3.5" />
-                      </Button>
-                      {account.isDefault && (
-                        <Chip size="sm" color="warning" variant="flat" className="shrink-0">
-                          默认
-                        </Chip>
-                      )}
-                    </div>
-                    <div className="mt-1 flex items-center gap-2 text-small text-default-500">
-                      <span>{platformInfo?.name || account.platform}</span>
-                      <span className="text-default-300">/</span>
-                      <span>{getPlatformAccountKey(account.platform)}</span>
-                    </div>
-                    <div className="mt-3">
-                      <PlatformContentChips platform={account.platform} />
-                    </div>
-                  </div>
-                  <Chip
-                    size="sm"
-                    color={account.isLoggedIn ? 'success' : 'default'}
-                    variant="flat"
-                    className="shrink-0"
+                return (
+                  <div
+                    key={account.id}
+                    className="grid grid-cols-[minmax(0,2.4fr)_minmax(0,1.1fr)_160px_148px] items-center gap-3 px-4 py-3 transition-colors hover:bg-foreground/[0.02]"
                   >
-                    <span className="inline-flex items-center gap-1">
-                      {account.isLoggedIn ? (
-                        <CheckCircle2 className="size-3.5" />
-                      ) : (
-                        <Circle className="size-3.5" />
-                      )}
-                      {account.isLoggedIn ? '已登录' : '未登录'}
-                    </span>
-                  </Chip>
-                </CardHeader>
-                <CardBody className="pt-0">
-                  <div className="flex flex-wrap items-center gap-2">
-                    <Button
-                      size="sm"
-                      variant="bordered"
-                      color={account.isLoggedIn ? 'default' : 'primary'}
-                      onPress={() => onLoginAccount?.(account)}
-                      startContent={<LogIn className="size-4" />}
-                    >
-                      {account.isLoggedIn ? '重新登录' : '去登录'}
-                    </Button>
-                    <Button
-                      size="sm"
-                      variant="bordered"
-                      onPress={() => handleRefreshAccount(account)}
-                      isLoading={refreshingIds.has(account.id)}
-                      startContent={
-                        refreshingIds.has(account.id) ? null : <RefreshCw className="size-4" />
-                      }
-                      title="重新检测登录状态和账号信息"
-                    >
-                      检测
-                    </Button>
+                    <div className="flex min-w-0 items-center gap-3">
+                      <AccountAvatar
+                        avatar={account.avatar}
+                        platform={account.platform}
+                        size={40}
+                      />
+                      <div className="min-w-0">
+                        <div className="flex min-w-0 items-center gap-2">
+                          <button
+                            className="truncate text-left text-sm font-medium hover:underline"
+                            onClick={() => handleEditAccount(account)}
+                            title="点击编辑名称"
+                          >
+                            {accountLabel}
+                          </button>
+                          {account.isDefault && (
+                            <Chip size="sm" color="warning" variant="flat" className="h-5 shrink-0">
+                              默认
+                            </Chip>
+                          )}
+                        </div>
+                        <div className="mt-1 flex items-center gap-2">
+                          <Chip
+                            size="sm"
+                            color={account.isLoggedIn ? 'success' : 'default'}
+                            variant="flat"
+                            className="h-5"
+                          >
+                            {account.isLoggedIn ? '已登录' : '未登录'}
+                          </Chip>
+                          <button
+                            type="button"
+                            className="inline-flex items-center gap-1 text-xs text-muted-foreground transition-colors hover:text-foreground hover:underline"
+                            onClick={() => onLoginAccount?.(account)}
+                          >
+                            <LogIn className="size-3" />
+                            {account.isLoggedIn ? '重新登录' : '去登录'}
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="flex min-w-0 items-center gap-2">
+                      <PlatformIcon platform={account.platform} size={18} />
+                      <span className="truncate text-sm">
+                        {platformInfo?.name || account.platform}
+                      </span>
+                    </div>
+
                     <Select
                       size="sm"
-                      placeholder="分组"
+                      aria-label="分组"
+                      placeholder="未分组"
                       selectedKeys={account.groupId ? [account.groupId] : []}
                       onChange={(e) => handleAssignGroup(account.id, e.target.value || null)}
-                      className="w-36"
                     >
                       {groups.map((g) => (
                         <SelectItem key={g.id}>{g.name}</SelectItem>
                       ))}
                     </Select>
-                    <div className="flex-1" />
-                    {!account.isDefault && (
+
+                    <div className="flex items-center justify-end gap-0.5">
                       <Button
                         size="sm"
                         variant="light"
                         isIconOnly
-                        onPress={() => handleSetDefault(account)}
-                        title="设为默认"
+                        onPress={() => handleRefreshAccount(account)}
+                        isLoading={refreshingIds.has(account.id)}
+                        title="检测登录状态"
                       >
-                        <Star className="size-4" />
+                        {!refreshingIds.has(account.id) && <RefreshCw className="size-4" />}
                       </Button>
-                    )}
-                    <Button
-                      size="sm"
-                      variant="light"
-                      color="danger"
-                      isIconOnly
-                      onPress={() => handleDeleteAccount(account.id)}
-                      title="删除账号"
-                    >
-                      <Trash2 className="size-4" />
-                    </Button>
+                      {!account.isDefault && (
+                        <Button
+                          size="sm"
+                          variant="light"
+                          isIconOnly
+                          onPress={() => handleSetDefault(account)}
+                          title="设为默认"
+                        >
+                          <Star className="size-4" />
+                        </Button>
+                      )}
+                      <Button
+                        size="sm"
+                        variant="light"
+                        isIconOnly
+                        onPress={() => handleEditAccount(account)}
+                        title="编辑账号"
+                      >
+                        <Pencil className="size-4" />
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="light"
+                        color="danger"
+                        isIconOnly
+                        onPress={() => handleDeleteAccount(account.id)}
+                        title="删除账号"
+                      >
+                        <Trash2 className="size-4" />
+                      </Button>
+                    </div>
                   </div>
-                </CardBody>
-              </Card>
-            )
-          })}
-        </div>
-      )}
+                )
+              })}
+            </div>
+          </Card>
+        )}
 
       {/* Add Account Modal */}
       <Modal isOpen={isAddAccountOpen} onClose={closeAddAccountModal}>
         <ModalContent className="max-w-[920px]">
           <ModalHeader className="flex flex-col gap-1">
             <span>添加账号</span>
-            <span className="text-sm font-normal text-default-500">选择一个账号平台并配置独立代理</span>
+            <span className="text-sm font-normal text-muted-foreground">选择一个账号平台并配置独立代理</span>
           </ModalHeader>
           <ModalBody className="flex max-h-[70vh] flex-col gap-4 overflow-hidden">
             <div className="flex flex-col gap-3 lg:flex-row lg:items-center">
@@ -655,7 +776,7 @@ export function AccountsPage({ onLoginAccount }: AccountsPageProps): React.React
                 value={platformSearch}
                 onChange={(event) => setPlatformSearch(event.target.value)}
                 placeholder="搜索平台或 accountKey"
-                startContent={<Search className="size-4 text-default-400" />}
+                startContent={<Search className="size-4 text-muted-foreground" />}
                 className="lg:max-w-xs"
               />
               <div className="flex flex-wrap gap-2">
@@ -673,9 +794,9 @@ export function AccountsPage({ onLoginAccount }: AccountsPageProps): React.React
               </div>
             </div>
 
-            <div className="min-h-0 flex-1 overflow-auto rounded-xl bg-default-50/50 p-3">
+            <div className="min-h-0 flex-1 overflow-auto rounded-xl bg-foreground/[0.03] p-3">
               {filteredPlatformsByCategory.length === 0 ? (
-                <div className="flex h-44 flex-col items-center justify-center gap-2 text-default-500">
+                <div className="flex h-44 flex-col items-center justify-center gap-2 text-muted-foreground">
                   <Search className="size-8" />
                   <span className="text-sm">没有匹配的平台</span>
                 </div>
@@ -684,10 +805,10 @@ export function AccountsPage({ onLoginAccount }: AccountsPageProps): React.React
                   {filteredPlatformsByCategory.map((category) => (
                     <div key={category.id}>
                       <div className="mb-2 flex items-center justify-between">
-                        <span className="text-xs font-medium text-default-500">
+                        <span className="text-xs font-medium text-muted-foreground">
                           {category.name}
                         </span>
-                        <span className="text-xs text-default-400">
+                        <span className="text-xs text-muted-foreground">
                           {category.platforms.length}
                         </span>
                       </div>
@@ -708,7 +829,7 @@ export function AccountsPage({ onLoginAccount }: AccountsPageProps): React.React
                                   : 'bg-background hover:shadow-sm hover:bg-foreground/[0.02]'
                               }`}
                             >
-                              <div className="flex size-11 shrink-0 items-center justify-center rounded-lg bg-default-100">
+                              <div className="flex size-11 shrink-0 items-center justify-center rounded-lg bg-muted">
                                 <PlatformIcon platform={platform} size={24} />
                               </div>
                               <div className="min-w-0 flex-1">
@@ -720,7 +841,7 @@ export function AccountsPage({ onLoginAccount }: AccountsPageProps): React.React
                                     <CheckCircle2 className="size-4 shrink-0 text-primary" />
                                   )}
                                 </div>
-                                <div className="mt-1 truncate text-xs text-default-500">
+                                <div className="mt-1 truncate text-xs text-muted-foreground">
                                   {accountKey}
                                 </div>
                                 <div className="mt-2">
@@ -811,6 +932,7 @@ export function AccountsPage({ onLoginAccount }: AccountsPageProps): React.React
           </ModalFooter>
         </ModalContent>
       </Modal>
+      </div>
     </div>
   )
 }
