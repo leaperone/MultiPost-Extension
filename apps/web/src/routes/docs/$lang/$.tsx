@@ -1,14 +1,9 @@
 import { createServerFn } from '@tanstack/react-start';
 import { createFileRoute, notFound, redirect } from '@tanstack/react-router';
-import {
-  DocsBody,
-  DocsDescription,
-  DocsPage,
-  DocsTitle,
-} from 'fumadocs-ui/page';
-import { Suspense } from 'react';
+import { Suspense, useMemo } from 'react';
 import { z } from 'zod';
 
+import { ContentArticle } from '../../../components/content/content-article';
 import {
   createClientRelativeLink,
   docsClientLoader,
@@ -24,13 +19,16 @@ const docsPageSchema = z.object({
 const loadDocsPage = createServerFn({ method: 'GET' })
   .validator(docsPageSchema)
   .handler(async ({ data }) => {
-    const { getDocsPageData, getDocsPathMap } = await import('../../../lib/docs-source');
+    const { getDocsPageData, getDocsPathMap, getDocsNeighbours } = await import(
+      '../../../lib/docs-source'
+    );
     const page = getDocsPageData(data.lang, data.slug);
     if (!page) return null;
 
     return {
       page,
       pathMap: getDocsPathMap(data.lang),
+      neighbours: getDocsNeighbours(data.lang, page.url),
     };
   });
 
@@ -96,23 +94,24 @@ export const Route = createFileRoute('/docs/$lang/$')({
 });
 
 function DocsArticlePage() {
-  const { page, pathMap } = Route.useLoaderData();
-  const components = getMDXComponents({
-    a: createClientRelativeLink(page.path, pathMap),
-  });
+  const { page, pathMap, neighbours } = Route.useLoaderData();
+  const components = useMemo(
+    () =>
+      getMDXComponents({
+        a: createClientRelativeLink(page.path, pathMap),
+      }),
+    [page.path, pathMap],
+  );
 
   return (
-    <DocsPage
+    <ContentArticle
+      title={page.title}
+      description={page.description}
       toc={page.toc}
-      full={page.full}>
-      <DocsTitle>{page.title}</DocsTitle>
-      <DocsDescription>{page.description}</DocsDescription>
-      <DocsBody>
-        <Suspense fallback={null}>
-          {docsClientLoader.useContent(page.path, { components })}
-        </Suspense>
-      </DocsBody>
-    </DocsPage>
+      previous={neighbours.previous}
+      next={neighbours.next}>
+      <Suspense fallback={null}>{docsClientLoader.useContent(page.path, { components })}</Suspense>
+    </ContentArticle>
   );
 }
 

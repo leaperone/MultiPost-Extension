@@ -1,14 +1,9 @@
 import { createServerFn } from '@tanstack/react-start';
 import { createFileRoute, notFound, redirect } from '@tanstack/react-router';
-import {
-  DocsBody,
-  DocsDescription,
-  DocsPage,
-  DocsTitle,
-} from 'fumadocs-ui/page';
-import { Suspense } from 'react';
+import { Suspense, useMemo } from 'react';
 import { z } from 'zod';
 
+import { ContentArticle } from '../../../components/content/content-article';
 import {
   blogClientLoader,
   createClientRelativeLink,
@@ -132,22 +127,25 @@ export const Route = createFileRoute('/blog/$lang/$')({
 
 function BlogArticlePage() {
   const { page, pathMap } = Route.useLoaderData();
-  const components = getMDXComponents({
-    a: createClientRelativeLink(page.path, pathMap),
-  });
+  const components = useMemo(
+    () =>
+      getMDXComponents({
+        a: createClientRelativeLink(page.path, pathMap),
+      }),
+    [page.path, pathMap],
+  );
+
+  // ISO date keeps SSR and client output identical regardless of locale.
+  const metaText = [page.author, page.date ? page.date.slice(0, 10) : null].filter(Boolean).join(' · ');
 
   return (
-    <DocsPage
-      toc={page.toc}
-      full={page.full}>
-      <DocsTitle>{page.title}</DocsTitle>
-      <DocsDescription>{page.description}</DocsDescription>
-      <DocsBody>
-        <Suspense fallback={null}>
-          {blogClientLoader.useContent(page.path, { components })}
-        </Suspense>
-      </DocsBody>
-    </DocsPage>
+    <ContentArticle
+      title={page.title}
+      description={page.description}
+      meta={metaText || undefined}
+      toc={page.toc}>
+      <Suspense fallback={null}>{blogClientLoader.useContent(page.path, { components })}</Suspense>
+    </ContentArticle>
   );
 }
 

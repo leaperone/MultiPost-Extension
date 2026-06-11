@@ -1,3 +1,4 @@
+import { findNeighbour } from 'fumadocs-core/page-tree';
 import { loader } from 'fumadocs-core/source';
 import type { TableOfContents } from 'fumadocs-core/toc';
 import { docs } from 'collections/server';
@@ -64,6 +65,27 @@ export function getDocsPageData(lang: string, slug: string[]): DocsPageData | nu
     toc: serializeToc(page.data.toc),
     full: page.data.full,
   };
+}
+
+export interface DocsNeighbour {
+  title: string;
+  url: string;
+}
+
+export function getDocsNeighbours(
+  lang: string,
+  url: string,
+): { previous?: DocsNeighbour; next?: DocsNeighbour } {
+  const tree = docsSource.pageTree[lang];
+  if (!tree) return {};
+
+  const toNeighbour = (item?: { name?: unknown; url?: string }): DocsNeighbour | undefined => {
+    if (!item?.url || typeof item.name !== 'string') return undefined;
+    return { title: item.name, url: item.url };
+  };
+
+  const { previous, next } = findNeighbour(tree, url);
+  return { previous: toNeighbour(previous), next: toNeighbour(next) };
 }
 
 export function getDocsPathMap(lang: string) {

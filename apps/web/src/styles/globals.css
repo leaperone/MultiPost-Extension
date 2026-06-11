@@ -1,7 +1,6 @@
 @import "tailwindcss";
 @plugin "../../hero.ts";
 @source "../../../../node_modules/@heroui/theme/dist/**/*.{js,ts,jsx,tsx}";
-@source "../../node_modules/fumadocs-ui/dist/**/*.js";
 @source "../../content/**/*.mdx";
 @custom-variant dark (&:is(.dark *));
 
@@ -326,5 +325,143 @@
 .dark .fc-day-today .fc-daygrid-day-number {
   color: hsla(var(--primary)) !important;
   font-weight: 600;
+}
+
+/* ---------------------------------------------------------------------------
+ * Docs / blog article typography (`.content-prose`)
+ * Replaces fumadocs-ui styling for MDX output, including shiki code blocks
+ * compiled by fumadocs-mdx with dual github-light/github-dark themes.
+ * ------------------------------------------------------------------------- */
+.content-prose {
+  line-height: 1.75;
+  font-size: 0.9375rem;
+}
+
+.content-prose :is(h1, h2, h3, h4, h5, h6) {
+  color: hsl(var(--foreground));
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  margin-top: 2em;
+  margin-bottom: 0.6em;
+}
+
+.content-prose h1 {
+  font-size: 1.875rem;
+}
+
+.content-prose h2 {
+  font-size: 1.5rem;
+  border-bottom: 1px solid hsl(var(--border));
+  padding-bottom: 0.4em;
+}
+
+.content-prose h3 {
+  font-size: 1.25rem;
+}
+
+.content-prose h4 {
+  font-size: 1.05rem;
+}
+
+.content-prose p {
+  margin-top: 1em;
+  margin-bottom: 1em;
+}
+
+.content-prose a {
+  color: hsl(var(--foreground));
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  text-decoration-color: hsl(var(--muted-foreground));
+}
+
+.content-prose a:hover {
+  text-decoration-color: hsl(var(--foreground));
+}
+
+.content-prose :is(ul, ol) {
+  margin: 1em 0;
+  padding-left: 1.5em;
+}
+
+.content-prose ul {
+  list-style-type: disc;
+}
+
+.content-prose ol {
+  list-style-type: decimal;
+}
+
+.content-prose li {
+  margin: 0.35em 0;
+}
+
+.content-prose blockquote {
+  border-left: 2px solid hsl(var(--border));
+  color: hsl(var(--muted-foreground));
+  margin: 1.25em 0;
+  padding-left: 1em;
+}
+
+.content-prose hr {
+  border-color: hsl(var(--border));
+  margin: 2.5em 0;
+}
+
+.content-prose table {
+  border-collapse: collapse;
+  font-size: 0.875rem;
+  margin: 1.25em 0;
+  width: 100%;
+}
+
+.content-prose :is(th, td) {
+  border: 1px solid hsl(var(--border));
+  padding: 0.5em 0.75em;
+  text-align: left;
+}
+
+.content-prose th {
+  background-color: hsl(var(--muted));
+  font-weight: 600;
+}
+
+.content-prose img {
+  margin: 1.25em 0;
+  max-width: 100%;
+}
+
+.content-prose code {
+  background-color: hsl(var(--muted));
+  border-radius: 0.3rem;
+  font-size: 0.85em;
+  padding: 0.15em 0.4em;
+}
+
+.content-prose pre {
+  background-color: hsl(var(--muted) / 50%);
+  border: 1px solid hsl(var(--border));
+  border-radius: 0.5rem;
+  font-size: 0.85rem;
+  line-height: 1.6;
+  margin: 1.25em 0;
+  overflow-x: auto;
+  padding: 1rem;
+}
+
+.content-prose pre code {
+  background-color: transparent;
+  border-radius: 0;
+  font-size: inherit;
+  padding: 0;
+}
+
+/* Shiki dual-theme output: the site is dark-only, so force dark variables. */
+.content-prose pre.shiki {
+  background-color: hsl(var(--muted) / 50%) !important;
+}
+
+.content-prose pre.shiki span {
+  color: var(--shiki-dark, inherit);
 }
 

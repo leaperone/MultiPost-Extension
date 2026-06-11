@@ -1,12 +1,10 @@
 import { createServerFn } from '@tanstack/react-start';
 import { createFileRoute, notFound, Outlet } from '@tanstack/react-router';
-import { DocsLayout } from 'fumadocs-ui/layouts/docs';
-import type { BaseLayoutProps } from 'fumadocs-ui/layouts/shared';
-import { useFumadocsLoader } from 'fumadocs-core/source/client';
 import { z } from 'zod';
 
+import { ContentShell } from '../../components/content/content-shell';
+import type { ContentTreeRoot } from '../../components/content/content-shell';
 import { blogI18n, isBlogLang, resolveBlogLang } from '../../lib/blog-i18n';
-import { FumadocsRootProvider } from '../../lib/fumadocs-providers';
 
 const blogShellSchema = z.object({
   lang: z.string().min(1),
@@ -19,32 +17,19 @@ const loadBlogShell = createServerFn({ method: 'GET' })
     return getBlogShellData(data.lang);
   });
 
-function blogBaseOptions(lang: string): BaseLayoutProps {
-  return {
-    nav: {
-      title: (
-        <>
-          <img
-            src="/favicon.ico"
-            alt="Logo"
-            width={24}
-            height={24}
-          />
-          MultiPost Blog
-        </>
-      ),
-      enabled: true,
-      url: `/blog/${lang}`,
-    },
-    links: [
-      {
-        text: 'Home',
-        url: '/',
-      },
-    ],
-    i18n: blogI18n,
-  };
-}
+const blogLocaleNames: Record<string, string> = {
+  en: 'English',
+  'zh-Hans': '简体中文',
+  'zh-Hant': '繁體中文',
+  ja: '日本語',
+  ko: '한국어',
+  fr: 'Français',
+  es: 'Español',
+  pt: 'Português',
+  ms: 'Melayu',
+  id: 'Bahasa Indonesia',
+  ru: 'Русский',
+};
 
 export const Route = createFileRoute('/blog/$lang')({
   beforeLoad: ({ params }) => {
@@ -64,19 +49,23 @@ export const Route = createFileRoute('/blog/$lang')({
 function BlogLangLayout() {
   const { lang: routeLang } = Route.useParams();
   const lang = resolveBlogLang(routeLang);
-  const data = useFumadocsLoader(Route.useLoaderData());
-
-  if (!data.pageTree) throw notFound();
+  const { pageTree } = Route.useLoaderData();
 
   return (
-    <FumadocsRootProvider
-      section="blog"
-      lang={lang}>
-      <DocsLayout
-        tree={data.pageTree}
-        {...blogBaseOptions(lang)}>
-        <Outlet />
-      </DocsLayout>
-    </FumadocsRootProvider>
+    <ContentShell
+      tree={pageTree as unknown as ContentTreeRoot}
+      title="MultiPost Blog"
+      homeUrl={`/blog/${lang}`}
+      navLinks={[
+        { text: 'Home', url: '/' },
+        { text: 'Docs', url: '/docs/zh' },
+      ]}
+      locales={blogI18n.languages.map((locale) => ({
+        locale,
+        name: blogLocaleNames[locale] || locale,
+      }))}
+      currentLocale={lang}>
+      <Outlet />
+    </ContentShell>
   );
 }
