@@ -1,4 +1,4 @@
-import { Button, Card, Checkbox, Avatar, Chip } from '@heroui/react'
+import { Button, Card, Checkbox, Chip } from '@heroui/react'
 import {
   CheckCircle,
   XCircle,
@@ -10,7 +10,6 @@ import {
   ChevronUp,
   AlertCircle
 } from 'lucide-react'
-import { Icon } from '@iconify/react'
 import { useState, useEffect, useMemo, useCallback } from 'react'
 import type { Account, PlatformType, SyncContentType } from '../../../../shared/types'
 import {
@@ -21,7 +20,6 @@ import {
 
 // Platform icon component with fallback mechanism
 export function PlatformIcon({ platform, size = 20 }: { platform: PlatformType; size?: number }) {
-  const [iconError, setIconError] = useState(false)
   const [faviconError, setFaviconError] = useState(false)
   const platformInfo = PLATFORMS[platform]
 
@@ -36,19 +34,8 @@ export function PlatformIcon({ platform, size = 20 }: { platform: PlatformType; 
     lineHeight: `${size}px`
   }
 
-  // Try iconify icon first
-  if (platformInfo.iconifyIcon && !iconError) {
-    return (
-      <Icon
-        icon={platformInfo.iconifyIcon}
-        width={size}
-        height={size}
-        onError={() => setIconError(true)}
-      />
-    )
-  }
-
-  // Try favicon next
+  // Platform favicons load directly from each site; iconify was dropped
+  // because its online icon API fails silently (blank icon, no onError).
   if (platformInfo.faviconUrl && !faviconError) {
     return (
       <img
@@ -57,6 +44,7 @@ export function PlatformIcon({ platform, size = 20 }: { platform: PlatformType; 
         width={size}
         height={size}
         className="rounded-sm object-contain"
+        referrerPolicy="no-referrer"
         onError={() => setFaviconError(true)}
       />
     )
@@ -378,7 +366,10 @@ export function AccountSelector({
                           isDisabled={isDisabled}
                           size="sm"
                         />
-                        <Avatar src={account.avatar} size="sm" name={account.username} />
+                        {/* 账号头像暂不展示，统一用平台 icon 标识 */}
+                        <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-foreground/[0.05]">
+                          <PlatformIcon platform={account.platform} size={18} />
+                        </span>
                         <span className="text-sm">{account.displayName || account.username}</span>
                         {account.isDefault && (
                           <Chip size="sm" variant="flat" color="warning">

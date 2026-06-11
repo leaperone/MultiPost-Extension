@@ -189,3 +189,86 @@
 [data-sidebar="group-label"] {
   color: hsl(var(--muted-foreground)) !important;
 }
+
+/* Markdown 预览排版（发布文章页） */
+.article-preview {
+  line-height: 1.75;
+  color: hsl(var(--foreground));
+  word-break: break-word;
+}
+.article-preview h1,
+.article-preview h2,
+.article-preview h3,
+.article-preview h4 {
+  font-weight: 600;
+  line-height: 1.4;
+  margin: 1.2em 0 0.5em;
+}
+.article-preview h1:first-child,
+.article-preview h2:first-child,
+.article-preview h3:first-child,
+.article-preview p:first-child {
+  margin-top: 0;
+}
+.article-preview h1 { font-size: 1.5em; }
+.article-preview h2 { font-size: 1.3em; }
+.article-preview h3 { font-size: 1.15em; }
+.article-preview p { margin: 0.6em 0; }
+.article-preview ul,
+.article-preview ol {
+  margin: 0.6em 0;
+  padding-left: 1.5em;
+}
+.article-preview ul { list-style: disc; }
+.article-preview ol { list-style: decimal; }
+.article-preview li { margin: 0.25em 0; }
+.article-preview blockquote {
+  margin: 0.8em 0;
+  border-left: 3px solid hsl(var(--border));
+  padding-left: 1em;
+  color: hsl(var(--muted-foreground));
+}
+.article-preview code {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.875em;
+  background: hsl(var(--muted));
+  border-radius: 4px;
+  padding: 0.15em 0.4em;
+}
+.article-preview pre {
+  margin: 0.8em 0;
+  background: hsl(var(--muted));
+  border-radius: 8px;
+  padding: 0.9em 1em;
+  overflow-x: auto;
+}
+.article-preview pre code {
+  background: transparent;
+  padding: 0;
+}
+.article-preview a {
+  color: hsl(var(--primary));
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+.article-preview img {
+  max-width: 100%;
+  border-radius: 8px;
+  margin: 0.6em 0;
+}
+.article-preview hr {
+  margin: 1.2em 0;
+  border-color: hsl(var(--border));
+}
+.article-preview table {
+  margin: 0.8em 0;
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9em;
+}
+.article-preview th,
+.article-preview td {
+  border: 1px solid hsl(var(--border));
+  padding: 0.4em 0.7em;
+  text-align: left;
+}

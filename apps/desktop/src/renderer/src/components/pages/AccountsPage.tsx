@@ -15,7 +15,6 @@ import {
 } from 'lucide-react'
 import { Button } from '@heroui/react'
 import { Card, CardBody, CardHeader } from '@heroui/react'
-import { Avatar } from '@heroui/react'
 import { Chip } from '@heroui/react'
 import { Tabs, Tab } from '@heroui/react'
 import {
@@ -448,11 +447,9 @@ export function AccountsPage({ onLoginAccount }: AccountsPageProps): React.React
             return (
               <Card key={account.id} className="border shadow-none">
                 <CardHeader className="flex flex-row items-start gap-4 pb-3">
-                  <div className="relative shrink-0">
-                    <Avatar src={account.avatar} name={accountLabel} size="lg" />
-                    <div className="absolute -bottom-1 -right-1 flex size-6 items-center justify-center rounded-md border bg-background">
-                      <PlatformIcon platform={account.platform} size={15} />
-                    </div>
+                  {/* 账号头像暂不展示，统一用平台 icon 标识 */}
+                  <div className="flex size-12 shrink-0 items-center justify-center rounded-full bg-foreground/[0.05]">
+                    <PlatformIcon platform={account.platform} size={26} />
                   </div>
                   <div className="min-w-0 flex-1">
                     <div className="flex min-w-0 items-center gap-2">

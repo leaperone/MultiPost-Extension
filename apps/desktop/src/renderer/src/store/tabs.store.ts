@@ -13,7 +13,6 @@ interface TabsState {
   goBack: (tabId: string) => Promise<void>
   goForward: (tabId: string) => Promise<void>
   refresh: (tabId: string) => Promise<void>
-  openWebDashboard: (path?: string) => void
 }
 
 export const useTabsStore = create<TabsState>((set, get) => ({
@@ -83,10 +82,6 @@ export const useTabsStore = create<TabsState>((set, get) => ({
     } catch (error) {
       console.error('Failed to refresh:', error)
     }
-  },
-
-  openWebDashboard: (path) => {
-    window.api.browser.openWebDashboard(path)
   }
 }))
 

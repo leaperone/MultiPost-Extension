@@ -6,7 +6,6 @@ import {
   ChevronsRight,
   ClockIcon,
   FileTextIcon,
-  GlobeIcon,
   HomeIcon,
   InfoIcon,
   MessageCircleHeartIcon,
@@ -18,7 +17,6 @@ import {
 } from 'lucide-react'
 
 import { useUiStore, type NativeView } from '../../store/ui.store'
-import { useTabsStore } from '../../store/tabs.store'
 import { useAccountsStore } from '../../store/accounts.store'
 import { HomeView } from './HomeView'
 import { PublishView } from './PublishView'
@@ -186,7 +184,6 @@ export function NativeShell(): React.ReactElement {
   const navigate = useUiStore((state) => state.navigate)
   const isCollapsed = useUiStore((state) => state.isSidebarCollapsed)
   const toggleSidebar = useUiStore((state) => state.toggleSidebar)
-  const openWebDashboard = useTabsStore((state) => state.openWebDashboard)
   const refreshAccounts = useAccountsStore((state) => state.refresh)
 
   useEffect(() => {
@@ -217,16 +214,6 @@ export function NativeShell(): React.ReactElement {
         </div>
 
         <div className="flex flex-col gap-0.5 border-t p-2">
-          <button
-            type="button"
-            onClick={() => openWebDashboard()}
-            className={`flex w-full items-center gap-2.5 rounded-lg px-2.5 py-2 text-[13px] text-muted-foreground transition-colors hover:text-foreground ${
-              isCollapsed ? 'justify-center' : ''
-            }`}
-          >
-            <GlobeIcon className="size-4 shrink-0" />
-            {!isCollapsed && <span className="truncate">Web 工作台</span>}
-          </button>
           <SidebarSection
             items={FOOTER_NAV}
             activeView={activeView}

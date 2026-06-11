@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { motion } from 'framer-motion'
-import { Avatar, Button, Card, Chip } from '@heroui/react'
+import { Button, Card, Chip } from '@heroui/react'
 import {
   ArrowRightIcon,
   CheckCircle2Icon,
@@ -18,6 +18,7 @@ import type { PublishHistory } from '@shared/types'
 import { PLATFORMS } from '@shared/constants'
 import { useAccountsStore } from '../../store/accounts.store'
 import { useUiStore, type NativeView } from '../../store/ui.store'
+import { PlatformIcon } from '../publish/shared'
 
 interface QuickAction {
   view: NativeView
@@ -172,14 +173,16 @@ export function HomeView(): React.ReactElement {
             ) : (
               <div className="mt-4 flex flex-col gap-3">
                 <div className="flex items-center gap-2">
+                  {/* 账号头像暂不展示，统一用平台 icon 标识 */}
                   <div className="flex -space-x-2">
                     {accounts.slice(0, 8).map((account) => (
-                      <Avatar
+                      <span
                         key={account.id}
-                        src={account.avatar}
-                        name={(account.displayName || account.username || '?').charAt(0)}
-                        className="size-8 border-2 border-background"
-                      />
+                        title={account.displayName || account.username}
+                        className="flex size-8 items-center justify-center rounded-full border-2 border-background bg-foreground/[0.05]"
+                      >
+                        <PlatformIcon platform={account.platform} size={16} />
+                      </span>
                     ))}
                   </div>
                   {accounts.length > 8 && (

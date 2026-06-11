@@ -1,7 +1,8 @@
 import { useState, useCallback, useEffect } from 'react'
-import { Button, Card, Input, Textarea, Spinner, addToast } from '@heroui/react'
-import { Save } from 'lucide-react'
-import type { PlatformType, DynamicData, SyncContentData, Draft } from '../../../../shared/types'
+import { Button, Card, Image, Input, Textarea, Spinner, addToast } from '@heroui/react'
+import { ImagePlus, Save, X } from 'lucide-react'
+import type { PlatformType, DynamicData, FileData, SyncContentData, Draft } from '../../../../shared/types'
+import { createLocalFileUrl } from '../../../../shared/types'
 import {
   AccountSelector,
   useAccountSelection,
@@ -9,6 +10,30 @@ import {
   PublishProgressCard,
   type AccountPublishState
 } from './shared'
+
+const IMAGE_EXTENSIONS = ['jpg', 'jpeg', 'png', 'gif', 'webp', 'bmp', 'heic', 'avif']
+const MAX_IMAGES = 20
+
+interface LocalImage extends FileData {
+  /** Filesystem path; what fill scripts ultimately need (via local-file://). */
+  path: string
+}
+
+function imageFromPath(path: string): LocalImage {
+  const name = path.split(/[\\/]/).pop() || path
+  const ext = (name.split('.').pop() || '').toLowerCase()
+  return {
+    path,
+    name,
+    url: createLocalFileUrl(path),
+    type: `image/${ext === 'jpg' ? 'jpeg' : ext || 'png'}`
+  }
+}
+
+function isImagePath(path: string): boolean {
+  const ext = (path.split('.').pop() || '').toLowerCase()
+  return IMAGE_EXTENSIONS.includes(ext)
+}
 
 interface DynamicPublishPageProps {
   onStartPublish: (
@@ -42,6 +67,8 @@ export function DynamicPublishPage({
 }: DynamicPublishPageProps): React.ReactElement {
   const [title, setTitle] = useState('')
   const [content, setContent] = useState('')
+  const [images, setImages] = useState<LocalImage[]>([])
+  const [isDraggingImages, setIsDraggingImages] = useState(false)
   const [autoSubmit, setAutoSubmit] = useState(false)
   const [isSavingDraft, setIsSavingDraft] = useState(false)
   const [currentDraftId, setCurrentDraftId] = useState<string | null>(null)
@@ -60,9 +87,62 @@ export function DynamicPublishPage({
     if (initialDraft) {
       setTitle(initialDraft.title || '')
       setContent(initialDraft.content || '')
+      setImages((initialDraft.images || []).filter(isImagePath).map(imageFromPath))
       setCurrentDraftId(initialDraft.id)
     }
   }, [initialDraft])
+
+  const addImagePaths = useCallback((paths: string[]) => {
+    const valid = paths.filter(isImagePath)
+    if (valid.length === 0) return
+
+    setImages((prev) => {
+      const existing = new Set(prev.map((img) => img.path))
+      const next = [...prev]
+      for (const path of valid) {
+        if (!existing.has(path) && next.length < MAX_IMAGES) {
+          next.push(imageFromPath(path))
+        }
+      }
+      return next
+    })
+  }, [])
+
+  const handlePickImages = useCallback(async () => {
+    try {
+      const paths = await window.api.app.selectFile({
+        filters: [{ name: '图片', extensions: IMAGE_EXTENSIONS }],
+        multiple: true
+      })
+      if (paths?.length) {
+        addImagePaths(paths)
+      }
+    } catch (error) {
+      console.error('Failed to select images:', error)
+    }
+  }, [addImagePaths])
+
+  const handleImageDrop = useCallback(
+    (e: React.DragEvent) => {
+      e.preventDefault()
+      setIsDraggingImages(false)
+      const paths = Array.from(e.dataTransfer.files)
+        .map((file) => {
+          try {
+            return window.api.app.getPathForFile(file)
+          } catch {
+            return ''
+          }
+        })
+        .filter(Boolean)
+      addImagePaths(paths)
+    },
+    [addImagePaths]
+  )
+
+  const handleRemoveImage = useCallback((path: string) => {
+    setImages((prev) => prev.filter((img) => img.path !== path))
+  }, [])
 
   const handlePublish = useCallback(() => {
     if (selectedPlatforms.size === 0 || !content.trim()) return
@@ -70,7 +150,7 @@ export function DynamicPublishPage({
     const dynamicData: DynamicData = {
       title: title.trim(),
       content: content.trim(),
-      images: [],
+      images: images.map(({ url, name, type, size }) => ({ url, name, type, size })),
       videos: []
     }
 
@@ -82,7 +162,7 @@ export function DynamicPublishPage({
       selectedAccountIds,
       selectedOtherPlatforms
     )
-  }, [selectedAccountIds, selectedOtherPlatforms, selectedPlatforms, title, content, autoSubmit, onStartPublish])
+  }, [selectedAccountIds, selectedOtherPlatforms, selectedPlatforms, title, content, images, autoSubmit, onStartPublish])
 
   const handleSaveDraft = useCallback(async () => {
     if (!content.trim()) {
@@ -100,6 +180,7 @@ export function DynamicPublishPage({
         title: title.trim() || '未命名动态',
         contentType: 'DYNAMIC' as const,
         content: content.trim(),
+        images: images.map((img) => img.path),
         selectedPlatforms: Array.from(selectedPlatforms)
       }
 
@@ -126,7 +207,7 @@ export function DynamicPublishPage({
     } finally {
       setIsSavingDraft(false)
     }
-  }, [title, content, selectedPlatforms, currentDraftId, onDraftSaved])
+  }, [title, content, images, selectedPlatforms, currentDraftId, onDraftSaved])
 
   const isContentValid = content.trim().length > 0
   const hasSelectedTargets = selectedAccountIds.size > 0 || selectedOtherPlatforms.size > 0
@@ -157,6 +238,65 @@ export function DynamicPublishPage({
             minRows={8}
             isDisabled={isPublishing}
           />
+        </div>
+
+        {/* 图片上传区 */}
+        <div
+          className={`mb-5 rounded-xl transition-colors ${isDraggingImages ? 'bg-foreground/[0.04]' : ''}`}
+          onDragOver={(e) => {
+            e.preventDefault()
+            setIsDraggingImages(true)
+          }}
+          onDragLeave={(e) => {
+            e.preventDefault()
+            setIsDraggingImages(false)
+          }}
+          onDrop={handleImageDrop}
+        >
+          <p className="mb-2 text-sm text-foreground/60">
+            图片（{images.length}/{MAX_IMAGES}）
+          </p>
+          <div className="flex flex-wrap gap-3">
+            {images.map((img, index) => (
+              <div
+                key={img.path}
+                className="group relative aspect-square w-[100px] overflow-hidden rounded-2xl border bg-default-100"
+              >
+                <Image
+                  src={img.url}
+                  alt={img.name}
+                  width={100}
+                  height={100}
+                  radius="none"
+                  className="size-[100px] object-cover"
+                />
+                <span className="absolute bottom-1 left-1 z-20 rounded bg-black/50 px-1 text-[10px] text-white">
+                  {index + 1}
+                </span>
+                <button
+                  type="button"
+                  className="absolute right-1 top-1 z-20 rounded-full bg-black/50 p-1 text-white opacity-0 transition-opacity hover:bg-black/70 group-hover:opacity-100"
+                  onClick={() => handleRemoveImage(img.path)}
+                  title="移除图片"
+                >
+                  <X className="size-3.5" />
+                </button>
+              </div>
+            ))}
+
+            {images.length < MAX_IMAGES && (
+              <button
+                type="button"
+                disabled={isPublishing}
+                onClick={handlePickImages}
+                className="flex aspect-square w-[100px] cursor-pointer flex-col items-center justify-center gap-1 rounded-2xl border border-dashed text-foreground/50 transition-colors hover:bg-foreground/[0.04] hover:text-foreground/80"
+              >
+                <ImagePlus className="size-5" />
+                <span className="text-xs">添加图片</span>
+              </button>
+            )}
+          </div>
+          <p className="mt-2 text-xs text-foreground/40">点击添加或将图片拖拽到此处</p>
         </div>
 
         <AccountSelector

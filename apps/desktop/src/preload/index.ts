@@ -1,4 +1,4 @@
-import { contextBridge, ipcRenderer } from 'electron'
+import { contextBridge, ipcRenderer, webUtils } from 'electron'
 import { electronAPI } from '@electron-toolkit/preload'
 import { IPC_CHANNELS } from '../shared/constants'
 import type {
@@ -215,7 +215,10 @@ const api = {
     selectFile: (options?: {
       filters?: { name: string; extensions: string[] }[]
       multiple?: boolean
-    }): Promise<string[]> => ipcRenderer.invoke(IPC_CHANNELS.APP_SELECT_FILE, options)
+    }): Promise<string[]> => ipcRenderer.invoke(IPC_CHANNELS.APP_SELECT_FILE, options),
+    // Resolve the filesystem path of a dropped File (drag & drop uploads);
+    // blob URLs are useless across BrowserViews, the fill scripts need paths.
+    getPathForFile: (file: File): string => webUtils.getPathForFile(file)
   },
 
   // Layout
