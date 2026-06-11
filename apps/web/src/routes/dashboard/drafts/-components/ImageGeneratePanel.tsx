@@ -11,8 +11,9 @@ import { Eye, Plus } from 'lucide-react';
 import { useTranslation } from '@/i18n/client';
 import { useDraftStore } from '@/store/draft.store';
 import { newImageGeneration } from '../../../../actions/draw/image';
+import { interopDefault } from '@/lib/lazyInterop';
 
-const Viewer = lazy(() => import('react-viewer'));
+const Viewer = lazy(() => import('react-viewer').then(interopDefault));
 
 interface TaskStatus {
   status: string;

@@ -16,6 +16,7 @@ import { useTranslation } from '@/i18n/client';
 import { useLocale } from '@/i18n/locale-provider';
 import { toast } from 'sonner';
 import { routeMeta } from '../../../lib/seo';
+import { interopDefault } from '@/lib/lazyInterop';
 
 export const Route = createFileRoute('/dashboard/draw/image')({
   head: () => ({
@@ -28,7 +29,7 @@ export const Route = createFileRoute('/dashboard/draw/image')({
   component: ImagePage,
 });
 
-const Viewer = lazy(() => import('react-viewer'));
+const Viewer = lazy(() => import('react-viewer').then(interopDefault));
 
 /**
  * 获取 ImageGenerationLog 的预览 URL

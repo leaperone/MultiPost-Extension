@@ -17,6 +17,7 @@ import { useLocale } from '@/i18n/locale-provider';
 import { ImageIcon, Download, Calendar, Maximize2, RefreshCcw, Pencil, X, Clock, Eye } from 'lucide-react';
 import { lazy, Suspense } from 'react';
 import { routeMeta } from '../../../lib/seo';
+import { interopDefault } from '@/lib/lazyInterop';
 
 interface PosterSearch {
   editId?: string;
@@ -36,7 +37,7 @@ export const Route = createFileRoute('/dashboard/draw/poster')({
   component: PosterPage,
 });
 
-const Viewer = lazy(() => import('react-viewer'));
+const Viewer = lazy(() => import('react-viewer').then(interopDefault));
 
 // --- Active task types & helpers ---
 

@@ -75,9 +75,10 @@ import { getPlatformExtraConfigList } from '@/actions/publish';
 import PlatformCheckbox from '@/routes/dashboard/publish/-components/PlatformCheckbox';
 import LibraryModal from '@/routes/dashboard/publish/-components/dynamic/LibraryModal';
 import { ImageGenerateModal } from '@/routes/dashboard/publish/-components/dynamic/ImageGenerateModal';
+import { interopDefault } from '@/lib/lazyInterop';
 
-const ReactPlayer = lazy(() => import('react-player'));
-const Viewer = lazy(() => import('react-viewer'));
+const ReactPlayer = lazy(() => import('react-player').then(interopDefault));
+const Viewer = lazy(() => import('react-viewer').then(interopDefault));
 
 // canvas-confetti only fires on user-visible milestones; load it on demand so
 // it stays out of the homepage's initial chunk.

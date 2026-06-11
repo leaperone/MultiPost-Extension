@@ -78,13 +78,14 @@ import {
   trackPublishFailed,
   trackPlatformSelected,
 } from '@/lib/posthog/events';
+import { interopDefault } from '@/lib/lazyInterop';
 
 export const Route = createFileRoute('/dashboard/publish/dynamic')({
   component: DynamicPage,
 });
 
-const ReactPlayer = lazy(() => import('react-player'));
-const Viewer = lazy(() => import('react-viewer'));
+const ReactPlayer = lazy(() => import('react-player').then(interopDefault));
+const Viewer = lazy(() => import('react-viewer').then(interopDefault));
 
 interface ActionPlaceholderProps {
   onClick?: () => void;

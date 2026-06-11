@@ -63,6 +63,24 @@ const MIME_TYPES: Record<string, string> = {
   '.pdf': 'application/pdf',
 };
 
+// Hashed build files live exclusively under /assets/. A miss there means the
+// file belongs to a previous deploy; falling through to SSR would return the
+// HTML shell with a 200, which stale tabs then execute as JS and CDNs cache.
+// Answer 404 instead, and keep it uncacheable so a mid-deploy window cannot
+// poison the CDN.
+function serveAssetMiss(res: ServerResponse, pathname: string) {
+  if (!pathname.startsWith('/assets/')) {
+    return false;
+  }
+
+  res.statusCode = 404;
+  res.setHeader('Content-Type', 'text/plain; charset=utf-8');
+  res.setHeader('Cache-Control', 'no-store');
+  res.end('Not Found');
+
+  return true;
+}
+
 function tryServeStatic(req: IncomingMessage, res: ServerResponse) {
   if (!staticRoot || (req.method !== 'GET' && req.method !== 'HEAD')) {
     return false;
@@ -89,11 +107,11 @@ function tryServeStatic(req: IncomingMessage, res: ServerResponse) {
   try {
     stats = statSync(filePath);
   } catch {
-    return false;
+    return serveAssetMiss(res, pathname);
   }
 
   if (!stats.isFile()) {
-    return false;
+    return serveAssetMiss(res, pathname);
   }
 
   res.statusCode = 200;

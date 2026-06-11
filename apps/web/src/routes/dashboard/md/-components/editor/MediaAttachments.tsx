@@ -23,9 +23,10 @@ import { nanoid } from 'nanoid'
 import { useTranslation } from '@/i18n/client'
 import { useMdDraftStore } from '@/store/md-draft.store'
 import type { DraftFileDataClient } from '@/lib/types/draft'
+import { interopDefault } from '@/lib/lazyInterop'
 
-const ReactPlayer = lazy(() => import('react-player'))
-const Viewer = lazy(() => import('react-viewer'))
+const ReactPlayer = lazy(() => import('react-player').then(interopDefault))
+const Viewer = lazy(() => import('react-viewer').then(interopDefault))
 
 // Shared S3 upload logic
 async function uploadFileToS3(

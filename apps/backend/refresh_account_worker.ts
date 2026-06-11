@@ -1,4 +1,4 @@
-import { eq, lt, lte } from "drizzle-orm";
+import { and, eq, lt, lte } from "drizzle-orm";
 import { SocialMediaAccount as SocialMediaAccountTable } from "@db/schema/index.ts";
 import { SocialMediaClientFactory } from "./client/factory.ts";
 import type { MultipostDb } from "./db.ts";
@@ -71,16 +71,24 @@ export class RefreshAccountWorker {
    */
   async processAllAccountsNeedingRefresh(): Promise<void> {
     try {
-      // Find accounts expiring within 1 hour (regardless of isActive)
+      // Find active accounts expiring within 1 hour. Inactive accounts are
+      // excluded: refreshAccount marks an account inactive when its refresh
+      // token is rejected, and retrying those would fail forever until the
+      // user re-authorizes.
       const oneHourFromNow = new Date(Date.now() + 60 * 60 * 1000);
 
       const accountsNeedingRefresh = await this.db
         .select()
         .from(SocialMediaAccountTable)
-        .where(lte(SocialMediaAccountTable.expiresAt, oneHourFromNow));
+        .where(
+          and(
+            lte(SocialMediaAccountTable.expiresAt, oneHourFromNow),
+            eq(SocialMediaAccountTable.isActive, true),
+          ),
+        );
 
       console.log(
-        `📋 Found ${accountsNeedingRefresh.length} accounts expiring within 1 hour (all statuses)`,
+        `📋 Found ${accountsNeedingRefresh.length} active accounts expiring within 1 hour`,
       );
 
       for (const account of accountsNeedingRefresh) {

@@ -9,10 +9,11 @@ import { toast } from 'sonner';
 import ky from 'ky';
 import { useTranslation } from '@/i18n/client';
 import type { FileHosting as FileHostingTable } from '@db/schema/schema';
+import { interopDefault } from '@/lib/lazyInterop';
 
 type FileHosting = typeof FileHostingTable.$inferSelect;
 
-const Viewer = lazy(() => import('react-viewer'));
+const Viewer = lazy(() => import('react-viewer').then(interopDefault));
 
 interface MediaLibraryProps {
   onSelectImage?: (imageFile: FileHosting) => void;

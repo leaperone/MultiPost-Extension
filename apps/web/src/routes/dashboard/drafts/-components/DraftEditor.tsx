@@ -13,9 +13,10 @@ import axios from 'axios';
 import { nanoid } from 'nanoid';
 import { useTranslation } from '@/i18n/client';
 import DirectPublishModal from './DriectPublishModal';
+import { interopDefault } from '@/lib/lazyInterop';
 
-const Viewer = React.lazy(() => import('react-viewer'));
-const ReactPlayer = React.lazy(() => import('react-player'));
+const Viewer = React.lazy(() => import('react-viewer').then(interopDefault));
+const ReactPlayer = React.lazy(() => import('react-player').then(interopDefault));
 
 const ActionPlaceholder = ({ onClick, icon, text }: { onClick?: () => void; icon: string; text: string }) => (
   <button

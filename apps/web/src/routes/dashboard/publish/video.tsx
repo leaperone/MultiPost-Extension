@@ -48,12 +48,13 @@ import {
   trackPublishFailed,
   trackPlatformSelected,
 } from '@/lib/posthog/events';
+import { interopDefault } from '@/lib/lazyInterop';
 
 export const Route = createFileRoute('/dashboard/publish/video')({
   component: VideoPage,
 });
 
-const ReactPlayer = lazy(() => import('react-player'));
+const ReactPlayer = lazy(() => import('react-player').then(interopDefault));
 
 function VideoPage() {
   const { t } = useTranslation('publish');

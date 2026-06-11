@@ -8,8 +8,9 @@ import { Download, Pencil, Check, Clock, Palette, ImageIcon } from 'lucide-react
 import { useTranslation } from '@/i18n/client';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
+import { interopDefault } from '@/lib/lazyInterop';
 
-const Viewer = lazy(() => import('react-viewer'));
+const Viewer = lazy(() => import('react-viewer').then(interopDefault));
 
 interface ResultWaiterProps {
   taskId: string;

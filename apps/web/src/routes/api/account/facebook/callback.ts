@@ -1,6 +1,6 @@
 import { createFileRoute } from '@tanstack/react-router';
 
-import { updateFacebookUserAccountAfterOAuth } from '../../../../actions/social-media-accounts/facebook-pages';
+import { updateFacebookUserAccountAfterOAuth } from '../../../../actions/social-media-accounts/facebook-pages/server';
 import {
   debugFacebookToken,
   exchangeCodeForFacebookUserToken,
