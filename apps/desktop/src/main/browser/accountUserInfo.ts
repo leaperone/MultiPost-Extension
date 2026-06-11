@@ -77,7 +77,10 @@ export const PLATFORM_LOGIN_COOKIES: Partial<Record<PlatformType, LoginCookieRul
   instagram: [{ name: 'sessionid', domain: 'instagram.com' }],
   linkedin: [{ name: 'li_at', domain: 'linkedin.com' }],
   jianshu: [{ name: 'remember_user_token', domain: 'jianshu.com' }],
-  v2ex: [{ name: 'A2', domain: 'v2ex.com' }]
+  v2ex: [{ name: 'A2', domain: 'v2ex.com' }],
+  neteasepodcast: [{ name: 'MUSIC_U', domain: '163.com' }],
+  spotify: [{ name: 'sp_dc', domain: 'spotify.com' }],
+  ximalaya: [{ name: '1&_token', domain: 'ximalaya.com' }]
 }
 
 export function matchesLoginCookies(

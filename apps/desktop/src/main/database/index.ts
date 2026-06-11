@@ -1,5 +1,5 @@
 import Database from 'better-sqlite3'
-import { app } from 'electron'
+import { app, safeStorage } from 'electron'
 import { join } from 'path'
 import { existsSync, mkdirSync } from 'fs'
 import type {
@@ -832,16 +832,48 @@ export class DatabaseService {
   }
 
   private serializeProxyConfig(proxyConfig: ProxyConfig | undefined): string | null {
-    // TODO(proxy): encrypt proxyConfig.password with Electron safeStorage before persisting.
     const normalized = normalizeProxyConfig(proxyConfig)
-    return normalized ? JSON.stringify(normalized) : null
+    if (!normalized) return null
+
+    const { password, ...rest } = normalized
+    const stored: Record<string, unknown> = { ...rest }
+
+    if (password && safeStorage.isEncryptionAvailable()) {
+      // Fresh plaintext password (create/edit): encrypt at rest.
+      stored.encryptedPassword = safeStorage.encryptString(password).toString('base64')
+    } else if (proxyConfig?.encryptedPassword) {
+      // Round-trip of an already-stored secret (e.g. a login-status-only
+      // update, or safeStorage temporarily unavailable): preserve the blob
+      // verbatim so credentials are never lost.
+      stored.encryptedPassword = proxyConfig.encryptedPassword
+    }
+    // If safeStorage is unavailable and only plaintext is present, the
+    // password is intentionally dropped rather than written in the clear.
+
+    return JSON.stringify(stored)
   }
 
   private parseProxyConfig(value: string | null, accountId: string): ProxyConfig | undefined {
     if (!value) return undefined
 
     try {
-      return normalizeProxyConfig(JSON.parse(value))
+      const parsed = JSON.parse(value) as ProxyConfig
+      const normalized = normalizeProxyConfig(parsed)
+      if (!normalized) return undefined
+
+      if (parsed.encryptedPassword) {
+        // Keep the blob so any re-serialization preserves it even if we can't
+        // decrypt right now (keychain locked, copied from another machine).
+        normalized.encryptedPassword = parsed.encryptedPassword
+        try {
+          normalized.password = safeStorage.decryptString(
+            Buffer.from(parsed.encryptedPassword, 'base64')
+          )
+        } catch (error) {
+          console.warn(`[Database] Failed to decrypt proxy password for ${accountId}:`, error)
+        }
+      }
+      return normalized
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error)
       throw new Error(`Invalid proxy_config for account ${accountId}: ${message}`)

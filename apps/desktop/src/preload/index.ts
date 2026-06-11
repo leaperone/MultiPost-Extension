@@ -225,6 +225,9 @@ const api = {
     getPlatforms: (): Promise<PlatformInfo[]> => ipcRenderer.invoke(IPC_CHANNELS.APP_GET_PLATFORMS),
     getFileInfo: (filePath: string): Promise<FileData> =>
       ipcRenderer.invoke(IPC_CHANNELS.APP_GET_FILE_INFO, filePath),
+    // Allowlist raw file paths (e.g. from drag & drop) for local-file://
+    registerLocalFiles: (paths: string[]): Promise<void> =>
+      ipcRenderer.invoke(IPC_CHANNELS.APP_REGISTER_LOCAL_FILES, paths),
     selectFile: (options?: {
       filters?: { name: string; extensions: string[] }[]
       multiple?: boolean

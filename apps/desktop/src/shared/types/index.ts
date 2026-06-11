@@ -234,6 +234,10 @@ export interface ProxyConfig {
   port: number
   username?: string
   password?: string
+  /** safeStorage-encrypted password blob (base64), main-process only */
+  encryptedPassword?: string
+  /** Read-only hint for the UI: a password exists but is never sent to renderers */
+  hasPassword?: boolean
 }
 
 export interface Account {
@@ -251,6 +255,23 @@ export interface Account {
   isDefault: boolean
   createdAt: number
   updatedAt: number
+}
+
+/**
+ * Strip the proxy password before an account crosses to a renderer. The web
+ * dashboard view loads remote web content, so the decrypted password must
+ * never leave the main process; the UI only learns whether one is set.
+ */
+export function toPublicAccount(account: Account): Account {
+  const proxy = account.proxyConfig
+  if (!proxy || (!proxy.password && !proxy.encryptedPassword)) {
+    return account
+  }
+  const { password, encryptedPassword, ...proxyRest } = proxy
+  return {
+    ...account,
+    proxyConfig: { ...proxyRest, hasPassword: Boolean(password || encryptedPassword) }
+  }
 }
 
 // Account group types

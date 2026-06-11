@@ -1,6 +1,6 @@
 import { app, session, type Session } from 'electron'
 import * as fs from 'fs'
-import { basename } from 'path'
+import { basename, extname, resolve } from 'path'
 import { is } from '@electron-toolkit/utils'
 import { getMimeType } from '../utils/mime'
 
@@ -100,14 +100,64 @@ export function hardenSession(ses: Session, opts: HardenSessionOptions = {}): vo
   })
 }
 
+// Per-session capability allowlist for local-file://. The protocol is
+// registered on account sessions so fill scripts can fetch media, which means
+// remote platform pages could otherwise read arbitrary files from disk. Only
+// paths the app itself handed out (file picker, drag & drop, publish payloads)
+// are servable.
+const allowedLocalFiles = new Set<string>()
+
+// Media extensions the app legitimately hands to platform views. Restricting
+// the allowlist to these limits the blast radius if app UI is ever XSS'd.
+const ALLOWED_LOCAL_FILE_EXTENSIONS = new Set([
+  '.jpg', '.jpeg', '.png', '.gif', '.webp', '.bmp', '.heic', '.avif',
+  '.mp4', '.mov', '.avi', '.mkv', '.webm', '.flv', '.m4v',
+  '.mp3', '.wav', '.m4a', '.aac', '.flac', '.ogg'
+])
+
+function hasAllowedMediaExtension(filePath: string): boolean {
+  return ALLOWED_LOCAL_FILE_EXTENSIONS.has(extname(filePath).toLowerCase())
+}
+
+// Canonical key for the allowlist: resolve symlinks so a later swap of a
+// registered symlink/junction can't redirect to a sensitive file, and
+// case-fold on Windows where paths are case-insensitive.
+function canonicalLocalFileKey(filePath: string): string {
+  let resolved = resolve(filePath)
+  try {
+    resolved = fs.realpathSync.native(resolved)
+  } catch {
+    // File may not exist yet at registration; fall back to the resolved path.
+  }
+  return process.platform === 'win32' ? resolved.toLowerCase() : resolved
+}
+
+export function allowLocalFile(filePath: string): void {
+  if (typeof filePath === 'string' && filePath.length > 0 && hasAllowedMediaExtension(filePath)) {
+    allowedLocalFiles.add(canonicalLocalFileKey(filePath))
+  }
+}
+
+export function allowLocalFileUrl(urlString: string): void {
+  try {
+    allowLocalFile(getLocalFilePath(urlString))
+  } catch {
+    // Malformed URL: nothing to allow.
+  }
+}
+
 export async function handleLocalFileRequest(request: Request): Promise<Response> {
   const filePath = getLocalFilePath(request.url)
 
-  if (!fs.existsSync(filePath)) {
-    return new Response('File not found', { status: 404 })
-  }
   if (filePath.includes('..')) {
     return new Response('Invalid path', { status: 403 })
+  }
+  if (!allowedLocalFiles.has(canonicalLocalFileKey(filePath))) {
+    console.warn('[LocalFileProtocol] Blocked non-allowlisted file:', basename(filePath))
+    return new Response('Forbidden', { status: 403 })
+  }
+  if (!fs.existsSync(filePath)) {
+    return new Response('File not found', { status: 404 })
   }
 
   try {
@@ -123,7 +173,6 @@ export async function handleLocalFileRequest(request: Request): Promise<Response
   }
 }
 
-// TODO Phase 1: replace path-shaped local-file URLs with a per-session capability allowlist.
 export function registerLocalFileProtocol(ses: Session): void {
   if (localFileProtocolSessions.has(ses)) {
     return

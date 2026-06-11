@@ -12,15 +12,28 @@ import { getDesktopUserAgent, handleLocalFileRequest, hardenSession } from './br
 import { closeAllAnonymizedProxies } from './proxy/accountProxy'
 import { openExternalUrl } from './browser/externalUrl'
 import { loadWindowState, trackWindowState } from './windowState'
+import log from 'electron-log/main'
+
+// Unified logging: console.* in the main process lands in
+// userData/logs/main.log with rotation, so production issues are diagnosable
+// from a file users can actually send us.
+// preload:false is critical — electron-log otherwise injects a logging preload
+// (window.__electronLog) into every future session, including the untrusted
+// platform BrowserViews that are supposed to receive no app preload at all.
+log.initialize({ preload: false, spyRendererConsole: false })
+log.transports.file.maxSize = 5 * 1024 * 1024
+log.transports.file.resolvePathFn = () => join(app.getPath('userData'), 'logs', 'main.log')
+log.transports.file.writeOptions = { ...log.transports.file.writeOptions, mode: 0o600 }
+Object.assign(console, log.functions)
 
 // Process-level safety net: log instead of silently dying. Electron would
 // otherwise show a generic crash dialog (uncaughtException) or nothing at all
 // (unhandledRejection), which is hostile for a production desktop app.
 process.on('uncaughtException', (error) => {
-  console.error('[Main] Uncaught exception:', error)
+  log.error('[Main] Uncaught exception:', error)
 })
 process.on('unhandledRejection', (reason) => {
-  console.error('[Main] Unhandled rejection:', reason)
+  log.error('[Main] Unhandled rejection:', reason)
 })
 
 // Single instance: a second launch focuses the existing window instead of

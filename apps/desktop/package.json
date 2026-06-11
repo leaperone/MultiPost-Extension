@@ -41,6 +41,7 @@
     "better-sqlite3": "^11.8.1",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
+    "electron-log": "^5.4.4",
     "electron-store": "^10.0.1",
     "electron-updater": "^6.7.3",
     "framer-motion": "^12.29.0",

@@ -4,6 +4,7 @@ import { v4 as uuidv4 } from 'uuid'
 import { is } from '@electron-toolkit/utils'
 import {
   createLocalFileUrl,
+  toPublicAccount,
   type Account,
   type PlatformType,
   type SyncContentType,
@@ -22,7 +23,12 @@ import {
 import { IPC_CHANNELS, PLATFORMS, PLATFORM_PUBLISH_URLS } from '../../shared/constants'
 import { getAdapter } from '../platforms'
 import { getMimeType } from '../utils/mime'
-import { hardenSession, registerLocalFileProtocol } from './sessionHardening'
+import {
+  allowLocalFile,
+  allowLocalFileUrl,
+  hardenSession,
+  registerLocalFileProtocol
+} from './sessionHardening'
 import { DatabaseService } from '../database'
 import {
   executeExtensionFill,
@@ -1564,21 +1570,12 @@ export class BrowserViewManager {
       case 'lizhi':
         // TODO(verify-login): confirm 荔枝播客 real-login cookie/storage signals.
         return this.hasCookieForAnyDomain(cookies, ['lizhi.fm'])
-      case 'ximalaya':
-        // TODO(verify-login): confirm 喜马拉雅 real-login cookie/storage signals.
-        return this.hasCookieForAnyDomain(cookies, ['ximalaya.com'])
       case 'xiaoyuzhou':
         // TODO(verify-login): confirm 小宇宙播客 real-login cookie/storage signals.
         return this.hasCookieForAnyDomain(cookies, ['xiaoyuzhoufm.com'])
       case 'qingting':
         // TODO(verify-login): confirm 蜻蜓FM real-login cookie/storage signals.
         return this.hasCookieForAnyDomain(cookies, ['qingting.fm'])
-      case 'neteasepodcast':
-        // TODO(verify-login): confirm 网易云音乐播客 real-login cookie/storage signals.
-        return this.hasCookieForAnyDomain(cookies, ['music.163.com', '163.com'])
-      case 'spotify':
-        // TODO(verify-login): confirm Spotify for Creators real-login cookie/storage signals.
-        return this.hasCookieForAnyDomain(cookies, ['spotify.com'])
       default:
         return cookies.length > 0
     }
@@ -1613,7 +1610,9 @@ export class BrowserViewManager {
 
     const updated = db.updateAccount(accountId, updates)
     if (updated) {
-      this.broadcastToUi(IPC_CHANNELS.ACCOUNT_UPDATED_EVENT, updated)
+      // Never broadcast the decrypted proxy password to UI webContents
+      // (the web dashboard hosts remote content).
+      this.broadcastToUi(IPC_CHANNELS.ACCOUNT_UPDATED_EVENT, toPublicAccount(updated))
     }
     return updated
   }
@@ -1760,7 +1759,8 @@ export class BrowserViewManager {
     const partition = `persist:${platform}-default`
     const ses = session.fromPartition(partition)
     hardenSession(ses)
-    // TODO(phase-capability): replace path-shaped local-file URLs with a per-session allowlist of user-selected files.
+    // local-file:// requests are gated by the capability allowlist in
+    // sessionHardening (only app-handed-out paths are servable).
     registerLocalFileProtocol(ses)
 
     // Create BrowserView with isolated session
@@ -2240,7 +2240,8 @@ export class BrowserViewManager {
     const partition = sessionPartition || `persist:executor-${accountId}`
     const ses = session.fromPartition(partition)
     hardenSession(ses)
-    // TODO(phase-capability): replace path-shaped local-file URLs with a per-session allowlist of user-selected files.
+    // local-file:// requests are gated by the capability allowlist in
+    // sessionHardening (only app-handed-out paths are servable).
     registerLocalFileProtocol(ses)
     await applyAccountProxy(ses, account)
 
@@ -3004,7 +3005,8 @@ export class BrowserViewManager {
         console.log(`[BrowserViewManager] Account ${displayName} using partition: ${partition}`)
         const ses = session.fromPartition(partition)
         hardenSession(ses)
-        // TODO(phase-capability): replace path-shaped local-file URLs with a per-session allowlist of user-selected files.
+        // local-file:// requests are gated by the capability allowlist in
+        // sessionHardening (only app-handed-out paths are servable).
         registerLocalFileProtocol(ses)
         await applyAccountProxy(ses, account)
         await acquireAccountProxyForSession(ses)
@@ -3403,9 +3405,24 @@ export class BrowserViewManager {
         // Standard scheme URL: local-file:// + path (Chromium treats first segment as host)
         // e.g. /tmp/photo.png -> local-file://tmp/photo.png (host=tmp, path=/photo.png)
         // The protocol handler reconstructs: '/' + host + pathname = /tmp/photo.png
+        allowLocalFile(item)
         return { url: createLocalFileUrl(item), name, type }
       }
+      // Publishing is user-initiated: the files referenced by the payload are
+      // legitimately shared with the platform views.
+      if (item.url.startsWith('local-file://')) {
+        allowLocalFileUrl(item.url)
+      }
       return { url: item.url, name: item.name, type: item.type || 'application/octet-stream' }
+    }
+
+    // Existing FileData objects skip toFileData, so their local-file:// URLs
+    // must still be allowlisted here or fill scripts would get a 403.
+    const registerExisting = <T extends { url?: string }>(fileData: T): T => {
+      if (fileData.url?.startsWith('local-file://')) {
+        allowLocalFileUrl(fileData.url)
+      }
+      return fileData
     }
 
     const normalized = { ...data }
@@ -3417,25 +3434,34 @@ export class BrowserViewManager {
       normalized.videos = normalized.videos.map((item) => toFileData(item, 'video'))
     }
     if ('video' in normalized && normalized.video) {
-      normalized.video = typeof normalized.video === 'string' ? toFileData(normalized.video, 'video') : normalized.video
+      normalized.video =
+        typeof normalized.video === 'string'
+          ? toFileData(normalized.video, 'video')
+          : registerExisting(normalized.video)
     }
     if ('cover' in normalized && normalized.cover) {
-      normalized.cover = typeof normalized.cover === 'string' ? toFileData(normalized.cover, 'image') : normalized.cover
+      normalized.cover =
+        typeof normalized.cover === 'string'
+          ? toFileData(normalized.cover, 'image')
+          : registerExisting(normalized.cover)
     }
     if ('horizontalCover' in normalized && normalized.horizontalCover) {
       normalized.horizontalCover =
         typeof normalized.horizontalCover === 'string'
           ? toFileData(normalized.horizontalCover, 'image')
-          : normalized.horizontalCover
+          : registerExisting(normalized.horizontalCover)
     }
     if ('verticalCover' in normalized && normalized.verticalCover) {
       normalized.verticalCover =
         typeof normalized.verticalCover === 'string'
           ? toFileData(normalized.verticalCover, 'image')
-          : normalized.verticalCover
+          : registerExisting(normalized.verticalCover)
     }
     if ('audio' in normalized && normalized.audio) {
-      normalized.audio = typeof normalized.audio === 'string' ? toFileData(normalized.audio, 'audio') : normalized.audio
+      normalized.audio =
+        typeof normalized.audio === 'string'
+          ? toFileData(normalized.audio, 'audio')
+          : registerExisting(normalized.audio)
     }
 
     return normalized

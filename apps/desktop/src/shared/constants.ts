@@ -1197,6 +1197,7 @@ export const IPC_CHANNELS = {
   APP_GET_VERSION: 'app:getVersion',
   APP_GET_AUTO_LAUNCH: 'app:getAutoLaunch',
   APP_SET_AUTO_LAUNCH: 'app:setAutoLaunch',
+  APP_REGISTER_LOCAL_FILES: 'app:registerLocalFiles',
   APP_GET_PLATFORMS: 'app:getPlatforms',
   APP_READ_FILE_AS_DATA_URL: 'app:readFileAsDataURL',
   APP_GET_FILE_INFO: 'app:getFileInfo',

@@ -131,12 +131,16 @@ export function DynamicPublishPage({
       setTitle(initialDraft.title || '')
       setContent(initialDraft.content || '')
       setTags(initialDraft.tags || [])
-      setImages(
-        (initialDraft.images || []).filter(isImagePath).map((path) => mediaFromPath(path, 'image'))
-      )
-      setVideos(
-        (initialDraft.videos || []).filter(isVideoPath).map((path) => mediaFromPath(path, 'video'))
-      )
+      const imagePaths = (initialDraft.images || []).filter(isImagePath)
+      const videoPaths = (initialDraft.videos || []).filter(isVideoPath)
+      // Previews fetch via local-file://, which only serves allowlisted paths.
+      void window.api.app
+        .registerLocalFiles([...imagePaths, ...videoPaths])
+        .catch((error) => console.error('Failed to register draft media:', error))
+        .finally(() => {
+          setImages(imagePaths.map((path) => mediaFromPath(path, 'image')))
+          setVideos(videoPaths.map((path) => mediaFromPath(path, 'video')))
+        })
       setCurrentDraftId(initialDraft.id)
     }
   }, [initialDraft])
@@ -144,12 +148,19 @@ export function DynamicPublishPage({
   const addMediaPaths = useCallback((paths: string[]) => {
     const imagePaths = paths.filter(isImagePath)
     const videoPaths = paths.filter(isVideoPath)
-    if (imagePaths.length > 0) {
-      setImages((prev) => appendMedia(prev, imagePaths, 'image', MAX_IMAGES))
-    }
-    if (videoPaths.length > 0) {
-      setVideos((prev) => appendMedia(prev, videoPaths, 'video', MAX_VIDEOS))
-    }
+    if (imagePaths.length === 0 && videoPaths.length === 0) return
+    // Register before rendering previews so local-file:// requests pass the allowlist
+    void window.api.app
+      .registerLocalFiles([...imagePaths, ...videoPaths])
+      .catch((error) => console.error('Failed to register media files:', error))
+      .finally(() => {
+        if (imagePaths.length > 0) {
+          setImages((prev) => appendMedia(prev, imagePaths, 'image', MAX_IMAGES))
+        }
+        if (videoPaths.length > 0) {
+          setVideos((prev) => appendMedia(prev, videoPaths, 'video', MAX_VIDEOS))
+        }
+      })
   }, [])
 
   const handlePickImages = useCallback(async () => {

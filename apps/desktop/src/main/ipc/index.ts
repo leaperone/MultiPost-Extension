@@ -6,6 +6,7 @@ import { IPC_CHANNELS, PLATFORMS } from '../../shared/constants'
 import { getMimeType } from '../utils/mime'
 import {
   createLocalFileUrl,
+  toPublicAccount,
   type Account,
   type AccountGroup,
   type Draft,
@@ -27,6 +28,7 @@ import { BrowserViewManager } from '../browser/browserViewManager'
 import { DatabaseService } from '../database'
 import type { KeepAliveService } from '../keepalive'
 import { normalizeProxyConfig } from '../proxy/accountProxy'
+import { allowLocalFile } from '../browser/sessionHardening'
 
 type BrowserViewManagerGetter = () => BrowserViewManager | null
 
@@ -152,12 +154,13 @@ export function registerIpcHandlers(
   ipcMain.handle(
     IPC_CHANNELS.ACCOUNT_LIST,
     async (_, filters?: { platform?: PlatformType; groupId?: string }) => {
-      return db.listAccounts(filters)
+      return db.listAccounts(filters).map(toPublicAccount)
     }
   )
 
   ipcMain.handle(IPC_CHANNELS.ACCOUNT_GET, async (_, id: string) => {
-    return db.getAccount(id)
+    const account = db.getAccount(id)
+    return account ? toPublicAccount(account) : null
   })
 
   ipcMain.handle(
@@ -176,7 +179,7 @@ export function registerIpcHandlers(
         createdAt: now,
         updatedAt: now
       }
-      return db.createAccount(account)
+      return toPublicAccount(db.createAccount(account))
     }
   )
 
@@ -193,14 +196,25 @@ export function registerIpcHandlers(
     const hasProxyConfigUpdate = hasOwnProperty(data, 'proxyConfig')
     const updateData: Partial<Account> = { ...data }
     if (hasProxyConfigUpdate) {
-      updateData.proxyConfig = normalizeProxyConfig(data.proxyConfig)
+      const nextProxy = normalizeProxyConfig(data.proxyConfig)
+      // The renderer never receives the stored password, so an edit that keeps
+      // the same proxy host submits an empty password. Carry the existing
+      // secret forward instead of silently wiping it.
+      if (nextProxy && !nextProxy.password) {
+        const existing = db.getAccount(id)?.proxyConfig
+        if (existing && existing.host === nextProxy.host) {
+          if (existing.password) nextProxy.password = existing.password
+          if (existing.encryptedPassword) nextProxy.encryptedPassword = existing.encryptedPassword
+        }
+      }
+      updateData.proxyConfig = nextProxy
     }
 
     const updated = db.updateAccount(id, updateData)
     if (updated && hasProxyConfigUpdate) {
       await getBrowserViewManager()?.reapplyAccountProxy(id)
     }
-    return updated
+    return updated ? toPublicAccount(updated) : updated
   })
 
   ipcMain.handle(
@@ -214,7 +228,8 @@ export function registerIpcHandlers(
   ipcMain.handle(IPC_CHANNELS.ACCOUNT_REFRESH_INFO, async (_, id: string) => {
     const manager = getBrowserViewManager()
     if (!manager) throw new Error('BrowserViewManager not initialized')
-    return manager.refreshAccountInfo(id)
+    const updated = await manager.refreshAccountInfo(id)
+    return updated ? toPublicAccount(updated) : updated
   })
 
   // Browser handlers
@@ -583,6 +598,7 @@ export function registerIpcHandlers(
       const stats = await fs.promises.stat(filePath)
       const mimeType = getMimeType(filePath)
       const name = path.basename(filePath)
+      allowLocalFile(filePath)
 
       return {
         name,
@@ -632,7 +648,22 @@ export function registerIpcHandlers(
     await fs.promises.mkdir(dir, { recursive: true })
     const filePath = path.join(dir, `pasted-${Date.now()}-${uuidv4().slice(0, 8)}.png`)
     await fs.promises.writeFile(filePath, image.toPNG())
+    allowLocalFile(filePath)
     return filePath
+  })
+
+  // Allowlist files for the local-file:// protocol. Drag & drop hands the
+  // renderer raw paths without a main-process round-trip, so it must register
+  // them before previews/fill scripts can fetch the files.
+  ipcMain.handle(IPC_CHANNELS.APP_REGISTER_LOCAL_FILES, async (_, paths: unknown) => {
+    if (!Array.isArray(paths)) {
+      throw new Error('Invalid argument: paths must be an array')
+    }
+    for (const filePath of paths) {
+      if (typeof filePath === 'string' && filePath.length > 0 && fs.existsSync(filePath)) {
+        allowLocalFile(filePath)
+      }
+    }
   })
 
   // Layout handlers

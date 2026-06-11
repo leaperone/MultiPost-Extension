@@ -10,6 +10,8 @@ export interface ProxyConfigDraft {
   port: string
   username: string
   password: string
+  /** A saved password exists in the main process but is never sent here */
+  hasSavedPassword: boolean
 }
 
 const PROXY_PROTOCOLS: Array<{ key: ProxyConfig['protocol']; label: string }> = [
@@ -35,7 +37,8 @@ export function createProxyConfigDraft(proxyConfig?: ProxyConfig): ProxyConfigDr
     host: proxyConfig?.host || '',
     port: proxyConfig?.port ? String(proxyConfig.port) : '',
     username: proxyConfig?.username || '',
-    password: proxyConfig?.password || ''
+    password: proxyConfig?.password || '',
+    hasSavedPassword: Boolean(proxyConfig?.hasPassword || proxyConfig?.password)
   }
 }
 
@@ -148,6 +151,7 @@ export function ProxyConfigSection({
               variant="bordered"
               value={value.password}
               isDisabled={!value.enabled}
+              placeholder={value.hasSavedPassword ? '已保存，留空则不修改' : undefined}
               onChange={(event) => update({ password: event.target.value })}
             />
           </div>
