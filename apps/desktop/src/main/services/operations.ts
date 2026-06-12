@@ -113,11 +113,42 @@ export function listPlatforms(): PlatformInfo[] {
 export type MediaInput = string | { path?: string; url?: string; name?: string }
 
 const DOWNLOAD_TIMEOUT_MS = 5 * 60 * 1000
+const API_MEDIA_RETENTION_MS = 24 * 60 * 60 * 1000
+
+function mediaDirPath(): string {
+  return path.join(app.getPath('userData'), 'api-media')
+}
 
 function mediaDir(): string {
-  const dir = path.join(app.getPath('userData'), 'api-media')
+  const dir = mediaDirPath()
   fs.mkdirSync(dir, { recursive: true })
   return dir
+}
+
+/**
+ * Downloaded publish media is one-shot — a remote image/video is only needed
+ * until its publish run finishes, so unlike pasted-images there is nothing to
+ * reference-check. Sweep anything past the retention window so api-media/ does
+ * not grow without bound. Cheap and best-effort; call at app startup.
+ */
+export function cleanupApiMedia(): void {
+  try {
+    const dir = mediaDirPath()
+    if (!fs.existsSync(dir)) return
+    const now = Date.now()
+    for (const name of fs.readdirSync(dir)) {
+      const filePath = path.join(dir, name)
+      try {
+        if (now - fs.statSync(filePath).mtimeMs > API_MEDIA_RETENTION_MS) {
+          fs.rmSync(filePath, { force: true })
+        }
+      } catch {
+        // Skip files that vanish mid-sweep
+      }
+    }
+  } catch (error) {
+    console.warn('[Operations] Failed to clean up api-media:', error)
+  }
 }
 
 function extensionForDownload(url: URL, contentType: string | null): string {

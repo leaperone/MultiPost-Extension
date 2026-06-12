@@ -9,7 +9,7 @@ import { initAutoUpdater, registerUpdaterIpcHandlers, checkForUpdatesSilently } 
 import { createMenu } from './menu'
 import { KeepAliveService } from './keepalive'
 import { startDebugServer } from './debug-server'
-import { initOperations } from './services/operations'
+import { cleanupApiMedia, initOperations } from './services/operations'
 import { stopExternalApiServer, syncExternalApiServer } from './api-server'
 import { getDesktopUserAgent, handleLocalFileRequest, hardenSession } from './browser/sessionHardening'
 import { closeAllAnonymizedProxies } from './proxy/accountProxy'
@@ -312,6 +312,7 @@ app.whenReady().then(async () => {
   await DatabaseService.getInstance().initialize()
 
   cleanupOrphanedPastedImages()
+  cleanupApiMedia()
 
   // Register IPC handlers
   registerIpcHandlers(ipcMain, () => browserViewManager, keepAliveService)
@@ -376,6 +377,10 @@ app.whenReady().then(async () => {
   syncExternalApiServer().catch((error) => {
     console.error('[Main] Failed to start external API server:', error)
   })
+  // The app is built to run for days on a second screen, so a startup-only
+  // sweep would let api-media grow between launches; re-sweep periodically.
+  // unref() so the timer never holds the process open at quit.
+  setInterval(cleanupApiMedia, 6 * 60 * 60 * 1000).unref()
 
   createTray(showMainWindow)
 
