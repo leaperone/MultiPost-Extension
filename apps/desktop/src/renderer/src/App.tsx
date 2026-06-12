@@ -2,7 +2,7 @@ import { useEffect } from 'react'
 import { UpdateNotification } from './components/UpdateNotification'
 import { BrowserTabs } from './components/BrowserTabs'
 import { NativeShell } from './components/native/NativeShell'
-import { useTabsStore } from './store/tabs.store'
+import { useTabsStore, HOME_TAB_ID } from './store/tabs.store'
 import { useUiStore, type NativeView } from './store/ui.store'
 
 const NATIVE_VIEWS = new Set<NativeView>([
@@ -39,11 +39,18 @@ function App(): React.ReactElement {
     })
   }, [])
 
+  // 主视图 renderer 同时承载顶部标签条和原生首页。非 home tab 激活时主进程把它
+  // 收缩成 72px 顶栏,此时必须隐藏 NativeShell——否则它会在矮视口里继续渲染、
+  // 内部侧栏(底部就是设置/关于)可滚动,被用户滚出来。用 hidden(display:none)
+  // 隐藏:不可见、不占布局、不可滚动,同时保留组件状态。
+  const tabs = useTabsStore((state) => state.tabs)
+  const isHomeActive = (tabs.find((tab) => tab.isActive)?.id ?? HOME_TAB_ID) === HOME_TAB_ID
+
   return (
-    <div className="flex h-screen flex-col bg-background">
+    <div className="flex h-screen flex-col overflow-hidden bg-background">
       <BrowserTabs className="shrink-0" />
 
-      <div className="min-h-0 flex-1">
+      <div className={`min-h-0 flex-1 ${isHomeActive ? '' : 'hidden'}`}>
         <NativeShell />
       </div>
 
