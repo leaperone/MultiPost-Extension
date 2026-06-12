@@ -7,8 +7,7 @@ export type PlatformType =
   | 'twitter'
   | 'douyin'
   | 'bilibili'
-  // zhihu: disabled due to anti-crawling issues
-  // | 'zhihu'
+  | 'zhihu'
   | 'wechat'
   // 中国动态平台
   | 'xueqiu'
