@@ -7,6 +7,7 @@ import {
   ClockIcon,
   FileTextIcon,
   MessageCircleHeartIcon,
+  MessageCircleQuestionIcon,
   PlusIcon,
   PodcastIcon,
   SendIcon,
@@ -25,6 +26,7 @@ import { AccountAvatar } from '../AccountAvatar'
 import { Button } from '../ui/button'
 import { Card } from '../ui/card'
 import { Badge } from '../ui/badge'
+import { CONTACT_LINKS, openContactLink } from './FeedbackDialog'
 
 interface QuickAction {
   view: NativeView
@@ -367,6 +369,36 @@ export function HomeView(): React.ReactElement {
           </Card>
         </motion.div>
       </div>
+
+      {/* Contact / feedback */}
+      <motion.div variants={listItem}>
+        <Card className="flex flex-col gap-4 p-5 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex items-start gap-3">
+            <span className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-foreground/[0.05] text-foreground">
+              <MessageCircleQuestionIcon className="size-5" />
+            </span>
+            <div>
+              <h2 className="text-sm font-medium">遇到问题？联系我们</h2>
+              <p className="mt-0.5 text-xs text-muted-foreground">
+                有任何使用问题或想支持新平台，随时反馈，我们会尽快帮你处理。
+              </p>
+            </div>
+          </div>
+          <div className="flex flex-wrap gap-2 sm:shrink-0">
+            {CONTACT_LINKS.map((link) => (
+              <Button
+                key={link.label}
+                size="sm"
+                variant="secondary"
+                onClick={() => openContactLink(link.url)}
+              >
+                <link.icon />
+                {link.label}
+              </Button>
+            ))}
+          </div>
+        </Card>
+      </motion.div>
     </motion.div>
   )
 }

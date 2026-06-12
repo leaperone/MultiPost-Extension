@@ -9,6 +9,7 @@ import {
   InfoIcon,
   Loader2,
   MessageCircleHeartIcon,
+  MessagesSquareIcon,
   NotebookPenIcon,
   PodcastIcon,
   SettingsIcon,
@@ -20,6 +21,7 @@ import { useUiStore, type NativeView } from '../../store/ui.store'
 import { useAccountsStore } from '../../store/accounts.store'
 import { usePublishStore, isTerminalTargetStatus } from '../../store/publish.store'
 import { HomeView } from './HomeView'
+import { FeedbackDialog } from './FeedbackDialog'
 import { PublishView } from './PublishView'
 import { AccountsPage } from '../pages/AccountsPage'
 import { DraftsPage } from '../pages/DraftsPage'
@@ -150,6 +152,42 @@ function SidebarSection({
   )
 }
 
+// Sidebar row that fires an action instead of switching a NativeView (e.g.
+// opening the feedback dialog). Mirrors SidebarItem's idle visuals.
+function SidebarActionButton({
+  icon,
+  label,
+  isCollapsed,
+  onClick
+}: {
+  icon: React.ReactNode
+  label: string
+  isCollapsed: boolean
+  onClick: () => void
+}): React.ReactElement {
+  const button = (
+    <button
+      type="button"
+      onClick={onClick}
+      className={`relative flex w-full items-center gap-2.5 rounded-lg px-2.5 py-2 text-[13px] text-muted-foreground transition-colors hover:text-foreground ${
+        isCollapsed ? 'justify-center' : ''
+      }`}
+    >
+      <span className="relative z-10 shrink-0">{icon}</span>
+      {!isCollapsed && <span className="relative z-10 truncate">{label}</span>}
+    </button>
+  )
+
+  if (isCollapsed) {
+    return (
+      <Tooltip content={label} side="right">
+        {button}
+      </Tooltip>
+    )
+  }
+  return button
+}
+
 const pageVariants = {
   initial: { opacity: 0, y: 10 },
   enter: { opacity: 1, y: 0, transition: { duration: 0.18, ease: 'easeOut' as const } },
@@ -208,6 +246,7 @@ export function NativeShell(): React.ReactElement {
   const isCollapsed = useUiStore((state) => state.isSidebarCollapsed)
   const toggleSidebar = useUiStore((state) => state.toggleSidebar)
   const refreshAccounts = useAccountsStore((state) => state.refresh)
+  const [isFeedbackOpen, setIsFeedbackOpen] = useState(false)
 
   // Publish run indicator: spinner while any target is still working, and a
   // red dot once a finished run contains failures the user hasn't looked at.
@@ -290,6 +329,12 @@ export function NativeShell(): React.ReactElement {
             isCollapsed={isCollapsed}
             onSelect={navigate}
           />
+          <SidebarActionButton
+            icon={<MessagesSquareIcon className="size-4" />}
+            label="反馈"
+            isCollapsed={isCollapsed}
+            onClick={() => setIsFeedbackOpen(true)}
+          />
           <Button
             size="icon-sm"
             variant="ghost"
@@ -317,6 +362,8 @@ export function NativeShell(): React.ReactElement {
           </motion.div>
         </AnimatePresence>
       </main>
+
+      <FeedbackDialog open={isFeedbackOpen} onOpenChange={setIsFeedbackOpen} />
     </div>
   )
 }
