@@ -75,7 +75,7 @@ export function AboutPage(): React.ReactElement {
             href="https://leaper.one"
             target="_blank"
             rel="noopener noreferrer"
-            className="text-foreground hover:underline"
+            className="text-primary hover:underline"
           >
             Leaper One
           </a>

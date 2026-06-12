@@ -233,7 +233,7 @@ export function HomeView(): React.ReactElement {
             whileTap={{ scale: 0.98 }}
             className="group relative flex flex-col gap-3 overflow-hidden rounded-xl bg-card p-4 text-left before:pointer-events-none before:absolute before:inset-0 before:bg-foreground/[0.03] before:opacity-0 before:transition-opacity hover:before:opacity-100"
           >
-            <span className="flex size-10 items-center justify-center rounded-lg bg-foreground/[0.05] text-foreground transition-colors group-hover:bg-foreground group-hover:text-background">
+            <span className="flex size-10 items-center justify-center rounded-lg bg-foreground/[0.05] text-foreground transition-colors group-hover:bg-primary group-hover:text-primary-foreground">
               {action.icon}
             </span>
             <span>

@@ -84,7 +84,7 @@ function SidebarItem({
       type="button"
       onClick={onSelect}
       className={`relative flex w-full items-center gap-2.5 rounded-lg px-2.5 py-2 text-[13px] transition-colors ${
-        isActive ? 'font-medium text-foreground' : 'text-muted-foreground hover:text-foreground'
+        isActive ? 'font-medium text-primary' : 'text-muted-foreground hover:text-foreground'
       } ${isCollapsed ? 'justify-center' : ''}`}
     >
       {isActive && (
