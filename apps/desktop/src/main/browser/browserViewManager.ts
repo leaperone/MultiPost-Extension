@@ -5,7 +5,8 @@ import {
   session,
   ipcMain,
   dialog,
-  type Session
+  type Session,
+  type WebPreferences
 } from 'electron'
 import { join, basename, extname } from 'path'
 import { v4 as uuidv4 } from 'uuid'
@@ -178,6 +179,18 @@ const WEB_DASHBOARD_BASE_URL = is.dev
   ? process.env.MULTIPOST_WEB_URL || 'http://localhost:3000'
   : 'https://multipost.app'
 
+// This preload only injects a page-world helper on allowlisted platform hosts.
+// It must not expose app IPC or Node APIs to third-party content.
+function createThirdPartyContentWebPreferences(ses: Session): WebPreferences {
+  return {
+    preload: join(__dirname, '../preload/injector-helper.js'),
+    session: ses,
+    contextIsolation: true,
+    nodeIntegration: false,
+    sandbox: true
+  }
+}
+
 export class BrowserViewManager {
   private mainWindow: BrowserWindow
   private views: Map<string, ManagedBrowserView> = new Map()
@@ -267,12 +280,7 @@ export class BrowserViewManager {
             const child = new BrowserWindow({
               ...options,
               autoHideMenuBar: true,
-              webPreferences: {
-                session: ses,
-                contextIsolation: true,
-                nodeIntegration: false,
-                sandbox: true
-              }
+              webPreferences: createThirdPartyContentWebPreferences(ses)
             })
             this.installNavigationGuard(child.webContents, `child-window:${url}`)
             trackAccountProxyForWebContents(child.webContents)
@@ -1339,14 +1347,7 @@ export class BrowserViewManager {
 
     // Create WebContentsView with isolated session
     const view = new WebContentsView({
-      webPreferences: {
-        // Security: third-party platform pages get NO app preload — do not expose
-        // window.api / window.electron (raw ipcRenderer) to untrusted remote content.
-        session: ses,
-        contextIsolation: true,
-        nodeIntegration: false,
-        sandbox: true
-      }
+      webPreferences: createThirdPartyContentWebPreferences(ses)
     })
     this.installNavigationGuard(view.webContents, `account:${accountId}`)
 
@@ -2028,14 +2029,7 @@ export class BrowserViewManager {
 
     // Create WebContentsView with isolated session
     const view = new WebContentsView({
-      webPreferences: {
-        // Security: third-party platform pages get NO app preload — do not expose
-        // window.api / window.electron (raw ipcRenderer) to untrusted remote content.
-        session: ses,
-        contextIsolation: true,
-        nodeIntegration: false,
-        sandbox: true
-      }
+      webPreferences: createThirdPartyContentWebPreferences(ses)
     })
     this.installNavigationGuard(view.webContents, `platform:${platform}`)
 
@@ -2546,14 +2540,7 @@ export class BrowserViewManager {
 
     // Create WebContentsView
     const view = new WebContentsView({
-      webPreferences: {
-        // Security: third-party platform pages get NO app preload — do not expose
-        // window.api / window.electron (raw ipcRenderer) to untrusted remote content.
-        session: ses,
-        contextIsolation: true,
-        nodeIntegration: false,
-        sandbox: true
-      }
+      webPreferences: createThirdPartyContentWebPreferences(ses)
     })
     this.installNavigationGuard(view.webContents, `executor:${accountId}`)
 
@@ -3312,14 +3299,7 @@ export class BrowserViewManager {
 
         // Create WebContentsView
         const view = new WebContentsView({
-          webPreferences: {
-            // Security: third-party platform pages get NO app preload — do not expose
-            // window.api / window.electron (raw ipcRenderer) to untrusted remote content.
-            session: ses,
-            contextIsolation: true,
-            nodeIntegration: false,
-            sandbox: true
-          }
+          webPreferences: createThirdPartyContentWebPreferences(ses)
         })
         this.installNavigationGuard(view.webContents, `publish-group:${groupId}:${accountId}`)
 

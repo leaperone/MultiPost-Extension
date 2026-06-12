@@ -37,7 +37,7 @@ export function applyDebugLogSetting(enabled: boolean): void {
 export function initLogging(): void {
   // preload:false is critical — electron-log otherwise injects a logging preload
   // (window.__electronLog) into every future session, including the untrusted
-  // platform BrowserViews that are supposed to receive no app preload at all.
+  // platform BrowserViews that only receive the narrow injector-helper preload.
   // Renderer logs instead travel over our own preload bridge (log:fromRenderer).
   log.initialize({ preload: false, spyRendererConsole: false })
   log.transports.file.maxSize = 5 * 1024 * 1024

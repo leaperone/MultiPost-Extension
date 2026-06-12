@@ -11,7 +11,7 @@
     "isolatedModules": true,
     "noEmit": true,
     "outDir": "../../out/preload",
-    "rootDir": ".",
+    "rootDir": "..",
     "baseUrl": ".",
     "paths": {
       "@shared/*": ["../shared/*"]

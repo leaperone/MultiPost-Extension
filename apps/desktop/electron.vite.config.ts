@@ -2,7 +2,10 @@ import { resolve } from 'path'
 import { defineConfig, externalizeDepsPlugin, loadEnv } from 'electron-vite'
 import react from '@vitejs/plugin-react'
 import tailwindcss from '@tailwindcss/vite'
-import { injectorBundlesVirtualModulePlugin } from './scripts/injector-bundles.mjs'
+import {
+  injectorBundlesVirtualModulePlugin,
+  injectorContentHelperVirtualModulePlugin
+} from './scripts/injector-bundles.mjs'
 
 export default defineConfig(({ mode }) => {
   // 第三个参数为空字符串，加载所有环境变量（不限制前缀）
@@ -32,7 +35,7 @@ export default defineConfig(({ mode }) => {
       }
     },
     preload: {
-      plugins: [externalizeDepsPlugin()],
+      plugins: [injectorContentHelperVirtualModulePlugin(), externalizeDepsPlugin()],
       resolve: {
         alias: {
           '@shared': resolve('src/shared')
@@ -43,6 +46,7 @@ export default defineConfig(({ mode }) => {
         rollupOptions: {
           input: {
             index: resolve('src/preload/index.ts'),
+            'injector-helper': resolve('src/preload/injector-helper.ts'),
             webview: resolve('src/preload/webview.ts')
           }
         }
