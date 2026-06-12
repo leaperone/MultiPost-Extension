@@ -214,7 +214,7 @@ function AboutPage() {
           立即安装 MultiPost 浏览器扩展，体验一键多平台发布的便捷。
         </p>
         <div className="flex flex-wrap justify-center gap-4">
-          <Link href="/extension">
+          <Link href="/install">
             <Button color="primary" size="lg">
               安装扩展
             </Button>

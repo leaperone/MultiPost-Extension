@@ -20,7 +20,7 @@ export default function ForceInstallExtension() {
       }
 
       if (!isUnmounted) {
-        void navigate({ to: '/extension' } as never);
+        void navigate({ to: '/install' } as never);
       }
     }
 

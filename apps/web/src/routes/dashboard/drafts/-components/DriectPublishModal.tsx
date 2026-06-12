@@ -165,7 +165,7 @@ export default function DirectPublishModal({
    * Navigate to extension page
    */
   const handleGoToExtension = () => {
-    window.location.href = '/extension';
+    window.location.href = '/install';
     onClose();
   };
 

@@ -216,7 +216,7 @@ function WebDashboardContent() {
 
                 <LiquidGlassButton
                   onClick={() => {
-                    window.location.href = '/extension';
+                    window.location.href = '/install';
                   }}
                   className="flex items-center gap-2">
                   <PuzzleIcon className="size-4" />

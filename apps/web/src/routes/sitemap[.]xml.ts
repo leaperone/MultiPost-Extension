@@ -28,7 +28,7 @@ function renderSitemap() {
   const currentDate = new Date();
   const staticPages: SitemapEntry[] = [
     { url: baseUrl, lastModified: currentDate, changeFrequency: 'daily', priority: 1 },
-    { url: `${baseUrl}/extension`, lastModified: currentDate, changeFrequency: 'weekly', priority: 0.9 },
+    { url: `${baseUrl}/install`, lastModified: currentDate, changeFrequency: 'weekly', priority: 0.9 },
     { url: `${baseUrl}/about`, lastModified: currentDate, changeFrequency: 'monthly', priority: 0.8 },
     { url: `${baseUrl}/signin`, lastModified: currentDate, changeFrequency: 'monthly', priority: 0.8 },
     { url: `${baseUrl}/dashboard`, lastModified: currentDate, changeFrequency: 'daily', priority: 0.7 },

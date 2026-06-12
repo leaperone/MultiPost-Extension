@@ -121,7 +121,7 @@ export default function DirectPublishModal({
   };
 
   const handleGoToExtension = () => {
-    window.location.href = '/extension';
+    window.location.href = '/install';
     onClose();
   };
 
