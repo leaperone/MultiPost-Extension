@@ -26,7 +26,9 @@ import type {
   PublishGroup,
   KeepAliveStatus,
   ExternalApiSettings,
-  KeepAliveConfig
+  KeepAliveConfig,
+  DesktopToastPayload,
+  DesktopToastOverlaySize
 } from '../shared/types'
 
 // Custom APIs for renderer
@@ -436,6 +438,40 @@ const api = {
     // fire-and-forget by design: logging must never block the UI thread
     send: (level: 'error' | 'warn' | 'info' | 'debug', args: string[]): void => {
       ipcRenderer.send(IPC_CHANNELS.LOG_FROM_RENDERER, level, args)
+    }
+  },
+
+  // Global toast: caller side. Any renderer fires a toast through main, which
+  // forwards it to the transparent overlay view so it floats above every page.
+  toast: {
+    emit: (payload: DesktopToastPayload): void => {
+      ipcRenderer.send(IPC_CHANNELS.TOAST_EMIT, payload)
+    },
+    dismiss: (id?: string): void => {
+      ipcRenderer.send(IPC_CHANNELS.TOAST_DISMISS, id)
+    }
+  },
+
+  // Global toast: overlay-host side (consumed only by the toast overlay surface).
+  toastHost: {
+    onRender: (callback: (payload: DesktopToastPayload) => void) => {
+      const listener = (_: Electron.IpcRendererEvent, payload: DesktopToastPayload): void =>
+        callback(payload)
+      ipcRenderer.on(IPC_CHANNELS.TOAST_RENDER, listener)
+      return (): void => {
+        ipcRenderer.removeListener(IPC_CHANNELS.TOAST_RENDER, listener)
+      }
+    },
+    onDismiss: (callback: (id?: string) => void) => {
+      const listener = (_: Electron.IpcRendererEvent, id?: string): void => callback(id)
+      ipcRenderer.on(IPC_CHANNELS.TOAST_RENDER_DISMISS, listener)
+      return (): void => {
+        ipcRenderer.removeListener(IPC_CHANNELS.TOAST_RENDER_DISMISS, listener)
+      }
+    },
+    // null → no visible toast: main detaches the overlay so clicks pass through.
+    reportSize: (size: DesktopToastOverlaySize | null): void => {
+      ipcRenderer.send(IPC_CHANNELS.TOAST_MEASURE, size)
     }
   }
 }

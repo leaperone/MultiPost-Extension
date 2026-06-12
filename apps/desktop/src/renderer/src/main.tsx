@@ -3,7 +3,6 @@ import ReactDOM from 'react-dom/client'
 import { MotionConfig } from 'framer-motion'
 import { ThemeProvider as NextThemesProvider } from 'next-themes'
 import App from './App'
-import { Toaster } from './components/ui/sonner'
 import { initRendererLogging } from './lib/logger'
 import './styles/global.css'
 
@@ -11,13 +10,15 @@ import './styles/global.css'
 // captured into renderer.log from the very first frame.
 initRendererLogging()
 
+// Toaster 不在这里挂载:它被切到 web/内容 view 后会被裁掉看不见。toast 改由独立的
+// 透明 overlay surface(overlay.tsx)全局承载,这里只渲染主 UI。
+
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
     <NextThemesProvider attribute="class" defaultTheme="system">
       {/* reducedMotion="user": 尊重系统级减少动态偏好(无障碍基线) */}
       <MotionConfig reducedMotion="user">
         <App />
-        <Toaster />
       </MotionConfig>
     </NextThemesProvider>
   </React.StrictMode>

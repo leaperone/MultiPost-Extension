@@ -58,7 +58,15 @@ export default defineConfig(({ mode }) => {
       },
       plugins: [tailwindcss(), react()],
       build: {
-        minify
+        minify,
+        rollupOptions: {
+          input: {
+            // 主 UI 入口
+            index: resolve('src/renderer/index.html'),
+            // 透明 toast 浮层 surface(独立 WebContentsView 加载)
+            overlay: resolve('src/renderer/overlay.html')
+          }
+        }
       }
     }
   }

@@ -530,6 +530,36 @@ export interface PublishGroup {
   createdAt: number
 }
 
+// Global toast overlay: JSON-only payload bridged from any renderer to the
+// transparent toast overlay WebContentsView. ReactNode titles, action/cancel
+// callbacks, promise and custom toasts are intentionally unsupported — they
+// can't cross IPC under contextIsolation.
+export type DesktopToastMethod =
+  | 'default'
+  | 'success'
+  | 'error'
+  | 'loading'
+  | 'info'
+  | 'warning'
+  | 'message'
+
+export interface DesktopToastPayload {
+  id: string
+  method: DesktopToastMethod
+  title: string
+  description?: string
+  // ms; Infinity means a sticky toast. Electron IPC uses the structured clone
+  // algorithm, so Infinity survives the trip intact.
+  duration?: number
+}
+
+// Reported by the overlay renderer so main can size/detach the overlay view to
+// exactly cover the visible toast stack (and pass clicks through elsewhere).
+export interface DesktopToastOverlaySize {
+  width: number
+  height: number
+}
+
 // Window state
 export interface WindowState {
   width: number

@@ -27,7 +27,9 @@ import {
   type PublishEventStatus,
   type PublishStatus,
   type PublishStatusSnapshot,
-  type PublishTargetResult
+  type PublishTargetResult,
+  type DesktopToastPayload,
+  type DesktopToastOverlaySize
 } from '../../shared/types'
 import { IPC_CHANNELS, PLATFORMS, PLATFORM_PUBLISH_URLS } from '../../shared/constants'
 import { getAdapter } from '../platforms'
@@ -157,6 +159,12 @@ const PAGE_READY_SETTLE_MS = 500
 const TABBAR_HEIGHT = 72
 const TOOLBAR_HEIGHT = 40
 const DEFAULT_SIDEBAR_WIDTH = 256 // 16rem expanded
+// Fixed width of the transparent toast overlay (sonner toast ~356 + side
+// offsets). Its height is driven by the overlay's own measurement.
+const TOAST_OVERLAY_WIDTH = 420
+// IPC for the toast overlay is process-global; register it only once even if
+// the manager is ever recreated.
+let toastOverlayIpcRegistered = false
 const PUBLISH_SNAPSHOT_LIMIT = 50
 const PUBLISH_SNAPSHOT_TTL_MS = 10 * 60 * 1000
 
@@ -186,6 +194,13 @@ export class BrowserViewManager {
   private webDashboardView: WebContentsView | null = null
   // Tab bar WebContentsView - always on top
   private tabBarView: WebContentsView | null = null
+  // Transparent toast overlay WebContentsView - floats above everything (incl.
+  // tabBarView); main sizes it to hug the visible toast stack, or parks it
+  // off-window when empty so clicks pass through elsewhere.
+  private toastOverlayView: WebContentsView | null = null
+  private toastOverlaySize: DesktopToastOverlaySize | null = null
+  private toastOverlayReady = false
+  private pendingToastMessages: Array<{ channel: string; payload: unknown }> = []
   // Publish Groups - 发布 Group 管理
   private publishGroups: Map<string, PublishGroupView> = new Map()
   private executorPublishRuns: Map<string, ExecutorPublishRun> = new Map()
@@ -1000,6 +1015,11 @@ export class BrowserViewManager {
     // Setup IPC handlers for web dashboard navigation
     this.setupWebDashboardIpcHandlers()
 
+    // Global toast overlay: register IPC + create the transparent view so every
+    // renderer's toasts float above all content views.
+    this.setupToastOverlayIpc()
+    void this.ensureToastOverlay()
+
     publishLogger.info('Native home tab initialized')
   }
 
@@ -1100,7 +1120,7 @@ export class BrowserViewManager {
 
     this.mainWindow.contentView.addChildView(view)
     if (this.tabBarView) {
-      this.mainWindow.contentView.addChildView(this.tabBarView)
+      this.raiseTopSurfaces()
     }
 
     this.activeViewId = WEB_TAB_ID
@@ -1378,7 +1398,7 @@ export class BrowserViewManager {
 
     // Ensure tab bar stays on top
     if (this.tabBarView) {
-      this.mainWindow.contentView.addChildView(this.tabBarView)
+      this.raiseTopSurfaces()
     }
 
     // Hide other views
@@ -1492,7 +1512,7 @@ export class BrowserViewManager {
 
     // Ensure tab bar stays on top
     if (this.tabBarView) {
-      this.mainWindow.contentView.addChildView(this.tabBarView)
+      this.raiseTopSurfaces()
     }
 
     // Shrink the renderer view back to the tab strip if we left native home
@@ -1775,6 +1795,120 @@ export class BrowserViewManager {
    * Update bounds for all views based on current window size
    * All BrowserViews start below the browser chrome.
    */
+  /**
+   * Keep the always-on-top surfaces above all content views. Re-adding a child
+   * view makes it topmost, so order matters: tab bar first, then the toast
+   * overlay on the very top.
+   */
+  private raiseTopSurfaces(): void {
+    if (this.mainWindow.isDestroyed()) return
+    const contentView = this.mainWindow.contentView
+    if (this.tabBarView) contentView.addChildView(this.tabBarView)
+    if (this.toastOverlayView) contentView.addChildView(this.toastOverlayView)
+  }
+
+  /**
+   * Position the toast overlay over the bottom-right toast stack, or park it
+   * just off the bottom edge when there is no toast (invisible + click-through),
+   * keeping a stable viewport width so it can still measure the next toast.
+   */
+  private applyToastOverlayBounds(size: DesktopToastOverlaySize | null): void {
+    this.toastOverlaySize = size
+    if (!this.toastOverlayView || this.mainWindow.isDestroyed()) return
+    const [winW, winH] = this.mainWindow.getContentSize()
+    const width = size?.width ?? TOAST_OVERLAY_WIDTH
+    const x = Math.max(0, winW - width)
+    if (!size || size.height <= 0) {
+      this.toastOverlayView.setBounds({ x, y: winH, width, height: 1 })
+      return
+    }
+    const height = Math.min(size.height, winH)
+    this.toastOverlayView.setBounds({ x, y: Math.max(0, winH - height), width, height })
+  }
+
+  /** Send to the overlay renderer, buffering until it signals readiness. */
+  private sendToToastOverlay(channel: string, payload: unknown): void {
+    const wc = this.toastOverlayView?.webContents
+    if (this.toastOverlayReady && wc && !wc.isDestroyed()) {
+      wc.send(channel, payload)
+    } else {
+      this.pendingToastMessages.push({ channel, payload })
+    }
+  }
+
+  /**
+   * Create the transparent toast overlay view (once). It loads the dedicated
+   * overlay.html surface and is added on top of everything.
+   */
+  private async ensureToastOverlay(): Promise<void> {
+    if (this.toastOverlayView) return
+
+    const view = new WebContentsView({
+      webPreferences: {
+        preload: join(__dirname, '../preload/index.js'),
+        contextIsolation: true,
+        nodeIntegration: false,
+        sandbox: false,
+        transparent: true,
+        // Keep animating while the window is occluded.
+        backgroundThrottling: false
+      }
+    })
+    this.toastOverlayView = view
+    view.setBackgroundColor('#00000000')
+    this.installNavigationGuard(view.webContents, 'toast-overlay')
+    view.webContents.setWindowOpenHandler(({ url }) => {
+      void openExternalUrl(url)
+      return { action: 'deny' }
+    })
+
+    // Park off-window until the first toast measurement arrives.
+    this.applyToastOverlayBounds(null)
+    this.mainWindow.contentView.addChildView(view)
+
+    const isDev = !!process.env.ELECTRON_RENDERER_URL
+    if (isDev) {
+      await view.webContents.loadURL(`${process.env.ELECTRON_RENDERER_URL}/overlay.html`)
+    } else {
+      await view.webContents.loadFile(join(__dirname, '../renderer/overlay.html'))
+    }
+    this.debugAttachConsoleCapture(view.webContents, 'toast-overlay')
+    publishLogger.info('Toast overlay view created')
+  }
+
+  /**
+   * Register process-global IPC for the toast overlay (once). Renderers emit
+   * toasts here; main forwards them to the overlay and resizes the overlay view
+   * from the overlay's own measurements.
+   */
+  private setupToastOverlayIpc(): void {
+    if (toastOverlayIpcRegistered) return
+    toastOverlayIpcRegistered = true
+
+    ipcMain.on(IPC_CHANNELS.TOAST_EMIT, (_, payload: DesktopToastPayload) => {
+      void this.ensureToastOverlay()
+      this.sendToToastOverlay(IPC_CHANNELS.TOAST_RENDER, payload)
+    })
+    ipcMain.on(IPC_CHANNELS.TOAST_DISMISS, (_, id?: string) => {
+      this.sendToToastOverlay(IPC_CHANNELS.TOAST_RENDER_DISMISS, id)
+    })
+    ipcMain.on(IPC_CHANNELS.TOAST_MEASURE, (_, size: DesktopToastOverlaySize | null) => {
+      // The first measurement doubles as the overlay's readiness signal: flush
+      // any toasts queued before its listeners were wired up.
+      if (!this.toastOverlayReady) {
+        this.toastOverlayReady = true
+        const wc = this.toastOverlayView?.webContents
+        if (wc && !wc.isDestroyed()) {
+          for (const message of this.pendingToastMessages) {
+            wc.send(message.channel, message.payload)
+          }
+        }
+        this.pendingToastMessages = []
+      }
+      this.applyToastOverlayBounds(size)
+    })
+  }
+
   private updateAllViewBounds(): void {
     if (this.mainWindow.isDestroyed()) return
 
@@ -1792,7 +1926,7 @@ export class BrowserViewManager {
         height: chromeHeight
       })
       // Ensure tab bar stays on top
-      this.mainWindow.contentView.addChildView(this.tabBarView)
+      this.raiseTopSurfaces()
     }
 
     // All content views start below the tab bar
@@ -1850,6 +1984,12 @@ export class BrowserViewManager {
           height: contentHeight
         })
       }
+    }
+
+    // Toast overlay: re-hug the bottom-right toast stack for the new window size
+    // (or stay parked off-window when there is no toast).
+    if (this.toastOverlayView) {
+      this.applyToastOverlayBounds(this.toastOverlaySize)
     }
   }
 
@@ -2065,7 +2205,7 @@ export class BrowserViewManager {
 
     // Ensure tab bar stays on top and shrink the renderer chrome
     if (this.tabBarView) {
-      this.mainWindow.contentView.addChildView(this.tabBarView)
+      this.raiseTopSurfaces()
     }
     this.updateAllViewBounds()
   }
@@ -2469,7 +2609,7 @@ export class BrowserViewManager {
 
     // Ensure tab bar stays on top
     if (this.tabBarView) {
-      this.mainWindow.contentView.addChildView(this.tabBarView)
+      this.raiseTopSurfaces()
     }
 
     // Shrink the renderer chrome and apply consistent content bounds
@@ -2927,7 +3067,7 @@ export class BrowserViewManager {
 
     // Ensure tab bar stays on top
     if (this.tabBarView) {
-      this.mainWindow.contentView.addChildView(this.tabBarView)
+      this.raiseTopSurfaces()
     }
 
     this.activeViewId = HOME_TAB_ID
@@ -3324,7 +3464,7 @@ export class BrowserViewManager {
 
     // Ensure tab bar stays on top
     if (this.tabBarView) {
-      this.mainWindow.contentView.addChildView(this.tabBarView)
+      this.raiseTopSurfaces()
     }
 
     this.activeGroupId = groupId
@@ -3362,7 +3502,7 @@ export class BrowserViewManager {
 
     // Ensure tab bar stays on top
     if (this.tabBarView) {
-      this.mainWindow.contentView.addChildView(this.tabBarView)
+      this.raiseTopSurfaces()
     }
 
     group.activeAccountId = accountId

@@ -1250,5 +1250,13 @@ export const IPC_CHANNELS = {
   DEBUG_LOG_GET: 'debugLog:get',
   DEBUG_LOG_SET: 'debugLog:set',
   LOG_FROM_RENDERER: 'log:fromRenderer',
-  LOG_OPEN_DIR: 'log:openDir'
+  LOG_OPEN_DIR: 'log:openDir',
+
+  // Global toast overlay: any renderer → main → transparent overlay view.
+  // Keeps publish/progress toasts visible above web/content views.
+  TOAST_EMIT: 'toast:emit', // renderer → main (DesktopToastPayload)
+  TOAST_DISMISS: 'toast:dismiss', // renderer → main (id?)
+  TOAST_RENDER: 'toast:render', // main → overlay (DesktopToastPayload)
+  TOAST_RENDER_DISMISS: 'toast:renderDismiss', // main → overlay (id?)
+  TOAST_MEASURE: 'toast:measure' // overlay → main (DesktopToastOverlaySize | null)
 } as const
