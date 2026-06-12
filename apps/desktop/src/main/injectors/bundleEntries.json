@@ -637,5 +637,320 @@
     "exportName": "DynamicZSXQ",
     "injectUrl": "https://wx.zsxq.com/",
     "accountKey": "zsxq"
+  },
+  {
+    "desktopPlatform": "aliyun",
+    "contentType": "ARTICLE",
+    "extensionKey": "ARTICLE_ALIYUN",
+    "source": "article/aliyun.ts",
+    "exportName": "ArticleAliyun",
+    "injectUrl": "https://developer.aliyun.com/article/new",
+    "accountKey": "aliyun"
+  },
+  {
+    "desktopPlatform": "tencentyun",
+    "contentType": "ARTICLE",
+    "extensionKey": "ARTICLE_TENCENTYUN",
+    "source": "article/tencentyun.ts",
+    "exportName": "ArticleTencentyun",
+    "injectUrl": "https://cloud.tencent.com/developer/article/write-new",
+    "accountKey": "tencentyun"
+  },
+  {
+    "desktopPlatform": "qie",
+    "contentType": "ARTICLE",
+    "extensionKey": "ARTICLE_QQ",
+    "source": "article/qq.ts",
+    "exportName": "ArticleQQ",
+    "injectUrl": "https://om.qq.com/main/creation/article",
+    "accountKey": "qie"
+  },
+  {
+    "desktopPlatform": "bilibili",
+    "contentType": "ARTICLE",
+    "extensionKey": "ARTICLE_BILIBILI",
+    "source": "article/bilibili.ts",
+    "exportName": "ArticleBilibili",
+    "injectUrl": "https://member.bilibili.com/article-text/home?newEditor=-1",
+    "accountKey": "bilibili"
+  },
+  {
+    "desktopPlatform": "medium",
+    "contentType": "ARTICLE",
+    "extensionKey": "ARTICLE_MEDIUM",
+    "source": "article/medium.ts",
+    "exportName": "ArticleMedium",
+    "injectUrl": "https://medium.com/new-story",
+    "accountKey": "medium"
+  },
+  {
+    "desktopPlatform": "oschina",
+    "contentType": "ARTICLE",
+    "extensionKey": "ARTICLE_OSCHINA",
+    "source": "article/oschina.ts",
+    "exportName": "ArticleOSChina",
+    "injectUrl": "https://my.oschina.net/new/blog",
+    "accountKey": "oschina"
+  },
+  {
+    "desktopPlatform": "infoq",
+    "contentType": "ARTICLE",
+    "extensionKey": "ARTICLE_INFOQ",
+    "source": "article/infoq.ts",
+    "exportName": "ArticleInfoQ",
+    "injectUrl": "https://xie.infoq.cn/",
+    "accountKey": "infoq"
+  },
+  {
+    "desktopPlatform": "smzdm",
+    "contentType": "ARTICLE",
+    "extensionKey": "ARTICLE_SMZDM",
+    "source": "article/smzdm.ts",
+    "exportName": "ArticleSMZDM",
+    "injectUrl": "https://zhiyou.smzdm.com/user/article/post",
+    "accountKey": "smzdm"
+  },
+  {
+    "desktopPlatform": "woshipm",
+    "contentType": "ARTICLE",
+    "extensionKey": "ARTICLE_WOSHIPM",
+    "source": "article/woshipm.ts",
+    "exportName": "ArticleWoshipm",
+    "injectUrl": "https://www.woshipm.com/wp-admin/post-new.php",
+    "accountKey": "woshipm"
+  },
+  {
+    "desktopPlatform": "gelonghui",
+    "contentType": "ARTICLE",
+    "extensionKey": "ARTICLE_GELONGHUI",
+    "source": "article/gelonghui.ts",
+    "exportName": "ArticleGeLongHui",
+    "injectUrl": "https://www.gelonghui.com/articleCreate/",
+    "accountKey": "gelonghui"
+  },
+  {
+    "desktopPlatform": "jiankangjie",
+    "contentType": "ARTICLE",
+    "extensionKey": "ARTICLE_JIANKANGJIE",
+    "source": "article/jiankangjie.ts",
+    "exportName": "ArticleJianKangJie",
+    "injectUrl": "https://ucenter.cn-healthcare.com/article/revision/newedit",
+    "accountKey": "jiankangjie"
+  },
+  {
+    "desktopPlatform": "kaidiwang",
+    "contentType": "ARTICLE",
+    "extensionKey": "ARTICLE_KAIDIWANG",
+    "source": "article/kaidiwang.ts",
+    "exportName": "ArticleKaiDiWang",
+    "injectUrl": "https://www.9kd.com/create",
+    "accountKey": "kaidiwang"
+  },
+  {
+    "desktopPlatform": "autohome",
+    "contentType": "ARTICLE",
+    "extensionKey": "ARTICLE_AUTOHOME",
+    "source": "article/autohome.ts",
+    "exportName": "ArticleAutohome",
+    "injectUrl": "https://chejiahao.autohome.com.cn/article/post.html",
+    "accountKey": "autohome"
+  },
+  {
+    "desktopPlatform": "jianpian",
+    "contentType": "ARTICLE",
+    "extensionKey": "ARTICLE_JIANPIAN",
+    "source": "article/jianpian.ts",
+    "exportName": "ArticleJianpian",
+    "injectUrl": "https://www.jianpian.cn/p/edit",
+    "accountKey": "jianpian"
+  },
+  {
+    "desktopPlatform": "tonghuashun",
+    "contentType": "ARTICLE",
+    "extensionKey": "ARTICLE_TONGHUASHUN",
+    "source": "article/tonghuashun.ts",
+    "exportName": "ArticleTonghuashun",
+    "injectUrl": "https://t.10jqka.com.cn/newcircle/creation/postAll",
+    "accountKey": "tonghuashun"
+  },
+  {
+    "desktopPlatform": "dongchedi",
+    "contentType": "ARTICLE",
+    "extensionKey": "ARTICLE_DONGCHEDI",
+    "source": "article/dongchedi.ts",
+    "exportName": "ArticleDongchedi",
+    "injectUrl": "https://mp.dcdapp.com/profile_v2/publish/article",
+    "accountKey": "dongchedi"
+  },
+  {
+    "desktopPlatform": "zsxq",
+    "contentType": "ARTICLE",
+    "extensionKey": "ARTICLE_ZSXQ",
+    "source": "article/zsxq.ts",
+    "exportName": "ArticleZsxq",
+    "injectUrl": "https://wx.zsxq.com/",
+    "accountKey": "zsxq"
+  },
+  {
+    "desktopPlatform": "netease",
+    "contentType": "ARTICLE",
+    "extensionKey": "ARTICLE_NETEASE",
+    "source": "article/netease.ts",
+    "exportName": "ArticleNetease",
+    "injectUrl": "https://mp.163.com/#/article-publish",
+    "accountKey": "netease"
+  },
+  {
+    "desktopPlatform": "sohu",
+    "contentType": "ARTICLE",
+    "extensionKey": "ARTICLE_SOHU",
+    "source": "article/sohu.ts",
+    "exportName": "ArticleSohu",
+    "injectUrl": "https://mp.sohu.com/mpfe/v4/contentManagement/news/addarticle",
+    "accountKey": "sohu"
+  },
+  {
+    "desktopPlatform": "dayu",
+    "contentType": "ARTICLE",
+    "extensionKey": "ARTICLE_DAYUHAO",
+    "source": "article/dayuhao.ts",
+    "exportName": "ArticleDaYuHao",
+    "injectUrl": "https://mp.dayu.com/dashboard/article/write",
+    "accountKey": "dayu"
+  },
+  {
+    "desktopPlatform": "dingduanhao",
+    "contentType": "ARTICLE",
+    "extensionKey": "ARTICLE_DINGDUANHAO",
+    "source": "article/dingduanhao.ts",
+    "exportName": "ArticleDingduanhao",
+    "injectUrl": "https://mp.topnews.cn/#/scriptWrite",
+    "accountKey": "dingduanhao"
+  },
+  {
+    "desktopPlatform": "kuaichuanhao",
+    "contentType": "ARTICLE",
+    "extensionKey": "ARTICLE_KUAICHUANHAO",
+    "source": "article/kuaichuanhao.ts",
+    "exportName": "ArticleKuaichuanhao",
+    "injectUrl": "https://kuaichuan.360kuai.com/#/console/publish/article",
+    "accountKey": "kuaichuanhao"
+  },
+  {
+    "desktopPlatform": "yidian",
+    "contentType": "ARTICLE",
+    "extensionKey": "ARTICLE_YIDIANZIXUN",
+    "source": "article/yidianzixun.ts",
+    "exportName": "ArticleYidianzixun",
+    "injectUrl": "https://mp.yidianzixun.com/#/Writing/articleEditor",
+    "accountKey": "yidian"
+  },
+  {
+    "desktopPlatform": "twitter",
+    "contentType": "ARTICLE",
+    "extensionKey": "ARTICLE_XARTICLE",
+    "source": "article/xarticle.ts",
+    "exportName": "ArticleXArticle",
+    "injectUrl": "https://x.com/compose/articles",
+    "accountKey": "x"
+  },
+  {
+    "desktopPlatform": "pinterest",
+    "contentType": "DYNAMIC",
+    "extensionKey": "DYNAMIC_PINTEREST",
+    "source": "dynamic/pinterest.ts",
+    "exportName": "DynamicPinterest",
+    "injectUrl": "https://www.pinterest.com/pin-creation-tool/",
+    "accountKey": "pinterest"
+  },
+  {
+    "desktopPlatform": "bluesky",
+    "contentType": "DYNAMIC",
+    "extensionKey": "DYNAMIC_BLUESKY",
+    "source": "dynamic/bluesky.ts",
+    "exportName": "DynamicBluesky",
+    "injectUrl": "https://bsky.app/",
+    "accountKey": "bluesky"
+  },
+  {
+    "desktopPlatform": "v2ex",
+    "contentType": "DYNAMIC",
+    "extensionKey": "DYNAMIC_V2EX",
+    "source": "dynamic/v2ex.ts",
+    "exportName": "DynamicV2EX",
+    "injectUrl": "https://www.v2ex.com/write",
+    "accountKey": "v2ex"
+  },
+  {
+    "desktopPlatform": "dedao",
+    "contentType": "DYNAMIC",
+    "extensionKey": "DYNAMIC_DEDAO",
+    "source": "dynamic/dedao.ts",
+    "exportName": "DynamicDedao",
+    "injectUrl": "https://www.dedao.cn/knowledge/home",
+    "accountKey": "dedao"
+  },
+  {
+    "desktopPlatform": "xiaoheihe",
+    "contentType": "DYNAMIC",
+    "extensionKey": "DYNAMIC_XIAOHEIHE",
+    "source": "dynamic/xiaoheihe.ts",
+    "exportName": "DynamicXiaoheihe",
+    "injectUrl": "https://www.xiaoheihe.cn/creator/editor/draft/image_text",
+    "accountKey": "xiaoheihe"
+  },
+  {
+    "desktopPlatform": "maimai",
+    "contentType": "DYNAMIC",
+    "extensionKey": "DYNAMIC_MAIMAI",
+    "source": "dynamic/maimai.ts",
+    "exportName": "DynamicMaimai",
+    "injectUrl": "https://maimai.cn/community/home/following",
+    "accountKey": "maimai"
+  },
+  {
+    "desktopPlatform": "bluesky",
+    "contentType": "VIDEO",
+    "extensionKey": "VIDEO_BLUESKY",
+    "source": "video/bluesky.ts",
+    "exportName": "VideoBluesky",
+    "injectUrl": "https://bsky.app/",
+    "accountKey": "bluesky"
+  },
+  {
+    "desktopPlatform": "xiaoheihe",
+    "contentType": "VIDEO",
+    "extensionKey": "VIDEO_XIAOHEIHE",
+    "source": "video/xiaoheihe.ts",
+    "exportName": "VideoXiaoheihe",
+    "injectUrl": "https://www.xiaoheihe.cn/creator/editor/draft/video",
+    "accountKey": "xiaoheihe"
+  },
+  {
+    "desktopPlatform": "iqiyi",
+    "contentType": "VIDEO",
+    "extensionKey": "VIDEO_IQIYI",
+    "source": "video/iqiyi.ts",
+    "exportName": "VideoIqiyi",
+    "injectUrl": "https://mp.iqiyi.com/sns/publishv2/video",
+    "accountKey": "iqiyi"
+  },
+  {
+    "desktopPlatform": "youku",
+    "contentType": "VIDEO",
+    "extensionKey": "VIDEO_YOUKU",
+    "source": "video/youku.ts",
+    "exportName": "VideoYouku",
+    "injectUrl": "https://mp.youku.com/v2/manage/upload",
+    "accountKey": "youku"
+  },
+  {
+    "desktopPlatform": "tencentvideo",
+    "contentType": "VIDEO",
+    "extensionKey": "VIDEO_TENCENTVIDEO",
+    "source": "video/tencentvideo.ts",
+    "exportName": "VideoTencentVideo",
+    "injectUrl": "https://cm.v.qq.com/upload",
+    "accountKey": "tencentvideo"
   }
 ]

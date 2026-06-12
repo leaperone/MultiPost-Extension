@@ -4,7 +4,7 @@ MultiPost 平台注入脚本的**单一事实源**,由 desktop 与 web 共享。
 
 ## 目录
 
-- `src/{article,dynamic,video,podcast}/*.ts` — 71 个平台的发布注入脚本(对平台创作页 DOM 填表发布)。
+- `src/{article,dynamic,video,podcast}/*.ts` — 106 个平台的发布注入脚本(对平台创作页 DOM 填表发布)。
 - `src/types.ts` — 脚本共享的 `SyncData` / `ArticleData` / `VideoData` 等纯类型(脚本一律 `import type`)。
 - `src/helper.ts` + `src/helper/*` — MAIN-world content helper(B 站动态图片上传等)。
 - `build/index.mjs` — 参数化的 esbuild 编译管线(Node-only)。desktop 与 web 各自调用,只是源根/工作目录不同。
@@ -33,7 +33,7 @@ manifest 用脚本的**规范化 sha**(剥掉 esbuild 的路径注释)做内容�
 
 ## 防分叉
 
-`scripts/check-extension-drift.mjs` 比对 extension 与本包对应脚本的规范化 sha,漂移则 CI fail(`.github/workflows/injector-drift.yml`)。extension submodule 缺席时自动跳过。本地手动跑:
+`scripts/check-extension-drift.mjs` 比对 extension 与本包对应脚本,漂移则 CI fail(`.github/workflows/injector-drift.yml`)。sync 脚本按**源文本**比对(规范化掉 `../types` vs `../common`/`~sync/common` 的 type-import 路径差异),所以**无需在 extension submodule 装第三方依赖**(如 aliyun 的 turndown);content helper 因迁移时改过(去 Plasmo)按编译产物比对。extension submodule 缺席时自动跳过。本地手动跑:
 
 ```bash
 node packages/injectors/scripts/check-extension-drift.mjs
@@ -52,4 +52,4 @@ node packages/injectors/scripts/check-extension-drift.mjs
 
 ## 范围说明
 
-本包当前只含 71 个 **desktop 已接入**的平台脚本(以 `apps/desktop/.../bundleEntries.json` 为准)。extension 还有约 35 个 desktop 未接入的平台(如 aliyun 用 turndown);接入它们时需一并迁入本包并按需补依赖。
+本包含全部 106 个平台脚本(extension `sync/{article,dynamic,video,podcast}` 四类全集),以 `apps/desktop/.../bundleEntries.json` 为准。`article/aliyun.ts` 用 `turndown`(已加入本包依赖);日后新增平台时一并迁入本包并按需补依赖。
