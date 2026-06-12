@@ -1,5 +1,6 @@
 import type { WebContents } from 'electron'
-import injectorBundles, { injectorGlobalName } from 'virtual:injector-bundles'
+import { injectorGlobalName } from 'virtual:injector-bundles'
+import { injectorRegistry } from './registry'
 import type {
   ArticleData,
   DynamicData,
@@ -9,11 +10,7 @@ import type {
   SyncContentType,
   VideoData
 } from '@shared/types'
-import {
-  getDesktopInjectorManifestEntry,
-  type DesktopInjectorManifestEntry,
-  type ExtensionSyncData
-} from './manifest'
+import { getDesktopInjectorManifestEntry, type ExtensionSyncData } from './manifest'
 
 export interface ToExtensionSyncDataOptions {
   platform: string
@@ -130,16 +127,8 @@ function prepareDataForExtension(data: SyncContentData, contentType: SyncContent
   return data
 }
 
-function getInjectorBundle(entry: DesktopInjectorManifestEntry): string {
-  const bundle = injectorBundles[entry.extensionKey]
-  if (!bundle) {
-    throw new Error(`Missing desktop injector bundle for ${entry.extensionKey}`)
-  }
-  return bundle
-}
-
-function buildExecutionScript(entry: DesktopInjectorManifestEntry, syncData: ExtensionSyncData): string {
-  const injectorCall = serializeInjector(getInjectorBundle(entry), syncData)
+function buildExecutionScript(iife: string, syncData: ExtensionSyncData): string {
+  const injectorCall = serializeInjector(iife, syncData)
 
   return `
     (async () => {
@@ -240,29 +229,49 @@ export async function executeExtensionFill(
     injectUrl: entry.injectUrl,
     isAutoPublish
   })
-  try {
-    const script = buildExecutionScript(entry, syncData)
-    const result = (await webContents.executeJavaScript(script)) as InjectedExecutionResult
+  const active = injectorRegistry.getActiveBundle(entry.extensionKey)
+  if (!active) {
     return {
-      handled: true,
-      ok: result.ok,
-      error: result.error,
-      // TODO(phase3): replace this operation-local skip with real publish confirmation from injectors.
-      skipAdapterSubmit: result.ok && isAutoPublish,
-      extensionKey: entry.extensionKey,
-      injectUrl: entry.injectUrl,
-      accountKey: entry.accountKey
-    }
-  } catch (error) {
-    return {
-      handled: true,
+      handled: false,
       ok: false,
-      error: formatError(error),
       skipAdapterSubmit: false,
-      extensionKey: entry.extensionKey,
-      injectUrl: entry.injectUrl,
-      accountKey: entry.accountKey
+      reason: 'missing-bundle'
     }
+  }
+
+  const runWith = async (iife: string): Promise<InjectedExecutionResult> => {
+    try {
+      const script = buildExecutionScript(iife, syncData)
+      return (await webContents.executeJavaScript(script)) as InjectedExecutionResult
+    } catch (error) {
+      return { ok: false, error: formatError(error) }
+    }
+  }
+
+  let result = await runWith(active.iife)
+
+  if (active.isRemote) {
+    injectorRegistry.reportResult(entry.extensionKey, active.sha ?? '', result.ok)
+    if (!result.ok) {
+      // CRITICAL: a failing remote (hot-updated) bundle must never surface as a
+      // publish failure. Retry the built-in bundle in the SAME publish call and
+      // return its result — the hot-update layer can only ever help, never hurt.
+      const builtin = injectorRegistry.getBuiltinBundle(entry.extensionKey)
+      if (builtin && builtin !== active.iife) {
+        result = await runWith(builtin)
+      }
+    }
+  }
+
+  return {
+    handled: true,
+    ok: result.ok,
+    error: result.error,
+    // TODO(phase3): replace this operation-local skip with real publish confirmation from injectors.
+    skipAdapterSubmit: result.ok && isAutoPublish,
+    extensionKey: entry.extensionKey,
+    injectUrl: entry.injectUrl,
+    accountKey: entry.accountKey
   }
 }
 

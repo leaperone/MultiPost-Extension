@@ -6,8 +6,9 @@ import tailwindcss from '@tailwindcss/vite';
 import viteReact from '@vitejs/plugin-react';
 import { config as dotenvConfig } from 'dotenv';
 import fumadocsMdx from 'fumadocs-mdx/vite';
-import { defineConfig } from 'vite';
+import { defineConfig, type Plugin } from 'vite';
 import tsConfigPaths from 'vite-tsconfig-paths';
+import { createInjectorBuilder, INJECTOR_SCHEMA_VERSION, normalizeBundle, sha256Hex } from '@multipost/injectors/build';
 import { getBlogPrerenderPaths, getDocsPrerenderPaths } from './src/lib/content-prerender-paths';
 import * as sourceConfig from './source.config';
 
@@ -41,6 +42,48 @@ const docsAndBlogPrerenderPages = Array.from(new Set([...getDocsPrerenderPaths()
     },
   }),
 );
+
+// Compile the shared injector scripts and emit them as static files for desktop
+// hot-update. Runs only in the client build so files land in dist/client/injectors
+// (the production server serves dist/client, not dist/server). Each bundle file is
+// content-hashed (filename carries the sha); manifest.json indexes them. The sha is
+// computed over the path-normalized bundle so an unchanged script produces the same
+// sha as the desktop built-in bundle and is not needlessly re-fetched after a deploy.
+function injectorsEmitPlugin(): Plugin {
+  const injectorsRoot = path.join(monorepoRoot, 'packages/injectors');
+  const injectorsSrc = path.join(injectorsRoot, 'src');
+  const builder = createInjectorBuilder({
+    sourceRoot: injectorsSrc,
+    syncRoot: injectorsSrc,
+    contentsRoot: injectorsSrc,
+    entriesPath: path.join(monorepoRoot, 'apps/desktop/src/main/injectors/bundleEntries.json'),
+    contentHelperEntry: path.join(injectorsSrc, 'helper.ts'),
+    tsconfigPath: path.join(injectorsRoot, 'tsconfig.json'),
+    absWorkingDir: injectorsRoot,
+  });
+
+  return {
+    name: 'multipost-web-injectors-emit',
+    async generateBundle() {
+      // Only the client build serves files publicly (dist/client). Skip SSR/server.
+      const environmentName = (this as { environment?: { name?: string } }).environment?.name;
+      if (environmentName && environmentName !== 'client') return;
+
+      const { bundles } = await builder.buildBundleResult();
+      const entries = Object.entries(bundles)
+        .map(([extensionKey, iife]) => {
+          const sha256 = sha256Hex(normalizeBundle(iife));
+          const fileName = `injectors/${extensionKey}.${sha256.slice(0, 16)}.js`;
+          this.emitFile({ type: 'asset', fileName, source: iife });
+          return { extensionKey, sha256, schemaVersion: INJECTOR_SCHEMA_VERSION, url: `/${fileName}` };
+        })
+        .sort((a, b) => a.extensionKey.localeCompare(b.extensionKey));
+
+      const manifest = { schemaVersion: INJECTOR_SCHEMA_VERSION, generatedBy: 'web-build', entries };
+      this.emitFile({ type: 'asset', fileName: 'injectors/manifest.json', source: `${JSON.stringify(manifest, null, 2)}\n` });
+    },
+  };
+}
 
 function createSentryPlugins() {
   if (!sentrySourceMapsEnabled) return [];
@@ -93,6 +136,7 @@ export default defineConfig(async () => ({
     viteReact(),
     tailwindcss(),
     tsConfigPaths({ projects: [path.join(webRoot, 'tsconfig.json')] }),
+    injectorsEmitPlugin(),
     // PostHog does not provide a clean Vite sourcemap plugin in this repo; keep
     // any PostHog sourcemap upload as a separately gated CLI/CI step.
     ...createSentryPlugins(),

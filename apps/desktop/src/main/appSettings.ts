@@ -16,6 +16,7 @@ interface AppSettings {
   keepAlive?: Partial<KeepAliveConfig>
   externalApi?: Partial<ExternalApiSettings>
   debugLog?: boolean
+  injectorHotUpdate?: { enabled?: boolean }
 }
 
 function settingsPath(): string {
@@ -59,6 +60,21 @@ export function getDebugLogEnabled(): boolean {
 export function setDebugLogEnabled(enabled: boolean): void {
   const settings = readSettings()
   settings.debugLog = enabled
+  writeSettings(settings)
+}
+
+/**
+ * Injector hot-update defaults to OFF: it is a gated rollout and an escape hatch.
+ * While off, desktop only ever uses its built-in injector bundles — the remote
+ * layer is never fetched, so a bad deploy or a flaky network cannot touch publishing.
+ */
+export function getInjectorHotUpdateEnabled(): boolean {
+  return readSettings().injectorHotUpdate?.enabled === true
+}
+
+export function setInjectorHotUpdateEnabled(enabled: boolean): void {
+  const settings = readSettings()
+  settings.injectorHotUpdate = { ...settings.injectorHotUpdate, enabled }
   writeSettings(settings)
 }
 

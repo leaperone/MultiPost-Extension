@@ -10,6 +10,7 @@ import { createMenu } from './menu'
 import { KeepAliveService } from './keepalive'
 import { startDebugServer } from './debug-server'
 import { cleanupApiMedia, initOperations } from './services/operations'
+import { initInjectorHotUpdate } from './injectors/hotUpdate'
 import { stopExternalApiServer, syncExternalApiServer } from './api-server'
 import { getDesktopUserAgent, handleLocalFileRequest, hardenSession } from './browser/sessionHardening'
 import { closeAllAnonymizedProxies } from './proxy/accountProxy'
@@ -377,6 +378,10 @@ app.whenReady().then(async () => {
   syncExternalApiServer().catch((error) => {
     console.error('[Main] Failed to start external API server:', error)
   })
+
+  // Injector hot-update: hydrate from verified cache + (when enabled) poll web for
+  // newer platform scripts. Never blocks startup; degrades to built-in on any error.
+  initInjectorHotUpdate()
   // The app is built to run for days on a second screen, so a startup-only
   // sweep would let api-media grow between launches; re-sweep periodically.
   // unref() so the timer never holds the process open at quit.

@@ -1,0 +1,38 @@
+name: Injector Drift Check
+
+# The injector scripts live canonically in packages/injectors, but the
+# apps/extension submodule keeps its own copies (it ships independently). This
+# guard fails a PR if the two drift apart, so a platform fix made on one side is
+# not silently missed on the other. Compares path-normalized bundle sha, so
+# import-style differences do not count as drift — only real logic changes do.
+
+on:
+  pull_request:
+    paths:
+      - 'apps/extension/**'
+      - 'packages/injectors/**'
+      - 'apps/desktop/src/main/injectors/bundleEntries.json'
+
+jobs:
+  drift:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout (with extension submodule)
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Check injector script drift (extension vs packages/injectors)
+        run: node packages/injectors/scripts/check-extension-drift.mjs

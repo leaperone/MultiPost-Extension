@@ -36,6 +36,15 @@
     "accountKey": "bilibili"
   },
   {
+    "desktopPlatform": "bilibili",
+    "contentType": "DYNAMIC",
+    "extensionKey": "DYNAMIC_BILIBILI",
+    "source": "dynamic/bilibili.ts",
+    "exportName": "DynamicBilibili",
+    "injectUrl": "https://t.bilibili.com",
+    "accountKey": "bilibili"
+  },
+  {
     "desktopPlatform": "zhihu",
     "contentType": "DYNAMIC",
     "extensionKey": "DYNAMIC_ZHIHU",

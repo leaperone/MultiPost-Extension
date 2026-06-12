@@ -81,6 +81,17 @@ function serveAssetMiss(res: ServerResponse, pathname: string) {
   return true;
 }
 
+function cacheControlFor(pathname: string): string {
+  // Content-hashed Vite assets can cache forever.
+  if (pathname.startsWith('/assets/')) return 'public, max-age=31536000, immutable';
+  // Injector hot-update manifest must be revalidated every request so a fresh
+  // web deploy is picked up immediately; the bundles it points at are
+  // content-hashed (filename carries the sha) and can cache forever.
+  if (pathname === '/injectors/manifest.json') return 'no-cache';
+  if (pathname.startsWith('/injectors/')) return 'public, max-age=31536000, immutable';
+  return 'public, max-age=3600';
+}
+
 function tryServeStatic(req: IncomingMessage, res: ServerResponse) {
   if (!staticRoot || (req.method !== 'GET' && req.method !== 'HEAD')) {
     return false;
@@ -118,11 +129,7 @@ function tryServeStatic(req: IncomingMessage, res: ServerResponse) {
   res.setHeader('Content-Type', MIME_TYPES[extname(filePath).toLowerCase()] ?? 'application/octet-stream');
   res.setHeader('Content-Length', stats.size);
   res.setHeader('X-Content-Type-Options', 'nosniff');
-  // Vite asset filenames are content-hashed, so /assets/* can cache forever.
-  res.setHeader(
-    'Cache-Control',
-    pathname.startsWith('/assets/') ? 'public, max-age=31536000, immutable' : 'public, max-age=3600',
-  );
+  res.setHeader('Cache-Control', cacheControlFor(pathname));
 
   if (req.method === 'HEAD') {
     res.end();
