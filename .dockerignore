@@ -6,3 +6,7 @@ prisma/client*
 # Exclude apps not needed in Docker build
 apps/desktop
 apps/extension
+
+# ...except the injector bundle manifest, which the web build reads to emit
+# static injector scripts for desktop hot-update (apps/web/vite.config.ts).
+!apps/desktop/src/main/injectors/bundleEntries.json
