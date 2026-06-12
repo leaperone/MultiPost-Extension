@@ -4,7 +4,7 @@ export const DEFAULT_TITLE =
   'MultiPost - 开源社交媒体一键分发工具 | 多平台内容发布神器';
 export const TITLE_TEMPLATE = '%s | MultiPost';
 export const DEFAULT_DESCRIPTION =
-  '🚀 MultiPost 是一款开源的多平台内容发布工具,提供桌面客户端与浏览器扩展,支持一键将内容分发到微博、小红书、Twitter、LinkedIn 等 44+ 社交平台。提供智能内容提取、AI 辅助创作、平台优化等功能,让内容创作者轻松管理多平台账号。';
+  '🚀 MultiPost 是一款开源浏览器插件,支持一键将内容分发到微博、小红书、Twitter、LinkedIn 等多个社交平台。提供智能内容提取、AI 辅助创作、平台优化等功能,让内容创作者轻松管理多平台账号。';
 
 export const ROOT_KEYWORDS = [
   '社交媒体管理工具',
@@ -16,7 +16,7 @@ export const ROOT_KEYWORDS = [
   '微博发布工具',
   '小红书发布',
   'Twitter 发布',
-  '桌面客户端',
+  '浏览器插件',
   'social media management',
   'multi-platform publishing',
   'content distribution',

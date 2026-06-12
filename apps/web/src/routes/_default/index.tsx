@@ -8,7 +8,7 @@ import { useTranslation } from '../../i18n/client';
 
 const HOME_TITLE = 'MultiPost - Open Source Multi-Platform Social Media Publishing Tool';
 const HOME_DESCRIPTION =
-  'MultiPost is a free, open-source multi-platform publishing tool. Download the desktop app for macOS and Windows to publish to Weibo, Xiaohongshu, Twitter, LinkedIn and 44+ platforms with one click. A browser extension is also available. Save 80% of your publishing time with AI-powered content optimization.';
+  'MultiPost is a free, open-source browser extension for one-click multi-platform publishing. Publish to Weibo, Xiaohongshu, Twitter, LinkedIn and 10+ platforms simultaneously. Save 80% of your publishing time with AI-powered content optimization.';
 
 export const Route = createFileRoute('/_default/')({
   head: () => ({
@@ -85,17 +85,17 @@ function HomePage() {
                 <Button
                   size="lg"
                   color="primary"
-                  className="rounded-2xl px-10 py-7 text-lg font-medium"
-                  startContent={<MonitorIcon className="size-5" />}>
-                  {t('finalCta.desktop')}
+                  className="rounded-2xl px-10 py-7 text-lg font-medium">
+                  {t('finalCta.install')}
                 </Button>
               </Link>
               <Link to="/install">
                 <Button
                   size="lg"
                   variant="bordered"
-                  className="rounded-2xl px-10 py-7 text-lg font-medium">
-                  {t('finalCta.install')}
+                  className="rounded-2xl px-10 py-7 text-lg font-medium"
+                  startContent={<MonitorIcon className="size-5" />}>
+                  {t('finalCta.desktop')}
                 </Button>
               </Link>
               <a

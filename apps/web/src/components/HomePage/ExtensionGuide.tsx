@@ -1,6 +1,6 @@
 'use client';
 
-import { Button } from '@heroui/react';
+import { Button, Spinner } from '@heroui/react';
 import { RefreshCwIcon, ArrowRightIcon, CheckIcon, MonitorIcon } from 'lucide-react';
 import { Icon } from '@iconify/react';
 import { motion } from 'framer-motion';
@@ -75,22 +75,13 @@ export function ExtensionGuide({ isLoading, onRecheck }: ExtensionGuideProps) {
         className="mb-6 flex flex-col items-center gap-3 sm:flex-row sm:justify-center">
         <Button
           as="a"
-          href="/install"
-          size="lg"
-          color="primary"
-          className="min-w-[200px]"
-          endContent={<ArrowRightIcon className="size-4" />}
-          startContent={<MonitorIcon className="size-5" />}>
-          {t('finalCta.desktop')}
-        </Button>
-        <Button
-          as="a"
           href="https://chromewebstore.google.com/detail/multipost/dhohkaclnjgcikfoaacfgijgjgceofih"
           target="_blank"
           rel="noopener noreferrer"
           size="lg"
-          variant="bordered"
+          color="primary"
           className="min-w-[200px]"
+          endContent={<ArrowRightIcon className="size-4" />}
           startContent={<Icon icon="logos:chrome" className="size-5" />}>
           {t('homePublisher.extensionRequired.chromeStore')}
         </Button>
@@ -104,6 +95,15 @@ export function ExtensionGuide({ isLoading, onRecheck }: ExtensionGuideProps) {
           className="min-w-[200px]"
           startContent={<Icon icon="logos:microsoft-edge" className="size-5" />}>
           {t('homePublisher.extensionRequired.edgeStore')}
+        </Button>
+        <Button
+          as="a"
+          href="/install"
+          size="lg"
+          variant="bordered"
+          className="min-w-[200px]"
+          startContent={<MonitorIcon className="size-5" />}>
+          {t('finalCta.desktop')}
         </Button>
       </motion.div>
 

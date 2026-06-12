@@ -34,9 +34,9 @@ interface DownloadOption {
 export const Route = createFileRoute('/_default/install')({
   head: () => ({
     meta: routeMeta({
-      title: 'Download MultiPost - Desktop App for macOS & Windows',
+      title: 'Install MultiPost - Browser Extension and Desktop App',
       description:
-        'Download the MultiPost desktop app for macOS and Windows to publish across 44+ platforms. A browser extension for Chrome and Edge is also available.',
+        'Download MultiPost for Chrome, Microsoft Edge, macOS, and Windows.',
     }),
   }),
   component: InstallPage,
@@ -85,47 +85,6 @@ function InstallPage() {
         </div>
 
         <div className="mx-auto max-w-3xl space-y-10">
-          {/* Desktop App Section */}
-          <section>
-            <div className="mb-2 flex items-center gap-3">
-              <MonitorIcon className="size-6" />
-              <h2 className="text-xl font-medium">{t('desktopTitle')}</h2>
-            </div>
-            <p className="mb-4 text-sm text-foreground/60">{t('description')}</p>
-
-            <div className="grid gap-4">
-              {downloads.map((item) => (
-                <Card key={item.platform} className="border shadow-none">
-                  <CardBody className="p-5">
-                    <div className="mb-3 flex items-center gap-3">
-                      {item.icon}
-                      <h3 className="text-lg font-medium">{item.platform}</h3>
-                    </div>
-                    <div className="flex flex-wrap gap-3">
-                      {item.links.map((link) => (
-                        <Button
-                          key={link.url}
-                          as="a"
-                          href={link.url}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          color="primary"
-                          startContent={<DownloadIcon className="size-4" />}>
-                          {link.label}
-                          {link.note && (
-                            <span className="ml-1 text-xs opacity-70">({link.note})</span>
-                          )}
-                        </Button>
-                      ))}
-                    </div>
-                  </CardBody>
-                </Card>
-              ))}
-            </div>
-
-            <p className="mt-3 text-xs text-foreground/40">{t('moreFormats')}</p>
-          </section>
-
           {/* Browser Extension Section */}
           <section>
             <div className="mb-4 flex items-center gap-3">
@@ -153,6 +112,47 @@ function InstallPage() {
                 {t('edgeStore')}
               </Button>
             </div>
+          </section>
+
+          {/* Desktop App Section */}
+          <section>
+            <div className="mb-2 flex items-center gap-3">
+              <MonitorIcon className="size-6" />
+              <h2 className="text-xl font-medium">{t('desktopTitle')}</h2>
+            </div>
+            <p className="mb-4 text-sm text-foreground/60">{t('description')}</p>
+
+            <div className="grid gap-4">
+              {downloads.map((item) => (
+                <Card key={item.platform} className="border shadow-none">
+                  <CardBody className="p-5">
+                    <div className="mb-3 flex items-center gap-3">
+                      {item.icon}
+                      <h3 className="text-lg font-medium">{item.platform}</h3>
+                    </div>
+                    <div className="flex flex-wrap gap-3">
+                      {item.links.map((link) => (
+                        <Button
+                          key={link.url}
+                          as="a"
+                          href={link.url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          variant="bordered"
+                          startContent={<DownloadIcon className="size-4" />}>
+                          {link.label}
+                          {link.note && (
+                            <span className="ml-1 text-xs text-foreground/50">({link.note})</span>
+                          )}
+                        </Button>
+                      ))}
+                    </div>
+                  </CardBody>
+                </Card>
+              ))}
+            </div>
+
+            <p className="mt-3 text-xs text-foreground/40">{t('moreFormats')}</p>
           </section>
 
           {/* Beta notice */}

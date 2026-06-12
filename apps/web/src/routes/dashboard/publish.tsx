@@ -62,7 +62,7 @@ function PublishLayout() {
           title: t('extensionNotDetected.title'),
           description: t('extensionNotDetected.description'),
         });
-        void navigate({ to: '/install' } as never);
+        void navigate({ to: '/extension' } as never);
         return;
       }
 
