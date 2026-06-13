@@ -4,9 +4,11 @@ import { ThemeProvider as NextThemesProvider } from 'next-themes'
 import { toast as sonnerToast } from 'sonner'
 import { Toaster } from './components/ui/sonner'
 import { initRendererLogging } from './lib/logger'
+import { initSentryRenderer } from './observability/sentry'
 import './styles/global.css'
 import type { DesktopToastPayload } from '@shared/types'
 
+initSentryRenderer()
 initRendererLogging()
 
 // 透明 toast overlay surface:挂在一个独立的、始终最顶层的 WebContentsView 里,

@@ -37,10 +37,13 @@ import {
   regenerateExternalApiToken,
   getDebugLogEnabled,
   setDebugLogEnabled,
+  getTelemetryEnabled,
+  setTelemetryEnabled,
   KEEPALIVE_MIN_INTERVAL_HOURS,
   KEEPALIVE_MAX_INTERVAL_HOURS
 } from '../appSettings'
 import { syncExternalApiServer } from '../api-server'
+import { setSentryTelemetryEnabled } from '../observability/sentry'
 import { applyDebugLogSetting, getLogsDir, ipcLogger, rendererLogger } from '../logger'
 
 type BrowserViewManagerGetter = () => BrowserViewManager | null
@@ -1483,6 +1486,23 @@ export function registerIpcHandlers(
     // the bug being chased disappear.
     applyDebugLogSetting(enabled)
     return getDebugLogEnabled()
+  })
+
+  // ========== Telemetry Handlers ==========
+
+  ipcMain.handle(IPC_CHANNELS.TELEMETRY_GET, async () => {
+    return getTelemetryEnabled()
+  })
+
+  ipcMain.handle(IPC_CHANNELS.TELEMETRY_SET, async (_, enabled: unknown) => {
+    if (typeof enabled !== 'boolean') {
+      throw new Error('Invalid argument: enabled must be a boolean')
+    }
+    setTelemetryEnabled(enabled)
+    // Live toggle: update Sentry's in-memory gate so events stop/resume
+    // immediately, without an app restart.
+    setSentryTelemetryEnabled(enabled)
+    return getTelemetryEnabled()
   })
 
   ipcMain.handle(IPC_CHANNELS.LOG_OPEN_DIR, async () => {

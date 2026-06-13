@@ -19,7 +19,10 @@ export default defineConfig(({ mode }) => {
     main: {
       plugins: [injectorBundlesVirtualModulePlugin(), externalizeDepsPlugin()],
       define: {
-        'process.env.MULTIPOST_WEB_URL': JSON.stringify(env.MULTIPOST_WEB_URL)
+        'process.env.MULTIPOST_WEB_URL': JSON.stringify(env.MULTIPOST_WEB_URL),
+        // Sentry DSN for crash/error reporting. Optional at build time: sentry.ts
+        // falls back to a hardcoded public DSN when this is blank.
+        'process.env.SENTRY_DSN_DESKTOP': JSON.stringify(env.SENTRY_DSN_DESKTOP || '')
       },
       resolve: {
         alias: {

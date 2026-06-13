@@ -441,6 +441,13 @@ const api = {
     }
   },
 
+  // Telemetry (Sentry error/crash reporting): opt-out toggle, instant effect.
+  telemetry: {
+    get: (): Promise<boolean> => ipcRenderer.invoke(IPC_CHANNELS.TELEMETRY_GET),
+    set: (enabled: boolean): Promise<boolean> =>
+      ipcRenderer.invoke(IPC_CHANNELS.TELEMETRY_SET, enabled)
+  },
+
   // Global toast: caller side. Any renderer fires a toast through main, which
   // forwards it to the transparent overlay view so it floats above every page.
   toast: {

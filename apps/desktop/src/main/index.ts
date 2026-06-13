@@ -22,11 +22,17 @@ import { IPC_CHANNELS, PLATFORMS } from '../shared/constants'
 import { toPublicAccount, type Account } from '../shared/types'
 import log from 'electron-log/main'
 import { initLogging } from './logger'
+import { initSentryMain } from './observability/sentry'
 
 // Unified logging: console.* and scoped module loggers land in per-module
 // files under userData/logs (main/renderer/keepalive/publish/ipc) with
 // rotation, so production issues are diagnosable from files users can send us.
 initLogging()
+
+// Crash/error monitoring (Sentry). Initialized as early as possible — before
+// app.whenReady — so main-process crashes during startup are still captured.
+// Opt-out lives in Settings → 数据与隐私; sensitive data is scrubbed in-process.
+initSentryMain()
 
 // Process-level safety net: log instead of silently dying. Electron would
 // otherwise show a generic crash dialog (uncaughtException) or nothing at all

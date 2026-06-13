@@ -1252,6 +1252,10 @@ export const IPC_CHANNELS = {
   LOG_FROM_RENDERER: 'log:fromRenderer',
   LOG_OPEN_DIR: 'log:openDir',
 
+  // Telemetry (Sentry error/crash reporting) — opt-out toggle
+  TELEMETRY_GET: 'telemetry:get',
+  TELEMETRY_SET: 'telemetry:set',
+
   // Global toast overlay: any renderer → main → transparent overlay view.
   // Keeps publish/progress toasts visible above web/content views.
   TOAST_EMIT: 'toast:emit', // renderer → main (DesktopToastPayload)

@@ -17,7 +17,8 @@ import {
   KeyRound,
   Copy,
   Eye,
-  EyeOff
+  EyeOff,
+  ShieldCheck
 } from 'lucide-react'
 import { useTheme } from 'next-themes'
 import { useEffect, useState } from 'react'
@@ -340,6 +341,43 @@ function DebugLogSetting(): React.ReactElement {
         </Button>
       </SettingItem>
     </>
+  )
+}
+
+function TelemetrySetting(): React.ReactElement {
+  const [enabled, setEnabled] = useState(true)
+  const [loaded, setLoaded] = useState(false)
+
+  useEffect(() => {
+    window.api.telemetry
+      .get()
+      .then((value) => {
+        setEnabled(value)
+        setLoaded(true)
+      })
+      .catch(() => setLoaded(true))
+  }, [])
+
+  const handleChange = async (value: boolean): Promise<void> => {
+    setEnabled(value)
+    try {
+      const applied = await window.api.telemetry.set(value)
+      setEnabled(applied)
+    } catch (error) {
+      console.error('Failed to set telemetry:', error)
+      setEnabled(!value)
+      toast.error('无法修改错误上报设置', { description: '请稍后重试' })
+    }
+  }
+
+  return (
+    <SettingItem
+      icon={ShieldCheck}
+      title="崩溃与错误上报"
+      description="匿名上报崩溃和错误以帮助我们修复问题，已自动脱敏账号、Cookie 等隐私数据，随时可关"
+    >
+      <Switch checked={enabled} onCheckedChange={handleChange} disabled={!loaded} />
+    </SettingItem>
   )
 }
 
@@ -721,6 +759,7 @@ export function SettingsPage(): React.ReactElement {
           数据与隐私
         </h2>
         <Card className="divide-y divide-border/60 px-5">
+          <TelemetrySetting />
           <DataBackupSetting />
           <DebugLogSetting />
         </Card>

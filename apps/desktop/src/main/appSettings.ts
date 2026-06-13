@@ -16,6 +16,7 @@ interface AppSettings {
   keepAlive?: Partial<KeepAliveConfig>
   externalApi?: Partial<ExternalApiSettings>
   debugLog?: boolean
+  telemetry?: { enabled?: boolean }
   injectorHotUpdate?: { enabled?: boolean }
 }
 
@@ -60,6 +61,21 @@ export function getDebugLogEnabled(): boolean {
 export function setDebugLogEnabled(enabled: boolean): void {
   const settings = readSettings()
   settings.debugLog = enabled
+  writeSettings(settings)
+}
+
+/**
+ * Telemetry (Sentry error/crash reporting) defaults to ON — it is opt-out, the
+ * one signal that lets us fix crashes users never report. Only an explicit
+ * `false` disables it, so a missing/blank settings file reports by default.
+ */
+export function getTelemetryEnabled(): boolean {
+  return readSettings().telemetry?.enabled !== false
+}
+
+export function setTelemetryEnabled(enabled: boolean): void {
+  const settings = readSettings()
+  settings.telemetry = { ...settings.telemetry, enabled }
   writeSettings(settings)
 }
 

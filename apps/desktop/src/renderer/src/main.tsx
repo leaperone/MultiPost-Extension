@@ -4,7 +4,12 @@ import { MotionConfig } from 'framer-motion'
 import { ThemeProvider as NextThemesProvider } from 'next-themes'
 import App from './App'
 import { initRendererLogging } from './lib/logger'
+import { initSentryRenderer } from './observability/sentry'
 import './styles/global.css'
+
+// Crash/error monitoring first, so errors during logging/render setup are
+// caught too. Events are forwarded to main, which scrubs and gates them.
+initSentryRenderer()
 
 // Before first render: console.error/warn and uncaught errors should be
 // captured into renderer.log from the very first frame.
