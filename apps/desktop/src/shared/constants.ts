@@ -1118,6 +1118,16 @@ export const IPC_CHANNELS = {
   ACCOUNT_REFRESH_INFO: 'account:refreshInfo',
   ACCOUNT_UPDATED_EVENT: 'multipost:account:updated',
 
+  // Proxy Pool
+  PROXY_LIST: 'proxy:list',
+  PROXY_CREATE: 'proxy:create',
+  PROXY_UPDATE: 'proxy:update',
+  PROXY_DELETE: 'proxy:delete',
+  PROXY_TEST: 'proxy:test',
+  PROXY_TEST_SAVED: 'proxy:testSaved',
+  PROXY_GET_SETTINGS: 'proxy:getSettings',
+  PROXY_SET_SETTINGS: 'proxy:setSettings',
+
   // Browser
   BROWSER_OPEN: 'browser:open',
   BROWSER_CLOSE: 'browser:close',

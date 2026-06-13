@@ -2,6 +2,7 @@ import Database from 'better-sqlite3'
 import { app, safeStorage } from 'electron'
 import { join } from 'path'
 import { existsSync, mkdirSync } from 'fs'
+import { v4 as uuidv4 } from 'uuid'
 import type {
   Account,
   AccountGroup,
@@ -12,11 +13,18 @@ import type {
   ScheduledPublishStatus,
   PublishTask,
   PlatformType,
+  ProxyProfile,
+  ProxyProfileInput,
   ProxyConfig,
   TaskStatus,
   SyncContentType
 } from '../../shared/types'
-import { normalizeProxyConfig } from '../proxy/accountProxy'
+import { buildProxyMigrationKey, normalizeProxyConfig } from '../proxy/proxyConfig'
+
+const PROXY_NAME_MAX_LENGTH = 200
+const PROXY_HOST_MAX_LENGTH = 255
+const PROXY_USERNAME_MAX_LENGTH = 512
+const PROXY_PASSWORD_MAX_LENGTH = 1024
 
 export class DatabaseService {
   private static instance: DatabaseService
@@ -50,6 +58,8 @@ export class DatabaseService {
 
     // Create tables (for new databases or tables that don't exist)
     this.createTables()
+
+    this.migrateAccountProxiesToPool()
   }
 
   private runMigrations(): void {
@@ -98,6 +108,9 @@ export class DatabaseService {
     if (!columnNames.includes('proxy_config')) {
       this.db!.exec('ALTER TABLE accounts ADD COLUMN proxy_config TEXT')
     }
+    if (!columnNames.includes('proxy_id')) {
+      this.db!.exec('ALTER TABLE accounts ADD COLUMN proxy_id TEXT')
+    }
     if (!columnNames.includes('remark')) {
       this.db!.exec('ALTER TABLE accounts ADD COLUMN remark TEXT')
     }
@@ -127,6 +140,21 @@ export class DatabaseService {
       )
     `)
 
+    // Proxy pool table
+    this.db.exec(`
+      CREATE TABLE IF NOT EXISTS proxies (
+        id TEXT PRIMARY KEY,
+        name TEXT NOT NULL,
+        protocol TEXT NOT NULL,
+        host TEXT NOT NULL,
+        port INTEGER NOT NULL,
+        username TEXT,
+        encrypted_password TEXT,
+        created_at INTEGER NOT NULL,
+        updated_at INTEGER NOT NULL
+      )
+    `)
+
     // Accounts table
     this.db.exec(`
       CREATE TABLE IF NOT EXISTS accounts (
@@ -140,6 +168,7 @@ export class DatabaseService {
         last_login_at INTEGER,
         group_id TEXT,
         session_partition TEXT NOT NULL,
+        proxy_id TEXT,
         proxy_config TEXT,
         is_default INTEGER DEFAULT 0,
         created_at INTEGER NOT NULL,
@@ -239,6 +268,85 @@ export class DatabaseService {
     `)
   }
 
+  private migrateAccountProxiesToPool(): void {
+    if (!this.db) throw new Error('Database not initialized')
+
+    const db = this.db
+    const migrate = db.transaction(() => {
+      const accountRows = db
+        .prepare(`
+          SELECT id, proxy_config
+          FROM accounts
+          WHERE proxy_id IS NULL
+            AND proxy_config IS NOT NULL
+            AND TRIM(proxy_config) <> ''
+        `)
+        .all() as LegacyAccountProxyRow[]
+      if (accountRows.length === 0) {
+        return
+      }
+
+      const proxyIdsByMigrationKey = new Map<string, string>()
+      const existingProxyRows = db.prepare('SELECT * FROM proxies').all() as ProxyRow[]
+      for (const proxyRow of existingProxyRows) {
+        const proxyConfig = this.rowToProxyConfigWithoutDecrypt(proxyRow)
+        proxyIdsByMigrationKey.set(buildProxyMigrationKey(proxyConfig), proxyRow.id)
+      }
+
+      const insertProxy = db.prepare(`
+        INSERT INTO proxies (id, name, protocol, host, port, username, encrypted_password, created_at, updated_at)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+      `)
+      const updateAccount = db.prepare(`
+        UPDATE accounts
+        SET proxy_id = ?, proxy_config = NULL
+        WHERE id = ?
+      `)
+      const clearMalformedProxyConfig = db.prepare(`
+        UPDATE accounts
+        SET proxy_config = NULL
+        WHERE id = ?
+      `)
+
+      for (const accountRow of accountRows) {
+        try {
+          const proxyConfig = this.parseProxyConfigForMigration(accountRow.proxy_config, accountRow.id)
+          if (!proxyConfig) {
+            continue
+          }
+
+          const migrationKey = buildProxyMigrationKey(proxyConfig)
+          let proxyId = proxyIdsByMigrationKey.get(migrationKey)
+          if (!proxyId) {
+            const now = Date.now()
+            proxyId = uuidv4()
+            insertProxy.run(
+              proxyId,
+              `${proxyConfig.host}:${proxyConfig.port}`,
+              proxyConfig.protocol,
+              proxyConfig.host,
+              proxyConfig.port,
+              proxyConfig.username ?? null,
+              proxyConfig.encryptedPassword ?? null,
+              now,
+              now
+            )
+            proxyIdsByMigrationKey.set(migrationKey, proxyId)
+          }
+
+          updateAccount.run(proxyId, accountRow.id)
+        } catch (error) {
+          console.warn('[Database] Failed to migrate account proxy_config:', {
+            accountId: accountRow.id,
+            error
+          })
+          clearMalformedProxyConfig.run(accountRow.id)
+        }
+      }
+    })
+    migrate()
+  }
+
   // ========== Account Group Methods ==========
 
   createAccountGroup(group: AccountGroup): AccountGroup {
@@ -304,8 +412,8 @@ export class DatabaseService {
     if (!this.db) throw new Error('Database not initialized')
 
     const stmt = this.db.prepare(`
-      INSERT INTO accounts (id, platform, username, display_name, remark, avatar, is_logged_in, last_login_at, group_id, session_partition, proxy_config, is_default, created_at, updated_at)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      INSERT INTO accounts (id, platform, username, display_name, remark, avatar, is_logged_in, last_login_at, group_id, session_partition, proxy_id, proxy_config, is_default, created_at, updated_at)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `)
 
     stmt.run(
@@ -319,6 +427,7 @@ export class DatabaseService {
       account.lastLoginAt || null,
       account.groupId || null,
       account.sessionPartition,
+      account.proxyId || null,
       this.serializeProxyConfig(account.proxyConfig),
       account.isDefault ? 1 : 0,
       account.createdAt,
@@ -359,6 +468,13 @@ export class DatabaseService {
     return (stmt.all(...params) as AccountRow[]).map((row) => this.rowToAccount(row))
   }
 
+  getAccountsByProxyId(proxyId: string): Account[] {
+    if (!this.db) throw new Error('Database not initialized')
+
+    const stmt = this.db.prepare('SELECT * FROM accounts WHERE proxy_id = ? ORDER BY created_at DESC')
+    return (stmt.all(proxyId) as AccountRow[]).map((row) => this.rowToAccount(row))
+  }
+
   updateAccount(id: string, data: Partial<Account>): Account | null {
     if (!this.db) throw new Error('Database not initialized')
 
@@ -376,6 +492,7 @@ export class DatabaseService {
         is_logged_in = ?,
         last_login_at = ?,
         group_id = ?,
+        proxy_id = ?,
         proxy_config = ?,
         is_default = ?,
         updated_at = ?
@@ -390,6 +507,7 @@ export class DatabaseService {
       updated.isLoggedIn ? 1 : 0,
       updated.lastLoginAt || null,
       updated.groupId || null,
+      updated.proxyId || null,
       this.serializeProxyConfig(updated.proxyConfig),
       updated.isDefault ? 1 : 0,
       updated.updatedAt,
@@ -416,6 +534,215 @@ export class DatabaseService {
       db.prepare('UPDATE accounts SET is_default = 1 WHERE id = ?').run(id)
     })
     setDefault()
+  }
+
+  // ========== Proxy Pool Methods ==========
+
+  createProxy(input: ProxyProfileInput): ProxyProfile {
+    if (!this.db) throw new Error('Database not initialized')
+
+    const now = Date.now()
+    const name = this.normalizeProxyName(input.name)
+    const proxyConfig = this.normalizeProxyProfileInput(input)
+    const row: ProxyRow = {
+      id: uuidv4(),
+      name,
+      protocol: proxyConfig.protocol,
+      host: proxyConfig.host,
+      port: proxyConfig.port,
+      username: proxyConfig.username ?? null,
+      encrypted_password: this.serializeProxyPassword(proxyConfig.password),
+      created_at: now,
+      updated_at: now
+    }
+
+    const stmt = this.db.prepare(`
+      INSERT INTO proxies (id, name, protocol, host, port, username, encrypted_password, created_at, updated_at)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `)
+    stmt.run(
+      row.id,
+      row.name,
+      row.protocol,
+      row.host,
+      row.port,
+      row.username,
+      row.encrypted_password,
+      row.created_at,
+      row.updated_at
+    )
+
+    return this.rowToProxyProfile({ ...row, usage_count: 0 })
+  }
+
+  getOrCreateProxyFromConfig(config: ProxyConfig): ProxyProfile {
+    if (!this.db) throw new Error('Database not initialized')
+
+    if (typeof config.host === 'string' && config.host.trim().length > PROXY_HOST_MAX_LENGTH) {
+      throw new Error(`Proxy host must be ${PROXY_HOST_MAX_LENGTH} characters or fewer`)
+    }
+    if (config.username && config.username.length > PROXY_USERNAME_MAX_LENGTH) {
+      throw new Error(`Proxy username must be ${PROXY_USERNAME_MAX_LENGTH} characters or fewer`)
+    }
+    if (config.password && config.password.length > PROXY_PASSWORD_MAX_LENGTH) {
+      throw new Error(`Proxy password must be ${PROXY_PASSWORD_MAX_LENGTH} characters or fewer`)
+    }
+
+    const normalized = normalizeProxyConfig(config)
+    if (!normalized) {
+      throw new Error('Proxy config is required')
+    }
+    if (config.encryptedPassword) {
+      normalized.encryptedPassword = config.encryptedPassword
+    }
+
+    const migrationKey = buildProxyMigrationKey(normalized)
+    const existingRows = this.db.prepare('SELECT * FROM proxies').all() as ProxyRow[]
+    const existingRow = existingRows.find((row) => {
+      try {
+        return (
+          buildProxyMigrationKey(this.rowToProxyConfig(row)) === migrationKey ||
+          buildProxyMigrationKey(this.rowToProxyConfigWithoutDecrypt(row)) === migrationKey
+        )
+      } catch (error) {
+        console.warn(`[Database] Failed to compare proxy profile ${row.id}:`, error)
+        return false
+      }
+    })
+    if (existingRow) {
+      return this.getProxy(existingRow.id) ?? this.rowToProxyProfile({ ...existingRow, usage_count: 0 })
+    }
+
+    const now = Date.now()
+    const row: ProxyRow = {
+      id: uuidv4(),
+      name: `${normalized.host}:${normalized.port}`,
+      protocol: normalized.protocol,
+      host: normalized.host,
+      port: normalized.port,
+      username: normalized.username ?? null,
+      encrypted_password: normalized.encryptedPassword ?? this.serializeProxyPassword(normalized.password),
+      created_at: now,
+      updated_at: now
+    }
+
+    const stmt = this.db.prepare(`
+      INSERT INTO proxies (id, name, protocol, host, port, username, encrypted_password, created_at, updated_at)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `)
+    stmt.run(
+      row.id,
+      row.name,
+      row.protocol,
+      row.host,
+      row.port,
+      row.username,
+      row.encrypted_password,
+      row.created_at,
+      row.updated_at
+    )
+
+    return this.rowToProxyProfile({ ...row, usage_count: 0 })
+  }
+
+  getProxy(id: string): ProxyProfile | null {
+    if (!this.db) throw new Error('Database not initialized')
+
+    const stmt = this.db.prepare(`
+      SELECT p.*, COUNT(a.id) AS usage_count
+      FROM proxies p
+      LEFT JOIN accounts a ON a.proxy_id = p.id
+      WHERE p.id = ?
+      GROUP BY p.id
+    `)
+    const row = stmt.get(id) as ProxyProfileRow | undefined
+    return row ? this.rowToProxyProfile(row) : null
+  }
+
+  getProxyConfig(id: string): ProxyConfig | undefined {
+    if (!this.db) throw new Error('Database not initialized')
+
+    const row = this.getProxyRow(id)
+    return row ? this.rowToProxyConfig(row) : undefined
+  }
+
+  listProxies(): ProxyProfile[] {
+    if (!this.db) throw new Error('Database not initialized')
+
+    const stmt = this.db.prepare(`
+      SELECT p.*, COUNT(a.id) AS usage_count
+      FROM proxies p
+      LEFT JOIN accounts a ON a.proxy_id = p.id
+      GROUP BY p.id
+      ORDER BY p.updated_at DESC, p.created_at DESC
+    `)
+    return (stmt.all() as ProxyProfileRow[]).map((row) => this.rowToProxyProfile(row))
+  }
+
+  updateProxy(id: string, input: Partial<ProxyProfileInput>): ProxyProfile | null {
+    if (!this.db) throw new Error('Database not initialized')
+
+    const existing = this.getProxyRow(id)
+    if (!existing) return null
+
+    const proxyConfig = this.normalizeProxyProfileInput({
+      name: input.name ?? existing.name,
+      protocol: input.protocol ?? (existing.protocol as ProxyProfileInput['protocol']),
+      host: input.host ?? existing.host,
+      port: input.port ?? existing.port,
+      username: input.username !== undefined ? input.username : existing.username ?? undefined,
+      password: input.password
+    })
+    const updated: ProxyRow = {
+      id: existing.id,
+      name: input.name !== undefined ? this.normalizeProxyName(input.name) : existing.name,
+      protocol: proxyConfig.protocol,
+      host: proxyConfig.host,
+      port: proxyConfig.port,
+      username: proxyConfig.username ?? null,
+      encrypted_password:
+        typeof input.password === 'string' && input.password.length > 0
+          ? this.serializeProxyPassword(input.password)
+          : existing.encrypted_password,
+      created_at: existing.created_at,
+      updated_at: Date.now()
+    }
+
+    const stmt = this.db.prepare(`
+      UPDATE proxies SET
+        name = ?,
+        protocol = ?,
+        host = ?,
+        port = ?,
+        username = ?,
+        encrypted_password = ?,
+        updated_at = ?
+      WHERE id = ?
+    `)
+    stmt.run(
+      updated.name,
+      updated.protocol,
+      updated.host,
+      updated.port,
+      updated.username,
+      updated.encrypted_password,
+      updated.updated_at,
+      id
+    )
+
+    return this.getProxy(id)
+  }
+
+  deleteProxy(id: string): void {
+    if (!this.db) throw new Error('Database not initialized')
+
+    const db = this.db
+    const deleteProxy = db.transaction(() => {
+      const now = Date.now()
+      db.prepare('UPDATE accounts SET proxy_id = NULL, updated_at = ? WHERE proxy_id = ?').run(now, id)
+      db.prepare('DELETE FROM proxies WHERE id = ?').run(id)
+    })
+    deleteProxy()
   }
 
   // Task methods
@@ -838,10 +1165,133 @@ export class DatabaseService {
       lastLoginAt: row.last_login_at || undefined,
       groupId: row.group_id || undefined,
       sessionPartition: row.session_partition,
+      proxyId: row.proxy_id,
       proxyConfig: this.parseProxyConfig(row.proxy_config, row.id),
       isDefault: row.is_default === 1,
       createdAt: row.created_at,
       updatedAt: row.updated_at
+    }
+  }
+
+  private rowToProxyProfile(row: ProxyProfileRow): ProxyProfile {
+    return {
+      id: row.id,
+      name: row.name,
+      protocol: row.protocol as ProxyProfile['protocol'],
+      host: row.host,
+      port: row.port,
+      username: row.username || undefined,
+      hasPassword: Boolean(row.encrypted_password),
+      usageCount: row.usage_count,
+      createdAt: row.created_at,
+      updatedAt: row.updated_at
+    }
+  }
+
+  private getProxyRow(id: string): ProxyRow | null {
+    if (!this.db) throw new Error('Database not initialized')
+
+    const stmt = this.db.prepare('SELECT * FROM proxies WHERE id = ?')
+    const row = stmt.get(id) as ProxyRow | undefined
+    return row ?? null
+  }
+
+  private normalizeProxyName(value: unknown): string {
+    if (typeof value !== 'string') {
+      throw new Error('Proxy name is required')
+    }
+
+    const name = value.trim()
+    if (!name) {
+      throw new Error('Proxy name is required')
+    }
+    if (name.length > PROXY_NAME_MAX_LENGTH) {
+      throw new Error(`Proxy name must be ${PROXY_NAME_MAX_LENGTH} characters or fewer`)
+    }
+    return name
+  }
+
+  private normalizeProxyProfileInput(input: ProxyProfileInput): ProxyConfig {
+    if (typeof input.host === 'string' && input.host.trim().length > PROXY_HOST_MAX_LENGTH) {
+      throw new Error(`Proxy host must be ${PROXY_HOST_MAX_LENGTH} characters or fewer`)
+    }
+    if (input.username && input.username.length > PROXY_USERNAME_MAX_LENGTH) {
+      throw new Error(`Proxy username must be ${PROXY_USERNAME_MAX_LENGTH} characters or fewer`)
+    }
+    if (input.password && input.password.length > PROXY_PASSWORD_MAX_LENGTH) {
+      throw new Error(`Proxy password must be ${PROXY_PASSWORD_MAX_LENGTH} characters or fewer`)
+    }
+
+    const normalized = normalizeProxyConfig({
+      protocol: input.protocol,
+      host: input.host,
+      port: input.port,
+      username: input.username,
+      password: input.password
+    })
+    if (!normalized) {
+      throw new Error('Proxy config is required')
+    }
+    return normalized
+  }
+
+  private serializeProxyPassword(password: string | undefined): string | null {
+    if (password && safeStorage.isEncryptionAvailable()) {
+      return safeStorage.encryptString(password).toString('base64')
+    }
+
+    return null
+  }
+
+  private decryptProxyPassword(encryptedPassword: string, proxyId: string): string | undefined {
+    try {
+      return safeStorage.decryptString(Buffer.from(encryptedPassword, 'base64'))
+    } catch (error) {
+      console.warn(`[Database] Failed to decrypt proxy password for ${proxyId}:`, error)
+      return undefined
+    }
+  }
+
+  private rowToProxyConfig(row: ProxyRow): ProxyConfig {
+    const proxyConfig = this.rowToProxyConfigWithoutDecrypt(row)
+    if (row.encrypted_password) {
+      proxyConfig.password = this.decryptProxyPassword(row.encrypted_password, row.id)
+    }
+    return proxyConfig
+  }
+
+  private rowToProxyConfigWithoutDecrypt(row: ProxyRow): ProxyConfig {
+    const normalized = normalizeProxyConfig({
+      protocol: row.protocol,
+      host: row.host,
+      port: row.port,
+      username: row.username ?? undefined
+    })
+    if (!normalized) {
+      throw new Error(`Invalid proxy row for ${row.id}`)
+    }
+
+    if (row.encrypted_password) {
+      normalized.encryptedPassword = row.encrypted_password
+    }
+    return normalized
+  }
+
+  private parseProxyConfigForMigration(value: string, accountId: string): ProxyConfig | undefined {
+    try {
+      const parsed = JSON.parse(value) as ProxyConfig
+      const normalized = normalizeProxyConfig(parsed)
+      if (!normalized) {
+        throw new Error('Proxy config is required')
+      }
+
+      if (typeof parsed.encryptedPassword === 'string' && parsed.encryptedPassword.length > 0) {
+        normalized.encryptedPassword = parsed.encryptedPassword
+      }
+      return normalized
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error)
+      throw new Error(`Invalid proxy_config for account ${accountId}: ${message}`)
     }
   }
 
@@ -980,6 +1430,27 @@ interface AccountGroupRow {
   updated_at: number
 }
 
+interface ProxyRow {
+  id: string
+  name: string
+  protocol: string
+  host: string
+  port: number
+  username: string | null
+  encrypted_password: string | null
+  created_at: number
+  updated_at: number
+}
+
+interface ProxyProfileRow extends ProxyRow {
+  usage_count: number
+}
+
+interface LegacyAccountProxyRow {
+  id: string
+  proxy_config: string
+}
+
 interface AccountRow {
   id: string
   platform: string
@@ -991,6 +1462,7 @@ interface AccountRow {
   last_login_at: number | null
   group_id: string | null
   session_partition: string
+  proxy_id: string | null
   proxy_config: string | null
   is_default: number
   created_at: number

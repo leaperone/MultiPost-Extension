@@ -61,6 +61,7 @@ import {
   trackAccountProxyForWebContents,
   withAccountProxySession
 } from '../proxy/accountProxy'
+import { registerGlobalProxySession } from '../proxy/proxyManager'
 import { isSupportedBrowserNavigationUrl, openExternalUrl } from './externalUrl'
 import {
   fetchSessionUserInfo,
@@ -2026,6 +2027,7 @@ export class BrowserViewManager {
     // local-file:// requests are gated by the capability allowlist in
     // sessionHardening (only app-handed-out paths are servable).
     registerLocalFileProtocol(ses)
+    await registerGlobalProxySession(ses)
 
     // Create WebContentsView with isolated session
     const view = new WebContentsView({

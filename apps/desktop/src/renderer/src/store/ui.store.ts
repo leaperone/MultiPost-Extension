@@ -11,6 +11,7 @@ export type NativeView =
   | 'drafts'
   | 'history'
   | 'settings'
+  | 'proxy'
   | 'about'
 
 interface UiState {

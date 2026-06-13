@@ -12,6 +12,7 @@ import {
   MessagesSquareIcon,
   NotebookPenIcon,
   PodcastIcon,
+  Network,
   SettingsIcon,
   UsersIcon,
   VideoIcon
@@ -27,6 +28,7 @@ import { AccountsPage } from '../pages/AccountsPage'
 import { DraftsPage } from '../pages/DraftsPage'
 import { HistoryPage } from '../pages/HistoryPage'
 import { SettingsPage } from '../pages/SettingsPage'
+import { ProxyPage } from '../pages/ProxyPage'
 import { AboutPage } from '../pages/AboutPage'
 import { Button } from '../ui/button'
 import { Tooltip } from '../ui/tooltip'
@@ -56,6 +58,7 @@ const PUBLISH_NAV: NavItem[] = [
 
 const FOOTER_NAV: NavItem[] = [
   { view: 'settings', label: '设置', icon: <SettingsIcon className="size-4" /> },
+  { view: 'proxy', label: '代理', icon: <Network className="size-4" /> },
   { view: 'about', label: '关于', icon: <InfoIcon className="size-4" /> }
 ]
 
@@ -231,6 +234,8 @@ function ActivePage({ view }: { view: NativeView }): React.ReactElement {
       return <HistoryPage />
     case 'settings':
       return <SettingsPage />
+    case 'proxy':
+      return <ProxyPage />
     case 'about':
       return <AboutPage />
   }

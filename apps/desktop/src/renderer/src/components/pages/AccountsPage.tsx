@@ -18,15 +18,21 @@ import {
   getPlatformAccountKey,
   PLATFORMS
 } from '@shared/constants'
-import type { Account, AccountGroup, PlatformType, SyncContentType } from '@shared/types'
+import type {
+  Account,
+  AccountGroup,
+  PlatformType,
+  ProxyProfile,
+  ProxySettings,
+  SyncContentType
+} from '@shared/types'
 import { PLATFORM_CATEGORIES, PlatformIcon } from '../publish/shared'
 import { AccountAvatar } from '../AccountAvatar'
 import {
-  createProxyConfigDraft,
-  proxyDraftToConfig,
-  ProxyConfigSection,
-  type ProxyConfigDraft
-} from '../ProxyConfigSection'
+  PROXY_CREATE_VALUE,
+  PROXY_NONE_VALUE,
+  ProxyProfileFormDialog
+} from './ProxyPage'
 import { Button } from '../ui/button'
 import { Card } from '../ui/card'
 import { Badge } from '../ui/badge'
@@ -68,6 +74,20 @@ const CONTENT_TYPE_FILTERS: Array<{ key: ContentTypeFilter; label: string }> = [
 
 // Radix Select reserves the empty string, so "ungrouped" needs a sentinel value
 const UNGROUPED_VALUE = '__ungrouped__'
+
+function getSelectableProxyId(
+  proxyId: string | null | undefined,
+  proxies: ProxyProfile[]
+): string | null {
+  if (proxyId && proxies.some((proxy) => proxy.id === proxyId)) {
+    return proxyId
+  }
+  return null
+}
+
+function formatProxyOption(profile: ProxyProfile): string {
+  return `${profile.name} · ${profile.protocol.toUpperCase()} ${profile.host}:${profile.port}`
+}
 
 function getPlatformContentTypes(platform: PlatformType): SyncContentType[] {
   return PLATFORMS[platform]?.supportedContentTypes || []
@@ -116,26 +136,30 @@ function SearchInput({
 export function AccountsPage({ onLoginAccount }: AccountsPageProps): React.ReactElement {
   const [accounts, setAccounts] = useState<Account[]>([])
   const [groups, setGroups] = useState<AccountGroup[]>([])
+  const [proxies, setProxies] = useState<ProxyProfile[]>([])
+  const [proxySettings, setProxySettings] = useState<ProxySettings>({
+    defaultProxyId: null,
+    globalProxyId: null
+  })
   const [selectedGroup, setSelectedGroup] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
 
   const [isAddAccountOpen, setIsAddAccountOpen] = useState(false)
   const [isAddGroupOpen, setIsAddGroupOpen] = useState(false)
   const [isEditAccountOpen, setIsEditAccountOpen] = useState(false)
+  const [proxyDialogTarget, setProxyDialogTarget] = useState<'new-account' | 'edit-account' | null>(
+    null
+  )
 
   const [newGroupName, setNewGroupName] = useState('')
   const [newGroupColor, setNewGroupColor] = useState('')
   const [selectedPlatform, setSelectedPlatform] = useState<PlatformType | ''>('')
   const [platformSearch, setPlatformSearch] = useState('')
   const [contentTypeFilter, setContentTypeFilter] = useState<ContentTypeFilter>('ALL')
-  const [newAccountProxyDraft, setNewAccountProxyDraft] = useState<ProxyConfigDraft>(() =>
-    createProxyConfigDraft()
-  )
+  const [newAccountProxyId, setNewAccountProxyId] = useState<string | null>(null)
   const [editingAccount, setEditingAccount] = useState<Account | null>(null)
   const [editDisplayName, setEditDisplayName] = useState('')
-  const [editProxyDraft, setEditProxyDraft] = useState<ProxyConfigDraft>(() =>
-    createProxyConfigDraft()
-  )
+  const [editProxyId, setEditProxyId] = useState<string | null>(null)
 
   // Destructive actions go through a confirm dialog (deleting an account also
   // clears its login session, so it must never be one accidental click away).
@@ -151,12 +175,16 @@ export function AccountsPage({ onLoginAccount }: AccountsPageProps): React.React
   const loadData = useCallback(async () => {
     try {
       setLoading(true)
-      const [accountsData, groupsData] = await Promise.all([
+      const [accountsData, groupsData, proxyList, settings] = await Promise.all([
         window.api.account.list(selectedGroup ? { groupId: selectedGroup } : undefined),
-        window.api.group.list()
+        window.api.group.list(),
+        window.api.proxy.list(),
+        window.api.proxy.getSettings()
       ])
       setAccounts(accountsData)
       setGroups(groupsData)
+      setProxies(proxyList)
+      setProxySettings(settings)
     } catch (error) {
       console.error('Failed to load accounts:', error)
       toast.error('无法加载账号列表', { description: '请稍后重试，若持续失败请重启应用' })
@@ -168,6 +196,16 @@ export function AccountsPage({ onLoginAccount }: AccountsPageProps): React.React
   useEffect(() => {
     loadData()
   }, [loadData])
+
+  const refreshProxyData = useCallback(async (): Promise<ProxyProfile[]> => {
+    const [proxyList, settings] = await Promise.all([
+      window.api.proxy.list(),
+      window.api.proxy.getSettings()
+    ])
+    setProxies(proxyList)
+    setProxySettings(settings)
+    return proxyList
+  }, [])
 
   // The main process re-detects accounts in the background (e.g. right after
   // a login tab closes); merge those updates into the list live.
@@ -250,7 +288,12 @@ export function AccountsPage({ onLoginAccount }: AccountsPageProps): React.React
     setSelectedPlatform('')
     setPlatformSearch('')
     setContentTypeFilter('ALL')
-    setNewAccountProxyDraft(createProxyConfigDraft())
+    setNewAccountProxyId(getSelectableProxyId(proxySettings.defaultProxyId, proxies))
+  }
+
+  const openAddAccountModal = () => {
+    setNewAccountProxyId(getSelectableProxyId(proxySettings.defaultProxyId, proxies))
+    setIsAddAccountOpen(true)
   }
 
   const closeAddAccountModal = () => {
@@ -264,8 +307,9 @@ export function AccountsPage({ onLoginAccount }: AccountsPageProps): React.React
     if (!selectedPlatform) return
 
     try {
+      const proxyId = getSelectableProxyId(newAccountProxyId, proxies)
       const account = await window.api.account.create(selectedPlatform, {
-        proxyConfig: proxyDraftToConfig(newAccountProxyDraft)
+        proxyId
       })
       setAccounts((prev) => [account, ...prev])
       if (!keepOpen) {
@@ -346,7 +390,7 @@ export function AccountsPage({ onLoginAccount }: AccountsPageProps): React.React
   const handleEditAccount = (account: Account) => {
     setEditingAccount(account)
     setEditDisplayName(account.displayName || account.username || '')
-    setEditProxyDraft(createProxyConfigDraft(account.proxyConfig))
+    setEditProxyId(getSelectableProxyId(account.proxyId, proxies))
     setIsEditAccountOpen(true)
   }
 
@@ -354,9 +398,10 @@ export function AccountsPage({ onLoginAccount }: AccountsPageProps): React.React
     if (!editingAccount) return
 
     try {
+      const proxyId = getSelectableProxyId(editProxyId, proxies)
       await window.api.account.update(editingAccount.id, {
         displayName: editDisplayName.trim() || undefined,
-        proxyConfig: proxyDraftToConfig(editProxyDraft)
+        proxyId: proxyId ?? null
       })
       await loadData()
       setIsEditAccountOpen(false)
@@ -462,6 +507,47 @@ export function AccountsPage({ onLoginAccount }: AccountsPageProps): React.React
     ],
     [groups]
   )
+
+  const proxySelectOptions = useMemo(
+    () => [
+      { value: PROXY_NONE_VALUE, label: '无代理' },
+      ...proxies.map((proxy) => ({ value: proxy.id, label: formatProxyOption(proxy) })),
+      { value: PROXY_CREATE_VALUE, label: '+ 新建代理…' }
+    ],
+    [proxies]
+  )
+
+  const handleNewAccountProxyChange = (value: string): void => {
+    if (value === PROXY_CREATE_VALUE) {
+      setProxyDialogTarget('new-account')
+      return
+    }
+    setNewAccountProxyId(value === PROXY_NONE_VALUE ? null : value)
+  }
+
+  const handleEditProxyChange = (value: string): void => {
+    if (value === PROXY_CREATE_VALUE) {
+      setProxyDialogTarget('edit-account')
+      return
+    }
+    setEditProxyId(value === PROXY_NONE_VALUE ? null : value)
+  }
+
+  const handleProxyCreated = async (profile: ProxyProfile): Promise<void> => {
+    try {
+      await refreshProxyData()
+    } catch (error) {
+      console.error('Failed to refresh proxy list:', error)
+      toast.error('代理已创建，但列表刷新失败', { description: '请稍后手动刷新页面' })
+    }
+
+    if (proxyDialogTarget === 'new-account') {
+      setNewAccountProxyId(profile.id)
+    } else if (proxyDialogTarget === 'edit-account') {
+      setEditProxyId(profile.id)
+    }
+    setProxyDialogTarget(null)
+  }
 
   return (
     <div className="flex h-full min-h-0 gap-6">
@@ -606,7 +692,7 @@ export function AccountsPage({ onLoginAccount }: AccountsPageProps): React.React
               ? `检测中 ${refreshAllProgress.done}/${refreshAllProgress.total}`
               : '检测全部'}
           </Button>
-          <Button size="sm" onClick={() => setIsAddAccountOpen(true)}>
+          <Button size="sm" onClick={openAddAccountModal}>
             <Plus />
             添加账号
           </Button>
@@ -625,7 +711,7 @@ export function AccountsPage({ onLoginAccount }: AccountsPageProps): React.React
               <p className="font-medium">暂无账号</p>
               <p className="text-sm text-muted-foreground">选择平台后会创建独立登录会话</p>
             </div>
-            <Button size="sm" onClick={() => setIsAddAccountOpen(true)}>
+            <Button size="sm" onClick={openAddAccountModal}>
               <Plus />
               添加第一个账号
             </Button>
@@ -780,7 +866,7 @@ export function AccountsPage({ onLoginAccount }: AccountsPageProps): React.React
           <DialogContent className="max-w-[920px]">
             <DialogHeader>
               <DialogTitle>添加账号</DialogTitle>
-              <DialogDescription>选择一个账号平台并配置独立代理</DialogDescription>
+              <DialogDescription>选择账号平台，并从代理池中选择账号代理</DialogDescription>
             </DialogHeader>
             <div className="flex max-h-[60vh] min-h-0 flex-col gap-4">
               <div className="flex flex-col gap-3 lg:flex-row lg:items-center">
@@ -842,7 +928,7 @@ export function AccountsPage({ onLoginAccount }: AccountsPageProps): React.React
                                     <PlatformIcon platform={platform} size={20} />
                                   </div>
                                   {isSelected && (
-                                    <CheckCircle2 className="size-4 shrink-0 text-primary" />
+                                    <CheckCircle2 className="size-4 shrink-0 text-foreground" />
                                   )}
                                 </div>
                                 <div className="w-full min-w-0">
@@ -864,9 +950,12 @@ export function AccountsPage({ onLoginAccount }: AccountsPageProps): React.React
                 )}
               </div>
 
-              <ProxyConfigSection
-                value={newAccountProxyDraft}
-                onChange={setNewAccountProxyDraft}
+              <SimpleSelect
+                label="代理"
+                description="默认使用代理页设置的默认代理；也可以改为无代理或新建代理。"
+                value={newAccountProxyId ?? PROXY_NONE_VALUE}
+                options={proxySelectOptions}
+                onValueChange={handleNewAccountProxyChange}
               />
             </div>
             <DialogFooter>
@@ -933,11 +1022,12 @@ export function AccountsPage({ onLoginAccount }: AccountsPageProps): React.React
                 onChange={(e) => setEditDisplayName(e.target.value)}
                 autoFocus
               />
-              <ProxyConfigSection
-                key={editingAccount?.id || 'edit-proxy'}
-                value={editProxyDraft}
-                onChange={setEditProxyDraft}
-                defaultExpanded={Boolean(editingAccount?.proxyConfig)}
+              <SimpleSelect
+                label="代理"
+                description="账号流量只使用这里选择的代理；无代理时直连。"
+                value={editProxyId ?? PROXY_NONE_VALUE}
+                options={proxySelectOptions}
+                onValueChange={handleEditProxyChange}
               />
             </div>
             <DialogFooter>
@@ -948,6 +1038,14 @@ export function AccountsPage({ onLoginAccount }: AccountsPageProps): React.React
             </DialogFooter>
           </DialogContent>
         </Dialog>
+
+        <ProxyProfileFormDialog
+          open={proxyDialogTarget !== null}
+          onOpenChange={(open) => {
+            if (!open) setProxyDialogTarget(null)
+          }}
+          onSaved={handleProxyCreated}
+        />
 
         {/* Delete account confirm */}
         <ConfirmDialog

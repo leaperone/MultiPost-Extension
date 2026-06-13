@@ -2,7 +2,7 @@ import { app } from 'electron'
 import { randomBytes } from 'crypto'
 import { existsSync, readFileSync, writeFileSync } from 'fs'
 import { join } from 'path'
-import type { ExternalApiSettings, KeepAliveConfig } from '../shared/types'
+import type { ExternalApiSettings, KeepAliveConfig, ProxySettings } from '../shared/types'
 
 /**
  * Main-process settings that must be readable outside the renderer (e.g. at
@@ -15,6 +15,8 @@ interface AppSettings {
   closeWindowBehavior?: CloseWindowBehavior
   keepAlive?: Partial<KeepAliveConfig>
   externalApi?: Partial<ExternalApiSettings>
+  defaultProxyId?: string | null
+  globalProxyId?: string | null
   debugLog?: boolean
   telemetry?: { enabled?: boolean }
   injectorHotUpdate?: { enabled?: boolean }
@@ -116,6 +118,43 @@ export function setKeepAliveConfig(config: Partial<KeepAliveConfig>): KeepAliveC
   settings.keepAlive = { ...getKeepAliveConfig(), ...config }
   writeSettings(settings)
   return getKeepAliveConfig()
+}
+
+function normalizeProxySettingId(value: unknown): string | null {
+  return typeof value === 'string' && value.length > 0 ? value : null
+}
+
+export function getProxySettings(): ProxySettings {
+  const settings = readSettings()
+  return {
+    defaultProxyId: normalizeProxySettingId(settings.defaultProxyId),
+    globalProxyId: normalizeProxySettingId(settings.globalProxyId)
+  }
+}
+
+export function setProxySettings(patch: Partial<ProxySettings>): ProxySettings {
+  const settings = readSettings()
+  const current = getProxySettings()
+
+  settings.defaultProxyId =
+    Object.prototype.hasOwnProperty.call(patch, 'defaultProxyId')
+      ? normalizeProxySettingId(patch.defaultProxyId)
+      : current.defaultProxyId
+  settings.globalProxyId =
+    Object.prototype.hasOwnProperty.call(patch, 'globalProxyId')
+      ? normalizeProxySettingId(patch.globalProxyId)
+      : current.globalProxyId
+
+  writeSettings(settings)
+  return getProxySettings()
+}
+
+export function getDefaultProxyId(): string | null {
+  return getProxySettings().defaultProxyId
+}
+
+export function getGlobalProxyId(): string | null {
+  return getProxySettings().globalProxyId
 }
 
 export const EXTERNAL_API_DEFAULT_PORT = 19528

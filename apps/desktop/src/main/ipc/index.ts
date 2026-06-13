@@ -15,6 +15,8 @@ import {
   type ScheduledPublish,
   type PlatformType,
   type ProxyConfig,
+  type ProxyProfileInput,
+  type ProxySettings,
   type PublishTask,
   type TaskStatus,
   type SyncContentType,
@@ -27,7 +29,19 @@ import {
 import { BrowserViewManager } from '../browser/browserViewManager'
 import { DatabaseService } from '../database'
 import type { KeepAliveService } from '../keepalive'
-import { closeAllAnonymizedProxies, normalizeProxyConfig } from '../proxy/accountProxy'
+import { closeAllAnonymizedProxies } from '../proxy/accountProxy'
+import {
+  normalizeProxyConfig,
+  normalizeProxyHost,
+  normalizeProxyPort
+} from '../proxy/proxyConfig'
+import {
+  applyGlobalProxy,
+  deleteProxyAndReapply,
+  onProxyMutated,
+  testProxy,
+  testSavedProxy
+} from '../proxy/proxyManager'
 import { allowLocalFile } from '../browser/sessionHardening'
 import {
   getCloseWindowBehavior,
@@ -39,6 +53,8 @@ import {
   setDebugLogEnabled,
   getTelemetryEnabled,
   setTelemetryEnabled,
+  getProxySettings,
+  setProxySettings,
   KEEPALIVE_MIN_INTERVAL_HOURS,
   KEEPALIVE_MAX_INTERVAL_HOURS
 } from '../appSettings'
@@ -47,6 +63,23 @@ import { setSentryTelemetryEnabled } from '../observability/sentry'
 import { applyDebugLogSetting, getLogsDir, ipcLogger, rendererLogger } from '../logger'
 
 type BrowserViewManagerGetter = () => BrowserViewManager | null
+
+interface AccountCreateOptions {
+  proxyId?: string | null
+  proxyConfig?: ProxyConfig | null
+}
+
+interface AccountProxyBindingUpdate {
+  hasUpdate: boolean
+  proxyId: string | null | undefined
+}
+
+const proxyProtocols: ProxyProfileInput['protocol'][] = ['http', 'https', 'socks5']
+const PROXY_ID_MAX_LENGTH = 200
+const PROXY_NAME_MAX_LENGTH = 200
+const PROXY_HOST_MAX_LENGTH = 255
+const PROXY_USERNAME_MAX_LENGTH = 512
+const PROXY_PASSWORD_MAX_LENGTH = 1024
 
 function formatIpcError(error: unknown): string {
   if (error instanceof Error) {
@@ -110,15 +143,296 @@ function hasOwnProperty<T extends object, K extends PropertyKey>(
   return Object.prototype.hasOwnProperty.call(value, key)
 }
 
+function assertRecord(value: unknown, label: string): Record<string, unknown> {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) {
+    throw new Error(`${label} must be an object`)
+  }
+  return value as Record<string, unknown>
+}
+
+function normalizeProxyName(value: unknown): string {
+  if (typeof value !== 'string') {
+    throw new Error('Proxy name is required')
+  }
+
+  const name = value.trim()
+  if (!name) {
+    throw new Error('Proxy name is required')
+  }
+  if (name.length > PROXY_NAME_MAX_LENGTH) {
+    throw new Error(`Proxy name must be ${PROXY_NAME_MAX_LENGTH} characters or fewer`)
+  }
+  return name
+}
+
+function normalizeProxyProtocol(value: unknown): ProxyProfileInput['protocol'] {
+  if (!proxyProtocols.includes(value as ProxyProfileInput['protocol'])) {
+    throw new Error('Proxy protocol must be http, https, or socks5')
+  }
+  return value as ProxyProfileInput['protocol']
+}
+
+function normalizeProxyHostForIpc(value: unknown): string {
+  if (typeof value === 'string' && value.trim().length > PROXY_HOST_MAX_LENGTH) {
+    throw new Error(`Proxy host must be ${PROXY_HOST_MAX_LENGTH} characters or fewer`)
+  }
+  return normalizeProxyHost(value)
+}
+
+function normalizeOptionalProxyCredential(
+  value: unknown,
+  label: string,
+  maxLength: number
+): string | undefined {
+  if (value == null) {
+    return undefined
+  }
+  if (typeof value !== 'string') {
+    throw new Error(`${label} must be a string`)
+  }
+  if (value.length > maxLength) {
+    throw new Error(`${label} must be ${maxLength} characters or fewer`)
+  }
+  return value.length > 0 ? value : undefined
+}
+
+function normalizeProxyCredentialText(value: unknown, label: string, maxLength: number): string {
+  if (value == null) {
+    return ''
+  }
+  if (typeof value !== 'string') {
+    throw new Error(`${label} must be a string`)
+  }
+  if (value.length > maxLength) {
+    throw new Error(`${label} must be ${maxLength} characters or fewer`)
+  }
+  return value
+}
+
+function normalizeProxyProfileInputForIpc(value: unknown): ProxyProfileInput {
+  const input = assertRecord(value, 'Proxy profile')
+  const proxyConfig = normalizeProxyConfig({
+    protocol: normalizeProxyProtocol(input.protocol),
+    host: normalizeProxyHostForIpc(input.host),
+    port: input.port,
+    username: normalizeOptionalProxyCredential(
+      input.username,
+      'Proxy username',
+      PROXY_USERNAME_MAX_LENGTH
+    ),
+    password: normalizeOptionalProxyCredential(
+      input.password,
+      'Proxy password',
+      PROXY_PASSWORD_MAX_LENGTH
+    )
+  })
+  if (!proxyConfig) {
+    throw new Error('Proxy config is required')
+  }
+
+  return {
+    name: normalizeProxyName(input.name),
+    protocol: proxyConfig.protocol,
+    host: proxyConfig.host,
+    port: proxyConfig.port,
+    username: proxyConfig.username,
+    password: proxyConfig.password
+  }
+}
+
+function normalizeLegacyProxyConfigForIpc(value: unknown): ProxyConfig | undefined {
+  if (value == null) {
+    return undefined
+  }
+
+  const input = assertRecord(value, 'Proxy config')
+  return normalizeProxyConfig({
+    protocol: normalizeProxyProtocol(input.protocol),
+    host: normalizeProxyHostForIpc(input.host),
+    port: input.port,
+    username: normalizeOptionalProxyCredential(
+      input.username,
+      'Proxy username',
+      PROXY_USERNAME_MAX_LENGTH
+    ),
+    password: normalizeOptionalProxyCredential(
+      input.password,
+      'Proxy password',
+      PROXY_PASSWORD_MAX_LENGTH
+    )
+  })
+}
+
+function normalizeProxyProfilePatchForIpc(value: unknown): Partial<ProxyProfileInput> {
+  const input = assertRecord(value, 'Proxy profile')
+  const patch: Partial<ProxyProfileInput> = {}
+
+  if (hasOwnProperty(input, 'name')) {
+    patch.name = normalizeProxyName(input.name)
+  }
+  if (hasOwnProperty(input, 'protocol')) {
+    patch.protocol = normalizeProxyProtocol(input.protocol)
+  }
+  if (hasOwnProperty(input, 'host')) {
+    patch.host = normalizeProxyHostForIpc(input.host)
+  }
+  if (hasOwnProperty(input, 'port')) {
+    patch.port = normalizeProxyPort(input.port)
+  }
+  if (hasOwnProperty(input, 'username')) {
+    patch.username = normalizeProxyCredentialText(
+      input.username,
+      'Proxy username',
+      PROXY_USERNAME_MAX_LENGTH
+    )
+  }
+  if (hasOwnProperty(input, 'password')) {
+    patch.password = normalizeOptionalProxyCredential(
+      input.password,
+      'Proxy password',
+      PROXY_PASSWORD_MAX_LENGTH
+    )
+  }
+
+  return patch
+}
+
+function normalizeProxyIdForIpc(value: unknown): string {
+  if (typeof value !== 'string') {
+    throw new Error('Proxy id must be a string')
+  }
+
+  const proxyId = value.trim()
+  if (!proxyId) {
+    throw new Error('Proxy id is required')
+  }
+  if (proxyId.length > PROXY_ID_MAX_LENGTH) {
+    throw new Error(`Proxy id must be ${PROXY_ID_MAX_LENGTH} characters or fewer`)
+  }
+  return proxyId
+}
+
+function normalizeProxyBindingId(value: unknown): string | null {
+  if (value == null) {
+    return null
+  }
+  return normalizeProxyIdForIpc(value)
+}
+
+function assertProxyExists(db: DatabaseService, proxyId: string | null): void {
+  if (!proxyId) {
+    return
+  }
+  if (!db.getProxy(proxyId)) {
+    throw new Error(`Proxy profile not found: ${proxyId}`)
+  }
+}
+
+function createProxyFromLegacyConfig(
+  db: DatabaseService,
+  proxyConfigInput: unknown,
+  existingAccountId?: string
+): string | null {
+  const proxyConfig = normalizeLegacyProxyConfigForIpc(proxyConfigInput)
+  if (!proxyConfig) {
+    return null
+  }
+
+  if (!proxyConfig.password && existingAccountId) {
+    const account = db.getAccount(existingAccountId)
+    const existingProxy = account?.proxyId
+      ? db.getProxyConfig(account.proxyId)
+      : account?.proxyConfig
+    if (
+      existingProxy &&
+      existingProxy.protocol === proxyConfig.protocol &&
+      existingProxy.host === proxyConfig.host &&
+      existingProxy.port === proxyConfig.port &&
+      (existingProxy.username ?? '') === (proxyConfig.username ?? '') &&
+      existingProxy.password
+    ) {
+      proxyConfig.password = existingProxy.password
+      proxyConfig.encryptedPassword = existingProxy.encryptedPassword
+    }
+  }
+
+  return db.getOrCreateProxyFromConfig(proxyConfig).id
+}
+
+function resolveAccountProxyBindingForCreate(
+  db: DatabaseService,
+  options: AccountCreateOptions | undefined
+): string | null | undefined {
+  if (!options) {
+    return undefined
+  }
+
+  const input = assertRecord(options, 'Account create options')
+  if (hasOwnProperty(input, 'proxyId')) {
+    const proxyId = normalizeProxyBindingId(input.proxyId)
+    assertProxyExists(db, proxyId)
+    return proxyId
+  }
+
+  if (hasOwnProperty(input, 'proxyConfig')) {
+    return createProxyFromLegacyConfig(db, input.proxyConfig)
+  }
+
+  return undefined
+}
+
+function resolveAccountProxyBindingForUpdate(
+  db: DatabaseService,
+  accountId: string,
+  data: Partial<Account>
+): AccountProxyBindingUpdate {
+  if (hasOwnProperty(data, 'proxyId')) {
+    const proxyId = normalizeProxyBindingId(data.proxyId)
+    assertProxyExists(db, proxyId)
+    return { hasUpdate: true, proxyId }
+  }
+
+  if (hasOwnProperty(data, 'proxyConfig')) {
+    return {
+      hasUpdate: true,
+      proxyId: createProxyFromLegacyConfig(db, data.proxyConfig, accountId)
+    }
+  }
+
+  return { hasUpdate: false, proxyId: undefined }
+}
+
+function normalizeProxySettingsPatchForIpc(
+  db: DatabaseService,
+  value: unknown
+): Partial<ProxySettings> {
+  const input = assertRecord(value, 'Proxy settings')
+  const patch: Partial<ProxySettings> = {}
+
+  if (hasOwnProperty(input, 'defaultProxyId')) {
+    const proxyId = normalizeProxyBindingId(input.defaultProxyId)
+    assertProxyExists(db, proxyId)
+    patch.defaultProxyId = proxyId
+  }
+  if (hasOwnProperty(input, 'globalProxyId')) {
+    const proxyId = normalizeProxyBindingId(input.globalProxyId)
+    assertProxyExists(db, proxyId)
+    patch.globalProxyId = proxyId
+  }
+
+  return patch
+}
+
 function formatAccountForLog(
-  account: Pick<Account, 'id' | 'platform' | 'proxyConfig'> | null | undefined
-): { id: string; platform: PlatformType; hasProxyConfig: boolean } | null {
+  account: Pick<Account, 'id' | 'platform' | 'proxyId' | 'proxyConfig'> | null | undefined
+): { id: string; platform: PlatformType; proxyId: string | null; hasProxyConfig: boolean } | null {
   if (!account) {
     return null
   }
   return {
     id: account.id,
     platform: account.platform,
+    proxyId: account.proxyId ?? null,
     hasProxyConfig: Boolean(account.proxyConfig)
   }
 }
@@ -179,18 +493,75 @@ export function registerIpcHandlers(
     return account ? toPublicAccount(account) : null
   })
 
+  // ========== Proxy Pool Handlers ==========
+
+  ipcMain.handle(IPC_CHANNELS.PROXY_LIST, async () => {
+    return db.listProxies()
+  })
+
+  ipcMain.handle(IPC_CHANNELS.PROXY_CREATE, async (_, input: unknown) => {
+    const proxy = db.createProxy(normalizeProxyProfileInputForIpc(input))
+    await onProxyMutated(proxy.id, async (accountId) => {
+      await getBrowserViewManager()?.reapplyAccountProxy(accountId)
+    })
+    return proxy
+  })
+
+  ipcMain.handle(IPC_CHANNELS.PROXY_UPDATE, async (_, id: unknown, input: unknown) => {
+    const proxyId = normalizeProxyIdForIpc(id)
+    const updated = db.updateProxy(proxyId, normalizeProxyProfilePatchForIpc(input))
+    if (!updated) {
+      return null
+    }
+
+    await onProxyMutated(proxyId, async (accountId) => {
+      await getBrowserViewManager()?.reapplyAccountProxy(accountId)
+    })
+    return updated
+  })
+
+  ipcMain.handle(IPC_CHANNELS.PROXY_DELETE, async (_, id: unknown) => {
+    await deleteProxyAndReapply(normalizeProxyIdForIpc(id), async (accountId) => {
+      await getBrowserViewManager()?.reapplyAccountProxy(accountId)
+    })
+  })
+
+  ipcMain.handle(IPC_CHANNELS.PROXY_TEST, async (_, input: unknown) => {
+    return testProxy(normalizeProxyProfileInputForIpc(input))
+  })
+
+  ipcMain.handle(IPC_CHANNELS.PROXY_TEST_SAVED, async (_, id: unknown) => {
+    return testSavedProxy(normalizeProxyIdForIpc(id))
+  })
+
+  ipcMain.handle(IPC_CHANNELS.PROXY_GET_SETTINGS, async () => {
+    return getProxySettings()
+  })
+
+  ipcMain.handle(IPC_CHANNELS.PROXY_SET_SETTINGS, async (_, input: unknown) => {
+    const before = getProxySettings()
+    const settings = setProxySettings(normalizeProxySettingsPatchForIpc(db, input))
+
+    if (before.globalProxyId !== settings.globalProxyId) {
+      await applyGlobalProxy()
+    }
+
+    return settings
+  })
+
   ipcMain.handle(
     IPC_CHANNELS.ACCOUNT_CREATE,
-    async (_, platform: PlatformType, options?: { proxyConfig?: ProxyConfig }) => {
+    async (_, platform: PlatformType, options?: AccountCreateOptions) => {
       const now = Date.now()
       const accountId = uuidv4()
+      const proxyId = resolveAccountProxyBindingForCreate(db, options)
       const account: Account = {
         id: accountId,
         platform,
         username: `${platform}_user`,
         isLoggedIn: false,
         sessionPartition: `persist:account-${accountId}`,
-        proxyConfig: normalizeProxyConfig(options?.proxyConfig),
+        proxyId: proxyId ?? null,
         isDefault: false,
         createdAt: now,
         updatedAt: now
@@ -209,25 +580,17 @@ export function registerIpcHandlers(
   })
 
   ipcMain.handle(IPC_CHANNELS.ACCOUNT_UPDATE, async (_, id: string, data: Partial<Account>) => {
-    const hasProxyConfigUpdate = hasOwnProperty(data, 'proxyConfig')
-    const updateData: Partial<Account> = { ...data }
-    if (hasProxyConfigUpdate) {
-      const nextProxy = normalizeProxyConfig(data.proxyConfig)
-      // The renderer never receives the stored password, so an edit that keeps
-      // the same proxy host submits an empty password. Carry the existing
-      // secret forward instead of silently wiping it.
-      if (nextProxy && !nextProxy.password) {
-        const existing = db.getAccount(id)?.proxyConfig
-        if (existing && existing.host === nextProxy.host) {
-          if (existing.password) nextProxy.password = existing.password
-          if (existing.encryptedPassword) nextProxy.encryptedPassword = existing.encryptedPassword
-        }
-      }
-      updateData.proxyConfig = nextProxy
+    const input = assertRecord(data, 'Account update data') as Partial<Account>
+    const proxyBinding = resolveAccountProxyBindingForUpdate(db, id, input)
+    const updateData: Partial<Account> = { ...input }
+
+    if (proxyBinding.hasUpdate) {
+      updateData.proxyId = proxyBinding.proxyId ?? null
+      updateData.proxyConfig = undefined
     }
 
     const updated = db.updateAccount(id, updateData)
-    if (updated && hasProxyConfigUpdate) {
+    if (updated && proxyBinding.hasUpdate) {
       await getBrowserViewManager()?.reapplyAccountProxy(id)
     }
     return updated ? toPublicAccount(updated) : updated

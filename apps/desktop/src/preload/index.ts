@@ -14,6 +14,10 @@ import type {
   PlatformInfo,
   PlatformType,
   ProxyConfig,
+  ProxyProfile,
+  ProxyProfileInput,
+  ProxySettings,
+  ProxyTestResult,
   PublishTask,
   TaskStatus,
   SyncContentType,
@@ -58,7 +62,10 @@ const api = {
     list: (filters?: { platform?: PlatformType; groupId?: string }): Promise<Account[]> =>
       ipcRenderer.invoke(IPC_CHANNELS.ACCOUNT_LIST, filters),
     get: (id: string): Promise<Account | null> => ipcRenderer.invoke(IPC_CHANNELS.ACCOUNT_GET, id),
-    create: (platform: PlatformType, options?: { proxyConfig?: ProxyConfig }): Promise<Account> =>
+    create: (
+      platform: PlatformType,
+      options?: { proxyId?: string | null; proxyConfig?: ProxyConfig | null }
+    ): Promise<Account> =>
       ipcRenderer.invoke(IPC_CHANNELS.ACCOUNT_CREATE, platform, options),
     delete: (id: string): Promise<void> => ipcRenderer.invoke(IPC_CHANNELS.ACCOUNT_DELETE, id),
     update: (id: string, data: Partial<Account>): Promise<Account> =>
@@ -75,6 +82,24 @@ const api = {
         ipcRenderer.removeListener(IPC_CHANNELS.ACCOUNT_UPDATED_EVENT, listener)
       }
     }
+  },
+
+  // Proxy pool management
+  proxy: {
+    list: (): Promise<ProxyProfile[]> => ipcRenderer.invoke(IPC_CHANNELS.PROXY_LIST),
+    create: (input: ProxyProfileInput): Promise<ProxyProfile> =>
+      ipcRenderer.invoke(IPC_CHANNELS.PROXY_CREATE, input),
+    update: (id: string, input: Partial<ProxyProfileInput>): Promise<ProxyProfile | null> =>
+      ipcRenderer.invoke(IPC_CHANNELS.PROXY_UPDATE, id, input),
+    delete: (id: string): Promise<void> => ipcRenderer.invoke(IPC_CHANNELS.PROXY_DELETE, id),
+    test: (input: ProxyProfileInput): Promise<ProxyTestResult> =>
+      ipcRenderer.invoke(IPC_CHANNELS.PROXY_TEST, input),
+    testSaved: (id: string): Promise<ProxyTestResult> =>
+      ipcRenderer.invoke(IPC_CHANNELS.PROXY_TEST_SAVED, id),
+    getSettings: (): Promise<ProxySettings> =>
+      ipcRenderer.invoke(IPC_CHANNELS.PROXY_GET_SETTINGS),
+    setSettings: (settings: Partial<ProxySettings>): Promise<ProxySettings> =>
+      ipcRenderer.invoke(IPC_CHANNELS.PROXY_SET_SETTINGS, settings)
   },
 
   // Browser view management

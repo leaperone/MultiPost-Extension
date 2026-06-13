@@ -23,6 +23,7 @@ import { toPublicAccount, type Account } from '../shared/types'
 import log from 'electron-log/main'
 import { initLogging } from './logger'
 import { initSentryMain } from './observability/sentry'
+import { initProxyManager } from './proxy/proxyManager'
 
 // Unified logging: console.* and scoped module loggers land in per-module
 // files under userData/logs (main/renderer/keepalive/publish/ipc) with
@@ -331,6 +332,7 @@ app.whenReady().then(async () => {
   })
 
   hardenSession(session.defaultSession, { includeDesktopHeader: true })
+  await initProxyManager()
 
   createMenu()
   createWindow()

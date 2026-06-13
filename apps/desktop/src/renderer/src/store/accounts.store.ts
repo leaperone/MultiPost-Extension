@@ -1,12 +1,12 @@
 import { create } from 'zustand'
-import type { Account, PlatformType, ProxyConfig } from '@shared/types'
+import type { Account, PlatformType } from '@shared/types'
 
 interface AccountsState {
   accounts: Account[]
   isLoading: boolean
   hasLoaded: boolean
   refresh: () => Promise<void>
-  createAccount: (platform: PlatformType, options?: { proxyConfig?: ProxyConfig }) => Promise<Account>
+  createAccount: (platform: PlatformType, options?: { proxyId?: string | null }) => Promise<Account>
   updateAccount: (id: string, data: Partial<Account>) => Promise<void>
   deleteAccount: (id: string) => Promise<void>
   openAccountBrowser: (accountId: string, url?: string) => Promise<void>

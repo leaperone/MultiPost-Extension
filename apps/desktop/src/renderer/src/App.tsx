@@ -15,6 +15,7 @@ const NATIVE_VIEWS = new Set<NativeView>([
   'drafts',
   'history',
   'settings',
+  'proxy',
   'about'
 ])
 

@@ -228,6 +228,8 @@ export interface PostContent {
 }
 
 // Account types
+export type ProxyProtocol = 'http' | 'https' | 'socks5'
+
 export interface ProxyConfig {
   protocol: 'http' | 'https' | 'socks5'
   host: string
@@ -238,6 +240,39 @@ export interface ProxyConfig {
   encryptedPassword?: string
   /** Read-only hint for the UI: a password exists but is never sent to renderers */
   hasPassword?: boolean
+}
+
+export interface ProxyProfile {
+  id: string
+  name: string
+  protocol: ProxyProtocol
+  host: string
+  port: number
+  username?: string
+  hasPassword?: boolean
+  usageCount?: number
+  createdAt: number
+  updatedAt: number
+}
+
+export interface ProxyProfileInput {
+  name: string
+  protocol: ProxyProtocol
+  host: string
+  port: number
+  username?: string
+  password?: string
+}
+
+export interface ProxySettings {
+  defaultProxyId: string | null
+  globalProxyId: string | null
+}
+
+export interface ProxyTestResult {
+  ok: boolean
+  latencyMs?: number
+  error?: string
 }
 
 export interface Account {
@@ -251,6 +286,7 @@ export interface Account {
   lastLoginAt?: number
   groupId?: string
   sessionPartition: string
+  proxyId?: string | null
   proxyConfig?: ProxyConfig
   isDefault: boolean
   createdAt: number
