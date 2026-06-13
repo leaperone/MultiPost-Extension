@@ -116,29 +116,46 @@ function FolderNode({ folder, pathname }: { folder: ContentTreeFolder; pathname:
     if (containsActive) setOpen(true);
   }, [containsActive]);
 
-  const label = folder.index ? (
-    <PageLink
-      page={folder.index}
-      pathname={pathname}
+  const chevron = (
+    <ChevronRight
+      className={`size-3.5 shrink-0 text-muted-foreground transition-transform ${open ? 'rotate-90' : ''}`}
     />
-  ) : (
-    <span className="block px-2.5 py-1.5 text-sm text-muted-foreground">
-      <HtmlName name={folder.name} />
-    </span>
   );
 
   return (
     <div>
-      <div className="flex items-center">
-        <div className="min-w-0 flex-1">{label}</div>
+      {folder.index ? (
+        // Index folders keep navigation on the label; only the chevron toggles.
+        <div className="flex items-center">
+          <div className="min-w-0 flex-1">
+            <PageLink
+              page={folder.index}
+              pathname={pathname}
+            />
+          </div>
+          <button
+            type="button"
+            aria-label={open ? 'Collapse section' : 'Expand section'}
+            onClick={() => setOpen((v) => !v)}
+            className="rounded-md p-1 transition-colors hover:text-foreground">
+            {chevron}
+          </button>
+        </div>
+      ) : (
+        // Group folders have no page to open, so the whole row toggles.
         <button
           type="button"
+          aria-expanded={open}
           aria-label={open ? 'Collapse section' : 'Expand section'}
           onClick={() => setOpen((v) => !v)}
-          className="rounded-md p-1 text-muted-foreground transition-colors hover:text-foreground">
-          <ChevronRight className={`size-3.5 transition-transform ${open ? 'rotate-90' : ''}`} />
+          className="flex w-full items-center gap-1 rounded-md px-2.5 py-1.5 text-left text-sm text-muted-foreground transition-colors hover:text-foreground">
+          <HtmlName
+            name={folder.name}
+            className="min-w-0 flex-1 truncate"
+          />
+          {chevron}
         </button>
-      </div>
+      )}
       {open && (
         <div className="ml-2.5 flex flex-col gap-0.5 border-l pl-2">
           <TreeNodes

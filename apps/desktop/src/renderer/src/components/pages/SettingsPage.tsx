@@ -681,7 +681,11 @@ function ExternalApiSetting(): React.ReactElement {
                 type="button"
                 className="underline underline-offset-2"
                 onClick={() =>
-                  window.api.browser.openWebDashboard('/docs/api-reference/desktop')
+                  window.open(
+                    'https://multipost.app/docs/zh/api-reference/desktop',
+                    '_blank',
+                    'noopener,noreferrer'
+                  )
                 }
               >
                 使用文档

@@ -1,6 +1,6 @@
 'use client';
 
-import { Check, Copy } from 'lucide-react';
+import { Check, CircleCheck, CircleX, Copy, Info, TriangleAlert } from 'lucide-react';
 import { useRef, useState } from 'react';
 import type { AnchorHTMLAttributes, ComponentProps, DetailedHTMLProps, FC, ReactNode } from 'react';
 
@@ -119,6 +119,37 @@ export function Cards({ children }: { children: ReactNode }) {
   return <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">{children}</div>;
 }
 
+const calloutIcons = {
+  info: Info,
+  warn: TriangleAlert,
+  warning: TriangleAlert,
+  error: CircleX,
+  success: CircleCheck,
+} as const;
+
+interface CalloutProps {
+  type?: keyof typeof calloutIcons;
+  title?: ReactNode;
+  icon?: ReactNode;
+  children?: ReactNode;
+}
+
+export function Callout({ type = 'info', title, icon, children }: CalloutProps) {
+  const Icon = calloutIcons[type] ?? Info;
+
+  return (
+    <div className="my-4 flex gap-3 rounded-lg border bg-muted/40 p-4 text-sm">
+      <span className="mt-0.5 shrink-0 text-muted-foreground">
+        {icon ?? <Icon className="size-4" />}
+      </span>
+      <div className="min-w-0 flex-1 [&>:first-child]:mt-0 [&>:last-child]:mb-0">
+        {title && <p className="mb-1 font-medium text-foreground">{title}</p>}
+        {children}
+      </div>
+    </div>
+  );
+}
+
 const baseComponents = {
   h1: createHeading('h1'),
   h2: createHeading('h2'),
@@ -129,6 +160,7 @@ const baseComponents = {
   pre: Pre,
   img: Img,
   table: Table,
+  Callout,
   Card,
   Cards,
 };
