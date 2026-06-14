@@ -6,6 +6,7 @@ import { IPC_CHANNELS, PLATFORMS } from '../../shared/constants'
 import { getMimeType } from '../utils/mime'
 import {
   createLocalFileUrl,
+  hasAccountStatMetrics,
   toPublicAccount,
   type Account,
   type AccountGroup,
@@ -80,6 +81,8 @@ const PROXY_NAME_MAX_LENGTH = 200
 const PROXY_HOST_MAX_LENGTH = 255
 const PROXY_USERNAME_MAX_LENGTH = 512
 const PROXY_PASSWORD_MAX_LENGTH = 1024
+const INTERACTION_ID_MAX_LENGTH = 128
+const INTERACTION_TEXT_MAX_LENGTH = 2000
 
 function formatIpcError(error: unknown): string {
   if (error instanceof Error) {
@@ -126,6 +129,34 @@ function publishError<TData>(
   code = 1
 ): PublishBridgeEnvelope<TData> {
   return publishEnvelope(code, formatIpcError(error), data, results)
+}
+
+function normalizeInteractionId(value: unknown): string | null {
+  if (typeof value !== 'string') return null
+  const id = value
+  if (!id || id.length > INTERACTION_ID_MAX_LENGTH) return null
+  if (hasInvalidInteractionIdCharacter(id)) return null
+  return id
+}
+
+function hasInvalidInteractionIdCharacter(value: string): boolean {
+  for (const char of value) {
+    const code = char.charCodeAt(0)
+    if (code <= 0x1f || code === 0x7f || char.trim() === '') return true
+  }
+  return false
+}
+
+function normalizeOptionalInteractionId(value: unknown): string | null | undefined {
+  if (value === undefined || value === null) return undefined
+  return normalizeInteractionId(value)
+}
+
+function normalizeInteractionText(value: unknown): string | null {
+  if (typeof value !== 'string') return null
+  const text = value.trim()
+  if (!text || text.length > INTERACTION_TEXT_MAX_LENGTH) return null
+  return text
 }
 
 function snapshotHasFailure(snapshot: PublishStatusSnapshot): boolean {
@@ -611,6 +642,99 @@ export function registerIpcHandlers(
     return updated ? toPublicAccount(updated) : updated
   })
 
+  ipcMain.handle(IPC_CHANNELS.ACCOUNT_GET_ANALYTICS, async (_, id: string) => {
+    const manager = getBrowserViewManager()
+    if (!manager) return null
+    const account = db.getAccount(id)
+    if (!account) return null
+    return manager.getAccountAnalytics(id, account.platform)
+  })
+
+  ipcMain.handle(IPC_CHANNELS.ACCOUNT_LIST_POSTS, async (_, id: string) => {
+    const manager = getBrowserViewManager()
+    if (!manager) return []
+    const accountId = normalizeInteractionId(id)
+    if (!accountId) return []
+    return manager.getAccountPosts(accountId)
+  })
+
+  ipcMain.handle(IPC_CHANNELS.ACCOUNT_LIST_COMMENTS, async (_, id: string, exportId: string) => {
+    const manager = getBrowserViewManager()
+    if (!manager) return []
+    const accountId = normalizeInteractionId(id)
+    const normalizedExportId = normalizeInteractionId(exportId)
+    if (!accountId || !normalizedExportId) return []
+    return manager.getAccountComments(accountId, normalizedExportId)
+  })
+
+  ipcMain.handle(
+    IPC_CHANNELS.ACCOUNT_REPLY_COMMENT,
+    async (_, id: string, exportId: string, content: string, replyCommentId?: string) => {
+      const manager = getBrowserViewManager()
+      if (!manager) return null
+      const accountId = normalizeInteractionId(id)
+      const normalizedExportId = normalizeInteractionId(exportId)
+      const normalizedContent = normalizeInteractionText(content)
+      const normalizedReplyCommentId = normalizeOptionalInteractionId(replyCommentId)
+      if (
+        !accountId ||
+        !normalizedExportId ||
+        !normalizedContent ||
+        normalizedReplyCommentId === null
+      ) {
+        return null
+      }
+      return manager.replyAccountComment(
+        accountId,
+        normalizedExportId,
+        normalizedContent,
+        normalizedReplyCommentId
+      )
+    }
+  )
+
+  ipcMain.handle(IPC_CHANNELS.ACCOUNT_DM_SESSIONS, async (_, id: string) => {
+    const manager = getBrowserViewManager()
+    if (!manager) return []
+    const accountId = normalizeInteractionId(id)
+    if (!accountId) return []
+    return manager.getAccountDmSessions(accountId)
+  })
+
+  ipcMain.handle(IPC_CHANNELS.ACCOUNT_DM_MESSAGES, async (_, id: string, sessionId: string) => {
+    const manager = getBrowserViewManager()
+    if (!manager) return []
+    const accountId = normalizeInteractionId(id)
+    const normalizedSessionId = normalizeInteractionId(sessionId)
+    if (!accountId || !normalizedSessionId) return []
+    return manager.getAccountDmMessages(accountId, normalizedSessionId)
+  })
+
+  ipcMain.handle(
+    IPC_CHANNELS.ACCOUNT_SEND_DM,
+    async (_, id: string, sessionId: string, toUsername: string, text: string) => {
+      const manager = getBrowserViewManager()
+      if (!manager) return null
+      const accountId = normalizeInteractionId(id)
+      const normalizedSessionId = normalizeInteractionId(sessionId)
+      const normalizedToUsername = normalizeInteractionId(toUsername)
+      const normalizedText = normalizeInteractionText(text)
+      if (!accountId || !normalizedSessionId || !normalizedToUsername || !normalizedText) {
+        return null
+      }
+      const sessions = await manager.getAccountDmSessions(accountId)
+      const matchedSession = sessions.find((session) => session.id === normalizedSessionId)
+      const targetUsername = normalizeInteractionId(matchedSession?.peerUsername) ?? normalizedToUsername
+
+      return manager.sendAccountDm(
+        accountId,
+        normalizedSessionId,
+        targetUsername,
+        normalizedText
+      )
+    }
+  )
+
   // Browser handlers
   ipcMain.handle(
     IPC_CHANNELS.BROWSER_OPEN,
@@ -683,15 +807,19 @@ export function registerIpcHandlers(
     }
 
     // Fetch real user info when logged in and info is missing
-    if (isLoggedIn && (!account.displayName || !account.avatar)) {
+    if (isLoggedIn && (!account.displayName || !account.avatar || !hasAccountStatMetrics(account.stats))) {
       try {
         const userInfo = await manager.fetchUserInfo(accountId, account.platform)
         if (userInfo) {
-          db.updateAccount(accountId, {
+          const updateData: Partial<Account> = {
             username: userInfo.username,
             displayName: userInfo.displayName,
             avatar: userInfo.avatar
-          })
+          }
+          if (userInfo.stats && hasAccountStatMetrics(userInfo.stats)) {
+            updateData.stats = userInfo.stats
+          }
+          db.updateAccount(accountId, updateData)
           ipcLogger.info('Updated account user info:', userInfo)
         }
       } catch (e) {

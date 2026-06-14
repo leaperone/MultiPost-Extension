@@ -1116,6 +1116,13 @@ export const IPC_CHANNELS = {
   ACCOUNT_UPDATE: 'account:update',
   ACCOUNT_SET_DEFAULT: 'account:setDefault',
   ACCOUNT_REFRESH_INFO: 'account:refreshInfo',
+  ACCOUNT_GET_ANALYTICS: 'account:getAnalytics',
+  ACCOUNT_LIST_POSTS: 'account:listPosts',
+  ACCOUNT_LIST_COMMENTS: 'account:listComments',
+  ACCOUNT_REPLY_COMMENT: 'account:replyComment',
+  ACCOUNT_DM_SESSIONS: 'account:dmSessions',
+  ACCOUNT_DM_MESSAGES: 'account:dmMessages',
+  ACCOUNT_SEND_DM: 'account:sendDm',
   ACCOUNT_UPDATED_EVENT: 'multipost:account:updated',
 
   // Proxy Pool

@@ -3,9 +3,17 @@ import { app, safeStorage } from 'electron'
 import { join } from 'path'
 import { existsSync, mkdirSync } from 'fs'
 import { v4 as uuidv4 } from 'uuid'
+import {
+  hasAccountStatMetrics,
+  mergeAccountStats,
+  sanitizeAccountHealth,
+  sanitizeAccountStats
+} from '../../shared/types'
 import type {
   Account,
   AccountGroup,
+  AccountHealthStatus,
+  AccountStats,
   Draft,
   PublishHistory,
   PublishHistoryStatus,
@@ -108,6 +116,12 @@ export class DatabaseService {
     if (!columnNames.includes('proxy_config')) {
       this.db!.exec('ALTER TABLE accounts ADD COLUMN proxy_config TEXT')
     }
+    if (!columnNames.includes('stats_json')) {
+      this.db!.exec('ALTER TABLE accounts ADD COLUMN stats_json TEXT')
+    }
+    if (!columnNames.includes('health_json')) {
+      this.db!.exec('ALTER TABLE accounts ADD COLUMN health_json TEXT')
+    }
     if (!columnNames.includes('proxy_id')) {
       this.db!.exec('ALTER TABLE accounts ADD COLUMN proxy_id TEXT')
     }
@@ -164,6 +178,8 @@ export class DatabaseService {
         display_name TEXT,
         remark TEXT,
         avatar TEXT,
+        stats_json TEXT,
+        health_json TEXT,
         is_logged_in INTEGER DEFAULT 0,
         last_login_at INTEGER,
         group_id TEXT,
@@ -412,8 +428,8 @@ export class DatabaseService {
     if (!this.db) throw new Error('Database not initialized')
 
     const stmt = this.db.prepare(`
-      INSERT INTO accounts (id, platform, username, display_name, remark, avatar, is_logged_in, last_login_at, group_id, session_partition, proxy_id, proxy_config, is_default, created_at, updated_at)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      INSERT INTO accounts (id, platform, username, display_name, remark, avatar, stats_json, health_json, is_logged_in, last_login_at, group_id, session_partition, proxy_id, proxy_config, is_default, created_at, updated_at)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `)
 
     stmt.run(
@@ -423,6 +439,8 @@ export class DatabaseService {
       account.displayName || null,
       account.remark || null,
       account.avatar || null,
+      this.serializeAccountStats(account.stats),
+      this.serializeAccountHealth(account.health),
       account.isLoggedIn ? 1 : 0,
       account.lastLoginAt || null,
       account.groupId || null,
@@ -481,7 +499,23 @@ export class DatabaseService {
     const existing = this.getAccount(id)
     if (!existing) return null
 
-    const updated = { ...existing, ...data, updatedAt: Date.now() }
+    const incomingUsername = typeof data.username === 'string' ? data.username.trim() : undefined
+    const existingUsername = existing.username.trim()
+    const identityChanged =
+      incomingUsername !== undefined &&
+      incomingUsername.length > 0 &&
+      incomingUsername !== existingUsername
+    const nextStats = identityChanged
+      ? sanitizeAccountStats(data.stats)
+      : hasAccountStatMetrics(data.stats)
+        ? mergeAccountStats(existing.stats, data.stats)
+        : existing.stats
+    const nextHealth = identityChanged
+      ? sanitizeAccountHealth(data.health)
+      : data.health === undefined
+        ? existing.health
+        : sanitizeAccountHealth(data.health) ?? existing.health
+    const updated = { ...existing, ...data, stats: nextStats, health: nextHealth, updatedAt: Date.now() }
 
     const stmt = this.db.prepare(`
       UPDATE accounts SET
@@ -489,6 +523,8 @@ export class DatabaseService {
         display_name = ?,
         remark = ?,
         avatar = ?,
+        stats_json = ?,
+        health_json = ?,
         is_logged_in = ?,
         last_login_at = ?,
         group_id = ?,
@@ -504,6 +540,8 @@ export class DatabaseService {
       updated.displayName || null,
       updated.remark || null,
       updated.avatar || null,
+      this.serializeAccountStats(updated.stats),
+      this.serializeAccountHealth(updated.health),
       updated.isLoggedIn ? 1 : 0,
       updated.lastLoginAt || null,
       updated.groupId || null,
@@ -1161,6 +1199,8 @@ export class DatabaseService {
       displayName: row.display_name || undefined,
       remark: row.remark || undefined,
       avatar: row.avatar || undefined,
+      stats: this.parseAccountStats(row.stats_json, row.id),
+      health: this.parseAccountHealth(row.health_json, row.id),
       isLoggedIn: row.is_logged_in === 1,
       lastLoginAt: row.last_login_at || undefined,
       groupId: row.group_id || undefined,
@@ -1317,6 +1357,40 @@ export class DatabaseService {
     return JSON.stringify(stored)
   }
 
+  private serializeAccountStats(stats: AccountStats | undefined): string | null {
+    const sanitized = sanitizeAccountStats(stats)
+    return sanitized ? JSON.stringify(sanitized) : null
+  }
+
+  private parseAccountStats(value: string | null, accountId: string): AccountStats | undefined {
+    if (!value) return undefined
+
+    try {
+      const parsed = JSON.parse(value)
+      return sanitizeAccountStats(parsed)
+    } catch (error) {
+      console.warn(`[Database] Failed to parse stats_json for account ${accountId}:`, error)
+      return undefined
+    }
+  }
+
+  private serializeAccountHealth(health: AccountHealthStatus | undefined): string | null {
+    const sanitized = sanitizeAccountHealth(health)
+    return sanitized ? JSON.stringify(sanitized) : null
+  }
+
+  private parseAccountHealth(value: string | null, accountId: string): AccountHealthStatus | undefined {
+    if (!value) return undefined
+
+    try {
+      const parsed = JSON.parse(value)
+      return sanitizeAccountHealth(parsed)
+    } catch (error) {
+      console.warn(`[Database] Failed to parse health_json for account ${accountId}:`, error)
+      return undefined
+    }
+  }
+
   private parseProxyConfig(value: string | null, accountId: string): ProxyConfig | undefined {
     if (!value) return undefined
 
@@ -1458,6 +1532,8 @@ interface AccountRow {
   display_name: string | null
   remark: string | null
   avatar: string | null
+  stats_json: string | null
+  health_json: string | null
   is_logged_in: number
   last_login_at: number | null
   group_id: string | null

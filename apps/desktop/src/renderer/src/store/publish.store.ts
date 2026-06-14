@@ -1,6 +1,8 @@
 import { create } from 'zustand'
 import { toast } from '../components/ui/sonner'
+import { PLATFORMS } from '@shared/constants'
 import type {
+  Account,
   BrowserTab,
   GroupTab,
   PlatformType,
@@ -56,6 +58,28 @@ function tabsToTargets(tabs: GroupTab[]): AccountPublishState[] {
     error: tab.error,
     postUrl: tab.postUrl
   }))
+}
+
+function getAccountLabel(account: Account): string {
+  return account.displayName || account.username || account.platform
+}
+
+function warnUnhealthyPublishTargets(accounts: Account[], selectedAccountIds: Set<string>): void {
+  const unhealthyAccounts = accounts.filter(
+    (account) =>
+      selectedAccountIds.has(account.id) &&
+      (account.health?.state === 'restricted' || account.health?.state === 'banned')
+  )
+
+  for (const account of unhealthyAccounts) {
+    const platformName = PLATFORMS[account.platform]?.name || account.platform
+    const reason =
+      account.health?.reason ||
+      (account.health?.state === 'banned' ? '账号被封禁' : '账号受限')
+    toast.error(`${platformName} @${getAccountLabel(account)}:账号受限,可能无法发布`, {
+      description: reason
+    })
+  }
 }
 
 // ---------------------------------------------------------------------------
@@ -173,6 +197,7 @@ export const usePublishStore = create<PublishState>((set, get) => ({
       // Fetch fresh accounts at publish time: the selector UI loads its own
       // list over IPC, so a cached store snapshot could miss recent changes.
       const accounts = await window.api.account.list()
+      warnUnhealthyPublishTargets(accounts, selectedAccountIds)
       const targets = accounts
         .filter((account) => selectedAccountIds.has(account.id))
         .map((account) => ({

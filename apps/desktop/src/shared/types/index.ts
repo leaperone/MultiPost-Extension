@@ -83,6 +83,23 @@ export type PlatformType =
   | 'neteasepodcast'
   | 'spotify'
 
+export const ACCOUNT_ANALYTICS_PLATFORMS = [
+  'bilibili',
+  'zhihu',
+  'weibo',
+  'weixinchannel'
+] as const satisfies readonly PlatformType[]
+
+export type AccountAnalyticsPlatform = (typeof ACCOUNT_ANALYTICS_PLATFORMS)[number]
+
+const ACCOUNT_ANALYTICS_PLATFORM_SET: ReadonlySet<PlatformType> = new Set(
+  ACCOUNT_ANALYTICS_PLATFORMS
+)
+
+export function isAnalyticsSupported(platform: PlatformType): platform is AccountAnalyticsPlatform {
+  return ACCOUNT_ANALYTICS_PLATFORM_SET.has(platform)
+}
+
 export interface PlatformInfo {
   id: PlatformType
   name: string
@@ -269,6 +286,182 @@ export interface ProxySettings {
   globalProxyId: string | null
 }
 
+export interface AccountStats {
+  fans?: number
+  following?: number
+  likes?: number
+  works?: number
+  views?: number
+  updatedAt?: number
+}
+
+export interface AccountAnalyticsPoint {
+  date: string
+  value: number
+}
+
+export interface AccountAnalytics {
+  overview: {
+    fans?: number
+    following?: number
+    views?: number
+    likes?: number
+    comments?: number
+    works?: number
+  }
+  fansTrend: AccountAnalyticsPoint[]
+  updatedAt: number
+}
+
+export interface AccountComment {
+  id: string
+  content: string
+  author?: string
+  createdAt?: number
+  replyCount?: number
+}
+
+export interface AccountPost {
+  id: string
+  title?: string
+  createdAt?: number
+  commentCount?: number
+}
+
+export interface DmSession {
+  id: string
+  peerUsername?: string
+  peerName?: string
+  peerAvatar?: string
+  unread?: number
+  lastMessage?: string
+  lastTime?: number
+}
+
+export interface DmMessage {
+  id: string
+  fromMe: boolean
+  text?: string
+  createdAt?: number
+}
+
+const ACCOUNT_HEALTH_STATES = ['active', 'logged_out', 'restricted', 'banned', 'unknown'] as const
+
+export type AccountHealthState = (typeof ACCOUNT_HEALTH_STATES)[number]
+
+export interface AccountHealthStatus {
+  state: AccountHealthState
+  reason?: string
+  updatedAt?: number
+}
+
+export const ACCOUNT_STAT_METRIC_KEYS = ['fans', 'following', 'likes', 'works', 'views'] as const
+
+type AccountStatMetricKey = (typeof ACCOUNT_STAT_METRIC_KEYS)[number]
+
+function isPlainRecord(value: unknown): value is Record<string, unknown> {
+  if (value === null || typeof value !== 'object') return false
+  const prototype = Object.getPrototypeOf(value)
+  return prototype === Object.prototype || prototype === null
+}
+
+function toFiniteMetric(value: unknown): number | undefined {
+  if (typeof value === 'number' && Number.isFinite(value)) return value
+  if (typeof value === 'string' && value.trim().length > 0) {
+    const parsed = Number(value)
+    if (Number.isFinite(parsed)) return parsed
+  }
+  return undefined
+}
+
+export function sanitizeAccountStats(input: unknown): AccountStats | undefined {
+  if (!isPlainRecord(input)) return undefined
+
+  const stats: AccountStats = {}
+  const numericStats = stats as Record<AccountStatMetricKey, number | undefined>
+  let hasMetric = false
+
+  for (const key of ACCOUNT_STAT_METRIC_KEYS) {
+    const value = toFiniteMetric(input[key])
+    if (value !== undefined) {
+      numericStats[key] = value
+      hasMetric = true
+    }
+  }
+
+  if (!hasMetric) return undefined
+
+  if (typeof input.updatedAt === 'number' && Number.isFinite(input.updatedAt)) {
+    stats.updatedAt = input.updatedAt
+  }
+
+  return stats
+}
+
+function isAccountHealthState(value: unknown): value is AccountHealthState {
+  return (
+    typeof value === 'string' &&
+    ACCOUNT_HEALTH_STATES.includes(value as AccountHealthState)
+  )
+}
+
+export function sanitizeAccountHealth(input: unknown): AccountHealthStatus | undefined {
+  try {
+    if (!isPlainRecord(input)) return undefined
+    if (!isAccountHealthState(input.state)) return undefined
+
+    const health: AccountHealthStatus = { state: input.state }
+    if (input.reason !== undefined && input.reason !== null) {
+      try {
+        const reason = String(input.reason).trim().slice(0, 512)
+        if (reason.length > 0) {
+          health.reason = reason
+        }
+      } catch {
+        // Ignore uncoercible reason values; the state itself is still useful.
+      }
+    }
+
+    const updatedAt = toFiniteMetric(input.updatedAt)
+    if (updatedAt !== undefined) {
+      health.updatedAt = updatedAt
+    }
+
+    return health
+  } catch {
+    return undefined
+  }
+}
+
+export function hasAccountStatMetrics(stats: AccountStats | undefined): boolean {
+  return sanitizeAccountStats(stats) !== undefined
+}
+
+export function mergeAccountStats(
+  existing: AccountStats | undefined,
+  incoming: AccountStats | undefined
+): AccountStats | undefined {
+  const sanitizedIncoming = sanitizeAccountStats(incoming)
+  if (!sanitizedIncoming) return existing
+
+  const sanitizedExisting = sanitizeAccountStats(existing)
+  const merged: AccountStats = sanitizedExisting ? { ...sanitizedExisting } : {}
+  const numericMerged = merged as Record<AccountStatMetricKey, number | undefined>
+
+  for (const key of ACCOUNT_STAT_METRIC_KEYS) {
+    const value = sanitizedIncoming[key]
+    if (typeof value === 'number' && Number.isFinite(value)) {
+      numericMerged[key] = value
+    }
+  }
+
+  if (typeof sanitizedIncoming.updatedAt === 'number' && Number.isFinite(sanitizedIncoming.updatedAt)) {
+    merged.updatedAt = sanitizedIncoming.updatedAt
+  }
+
+  return hasAccountStatMetrics(merged) ? merged : existing
+}
+
 export interface ProxyTestResult {
   ok: boolean
   latencyMs?: number
@@ -282,6 +475,8 @@ export interface Account {
   displayName?: string
   remark?: string
   avatar?: string
+  stats?: AccountStats
+  health?: AccountHealthStatus
   isLoggedIn: boolean
   lastLoginAt?: number
   groupId?: string
@@ -407,6 +602,22 @@ export interface IpcChannels {
   'account:create': (platform: PlatformType) => Promise<Account>
   'account:delete': (id: string) => Promise<void>
   'account:update': (id: string, data: Partial<Account>) => Promise<Account>
+  'account:listPosts': (id: string) => Promise<AccountPost[]>
+  'account:listComments': (id: string, exportId: string) => Promise<AccountComment[]>
+  'account:replyComment': (
+    id: string,
+    exportId: string,
+    content: string,
+    replyCommentId?: string
+  ) => Promise<AccountComment | null>
+  'account:dmSessions': (id: string) => Promise<DmSession[]>
+  'account:dmMessages': (id: string, sessionId: string) => Promise<DmMessage[]>
+  'account:sendDm': (
+    id: string,
+    sessionId: string,
+    toUsername: string,
+    text: string
+  ) => Promise<DmMessage | null>
 
   // BrowserView management
   'browser:open': (accountId: string, url?: string) => Promise<void>

@@ -3,8 +3,13 @@ import { electronAPI } from '@electron-toolkit/preload'
 import { IPC_CHANNELS } from '../shared/constants'
 import type {
   Account,
+  AccountAnalytics,
+  AccountComment,
   AccountGroup,
+  AccountPost,
   BrowserTab,
+  DmMessage,
+  DmSession,
   Draft,
   FileData,
   PublishHistory,
@@ -75,6 +80,36 @@ const api = {
     // Re-detect login status + nickname/avatar from the account session
     refreshInfo: (id: string): Promise<Account | null> =>
       ipcRenderer.invoke(IPC_CHANNELS.ACCOUNT_REFRESH_INFO, id),
+    getAnalytics: (id: string): Promise<AccountAnalytics | null> =>
+      ipcRenderer.invoke(IPC_CHANNELS.ACCOUNT_GET_ANALYTICS, id),
+    listPosts: (id: string): Promise<AccountPost[]> =>
+      ipcRenderer.invoke(IPC_CHANNELS.ACCOUNT_LIST_POSTS, id),
+    listComments: (id: string, exportId: string): Promise<AccountComment[]> =>
+      ipcRenderer.invoke(IPC_CHANNELS.ACCOUNT_LIST_COMMENTS, id, exportId),
+    replyComment: (
+      id: string,
+      exportId: string,
+      content: string,
+      replyCommentId?: string
+    ): Promise<AccountComment | null> =>
+      ipcRenderer.invoke(
+        IPC_CHANNELS.ACCOUNT_REPLY_COMMENT,
+        id,
+        exportId,
+        content,
+        replyCommentId
+      ),
+    listDmSessions: (id: string): Promise<DmSession[]> =>
+      ipcRenderer.invoke(IPC_CHANNELS.ACCOUNT_DM_SESSIONS, id),
+    listDmMessages: (id: string, sessionId: string): Promise<DmMessage[]> =>
+      ipcRenderer.invoke(IPC_CHANNELS.ACCOUNT_DM_MESSAGES, id, sessionId),
+    sendDm: (
+      id: string,
+      sessionId: string,
+      toUsername: string,
+      text: string
+    ): Promise<DmMessage | null> =>
+      ipcRenderer.invoke(IPC_CHANNELS.ACCOUNT_SEND_DM, id, sessionId, toUsername, text),
     onUpdated: (callback: (account: Account) => void) => {
       const listener = (_: Electron.IpcRendererEvent, account: Account): void => callback(account)
       ipcRenderer.on(IPC_CHANNELS.ACCOUNT_UPDATED_EVENT, listener)

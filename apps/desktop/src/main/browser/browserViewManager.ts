@@ -13,8 +13,17 @@ import { v4 as uuidv4 } from 'uuid'
 import { is } from '@electron-toolkit/utils'
 import {
   createLocalFileUrl,
+  hasAccountStatMetrics,
+  isAnalyticsSupported,
   toPublicAccount,
   type Account,
+  type AccountAnalytics,
+  type AccountComment,
+  type AccountHealthStatus,
+  type AccountPost,
+  type AccountStats,
+  type DmMessage,
+  type DmSession,
   type PlatformType,
   type SyncContentType,
   type SyncContentData,
@@ -66,8 +75,18 @@ import { isSupportedBrowserNavigationUrl, openExternalUrl } from './externalUrl'
 import {
   fetchSessionUserInfo,
   matchesLoginCookies,
-  PLATFORM_LOGIN_COOKIES
+  PLATFORM_LOGIN_COOKIES,
+  probeXiaohongshuHealth
 } from './accountUserInfo'
+import { fetchAccountAnalytics } from './accountAnalytics'
+import {
+  createComment,
+  listComments,
+  listDmMessages,
+  listDmSessions,
+  listPosts,
+  sendDm
+} from './accountInteractions'
 
 interface ManagedBrowserView {
   view: WebContentsView
@@ -179,6 +198,13 @@ const WEB_TAB_ID = '__web__'
 const WEB_DASHBOARD_BASE_URL = is.dev
   ? process.env.MULTIPOST_WEB_URL || 'http://localhost:3000'
   : 'https://multipost.app'
+
+type FetchedAccountUserInfo = {
+  username: string
+  displayName?: string
+  avatar?: string
+  stats?: AccountStats
+}
 
 // This preload only injects a page-world helper on allowlisted platform hosts.
 // It must not expose app IPC or Node APIs to third-party content.
@@ -1040,6 +1066,8 @@ export class BrowserViewManager {
 
     const [width, height] = this.mainWindow.getContentSize()
 
+    // Account stats are included in account list/get responses, including the
+    // web dashboard; P0 adds no dedicated live stats push event for web.
     const view = new WebContentsView({
       webPreferences: {
         preload: join(__dirname, '../preload/webview.js'),
@@ -1629,7 +1657,7 @@ export class BrowserViewManager {
   async fetchUserInfo(
     accountId: string,
     platform: PlatformType
-  ): Promise<{ username: string; displayName?: string; avatar?: string } | null> {
+  ): Promise<FetchedAccountUserInfo | null> {
     // Try using the open WebContentsView first (DOM scrapers can see more than
     // plain APIs on some platforms), but never let a flaky scraper block the
     // session-based fallback.
@@ -1653,23 +1681,34 @@ export class BrowserViewManager {
   }
 
   /**
+   * Resolve the account's persisted session, including the legacy partition
+   * fallback used by login-status checks, then apply browser hardening.
+   */
+  private async getAccountSession(
+    accountId: string,
+    platform: PlatformType
+  ): Promise<{ account: Account | null; ses: Session }> {
+    const account = DatabaseService.getInstance().getAccount(accountId)
+    // Mirror getLoginStatus: accounts migrated from the legacy partition
+    // format keep their cookies there, so fetch from whichever has them.
+    const newPartition = account?.sessionPartition || `persist:account-${accountId}`
+    let ses = session.fromPartition(newPartition)
+    if ((await ses.cookies.get({})).length === 0) {
+      ses = session.fromPartition(`persist:${platform}-${accountId}`)
+    }
+    hardenSession(ses)
+    return { account, ses }
+  }
+
+  /**
    * Fetch user info directly using session cookies without needing a WebContentsView
    */
   private async fetchUserInfoFromSession(
     accountId: string,
     platform: PlatformType
-  ): Promise<{ username: string; displayName?: string; avatar?: string } | null> {
+  ): Promise<FetchedAccountUserInfo | null> {
     try {
-      const account = DatabaseService.getInstance().getAccount(accountId)
-      // Mirror getLoginStatus: accounts migrated from the legacy partition
-      // format keep their cookies there, so fetch from whichever has them.
-      const newPartition = account?.sessionPartition || `persist:account-${accountId}`
-      let ses = session.fromPartition(newPartition)
-      if ((await ses.cookies.get({})).length === 0) {
-        ses = session.fromPartition(`persist:${platform}-${accountId}`)
-      }
-      hardenSession(ses)
-      const targetSession = ses
+      const { account, ses: targetSession } = await this.getAccountSession(accountId, platform)
       return await withAccountProxySession(targetSession, account, async () => {
         return fetchSessionUserInfo(targetSession, platform)
       })
@@ -1726,6 +1765,171 @@ export class BrowserViewManager {
     }
   }
 
+  async getAccountHealth(
+    accountId: string,
+    platform: PlatformType,
+    isLoggedIn: boolean
+  ): Promise<AccountHealthStatus> {
+    const timestamp = Date.now()
+    if (!isLoggedIn) {
+      return { state: 'logged_out', updatedAt: timestamp }
+    }
+
+    switch (platform) {
+      case 'xiaohongshu':
+        try {
+          const { account, ses: targetSession } = await this.getAccountSession(accountId, platform)
+          const health = await withAccountProxySession(targetSession, account, async () => {
+            return probeXiaohongshuHealth(targetSession)
+          })
+          if (health.state === 'unknown' && health.updatedAt === undefined) {
+            return { ...health, updatedAt: Date.now() }
+          }
+          return { ...health, updatedAt: health.updatedAt ?? timestamp }
+        } catch (error) {
+          publishLogger.error(`getAccountHealth(${accountId}) probe failed:`, error)
+          return { state: 'unknown', updatedAt: Date.now() }
+        }
+      default:
+        return { state: 'active', updatedAt: timestamp }
+    }
+  }
+
+  async getAccountAnalytics(
+    accountId: string,
+    platform: PlatformType
+  ): Promise<AccountAnalytics | null> {
+    if (!isAnalyticsSupported(platform)) return null
+
+    try {
+      const { account, ses: targetSession } = await this.getAccountSession(accountId, platform)
+      return await withAccountProxySession(targetSession, account, async () => {
+        return fetchAccountAnalytics(targetSession, platform)
+      })
+    } catch (error) {
+      publishLogger.error(`getAccountAnalytics(${accountId}) failed:`, error)
+      return null
+    }
+  }
+
+  async getAccountPosts(accountId: string): Promise<AccountPost[]> {
+    const accountRecord = DatabaseService.getInstance().getAccount(accountId)
+    if (!accountRecord || accountRecord.platform !== 'weixinchannel') return []
+
+    try {
+      const { account, ses: targetSession } = await this.getAccountSession(
+        accountId,
+        accountRecord.platform
+      )
+      return await withAccountProxySession(targetSession, account, async () => {
+        return listPosts(targetSession)
+      })
+    } catch (error) {
+      publishLogger.error(`getAccountPosts(${accountId}) failed:`, error)
+      return []
+    }
+  }
+
+  async getAccountComments(accountId: string, exportId: string): Promise<AccountComment[]> {
+    const accountRecord = DatabaseService.getInstance().getAccount(accountId)
+    if (!accountRecord || accountRecord.platform !== 'weixinchannel') return []
+
+    try {
+      const { account, ses: targetSession } = await this.getAccountSession(
+        accountId,
+        accountRecord.platform
+      )
+      return await withAccountProxySession(targetSession, account, async () => {
+        return listComments(targetSession, exportId)
+      })
+    } catch (error) {
+      publishLogger.error(`getAccountComments(${accountId}) failed:`, error)
+      return []
+    }
+  }
+
+  async replyAccountComment(
+    accountId: string,
+    exportId: string,
+    content: string,
+    replyCommentId?: string
+  ): Promise<AccountComment | null> {
+    const accountRecord = DatabaseService.getInstance().getAccount(accountId)
+    if (!accountRecord || accountRecord.platform !== 'weixinchannel') return null
+
+    try {
+      const { account, ses: targetSession } = await this.getAccountSession(
+        accountId,
+        accountRecord.platform
+      )
+      return await withAccountProxySession(targetSession, account, async () => {
+        return createComment(targetSession, exportId, content, replyCommentId)
+      })
+    } catch (error) {
+      publishLogger.error(`replyAccountComment(${accountId}) failed:`, error)
+      return null
+    }
+  }
+
+  async getAccountDmSessions(accountId: string): Promise<DmSession[]> {
+    const accountRecord = DatabaseService.getInstance().getAccount(accountId)
+    if (!accountRecord || accountRecord.platform !== 'weixinchannel') return []
+
+    try {
+      const { account, ses: targetSession } = await this.getAccountSession(
+        accountId,
+        accountRecord.platform
+      )
+      return await withAccountProxySession(targetSession, account, async () => {
+        return listDmSessions(targetSession)
+      })
+    } catch (error) {
+      publishLogger.error(`getAccountDmSessions(${accountId}) failed:`, error)
+      return []
+    }
+  }
+
+  async getAccountDmMessages(accountId: string, sessionId: string): Promise<DmMessage[]> {
+    const accountRecord = DatabaseService.getInstance().getAccount(accountId)
+    if (!accountRecord || accountRecord.platform !== 'weixinchannel') return []
+
+    try {
+      const { account, ses: targetSession } = await this.getAccountSession(
+        accountId,
+        accountRecord.platform
+      )
+      return await withAccountProxySession(targetSession, account, async () => {
+        return listDmMessages(targetSession, sessionId)
+      })
+    } catch (error) {
+      publishLogger.error(`getAccountDmMessages(${accountId}) failed:`, error)
+      return []
+    }
+  }
+
+  async sendAccountDm(
+    accountId: string,
+    sessionId: string,
+    toUsername: string,
+    text: string
+  ): Promise<DmMessage | null> {
+    const accountRecord = DatabaseService.getInstance().getAccount(accountId)
+    if (!accountRecord || accountRecord.platform !== 'weixinchannel') return null
+
+    try {
+      const { account, ses: targetSession } = await this.getAccountSession(
+        accountId,
+        accountRecord.platform
+      )
+      return await withAccountProxySession(targetSession, account, async () => {
+        return sendDm(targetSession, toUsername, text, sessionId)
+      })
+    } catch (error) {
+      publishLogger.error(`sendAccountDm(${accountId}) failed:`, error)
+      return null
+    }
+  }
+
   /**
    * Re-detect login status and refresh user info (nickname/avatar) for an
    * account, persist the result and notify the UI. Used by the manual
@@ -1741,15 +1945,54 @@ export class BrowserViewManager {
     const updates: Partial<Account> = { isLoggedIn }
     if (isLoggedIn) {
       updates.lastLoginAt = Date.now()
+      let identityInfo: FetchedAccountUserInfo | null = null
       try {
-        const userInfo = await this.fetchUserInfo(accountId, account.platform)
-        if (userInfo) {
-          updates.username = userInfo.username
-          if (userInfo.displayName) updates.displayName = userInfo.displayName
-          if (userInfo.avatar) updates.avatar = userInfo.avatar
+        identityInfo = await this.fetchUserInfo(accountId, account.platform)
+        if (identityInfo) {
+          updates.username = identityInfo.username
+          if (identityInfo.displayName) updates.displayName = identityInfo.displayName
+          if (identityInfo.avatar) updates.avatar = identityInfo.avatar
         }
       } catch (error) {
         publishLogger.error(`refreshAccountInfo(${accountId}) failed:`, error)
+      }
+
+      const identityStats = identityInfo?.stats
+      if (identityStats && hasAccountStatMetrics(identityStats)) {
+        updates.stats = identityStats
+      } else {
+        try {
+          const sessionInfo = await this.fetchUserInfoFromSession(accountId, account.platform)
+          const sessionStats = sessionInfo?.stats
+          if (sessionStats && hasAccountStatMetrics(sessionStats)) {
+            updates.stats = sessionStats
+          }
+        } catch (error) {
+          publishLogger.error(`refreshAccountInfo(${accountId}) stats refresh failed:`, error)
+        }
+      }
+    }
+
+    try {
+      const health = await this.getAccountHealth(accountId, account.platform, isLoggedIn)
+      if (health.state === 'logged_out') {
+        updates.isLoggedIn = false
+      }
+      const shouldPreserveHealth =
+        health.state === 'unknown' &&
+        account.health !== undefined &&
+        (isLoggedIn
+          ? account.health.state === 'restricted' ||
+            account.health.state === 'banned' ||
+            account.health.state === 'active'
+          : account.health.state !== 'unknown')
+      if (!shouldPreserveHealth) {
+        updates.health = health
+      }
+    } catch (error) {
+      publishLogger.error(`refreshAccountInfo(${accountId}) health refresh failed:`, error)
+      if (!account.health || account.health.state === 'unknown') {
+        updates.health = { state: 'unknown', updatedAt: Date.now() }
       }
     }
 

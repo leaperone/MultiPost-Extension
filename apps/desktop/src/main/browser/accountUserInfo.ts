@@ -1,5 +1,10 @@
 import type { Session } from 'electron'
-import type { PlatformType } from '../../shared/types'
+import {
+  sanitizeAccountStats,
+  type AccountHealthStatus,
+  type AccountStats,
+  type PlatformType
+} from '../../shared/types'
 import { getDesktopRequestHeaders } from './sessionHardening'
 
 /**
@@ -15,6 +20,7 @@ export interface SessionUserInfo {
   username: string
   displayName?: string
   avatar?: string
+  stats?: AccountStats
 }
 
 interface LoginCookieRule {
@@ -94,19 +100,20 @@ export function matchesLoginCookies(
   )
 }
 
-async function buildCookieHeader(ses: Session, domain: string): Promise<string | null> {
+export async function buildCookieHeader(ses: Session, domain: string): Promise<string | null> {
   const cookies = await ses.cookies.get({ domain })
   if (cookies.length === 0) return null
   return cookies.map((c) => `${c.name}=${c.value}`).join('; ')
 }
 
-async function fetchJson(
+export async function fetchJson(
   ses: Session,
   url: string,
   options: {
     cookieHeader: string
     referer: string
     origin?: string
+    headers?: Record<string, string>
     method?: 'GET' | 'POST'
     body?: string
     contentType?: string
@@ -118,6 +125,7 @@ async function fetchJson(
   }
   if (options.origin) headers.Origin = options.origin
   if (options.contentType) headers['Content-Type'] = options.contentType
+  if (options.headers) Object.assign(headers, options.headers)
 
   const response = await ses.fetch(url, {
     method: options.method ?? 'GET',
@@ -128,7 +136,7 @@ async function fetchJson(
   return response.json()
 }
 
-function asRecord(value: unknown): Record<string, unknown> | null {
+export function asRecord(value: unknown): Record<string, unknown> | null {
   return value !== null && typeof value === 'object' ? (value as Record<string, unknown>) : null
 }
 
@@ -138,6 +146,130 @@ function pickString(source: Record<string, unknown> | null, key: string): string
   if (typeof value === 'string' && value.length > 0) return value
   if (typeof value === 'number') return String(value)
   return undefined
+}
+
+export function stringValue(value: unknown): string | undefined {
+  if (typeof value === 'string' && value.length > 0) return value
+  if (typeof value === 'number' && Number.isFinite(value)) return String(value)
+  return undefined
+}
+
+export function pickFiniteNumber(
+  source: Record<string, unknown> | null | undefined,
+  key: string
+): number | undefined {
+  if (!source) return undefined
+  const value = source[key]
+  if (typeof value === 'number' && Number.isFinite(value)) return value
+  if (typeof value === 'string' && value.trim().length > 0) {
+    const parsed = Number(value)
+    if (Number.isFinite(parsed)) return parsed
+  }
+  return undefined
+}
+
+function firstFiniteNumber(
+  sources: Array<Record<string, unknown> | null | undefined>,
+  keys: string[]
+): number | undefined {
+  for (const source of sources) {
+    for (const key of keys) {
+      const value = pickFiniteNumber(source, key)
+      if (value !== undefined) return value
+    }
+  }
+  return undefined
+}
+
+function sumFiniteNumbers(values: Array<number | undefined>): number | undefined {
+  const finiteValues = values.filter((value): value is number => value !== undefined)
+  if (finiteValues.length === 0) return undefined
+  return finiteValues.reduce((total, value) => total + value, 0)
+}
+
+function buildAccountStats(metrics: Omit<AccountStats, 'updatedAt'>): AccountStats | undefined {
+  const stats = sanitizeAccountStats(metrics)
+  return stats ? { ...stats, updatedAt: Date.now() } : undefined
+}
+
+function logStatsFetchFailure(platform: PlatformType, error: unknown): void {
+  console.warn(`[accountUserInfo] Failed to fetch stats for ${platform}:`, error)
+}
+
+const XIAOHONGSHU_PERSONAL_INFO_URL =
+  'https://creator.xiaohongshu.com/api/galaxy/creator/home/personal_info'
+const XIAOHONGSHU_USER_INFO_URL = 'https://creator.xiaohongshu.com/api/galaxy/user/info'
+const XIAOHONGSHU_CREATOR_HOME_URL = 'https://creator.xiaohongshu.com/creator/home'
+const XIAOHONGSHU_BANNED_REASON = '因违反社区规范禁止发布笔记'
+const XIAOHONGSHU_RESTRICTED_REASON = '账号状态异常,可能受限'
+
+function isPermissionValue(value: unknown): value is string | unknown[] {
+  return typeof value === 'string' || Array.isArray(value)
+}
+
+function includesPermission(value: string | unknown[], permission: string): boolean {
+  if (typeof value === 'string') {
+    return value.includes(permission)
+  }
+  return value.some((item) => item === permission)
+}
+
+async function fetchXiaohongshuHealthRecord(
+  ses: Session,
+  url: string,
+  cookieHeader: string
+): Promise<Record<string, unknown> | null> {
+  try {
+    return asRecord(
+      await fetchJson(ses, url, {
+        cookieHeader,
+        referer: XIAOHONGSHU_CREATOR_HOME_URL,
+        origin: 'https://creator.xiaohongshu.com',
+        headers: { Authorization: '' }
+      })
+    )
+  } catch {
+    return null
+  }
+}
+
+export const probeXiaohongshuHealth = async (ses: Session): Promise<AccountHealthStatus> => {
+  const cookieHeader = await buildCookieHeader(ses, '.xiaohongshu.com')
+  if (!cookieHeader || !cookieHeader.includes('web_session=')) {
+    return { state: 'unknown' }
+  }
+
+  const personalInfo = await fetchXiaohongshuHealthRecord(
+    ses,
+    XIAOHONGSHU_PERSONAL_INFO_URL,
+    cookieHeader
+  )
+  const personalData = asRecord(personalInfo?.data)
+  const diagnosisStatus = pickFiniteNumber(personalData, 'diagnosis_status')
+  if (diagnosisStatus === undefined) {
+    return { state: 'unknown' }
+  }
+
+  if (diagnosisStatus === 2) {
+    const userInfo = await fetchXiaohongshuHealthRecord(ses, XIAOHONGSHU_USER_INFO_URL, cookieHeader)
+    const userData = asRecord(userInfo?.data)
+    const permissions = userData?.permissions
+    if (!isPermissionValue(permissions)) {
+      return { state: 'restricted', reason: XIAOHONGSHU_RESTRICTED_REASON }
+    }
+    if (!includesPermission(permissions, 'PRODUCT_NODE')) {
+      return { state: 'banned', reason: XIAOHONGSHU_BANNED_REASON }
+    }
+    return { state: 'restricted', reason: XIAOHONGSHU_RESTRICTED_REASON }
+  }
+
+  // Only diagnosis_status === 2 is a confirmed problem signal (the sole value
+  // the competitor acts on). 0/1 are the conventional "normal" codes; any other
+  // unrecognized status must NOT silently report active — fall back to unknown.
+  if (diagnosisStatus === 0 || diagnosisStatus === 1) {
+    return { state: 'active' }
+  }
+  return { state: 'unknown' }
 }
 
 type SessionUserInfoFetcher = (ses: Session) => Promise<SessionUserInfo | null>
@@ -157,7 +289,42 @@ const fetchBilibili: SessionUserInfoFetcher = async (ses) => {
 
   const mid = pickString(data, 'mid')
   if (!mid) return null
-  return { username: mid, displayName: pickString(data, 'uname'), avatar: pickString(data, 'face') }
+
+  const metrics: Omit<AccountStats, 'updatedAt'> = {}
+  try {
+    const relationJson = asRecord(
+      await fetchJson(ses, `https://api.bilibili.com/x/relation/stat?vmid=${encodeURIComponent(mid)}`, {
+        cookieHeader,
+        referer: 'https://www.bilibili.com/'
+      })
+    )
+    const relationData = asRecord(relationJson?.data)
+    metrics.fans = pickFiniteNumber(relationData, 'follower')
+    metrics.following = pickFiniteNumber(relationData, 'following')
+  } catch (error) {
+    logStatsFetchFailure('bilibili', error)
+  }
+
+  try {
+    const upstatJson = asRecord(
+      await fetchJson(ses, `https://api.bilibili.com/x/space/upstat?mid=${encodeURIComponent(mid)}`, {
+        cookieHeader,
+        referer: 'https://space.bilibili.com/'
+      })
+    )
+    const upstatData = asRecord(upstatJson?.data)
+    metrics.likes = pickFiniteNumber(upstatData, 'likes')
+    metrics.views = pickFiniteNumber(asRecord(upstatData?.archive), 'view')
+  } catch (error) {
+    logStatsFetchFailure('bilibili', error)
+  }
+
+  return {
+    username: mid,
+    displayName: pickString(data, 'uname'),
+    avatar: pickString(data, 'face'),
+    stats: buildAccountStats(metrics)
+  }
 }
 
 const fetchXiaohongshu: SessionUserInfoFetcher = async (ses) => {
@@ -178,7 +345,14 @@ const fetchXiaohongshu: SessionUserInfoFetcher = async (ses) => {
   return {
     username: pickString(data, 'red_id') || nickname,
     displayName: nickname,
-    avatar: pickString(data, 'imageb') || pickString(data, 'images')
+    avatar: pickString(data, 'imageb') || pickString(data, 'images'),
+    stats: buildAccountStats({
+      fans: firstFiniteNumber([data], ['fans', 'fans_count', 'followers', 'follower_count']),
+      following: firstFiniteNumber([data], ['follows', 'follow_count', 'following_count']),
+      likes: firstFiniteNumber([data], ['liked_count', 'likes', 'likes_count']),
+      works: firstFiniteNumber([data], ['note_count', 'notes_count', 'works_count']),
+      views: firstFiniteNumber([data], ['view_count', 'views_count'])
+    })
   }
 }
 
@@ -200,7 +374,26 @@ const fetchDouyin: SessionUserInfoFetcher = async (ses) => {
   const urlList = avatarSource?.url_list
   const avatar =
     Array.isArray(urlList) && typeof urlList[0] === 'string' ? (urlList[0] as string) : undefined
-  return { username: uid, displayName: pickString(user, 'nickname'), avatar }
+  return {
+    username: uid,
+    displayName: pickString(user, 'nickname'),
+    avatar,
+    stats: buildAccountStats({
+      fans: firstFiniteNumber(user ? [user] : [], [
+        'follower_count',
+        'followers_count',
+        'fans_count'
+      ]),
+      following: firstFiniteNumber(user ? [user] : [], ['following_count', 'follow_count']),
+      likes: firstFiniteNumber(user ? [user] : [], [
+        'total_favorited',
+        'favoriting_count',
+        'liked_count'
+      ]),
+      works: firstFiniteNumber(user ? [user] : [], ['aweme_count', 'works_count', 'video_count']),
+      views: firstFiniteNumber(user ? [user] : [], ['total_play_count', 'play_count'])
+    })
+  }
 }
 
 const fetchKuaishou: SessionUserInfoFetcher = async (ses) => {
@@ -230,6 +423,7 @@ const fetchKuaishou: SessionUserInfoFetcher = async (ses) => {
     username: userId,
     displayName: pickString(userInfo, 'name'),
     avatar: pickString(userInfo, 'avatar')
+    // Stats remain undefined in P0: Kuaishou metric APIs require __NS_sig3 signing.
   }
 }
 
@@ -238,16 +432,30 @@ const fetchZhihu: SessionUserInfoFetcher = async (ses) => {
   if (!cookieHeader || !cookieHeader.includes('z_c0=')) return null
 
   const json = asRecord(
-    await fetchJson(ses, 'https://www.zhihu.com/api/v4/me', {
-      cookieHeader,
-      referer: 'https://www.zhihu.com/'
-    })
+    await fetchJson(
+      ses,
+      'https://www.zhihu.com/api/v4/me?include=allow_message%2Cis_followed%2Cis_following%2Cfollower_count%2Canswer_count%2Carticles_count',
+      {
+        cookieHeader,
+        referer: 'https://www.zhihu.com/'
+      }
+    )
   )
   const id = pickString(json, 'url_token') || pickString(json, 'id')
   const name = pickString(json, 'name')
   if (!id || !name) return null
 
-  return { username: id, displayName: name, avatar: pickString(json, 'avatar_url') }
+  const answerCount = pickFiniteNumber(json, 'answer_count')
+  const articlesCount = pickFiniteNumber(json, 'articles_count')
+  return {
+    username: id,
+    displayName: name,
+    avatar: pickString(json, 'avatar_url'),
+    stats: buildAccountStats({
+      fans: pickFiniteNumber(json, 'follower_count'),
+      works: sumFiniteNumbers([answerCount, articlesCount])
+    })
+  }
 }
 
 const fetchJuejin: SessionUserInfoFetcher = async (ses) => {
@@ -268,7 +476,12 @@ const fetchJuejin: SessionUserInfoFetcher = async (ses) => {
   return {
     username: userId,
     displayName: pickString(data, 'user_name'),
-    avatar: pickString(data, 'avatar_large')
+    avatar: pickString(data, 'avatar_large'),
+    stats: buildAccountStats({
+      fans: pickFiniteNumber(data, 'follower_count'),
+      likes: pickFiniteNumber(data, 'got_digg_count'),
+      works: pickFiniteNumber(data, 'post_article_count')
+    })
   }
 }
 
@@ -292,7 +505,24 @@ const fetchToutiao: SessionUserInfoFetcher = async (ses) => {
   return {
     username: id || name!,
     displayName: name,
-    avatar: pickString(user, 'avatar_url') || pickString(user, 'avatar')
+    avatar: pickString(user, 'avatar_url') || pickString(user, 'avatar'),
+    stats: buildAccountStats({
+      fans: firstFiniteNumber([user, data], ['fans_count', 'follower_count', 'followers_count']),
+      following: firstFiniteNumber([user, data], ['follow_count', 'following_count']),
+      likes: firstFiniteNumber([user, data], ['digg_count', 'like_count', 'likes_count']),
+      works:
+        firstFiniteNumber([user, data], ['works_count', 'content_count']) ??
+        sumFiniteNumbers([
+          firstFiniteNumber([user, data], ['article_count', 'all_article_count']),
+          firstFiniteNumber([user, data], ['video_count'])
+        ]),
+      views: firstFiniteNumber([user, data], [
+        'view_count',
+        'total_view_count',
+        'read_count',
+        'total_read_count'
+      ])
+    })
   }
 }
 
@@ -315,7 +545,12 @@ const fetchWeibo: SessionUserInfoFetcher = async (ses) => {
   return {
     username: uid,
     displayName: pickString(user, 'screen_name'),
-    avatar: pickString(user, 'avatar_large') || pickString(user, 'profile_image_url')
+    avatar: pickString(user, 'avatar_large') || pickString(user, 'profile_image_url'),
+    stats: buildAccountStats({
+      fans: pickFiniteNumber(user, 'followers_count'),
+      following: pickFiniteNumber(user, 'friends_count'),
+      works: pickFiniteNumber(user, 'statuses_count')
+    })
   }
 }
 
@@ -345,6 +580,7 @@ const fetchWeixinMp: SessionUserInfoFetcher = async (ses) => {
     username: fakeId || nickname,
     displayName: nickname,
     avatar: avatar?.replace(/\\x26/g, '&').replace(/&amp;/g, '&')
+    // Stats remain undefined in P0: WeChat MP identity is parsed from HTML only.
   }
 }
 
@@ -375,7 +611,19 @@ const fetchWeixinChannel: SessionUserInfoFetcher = async (ses) => {
     username:
       pickString(finderUser, 'uniqId') || pickString(finderUser, 'finderUsername') || nickname,
     displayName: nickname,
-    avatar: pickString(finderUser, 'headImgUrl')
+    avatar: pickString(finderUser, 'headImgUrl'),
+    stats: buildAccountStats({
+      fans: firstFiniteNumber([finderUser, data], [
+        'fansCount',
+        'followerCount',
+        'followersCount',
+        'fans_count'
+      ]),
+      following: firstFiniteNumber([finderUser, data], ['followingCount', 'followCount']),
+      likes: firstFiniteNumber([finderUser, data], ['likeCount', 'likedCount']),
+      works: firstFiniteNumber([finderUser, data], ['feedCount', 'feedsCount', 'worksCount']),
+      views: firstFiniteNumber([finderUser, data], ['viewCount', 'playCount'])
+    })
   }
 }
 
@@ -405,7 +653,12 @@ const fetchTwitter: SessionUserInfoFetcher = async (ses) => {
     return {
       username: pickString(user, 'screen_name') || firstId,
       displayName: pickString(user, 'name'),
-      avatar: pickString(user, 'profile_image_url_https')
+      avatar: pickString(user, 'profile_image_url_https'),
+      stats: buildAccountStats({
+        fans: pickFiniteNumber(user, 'followers_count'),
+        following: pickFiniteNumber(user, 'friends_count'),
+        works: pickFiniteNumber(user, 'statuses_count')
+      })
     }
   } catch {
     return null
