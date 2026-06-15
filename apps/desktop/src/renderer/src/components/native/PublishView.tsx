@@ -7,6 +7,7 @@ import { DynamicPublishPage } from '../publish/DynamicPublishPage'
 import { VideoPublishPage } from '../publish/VideoPublishPage'
 import { ArticlePublishPage } from '../publish/ArticlePublishPage'
 import { PodcastPublishPage } from '../publish/PodcastPublishPage'
+import { toast } from '../ui/sonner'
 
 /**
  * Bridges the per-content-type publish forms to the publish-group flow. The
@@ -64,7 +65,10 @@ export function PublishView({ contentType }: { contentType: SyncContentType }): 
       void window.api.publishGroup
         .show(activeGroupId)
         .then(() => window.api.publishGroup.switchTab(activeGroupId, accountId))
-        .catch((error) => console.error('Failed to open group tab:', error))
+        .catch((error) => {
+          console.error('Failed to open group tab:', error)
+          toast.error('打不开账号页面', { description: '稍等一下再试试。' })
+        })
     },
     [activeGroupId]
   )
@@ -73,6 +77,7 @@ export function PublishView({ contentType }: { contentType: SyncContentType }): 
     if (!activeGroupId) return
     void window.api.publish.cancel(activeGroupId).catch((error: unknown) => {
       console.error('Failed to cancel publish group:', error)
+      toast.error('取消没成功', { description: '任务可能还在跑，去进度里看看。' })
     })
   }, [activeGroupId])
 

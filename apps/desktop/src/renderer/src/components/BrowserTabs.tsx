@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
 import { useTabsStore } from '../store/tabs.store'
 import { Button } from './ui/button'
+import { toast } from './ui/sonner'
 import {
   X,
   ChevronLeft,
@@ -152,6 +153,9 @@ export function useGroupTabs(groupId: string | null) {
       await window.api.publishGroup.fill(groupId)
     } catch (error) {
       console.error('Failed to fill group content:', error)
+      toast.error('内容没填上', {
+        description: '确认各平台标签页都开着，再点一次试试。'
+      })
     }
   }, [groupId])
 
@@ -161,6 +165,9 @@ export function useGroupTabs(groupId: string | null) {
       await window.api.publishGroup.submitAll(groupId)
     } catch (error) {
       console.error('Failed to submit group:', error)
+      toast.error('发布没成功', {
+        description: '内容没提交上去，检查下各平台页面再重试。'
+      })
     }
   }, [groupId])
 

@@ -4,6 +4,7 @@ import { Card } from '../ui/card'
 import { Checkbox } from '../ui/checkbox'
 import { Input } from '../ui/input'
 import { Tooltip } from '../ui/tooltip'
+import { toast } from '../ui/sonner'
 import {
   CheckCircle,
   XCircle,
@@ -433,6 +434,7 @@ export function AccountSelector({
         setAccounts(accountList)
       } catch (error) {
         console.error('Failed to load accounts:', error)
+        toast.error('账号列表没加载出来', { description: '刷新页面或重启应用试试。' })
       } finally {
         setLoading(false)
       }
@@ -695,6 +697,7 @@ export function useAccountSelection(
         setSelectedAccountIds(defaults)
       } catch (error) {
         console.error('Failed to load accounts:', error)
+        toast.error('账号列表没加载出来', { description: '刷新页面或重启应用试试。' })
       }
     }
     loadAccounts()

@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react'
 import { X, Download, RefreshCw } from 'lucide-react'
 import { Button } from './ui/button'
 import { Progress } from './ui/progress'
+import { toast } from './ui/sonner'
 import type { UpdateStatus, UpdateInfo } from '../../../shared/types'
 
 export function UpdateNotification(): React.ReactElement | null {
@@ -31,6 +32,7 @@ export function UpdateNotification(): React.ReactElement | null {
       await window.api.updater.downloadUpdate()
     } catch (error) {
       console.error('Failed to download update:', error)
+      toast.error('下载更新失败', { description: '检查下网络再重试。' })
     }
   }, [])
 

@@ -267,7 +267,12 @@ export function DynamicPublishPage({
     // Register before rendering previews so local-file:// requests pass the allowlist
     void window.api.app
       .registerLocalFiles([...imagePaths, ...videoPaths])
-      .catch((error) => console.error('Failed to register media files:', error))
+      .catch((error) => {
+        console.error('Failed to register media files:', error)
+        toast.error('部分文件没加载上', {
+          description: '预览可能显示不出来，但不影响发布。'
+        })
+      })
       .finally(() => {
         if (imagePaths.length > 0) {
           setImages((prev) => appendMedia(prev, imagePaths, 'image', MAX_IMAGES))
@@ -289,6 +294,7 @@ export function DynamicPublishPage({
       }
     } catch (error) {
       console.error('Failed to select images:', error)
+      toast.error('选图片出错了', { description: '再试一次。' })
     }
   }, [addMediaPaths])
 
@@ -303,6 +309,7 @@ export function DynamicPublishPage({
       }
     } catch (error) {
       console.error('Failed to select videos:', error)
+      toast.error('选视频出错了', { description: '再试一次。' })
     }
   }, [addMediaPaths])
 

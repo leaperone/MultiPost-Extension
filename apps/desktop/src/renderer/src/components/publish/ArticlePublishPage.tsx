@@ -86,10 +86,19 @@ function CompactCoverUpload({ file, onSelect, onRemove, disabled }: CompactCover
 
   const handlePick = useCallback(async () => {
     if (disabled) return
-    const [filePath] = await window.api.app.selectFile({ filters: COVER_FILE_FILTERS })
-    if (!filePath) return
-    const fileData = await fileDataFromPath(filePath)
-    if (fileData) onSelect(fileData)
+    try {
+      const [filePath] = await window.api.app.selectFile({ filters: COVER_FILE_FILTERS })
+      if (!filePath) return
+      const fileData = await fileDataFromPath(filePath)
+      if (fileData) {
+        onSelect(fileData)
+      } else {
+        toast('这张封面读不出来', { description: '确认文件还在原位，重新选一次。' })
+      }
+    } catch (error) {
+      console.error('Failed to pick cover:', error)
+      toast.error('选封面出错了', { description: '再试一次。' })
+    }
   }, [disabled, onSelect])
 
   const handleDrop = useCallback(

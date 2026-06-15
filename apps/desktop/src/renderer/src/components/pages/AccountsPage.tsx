@@ -1054,6 +1054,7 @@ export function AccountsPage({ onLoginAccount }: AccountsPageProps): React.React
       })
     } catch (error) {
       console.error('Failed to refresh all accounts:', error)
+      toast.error('检测没能完成', { description: '稍后重试一下。' })
     } finally {
       setIsRefreshingAll(false)
     }
@@ -1117,6 +1118,7 @@ export function AccountsPage({ onLoginAccount }: AccountsPageProps): React.React
       toast(`已将 ${account.displayName || account.username} 设为默认账号`)
     } catch (error) {
       console.error('Failed to set default:', error)
+      toast.error('没能设为默认', { description: '稍后重试一下。' })
     }
   }
 
@@ -1157,8 +1159,11 @@ export function AccountsPage({ onLoginAccount }: AccountsPageProps): React.React
     try {
       await window.api.account.update(accountId, { groupId: groupId || undefined })
       await loadData()
+      const groupName = groupId ? groups.find((g) => g.id === groupId)?.name : null
+      toast(groupName ? `已移到分组「${groupName}」` : '已移出分组')
     } catch (error) {
       console.error('Failed to assign group:', error)
+      toast.error('分组没改成', { description: '稍后重试一下。' })
     }
   }
 

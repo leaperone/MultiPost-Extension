@@ -199,10 +199,19 @@ export function VideoPublishPage({
   // Video file handling — always resolved to a local path
   const handlePickVideo = useCallback(async () => {
     if (isPublishing) return
-    const [filePath] = await window.api.app.selectFile({ filters: VIDEO_FILE_FILTERS })
-    if (!filePath) return
-    const fileData = await fileDataFromPath(filePath)
-    if (fileData) setVideoFile(fileData)
+    try {
+      const [filePath] = await window.api.app.selectFile({ filters: VIDEO_FILE_FILTERS })
+      if (!filePath) return
+      const fileData = await fileDataFromPath(filePath)
+      if (fileData) {
+        setVideoFile(fileData)
+      } else {
+        toast('这个视频读不出来', { description: '确认文件还在原位，重新选一次。' })
+      }
+    } catch (error) {
+      console.error('Failed to pick video:', error)
+      toast.error('选视频出错了', { description: '再试一次。' })
+    }
   }, [isPublishing])
 
   const handleVideoDrop = useCallback(
