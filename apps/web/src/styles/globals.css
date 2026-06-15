@@ -456,12 +456,21 @@
   padding: 0;
 }
 
-/* Shiki dual-theme output: the site is dark-only, so force dark variables. */
+/*
+ * Shiki dual-theme output: rehype-code emits both --shiki-light and
+ * --shiki-dark per token (defaultColor: false). Follow the active theme so
+ * github-light tokens render in light mode and github-dark in dark mode —
+ * otherwise dark-theme token colors wash out on the light background.
+ */
 .content-prose pre.shiki {
   background-color: hsl(var(--muted) / 50%) !important;
 }
 
 .content-prose pre.shiki span {
+  color: var(--shiki-light, inherit);
+}
+
+.dark .content-prose pre.shiki span {
   color: var(--shiki-dark, inherit);
 }
 
