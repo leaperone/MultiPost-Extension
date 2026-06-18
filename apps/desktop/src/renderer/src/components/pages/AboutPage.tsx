@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Globe, Github, ExternalLink, Heart } from 'lucide-react'
 import { Button } from '../ui/button'
-import logo from '../../assets/logo.png'
+import logo from '../../assets/icon.png'
 
 const links = [
   {

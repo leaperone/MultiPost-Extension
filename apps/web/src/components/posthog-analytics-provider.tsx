@@ -1,7 +1,7 @@
 import { useLocation } from '@tanstack/react-router';
 import posthog from 'posthog-js';
 import { PostHogProvider } from 'posthog-js/react';
-import { Suspense, useEffect, useRef, type ReactNode } from 'react';
+import { Suspense, useEffect, useRef, useState, type ReactNode } from 'react';
 
 import { useSession } from '../lib/auth-client';
 import { isPostHogClientEnabled, POSTHOG_HOST, POSTHOG_KEY } from '../lib/posthog/client-config';
@@ -25,7 +25,7 @@ const ensurePostHog = () => {
   hasInitialized = true;
 };
 
-function PostHogAnalyticsInner({ children }: { children: ReactNode }) {
+function PostHogAnalyticsInner() {
   const location = useLocation();
   const { data: session, status } = useSession();
   const lastUrlRef = useRef<string | null>(null);
@@ -107,21 +107,39 @@ function PostHogAnalyticsInner({ children }: { children: ReactNode }) {
     }
   }, [session?.user?.id, session?.user?.name, status]);
 
-  return <>{children}</>;
+  return null;
+}
+
+function PostHogAnalyticsRuntime() {
+  const [isReady, setIsReady] = useState(false);
+
+  useEffect(() => {
+    if (!isPostHogClientEnabled()) {
+      return;
+    }
+
+    ensurePostHog();
+    setIsReady(true);
+  }, []);
+
+  if (!isReady) {
+    return null;
+  }
+
+  return <PostHogAnalyticsInner />;
 }
 
 export function PostHogAnalyticsProvider({ children }: { children: ReactNode }) {
-  if (!isPostHogClientEnabled() || typeof window === 'undefined') {
+  if (!isPostHogClientEnabled()) {
     return <>{children}</>;
   }
 
-  ensurePostHog();
-
   return (
-    <Suspense fallback={children}>
-      <PostHogProvider client={posthog}>
-        <PostHogAnalyticsInner>{children}</PostHogAnalyticsInner>
-      </PostHogProvider>
-    </Suspense>
+    <PostHogProvider client={posthog}>
+      <Suspense fallback={null}>
+        <PostHogAnalyticsRuntime />
+      </Suspense>
+      {children}
+    </PostHogProvider>
   );
 }
