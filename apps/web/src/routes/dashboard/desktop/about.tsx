@@ -39,9 +39,11 @@ function DesktopAboutPage() {
       maxWidth="max-w-2xl">
       <div className="space-y-6">
         <div className="py-4 text-center">
-          <div className="mx-auto mb-4 flex size-20 items-center justify-center rounded-2xl bg-gradient-to-br from-blue-500 to-rose-500 text-3xl font-bold text-white">
-            M
-          </div>
+          <img
+            src="/logo.png"
+            alt="MultiPost"
+            className="mx-auto mb-4 size-20 object-contain"
+          />
           <p className="mx-auto max-w-md text-muted-foreground">
             Publish content to multiple social platforms from one desktop workspace.
           </p>

@@ -11,11 +11,11 @@ import {
 } from '@/lib/desktop-bridge';
 import { routeMeta } from '../../../lib/seo';
 import {
-  contentTypeLabels,
   DesktopPageShell,
   DesktopRequiredCard,
   EmptyState,
   formatDateTime,
+  getContentTypeLabel,
   LoadingState,
   StatusChip,
 } from './-components';
@@ -113,7 +113,7 @@ function DesktopHistoryPage() {
                     <Chip
                       size="sm"
                       variant="flat">
-                      {contentTypeLabels[record.contentType]}
+                      {getContentTypeLabel(record.contentType)}
                     </Chip>
                     <StatusChip status={record.status} />
                     <span className="text-xs text-muted-foreground">

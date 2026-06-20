@@ -17,8 +17,10 @@ import {
   DesktopRequiredCard,
   EmptyState,
   formatDateTime,
+  getContentTypeLabel,
+  getPublishPathForContentType,
+  isKnownContentType,
   LoadingState,
-  publishPathByContentType,
 } from './-components';
 
 export const Route = createFileRoute('/dashboard/desktop/drafts')({
@@ -41,11 +43,18 @@ function DesktopDraftsPage() {
   if (!isDesktop) return <DesktopRequiredCard />;
 
   const filteredDrafts =
-    filter === 'all' ? drafts : drafts.filter((draft) => draft.contentType === filter);
+    filter === 'all'
+      ? drafts
+      : drafts.filter(
+          (draft) => isKnownContentType(draft.contentType) && draft.contentType === filter,
+        );
 
   const navigateToDraft = (draft: Draft) => {
+    const publishPath = getPublishPathForContentType(draft.contentType);
+    if (!publishPath) return;
+
     getDesktopBridge()?.navigation.navigateTo(
-      `${publishPathByContentType[draft.contentType]}?draft=${encodeURIComponent(draft.id)}`,
+      `${publishPath}?draft=${encodeURIComponent(draft.id)}`,
     );
   };
 
@@ -82,7 +91,9 @@ function DesktopDraftsPage() {
           All ({drafts.length})
         </Chip>
         {(Object.keys(contentTypeLabels) as ContentType[]).map((type) => {
-          const count = drafts.filter((draft) => draft.contentType === type).length;
+          const count = drafts.filter(
+            (draft) => isKnownContentType(draft.contentType) && draft.contentType === type,
+          ).length;
           return (
             <Chip
               key={type}
@@ -104,50 +115,55 @@ function DesktopDraftsPage() {
         />
       ) : (
         <div className="grid gap-3">
-          {filteredDrafts.map((draft) => (
-            <Card
-              key={draft.id}
-              className="shadow-none border">
-              <CardBody className="flex flex-row items-start justify-between gap-3">
-                <div className="min-w-0">
-                  <div className="mb-1 flex flex-wrap items-center gap-2">
-                    <Chip
-                      size="sm"
-                      variant="flat">
-                      {contentTypeLabels[draft.contentType]}
-                    </Chip>
-                    <span className="text-xs text-muted-foreground">
-                      {formatDateTime(draft.updatedAt)}
-                    </span>
+          {filteredDrafts.map((draft) => {
+            const canEdit = getPublishPathForContentType(draft.contentType) !== null;
+
+            return (
+              <Card
+                key={draft.id}
+                className="shadow-none border">
+                <CardBody className="flex flex-row items-start justify-between gap-3">
+                  <div className="min-w-0">
+                    <div className="mb-1 flex flex-wrap items-center gap-2">
+                      <Chip
+                        size="sm"
+                        variant="flat">
+                        {getContentTypeLabel(draft.contentType)}
+                      </Chip>
+                      <span className="text-xs text-muted-foreground">
+                        {formatDateTime(draft.updatedAt)}
+                      </span>
+                    </div>
+                    <h3 className="truncate font-medium">{draft.title || 'Untitled'}</h3>
+                    <p className="line-clamp-2 text-sm text-muted-foreground">
+                      {draft.content || 'No content'}
+                    </p>
                   </div>
-                  <h3 className="truncate font-medium">{draft.title || 'Untitled'}</h3>
-                  <p className="line-clamp-2 text-sm text-muted-foreground">
-                    {draft.content || 'No content'}
-                  </p>
-                </div>
-                <div className="flex shrink-0 items-center gap-1">
-                  <Button
-                    size="sm"
-                    variant="light"
-                    isIconOnly
-                    aria-label="Edit draft"
-                    onPress={() => navigateToDraft(draft)}>
-                    <EditIcon className="size-4" />
-                  </Button>
-                  <Button
-                    size="sm"
-                    variant="light"
-                    color="danger"
-                    isIconOnly
-                    aria-label="Delete draft"
-                    isLoading={deletingId === draft.id}
-                    onPress={() => deleteDraft(draft)}>
-                    <Trash2Icon className="size-4" />
-                  </Button>
-                </div>
-              </CardBody>
-            </Card>
-          ))}
+                  <div className="flex shrink-0 items-center gap-1">
+                    <Button
+                      size="sm"
+                      variant="light"
+                      isIconOnly
+                      isDisabled={!canEdit}
+                      aria-label={canEdit ? 'Edit draft' : 'Unsupported draft type'}
+                      onPress={() => navigateToDraft(draft)}>
+                      <EditIcon className="size-4" />
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="light"
+                      color="danger"
+                      isIconOnly
+                      aria-label="Delete draft"
+                      isLoading={deletingId === draft.id}
+                      onPress={() => deleteDraft(draft)}>
+                      <Trash2Icon className="size-4" />
+                    </Button>
+                  </div>
+                </CardBody>
+              </Card>
+            );
+          })}
         </div>
       )}
 

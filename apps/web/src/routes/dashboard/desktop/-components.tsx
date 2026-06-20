@@ -9,20 +9,15 @@ import {
   type ContentType,
   type PlatformInfo,
 } from '@/lib/desktop-bridge';
+import { contentTypeLabels } from '@/lib/desktop-content-types';
 
-export const contentTypeLabels: Record<ContentType, string> = {
-  DYNAMIC: 'Dynamic',
-  VIDEO: 'Video',
-  ARTICLE: 'Article',
-  PODCAST: 'Podcast',
-};
-
-export const publishPathByContentType: Record<ContentType, string> = {
-  DYNAMIC: '/dashboard/desktop/publish/dynamic',
-  VIDEO: '/dashboard/desktop/publish/video',
-  ARTICLE: '/dashboard/desktop/publish/article',
-  PODCAST: '/dashboard/desktop/publish/dynamic',
-};
+export {
+  contentTypeLabels,
+  getContentTypeLabel,
+  getPublishPathForContentType,
+  isKnownContentType,
+  publishPathByContentType,
+} from '@/lib/desktop-content-types';
 
 export function DesktopPageShell({
   title,
