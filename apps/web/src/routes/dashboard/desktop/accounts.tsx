@@ -2,8 +2,10 @@ import { createFileRoute } from '@tanstack/react-router';
 import { Avatar, Button, Card, CardBody, Chip } from '@heroui/react';
 import { LogInIcon, RefreshCwIcon, Trash2Icon } from 'lucide-react';
 import { useState } from 'react';
+import { toast } from 'sonner';
 
 import {
+  getDesktopErrorMessage,
   getDesktopBridge,
   useDesktopAccounts,
   useDesktopPlatforms,
@@ -51,6 +53,12 @@ function DesktopAccountsPage() {
     try {
       const account = await bridge.account.create(platform.id);
       await bridge.account.openLogin(account.id);
+      await refresh();
+    } catch (error) {
+      console.error('Failed to open login:', error);
+      toast.error('登录页面没打开', {
+        description: getDesktopErrorMessage(error, '请检查网络后重试。'),
+      });
       await refresh();
     } finally {
       setBusyId(null);

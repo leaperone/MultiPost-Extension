@@ -167,6 +167,37 @@ function snapshotWasCancelled(snapshot: PublishStatusSnapshot): boolean {
   return snapshot.status === 'cancelled' || snapshot.targets.some((target) => target.status === 'cancelled')
 }
 
+function normalizePublishFailureReason(reason: string | undefined): string {
+  const rawReason = reason?.trim()
+  if (!rawReason) return '未知原因'
+  if (
+    /Element not found:/i.test(rawReason) ||
+    /页面加载超时/i.test(rawReason) ||
+    /page[-\s]?readiness/i.test(rawReason) ||
+    /page ready/i.test(rawReason) ||
+    /document\.readyState/i.test(rawReason)
+  ) {
+    return '页面未就绪或需要重新登录'
+  }
+  return rawReason
+}
+
+function summarizePublishFailures(snapshot: PublishStatusSnapshot): string {
+  const failedTargets = snapshot.targets.filter((target) => target.status === 'failed')
+  if (failedTargets.length === 0) {
+    return '发布失败'
+  }
+
+  const details = failedTargets
+    .map((target) => {
+      const platformName = PLATFORMS[target.platform]?.name || target.platform
+      return `${platformName}（${normalizePublishFailureReason(target.error)}）`
+    })
+    .join('；')
+
+  return failedTargets.length > 1 ? `部分发布失败：${details}` : `发布失败：${details}`
+}
+
 function hasOwnProperty<T extends object, K extends PropertyKey>(
   value: T,
   key: K
@@ -1472,7 +1503,7 @@ export function registerIpcHandlers(
 
         const snapshot = manager.finishExecutorPublishRun(taskId)
         if (snapshotHasFailure(snapshot)) {
-          return publishError('Publish failed', snapshot, snapshot.targets)
+          return publishError(summarizePublishFailures(snapshot), snapshot, snapshot.targets)
         }
         if (snapshotWasCancelled(snapshot)) {
           return publishError('Publish cancelled', snapshot, snapshot.targets, 2)
@@ -1483,9 +1514,18 @@ export function registerIpcHandlers(
           snapshot.targets
         )
       } catch (error) {
+        if (!manager.isPublishCancelled(taskId)) {
+          manager.markExecutorPublishTargetFailed(taskId, accountId, error)
+        }
         const snapshot = manager.finishExecutorPublishRun(taskId)
+        let message: unknown = error
+        if (snapshotWasCancelled(snapshot)) {
+          message = 'Publish cancelled'
+        } else if (snapshotHasFailure(snapshot)) {
+          message = summarizePublishFailures(snapshot)
+        }
         return publishError(
-          snapshotWasCancelled(snapshot) ? 'Publish cancelled' : error,
+          message,
           snapshot,
           snapshot.targets,
           snapshotWasCancelled(snapshot) ? 2 : 1
@@ -1582,7 +1622,7 @@ export function registerIpcHandlers(
 
       const snapshot = manager.finishExecutorPublishRun(taskId)
       if (snapshotHasFailure(snapshot)) {
-        return publishError('One or more targets failed', snapshot, snapshot.targets)
+        return publishError(summarizePublishFailures(snapshot), snapshot, snapshot.targets)
       }
       if (snapshotWasCancelled(snapshot)) {
         return publishError('Publish cancelled', snapshot, snapshot.targets, 2)

@@ -2,9 +2,11 @@ import { createFileRoute } from '@tanstack/react-router';
 import { Button, Card, CardBody, Image, Spinner, Textarea } from '@heroui/react';
 import { ImagePlusIcon, SendIcon, XIcon } from 'lucide-react';
 import { useState } from 'react';
+import { toast } from 'sonner';
 
 import {
   createAndShowPublishGroup,
+  getDesktopErrorMessage,
   getDesktopBridge,
   useDesktopAccounts,
   useDesktopPlatforms,
@@ -109,6 +111,11 @@ function DynamicPublishPage() {
         });
         bridge.navigation.navigateTo('/dashboard/desktop/executor');
       }
+    } catch (error) {
+      console.error('Failed to publish dynamic:', error);
+      toast.error('发布没成功', {
+        description: getDesktopErrorMessage(error, '请检查账号登录状态后重试。'),
+      });
     } finally {
       setIsPublishing(false);
     }

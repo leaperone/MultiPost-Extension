@@ -2,8 +2,10 @@ import { createFileRoute } from '@tanstack/react-router';
 import { Button, Card, CardBody, Input, Textarea } from '@heroui/react';
 import { FilmIcon, ImagePlusIcon, SendIcon, XIcon } from 'lucide-react';
 import { useState } from 'react';
+import { toast } from 'sonner';
 
 import {
+  getDesktopErrorMessage,
   getDesktopBridge,
   useDesktopAccounts,
   useDesktopPlatforms,
@@ -94,6 +96,11 @@ function VideoPublishPage() {
         autoSubmit: false,
       });
       bridge.navigation.navigateTo('/dashboard/desktop/executor');
+    } catch (error) {
+      console.error('Failed to publish video:', error);
+      toast.error('发布没成功', {
+        description: getDesktopErrorMessage(error, '请检查账号登录状态后重试。'),
+      });
     } finally {
       setIsPublishing(false);
     }

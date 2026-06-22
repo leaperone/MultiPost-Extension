@@ -1,4 +1,5 @@
 import { create } from 'zustand'
+import { toast } from '../components/ui/sonner'
 import type { Account, PlatformType } from '@shared/types'
 
 interface AccountsState {
@@ -10,6 +11,16 @@ interface AccountsState {
   updateAccount: (id: string, data: Partial<Account>) => Promise<void>
   deleteAccount: (id: string) => Promise<void>
   openAccountBrowser: (accountId: string, url?: string) => Promise<void>
+}
+
+function formatErrorMessage(error: unknown): string {
+  if (error instanceof Error && error.message) {
+    return error.message
+  }
+  if (typeof error === 'string' && error.trim()) {
+    return error
+  }
+  return '请检查网络后重试。'
 }
 
 export const useAccountsStore = create<AccountsState>((set, get) => ({
@@ -46,7 +57,14 @@ export const useAccountsStore = create<AccountsState>((set, get) => ({
   },
 
   openAccountBrowser: async (accountId, url) => {
-    await window.api.browser.open(accountId, url)
+    try {
+      await window.api.browser.open(accountId, url)
+    } catch (error) {
+      console.error('Failed to open account browser:', error)
+      toast.error('账号页面没打开', {
+        description: formatErrorMessage(error)
+      })
+    }
   }
 }))
 

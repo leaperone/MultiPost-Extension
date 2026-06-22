@@ -199,11 +199,125 @@ const WEB_DASHBOARD_BASE_URL = is.dev
   ? process.env.MULTIPOST_WEB_URL || 'http://localhost:3000'
   : 'https://multipost.app'
 
+const CHROMIUM_NET_ERROR_PATTERN = /\b(ERR_[A-Z0-9_]+)\s*\((-?\d+)\)/
+const CHROMIUM_NET_ERROR_NAME_PATTERN = /\b(ERR_[A-Z0-9_]+)\b/
+const NAVIGATION_ABORT_ERROR_NAMES = new Set(['ERR_ABORTED'])
+const NAVIGATION_ABORT_ERROR_CODES = new Set([-3])
+const NAVIGATION_NETWORK_ERROR_NAMES = new Set([
+  'ERR_FAILED',
+  'ERR_CONNECTION_TIMED_OUT',
+  'ERR_INTERNET_DISCONNECTED',
+  'ERR_NAME_NOT_RESOLVED',
+  'ERR_CONNECTION_REFUSED',
+  'ERR_CONNECTION_RESET',
+  'ERR_ADDRESS_UNREACHABLE',
+  'ERR_NETWORK_CHANGED',
+  'ERR_PROXY_CONNECTION_FAILED',
+  'ERR_TUNNEL_CONNECTION_FAILED',
+  'ERR_TIMED_OUT',
+  'ERR_SSL_PROTOCOL_ERROR',
+  'ERR_CERT_AUTHORITY_INVALID',
+  'ERR_CERT_COMMON_NAME_INVALID',
+  'ERR_CERT_DATE_INVALID'
+])
+const NAVIGATION_NETWORK_ERROR_CODES = new Set([
+  -2, -6, -7, -21, -100, -101, -102, -103, -104, -105, -106, -109, -118, -130,
+  -137, -138, -200, -201, -202, -324
+])
+
+interface NavigationErrorDetails {
+  kind: 'abort' | 'network' | 'fatal'
+  message: string
+  netErrorName?: string
+  netErrorCode?: number
+}
+
+interface NavigationLoadResult {
+  ok: boolean
+  kind?: 'abort' | 'network'
+  message?: string
+  details?: NavigationErrorDetails
+}
+
 type FetchedAccountUserInfo = {
   username: string
   displayName?: string
   avatar?: string
   stats?: AccountStats
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null
+}
+
+function stringifyUnknown(value: unknown): string {
+  if (value instanceof Error) {
+    return value.message
+  }
+  if (typeof value === 'string') {
+    return value
+  }
+  try {
+    return JSON.stringify(value)
+  } catch {
+    return String(value)
+  }
+}
+
+function readOptionalStringField(value: unknown, field: string): string | undefined {
+  if (!isRecord(value)) return undefined
+  const fieldValue = value[field]
+  return typeof fieldValue === 'string' ? fieldValue : undefined
+}
+
+function readOptionalNumberField(value: unknown, field: string): number | undefined {
+  if (!isRecord(value)) return undefined
+  const fieldValue = value[field]
+  if (typeof fieldValue === 'number' && Number.isFinite(fieldValue)) {
+    return fieldValue
+  }
+  if (typeof fieldValue === 'string') {
+    const numericValue = Number(fieldValue)
+    return Number.isFinite(numericValue) ? numericValue : undefined
+  }
+  return undefined
+}
+
+function getNavigationErrorMessage(error: unknown): string {
+  const message = readOptionalStringField(error, 'message')
+  return message || stringifyUnknown(error)
+}
+
+function classifyNavigationError(error: unknown): NavigationErrorDetails {
+  const message = getNavigationErrorMessage(error)
+  const parsed = CHROMIUM_NET_ERROR_PATTERN.exec(message)
+  const parsedName = parsed?.[1]
+  const parsedCode = parsed?.[2] ? Number(parsed[2]) : undefined
+  const fallbackName =
+    readOptionalStringField(error, 'code')?.startsWith('ERR_') === true
+      ? readOptionalStringField(error, 'code')
+      : CHROMIUM_NET_ERROR_NAME_PATTERN.exec(message)?.[1]
+  const netErrorName = parsedName ?? fallbackName
+  const netErrorCode =
+    parsedCode ??
+    readOptionalNumberField(error, 'errno') ??
+    readOptionalNumberField(error, 'code')
+
+  if (
+    (netErrorName && NAVIGATION_ABORT_ERROR_NAMES.has(netErrorName)) ||
+    (netErrorCode !== undefined && NAVIGATION_ABORT_ERROR_CODES.has(netErrorCode))
+  ) {
+    return { kind: 'abort', message, netErrorName, netErrorCode }
+  }
+
+  if (
+    (netErrorName && NAVIGATION_NETWORK_ERROR_NAMES.has(netErrorName)) ||
+    (netErrorCode !== undefined && NAVIGATION_NETWORK_ERROR_CODES.has(netErrorCode))
+  ) {
+    return { kind: 'network', message, netErrorName, netErrorCode }
+  }
+
+  return { kind: 'fatal', message, netErrorName, netErrorCode }
 }
 
 // This preload only injects a page-world helper on allowlisted platform hosts.
@@ -348,6 +462,77 @@ export class BrowserViewManager {
     } catch {
       return String(error)
     }
+  }
+
+  private describeNavigationFailure(details: NavigationErrorDetails): string {
+    const suffix =
+      details.netErrorName && details.netErrorCode !== undefined
+        ? `${details.netErrorName} (${details.netErrorCode})`
+        : details.netErrorName || details.message
+
+    switch (details.netErrorName) {
+      case 'ERR_NAME_NOT_RESOLVED':
+        return `无法解析平台地址：${suffix}`
+      case 'ERR_INTERNET_DISCONNECTED':
+        return `网络未连接：${suffix}`
+      case 'ERR_CONNECTION_TIMED_OUT':
+      case 'ERR_TIMED_OUT':
+        return `打开页面超时：${suffix}`
+      case 'ERR_CONNECTION_REFUSED':
+        return `平台连接被拒绝：${suffix}`
+      case 'ERR_CONNECTION_RESET':
+        return `网络连接被重置：${suffix}`
+      case 'ERR_PROXY_CONNECTION_FAILED':
+      case 'ERR_TUNNEL_CONNECTION_FAILED':
+        return `代理连接失败：${suffix}`
+      default:
+        return `网络连接失败：${suffix}`
+    }
+  }
+
+  private async loadURLWithNavigationHandling(
+    webContents: Electron.WebContents,
+    url: string,
+    context: string
+  ): Promise<NavigationLoadResult> {
+    try {
+      await webContents.loadURL(url)
+      return { ok: true }
+    } catch (error: unknown) {
+      const details = classifyNavigationError(error)
+      if (details.kind === 'fatal') {
+        throw error
+      }
+
+      const payload = {
+        url,
+        message: details.message,
+        netErrorName: details.netErrorName,
+        netErrorCode: details.netErrorCode
+      }
+      if (details.kind === 'abort') {
+        publishLogger.info(`${context} navigation aborted:`, payload)
+      } else {
+        publishLogger.warn(`${context} navigation failed:`, payload)
+      }
+
+      return {
+        ok: false,
+        kind: details.kind,
+        message: this.describeNavigationFailure(details),
+        details
+      }
+    }
+  }
+
+  private throwIfPublishNavigationFailed(
+    result: NavigationLoadResult,
+    action: string
+  ): void {
+    if (result.ok || result.kind !== 'network') {
+      return
+    }
+    throw new Error(`${action}失败：${result.message || '网络连接失败'}`)
   }
 
   private getPlatformPublishPayloadKey(platform: PlatformType, contentType: SyncContentType): string {
@@ -1096,7 +1281,13 @@ export class BrowserViewManager {
           (host) => urlObj.hostname === host || urlObj.hostname.endsWith(`.${host}`)
         )
         if (isSameOrigin) {
-          view.webContents.loadURL(url)
+          void this.loadURLWithNavigationHandling(
+            view.webContents,
+            url,
+            'web-dashboard:window-open'
+          ).catch((error: unknown) => {
+            publishLogger.error('Web dashboard window-open navigation failed:', error)
+          })
           return { action: 'deny' }
         }
       } catch {
@@ -1440,8 +1631,14 @@ export class BrowserViewManager {
 
     // Navigate to URL
     publishLogger.info('Loading URL:', targetUrl)
-    await view.webContents.loadURL(targetUrl)
-    publishLogger.info('URL loaded successfully')
+    const loadResult = await this.loadURLWithNavigationHandling(
+      view.webContents,
+      targetUrl,
+      `account:${accountId}:open`
+    )
+    if (loadResult.ok) {
+      publishLogger.info('URL loaded successfully')
+    }
 
     // Listen for navigation events
     view.webContents.on('did-navigate', (_event, navigatedUrl) => {
@@ -1595,7 +1792,11 @@ export class BrowserViewManager {
       return
     }
     await applyAccountProxy(managed.view.webContents.session, account)
-    await managed.view.webContents.loadURL(targetUrl)
+    await this.loadURLWithNavigationHandling(
+      managed.view.webContents,
+      targetUrl,
+      `account:${accountId}:navigate`
+    )
   }
 
   async navigateTab(tabId: string, url: string): Promise<void> {
@@ -1616,7 +1817,11 @@ export class BrowserViewManager {
       if (!this.webDashboardView) {
         throw new Error('Web dashboard view is not initialized')
       }
-      await this.webDashboardView.webContents.loadURL(targetUrl)
+      await this.loadURLWithNavigationHandling(
+        this.webDashboardView.webContents,
+        targetUrl,
+        'web-dashboard:address-bar'
+      )
       this.notifyTabsChanged()
       return
     }
@@ -1630,7 +1835,11 @@ export class BrowserViewManager {
     const group = this.publishGroups.get(tabId)
     const activeTarget = group?.activeAccountId ? group.views.get(group.activeAccountId) : null
     if (activeTarget) {
-      await activeTarget.view.webContents.loadURL(targetUrl)
+      await this.loadURLWithNavigationHandling(
+        activeTarget.view.webContents,
+        targetUrl,
+        `publish-group:${tabId}:address-bar`
+      )
       this.notifyTabsChanged()
       this.notifyGroupTabsChanged(tabId)
       return
@@ -2299,7 +2508,23 @@ export class BrowserViewManager {
 
     // Navigate to URL based on content type (load in background)
     const targetUrl = url || this.getPublishUrl(platform, contentType)
-    await view.webContents.loadURL(targetUrl)
+    try {
+      const loadResult = await this.loadURLWithNavigationHandling(
+        view.webContents,
+        targetUrl,
+        `platform:${platform}:open`
+      )
+      this.throwIfPublishNavigationFailed(loadResult, '打开平台发布页面')
+    } catch (error: unknown) {
+      this.platformViews.delete(platform)
+      if (this.activePlatformId === platform) {
+        this.activePlatformId = null
+      }
+      if (!view.webContents.isDestroyed()) {
+        view.webContents.close()
+      }
+      throw error
+    }
 
     // Listen for navigation events
     view.webContents.on('did-navigate', (_event, navigatedUrl) => {
@@ -2403,7 +2628,12 @@ export class BrowserViewManager {
     if (this.blockUnsupportedNavigation(targetUrl, 'loadExactUrlIfNeeded')) {
       return
     }
-    await webContents.loadURL(targetUrl)
+    const loadResult = await this.loadURLWithNavigationHandling(
+      webContents,
+      targetUrl,
+      'publish:loadExactUrlIfNeeded'
+    )
+    this.throwIfPublishNavigationFailed(loadResult, '打开发布页面')
     await this.waitForNavigationSettle(webContents)
   }
 
@@ -2519,7 +2749,12 @@ export class BrowserViewManager {
     if (!managed) {
       throw new Error(`No view found for platform: ${platform}`)
     }
-    await managed.view.webContents.loadURL(url)
+    const loadResult = await this.loadURLWithNavigationHandling(
+      managed.view.webContents,
+      url,
+      `platform:${platform}:navigate`
+    )
+    this.throwIfPublishNavigationFailed(loadResult, '打开平台页面')
   }
 
   /**
@@ -2560,16 +2795,23 @@ export class BrowserViewManager {
       // Navigate to publish URL if not already there
       const publishUrl = this.getPublishUrl(platform, contentType)
       const currentUrl = managed.view.webContents.getURL()
+      let shouldLoadPublishUrl = true
       try {
         const targetHostname = new URL(publishUrl).hostname
-        if (!currentUrl.includes(targetHostname)) {
-          await managed.view.webContents.loadURL(publishUrl)
-          // Wait for page to load
-          await this.waitForNavigationSettle(managed.view.webContents)
-        }
+        shouldLoadPublishUrl = targetHostname
+          ? !currentUrl.includes(targetHostname)
+          : this.normalizeNavigationUrl(currentUrl) !== this.normalizeNavigationUrl(publishUrl)
       } catch {
-        // If URL parsing fails, just try to navigate
-        await managed.view.webContents.loadURL(publishUrl)
+        shouldLoadPublishUrl =
+          this.normalizeNavigationUrl(currentUrl) !== this.normalizeNavigationUrl(publishUrl)
+      }
+      if (shouldLoadPublishUrl) {
+        const loadResult = await this.loadURLWithNavigationHandling(
+          managed.view.webContents,
+          publishUrl,
+          `platform:${platform}:fill`
+        )
+        this.throwIfPublishNavigationFailed(loadResult, '打开平台发布页面')
         await this.waitForNavigationSettle(managed.view.webContents)
       }
     }
@@ -2813,7 +3055,24 @@ export class BrowserViewManager {
 
     // Navigate to publish URL if contentType specified, otherwise platform home
     const url = this.getPublishUrl(platform, contentType)
-    await view.webContents.loadURL(url)
+    try {
+      const loadResult = await this.loadURLWithNavigationHandling(
+        view.webContents,
+        url,
+        `executor:${accountId}:open`
+      )
+      this.throwIfPublishNavigationFailed(loadResult, '打开账号发布页面')
+    } catch (error: unknown) {
+      this.executorViews.delete(accountId)
+      if (this.activeExecutorId === accountId) {
+        this.activeExecutorId = null
+      }
+      await releaseAccountProxyForWebContents(view.webContents)
+      if (!view.webContents.isDestroyed()) {
+        view.webContents.close()
+      }
+      throw error
+    }
 
     // Show the view
     await this.showExecutorView(accountId)
@@ -2982,14 +3241,23 @@ export class BrowserViewManager {
         // Navigate to publish URL if not already there
         const publishUrl = this.getPublishUrl(managed.platform, contentType)
         const currentUrl = managed.view.webContents.getURL()
+        let shouldLoadPublishUrl = true
         try {
           const targetHostname = new URL(publishUrl).hostname
-          if (!currentUrl.includes(targetHostname)) {
-            await managed.view.webContents.loadURL(publishUrl)
-            await this.waitForNavigationSettle(managed.view.webContents)
-          }
+          shouldLoadPublishUrl = targetHostname
+            ? !currentUrl.includes(targetHostname)
+            : this.normalizeNavigationUrl(currentUrl) !== this.normalizeNavigationUrl(publishUrl)
         } catch {
-          await managed.view.webContents.loadURL(publishUrl)
+          shouldLoadPublishUrl =
+            this.normalizeNavigationUrl(currentUrl) !== this.normalizeNavigationUrl(publishUrl)
+        }
+        if (shouldLoadPublishUrl) {
+          const loadResult = await this.loadURLWithNavigationHandling(
+            managed.view.webContents,
+            publishUrl,
+            `executor:${accountId}:fill`
+          )
+          this.throwIfPublishNavigationFailed(loadResult, '打开账号发布页面')
           await this.waitForNavigationSettle(managed.view.webContents)
         }
       }
@@ -3575,7 +3843,12 @@ export class BrowserViewManager {
         // Navigate to publish URL
         const publishUrl = this.getPublishUrl(platform, contentType)
         publishLogger.info(`Loading ${displayName}: ${publishUrl}`)
-        await view.webContents.loadURL(publishUrl)
+        const loadResult = await this.loadURLWithNavigationHandling(
+          view.webContents,
+          publishUrl,
+          `publish-group:${groupId}:${accountId}:open`
+        )
+        this.throwIfPublishNavigationFailed(loadResult, '打开账号发布页面')
       }
 
       // Set first account as active
@@ -4177,11 +4450,17 @@ export class BrowserViewManager {
     this.setGroupTargetStep(groupId, accountId, '重新打开页面…')
 
     const publishUrl = this.getPublishUrl(target.platform, group.contentType)
-    try {
-      await target.view.webContents.loadURL(publishUrl)
-    } catch (error) {
-      // ERR_ABORTED etc. — fillSingleGroupTarget's readiness wait will judge
-      publishLogger.warn(`Retry reload for ${accountId}:`, error)
+    const loadResult = await this.loadURLWithNavigationHandling(
+      target.view.webContents,
+      publishUrl,
+      `publish-group:${groupId}:${accountId}:retry`
+    )
+    if (loadResult.kind === 'network') {
+      this.setGroupTargetStatus(groupId, accountId, 'failed', {
+        error: `重新打开发布页面失败：${loadResult.message || '网络连接失败'}`
+      })
+      this.emitGroupRunFinished(groupId)
+      return
     }
 
     const normalizedData = this.normalizeContentData(group.data)

@@ -726,6 +726,16 @@ export function getPublishGroupAPI(): PublishGroupAPI | null {
   return bridge.publishGroup as PublishGroupAPI
 }
 
+export function getDesktopErrorMessage(error: unknown, fallback = '操作失败'): string {
+  if (error instanceof Error && error.message) {
+    return error.message
+  }
+  if (typeof error === 'string' && error.trim()) {
+    return error
+  }
+  return fallback
+}
+
 /**
  * Hook: 使用 Publish Group API
  */
@@ -757,6 +767,6 @@ export async function createAndShowPublishGroup(
     return groupId
   } catch (error) {
     console.error("[Desktop Bridge] Failed to create publish group:", error)
-    return null
+    throw error
   }
 }
