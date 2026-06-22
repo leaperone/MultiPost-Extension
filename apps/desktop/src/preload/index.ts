@@ -7,6 +7,7 @@ import type {
   AccountComment,
   AccountGroup,
   AccountPost,
+  AccountStatsHistoryPoint,
   BrowserTab,
   DmMessage,
   DmSession,
@@ -82,6 +83,8 @@ const api = {
       ipcRenderer.invoke(IPC_CHANNELS.ACCOUNT_REFRESH_INFO, id),
     getAnalytics: (id: string): Promise<AccountAnalytics | null> =>
       ipcRenderer.invoke(IPC_CHANNELS.ACCOUNT_GET_ANALYTICS, id),
+    getStatsHistory: (id: string, days?: number): Promise<AccountStatsHistoryPoint[]> =>
+      ipcRenderer.invoke(IPC_CHANNELS.ACCOUNT_GET_STATS_HISTORY, id, days),
     listPosts: (id: string): Promise<AccountPost[]> =>
       ipcRenderer.invoke(IPC_CHANNELS.ACCOUNT_LIST_POSTS, id),
     listComments: (id: string, exportId: string): Promise<AccountComment[]> =>

@@ -295,6 +295,16 @@ export interface AccountStats {
   updatedAt?: number
 }
 
+export interface AccountStatsHistoryPoint {
+  day: string
+  fans?: number
+  following?: number
+  likes?: number
+  works?: number
+  views?: number
+  recordedAt: number
+}
+
 export interface AccountAnalyticsPoint {
   date: string
   value: number

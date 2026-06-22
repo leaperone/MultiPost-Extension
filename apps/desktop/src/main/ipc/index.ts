@@ -152,6 +152,34 @@ function normalizeOptionalInteractionId(value: unknown): string | null | undefin
   return normalizeInteractionId(value)
 }
 
+// Account ids are app-generated UUIDs; cap the accepted length so a compromised
+// renderer cannot push a huge string through to main-process trimming / binding.
+const ACCOUNT_ID_MAX_LENGTH = 200
+
+function normalizeAccountId(value: unknown): string {
+  if (typeof value !== 'string') {
+    throw new Error('Account id must be a string')
+  }
+
+  const accountId = value.trim()
+  if (!accountId) {
+    throw new Error('Account id is required')
+  }
+  if (accountId.length > ACCOUNT_ID_MAX_LENGTH) {
+    throw new Error('Account id is too long')
+  }
+  return accountId
+}
+
+function normalizeStatsHistoryDays(value: unknown): number {
+  if (value === undefined || value === null) return 90
+
+  const days = typeof value === 'number' ? value : Number(value)
+  if (!Number.isFinite(days)) return 90
+
+  return Math.min(365, Math.max(1, Math.trunc(days)))
+}
+
 function normalizeInteractionText(value: unknown): string | null {
   if (typeof value !== 'string') return null
   const text = value.trim()
@@ -679,6 +707,25 @@ export function registerIpcHandlers(
     const account = db.getAccount(id)
     if (!account) return null
     return manager.getAccountAnalytics(id, account.platform)
+  })
+
+  ipcMain.handle(IPC_CHANNELS.ACCOUNT_GET_STATS_HISTORY, async (_, id: unknown, days?: unknown) => {
+    const accountId = normalizeAccountId(id)
+    const account = db.getAccount(accountId)
+    if (!account) {
+      // Don't echo the caller-supplied id back in the error.
+      throw new Error('Account not found')
+    }
+
+    // Seed today's point from stored stats so the dashboard isn't empty on first
+    // open, then query — sharing one `now` so a midnight crossing can't drop the
+    // just-seeded row, and reusing the already-loaded account for both.
+    const now = Date.now()
+    if (hasAccountStatMetrics(account.stats)) {
+      db.ensureTodayStatsSnapshot(account, now)
+    }
+
+    return db.getStatsHistoryForAccount(account, normalizeStatsHistoryDays(days), now)
   })
 
   ipcMain.handle(IPC_CHANNELS.ACCOUNT_LIST_POSTS, async (_, id: string) => {

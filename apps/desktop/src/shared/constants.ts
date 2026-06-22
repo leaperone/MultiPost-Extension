@@ -1117,6 +1117,7 @@ export const IPC_CHANNELS = {
   ACCOUNT_SET_DEFAULT: 'account:setDefault',
   ACCOUNT_REFRESH_INFO: 'account:refreshInfo',
   ACCOUNT_GET_ANALYTICS: 'account:getAnalytics',
+  ACCOUNT_GET_STATS_HISTORY: 'account:getStatsHistory',
   ACCOUNT_LIST_POSTS: 'account:listPosts',
   ACCOUNT_LIST_COMMENTS: 'account:listComments',
   ACCOUNT_REPLY_COMMENT: 'account:replyComment',

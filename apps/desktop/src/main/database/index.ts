@@ -14,6 +14,7 @@ import type {
   AccountGroup,
   AccountHealthStatus,
   AccountStats,
+  AccountStatsHistoryPoint,
   Draft,
   PublishHistory,
   PublishHistoryStatus,
@@ -33,6 +34,10 @@ const PROXY_NAME_MAX_LENGTH = 200
 const PROXY_HOST_MAX_LENGTH = 255
 const PROXY_USERNAME_MAX_LENGTH = 512
 const PROXY_PASSWORD_MAX_LENGTH = 1024
+// History rows are keyed by the (mutable) account username; cap its length so a
+// renderer cannot bloat the identity_key / index footprint by pushing huge
+// usernames through account updates.
+const STATS_IDENTITY_KEY_MAX_LENGTH = 128
 
 export class DatabaseService {
   private static instance: DatabaseService
@@ -267,6 +272,24 @@ export class DatabaseService {
       )
     `)
 
+    // Account stats history table
+    this.db.exec(`
+      CREATE TABLE IF NOT EXISTS account_stats_history (
+        id TEXT PRIMARY KEY,
+        account_id TEXT NOT NULL,
+        identity_key TEXT NOT NULL,
+        day TEXT NOT NULL,
+        fans INTEGER,
+        following INTEGER,
+        likes INTEGER,
+        works INTEGER,
+        views INTEGER,
+        recorded_at INTEGER NOT NULL,
+        FOREIGN KEY (account_id) REFERENCES accounts(id) ON DELETE CASCADE,
+        UNIQUE(account_id, identity_key, day)
+      )
+    `)
+
     // Create indexes
     this.db.exec(`
       CREATE INDEX IF NOT EXISTS idx_accounts_platform ON accounts(platform);
@@ -281,6 +304,7 @@ export class DatabaseService {
       CREATE INDEX IF NOT EXISTS idx_tasks_status ON publish_tasks(status);
       CREATE INDEX IF NOT EXISTS idx_tasks_account ON publish_tasks(account_id);
       CREATE INDEX IF NOT EXISTS idx_tasks_scheduled ON publish_tasks(scheduled_at);
+      CREATE INDEX IF NOT EXISTS idx_stats_history_account ON account_stats_history(account_id, identity_key, day DESC);
     `)
   }
 
@@ -516,6 +540,8 @@ export class DatabaseService {
         ? existing.health
         : sanitizeAccountHealth(data.health) ?? existing.health
     const updated = { ...existing, ...data, stats: nextStats, health: nextHealth, updatedAt: Date.now() }
+    const shouldRecordStatsSnapshot =
+      hasAccountStatMetrics(data.stats) && hasAccountStatMetrics(updated.stats)
 
     const stmt = this.db.prepare(`
       UPDATE accounts SET
@@ -552,13 +578,23 @@ export class DatabaseService {
       id
     )
 
+    if (shouldRecordStatsSnapshot) {
+      // Reuse the already-built `updated` account and stamp the snapshot with this
+      // update's timestamp (i.e. the collection time), not a fresh Date.now().
+      this.recordStatsSnapshot(updated, updated.stats, updated.updatedAt)
+    }
+
     return updated
   }
 
   deleteAccount(id: string): void {
     if (!this.db) throw new Error('Database not initialized')
-    const stmt = this.db.prepare('DELETE FROM accounts WHERE id = ?')
-    stmt.run(id)
+    const db = this.db
+    const deleteAccount = db.transaction(() => {
+      db.prepare('DELETE FROM account_stats_history WHERE account_id = ?').run(id)
+      db.prepare('DELETE FROM accounts WHERE id = ?').run(id)
+    })
+    deleteAccount()
   }
 
   setDefaultAccount(id: string, platform: PlatformType): void {
@@ -876,6 +912,113 @@ export class DatabaseService {
     if (!this.db) throw new Error('Database not initialized')
     const stmt = this.db.prepare('DELETE FROM publish_tasks WHERE id = ?')
     stmt.run(id)
+  }
+
+  // ========== Account Stats History Methods ==========
+
+  /**
+   * Record a freshly-collected stats snapshot for the given account. Callers
+   * pass the already-loaded account (avoiding a redundant lookup) and may pass
+   * the collection time. Same identity/day is overwritten with the newer value.
+   */
+  recordStatsSnapshot(account: Account, stats: AccountStats | undefined, recordedAt = Date.now()): void {
+    const sanitized = sanitizeAccountStats(stats)
+    if (!sanitized) return
+    this.writeStatsSnapshot(account, sanitized, recordedAt, true)
+  }
+
+  /**
+   * Seed today's snapshot from the account's currently-stored stats if (and only
+   * if) today's row is absent. Used by the read path (e.g. opening the dashboard)
+   * so it is idempotent and never rewrites an existing row's recorded_at — that
+   * timestamp must keep meaning "when the stats were collected", not "last read".
+   */
+  ensureTodayStatsSnapshot(account: Account, recordedAt = Date.now()): void {
+    const sanitized = sanitizeAccountStats(account.stats)
+    if (!sanitized) return
+    this.writeStatsSnapshot(account, sanitized, recordedAt, false)
+  }
+
+  private writeStatsSnapshot(
+    account: Account,
+    sanitized: AccountStats,
+    recordedAt: number,
+    overwrite: boolean
+  ): void {
+    if (!this.db) throw new Error('Database not initialized')
+
+    const conflictClause = overwrite
+      ? `ON CONFLICT(account_id, identity_key, day) DO UPDATE SET
+        fans = excluded.fans,
+        following = excluded.following,
+        likes = excluded.likes,
+        works = excluded.works,
+        views = excluded.views,
+        recorded_at = excluded.recorded_at`
+      : `ON CONFLICT(account_id, identity_key, day) DO NOTHING`
+
+    const stmt = this.db.prepare(`
+      INSERT INTO account_stats_history (
+        id,
+        account_id,
+        identity_key,
+        day,
+        fans,
+        following,
+        likes,
+        works,
+        views,
+        recorded_at
+      )
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      ${conflictClause}
+    `)
+
+    stmt.run(
+      uuidv4(),
+      account.id,
+      this.getAccountIdentityKey(account),
+      this.formatLocalDay(recordedAt),
+      sanitized.fans ?? null,
+      sanitized.following ?? null,
+      sanitized.likes ?? null,
+      sanitized.works ?? null,
+      sanitized.views ?? null,
+      recordedAt
+    )
+  }
+
+  /**
+   * Query history for an already-loaded account. `now` anchors the day-window
+   * lower bound so the read path can share a single clock with its seed write,
+   * avoiding a midnight split where the just-seeded point falls outside the range.
+   */
+  getStatsHistoryForAccount(
+    account: Account,
+    sinceDays = 90,
+    now = Date.now()
+  ): AccountStatsHistoryPoint[] {
+    if (!this.db) throw new Error('Database not initialized')
+
+    const days = this.clampStatsHistoryDays(sinceDays)
+    const sinceDate = new Date(now)
+    sinceDate.setHours(0, 0, 0, 0)
+    sinceDate.setDate(sinceDate.getDate() - (days - 1))
+
+    const stmt = this.db.prepare(`
+      SELECT day, fans, following, likes, works, views, recorded_at
+      FROM account_stats_history
+      WHERE account_id = ?
+        AND identity_key = ?
+        AND day >= ?
+      ORDER BY day ASC
+    `)
+
+    return (stmt.all(
+      account.id,
+      this.getAccountIdentityKey(account),
+      this.formatLocalDay(sinceDate.getTime())
+    ) as AccountStatsHistoryRow[]).map(this.rowToAccountStatsHistoryPoint)
   }
 
   // ========== Draft Methods ==========
@@ -1213,6 +1356,18 @@ export class DatabaseService {
     }
   }
 
+  private rowToAccountStatsHistoryPoint(row: AccountStatsHistoryRow): AccountStatsHistoryPoint {
+    return {
+      day: row.day,
+      fans: row.fans ?? undefined,
+      following: row.following ?? undefined,
+      likes: row.likes ?? undefined,
+      works: row.works ?? undefined,
+      views: row.views ?? undefined,
+      recordedAt: row.recorded_at
+    }
+  }
+
   private rowToProxyProfile(row: ProxyProfileRow): ProxyProfile {
     return {
       id: row.id,
@@ -1391,6 +1546,29 @@ export class DatabaseService {
     }
   }
 
+  private getAccountIdentityKey(account: Pick<Account, 'username' | 'id'>): string {
+    // An empty username would collapse all history under '' and break per-identity
+    // isolation (and silently hide a real account's history), so fall back to the
+    // stable account id. Cap length to keep the key — and thus per-day row count
+    // and index size — bounded against renderer-supplied usernames.
+    const trimmed = account.username.trim()
+    const key = trimmed.length > 0 ? trimmed : account.id
+    return key.slice(0, STATS_IDENTITY_KEY_MAX_LENGTH)
+  }
+
+  private clampStatsHistoryDays(value: number): number {
+    if (!Number.isFinite(value)) return 90
+    return Math.min(365, Math.max(1, Math.trunc(value)))
+  }
+
+  private formatLocalDay(time: number): string {
+    const date = new Date(time)
+    const year = date.getFullYear()
+    const month = String(date.getMonth() + 1).padStart(2, '0')
+    const day = String(date.getDate()).padStart(2, '0')
+    return `${year}-${month}-${day}`
+  }
+
   private parseProxyConfig(value: string | null, accountId: string): ProxyConfig | undefined {
     if (!value) return undefined
 
@@ -1543,6 +1721,16 @@ interface AccountRow {
   is_default: number
   created_at: number
   updated_at: number
+}
+
+interface AccountStatsHistoryRow {
+  day: string
+  fans: number | null
+  following: number | null
+  likes: number | null
+  works: number | null
+  views: number | null
+  recorded_at: number
 }
 
 interface DraftRow {
