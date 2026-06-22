@@ -12,6 +12,7 @@ const NATIVE_VIEWS = new Set<NativeView>([
   'publish-article',
   'publish-podcast',
   'accounts',
+  'analytics',
   'drafts',
   'history',
   'settings',

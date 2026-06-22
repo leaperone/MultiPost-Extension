@@ -7,6 +7,7 @@ import {
   FileTextIcon,
   HomeIcon,
   InfoIcon,
+  LineChart,
   Loader2,
   MessageCircleHeartIcon,
   MessagesSquareIcon,
@@ -25,6 +26,7 @@ import { HomeView } from './HomeView'
 import { FeedbackDialog } from './FeedbackDialog'
 import { PublishView } from './PublishView'
 import { AccountsPage } from '../pages/AccountsPage'
+import { AnalyticsDashboard } from '../pages/AnalyticsDashboard'
 import { DraftsPage } from '../pages/DraftsPage'
 import { HistoryPage } from '../pages/HistoryPage'
 import { SettingsPage } from '../pages/SettingsPage'
@@ -45,6 +47,7 @@ interface NavItem {
 const MAIN_NAV: NavItem[] = [
   { view: 'home', label: '首页', icon: <HomeIcon className="size-4" /> },
   { view: 'accounts', label: '账号', icon: <UsersIcon className="size-4" /> },
+  { view: 'analytics', label: '数据', icon: <LineChart className="size-4" /> },
   { view: 'drafts', label: '草稿', icon: <NotebookPenIcon className="size-4" /> },
   { view: 'history', label: '历史', icon: <ClockIcon className="size-4" /> }
 ]
@@ -228,6 +231,8 @@ function ActivePage({ view }: { view: NativeView }): React.ReactElement {
       return <PublishView contentType="PODCAST" />
     case 'accounts':
       return <AccountsPage onLoginAccount={(account) => void openAccountBrowser(account.id)} />
+    case 'analytics':
+      return <AnalyticsDashboard />
     case 'drafts':
       return <DraftsPage onEditDraft={handleEditDraft} />
     case 'history':

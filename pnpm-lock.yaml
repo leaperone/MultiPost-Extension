@@ -168,6 +168,9 @@ importers:
       proxy-chain:
         specifier: ^3.0.0
         version: 3.0.0
+      recharts:
+        specifier: ^2.15.1
+        version: 2.15.1(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
       sonner:
         specifier: ^1.7.4
         version: 1.7.4(react-dom@19.2.3(react@19.2.3))(react@19.2.3)

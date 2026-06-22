@@ -24,13 +24,9 @@ import {
   PLATFORMS
 } from '@shared/constants'
 import {
-  isAnalyticsSupported,
   type Account,
-  type AccountAnalytics,
   type AccountComment,
-  type AccountHealthStatus,
   type AccountPost,
-  type AccountStats,
   type AccountGroup,
   type DmMessage,
   type DmSession,
@@ -46,6 +42,11 @@ import {
   PROXY_NONE_VALUE,
   ProxyProfileFormDialog
 } from './ProxyPage'
+import {
+  formatAccountHealthBadge,
+  formatAccountStats,
+  getAccountLabel
+} from '../account/analytics-shared'
 import { Button } from '../ui/button'
 import { Card } from '../ui/card'
 import { Badge } from '../ui/badge'
@@ -65,6 +66,7 @@ import {
   DialogTitle
 } from '../ui/dialog'
 import { toast } from '../ui/sonner'
+import { useUiStore } from '../../store/ui.store'
 
 interface AccountsPageProps {
   onLoginAccount?: (account: Account) => void
@@ -109,55 +111,6 @@ function getPlatformContentTypes(platform: PlatformType): SyncContentType[] {
   return PLATFORMS[platform]?.supportedContentTypes || []
 }
 
-function getAccountLabel(account: Account): string {
-  return account.displayName || account.username || '未命名账号'
-}
-
-const ACCOUNT_STAT_LABELS: Array<{
-  key: keyof Pick<AccountStats, 'fans' | 'following' | 'likes' | 'works' | 'views'>
-  label: string
-}> = [
-  { key: 'fans', label: '粉丝' },
-  { key: 'following', label: '关注' },
-  { key: 'likes', label: '获赞' },
-  { key: 'works', label: '作品' },
-  { key: 'views', label: '播放' }
-]
-
-const ANALYTICS_METRIC_LABELS: Array<{
-  key: keyof AccountAnalytics['overview']
-  label: string
-}> = [
-  { key: 'fans', label: '粉丝' },
-  { key: 'following', label: '关注' },
-  { key: 'views', label: '播放' },
-  { key: 'likes', label: '获赞' },
-  { key: 'comments', label: '评论' },
-  { key: 'works', label: '作品' }
-]
-
-function supportsAccountAnalytics(platform: PlatformType): boolean {
-  return isAnalyticsSupported(platform)
-}
-
-function formatAccountStats(stats: AccountStats | undefined): string | null {
-  if (!stats) return null
-
-  const parts = ACCOUNT_STAT_LABELS.flatMap(({ key, label }) => {
-    const value = stats[key]
-    return typeof value === 'number' && Number.isFinite(value)
-      ? [`${value.toLocaleString()} ${label}`]
-      : []
-  })
-
-  return parts.length > 0 ? parts.join(' · ') : null
-}
-
-function formatAccountHealthBadge(health: AccountHealthStatus | undefined): string | null {
-  if (!health || (health.state !== 'restricted' && health.state !== 'banned')) return null
-  return health.reason || (health.state === 'banned' ? '账号被封禁' : '账号受限')
-}
-
 function PlatformContentBadges({ platform }: { platform: PlatformType }): React.ReactElement {
   return (
     <div className="flex flex-wrap gap-1.5">
@@ -190,104 +143,6 @@ function SearchInput({
         placeholder={placeholder}
         className="pl-8"
       />
-    </div>
-  )
-}
-
-function formatAnalyticsValue(value: number): string {
-  return Number.isFinite(value) ? value.toLocaleString() : ''
-}
-
-function AnalyticsSparkline({
-  points
-}: {
-  points: AccountAnalytics['fansTrend']
-}): React.ReactElement | null {
-  if (points.length === 0) return null
-
-  const max = Math.max(...points.map((point) => Math.abs(point.value)), 1)
-
-  return (
-    <div className="flex flex-col gap-2">
-      <div className="flex items-center justify-between text-xs text-muted-foreground">
-        <span>粉丝趋势</span>
-        <span>{points.length} 天</span>
-      </div>
-      <div className="flex h-24 items-end gap-1 border border-border/60 px-2 py-2">
-        {points.map((point, index) => {
-          const height = Math.max(4, Math.round((Math.abs(point.value) / max) * 100))
-          return (
-            <div
-              key={`${point.date}-${index}`}
-              className={point.value >= 0 ? 'flex-1 bg-foreground' : 'flex-1 bg-muted'}
-              style={{ height: `${height}%` }}
-              title={`${point.date}: ${formatAnalyticsValue(point.value)}`}
-            />
-          )
-        })}
-      </div>
-    </div>
-  )
-}
-
-function AnalyticsDialogBody({
-  analytics,
-  loading,
-  error
-}: {
-  analytics: AccountAnalytics | null
-  loading: boolean
-  error: string | null
-}): React.ReactElement {
-  if (loading) {
-    return (
-      <div className="flex h-40 items-center justify-center border border-border/60">
-        <Spinner size="sm" label="加载数据..." />
-      </div>
-    )
-  }
-
-  if (error) {
-    return (
-      <div className="flex h-40 flex-col items-center justify-center gap-1 border border-border/60 px-4 text-center">
-        <span className="text-sm">加载失败</span>
-        <span className="text-xs text-muted-foreground">{error}</span>
-      </div>
-    )
-  }
-
-  const metrics = ANALYTICS_METRIC_LABELS.flatMap(({ key, label }) => {
-    const value = analytics?.overview[key]
-    return typeof value === 'number' && Number.isFinite(value) ? [{ key, label, value }] : []
-  })
-  const fansTrend = analytics?.fansTrend ?? []
-
-  if (metrics.length === 0 && fansTrend.length === 0) {
-    return (
-      <div className="flex h-40 items-center justify-center border border-border/60 text-sm text-muted-foreground">
-        暂无数据
-      </div>
-    )
-  }
-
-  return (
-    <div className="flex flex-col gap-4">
-      {metrics.length > 0 && (
-        <div className="grid grid-cols-2 border border-border/60 sm:grid-cols-3">
-          {metrics.map((metric) => (
-            <div key={metric.key} className="border-b border-r border-border/60 p-3 last:border-r-0">
-              <div className="text-xs text-muted-foreground">{metric.label}</div>
-              <div className="mt-1 text-lg tabular-nums">{formatAnalyticsValue(metric.value)}</div>
-            </div>
-          ))}
-        </div>
-      )}
-      <AnalyticsSparkline points={fansTrend} />
-      {analytics?.updatedAt && (
-        <div className="text-xs text-muted-foreground">
-          更新于 {new Date(analytics.updatedAt).toLocaleString()}
-        </div>
-      )}
     </div>
   )
 }
@@ -872,6 +727,7 @@ function AccountInteractionsDialog({
 }
 
 export function AccountsPage({ onLoginAccount }: AccountsPageProps): React.ReactElement {
+  const openAnalyticsForAccount = useUiStore((state) => state.openAnalyticsForAccount)
   const [accounts, setAccounts] = useState<Account[]>([])
   const [groups, setGroups] = useState<AccountGroup[]>([])
   const [proxies, setProxies] = useState<ProxyProfile[]>([])
@@ -903,10 +759,6 @@ export function AccountsPage({ onLoginAccount }: AccountsPageProps): React.React
   // clears its login session, so it must never be one accidental click away).
   const [accountToDelete, setAccountToDelete] = useState<Account | null>(null)
   const [groupToDelete, setGroupToDelete] = useState<AccountGroup | null>(null)
-  const [analyticsAccount, setAnalyticsAccount] = useState<Account | null>(null)
-  const [accountAnalytics, setAccountAnalytics] = useState<AccountAnalytics | null>(null)
-  const [analyticsLoading, setAnalyticsLoading] = useState(false)
-  const [analyticsError, setAnalyticsError] = useState<string | null>(null)
   const [interactionsAccount, setInteractionsAccount] = useState<Account | null>(null)
 
   // List filters (platform rail + toolbar), modeled after mature account managers
@@ -959,38 +811,6 @@ export function AccountsPage({ onLoginAccount }: AccountsPageProps): React.React
       )
     })
   }, [])
-
-  useEffect(() => {
-    if (!analyticsAccount) return
-
-    let cancelled = false
-    setAccountAnalytics(null)
-    setAnalyticsError(null)
-    setAnalyticsLoading(true)
-
-    window.api.account
-      .getAnalytics(analyticsAccount.id)
-      .then((analytics) => {
-        if (!cancelled) {
-          setAccountAnalytics(analytics)
-        }
-      })
-      .catch((error) => {
-        if (!cancelled) {
-          console.error('Failed to load account analytics:', error)
-          setAnalyticsError(error instanceof Error ? error.message : '无法加载账号数据')
-        }
-      })
-      .finally(() => {
-        if (!cancelled) {
-          setAnalyticsLoading(false)
-        }
-      })
-
-    return () => {
-      cancelled = true
-    }
-  }, [analyticsAccount])
 
   const [refreshingIds, setRefreshingIds] = useState<Set<string>>(new Set())
   const [isRefreshingAll, setIsRefreshingAll] = useState(false)
@@ -1517,8 +1337,7 @@ export function AccountsPage({ onLoginAccount }: AccountsPageProps): React.React
                 const healthBadge = account.isLoggedIn
                   ? formatAccountHealthBadge(account.health)
                   : null
-                const canViewAnalytics =
-                  account.isLoggedIn && supportsAccountAnalytics(account.platform)
+                const canViewAnalytics = account.isLoggedIn || Boolean(statsLabel)
                 const canViewInteractions =
                   account.isLoggedIn && account.platform === 'weixinchannel'
 
@@ -1629,7 +1448,7 @@ export function AccountsPage({ onLoginAccount }: AccountsPageProps): React.React
                             variant="ghost"
                             className="h-7 px-2 text-xs font-normal"
                             aria-label="查看账号数据"
-                            onClick={() => setAnalyticsAccount(account)}
+                            onClick={() => openAnalyticsForAccount(account.id)}
                           >
                             <BarChart3 />
                             数据
@@ -1686,36 +1505,6 @@ export function AccountsPage({ onLoginAccount }: AccountsPageProps): React.React
             </div>
           </Card>
         )}
-
-        {/* Account Analytics Dialog */}
-        <Dialog
-          open={analyticsAccount !== null}
-          onOpenChange={(open) => {
-            if (!open) {
-              setAnalyticsAccount(null)
-              setAccountAnalytics(null)
-              setAnalyticsError(null)
-            }
-          }}
-        >
-          <DialogContent className="max-w-[560px]">
-            <DialogHeader>
-              <DialogTitle>账号数据</DialogTitle>
-              <DialogDescription>
-                {analyticsAccount
-                  ? `${getAccountLabel(analyticsAccount)} · ${
-                      PLATFORMS[analyticsAccount.platform]?.name || analyticsAccount.platform
-                    }`
-                  : ''}
-              </DialogDescription>
-            </DialogHeader>
-            <AnalyticsDialogBody
-              analytics={accountAnalytics}
-              loading={analyticsLoading}
-              error={analyticsError}
-            />
-          </DialogContent>
-        </Dialog>
 
         <AccountInteractionsDialog
           account={interactionsAccount}
