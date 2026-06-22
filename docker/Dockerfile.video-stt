@@ -17,9 +17,10 @@ COPY --from=deps /app/db /app/db
 RUN deno check src/main.ts
 
 FROM denoland/deno:latest AS video-stt-worker
-RUN apt-get update && apt-get install -y openssl ffmpeg && rm -rf /var/lib/apt/lists/* \
+RUN apt-get update && apt-get install -y openssl ffmpeg procps && rm -rf /var/lib/apt/lists/* \
     || (sed -i 's|deb.debian.org|mirrors.aliyun.com|g' /etc/apt/sources.list.d/debian.sources \
-    && apt-get update && apt-get install -y openssl ffmpeg && rm -rf /var/lib/apt/lists/*)
+    && apt-get update && apt-get install -y openssl ffmpeg procps && rm -rf /var/lib/apt/lists/*)
 WORKDIR /app/apps/video-stt-worker
 COPY --from=video-stt-worker-cache /app /app
+HEALTHCHECK --interval=30s --timeout=5s --start-period=20s --retries=3 CMD ["pgrep", "-x", "deno"]
 CMD ["deno", "run", "-A", "src/main.ts"]

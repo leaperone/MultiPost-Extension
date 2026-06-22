@@ -96,6 +96,7 @@ RUN if [ -d /app/apps/web/dist/client ]; then \
     fi
 WORKDIR /app/apps/web
 EXPOSE 3000
+HEALTHCHECK --interval=30s --timeout=5s --start-period=40s --retries=3 CMD ["wget","-q","-O","/dev/null","http://127.0.0.1:3000/api/health"]
 CMD [ "node", "dist/server/server.js" ]
 
 FROM denoland/deno:latest as backend-cache
@@ -108,6 +109,7 @@ FROM denoland/deno:latest as backend
 RUN apt-get update && apt-get install -y openssl
 WORKDIR /app/apps/backend
 COPY --from=backend-cache /app /app
+HEALTHCHECK --interval=30s --timeout=5s --start-period=40s --retries=3 CMD ["deno", "eval", "const r = await fetch('http://127.0.0.1:9000/health'); Deno.exit(r.ok ? 0 : 1)"]
 CMD ["deno", "run", "-A", "main.ts"]
 
 FROM denoland/deno:latest as video-stt-worker-cache
@@ -117,7 +119,8 @@ COPY --from=deps /app/db /app/db
 RUN deno check src/main.ts
 
 FROM denoland/deno:latest as video-stt-worker
-RUN apt-get update && apt-get install -y openssl ffmpeg
+RUN apt-get update && apt-get install -y openssl ffmpeg procps
 WORKDIR /app/apps/video-stt-worker
 COPY --from=video-stt-worker-cache /app /app
+HEALTHCHECK --interval=30s --timeout=5s --start-period=20s --retries=3 CMD ["pgrep", "-x", "deno"]
 CMD ["deno", "run", "-A", "src/main.ts"]
