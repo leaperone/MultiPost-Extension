@@ -442,8 +442,12 @@ export class DatabaseService {
 
   deleteAccountGroup(id: string): void {
     if (!this.db) throw new Error('Database not initialized')
-    const stmt = this.db.prepare('DELETE FROM account_groups WHERE id = ?')
-    stmt.run(id)
+    const db = this.db
+    const deleteGroup = db.transaction(() => {
+      db.prepare('UPDATE accounts SET group_id = NULL WHERE group_id = ?').run(id)
+      db.prepare('DELETE FROM account_groups WHERE id = ?').run(id)
+    })
+    deleteGroup()
   }
 
   // ========== Account Methods ==========
@@ -591,6 +595,8 @@ export class DatabaseService {
     if (!this.db) throw new Error('Database not initialized')
     const db = this.db
     const deleteAccount = db.transaction(() => {
+      db.prepare('DELETE FROM publish_history WHERE account_id = ?').run(id)
+      db.prepare('DELETE FROM publish_tasks WHERE account_id = ?').run(id)
       db.prepare('DELETE FROM account_stats_history WHERE account_id = ?').run(id)
       db.prepare('DELETE FROM accounts WHERE id = ?').run(id)
     })

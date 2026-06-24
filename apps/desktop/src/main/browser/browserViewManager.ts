@@ -38,6 +38,7 @@ import {
   type PublishStatus,
   type PublishStatusSnapshot,
   type PublishTargetResult,
+  type PublishHistory,
   type DesktopToastPayload,
   type DesktopToastOverlaySize
 } from '../../shared/types'
@@ -160,9 +161,23 @@ interface ExecutorPublishTargetState {
   extensionKey?: string
 }
 
+interface PublishHistoryContent {
+  title: string
+  content: string
+}
+
+interface PublishHistoryTarget {
+  accountId: string
+  platform: PlatformType
+  status: PublishTargetStatus
+  error?: string
+  postUrl?: string
+}
+
 interface ExecutorPublishRun {
   id: string
   contentType: SyncContentType
+  historyContent: PublishHistoryContent
   status: PublishGroupStatus
   targets: Map<string, ExecutorPublishTargetState>
   createdAt: number
@@ -364,6 +379,8 @@ export class BrowserViewManager {
   private notifiedGroupIds: Set<string> = new Set()
   private summaryEmittedGroupIds: Set<string> = new Set()
   private emittedPublishErrorKeys: Set<string> = new Set()
+  private publishHistoryAttemptByTarget: Map<string, number> = new Map()
+  private persistedPublishHistoryKeys: Set<string> = new Set()
   private platformPublishPayloads: Map<string, SyncContentData> = new Map()
   private executorPublishPayloads: Map<string, SyncContentData> = new Map()
   private activeGroupId: string | null = null
@@ -650,6 +667,142 @@ export class BrowserViewManager {
     this.sendPublishEvent('multipost:publish:complete', payload)
   }
 
+  private getPublishHistoryTargetKey(runId: string, accountId: string): string {
+    return `${runId}:${accountId}`
+  }
+
+  private getPublishHistoryKey(runId: string, accountId: string, attempt: number): string {
+    return `${this.getPublishHistoryTargetKey(runId, accountId)}:${attempt}`
+  }
+
+  private getPublishHistoryAttempt(runId: string, accountId: string): number {
+    return this.publishHistoryAttemptByTarget.get(
+      this.getPublishHistoryTargetKey(runId, accountId)
+    ) ?? 0
+  }
+
+  private startNewPublishHistoryAttempt(runId: string, accountId: string): void {
+    const targetKey = this.getPublishHistoryTargetKey(runId, accountId)
+    const nextAttempt = (this.publishHistoryAttemptByTarget.get(targetKey) ?? 0) + 1
+    this.publishHistoryAttemptByTarget.set(targetKey, nextAttempt)
+    this.persistedPublishHistoryKeys.delete(
+      this.getPublishHistoryKey(runId, accountId, nextAttempt)
+    )
+  }
+
+  private clearPublishHistoryMarkers(runId: string): void {
+    const prefix = `${runId}:`
+    for (const key of Array.from(this.publishHistoryAttemptByTarget.keys())) {
+      if (key.startsWith(prefix)) {
+        this.publishHistoryAttemptByTarget.delete(key)
+      }
+    }
+    for (const key of Array.from(this.persistedPublishHistoryKeys)) {
+      if (key.startsWith(prefix)) {
+        this.persistedPublishHistoryKeys.delete(key)
+      }
+    }
+  }
+
+  private derivePublishHistoryContent(
+    contentType: SyncContentType,
+    data: unknown
+  ): PublishHistoryContent {
+    const coerceString = (value: unknown): string => {
+      if (value === null || value === undefined) {
+        return ''
+      }
+      try {
+        return String(value)
+      } catch {
+        return ''
+      }
+    }
+    const payload =
+      data !== null && typeof data === 'object' ? (data as Record<string, unknown>) : null
+    const read = (key: string): string => coerceString(payload?.[key])
+    const primitiveContent = payload ? '' : coerceString(data)
+    const contentKeys =
+      contentType === 'ARTICLE'
+        ? ['markdownContent', 'htmlContent', 'content', 'description', 'digest']
+        : contentType === 'PODCAST'
+          ? ['description', 'content', 'markdownContent', 'htmlContent', 'digest']
+          : ['content', 'description', 'markdownContent', 'htmlContent', 'digest']
+    const content =
+      contentKeys.map(read).find((value) => value.trim().length > 0) ?? primitiveContent
+    const firstContentLine = content
+      .split(/\r?\n/)
+      .map((line) => line.trim())
+      .find((line) => line.length > 0)
+    const title = read('title').trim() || firstContentLine || '无标题'
+
+    return {
+      title,
+      content
+    }
+  }
+
+  private getPublishHistoryStatus(status: PublishTargetStatus): PublishHistory['status'] | null {
+    if (status === 'success') {
+      return 'success'
+    }
+    if (status === 'failed') {
+      return 'failed'
+    }
+    return null
+  }
+
+  private writePublishHistoryForTargets(params: {
+    runId: string
+    contentType: SyncContentType
+    historyContent: PublishHistoryContent
+    targets: PublishHistoryTarget[]
+  }): void {
+    const db = DatabaseService.getInstance()
+
+    for (const target of params.targets) {
+      const status = this.getPublishHistoryStatus(target.status)
+      if (!status) {
+        continue
+      }
+
+      const attempt = this.getPublishHistoryAttempt(params.runId, target.accountId)
+      const historyKey = this.getPublishHistoryKey(params.runId, target.accountId, attempt)
+      if (this.persistedPublishHistoryKeys.has(historyKey)) {
+        continue
+      }
+
+      if (!db.getAccount(target.accountId)) {
+        continue
+      }
+
+      const now = Date.now()
+      const history: PublishHistory = {
+        id: uuidv4(),
+        contentType: params.contentType,
+        title: params.historyContent.title,
+        content: params.historyContent.content,
+        platform: target.platform,
+        accountId: target.accountId,
+        status,
+        errorMessage: target.error,
+        platformPostUrl: target.postUrl,
+        publishedAt: now,
+        createdAt: now
+      }
+
+      try {
+        db.createPublishHistory(history)
+        this.persistedPublishHistoryKeys.add(historyKey)
+      } catch (error) {
+        publishLogger.error(
+          `Failed to write publish history for ${params.runId}/${target.accountId}:`,
+          error
+        )
+      }
+    }
+  }
+
   private buildGroupTargetResult(
     target: PublishGroupView['views'] extends Map<string, infer T> ? T : never
   ): PublishTargetResult {
@@ -723,6 +876,7 @@ export class BrowserViewManager {
         this.emittedPublishErrorKeys.delete(key)
       }
     }
+    this.clearPublishHistoryMarkers(taskId)
   }
 
   private statusSnapshotToWebStatus(snapshot: PublishStatusSnapshot): PublishStatus {
@@ -777,6 +931,23 @@ export class BrowserViewManager {
     if (details.extensionKey !== undefined) target.extensionKey = details.extensionKey
     if (this.isTerminalTargetStatus(status) || status === 'ready') {
       target.currentStep = undefined
+    }
+    if (this.isTerminalTargetStatus(previousStatus) && !this.isTerminalTargetStatus(status)) {
+      this.startNewPublishHistoryAttempt(groupId, accountId)
+      // Rolling a terminal target back (retry / fill-all) starts a fresh attempt:
+      // drop the prior attempt's result metadata so the next terminal write records
+      // clean error/postUrl for this attempt instead of leaking stale values.
+      if (details.error === undefined) target.error = undefined
+      if (details.postUrl === undefined) target.postUrl = undefined
+      if (details.extensionKey === undefined) target.extensionKey = undefined
+    }
+    if (this.getPublishHistoryStatus(status)) {
+      this.writePublishHistoryForTargets({
+        runId: group.id,
+        contentType: group.contentType,
+        historyContent: this.derivePublishHistoryContent(group.contentType, group.data),
+        targets: [target]
+      })
     }
 
     this.updateGroupStatus(groupId)
@@ -915,6 +1086,7 @@ export class BrowserViewManager {
 
   beginExecutorPublishRun(params: {
     contentType: SyncContentType
+    data: SyncContentData
     targets: Array<{ accountId: string; platform: PlatformType }>
   }): string {
     const taskId = `executor-${uuidv4()}`
@@ -931,6 +1103,7 @@ export class BrowserViewManager {
     const run: ExecutorPublishRun = {
       id: taskId,
       contentType: params.contentType,
+      historyContent: this.derivePublishHistoryContent(params.contentType, params.data),
       status: 'preparing',
       targets,
       createdAt: Date.now(),
@@ -984,6 +1157,22 @@ export class BrowserViewManager {
     if (details.error !== undefined) target.error = details.error
     if (details.postUrl !== undefined) target.postUrl = details.postUrl
     if (details.extensionKey !== undefined) target.extensionKey = details.extensionKey
+    if (this.isTerminalTargetStatus(previousStatus) && !this.isTerminalTargetStatus(status)) {
+      this.startNewPublishHistoryAttempt(taskId, accountId)
+      // See setGroupTargetStatus: reset stale per-attempt result on rollover so the
+      // next terminal write does not inherit the previous attempt's error/postUrl.
+      if (details.error === undefined) target.error = undefined
+      if (details.postUrl === undefined) target.postUrl = undefined
+      if (details.extensionKey === undefined) target.extensionKey = undefined
+    }
+    if (this.getPublishHistoryStatus(status)) {
+      this.writePublishHistoryForTargets({
+        runId: run.id,
+        contentType: run.contentType,
+        historyContent: run.historyContent,
+        targets: [target]
+      })
+    }
     this.updateExecutorRunStatus(run)
 
     if (previousStatus !== status) {
@@ -4302,6 +4491,7 @@ export class BrowserViewManager {
       }
     }
 
+    this.emitGroupRunFinished(groupId)
     return fillResults
   }
 

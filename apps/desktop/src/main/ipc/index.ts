@@ -992,23 +992,38 @@ export function registerIpcHandlers(
       const taskId = executor
         ? manager.beginExecutorPublishRun({
             contentType,
+            data,
             targets: [{ accountId, platform: executor.platform }]
           })
         : undefined
 
-      // Wait for page to load
-      await new Promise((resolve) => setTimeout(resolve, 2000))
+      try {
+        // Wait for page to load
+        await new Promise((resolve) => setTimeout(resolve, 2000))
 
-      // Fill content in executor view (now keyed by accountId)
-      const fillResult = await manager.fillExecutorContent(accountId, contentType, data, autoSubmit === true, taskId)
+        // Fill content in executor view (now keyed by accountId)
+        const fillResult = await manager.fillExecutorContent(
+          accountId,
+          contentType,
+          data,
+          autoSubmit === true,
+          taskId
+        )
 
-      // Auto submit if enabled
-      if (autoSubmit && !fillResult.skipAdapterSubmit) {
-        await new Promise((resolve) => setTimeout(resolve, 1000))
-        await manager.submitExecutorContent(accountId, contentType, taskId)
-      }
-      if (taskId) {
-        manager.finishExecutorPublishRun(taskId)
+        // Auto submit if enabled
+        if (autoSubmit && !fillResult.skipAdapterSubmit) {
+          await new Promise((resolve) => setTimeout(resolve, 1000))
+          await manager.submitExecutorContent(accountId, contentType, taskId)
+        }
+      } catch (error) {
+        if (taskId) {
+          manager.markExecutorPublishTargetFailed(taskId, accountId, error)
+        }
+        throw error
+      } finally {
+        if (taskId) {
+          manager.finishExecutorPublishRun(taskId)
+        }
       }
     }
   )
@@ -1503,6 +1518,7 @@ export function registerIpcHandlers(
 
       const taskId = manager.beginExecutorPublishRun({
         contentType,
+        data,
         targets: [{ accountId, platform: account.platform }]
       })
 
@@ -1604,7 +1620,7 @@ export function registerIpcHandlers(
       }
 
       const { contentType, targets, data, autoSubmit } = params
-      const taskId = manager.beginExecutorPublishRun({ contentType, targets })
+      const taskId = manager.beginExecutorPublishRun({ contentType, data, targets })
 
       for (const target of targets) {
         if (manager.isPublishCancelled(taskId)) {
