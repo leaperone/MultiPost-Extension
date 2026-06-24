@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState } from 'react'
 import { FileText, Trash2, Edit } from 'lucide-react'
 import { CONTENT_TYPE_LABELS } from '@shared/constants'
 import type { Draft, SyncContentType } from '@shared/types'
@@ -10,6 +10,7 @@ import { Tooltip } from '../ui/tooltip'
 import { ConfirmDialog } from '../ui/confirm-dialog'
 import { Spinner } from '../ui/spinner'
 import { toast } from '../ui/sonner'
+import { useDeleteDraft, useDrafts } from '../../lib/queries'
 
 interface DraftsPageProps {
   onEditDraft?: (draft: Draft) => void
@@ -37,34 +38,16 @@ function formatTime(timestamp: number): string {
 }
 
 export function DraftsPage({ onEditDraft }: DraftsPageProps): React.ReactElement {
-  const [drafts, setDrafts] = useState<Draft[]>([])
-  const [loading, setLoading] = useState(true)
   const [selectedType, setSelectedType] = useState<SyncContentType | 'all'>('all')
   const [draftToDelete, setDraftToDelete] = useState<Draft | null>(null)
-
-  const loadDrafts = useCallback(async () => {
-    try {
-      setLoading(true)
-      const data = await window.api.draft.list(
-        selectedType === 'all' ? undefined : selectedType
-      )
-      setDrafts(data)
-    } catch (error) {
-      console.error('Failed to load drafts:', error)
-      toast.error('无法加载草稿列表', { description: '请稍后重试' })
-    } finally {
-      setLoading(false)
-    }
-  }, [selectedType])
-
-  useEffect(() => {
-    loadDrafts()
-  }, [loadDrafts])
+  const draftsQuery = useDrafts(selectedType === 'all' ? undefined : selectedType)
+  const deleteDraft = useDeleteDraft()
+  const drafts = draftsQuery.data ?? []
+  const loading = draftsQuery.isPending
 
   const handleDelete = async (id: string) => {
     try {
-      await window.api.draft.delete(id)
-      setDrafts((prev) => prev.filter((d) => d.id !== id))
+      await deleteDraft.mutateAsync(id)
       toast('草稿已删除')
     } catch (error) {
       console.error('Failed to delete draft:', error)

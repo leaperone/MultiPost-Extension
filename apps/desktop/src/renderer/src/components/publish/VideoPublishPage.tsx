@@ -21,6 +21,7 @@ import {
   type PublishStep
 } from './shared'
 import { clearFormCache, loadFormCache, saveFormCache } from '../../lib/formCache'
+import { useCreateDraft, useUpdateDraft } from '../../lib/queries'
 
 const VIDEO_FILE_FILTERS = [
   { name: '视频', extensions: ['mp4', 'mov', 'avi', 'mkv', 'webm', 'flv', 'm4v'] }
@@ -80,6 +81,8 @@ export function VideoPublishPage({
   const [currentDraftId, setCurrentDraftId] = useState<string | null>(
     cachedForm?.currentDraftId ?? null
   )
+  const createDraft = useCreateDraft()
+  const updateDraft = useUpdateDraft()
 
   const initialSelection = useMemo<InitialAccountSelection | undefined>(
     () =>
@@ -275,9 +278,9 @@ export function VideoPublishPage({
       }
 
       if (currentDraftId) {
-        await window.api.draft.update(currentDraftId, draftData)
+        await updateDraft.mutateAsync({ id: currentDraftId, data: draftData })
       } else {
-        const newDraft = await window.api.draft.create(draftData)
+        const newDraft = await createDraft.mutateAsync(draftData)
         setCurrentDraftId(newDraft.id)
       }
 
@@ -291,7 +294,7 @@ export function VideoPublishPage({
     } finally {
       setIsSavingDraft(false)
     }
-  }, [title, description, tags, videoFile, coverFile, selectedPlatforms, currentDraftId, onDraftSaved])
+  }, [title, description, tags, videoFile, coverFile, selectedPlatforms, currentDraftId, onDraftSaved, createDraft, updateDraft])
 
   const isContentValid = title.trim().length > 0 && videoFile !== null
   const hasSelectedTargets = selectedAccountIds.size > 0 || selectedOtherPlatforms.size > 0

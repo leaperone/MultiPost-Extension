@@ -135,6 +135,9 @@ importers:
       '@sentry/electron':
         specifier: ^7.13.0
         version: 7.13.0
+      '@tanstack/react-query':
+        specifier: ^5.101.0
+        version: 5.101.0(react@19.2.3)
       better-sqlite3:
         specifier: ^11.8.1
         version: 11.10.0

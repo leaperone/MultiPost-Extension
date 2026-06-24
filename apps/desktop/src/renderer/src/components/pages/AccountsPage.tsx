@@ -26,13 +26,9 @@ import {
 import {
   type Account,
   type AccountComment,
-  type AccountPost,
   type AccountGroup,
-  type DmMessage,
-  type DmSession,
   type PlatformType,
   type ProxyProfile,
-  type ProxySettings,
   type SyncContentType
 } from '@shared/types'
 import { PLATFORM_CATEGORIES, PlatformIcon } from '../publish/shared'
@@ -67,6 +63,25 @@ import {
 } from '../ui/dialog'
 import { toast } from '../ui/sonner'
 import { useUiStore } from '../../store/ui.store'
+import {
+  useAccountComments,
+  useAccountPosts,
+  useAccounts,
+  useCreateAccount,
+  useCreateGroup,
+  useDeleteAccount,
+  useDeleteGroup,
+  useDmMessages,
+  useDmSessions,
+  useGroups,
+  useProxies,
+  useProxySettings,
+  useRefreshAccountInfo,
+  useReplyComment,
+  useSendDm,
+  useSetDefaultAccount,
+  useUpdateAccount
+} from '../../lib/queries'
 
 interface AccountsPageProps {
   onLoginAccount?: (account: Account) => void
@@ -181,92 +196,60 @@ function CommentsPane({
   account: Account
   active: boolean
 }): React.ReactElement {
-  const [posts, setPosts] = useState<AccountPost[]>([])
   const [selectedPostId, setSelectedPostId] = useState('')
-  const [postsLoaded, setPostsLoaded] = useState(false)
-  const [postsLoading, setPostsLoading] = useState(false)
-  const [postsError, setPostsError] = useState<string | null>(null)
-  const [comments, setComments] = useState<AccountComment[]>([])
-  const [commentsLoading, setCommentsLoading] = useState(false)
-  const [commentsError, setCommentsError] = useState<string | null>(null)
   const [replyingTo, setReplyingTo] = useState<AccountComment | null>(null)
   const [replyText, setReplyText] = useState('')
-  const [replySubmitting, setReplySubmitting] = useState(false)
+  const postsQuery = useAccountPosts(account.id, active)
+  const posts = postsQuery.data ?? []
+  const commentsQuery = useAccountComments(account.id, selectedPostId, active && Boolean(selectedPostId))
+  const comments = commentsQuery.data ?? []
+  const replyComment = useReplyComment()
 
-  const loadPosts = useCallback(async () => {
-    setPostsLoading(true)
-    setPostsError(null)
-    try {
-      const result = await window.api.account.listPosts(account.id)
-      setPosts(result)
-      setPostsLoaded(true)
-      setSelectedPostId((current) => current || result[0]?.id || '')
-    } catch (error) {
-      console.error('Failed to load account posts:', error)
-      setPostsError(error instanceof Error ? error.message : '无法加载作品')
-      setPostsLoaded(true)
-    } finally {
-      setPostsLoading(false)
-    }
+  useEffect(() => {
+    setSelectedPostId('')
+    setReplyingTo(null)
+    setReplyText('')
   }, [account.id])
 
-  const loadComments = useCallback(
-    async (postId: string) => {
-      setCommentsLoading(true)
-      setCommentsError(null)
-      try {
-        const result = await window.api.account.listComments(account.id, postId)
-        setComments(result)
-      } catch (error) {
-        console.error('Failed to load account comments:', error)
-        setCommentsError(error instanceof Error ? error.message : '无法加载评论')
-      } finally {
-        setCommentsLoading(false)
-      }
-    },
-    [account.id]
-  )
-
   useEffect(() => {
-    if (active && !postsLoaded) {
-      void loadPosts()
+    if (!active || posts.length === 0) return
+    if (!selectedPostId || !posts.some((post) => post.id === selectedPostId)) {
+      setSelectedPostId(posts[0].id)
     }
-  }, [active, postsLoaded, loadPosts])
-
-  useEffect(() => {
-    if (active && selectedPostId) {
-      void loadComments(selectedPostId)
-    }
-  }, [active, selectedPostId, loadComments])
+  }, [active, posts, selectedPostId])
 
   const selectedPost = posts.find((post) => post.id === selectedPostId)
+  const postsError =
+    postsQuery.error instanceof Error ? postsQuery.error.message : postsQuery.error ? '无法加载作品' : null
+  const commentsError =
+    commentsQuery.error instanceof Error
+      ? commentsQuery.error.message
+      : commentsQuery.error
+        ? '无法加载评论'
+        : null
 
   const handleReply = async (): Promise<void> => {
     const content = replyText.trim()
     if (!selectedPostId || !replyingTo || !content) return
 
-    setReplySubmitting(true)
     try {
-      const created = await window.api.account.replyComment(
-        account.id,
-        selectedPostId,
+      const created = await replyComment.mutateAsync({
+        accountId: account.id,
+        postId: selectedPostId,
         content,
-        replyingTo.id
-      )
+        replyCommentId: replyingTo.id
+      })
       if (!created) {
         throw new Error('平台未返回成功结果')
       }
       setReplyingTo(null)
       setReplyText('')
-      await loadComments(selectedPostId)
       toast('回复已发送')
     } catch (error) {
       console.error('Failed to reply account comment:', error)
       toast.error('回复失败', {
         description: error instanceof Error ? error.message : '请稍后重试'
       })
-    } finally {
-      setReplySubmitting(false)
     }
   }
 
@@ -275,7 +258,7 @@ function CommentsPane({
       <div className="flex min-h-0 flex-col border border-border/60">
         <div className="border-b border-border/60 px-3 py-2 text-sm">作品</div>
         <div className="min-h-0 flex-1 overflow-y-auto">
-          {postsLoading ? (
+          {active && postsQuery.isPending ? (
             <InteractionStateBox label="加载作品..." loading />
           ) : postsError ? (
             <InteractionStateBox label="作品加载失败" detail={postsError} />
@@ -323,8 +306,8 @@ function CommentsPane({
             size="sm"
             variant="ghost"
             className="font-normal"
-            onClick={() => selectedPostId && void loadComments(selectedPostId)}
-            disabled={!selectedPostId || commentsLoading}
+            onClick={() => selectedPostId && void commentsQuery.refetch()}
+            disabled={!selectedPostId || commentsQuery.isFetching}
           >
             <RefreshCw />
             刷新
@@ -333,7 +316,7 @@ function CommentsPane({
         <div className="min-h-0 flex-1 overflow-y-auto">
           {!selectedPostId ? (
             <InteractionStateBox label="请选择作品" />
-          ) : commentsLoading ? (
+          ) : active && commentsQuery.isPending ? (
             <InteractionStateBox label="加载评论..." loading />
           ) : commentsError ? (
             <InteractionStateBox label="评论加载失败" detail={commentsError} />
@@ -405,10 +388,10 @@ function CommentsPane({
                 variant="secondary"
                 className="self-end font-normal"
                 onClick={() => void handleReply()}
-                isLoading={replySubmitting}
+                isLoading={replyComment.isPending}
                 disabled={!replyText.trim()}
               >
-                {!replySubmitting && <Send />}
+                {!replyComment.isPending && <Send />}
                 发送
               </Button>
             </div>
@@ -426,81 +409,54 @@ function DmPane({
   account: Account
   active: boolean
 }): React.ReactElement {
-  const [sessions, setSessions] = useState<DmSession[]>([])
   const [selectedSessionId, setSelectedSessionId] = useState('')
-  const [sessionsLoaded, setSessionsLoaded] = useState(false)
-  const [sessionsLoading, setSessionsLoading] = useState(false)
-  const [sessionsError, setSessionsError] = useState<string | null>(null)
-  const [messages, setMessages] = useState<DmMessage[]>([])
-  const [messagesLoading, setMessagesLoading] = useState(false)
-  const [messagesError, setMessagesError] = useState<string | null>(null)
   const [sendText, setSendText] = useState('')
-  const [sendSubmitting, setSendSubmitting] = useState(false)
+  const sessionsQuery = useDmSessions(account.id, active)
+  const sessions = sessionsQuery.data ?? []
+  const messagesQuery = useDmMessages(account.id, selectedSessionId, active && Boolean(selectedSessionId))
+  const messages = messagesQuery.data ?? []
+  const sendDm = useSendDm()
 
-  const loadSessions = useCallback(async () => {
-    setSessionsLoading(true)
-    setSessionsError(null)
-    try {
-      const result = await window.api.account.listDmSessions(account.id)
-      setSessions(result)
-      setSessionsLoaded(true)
-      setSelectedSessionId((current) => current || result[0]?.id || '')
-    } catch (error) {
-      console.error('Failed to load account DM sessions:', error)
-      setSessionsError(error instanceof Error ? error.message : '无法加载会话')
-      setSessionsLoaded(true)
-    } finally {
-      setSessionsLoading(false)
-    }
+  useEffect(() => {
+    setSelectedSessionId('')
+    setSendText('')
   }, [account.id])
 
-  const loadMessages = useCallback(
-    async (sessionId: string) => {
-      setMessagesLoading(true)
-      setMessagesError(null)
-      try {
-        const result = await window.api.account.listDmMessages(account.id, sessionId)
-        setMessages(result)
-      } catch (error) {
-        console.error('Failed to load account DM messages:', error)
-        setMessagesError(error instanceof Error ? error.message : '无法加载消息')
-      } finally {
-        setMessagesLoading(false)
-      }
-    },
-    [account.id]
-  )
-
   useEffect(() => {
-    if (active && !sessionsLoaded) {
-      void loadSessions()
+    if (!active || sessions.length === 0) return
+    if (!selectedSessionId || !sessions.some((session) => session.id === selectedSessionId)) {
+      setSelectedSessionId(sessions[0].id)
     }
-  }, [active, sessionsLoaded, loadSessions])
-
-  useEffect(() => {
-    if (active && selectedSessionId) {
-      void loadMessages(selectedSessionId)
-    }
-  }, [active, selectedSessionId, loadMessages])
+  }, [active, sessions, selectedSessionId])
 
   const selectedSession = sessions.find((session) => session.id === selectedSessionId)
+  const sessionsError =
+    sessionsQuery.error instanceof Error
+      ? sessionsQuery.error.message
+      : sessionsQuery.error
+        ? '无法加载会话'
+        : null
+  const messagesError =
+    messagesQuery.error instanceof Error
+      ? messagesQuery.error.message
+      : messagesQuery.error
+        ? '无法加载消息'
+        : null
 
   const handleSend = async (): Promise<void> => {
     const text = sendText.trim()
     if (!selectedSession || !text) return
 
-    setSendSubmitting(true)
     try {
-      const sent = await window.api.account.sendDm(
-        account.id,
-        selectedSession.id,
-        selectedSession.peerUsername || selectedSession.id,
+      const sent = await sendDm.mutateAsync({
+        accountId: account.id,
+        sessionId: selectedSession.id,
+        toUsername: selectedSession.peerUsername || selectedSession.id,
         text
-      )
+      })
       if (!sent) {
         throw new Error('平台未返回成功结果')
       }
-      setMessages((current) => [...current, sent])
       setSendText('')
       toast('私信已发送')
     } catch (error) {
@@ -508,8 +464,6 @@ function DmPane({
       toast.error('发送失败', {
         description: error instanceof Error ? error.message : '请稍后重试'
       })
-    } finally {
-      setSendSubmitting(false)
     }
   }
 
@@ -523,14 +477,14 @@ function DmPane({
             variant="ghost"
             className="font-normal"
             aria-label="刷新会话"
-            onClick={() => void loadSessions()}
-            disabled={sessionsLoading}
+            onClick={() => void sessionsQuery.refetch()}
+            disabled={sessionsQuery.isFetching}
           >
             <RefreshCw />
           </Button>
         </div>
         <div className="min-h-0 flex-1 overflow-y-auto">
-          {sessionsLoading ? (
+          {active && sessionsQuery.isPending ? (
             <InteractionStateBox label="加载会话..." loading />
           ) : sessionsError ? (
             <InteractionStateBox label="会话加载失败" detail={sessionsError} />
@@ -584,8 +538,8 @@ function DmPane({
             size="sm"
             variant="ghost"
             className="font-normal"
-            onClick={() => selectedSessionId && void loadMessages(selectedSessionId)}
-            disabled={!selectedSessionId || messagesLoading}
+            onClick={() => selectedSessionId && void messagesQuery.refetch()}
+            disabled={!selectedSessionId || messagesQuery.isFetching}
           >
             <RefreshCw />
             刷新
@@ -594,7 +548,7 @@ function DmPane({
         <div className="min-h-0 flex-1 overflow-y-auto px-3 py-3">
           {!selectedSessionId ? (
             <InteractionStateBox label="请选择会话" />
-          ) : messagesLoading ? (
+          ) : active && messagesQuery.isPending ? (
             <InteractionStateBox label="加载消息..." loading />
           ) : messagesError ? (
             <InteractionStateBox label="消息加载失败" detail={messagesError} />
@@ -644,10 +598,10 @@ function DmPane({
                 variant="secondary"
                 className="self-end font-normal"
                 onClick={() => void handleSend()}
-                isLoading={sendSubmitting}
+                isLoading={sendDm.isPending}
                 disabled={!sendText.trim()}
               >
-                {!sendSubmitting && <Send />}
+                {!sendDm.isPending && <Send />}
                 发送
               </Button>
             </div>
@@ -728,15 +682,34 @@ function AccountInteractionsDialog({
 
 export function AccountsPage({ onLoginAccount }: AccountsPageProps): React.ReactElement {
   const openAnalyticsForAccount = useUiStore((state) => state.openAnalyticsForAccount)
-  const [accounts, setAccounts] = useState<Account[]>([])
-  const [groups, setGroups] = useState<AccountGroup[]>([])
-  const [proxies, setProxies] = useState<ProxyProfile[]>([])
-  const [proxySettings, setProxySettings] = useState<ProxySettings>({
+  const [selectedGroup, setSelectedGroup] = useState<string | null>(null)
+  const accountFilters = useMemo(
+    () => (selectedGroup ? { groupId: selectedGroup } : undefined),
+    [selectedGroup]
+  )
+  const accountsQuery = useAccounts(accountFilters)
+  const groupsQuery = useGroups()
+  const proxiesQuery = useProxies()
+  const proxySettingsQuery = useProxySettings()
+  const createAccount = useCreateAccount()
+  const updateAccount = useUpdateAccount()
+  const deleteAccount = useDeleteAccount()
+  const setDefaultAccount = useSetDefaultAccount()
+  const refreshAccountInfo = useRefreshAccountInfo()
+  const createGroup = useCreateGroup()
+  const deleteGroup = useDeleteGroup()
+  const accounts = accountsQuery.data ?? []
+  const groups = groupsQuery.data ?? []
+  const proxies = proxiesQuery.data ?? []
+  const proxySettings = proxySettingsQuery.data ?? {
     defaultProxyId: null,
     globalProxyId: null
-  })
-  const [selectedGroup, setSelectedGroup] = useState<string | null>(null)
-  const [loading, setLoading] = useState(true)
+  }
+  const loading =
+    accountsQuery.isPending ||
+    groupsQuery.isPending ||
+    proxiesQuery.isPending ||
+    proxySettingsQuery.isPending
 
   const [isAddAccountOpen, setIsAddAccountOpen] = useState(false)
   const [isAddGroupOpen, setIsAddGroupOpen] = useState(false)
@@ -767,51 +740,6 @@ export function AccountsPage({ onLoginAccount }: AccountsPageProps): React.React
   const [accountSearch, setAccountSearch] = useState('')
   const [railSearch, setRailSearch] = useState('')
 
-  const loadData = useCallback(async () => {
-    try {
-      setLoading(true)
-      const [accountsData, groupsData, proxyList, settings] = await Promise.all([
-        window.api.account.list(selectedGroup ? { groupId: selectedGroup } : undefined),
-        window.api.group.list(),
-        window.api.proxy.list(),
-        window.api.proxy.getSettings()
-      ])
-      setAccounts(accountsData)
-      setGroups(groupsData)
-      setProxies(proxyList)
-      setProxySettings(settings)
-    } catch (error) {
-      console.error('Failed to load accounts:', error)
-      toast.error('无法加载账号列表', { description: '请稍后重试，若持续失败请重启应用' })
-    } finally {
-      setLoading(false)
-    }
-  }, [selectedGroup])
-
-  useEffect(() => {
-    loadData()
-  }, [loadData])
-
-  const refreshProxyData = useCallback(async (): Promise<ProxyProfile[]> => {
-    const [proxyList, settings] = await Promise.all([
-      window.api.proxy.list(),
-      window.api.proxy.getSettings()
-    ])
-    setProxies(proxyList)
-    setProxySettings(settings)
-    return proxyList
-  }, [])
-
-  // The main process re-detects accounts in the background (e.g. right after
-  // a login tab closes); merge those updates into the list live.
-  useEffect(() => {
-    return window.api.account.onUpdated((updated) => {
-      setAccounts((prev) =>
-        prev.map((account) => (account.id === updated.id ? updated : account))
-      )
-    })
-  }, [])
-
   const [refreshingIds, setRefreshingIds] = useState<Set<string>>(new Set())
   const [isRefreshingAll, setIsRefreshingAll] = useState(false)
   const [refreshAllProgress, setRefreshAllProgress] = useState({ done: 0, total: 0 })
@@ -819,9 +747,8 @@ export function AccountsPage({ onLoginAccount }: AccountsPageProps): React.React
   const handleRefreshAccount = useCallback(async (account: Account) => {
     setRefreshingIds((prev) => new Set(prev).add(account.id))
     try {
-      const updated = await window.api.account.refreshInfo(account.id)
+      const updated = await refreshAccountInfo.mutateAsync(account.id)
       if (updated) {
-        setAccounts((prev) => prev.map((a) => (a.id === updated.id ? updated : a)))
         if (updated.isLoggedIn) {
           toast(`已更新 ${updated.displayName || updated.username} 的账号信息`)
         } else {
@@ -840,7 +767,7 @@ export function AccountsPage({ onLoginAccount }: AccountsPageProps): React.React
         return next
       })
     }
-  }, [])
+  }, [refreshAccountInfo])
 
   const handleRefreshAll = useCallback(async () => {
     if (accounts.length === 0) return
@@ -849,7 +776,7 @@ export function AccountsPage({ onLoginAccount }: AccountsPageProps): React.React
     try {
       const results = await Promise.allSettled(
         accounts.map((account) =>
-          window.api.account.refreshInfo(account.id).finally(() => {
+          refreshAccountInfo.mutateAsync(account.id).finally(() => {
             setRefreshAllProgress((prev) => ({ ...prev, done: prev.done + 1 }))
           })
         )
@@ -863,9 +790,6 @@ export function AccountsPage({ onLoginAccount }: AccountsPageProps): React.React
         .filter((account): account is Account => Boolean(account))
       const failedCount = results.filter((result) => result.status === 'rejected').length
 
-      setAccounts((prev) =>
-        prev.map((account) => updatedAccounts.find((u) => u.id === account.id) || account)
-      )
       const loggedIn = updatedAccounts.filter((account) => account.isLoggedIn).length
       toast(failedCount > 0 ? '检测完成（部分失败）' : '检测完成', {
         description:
@@ -878,7 +802,7 @@ export function AccountsPage({ onLoginAccount }: AccountsPageProps): React.React
     } finally {
       setIsRefreshingAll(false)
     }
-  }, [accounts])
+  }, [accounts, refreshAccountInfo])
 
   const resetAddAccountForm = () => {
     setSelectedPlatform('')
@@ -904,10 +828,10 @@ export function AccountsPage({ onLoginAccount }: AccountsPageProps): React.React
 
     try {
       const proxyId = getSelectableProxyId(newAccountProxyId, proxies)
-      const account = await window.api.account.create(selectedPlatform, {
-        proxyId
+      await createAccount.mutateAsync({
+        platform: selectedPlatform,
+        options: { proxyId }
       })
-      setAccounts((prev) => [account, ...prev])
       if (!keepOpen) {
         closeAddAccountModal()
       }
@@ -922,8 +846,7 @@ export function AccountsPage({ onLoginAccount }: AccountsPageProps): React.React
 
   const handleDeleteAccount = async (id: string) => {
     try {
-      await window.api.account.delete(id)
-      setAccounts((prev) => prev.filter((a) => a.id !== id))
+      await deleteAccount.mutateAsync(id)
       toast('账号已删除')
     } catch (error) {
       console.error('Failed to delete account:', error)
@@ -933,8 +856,7 @@ export function AccountsPage({ onLoginAccount }: AccountsPageProps): React.React
 
   const handleSetDefault = async (account: Account) => {
     try {
-      await window.api.account.setDefault(account.id, account.platform)
-      await loadData()
+      await setDefaultAccount.mutateAsync({ id: account.id, platform: account.platform })
       toast(`已将 ${account.displayName || account.username} 设为默认账号`)
     } catch (error) {
       console.error('Failed to set default:', error)
@@ -946,11 +868,10 @@ export function AccountsPage({ onLoginAccount }: AccountsPageProps): React.React
     if (!newGroupName.trim()) return
 
     try {
-      const group = await window.api.group.create({
+      const group = await createGroup.mutateAsync({
         name: newGroupName.trim(),
         color: newGroupColor || undefined
       })
-      setGroups((prev) => [...prev, group])
       setIsAddGroupOpen(false)
       setNewGroupName('')
       setNewGroupColor('')
@@ -963,8 +884,7 @@ export function AccountsPage({ onLoginAccount }: AccountsPageProps): React.React
 
   const handleDeleteGroup = async (id: string) => {
     try {
-      await window.api.group.delete(id)
-      setGroups((prev) => prev.filter((g) => g.id !== id))
+      await deleteGroup.mutateAsync(id)
       if (selectedGroup === id) {
         setSelectedGroup(null)
       }
@@ -977,8 +897,7 @@ export function AccountsPage({ onLoginAccount }: AccountsPageProps): React.React
 
   const handleAssignGroup = async (accountId: string, groupId: string | null) => {
     try {
-      await window.api.account.update(accountId, { groupId: groupId || undefined })
-      await loadData()
+      await updateAccount.mutateAsync({ id: accountId, data: { groupId: groupId || undefined } })
       const groupName = groupId ? groups.find((g) => g.id === groupId)?.name : null
       toast(groupName ? `已移到分组「${groupName}」` : '已移出分组')
     } catch (error) {
@@ -999,11 +918,13 @@ export function AccountsPage({ onLoginAccount }: AccountsPageProps): React.React
 
     try {
       const proxyId = getSelectableProxyId(editProxyId, proxies)
-      await window.api.account.update(editingAccount.id, {
-        displayName: editDisplayName.trim() || undefined,
-        proxyId: proxyId ?? null
+      await updateAccount.mutateAsync({
+        id: editingAccount.id,
+        data: {
+          displayName: editDisplayName.trim() || undefined,
+          proxyId: proxyId ?? null
+        }
       })
-      await loadData()
       setIsEditAccountOpen(false)
       setEditingAccount(null)
       toast('账号信息已保存')
@@ -1133,14 +1054,7 @@ export function AccountsPage({ onLoginAccount }: AccountsPageProps): React.React
     setEditProxyId(value === PROXY_NONE_VALUE ? null : value)
   }
 
-  const handleProxyCreated = async (profile: ProxyProfile): Promise<void> => {
-    try {
-      await refreshProxyData()
-    } catch (error) {
-      console.error('Failed to refresh proxy list:', error)
-      toast.error('代理已创建，但列表刷新失败', { description: '请稍后手动刷新页面' })
-    }
-
+  const handleProxyCreated = (profile: ProxyProfile): void => {
     if (proxyDialogTarget === 'new-account') {
       setNewAccountProxyId(profile.id)
     } else if (proxyDialogTarget === 'edit-account') {

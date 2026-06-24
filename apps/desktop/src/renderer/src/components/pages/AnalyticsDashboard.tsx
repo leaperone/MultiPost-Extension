@@ -1,10 +1,10 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
+import { useQueries, useQueryClient } from '@tanstack/react-query'
 import { AlertCircle, CheckCircle2, RefreshCw, Search, X } from 'lucide-react'
 import { PLATFORMS } from '@shared/constants'
 import type {
   Account,
   AccountAnalytics,
-  AccountGroup,
   AccountStats,
   AccountStatsHistoryPoint,
   PlatformType
@@ -25,8 +25,14 @@ import { Checkbox } from '../ui/checkbox'
 import { Input } from '../ui/input'
 import { SimpleSelect, type SimpleSelectOption } from '../ui/select'
 import { Spinner } from '../ui/spinner'
-import { useAccountsStore } from '../../store/accounts.store'
 import { useUiStore } from '../../store/ui.store'
+import {
+  accountAnalyticsQueryOptions,
+  accountStatsHistoryQueryOptions,
+  queryKeys,
+  useAccounts,
+  useGroups
+} from '../../lib/queries'
 
 const ALL_PLATFORMS = 'all'
 const ALL_GROUPS = 'all'
@@ -430,52 +436,30 @@ function SearchInput({
 }
 
 export function AnalyticsDashboard(): React.ReactElement {
+  const queryClient = useQueryClient()
   const analyticsAccountIds = useUiStore((state) => state.analyticsAccountIds)
   const setAnalyticsAccountIds = useUiStore((state) => state.setAnalyticsAccountIds)
-  // Accounts are owned by the shared store, which already syncs background
-  // account updates (onUpdated) — no need to duplicate that here.
-  const accounts = useAccountsStore((state) => state.accounts)
-  const accountsLoading = useAccountsStore((state) => state.isLoading)
-  const accountsHasLoaded = useAccountsStore((state) => state.hasLoaded)
-  const refreshAccounts = useAccountsStore((state) => state.refresh)
-  const [groups, setGroups] = useState<AccountGroup[]>([])
-  const [records, setRecords] = useState<AccountAnalyticsRecord[]>([])
-  const [recordsLoading, setRecordsLoading] = useState(false)
-  const [loadedFingerprint, setLoadedFingerprint] = useState('')
+  const accountsQuery = useAccounts()
+  const groupsQuery = useGroups()
+  const accounts = accountsQuery.data ?? []
+  const groups = groupsQuery.data ?? []
+  const accountsLoading = accountsQuery.isPending || accountsQuery.isFetching
+  const groupsLoading = groupsQuery.isPending || groupsQuery.isFetching
+  const accountsHasLoaded = accountsQuery.isFetched
+  const accountsLoadedSuccessfully = accountsQuery.isSuccess
   const [platformFilter, setPlatformFilter] = useState<PlatformFilter>(ALL_PLATFORMS)
   const [groupFilter, setGroupFilter] = useState<GroupFilter>(ALL_GROUPS)
   const [query, setQuery] = useState('')
-  const [reloadToken, setReloadToken] = useState(0)
-
-  useEffect(() => {
-    if (!accountsHasLoaded) void refreshAccounts()
-  }, [accountsHasLoaded, refreshAccounts])
-
-  // Groups aren't in the account store; load locally and on explicit refresh.
-  useEffect(() => {
-    let cancelled = false
-    window.api.group
-      .list()
-      .then((groupList) => {
-        if (!cancelled) setGroups(groupList)
-      })
-      .catch(() => {
-        if (!cancelled) setGroups([])
-      })
-    return () => {
-      cancelled = true
-    }
-  }, [reloadToken])
 
   const accountById = useMemo(() => new Map(accounts.map((account) => [account.id, account])), [accounts])
 
   useEffect(() => {
-    if (!accountsHasLoaded) return
+    if (!accountsLoadedSuccessfully) return
     const validIds = analyticsAccountIds.filter((accountId) => accountById.has(accountId))
     if (validIds.length !== analyticsAccountIds.length) {
       setAnalyticsAccountIds(validIds)
     }
-  }, [accountById, accountsHasLoaded, analyticsAccountIds, setAnalyticsAccountIds])
+  }, [accountById, accountsLoadedSuccessfully, analyticsAccountIds, setAnalyticsAccountIds])
 
   const selectedAccounts = useMemo(
     () =>
@@ -486,83 +470,40 @@ export function AnalyticsDashboard(): React.ReactElement {
     [accountById, analyticsAccountIds]
   )
 
-  // Identity-aware key: changes when the selection set OR a selected account's
-  // identity/stats change, but NOT when an unrelated account updates. It drives
-  // record fetching and gates rendering, so a prior identity's history can never
-  // be shown under the current selection (Revision 1 stale-data invariant).
-  const selectionFingerprint = useMemo(
+  const historyQueries = useQueries({
+    queries: selectedAccounts.map((account) =>
+      accountStatsHistoryQueryOptions(account, HISTORY_DAYS)
+    )
+  })
+  const analyticsQueries = useQueries({
+    queries: selectedAccounts.map((account) =>
+      accountAnalyticsQueryOptions(account.id, supportsAccountAnalytics(account.platform))
+    )
+  })
+
+  const records = useMemo<AccountAnalyticsRecord[]>(
     () =>
-      selectedAccounts
-        .map((account) => `${account.id}:${account.username}:${account.stats?.updatedAt ?? ''}`)
-        .join('|'),
-    [selectedAccounts]
+      selectedAccounts.map((account, index) => {
+        const historyQuery = historyQueries[index]
+        const analyticsQuery = analyticsQueries[index]
+        const analyticsSupported = supportsAccountAnalytics(account.platform)
+        return {
+          account,
+          history: (historyQuery?.data as AccountStatsHistoryPoint[] | undefined) ?? [],
+          analytics: analyticsSupported
+            ? ((analyticsQuery?.data as AccountAnalytics | null | undefined) ?? null)
+            : null,
+          historyError: historyQuery?.error
+            ? getErrorMessage(historyQuery.error, '无法加载本地历史')
+            : null,
+          analyticsError:
+            analyticsSupported && analyticsQuery?.error
+              ? getErrorMessage(analyticsQuery.error, '无法加载平台侧数据')
+              : null
+        }
+      }),
+    [analyticsQueries, historyQueries, selectedAccounts]
   )
-
-  // The fetch reads the latest selected accounts via ref so it can depend on the
-  // stable fingerprint string rather than the (re-created) account array.
-  const selectedAccountsRef = useRef(selectedAccounts)
-  selectedAccountsRef.current = selectedAccounts
-
-  useEffect(() => {
-    let cancelled = false
-    const targetAccounts = selectedAccountsRef.current
-    const fingerprintAtFetch = selectionFingerprint
-
-    async function loadRecords(): Promise<void> {
-      if (targetAccounts.length === 0) {
-        setRecords([])
-        setLoadedFingerprint(fingerprintAtFetch)
-        setRecordsLoading(false)
-        return
-      }
-
-      setRecordsLoading(true)
-      const [historyResults, analyticsResults] = await Promise.all([
-        Promise.allSettled(
-          targetAccounts.map((account) =>
-            window.api.account.getStatsHistory(account.id, HISTORY_DAYS)
-          )
-        ),
-        Promise.allSettled(
-          targetAccounts.map((account) =>
-            supportsAccountAnalytics(account.platform)
-              ? window.api.account.getAnalytics(account.id)
-              : Promise.resolve(null)
-          )
-        )
-      ])
-
-      if (cancelled) return
-
-      setRecords(
-        targetAccounts.map((account, index) => {
-          const historyResult = historyResults[index]
-          const analyticsResult = analyticsResults[index]
-          return {
-            account,
-            history: historyResult.status === 'fulfilled' ? historyResult.value : [],
-            analytics: analyticsResult.status === 'fulfilled' ? analyticsResult.value : null,
-            historyError:
-              historyResult.status === 'rejected'
-                ? getErrorMessage(historyResult.reason, '无法加载本地历史')
-                : null,
-            analyticsError:
-              analyticsResult.status === 'rejected'
-                ? getErrorMessage(analyticsResult.reason, '无法加载平台侧数据')
-                : null
-          }
-        })
-      )
-      setLoadedFingerprint(fingerprintAtFetch)
-      setRecordsLoading(false)
-    }
-
-    void loadRecords()
-
-    return () => {
-      cancelled = true
-    }
-  }, [reloadToken, selectionFingerprint])
 
   const platformOptions = useMemo<SimpleSelectOption[]>(() => {
     const platforms = Array.from(new Set(accounts.map((account) => account.platform)))
@@ -620,16 +561,28 @@ export function AnalyticsDashboard(): React.ReactElement {
   }
 
   const refresh = async (): Promise<void> => {
-    await refreshAccounts()
-    setReloadToken((value) => value + 1)
+    await Promise.all([
+      queryClient.invalidateQueries({ queryKey: queryKeys.accountsRoot }),
+      queryClient.invalidateQueries({ queryKey: queryKeys.groups }),
+      ...selectedAccounts.map((account) =>
+        queryClient.invalidateQueries({ queryKey: queryKeys.account(account.id) })
+      )
+    ])
   }
 
-  // Only show records once their fetched fingerprint matches the current
-  // selection — otherwise a pending reload would briefly show stale data.
-  const recordsMatch = loadedFingerprint === selectionFingerprint
-  const visibleRecords = recordsMatch ? records : []
+  // Keep the no-stale-data invariant: query keys isolate account identities,
+  // and while any selected account child query is resolving we hide records
+  // instead of showing old analytics under the current selection.
+  const recordsLoading =
+    selectedAccounts.length > 0 &&
+    (historyQueries.some((query) => query.isPending || query.isFetching) ||
+      analyticsQueries.some((query, index) => {
+        const account = selectedAccounts[index]
+        return supportsAccountAnalytics(account.platform) && (query.isPending || query.isFetching)
+      }))
+  const visibleRecords = recordsLoading ? [] : records
   const selectedRecord = visibleRecords.length === 1 ? visibleRecords[0] : null
-  const isDataLoading = recordsLoading || !recordsMatch
+  const isDataLoading = recordsLoading
   // Pre-selected ids (e.g. navigated from the accounts page) before the account
   // list has resolved: show loading, not the "choose an account" empty state.
   const hasUnresolvedSelection = analyticsAccountIds.length > 0 && !accountsHasLoaded
@@ -656,8 +609,13 @@ export function AnalyticsDashboard(): React.ReactElement {
             options={groupOptions}
             placeholder="全部分组"
           />
-          <Button size="sm" variant="secondary" onClick={refresh} isLoading={accountsLoading || recordsLoading}>
-            {!accountsLoading && !recordsLoading && <RefreshCw />}
+          <Button
+            size="sm"
+            variant="secondary"
+            onClick={refresh}
+            isLoading={accountsLoading || groupsLoading || recordsLoading}
+          >
+            {!accountsLoading && !groupsLoading && !recordsLoading && <RefreshCw />}
             刷新
           </Button>
         </div>

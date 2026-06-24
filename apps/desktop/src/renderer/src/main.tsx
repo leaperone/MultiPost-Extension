@@ -2,8 +2,11 @@ import React from 'react'
 import ReactDOM from 'react-dom/client'
 import { MotionConfig } from 'framer-motion'
 import { ThemeProvider as NextThemesProvider } from 'next-themes'
+import { QueryClientProvider } from '@tanstack/react-query'
 import App from './App'
 import { initRendererLogging } from './lib/logger'
+import { queryClient } from './lib/query-client'
+import { installQueryEventBridges } from './lib/query-sync'
 import { initSentryRenderer } from './observability/sentry'
 import './styles/global.css'
 
@@ -18,13 +21,17 @@ initRendererLogging()
 // Toaster 不在这里挂载:它被切到 web/内容 view 后会被裁掉看不见。toast 改由独立的
 // 透明 overlay surface(overlay.tsx)全局承载,这里只渲染主 UI。
 
+installQueryEventBridges(queryClient)
+
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
     <NextThemesProvider attribute="class" defaultTheme="system">
-      {/* reducedMotion="user": 尊重系统级减少动态偏好(无障碍基线) */}
-      <MotionConfig reducedMotion="user">
-        <App />
-      </MotionConfig>
+      <QueryClientProvider client={queryClient}>
+        {/* reducedMotion="user": 尊重系统级减少动态偏好(无障碍基线) */}
+        <MotionConfig reducedMotion="user">
+          <App />
+        </MotionConfig>
+      </QueryClientProvider>
     </NextThemesProvider>
   </React.StrictMode>
 )

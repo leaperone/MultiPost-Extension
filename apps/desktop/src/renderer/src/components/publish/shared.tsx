@@ -35,6 +35,7 @@ import {
 } from '../../../../shared/constants'
 import { PlatformIcon } from '../PlatformIcon'
 import { AccountAvatar } from '../AccountAvatar'
+import { useAccounts } from '../../lib/queries'
 
 // PlatformIcon moved to its own file so leaf components (e.g. AccountAvatar)
 // can use it without importing this whole module; re-exported for callers.
@@ -422,33 +423,16 @@ export function AccountSelector({
   onOtherPlatformToggle,
   isDisabled = false
 }: AccountSelectorProps): React.ReactElement {
-  const [accounts, setAccounts] = useState<Account[]>([])
-  const [loading, setLoading] = useState(true)
   const [showOtherPlatforms, setShowOtherPlatforms] = useState(false)
+  const accountsQuery = useAccounts()
+  const accounts = accountsQuery.data ?? []
 
-  // Load accounts on mount
   useEffect(() => {
-    const loadAccounts = async () => {
-      try {
-        const accountList = await window.api.account.list()
-        setAccounts(accountList)
-      } catch (error) {
-        console.error('Failed to load accounts:', error)
-        toast.error('账号列表没加载出来', { description: '刷新页面或重启应用试试。' })
-      } finally {
-        setLoading(false)
-      }
+    if (accountsQuery.error) {
+      console.error('Failed to load accounts:', accountsQuery.error)
+      toast.error('账号列表没加载出来', { description: '刷新页面或重启应用试试。' })
     }
-    loadAccounts()
-
-    // Login status / avatar can change while this page stays mounted
-    // (e.g. the user logs in via an account tab and closes it).
-    return window.api.account.onUpdated((updated) => {
-      setAccounts((prev) =>
-        prev.map((account) => (account.id === updated.id ? updated : account))
-      )
-    })
-  }, [])
+  }, [accountsQuery.error])
 
   // Group accounts by platform and filter by content type support
   const accountsByPlatform = useMemo(() => {
@@ -485,7 +469,7 @@ export function AccountSelector({
     })).filter((category) => category.platforms.length > 0)
   }, [otherAvailablePlatforms])
 
-  if (loading) {
+  if (accountsQuery.isPending) {
     return (
       <div className="flex flex-col gap-3">
         <label className="text-xs font-medium text-muted-foreground">选择发布账号</label>
@@ -651,65 +635,63 @@ export function useAccountSelection(
   // Locked at mount so an unstable object literal from the caller can't
   // re-trigger the account-loading effect (and wipe the user's selection).
   const initialSelectionRef = useRef(initialSelection)
+  const initializedContentTypeRef = useRef<SyncContentType | null>(null)
   const [selectedAccountIds, setSelectedAccountIds] = useState<Set<string>>(new Set())
   const [selectedOtherPlatforms, setSelectedOtherPlatforms] = useState<Set<PlatformType>>(
     () => new Set(initialSelectionRef.current?.otherPlatforms || [])
   )
-  const [accounts, setAccounts] = useState<Account[]>([])
+  const accountsQuery = useAccounts()
+  const accounts = accountsQuery.data ?? []
 
-  // Load accounts
   useEffect(() => {
-    const loadAccounts = async () => {
-      try {
-        const accountList = await window.api.account.list()
-        setAccounts(accountList)
+    if (accountsQuery.error) {
+      console.error('Failed to load accounts:', accountsQuery.error)
+      toast.error('账号列表没加载出来', { description: '刷新页面或重启应用试试。' })
+    }
+  }, [accountsQuery.error])
 
-        // A restored selection wins over defaults, filtered to accounts that
-        // still exist and can publish this content type.
-        const cachedIds = initialSelectionRef.current?.accountIds
-        if (cachedIds && cachedIds.length > 0) {
-          const restorable = new Set<string>()
-          for (const account of accountList) {
-            if (
-              cachedIds.includes(account.id) &&
-              getPlatformPublishTarget(account.platform, contentType)
-            ) {
-              restorable.add(account.id)
-            }
-          }
-          if (restorable.size > 0) {
-            setSelectedAccountIds(restorable)
-            return
-          }
-        }
+  useEffect(() => {
+    if (
+      !accountsQuery.isSuccess ||
+      accountsQuery.isFetching ||
+      initializedContentTypeRef.current === contentType
+    ) {
+      return
+    }
+    initializedContentTypeRef.current = contentType
 
-        // Auto-select default accounts for each platform
-        const defaults = new Set<string>()
-        for (const account of accountList) {
-          if (
-            account.isDefault &&
-            account.isLoggedIn &&
-            getPlatformPublishTarget(account.platform, contentType)
-          ) {
-            defaults.add(account.id)
-          }
+    // A restored selection wins over defaults, filtered to accounts that
+    // still exist and can publish this content type.
+    const cachedIds = initialSelectionRef.current?.accountIds
+    if (cachedIds && cachedIds.length > 0) {
+      const restorable = new Set<string>()
+      for (const account of accounts) {
+        if (
+          cachedIds.includes(account.id) &&
+          getPlatformPublishTarget(account.platform, contentType)
+        ) {
+          restorable.add(account.id)
         }
-        setSelectedAccountIds(defaults)
-      } catch (error) {
-        console.error('Failed to load accounts:', error)
-        toast.error('账号列表没加载出来', { description: '刷新页面或重启应用试试。' })
+      }
+      if (restorable.size > 0) {
+        setSelectedAccountIds(restorable)
+        return
       }
     }
-    loadAccounts()
 
-    // Merge background account refreshes (login status, nickname, avatar)
-    // without disturbing the user's current selection.
-    return window.api.account.onUpdated((updated) => {
-      setAccounts((prev) =>
-        prev.map((account) => (account.id === updated.id ? updated : account))
-      )
-    })
-  }, [contentType])
+    // Auto-select default accounts for each platform.
+    const defaults = new Set<string>()
+    for (const account of accounts) {
+      if (
+        account.isDefault &&
+        account.isLoggedIn &&
+        getPlatformPublishTarget(account.platform, contentType)
+      ) {
+        defaults.add(account.id)
+      }
+    }
+    setSelectedAccountIds(defaults)
+  }, [accounts, accountsQuery.isFetching, accountsQuery.isSuccess, contentType])
 
   const handleAccountToggle = useCallback((accountId: string) => {
     setSelectedAccountIds((prev) => {

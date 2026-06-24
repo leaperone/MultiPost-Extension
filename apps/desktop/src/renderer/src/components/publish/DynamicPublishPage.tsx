@@ -30,6 +30,7 @@ import {
   type PublishStep
 } from './shared'
 import { clearFormCache, loadFormCache, saveFormCache, validateCachedPaths } from '../../lib/formCache'
+import { useCreateDraft, useUpdateDraft } from '../../lib/queries'
 
 const IMAGE_EXTENSIONS = ['jpg', 'jpeg', 'png', 'gif', 'webp', 'bmp', 'heic', 'avif']
 const VIDEO_EXTENSIONS = ['mp4', 'mov', 'avi', 'mkv', 'webm', 'flv', 'm4v']
@@ -160,6 +161,8 @@ export function DynamicPublishPage({
   const [currentDraftId, setCurrentDraftId] = useState<string | null>(
     cachedForm?.currentDraftId ?? null
   )
+  const createDraft = useCreateDraft()
+  const updateDraft = useUpdateDraft()
 
   const initialSelection = useMemo<InitialAccountSelection | undefined>(
     () =>
@@ -423,9 +426,9 @@ export function DynamicPublishPage({
       }
 
       if (currentDraftId) {
-        await window.api.draft.update(currentDraftId, draftData)
+        await updateDraft.mutateAsync({ id: currentDraftId, data: draftData })
       } else {
-        const newDraft = await window.api.draft.create(draftData)
+        const newDraft = await createDraft.mutateAsync(draftData)
         setCurrentDraftId(newDraft.id)
       }
 
@@ -439,7 +442,7 @@ export function DynamicPublishPage({
     } finally {
       setIsSavingDraft(false)
     }
-  }, [title, content, tags, images, videos, selectedPlatforms, currentDraftId, onDraftSaved])
+  }, [title, content, tags, images, videos, selectedPlatforms, currentDraftId, onDraftSaved, createDraft, updateDraft])
 
   const isContentValid = content.trim().length > 0
   const hasSelectedTargets = selectedAccountIds.size > 0 || selectedOtherPlatforms.size > 0

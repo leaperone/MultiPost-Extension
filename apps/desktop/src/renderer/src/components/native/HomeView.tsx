@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { motion } from 'framer-motion'
 import {
   ArrowRightIcon,
@@ -18,10 +18,9 @@ import {
   XIcon
 } from 'lucide-react'
 
-import type { PublishHistory } from '@shared/types'
 import { PLATFORMS } from '@shared/constants'
-import { useAccountsStore } from '../../store/accounts.store'
 import { useUiStore, type NativeView } from '../../store/ui.store'
+import { useAccounts, useHistory } from '../../lib/queries'
 import { AccountAvatar } from '../AccountAvatar'
 import { Button } from '../ui/button'
 import { Card } from '../ui/card'
@@ -181,21 +180,8 @@ function greetingByHour(): string {
 
 export function HomeView(): React.ReactElement {
   const navigate = useUiStore((state) => state.navigate)
-  const accounts = useAccountsStore((state) => state.accounts)
-  const [recentHistory, setRecentHistory] = useState<PublishHistory[]>([])
-
-  useEffect(() => {
-    let cancelled = false
-    void window.api.history
-      .list({ limit: 5 })
-      .then((items) => {
-        if (!cancelled) setRecentHistory(items)
-      })
-      .catch((error) => console.error('Failed to load history:', error))
-    return () => {
-      cancelled = true
-    }
-  }, [])
+  const accounts = useAccounts().data ?? []
+  const recentHistory = useHistory({ limit: 5 }).data ?? []
 
   const loggedInCount = accounts.filter((account) => account.isLoggedIn).length
   const offlineCount = accounts.length - loggedInCount

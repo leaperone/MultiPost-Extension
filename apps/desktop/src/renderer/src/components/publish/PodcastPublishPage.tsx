@@ -18,6 +18,7 @@ import {
   type PublishStep
 } from './shared'
 import { clearFormCache, loadFormCache, saveFormCache } from '../../lib/formCache'
+import { useCreateDraft, useUpdateDraft } from '../../lib/queries'
 
 interface PodcastPublishPageProps {
   onStartPublish: (
@@ -87,6 +88,8 @@ export function PodcastPublishPage({
   const [currentDraftId, setCurrentDraftId] = useState<string | null>(
     cachedForm?.currentDraftId ?? null
   )
+  const createDraft = useCreateDraft()
+  const updateDraft = useUpdateDraft()
 
   const audioInputRef = useRef<HTMLInputElement>(null)
   const coverInputRef = useRef<HTMLInputElement>(null)
@@ -359,9 +362,9 @@ export function PodcastPublishPage({
       }
 
       if (currentDraftId) {
-        await window.api.draft.update(currentDraftId, draftData)
+        await updateDraft.mutateAsync({ id: currentDraftId, data: draftData })
       } else {
-        const newDraft = await window.api.draft.create(draftData)
+        const newDraft = await createDraft.mutateAsync(draftData)
         setCurrentDraftId(newDraft.id)
       }
 
@@ -375,7 +378,7 @@ export function PodcastPublishPage({
     } finally {
       setIsSavingDraft(false)
     }
-  }, [title, description, tags, selectedPlatforms, currentDraftId, onDraftSaved])
+  }, [title, description, tags, selectedPlatforms, currentDraftId, onDraftSaved, createDraft, updateDraft])
 
   const isContentValid = title.trim().length > 0 && audioFile !== null
   const hasSelectedTargets = selectedAccountIds.size > 0 || selectedOtherPlatforms.size > 0

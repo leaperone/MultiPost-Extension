@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import {
   CheckCircle2,
   Network,
@@ -31,6 +31,14 @@ import { Input } from '../ui/input'
 import { SimpleSelect } from '../ui/select'
 import { toast } from '../ui/sonner'
 import { Tooltip } from '../ui/tooltip'
+import {
+  useCreateProxy,
+  useDeleteProxy,
+  useProxies,
+  useProxySettings,
+  useUpdateProxy,
+  useUpdateProxySettings
+} from '../../lib/queries'
 
 export const PROXY_NONE_VALUE = '__no_proxy__'
 export const PROXY_CREATE_VALUE = '__create_proxy__'
@@ -181,6 +189,8 @@ export function ProxyProfileFormDialog({
   const [testResult, setTestResult] = useState<ProxyTestResult | null>(null)
   const [isTesting, setIsTesting] = useState(false)
   const [isSaving, setIsSaving] = useState(false)
+  const createProxy = useCreateProxy()
+  const updateProxy = useUpdateProxy()
 
   useEffect(() => {
     if (!open) return
@@ -230,8 +240,8 @@ export function ProxyProfileFormDialog({
     setIsSaving(true)
     try {
       const saved = profile
-        ? await window.api.proxy.update(profile.id, input)
-        : await window.api.proxy.create(input)
+        ? await updateProxy.mutateAsync({ id: profile.id, input })
+        : await createProxy.mutateAsync(input)
 
       if (!saved) {
         throw new Error('代理不存在或已被删除')
@@ -332,38 +342,21 @@ export function ProxyProfileFormDialog({
 }
 
 export function ProxyPage(): React.ReactElement {
-  const [proxies, setProxies] = useState<ProxyProfile[]>([])
-  const [settings, setSettings] = useState<ProxySettings>({
-    defaultProxyId: null,
-    globalProxyId: null
-  })
-  const [loading, setLoading] = useState(true)
   const [isFormOpen, setIsFormOpen] = useState(false)
   const [editingProxy, setEditingProxy] = useState<ProxyProfile | null>(null)
   const [proxyToDelete, setProxyToDelete] = useState<ProxyProfile | null>(null)
   const [testingIds, setTestingIds] = useState<Set<string>>(() => new Set())
   const [testResults, setTestResults] = useState<Record<string, ProxyTestResult>>({})
-
-  const loadData = useCallback(async (): Promise<void> => {
-    try {
-      setLoading(true)
-      const [proxyList, proxySettings] = await Promise.all([
-        window.api.proxy.list(),
-        window.api.proxy.getSettings()
-      ])
-      setProxies(proxyList)
-      setSettings(proxySettings)
-    } catch (error) {
-      console.error('Failed to load proxies:', error)
-      toast.error('无法加载代理设置', { description: '请稍后重试' })
-    } finally {
-      setLoading(false)
-    }
-  }, [])
-
-  useEffect(() => {
-    void loadData()
-  }, [loadData])
+  const proxiesQuery = useProxies()
+  const settingsQuery = useProxySettings()
+  const updateProxySettings = useUpdateProxySettings()
+  const deleteProxy = useDeleteProxy()
+  const proxies = proxiesQuery.data ?? []
+  const settings = settingsQuery.data ?? {
+    defaultProxyId: null,
+    globalProxyId: null
+  }
+  const loading = proxiesQuery.isPending || settingsQuery.isPending
 
   const proxyOptions = useMemo(
     () => [
@@ -381,15 +374,11 @@ export function ProxyPage(): React.ReactElement {
   }
 
   const updateSettings = async (patch: Partial<ProxySettings>): Promise<void> => {
-    const previous = settings
-    setSettings((current) => ({ ...current, ...patch }))
     try {
-      const next = await window.api.proxy.setSettings(patch)
-      setSettings(next)
+      await updateProxySettings.mutateAsync(patch)
       toast('代理设置已更新')
     } catch (error) {
       console.error('Failed to update proxy settings:', error)
-      setSettings(previous)
       toast.error('无法更新代理设置', { description: '请稍后重试' })
     }
   }
@@ -424,9 +413,8 @@ export function ProxyPage(): React.ReactElement {
 
   const handleDeleteProxy = async (proxy: ProxyProfile): Promise<void> => {
     try {
-      await window.api.proxy.delete(proxy.id)
+      await deleteProxy.mutateAsync(proxy.id)
       toast('代理已删除')
-      await loadData()
     } catch (error) {
       console.error('Failed to delete proxy:', error)
       toast.error('无法删除代理', { description: '请稍后重试' })
@@ -601,9 +589,6 @@ export function ProxyPage(): React.ReactElement {
         open={isFormOpen}
         onOpenChange={setIsFormOpen}
         profile={editingProxy}
-        onSaved={async () => {
-          await loadData()
-        }}
       />
 
       <ConfirmDialog

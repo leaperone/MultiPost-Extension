@@ -1,6 +1,8 @@
 import { create } from 'zustand'
 import { toast } from '../components/ui/sonner'
 import { PLATFORMS } from '@shared/constants'
+import { queryClient } from '../lib/query-client'
+import { queryKeys } from '../lib/queries'
 import type {
   Account,
   BrowserTab,
@@ -194,9 +196,13 @@ export const usePublishStore = create<PublishState>((set, get) => ({
   startPublish: async ({ contentType, data, selectedAccountIds, selectedOtherPlatforms, autoSubmit }) => {
     set({ isStarting: true })
     try {
-      // Fetch fresh accounts at publish time: the selector UI loads its own
-      // list over IPC, so a cached store snapshot could miss recent changes.
-      const accounts = await window.api.account.list()
+      // This is a publish-time command, not a mounted subscription. Force a
+      // fresh account read so recent login/health/proxy changes gate targets.
+      const accounts = await queryClient.fetchQuery({
+        queryKey: queryKeys.accounts(),
+        queryFn: () => window.api.account.list(),
+        staleTime: 0
+      })
       warnUnhealthyPublishTargets(accounts, selectedAccountIds)
       const targets = accounts
         .filter((account) => selectedAccountIds.has(account.id))

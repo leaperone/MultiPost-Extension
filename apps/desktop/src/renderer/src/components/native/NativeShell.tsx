@@ -20,8 +20,9 @@ import {
 } from 'lucide-react'
 
 import { useUiStore, type NativeView } from '../../store/ui.store'
-import { useAccountsStore } from '../../store/accounts.store'
 import { usePublishStore, isTerminalTargetStatus } from '../../store/publish.store'
+import { openAccountBrowser } from '../../lib/account-actions'
+import { useAccounts } from '../../lib/queries'
 import { HomeView } from './HomeView'
 import { FeedbackDialog } from './FeedbackDialog'
 import { PublishView } from './PublishView'
@@ -203,7 +204,6 @@ const pageVariants = {
 function ActivePage({ view }: { view: NativeView }): React.ReactElement {
   const navigate = useUiStore((state) => state.navigate)
   const setDraftToEdit = useUiStore((state) => state.setDraftToEdit)
-  const openAccountBrowser = useAccountsStore((state) => state.openAccountBrowser)
 
   const handleEditDraft = (draft: Draft): void => {
     setDraftToEdit(draft)
@@ -255,7 +255,7 @@ export function NativeShell(): React.ReactElement {
   const navigate = useUiStore((state) => state.navigate)
   const isCollapsed = useUiStore((state) => state.isSidebarCollapsed)
   const toggleSidebar = useUiStore((state) => state.toggleSidebar)
-  const refreshAccounts = useAccountsStore((state) => state.refresh)
+  useAccounts()
   const [isFeedbackOpen, setIsFeedbackOpen] = useState(false)
 
   // Publish run indicator: spinner while any target is still working, and a
@@ -291,10 +291,6 @@ export function NativeShell(): React.ReactElement {
     }
     return null
   }
-
-  useEffect(() => {
-    void refreshAccounts()
-  }, [refreshAccounts])
 
   // Keep-alive detected an expired session; the shell is the one always-mounted
   // surface, so the logged-out alert lives here instead of any single page.

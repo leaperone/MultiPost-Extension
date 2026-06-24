@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useMemo, useState } from 'react'
 import { History, CheckCircle, XCircle, Circle, ExternalLink, Trash2, RefreshCw } from 'lucide-react'
 import { PLATFORMS } from '@shared/constants'
 import type { PublishHistory, PublishHistoryStatus, PlatformType } from '@shared/types'
@@ -10,6 +10,7 @@ import { Tooltip } from '../ui/tooltip'
 import { ConfirmDialog } from '../ui/confirm-dialog'
 import { Spinner } from '../ui/spinner'
 import { toast } from '../ui/sonner'
+import { useDeleteHistory, useHistory } from '../../lib/queries'
 
 // 状态只靠 Lucide 图标 + 文字表达(The One Red Rule):失败才允许警示红
 const STATUS_META: Record<PublishHistoryStatus, { label: string; className: string }> = {
@@ -59,35 +60,23 @@ function formatTime(timestamp: number): string {
 }
 
 export function HistoryPage(): React.ReactElement {
-  const [history, setHistory] = useState<PublishHistory[]>([])
-  const [loading, setLoading] = useState(true)
   const [selectedStatus, setSelectedStatus] = useState<PublishHistoryStatus | 'all'>('all')
   const [itemToDelete, setItemToDelete] = useState<PublishHistory | null>(null)
-
-  const loadHistory = useCallback(async () => {
-    try {
-      setLoading(true)
-      const data = await window.api.history.list({
-        status: selectedStatus === 'all' ? undefined : selectedStatus,
-        limit: 100
-      })
-      setHistory(data)
-    } catch (error) {
-      console.error('Failed to load history:', error)
-      toast.error('无法加载发布历史', { description: '请点击刷新重试' })
-    } finally {
-      setLoading(false)
-    }
-  }, [selectedStatus])
-
-  useEffect(() => {
-    loadHistory()
-  }, [loadHistory])
+  const filters = useMemo(
+    () => ({
+      status: selectedStatus === 'all' ? undefined : selectedStatus,
+      limit: 100
+    }),
+    [selectedStatus]
+  )
+  const historyQuery = useHistory(filters)
+  const deleteHistory = useDeleteHistory()
+  const history = historyQuery.data ?? []
+  const loading = historyQuery.isPending
 
   const handleDelete = async (id: string) => {
     try {
-      await window.api.history.delete(id)
-      setHistory((prev) => prev.filter((h) => h.id !== id))
+      await deleteHistory.mutateAsync(id)
       toast('发布记录已删除')
     } catch (error) {
       console.error('Failed to delete history:', error)
@@ -128,7 +117,12 @@ export function HistoryPage(): React.ReactElement {
             失败
           </span>
           <Tooltip content="刷新列表">
-            <Button size="icon-sm" variant="secondary" aria-label="刷新列表" onClick={loadHistory}>
+            <Button
+              size="icon-sm"
+              variant="secondary"
+              aria-label="刷新列表"
+              onClick={() => void historyQuery.refetch()}
+            >
               <RefreshCw />
             </Button>
           </Tooltip>

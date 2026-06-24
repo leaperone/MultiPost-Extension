@@ -37,6 +37,7 @@ import {
 } from './shared'
 import { clearFormCache, loadFormCache, saveFormCache } from '../../lib/formCache'
 import { cn } from '../../lib/utils'
+import { useCreateDraft, useUpdateDraft } from '../../lib/queries'
 
 /** 窄屏(<lg)下工作台只显示一栏,由 segmented 切换;≥lg 始终左右分栏 */
 type WorkbenchPane = 'edit' | 'preview'
@@ -210,6 +211,8 @@ export function ArticlePublishPage({
   const [currentDraftId, setCurrentDraftId] = useState<string | null>(
     cachedForm?.currentDraftId ?? null
   )
+  const createDraft = useCreateDraft()
+  const updateDraft = useUpdateDraft()
   const editorRef = useRef<HTMLTextAreaElement>(null)
 
   const initialSelection = useMemo<InitialAccountSelection | undefined>(
@@ -364,9 +367,9 @@ export function ArticlePublishPage({
       }
 
       if (currentDraftId) {
-        await window.api.draft.update(currentDraftId, draftData)
+        await updateDraft.mutateAsync({ id: currentDraftId, data: draftData })
       } else {
-        const newDraft = await window.api.draft.create(draftData)
+        const newDraft = await createDraft.mutateAsync(draftData)
         setCurrentDraftId(newDraft.id)
       }
 
@@ -380,7 +383,7 @@ export function ArticlePublishPage({
     } finally {
       setIsSavingDraft(false)
     }
-  }, [title, content, tags, coverFile, selectedPlatforms, currentDraftId, onDraftSaved])
+  }, [title, content, tags, coverFile, selectedPlatforms, currentDraftId, onDraftSaved, createDraft, updateDraft])
 
   const isContentValid = title.trim().length > 0 && content.trim().length > 0
   const hasSelectedTargets = selectedAccountIds.size > 0 || selectedOtherPlatforms.size > 0
