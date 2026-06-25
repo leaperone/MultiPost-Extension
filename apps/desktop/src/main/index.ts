@@ -184,11 +184,27 @@ app.on('will-quit', (event) => {
   }
 
   proxyCleanupStarted = true
+
+  // Proxy teardown (proxy-chain server.close / session.closeAllConnections) can
+  // hang indefinitely when a tunnel never drains, so the `.finally` that calls
+  // app.quit() may never run. The auto-updater's Squirrel.Mac install waits for
+  // this process to exit before swapping the bundle and relaunching, so a hung
+  // cleanup deadlocks the update — the window closes but the process lingers
+  // (tray icon stays, ShipIt waits forever, install never completes). Force-exit
+  // after a short grace period so quit always lands; app.exit() skips will-quit
+  // and terminates immediately, releasing the process for ShipIt to take over.
+  const forceExit = setTimeout(() => {
+    console.warn('[Main] Proxy cleanup timed out; forcing exit to avoid deadlocking the updater')
+    app.exit(0)
+  }, 4000)
+  forceExit.unref?.()
+
   void closeAllAnonymizedProxies()
     .catch((error) => {
       console.warn('[Main] Failed to clean up account proxies:', error)
     })
     .finally(() => {
+      clearTimeout(forceExit)
       proxyCleanupComplete = true
       proxyCleanupStarted = false
       app.quit()
