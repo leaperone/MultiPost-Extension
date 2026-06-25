@@ -15,12 +15,15 @@ interface AppSettings {
   closeWindowBehavior?: CloseWindowBehavior
   keepAlive?: Partial<KeepAliveConfig>
   externalApi?: Partial<ExternalApiSettings>
+  ignoredUpdateVersion?: string | null
   defaultProxyId?: string | null
   globalProxyId?: string | null
   debugLog?: boolean
   telemetry?: { enabled?: boolean }
   injectorHotUpdate?: { enabled?: boolean }
 }
+
+const IGNORED_UPDATE_VERSION_MAX_LENGTH = 128
 
 function settingsPath(): string {
   return join(app.getPath('userData'), 'app-settings.json')
@@ -94,6 +97,25 @@ export function setInjectorHotUpdateEnabled(enabled: boolean): void {
   const settings = readSettings()
   settings.injectorHotUpdate = { ...settings.injectorHotUpdate, enabled }
   writeSettings(settings)
+}
+
+export function normalizeIgnoredUpdateVersion(value: unknown): string | null {
+  if (typeof value !== 'string') return null
+  const normalized = value.trim()
+  if (!normalized) return null
+  return normalized.slice(0, IGNORED_UPDATE_VERSION_MAX_LENGTH)
+}
+
+export function getIgnoredUpdateVersion(): string | null {
+  return normalizeIgnoredUpdateVersion(readSettings().ignoredUpdateVersion)
+}
+
+export function setIgnoredUpdateVersion(version: unknown): string | null {
+  const settings = readSettings()
+  const normalized = normalizeIgnoredUpdateVersion(version)
+  settings.ignoredUpdateVersion = normalized
+  writeSettings(settings)
+  return normalized
 }
 
 export const KEEPALIVE_DEFAULT_INTERVAL_HOURS = 4

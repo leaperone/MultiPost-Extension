@@ -340,9 +340,10 @@ app.whenReady().then(async () => {
   // Initialize auto-updater after window is created
   if (mainWindow) {
     // UI lives in BrowserViews, so updater status must be broadcast through the manager
-    initAutoUpdater(mainWindow, (channel, payload) =>
+    initAutoUpdater(mainWindow, (channel, payload) => {
       browserViewManager?.broadcastToUi(channel, payload)
-    )
+      browserViewManager?.forwardToToastOverlay(channel, payload)
+    })
 
     // Check for updates after app starts (only in production)
     if (!is.dev) {

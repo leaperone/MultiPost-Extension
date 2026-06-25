@@ -1,5 +1,4 @@
 import { useEffect } from 'react'
-import { UpdateNotification } from './components/UpdateNotification'
 import { BrowserTabs } from './components/BrowserTabs'
 import { NativeShell } from './components/native/NativeShell'
 import { useTabsStore, HOME_TAB_ID } from './store/tabs.store'
@@ -55,9 +54,6 @@ function App(): React.ReactElement {
       <div className={`min-h-0 flex-1 ${isHomeActive ? '' : 'hidden'}`}>
         <NativeShell />
       </div>
-
-      {/* 更新通知 */}
-      <UpdateNotification />
     </div>
   )
 }

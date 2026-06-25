@@ -2,6 +2,11 @@ import { autoUpdater, UpdateInfo, ProgressInfo, UpdateDownloadedEvent } from 'el
 import { BrowserWindow, ipcMain, dialog, app } from 'electron'
 import { is } from '@electron-toolkit/utils'
 import { IPC_CHANNELS } from '../../shared/constants'
+import {
+  getIgnoredUpdateVersion,
+  setIgnoredUpdateVersion,
+  normalizeIgnoredUpdateVersion
+} from '../appSettings'
 
 export interface UpdateStatus {
   status: 'idle' | 'checking' | 'available' | 'not-available' | 'downloading' | 'downloaded' | 'error'
@@ -202,6 +207,28 @@ export function registerUpdaterIpcHandlers(): void {
   // Get current update status
   ipcMain.handle(IPC_CHANNELS.UPDATER_GET_STATUS, () => {
     return currentStatus
+  })
+
+  ipcMain.handle(IPC_CHANNELS.UPDATER_GET_IGNORED, () => {
+    return getIgnoredUpdateVersion()
+  })
+
+  // "Ignore this version" must only ever suppress the version currently being
+  // offered. A renderer must not be trusted to pre-seed suppression for an
+  // arbitrary version, so the requested value is accepted only when it matches
+  // the version the updater is actively presenting.
+  ipcMain.handle(IPC_CHANNELS.UPDATER_IGNORE, (_, version: string) => {
+    const offered = currentStatus.info?.version
+    const isOffering =
+      currentStatus.status === 'available' || currentStatus.status === 'downloaded'
+    if (
+      !isOffering ||
+      !offered ||
+      normalizeIgnoredUpdateVersion(version) !== normalizeIgnoredUpdateVersion(offered)
+    ) {
+      return getIgnoredUpdateVersion()
+    }
+    return setIgnoredUpdateVersion(offered)
   })
 }
 

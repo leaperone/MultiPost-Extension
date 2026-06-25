@@ -1234,6 +1234,8 @@ export const IPC_CHANNELS = {
   UPDATER_DOWNLOAD: 'updater:download',
   UPDATER_INSTALL: 'updater:install',
   UPDATER_GET_STATUS: 'updater:getStatus',
+  UPDATER_GET_IGNORED: 'updater:getIgnoredVersion',
+  UPDATER_IGNORE: 'updater:ignoreVersion',
   UPDATER_STATUS: 'updater:status',
 
   // Publish Group

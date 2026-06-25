@@ -340,6 +340,10 @@ const api = {
     downloadUpdate: (): Promise<void> => ipcRenderer.invoke(IPC_CHANNELS.UPDATER_DOWNLOAD),
     installUpdate: (): Promise<void> => ipcRenderer.invoke(IPC_CHANNELS.UPDATER_INSTALL),
     getStatus: (): Promise<UpdateStatus> => ipcRenderer.invoke(IPC_CHANNELS.UPDATER_GET_STATUS),
+    getIgnoredVersion: (): Promise<string | null> =>
+      ipcRenderer.invoke(IPC_CHANNELS.UPDATER_GET_IGNORED),
+    ignoreVersion: (version: string): Promise<string | null> =>
+      ipcRenderer.invoke(IPC_CHANNELS.UPDATER_IGNORE, version),
     onStatusChange: (callback: (status: UpdateStatus) => void) => {
       const listener = (_: Electron.IpcRendererEvent, status: UpdateStatus) => callback(status)
       ipcRenderer.on(IPC_CHANNELS.UPDATER_STATUS, listener)

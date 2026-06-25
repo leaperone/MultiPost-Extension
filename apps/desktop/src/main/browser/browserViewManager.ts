@@ -600,6 +600,11 @@ export class BrowserViewManager {
     sendTo(this.mainWindow.webContents)
   }
 
+  forwardToToastOverlay(channel: string, payload: unknown): void {
+    void this.ensureToastOverlay()
+    this.sendToToastOverlay(channel, payload)
+  }
+
   private sendPublishEvent(
     channel: 'multipost:publish:progress' | 'multipost:publish:complete' | 'multipost:publish:error',
     payload: PublishEventPayload
