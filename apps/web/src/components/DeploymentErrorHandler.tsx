@@ -46,11 +46,20 @@ export function DeploymentErrorHandler() {
         errorMessage.includes('Server Action') ||
         errorMessage.includes('was not found on the server');
 
-      // Detect chunk loading errors
+      // Detect chunk loading errors. The extra patterns cover stale Vite
+      // module hashes after a deploy: the import() call succeeds at the
+      // network layer but the cached export shape has changed
+      // ("does not provide an export named") or the module fails to evaluate
+      // ("Importing a module script failed" / "Failed to fetch dynamically
+      // imported module"). All three resolve once the user gets the new
+      // client, so auto-reload is the correct UX.
       const isChunkLoadError =
         errorName === 'ChunkLoadError' ||
         errorMessage.includes('Loading chunk') ||
-        errorMessage.includes('ChunkLoadError');
+        errorMessage.includes('ChunkLoadError') ||
+        errorMessage.includes('does not provide an export named') ||
+        errorMessage.includes('Importing a module script failed') ||
+        errorMessage.includes('Failed to fetch dynamically imported module');
 
       if (isServerActionError || isChunkLoadError) {
         hasReloaded.current = true;

@@ -61,6 +61,13 @@ export function createSentryOptions({ runtime }: SentryRuntimeOptions) {
     // actions (PUBLISH, LINK_EXTENSION, OPEN_OPTIONS) keep reporting so real failures stay visible.
     // issue #258: silence transient database connectivity failures. Caught at the
     // data-access layer where possible; this is the safety net.
+    // Stale-deploy + extension DOM + Electron IPC noise: DeploymentErrorHandler
+    // already auto-reloads stale clients on chunk/import failures; extension DOM
+    // races (Google Translate, Grammarly) reparent text nodes mid-commit so
+    // React's insertBefore/removeChild hits a node it no longer owns; Electron
+    // IPC errors carrying chromium ERR_* are the user's local network failing
+    // to load a platform site (BROWSER_OPEN from the desktop renderer). None
+    // of these are application bugs.
     ignoreErrors: [
       /^Extension request timeout: action=MUTLIPOST_EXTENSION_(CHECK_SERVICE_STATUS|PLATFORMS|REQUEST_TRUST_DOMAIN) timeout=\d+ms$/,
       /Can't reach database server at/,
@@ -73,6 +80,16 @@ export function createSentryOptions({ runtime }: SentryRuntimeOptions) {
       /terminating connection due to administrator command/i,
       /database system is (shutting down|starting up|in recovery mode)/i,
       /\b(08000|08001|08003|08004|08006|08007|08P01|57P0[1-3])\b/,
+      /ChunkLoadError/,
+      /Loading chunk \d+ failed/i,
+      /Loading CSS chunk \d+ failed/i,
+      /Failed to fetch dynamically imported module/i,
+      /Importing a module script failed/i,
+      /does not provide an export named/,
+      /Failed to execute 'insertBefore' on 'Node'/,
+      /Failed to execute 'removeChild' on 'Node'/,
+      /The node (?:before which the new node is to be inserted|to be removed) is not a child of this node/,
+      /Error invoking remote method '[^']+': Error: ERR_/,
     ],
     beforeSend,
     beforeSendTransaction,
