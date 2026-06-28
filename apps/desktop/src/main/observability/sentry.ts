@@ -49,6 +49,17 @@ export function initSentryMain(): void {
     // Never auto-attach PII; the scrubbers below are the safety net, this is
     // the first line of defense.
     sendDefaultPii: false,
+    // Chromium network errors surfaced by webContents.loadURL (BROWSER_OPEN,
+    // platform navigations) are user-environment issues — the user's network
+    // dropped, a proxy died, the user cancelled mid-load — not application
+    // bugs. ERR_ABORTED is also the normal outcome of stopLoading()/quick
+    // re-navigation. The browserViewManager already classifies and downgrades
+    // these to info/warn logs; this drops the duplicate Sentry events that
+    // still leak through (IPC reject path, renderer-side window.api callers
+    // re-raising, etc.) so the inbox stays focused on real bugs.
+    ignoreErrors: [
+      /\bERR_(ABORTED|FAILED|CONNECTION_(TIMED_OUT|CLOSED|REFUSED|RESET)|INTERNET_DISCONNECTED|NAME_NOT_RESOLVED|ADDRESS_UNREACHABLE|NETWORK_CHANGED|PROXY_CONNECTION_FAILED|TUNNEL_CONNECTION_FAILED|TIMED_OUT|SSL_PROTOCOL_ERROR|CERT_(AUTHORITY_INVALID|COMMON_NAME_INVALID|DATE_INVALID))\b/
+    ],
     // Drop the Console integration: main-process console output captures
     // third-party platform debug info (and our own verbose logs) that must not
     // become breadcrumbs — even redacted, breadcrumb volume leaks usage.
