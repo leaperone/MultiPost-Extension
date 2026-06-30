@@ -68,6 +68,10 @@ export function createSentryOptions({ runtime }: SentryRuntimeOptions) {
     // IPC errors carrying chromium ERR_* are the user's local network failing
     // to load a platform site (BROWSER_OPEN from the desktop renderer). None
     // of these are application bugs.
+    // Injected third-party scripts (blob:/extension snippets) call
+    // getBoundingClientRect on a non-element and throw "is not a function"
+    // (Sentry MULTIPOST-WEB-K, surfaced as <unknown>). Our own call sites only
+    // ever pass real elements from refs, so this message is never first-party.
     ignoreErrors: [
       /^Extension request timeout: action=MUTLIPOST_EXTENSION_(CHECK_SERVICE_STATUS|PLATFORMS|REQUEST_TRUST_DOMAIN) timeout=\d+ms$/,
       /Can't reach database server at/,
@@ -90,6 +94,7 @@ export function createSentryOptions({ runtime }: SentryRuntimeOptions) {
       /Failed to execute 'removeChild' on 'Node'/,
       /The node (?:before which the new node is to be inserted|to be removed) is not a child of this node/,
       /Error invoking remote method '[^']+': Error: ERR_/,
+      /getBoundingClientRect is not a function/,
     ],
     beforeSend,
     beforeSendTransaction,

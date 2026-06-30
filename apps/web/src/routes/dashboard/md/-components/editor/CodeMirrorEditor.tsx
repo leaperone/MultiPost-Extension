@@ -1,6 +1,7 @@
 'use client'
 
-import { useCallback, useMemo } from 'react'
+import { createClientOnlyFn } from '@tanstack/react-start'
+import { Component, useCallback, useMemo, type ErrorInfo, type ReactNode } from 'react'
 import { useTheme } from 'next-themes'
 import CodeMirror from '@uiw/react-codemirror'
 import { markdown, markdownLanguage } from '@codemirror/lang-markdown'
@@ -15,7 +16,26 @@ const baseExtensions = [
   EditorView.lineWrapping,
 ]
 
-export default function CodeMirrorEditor() {
+const BASIC_SETUP = {
+  lineNumbers: true,
+  foldGutter: true,
+  highlightActiveLine: true,
+  highlightSelectionMatches: true,
+  bracketMatching: true,
+}
+
+const MAX_AUTO_RETRIES = 2
+
+const reportEditorErrorToSentry = createClientOnlyFn((error: unknown) => {
+  void Promise.all([import('@/sentry.client.config'), import('@sentry/core')]).then(
+    ([{ initSentryClient }, { captureException }]) => {
+      initSentryClient()
+      captureException(error)
+    },
+  )
+})
+
+function CodeMirrorEditorInner() {
   const { resolvedTheme } = useTheme()
   const content = useMdDraftStore(s => s.currentContent)
   const setContent = useMdDraftStore(s => s.setContent)
@@ -72,13 +92,75 @@ export default function CodeMirrorEditor() {
       extensions={extensions}
       height="100%"
       style={{ height: '100%' }}
-      basicSetup={{
-        lineNumbers: true,
-        foldGutter: true,
-        highlightActiveLine: true,
-        highlightSelectionMatches: true,
-        bracketMatching: true,
-      }}
+      basicSetup={BASIC_SETUP}
     />
   )
+}
+
+interface CodeMirrorEditorBoundaryState {
+  hasError: boolean
+  remountKey: number
+  retryCount: number
+}
+
+export default class CodeMirrorEditor extends Component<
+  Record<string, never>,
+  CodeMirrorEditorBoundaryState
+> {
+  state: CodeMirrorEditorBoundaryState = {
+    hasError: false,
+    remountKey: 0,
+    retryCount: 0,
+  }
+
+  static getDerivedStateFromError(): Partial<CodeMirrorEditorBoundaryState> {
+    return { hasError: true }
+  }
+
+  componentDidCatch(error: unknown, _errorInfo: ErrorInfo) {
+    reportEditorErrorToSentry(error)
+
+    this.setState(prevState => {
+      if (prevState.retryCount >= MAX_AUTO_RETRIES) {
+        return prevState
+      }
+
+      return {
+        hasError: false,
+        remountKey: prevState.remountKey + 1,
+        retryCount: prevState.retryCount + 1,
+      }
+    })
+  }
+
+  handleReloadEditor = () => {
+    this.setState(prevState => ({
+      hasError: false,
+      remountKey: prevState.remountKey + 1,
+      retryCount: 0,
+    }))
+  }
+
+  render(): ReactNode {
+    if (this.state.hasError) {
+      return (
+        <div className="flex h-full items-center justify-center bg-background p-4 text-foreground">
+          <div className="w-full max-w-sm border bg-background p-4 text-center shadow-none">
+            <p className="text-sm font-medium text-foreground">Editor unavailable</p>
+            <p className="mt-2 text-sm text-muted-foreground">
+              Your draft is still saved. Reload the editor to continue.
+            </p>
+            <button
+              type="button"
+              onClick={this.handleReloadEditor}
+              className="mt-4 inline-flex items-center justify-center rounded-md border bg-background px-4 py-2 text-sm font-medium text-foreground shadow-none transition-colors hover:bg-foreground/5">
+              Reload editor
+            </button>
+          </div>
+        </div>
+      )
+    }
+
+    return <CodeMirrorEditorInner key={this.state.remountKey} />
+  }
 }
