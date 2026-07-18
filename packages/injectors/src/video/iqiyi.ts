@@ -173,6 +173,12 @@ export async function VideoIqiyi(data: SyncData) {
           tagInput.dispatchEvent(
             new KeyboardEvent("keydown", { bubbles: true, key: "Enter", code: "Enter", keyCode: 13 }),
           );
+          tagInput.dispatchEvent(
+            new KeyboardEvent("keypress", { bubbles: true, key: "Enter", code: "Enter", keyCode: 13 }),
+          );
+          tagInput.dispatchEvent(
+            new KeyboardEvent("keyup", { bubbles: true, key: "Enter", code: "Enter", keyCode: 13 }),
+          );
           await new Promise((resolve) => setTimeout(resolve, 400));
         }
       }

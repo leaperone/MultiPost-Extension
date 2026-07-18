@@ -240,7 +240,9 @@ export async function DynamicOkjike(data: SyncData) {
   }
 
   async function fillContent() {
-    const inputElement = (await waitForElement('div[contenteditable="true"][role="textbox"]')) as HTMLDivElement | null;
+    const inputElement = (await waitForElement(
+      'form div[contenteditable="true"], div[contenteditable="true"][role="textbox"]',
+    )) as HTMLDivElement | null;
     if (!inputElement) {
       console.error("Jike editor not found");
       return null;

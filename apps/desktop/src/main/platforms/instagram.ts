@@ -130,10 +130,11 @@ export class InstagramAdapter extends BasePlatformAdapter {
           );
           const captionEditor = Array.from(captionEditors).find(el => {
             const placeholder = el.getAttribute('aria-placeholder');
-            return placeholder?.includes('输入说明文字') ||
+            return placeholder?.includes('输入配文') ||
+                   placeholder?.includes('输入说明文字') ||
                    placeholder?.includes('撰寫說明文字') ||
                    placeholder?.includes('Write a caption');
-          });
+          }) || captionEditors[captionEditors.length - 1];
 
           if (captionEditor) {
             captionEditor.focus();

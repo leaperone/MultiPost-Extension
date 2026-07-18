@@ -157,7 +157,9 @@ export class BilibiliAdapter extends BasePlatformAdapter {
           // Fill title if provided
           const titleText = ${JSON.stringify(title)};
           if (titleText) {
-            const titleInput = document.querySelector('input.bili-dyn-publishing__title__input');
+            const titleInput = document.querySelector(
+              'input.bili-dyn-publishing__title__input, input[maxlength="20"][placeholder="好的标题更容易获得支持，选填20字"]'
+            );
             if (titleInput) {
               titleInput.focus();
               titleInput.value = titleText;
@@ -575,7 +577,11 @@ export class BilibiliAdapter extends BasePlatformAdapter {
               // Try to find and click save draft button
               const buttons = document.querySelectorAll('button');
               for (const btn of buttons) {
-                if (btn.textContent?.includes('保存') || btn.textContent?.includes('发布')) {
+                if (
+                  btn.textContent?.includes('提交文章') ||
+                  btn.textContent?.includes('保存') ||
+                  btn.textContent?.includes('发布')
+                ) {
                   btn.click();
                   console.log('Article button clicked');
                   await new Promise(resolve => setTimeout(resolve, 2000));

@@ -161,15 +161,18 @@ export async function DynamicWeiXinChannel(data: SyncData) {
 
   async function findDescriptionEditor(): Promise<HTMLDivElement | null> {
     const primarySelector = 'div[data-placeholder="添加描述, 1000个字符内"]';
+    const secondarySelector = 'div[data-placeholder="添加描述"]';
     const legacySelector = "div.input-editor";
     const primaryEditor = queryElement(primarySelector) as HTMLDivElement | null;
+    const secondaryEditor = queryElement(secondarySelector) as HTMLDivElement | null;
     const legacyEditor = queryElement(legacySelector) as HTMLDivElement | null;
-    if (primaryEditor || legacyEditor) return primaryEditor || legacyEditor;
+    if (primaryEditor || secondaryEditor || legacyEditor) return primaryEditor || secondaryEditor || legacyEditor;
 
-    await waitForElementOptional(`${primarySelector}, ${legacySelector}`, 1500);
+    await waitForElementOptional(`${primarySelector}, ${secondarySelector}, ${legacySelector}`, 1500);
     const waitedPrimaryEditor = queryElement(primarySelector) as HTMLDivElement | null;
+    const waitedSecondaryEditor = queryElement(secondarySelector) as HTMLDivElement | null;
     const waitedLegacyEditor = queryElement(legacySelector) as HTMLDivElement | null;
-    return waitedPrimaryEditor || waitedLegacyEditor;
+    return waitedPrimaryEditor || waitedSecondaryEditor || waitedLegacyEditor;
   }
 
   /**

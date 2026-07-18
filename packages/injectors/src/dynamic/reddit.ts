@@ -34,12 +34,23 @@ export async function DynamicReddit(data: SyncData) {
   try {
     const { title, content, images, videos, tags } = data.data as DynamicData;
 
-    // 等待页面加载
-    await waitForElement("faceplate-textarea-input");
+    // Reddit has shipped both the older shadow-DOM composer and the newer
+    // faceplate form. Keep both paths so a staged rollout does not break fill.
+    await waitForElement("faceplate-form-section, faceplate-textarea-input");
+
+    const modernTitleSection = document.querySelector(
+      'faceplate-form-section[name="type"][pattern="TEXT|VIDEO|IMAGE|GALLERY|LINK|CROSSPOST|AMA"]',
+    );
+    const modernBodySection =
+      document.querySelector('faceplate-form-section[name="type"][pattern="TEXT|IMAGE|VIDEO|LINK|AMA"]') ||
+      modernTitleSection;
+    const modernEditor = modernBodySection
+      ?.querySelector('shreddit-composer[name="body"]')
+      ?.querySelector('div[contenteditable="true"]') as HTMLDivElement | null;
 
     // 如果有媒体文件，点击 Image & Video 标签
     const mediaFiles = [...(images || []), ...(videos || [])];
-    if (mediaFiles.length > 0) {
+    if (mediaFiles.length > 0 && !modernEditor) {
       const tablist = document
         .querySelector("r-post-type-select")
         ?.shadowRoot?.querySelector("div[role='tablist']")
@@ -55,9 +66,12 @@ export async function DynamicReddit(data: SyncData) {
     }
 
     // 填写标题
-    const titleTextarea = document
-      .querySelector("faceplate-textarea-input")
-      ?.shadowRoot?.querySelector('textarea[id="innerTextArea"]') as HTMLTextAreaElement;
+    const titleTextarea = (modernTitleSection
+      ?.querySelector('post-composer-title[name="title"]')
+      ?.shadowRoot?.querySelector("textarea") ||
+      document
+        .querySelector("faceplate-textarea-input")
+        ?.shadowRoot?.querySelector('textarea[id="innerTextArea"]')) as HTMLTextAreaElement | null;
     console.debug("titleTextarea", titleTextarea);
     if (!titleTextarea) {
       console.debug("未找到标题元素");
@@ -68,7 +82,29 @@ export async function DynamicReddit(data: SyncData) {
     titleTextarea.dispatchEvent(new Event("change", { bubbles: true }));
 
     // 上传媒体文件
-    if (mediaFiles.length > 0) {
+    if (mediaFiles.length > 0 && modernEditor) {
+      modernEditor.focus();
+      const mediaPasteEvent = new ClipboardEvent("paste", {
+        bubbles: true,
+        cancelable: true,
+        clipboardData: new DataTransfer(),
+      });
+
+      for (const fileData of mediaFiles) {
+        console.debug("try upload file", fileData);
+        try {
+          const response = await fetch(fileData.url);
+          const arrayBuffer = await response.arrayBuffer();
+          const file = new File([arrayBuffer], fileData.name, { type: fileData.type });
+          mediaPasteEvent.clipboardData?.items.add(file);
+        } catch (error) {
+          console.error("获取文件失败:", error);
+        }
+      }
+
+      modernEditor.dispatchEvent(mediaPasteEvent);
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+    } else if (mediaFiles.length > 0) {
       const fileInput = document
         .querySelector("r-post-media-input")
         ?.shadowRoot?.querySelector("input") as HTMLInputElement;
@@ -95,11 +131,11 @@ export async function DynamicReddit(data: SyncData) {
       }
     }
 
-    // 填写内容 - 查找第三个 contenteditable div
+    // 新版 composer 使用稳定的 shreddit 结构；旧版回退到原来的第三个编辑器。
     const editors = document.querySelectorAll('div[contenteditable="true"]');
     console.debug("qlEditors", editors);
-    if (editors && editors.length > 2) {
-      const editor = editors[2] as HTMLDivElement;
+    const editor = modernEditor || (editors[2] as HTMLDivElement | undefined);
+    if (editor) {
       console.debug("qlEditor -->", editor);
       editor.focus();
       await new Promise((resolve) => setTimeout(resolve, 1000));

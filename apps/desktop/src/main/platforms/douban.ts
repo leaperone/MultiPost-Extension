@@ -240,18 +240,18 @@ export class DoubanAdapter extends BasePlatformAdapter {
 
         try {
           // 等待编辑器加载
-          await waitForElement('#note-editor, .note-editor');
+          await waitForElement('textarea[placeholder="添加标题"], textarea, #note-editor, .note-editor');
           await new Promise(resolve => setTimeout(resolve, 2000));
 
           // 填写标题
-          const titleInput = document.querySelector('input[name="title"], #note-title');
+          const titleInput = document.querySelector('textarea[placeholder="添加标题"], input[name="title"], #note-title, textarea');
           if (titleInput) {
             titleInput.value = ${JSON.stringify(title)};
             titleInput.dispatchEvent(new Event('input', { bubbles: true }));
           }
 
           // 填写内容
-          const editor = document.querySelector('.note-editor .editable, #note-content');
+          const editor = document.querySelector('div[data-contents="true"], div[contenteditable="true"], .note-editor .editable, #note-content');
           if (editor) {
             const pasteEvent = new ClipboardEvent('paste', {
               bubbles: true,

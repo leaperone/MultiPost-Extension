@@ -79,8 +79,10 @@ export class ZhihuAdapter extends BasePlatformAdapter {
           await new Promise(resolve => setTimeout(resolve, 1000));
 
           // 等待并填写标题
-          await waitForElement('textarea[placeholder="添加标题(选填)"]');
-          const titleInput = document.querySelector('textarea[placeholder="添加标题(选填)"]');
+          await waitForElement('textarea[name="title"], textarea[placeholder="添加标题(选填)"]');
+          const titleInput = document.querySelector(
+            'textarea[name="title"], textarea[placeholder="添加标题(选填)"]'
+          );
           if (titleInput && ${JSON.stringify(title)}) {
             titleInput.value = ${JSON.stringify(title)};
             titleInput.dispatchEvent(new Event('input', { bubbles: true }));

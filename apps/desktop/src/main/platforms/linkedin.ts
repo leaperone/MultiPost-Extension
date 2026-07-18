@@ -51,27 +51,45 @@ export class LinkedinAdapter extends BasePlatformAdapter {
           });
         }
 
+        function waitForElementInRoot(selector, root, timeout = 10000) {
+          return new Promise((resolve, reject) => {
+            const element = root.querySelector(selector);
+            if (element) { resolve(element); return; }
+
+            const observer = new MutationObserver(() => {
+              const element = root.querySelector(selector);
+              if (element) { resolve(element); observer.disconnect(); }
+            });
+            observer.observe(root, { childList: true, subtree: true });
+            setTimeout(() => {
+              observer.disconnect();
+              reject(new Error('Element not found: ' + selector));
+            }, timeout);
+          });
+        }
+
         try {
           // 等待页面加载并点击发帖触发按钮
-          await waitForElement('div.share-box-feed-entry__top-bar');
+          await waitForElement("div[componentkey='draft-text-replaceable-component'], div.share-box-feed-entry__top-bar");
           await new Promise(resolve => setTimeout(resolve, 500));
 
-          const triggerButton = document.querySelector('div.share-box-feed-entry__top-bar > button');
+          const triggerButton = document.querySelector("div[componentkey='draft-text-replaceable-component']") ||
+            document.querySelector('div.share-box-feed-entry__top-bar > button');
           if (!triggerButton) {
             console.debug('未找到触发按钮');
             return;
           }
           triggerButton.click();
 
+          const outlet = await waitForElement('div#interop-outlet', 5000).catch(() => null);
+          const root = outlet?.shadowRoot || document;
+
           // 等待编辑器出现
-          await waitForElement('div.ql-editor[contenteditable="true"]');
+          await waitForElementInRoot('div.ql-editor[contenteditable="true"]', root);
           await new Promise(resolve => setTimeout(resolve, 500));
 
           // 查找正确的编辑器
-          const editor =
-            document.querySelector('div.ql-editor[contenteditable="true"][data-placeholder="What do you want to talk about?"]') ||
-            document.querySelector('div.ql-editor[contenteditable="true"][data-placeholder="您想讨论什么话题？"]') ||
-            document.querySelector('div.ql-editor[contenteditable="true"][data-placeholder="分享您的意见想法⋯⋯"]');
+          const editor = root.querySelector('div.ql-editor[contenteditable="true"]');
 
           if (!editor) {
             console.debug('未找到编辑器元素');
@@ -181,7 +199,9 @@ export class LinkedinAdapter extends BasePlatformAdapter {
         (async function() {
           await new Promise(resolve => setTimeout(resolve, 1000));
 
-          const sendButton = document.querySelector('button.share-actions__primary-action');
+          const outlet = document.querySelector('div#interop-outlet');
+          const root = outlet?.shadowRoot || document;
+          const sendButton = root.querySelector('button.share-actions__primary-action');
           if (sendButton) {
             sendButton.click();
             await new Promise(resolve => setTimeout(resolve, 3000));

@@ -171,7 +171,8 @@ export async function ArticleSSPai(data: SyncData) {
       return;
     }
 
-    const previewButton = await findElementByText("button", "预览");
+    const previewButton =
+      document.querySelector("a.editor-extra-button-preview") || (await findElementByText("button", "预览"));
     console.debug("previewButton", previewButton);
 
     if (previewButton) {

@@ -60,8 +60,10 @@ export async function DynamicFacebook(data: SyncData) {
         span.textContent?.includes("Photo/video") ||
         span.textContent?.includes("相片／影片") ||
         span.textContent?.includes("在想些什么") ||
+        span.textContent?.includes("在想些什麼") ||
         span.textContent?.includes("What's on your mind") ||
-        span.textContent?.includes("分享你的新鲜事吧"),
+        span.textContent?.includes("分享你的新鲜事吧") ||
+        span.textContent?.includes("分享您的新鲜事吧"),
     );
 
     if (!photoButton) {
@@ -87,8 +89,10 @@ export async function DynamicFacebook(data: SyncData) {
       console.debug("ariaPlaceholder", placeholder);
       return (
         placeholder?.includes("在想些什么") ||
+        placeholder?.includes("在想些什麼") ||
         placeholder?.includes("What's on your mind") ||
-        placeholder?.includes("分享你的新鲜事吧")
+        placeholder?.includes("分享你的新鲜事吧") ||
+        placeholder?.includes("分享您的新鲜事吧")
       );
     }) as HTMLElement;
 

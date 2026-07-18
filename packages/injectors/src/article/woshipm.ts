@@ -56,6 +56,53 @@ export async function ArticleWoshipm(data: SyncData) {
     }
   }
 
+  function getCookie(name: string): string | null {
+    const prefix = `${encodeURIComponent(name)}=`;
+    const cookie = document.cookie.split("; ").find((item) => item.startsWith(prefix));
+    return cookie ? decodeURIComponent(cookie.slice(prefix.length)) : null;
+  }
+
+  async function uploadInlineImage(fileData: FileData): Promise<string | null> {
+    const token = getCookie("__jl");
+    if (!token) {
+      console.debug("Woshipm inline image token not found");
+      return null;
+    }
+    const file = await createFile(fileData);
+    if (!file) return null;
+
+    const formData = new FormData();
+    formData.append("name", file.name);
+    formData.append("action", "wpuf_insert_image");
+    formData.append("files", file);
+    const response = await fetch("https://www.woshipm.com/tensorflow/upyun/upload", {
+      method: "POST",
+      body: formData,
+      headers: { jlstar: `Bearer ${token}` },
+      credentials: "include",
+    });
+    if (!response.ok) throw new Error(`Woshipm inline image upload failed: HTTP ${response.status}`);
+    const result = await response.json();
+    return typeof result?.data?.[0]?.url === "string" ? result.data[0].url : null;
+  }
+
+  async function replaceInlineImages(html: string, files: FileData[]): Promise<string> {
+    if (!html || files.length === 0) return html;
+    const documentFragment = new DOMParser().parseFromString(html, "text/html");
+    for (const image of Array.from(documentFragment.querySelectorAll("img[src]"))) {
+      const source = image.getAttribute("src");
+      const fileData = files.find((file) => file.url === source);
+      if (!fileData) continue;
+      try {
+        const uploadedUrl = await uploadInlineImage(fileData);
+        if (uploadedUrl) image.setAttribute("src", uploadedUrl);
+      } catch (error) {
+        console.warn("Woshipm inline image upload failed:", error);
+      }
+    }
+    return documentFragment.body.innerHTML;
+  }
+
   async function setFileInput(fileInput: HTMLInputElement, fileData: FileData): Promise<boolean> {
     const file = await createFile(fileData);
     if (!file) return false;
@@ -161,7 +208,8 @@ export async function ArticleWoshipm(data: SyncData) {
   }
 
   try {
-    const { title, htmlContent, cover } = data.data as ArticleData;
+    const { title, htmlContent, cover, images } = data.data as ArticleData;
+    const processedHtml = await replaceInlineImages(htmlContent || "", images || []);
     const required = {
       title: false,
       body: false,
@@ -194,7 +242,7 @@ export async function ArticleWoshipm(data: SyncData) {
       ) as HTMLDivElement | null);
     if (editor) {
       try {
-        pasteHtml(editor, htmlContent || "");
+        pasteHtml(editor, processedHtml);
         required.body = true;
       } catch (error) {
         console.error("Woshipm body write failed:", error);

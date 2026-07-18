@@ -406,9 +406,28 @@ export class BaijiahaoAdapter extends BasePlatformAdapter {
           // 发布文章
           const formData = new FormData();
           formData.append('type', 'news');
-          formData.append('title', articleData.title?.slice(0, 30) || '');
+          formData.append('title', articleData.title?.slice(0, 64) || '');
           formData.append('content', processedContent);
           formData.append('abstract', articleData.digest || '');
+          const contentLength = new DOMParser()
+            .parseFromString(processedContent, 'text/html')
+            .documentElement.textContent?.length || 0;
+          formData.append('len', contentLength.toString());
+          formData.append('activity_list[0][id]', 'ttv');
+          formData.append('activity_list[0][is_checked]', '1');
+          formData.append('activity_list[1][id]', 'ai_tts');
+          formData.append('activity_list[1][is_checked]', '1');
+          formData.append('activity_list[2][id]', 'reward');
+          formData.append('activity_list[2][is_checked]', '1');
+          formData.append('activity_list[3][id]', 'aigc_bjh_status');
+          formData.append('activity_list[3][is_checked]', '0');
+          formData.append('cover_image_source[wide_cover_image_source]', 'local');
+          formData.append('isBeautify', 'false');
+          formData.append('usingImgFilter', 'false');
+          formData.append('first_exclusive_publish_v2', '3');
+          formData.append('subtitle', '');
+          formData.append('bjhtopic_id', '');
+          formData.append('bjhtopic_info', '');
           formData.append('source', 'upload');
           formData.append('cover_source', 'upload');
 

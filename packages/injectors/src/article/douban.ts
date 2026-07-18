@@ -31,12 +31,12 @@ export async function ArticleDouban(data: SyncData) {
     });
   }
 
-  const articleData = data.origin as ArticleData;
+  const articleData = data.data as ArticleData;
 
   // 填充文章内容
   async function fillArticleContent() {
     // 等待标题输入框出现
-    const titleTextarea = (await waitForElement('textarea[placeholder="添加标题"]')) as HTMLTextAreaElement;
+    const titleTextarea = (await waitForElement('textarea[placeholder="添加标题"], textarea')) as HTMLTextAreaElement;
     await new Promise((resolve) => setTimeout(resolve, 1000));
 
     // 设置标题
@@ -46,7 +46,7 @@ export async function ArticleDouban(data: SyncData) {
     console.debug("titleTextarea", titleTextarea, titleTextarea.value);
 
     // 等待编辑器加载
-    const editor = document.querySelector('div[data-contents="true"]') as HTMLDivElement;
+    const editor = document.querySelector('div[data-contents="true"], div[contenteditable="true"]') as HTMLDivElement;
     if (!editor) {
       console.debug("未找到编辑器元素");
       return false;

@@ -46,11 +46,14 @@ export async function ArticleNetease(data: SyncData) {
   }
 
   try {
-    // 标题(网易号限制 5~30 字)
-    const titleInput = (await waitForElement('textarea[placeholder="请输入标题 (5~30个字)"]')) as HTMLTextAreaElement;
+    // Newer editor allows 64 characters; keep the 30-character placeholder as
+    // a fallback for accounts still on the older editor rollout.
+    const titleInput = (await waitForElement(
+      'textarea[placeholder="请输入标题 (5~64个字)"], textarea[placeholder="请输入标题 (5~30个字)"]',
+    )) as HTMLTextAreaElement;
     await new Promise((resolve) => setTimeout(resolve, 1000));
     if (titleInput) {
-      titleInput.value = articleData.title?.slice(0, 30) || "";
+      titleInput.value = articleData.title?.slice(0, 64) || "";
       titleInput.dispatchEvent(new Event("input", { bubbles: true }));
       titleInput.dispatchEvent(new Event("change", { bubbles: true }));
     }

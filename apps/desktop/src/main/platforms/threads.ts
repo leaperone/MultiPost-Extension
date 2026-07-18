@@ -27,6 +27,7 @@ export class ThreadsAdapter extends BasePlatformAdapter {
     const title = data.title || ''
     const images = data.images || []
     const videos = data.videos || []
+    const tags = data.tags || []
 
     return `
       (async function() {
@@ -49,16 +50,30 @@ export class ThreadsAdapter extends BasePlatformAdapter {
           });
         }
 
+        function findCreateButton() {
+          const labels = ['创建', '建立', 'Create', '新貼文', 'New post'];
+          for (const label of labels) {
+            const icon = document.querySelector('svg[aria-label="' + label + '"]');
+            if (icon) return icon.closest('a, div, button');
+          }
+          return null;
+        }
+
         try {
-          // 等待并点击占位元素
-          const placeholder = await waitForElement('div[aria-label="文本栏为空白。请输入内容，撰写新帖子。"]');
+          // 优先使用多语言入口，回退到编辑区占位元素。
+          const createButton = findCreateButton();
+          const placeholder = createButton || await waitForElement(
+            'div[aria-label="文本栏为空白。请输入内容，撰写新帖子。"], div[contenteditable="true"][aria-placeholder]'
+          );
           placeholder.click();
           await new Promise(resolve => setTimeout(resolve, 2000));
 
-          const dialog = document.querySelector("div[role='dialog']");
+          const dialog = document.querySelector("div[role='dialog']") || document.body;
 
           // 查找并填写帖子内容
-          const editor = dialog.querySelector('div[aria-label="文本栏为空白。请输入内容，撰写新帖子。"]');
+          const editor = dialog.querySelector('div[contenteditable="true"][aria-placeholder]') ||
+            dialog.querySelector('div[contenteditable="true"]') ||
+            dialog.querySelector('div[aria-label="文本栏为空白。请输入内容，撰写新帖子。"]');
           if (!editor) {
             throw new Error('未找到编辑器元素');
           }
@@ -70,7 +85,12 @@ export class ThreadsAdapter extends BasePlatformAdapter {
             cancelable: true,
             clipboardData: new DataTransfer()
           });
-          pasteEvent.clipboardData.setData('text/plain', ${JSON.stringify(title + '\n' + content)});
+          const tags = ${JSON.stringify(tags)};
+          const tagSuffix = tags.length ? ' ' + tags.map(tag => '#' + tag).join(' ') : '';
+          const textContent = ${JSON.stringify(title)}
+            ? ${JSON.stringify(title)} + '\\n' + ${JSON.stringify(content)} + tagSuffix
+            : ${JSON.stringify(content)} + tagSuffix;
+          pasteEvent.clipboardData.setData('text/plain', textContent);
           editor.dispatchEvent(pasteEvent);
 
           const images = ${JSON.stringify(images)};
@@ -78,7 +98,7 @@ export class ThreadsAdapter extends BasePlatformAdapter {
 
           if (images?.length > 0 || videos?.length > 0) {
             const fileInput = await waitForElement(
-              'input[type="file"][accept*="image/jpeg,image/png,image/webp,video/mp4,video/quicktime"]'
+              'input[type="file"][accept="image/avif,image/jpeg,image/png,image/webp,video/mp4,video/quicktime,video/webm"], input[type="file"][accept*="image/jpeg"][accept*="video/mp4"], input[type="file"][accept*="image/"][accept*="video/"]'
             );
 
             if (!fileInput) {
@@ -89,7 +109,7 @@ export class ThreadsAdapter extends BasePlatformAdapter {
 
             // 处理图片
             if (images) {
-              for (const image of images) {
+              for (const image of images.slice(0, 20)) {
                 try {
                   const response = await fetch(image.url);
                   const blob = await response.blob();
@@ -102,7 +122,7 @@ export class ThreadsAdapter extends BasePlatformAdapter {
             }
 
             // 处理视频（只取第一个）
-            if (videos && videos.length > 0) {
+            if (videos && videos.length > 0 && dataTransfer.files.length < 20) {
               try {
                 const video = videos[0];
                 const response = await fetch(video.url);
@@ -187,13 +207,15 @@ export class ThreadsAdapter extends BasePlatformAdapter {
             return { clicked: false, error: '未找到对话框' };
           }
 
-          const publishDiv = Array.from(dialog.querySelectorAll('div')).find(el =>
-            el.textContent.trim() === '发布'
-          );
+          const labels = ['Post', '发布', '發佈'];
+          const publishDiv = Array.from(
+            dialog.querySelectorAll('button, div[role="button"], div, [aria-label]')
+          ).find(el => labels.includes(el.getAttribute('aria-label')?.trim() || '') ||
+            labels.includes(el.textContent?.trim() || ''));
           const nextDiv = publishDiv?.querySelector('div');
 
-          if (nextDiv) {
-            nextDiv.click();
+          if (nextDiv || publishDiv) {
+            (nextDiv || publishDiv).click();
             await new Promise(resolve => setTimeout(resolve, 3000));
             return { clicked: true };
           }

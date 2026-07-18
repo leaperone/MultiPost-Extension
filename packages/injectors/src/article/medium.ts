@@ -23,6 +23,37 @@ export async function ArticleMedium(data: SyncData) {
     });
   }
 
+  function setContentEditableText(editor: HTMLElement, target: HTMLElement, value: string): void {
+    if (!value) return;
+
+    editor.focus();
+    const selection = window.getSelection();
+    if (!selection) return;
+
+    const selectTarget = () => {
+      const range = document.createRange();
+      range.selectNodeContents(target);
+      selection.removeAllRanges();
+      selection.addRange(range);
+    };
+
+    selectTarget();
+    document.execCommand("insertText", false, value);
+    if (target.textContent !== value) {
+      selectTarget();
+      const paste = new ClipboardEvent("paste", {
+        bubbles: true,
+        cancelable: true,
+        clipboardData: new DataTransfer(),
+      });
+      paste.clipboardData?.setData("text/plain", value);
+      editor.dispatchEvent(paste);
+    }
+
+    editor.dispatchEvent(new InputEvent("input", { bubbles: true, inputType: "insertText", data: value }));
+    editor.dispatchEvent(new Event("change", { bubbles: true }));
+  }
+
   try {
     const { title, htmlContent } = data.data as ArticleData;
 
@@ -32,9 +63,11 @@ export async function ArticleMedium(data: SyncData) {
     // Medium 标题与正文都是 contenteditable；标题是 h3，正文是文章主体 div。
     const titleEl = document.querySelector("h3[data-testid='editorTitleParagraph']") as HTMLElement | null;
     if (titleEl && title) {
-      titleEl.focus();
-      titleEl.textContent = title;
-      titleEl.dispatchEvent(new InputEvent("input", { bubbles: true, inputType: "insertText", data: title }));
+      setContentEditableText(
+        (titleEl.closest('[contenteditable="true"]') as HTMLElement | null) || titleEl,
+        titleEl,
+        title,
+      );
     }
 
     const editor = document.querySelector('div[contenteditable="true"]') as HTMLDivElement | null;

@@ -23,7 +23,10 @@ export async function DynamicWeixin(data: SyncData) {
     // 提取整个 window.wx.commonData 对象
     const dataMatch = html.match(/window\.wx\.commonData\s*=\s*\{([\s\S]*?)\};/);
     if (!dataMatch) {
-      throw new Error("无法获取微信公众号信息");
+      const token = html.match(/"&token\s*=\s*([^"]+)"/)?.[1] || "";
+      const nickname = html.match(/nick_name\s*:\s*"([^"]+)",/)?.[1] || "";
+      if (!token) throw new Error("无法获取微信公众号信息");
+      return { token, nickname: decodeURIComponent(nickname) };
     }
 
     // 提取 token 和 nickname
@@ -319,9 +322,14 @@ export async function DynamicWeixin(data: SyncData) {
     const uploadedImages: WeixinUploadResult[] = [];
     const ratios = [16 / 9, 1, 3 / 4]; // 支持的裁剪比例
 
+    let imageCount = 0;
     for (const fileData of dynamicData.images) {
       const file = await fetch(fileData.url).then((r) => r.blob());
-      const uploadResult = await uploadImage(new File([file], fileData.name, { type: fileData.type }));
+      const fileType = fileData.type || file.type;
+      if (!fileType.startsWith("image/")) continue;
+      if (imageCount >= 20) break;
+      imageCount += 1;
+      const uploadResult = await uploadImage(new File([file], fileData.name, { type: fileType }));
 
       if (uploadResult) {
         // 获取图片实际尺寸

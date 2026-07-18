@@ -42,7 +42,12 @@ export async function ArticleWeixin(data: SyncData) {
     // 提取整个 window.wx.commonData 对象
     const dataMatch = html.match(/window\.wx\.commonData\s*=\s*\{([\s\S]*?)\};/);
     if (!dataMatch) {
-      throw new Error("无法获取微信公众号信息");
+      const token = html.match(/"&token\s*=\s*([^"]+)"/)?.[1] || "";
+      const nickname = html.match(/nick_name\s*:\s*"([^"]+)",/)?.[1] || "";
+      const ticket = html.match(/ticket\s*:\s*"(\w+)",/)?.[1] || "";
+      const userName = html.match(/user_name\s*:\s*"(\w+)",/)?.[1] || "";
+      if (!token) throw new Error("无法获取微信公众号信息");
+      return { token, nickname: decodeURIComponent(nickname), ticket, userName };
     }
 
     // 提取 token 和 nickname

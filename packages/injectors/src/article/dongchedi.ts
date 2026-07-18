@@ -112,11 +112,11 @@ export async function ArticleDongchedi(data: SyncData) {
       titleTextarea.dispatchEvent(new Event("change", { bubbles: true }));
     }
 
-    await waitForElement("iframe");
-    const editorIframe = findEditorIframe();
-    const editorBody = editorIframe?.contentDocument?.body;
+    const directEditor = document.querySelector('div[contenteditable="true"]') as HTMLElement | null;
+    if (!directEditor) await waitForElement("iframe");
+    const editorBody = directEditor || findEditorIframe()?.contentDocument?.body;
     if (!editorBody) {
-      console.debug("懂车号:未找到编辑器 iframe");
+      console.debug("懂车号:未找到正文编辑器");
       return;
     }
 

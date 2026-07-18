@@ -202,17 +202,18 @@ export async function ArticleAutohome(data: SyncData) {
     };
 
     await waitForElementOptional(
-      'input[placeholder*="标题"], textarea[placeholder*="标题"], input[placeholder="请输入文章标题(6-30个汉字)"]',
+      'input[placeholder="请输入文章标题（6-30个汉字）"], input[placeholder="请输入文章标题(6-30个汉字)"], input[placeholder*="标题"], textarea[placeholder*="标题"]',
     );
     const titleEl = queryFirstElement<HTMLInputElement | HTMLTextAreaElement>([
+      'input[placeholder="请输入文章标题（6-30个汉字）"]',
+      'input[placeholder="请输入文章标题(6-30个汉字)"]',
       'input[placeholder*="标题"]',
       'textarea[placeholder*="标题"]',
-      'input[placeholder="请输入文章标题(6-30个汉字)"]',
     ]);
     if (titleEl && title) {
       try {
         titleEl.focus();
-        titleEl.value = title.slice(0, 60);
+        titleEl.value = title.slice(0, 30);
         dispatchInputEvents(titleEl);
         required.title = true;
       } catch (error) {

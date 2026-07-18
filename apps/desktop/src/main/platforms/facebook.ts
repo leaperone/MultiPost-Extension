@@ -73,7 +73,9 @@ export class FacebookAdapter extends BasePlatformAdapter {
             span.textContent?.includes('Photo/video') ||
             span.textContent?.includes('相片／影片') ||
             span.textContent?.includes('在想些什么') ||
+            span.textContent?.includes('在想些什麼') ||
             span.textContent?.includes("What's on your mind") ||
+            span.textContent?.includes('分享你的新鲜事吧') ||
             span.textContent?.includes('分享您的新鲜事吧')
           );
 
@@ -97,7 +99,9 @@ export class FacebookAdapter extends BasePlatformAdapter {
           const editor = Array.from(editors).find(el => {
             const placeholder = el.getAttribute('aria-placeholder');
             return placeholder?.includes('在想些什么') ||
+                   placeholder?.includes('在想些什麼') ||
                    placeholder?.includes("What's on your mind") ||
+                   placeholder?.includes('分享你的新鲜事吧') ||
                    placeholder?.includes('分享您的新鲜事吧');
           });
 
@@ -121,7 +125,7 @@ export class FacebookAdapter extends BasePlatformAdapter {
           const mediaFiles = [...${JSON.stringify(images)}, ...${JSON.stringify(videos)}];
           if (mediaFiles.length > 0) {
             const fileInputs = document.querySelectorAll(
-              'input[type="file"][accept="image/*,image/heif,image/heic,video/*,video/mp4,video/x-m4v,video/x-matroska,.mkv"]'
+              'input[type="file"][accept^="image/"]'
             );
 
             if (fileInputs && fileInputs.length > 0) {

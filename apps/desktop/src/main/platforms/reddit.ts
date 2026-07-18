@@ -52,13 +52,23 @@ export class RedditAdapter extends BasePlatformAdapter {
         }
 
         try {
-          // 等待页面加载
-          await waitForElement('faceplate-textarea-input');
+          // Support both the newer faceplate form and the older shadow-DOM composer.
+          await waitForElement('faceplate-form-section, faceplate-textarea-input');
+
+          const modernTitleSection = document.querySelector(
+            'faceplate-form-section[name="type"][pattern="TEXT|VIDEO|IMAGE|GALLERY|LINK|CROSSPOST|AMA"]'
+          );
+          const modernBodySection = document.querySelector(
+            'faceplate-form-section[name="type"][pattern="TEXT|IMAGE|VIDEO|LINK|AMA"]'
+          ) || modernTitleSection;
+          const modernEditor = modernBodySection
+            ?.querySelector('shreddit-composer[name="body"]')
+            ?.querySelector('div[contenteditable="true"]');
 
           const mediaFiles = [...${JSON.stringify(images)}, ...${JSON.stringify(videos)}];
 
           // 如果有媒体文件，点击 Image & Video 标签
-          if (mediaFiles.length > 0) {
+          if (mediaFiles.length > 0 && !modernEditor) {
             const tablist = document
               .querySelector('r-post-type-select')
               ?.shadowRoot?.querySelector("div[role='tablist']")
@@ -74,7 +84,9 @@ export class RedditAdapter extends BasePlatformAdapter {
           }
 
           // 填写标题
-          const titleTextarea = document
+          const titleTextarea = modernTitleSection
+            ?.querySelector('post-composer-title[name="title"]')
+            ?.shadowRoot?.querySelector('textarea') || document
             .querySelector('faceplate-textarea-input')
             ?.shadowRoot?.querySelector('textarea[id="innerTextArea"]');
 
@@ -87,7 +99,28 @@ export class RedditAdapter extends BasePlatformAdapter {
           titleTextarea.dispatchEvent(new Event('change', { bubbles: true }));
 
           // 上传媒体文件
-          if (mediaFiles.length > 0) {
+          if (mediaFiles.length > 0 && modernEditor) {
+            modernEditor.focus();
+            const mediaPasteEvent = new ClipboardEvent('paste', {
+              bubbles: true,
+              cancelable: true,
+              clipboardData: new DataTransfer()
+            });
+
+            for (const fileData of mediaFiles) {
+              try {
+                const response = await fetch(fileData.url);
+                const arrayBuffer = await response.arrayBuffer();
+                const file = new File([arrayBuffer], fileData.name, { type: fileData.type });
+                mediaPasteEvent.clipboardData?.items.add(file);
+              } catch (error) {
+                console.error('获取文件失败:', error);
+              }
+            }
+
+            modernEditor.dispatchEvent(mediaPasteEvent);
+            await new Promise(resolve => setTimeout(resolve, 1000));
+          } else if (mediaFiles.length > 0) {
             const fileInput = document
               .querySelector('r-post-media-input')
               ?.shadowRoot?.querySelector('input');
@@ -111,10 +144,10 @@ export class RedditAdapter extends BasePlatformAdapter {
             }
           }
 
-          // 填写内容 - 查找第三个 contenteditable div
+          // Prefer the stable shreddit composer and keep the old editor fallback.
           const editors = document.querySelectorAll('div[contenteditable="true"]');
-          if (editors && editors.length > 2) {
-            const editor = editors[2];
+          const editor = modernEditor || editors[2];
+          if (editor) {
             editor.focus();
             await new Promise(resolve => setTimeout(resolve, 1000));
 

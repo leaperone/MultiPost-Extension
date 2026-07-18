@@ -82,7 +82,9 @@ export async function DynamicBilibili(data: SyncData) {
     );
 
     if (title) {
-      const titleInput = (await waitForElement("input.bili-dyn-publishing__title__input")) as HTMLInputElement;
+      const titleInput = (await waitForElement(
+        'input.bili-dyn-publishing__title__input, input[maxlength="20"][placeholder="好的标题更容易获得支持，选填20字"]',
+      )) as HTMLInputElement;
       titleInput.focus();
       titleInput.value = title;
       titleInput.dispatchEvent(new Event("input", { bubbles: true }));

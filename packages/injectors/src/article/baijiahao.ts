@@ -179,7 +179,7 @@ export async function ArticleBaijiahao(data: SyncData) {
 
     const formData = new FormData();
     formData.append("type", "news");
-    formData.append("title", articleData.title?.slice(0, 30) || "");
+    formData.append("title", articleData.title?.slice(0, 64) || "");
     formData.append("content", articleData.htmlContent || "");
     formData.append("vertical_cover", coverResults?.[1].src || "");
     formData.append("abstract", articleData.digest || "");
@@ -191,14 +191,23 @@ export async function ArticleBaijiahao(data: SyncData) {
     formData.append("len", contentLength.toString());
     formData.append("activity_list[0][id]", "ttv");
     formData.append("activity_list[0][is_checked]", "1");
-    formData.append("activity_list[1][id]", "reward");
+    formData.append("activity_list[1][id]", "ai_tts");
     formData.append("activity_list[1][is_checked]", "1");
-    formData.append("activity_list[2][id]", "aigc_bjh_status");
-    formData.append("activity_list[2][is_checked]", "0");
+    formData.append("activity_list[2][id]", "reward");
+    formData.append("activity_list[2][is_checked]", "1");
+    formData.append("activity_list[3][id]", "aigc_bjh_status");
+    formData.append("activity_list[3][is_checked]", "0");
     formData.append("source_reprinted_allow", "0");
     formData.append("is_auto_optimize_cover", "1");
     formData.append("abstract_from", "1");
     formData.append("cover_layout", "one");
+    formData.append("cover_image_source[wide_cover_image_source]", "local");
+    formData.append("isBeautify", "false");
+    formData.append("usingImgFilter", "false");
+    formData.append("first_exclusive_publish_v2", "3");
+    formData.append("subtitle", "");
+    formData.append("bjhtopic_id", "");
+    formData.append("bjhtopic_info", "");
 
     if (coverResults) {
       formData.append(

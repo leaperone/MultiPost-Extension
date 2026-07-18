@@ -409,7 +409,7 @@ export async function VideoWeiXinChannel(data: SyncData) {
 
     // 处理标题输入（找不到不报错，避免中断后续字段填充）
     const titleInput = (await waitForElementOptional(
-      'input[placeholder="概括视频主要内容，字数建议6-16个字符"]',
+      'input[placeholder="填写短标题有机会获得更多流量"], input[placeholder="概括视频主要内容，字数建议6-16个字符"]',
     )) as HTMLInputElement | null;
     if (titleInput) {
       titleInput.value = title || "";

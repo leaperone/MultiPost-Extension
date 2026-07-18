@@ -62,6 +62,52 @@ export async function ArticleSohu(data: SyncData) {
     }
   }
 
+  async function uploadCover(): Promise<boolean> {
+    if (!articleData.cover?.url) return true;
+
+    const uploadTrigger = document.querySelector("span.upload-tip") as HTMLElement | null;
+    if (!uploadTrigger) {
+      console.debug("搜狐号:未找到封面上传入口");
+      return false;
+    }
+    uploadTrigger.click();
+    await sleep(1000);
+
+    const localUploadTab = Array.from(document.querySelectorAll<HTMLElement>("h3")).find((element) =>
+      element.textContent?.includes("本地上传"),
+    );
+    localUploadTab?.click();
+    if (localUploadTab) await sleep(1000);
+
+    const fileInput = document.querySelector('input[type="file"]') as HTMLInputElement | null;
+    if (!fileInput) {
+      console.debug("搜狐号:未找到封面文件输入框");
+      return false;
+    }
+
+    const response = await fetch(articleData.cover.url);
+    if (!response.ok) throw new Error(`搜狐号:获取封面失败 HTTP ${response.status}`);
+    const arrayBuffer = await response.arrayBuffer();
+    const file = new File([arrayBuffer], articleData.cover.name, { type: articleData.cover.type });
+    const dataTransfer = new DataTransfer();
+    dataTransfer.items.add(file);
+    fileInput.files = dataTransfer.files;
+    fileInput.dispatchEvent(new Event("change", { bubbles: true }));
+    fileInput.dispatchEvent(new Event("input", { bubbles: true }));
+    await sleep(5000);
+
+    const confirmButton = Array.from(document.querySelectorAll<HTMLElement>("p.button.positive-button")).find(
+      (element) => element.textContent?.includes("确定"),
+    );
+    if (!confirmButton) {
+      console.debug("搜狐号:未找到封面确认按钮");
+      return false;
+    }
+    confirmButton.dispatchEvent(new Event("click", { bubbles: true }));
+    await sleep(2000);
+    return true;
+  }
+
   try {
     await waitForElement('div[contenteditable="true"], div.ql-editor');
     await sleep(2000);
@@ -89,7 +135,13 @@ export async function ArticleSohu(data: SyncData) {
     editor.dispatchEvent(new Event("change", { bubbles: true }));
     await sleep(5000);
 
+    const coverUploaded = await uploadCover();
+
     if (data.isAutoPublish === true) {
+      if (!coverUploaded) {
+        console.error("搜狐号:封面未完成，跳过自动发布");
+        return;
+      }
       clickPublishButton();
     }
   } catch (error) {

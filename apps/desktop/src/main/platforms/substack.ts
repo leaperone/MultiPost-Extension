@@ -7,6 +7,7 @@ import type {
   ArticleData
 } from '../../shared/types'
 import { BasePlatformAdapter } from './base'
+import { PLATFORM_PUBLISH_URLS } from '../../shared/constants'
 
 /**
  * Substack platform adapter
@@ -153,6 +154,7 @@ export class SubstackAdapter extends BasePlatformAdapter {
   private getArticleFillScript(data: ArticleData): string {
     const title = data.title || ''
     const htmlContent = data.htmlContent || ''
+    const cover = data.cover
 
     return `
       (async function() {
@@ -177,7 +179,7 @@ export class SubstackAdapter extends BasePlatformAdapter {
 
         try {
           // 等待标题输入框
-          const titleInput = await waitForElement('input[placeholder="Title"]');
+          const titleInput = await waitForElement('textarea#post-title, input[placeholder="Title"]');
           if (titleInput) {
             titleInput.value = ${JSON.stringify(title)};
             titleInput.dispatchEvent(new Event('input', { bubbles: true }));
@@ -202,6 +204,25 @@ export class SubstackAdapter extends BasePlatformAdapter {
           });
           pasteEvent.clipboardData.setData('text/html', ${JSON.stringify(htmlContent)});
           editor.dispatchEvent(pasteEvent);
+
+          const cover = ${JSON.stringify(cover)};
+          if (cover?.url) {
+            const fileInput = document.querySelector('input#cover-file');
+            if (fileInput) {
+              const response = await fetch(cover.url);
+              if (!response.ok) throw new Error('获取封面失败: HTTP ' + response.status);
+              const blob = await response.blob();
+              const file = new File([blob], cover.name, {
+                type: cover.type || blob.type || 'application/octet-stream'
+              });
+              const dataTransfer = new DataTransfer();
+              dataTransfer.items.add(file);
+              fileInput.files = dataTransfer.files;
+              fileInput.dispatchEvent(new Event('change', { bubbles: true }));
+              fileInput.dispatchEvent(new Event('input', { bubbles: true }));
+              await new Promise(resolve => setTimeout(resolve, 3000));
+            }
+          }
 
           await new Promise(resolve => setTimeout(resolve, 1000));
           console.log('Substack 文章内容填写完成');
@@ -244,8 +265,11 @@ export class SubstackAdapter extends BasePlatformAdapter {
     }
   }
 
-  async navigateToPublishPage(view: WebContentsView, _contentType?: SyncContentType): Promise<void> {
-    await view.webContents.loadURL(this.publishUrl + '/notes')
+  async navigateToPublishPage(view: WebContentsView, contentType?: SyncContentType): Promise<void> {
+    const url = contentType
+      ? PLATFORM_PUBLISH_URLS.substack[contentType] || this.publishUrl
+      : this.publishUrl
+    await view.webContents.loadURL(url)
     await this.waitForNavigation(view)
   }
 

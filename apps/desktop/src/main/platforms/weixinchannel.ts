@@ -166,7 +166,9 @@ export class WeixinChannelAdapter extends BasePlatformAdapter {
           await new Promise(resolve => setTimeout(resolve, 5000));
 
           // 处理内容输入
-          const editorElement = await waitForElement('div.input-editor');
+          const editorElement = await waitForElement(
+            'div[data-placeholder="添加描述, 1000个字符内"], div[data-placeholder="添加描述"], div.input-editor'
+          );
           if (editorElement) {
             editorElement.innerHTML = '';
             editorElement.focus();
@@ -319,7 +321,9 @@ export class WeixinChannelAdapter extends BasePlatformAdapter {
           await new Promise(resolve => setTimeout(resolve, 5000));
 
           // 处理标题输入
-          const titleInput = await waitForElement('input[placeholder="概括视频主要内容，字数建议6-16个字符"]');
+          const titleInput = await waitForElement(
+            'input[placeholder="填写短标题有机会获得更多流量"], input[placeholder="概括视频主要内容，字数建议6-16个字符"]'
+          );
           titleInput.value = ${JSON.stringify(title)};
           titleInput.dispatchEvent(new Event('input', { bubbles: true }));
 

@@ -58,7 +58,9 @@ export class OkjikeAdapter extends BasePlatformAdapter {
         }
 
         async function fillContent() {
-          const inputElement = await waitForElement('div[contenteditable="true"][role="textbox"]');
+          const inputElement = await waitForElement(
+            'form div[contenteditable="true"], div[contenteditable="true"][role="textbox"]'
+          );
           const fullContent = ${JSON.stringify(title + '\n' + content)};
           const pasteEvent = new ClipboardEvent('paste', {
             bubbles: true,
