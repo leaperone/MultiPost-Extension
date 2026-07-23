@@ -40,7 +40,8 @@ ENV NEXT_PUBLIC_SENTRY_DSN=$NEXT_PUBLIC_SENTRY_DSN \
 RUN pnpm --filter multipost-web build && \
     pnpm dlx @posthog/cli@0.4.4 sourcemap inject \
       --directory /app/apps/web/dist && \
-    test -n "$(grep -RIl --include='*.js' --include='*.mjs' '//# chunkId=' /app/apps/web/dist | head -n 1 || true)"
+    test -n "$(find /app/apps/web/dist -type f \( -name '*.js' -o -name '*.mjs' \) \
+      -exec grep -l '//# chunkId=' {} \; | head -n 1)"
 
 FROM scratch AS sourcemaps
 COPY --from=builder /app/apps/web/dist /dist
