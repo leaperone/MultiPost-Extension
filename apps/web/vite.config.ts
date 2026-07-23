@@ -1,6 +1,5 @@
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { sentryVitePlugin } from '@sentry/vite-plugin';
 import { tanstackStart } from '@tanstack/react-start/plugin/vite';
 import tailwindcss from '@tailwindcss/vite';
 import viteReact from '@vitejs/plugin-react';
@@ -25,13 +24,6 @@ dotenvConfig({ path: path.join(monorepoRoot, '.env') });
 // client validates a public origin at import time, so provide the production
 // origin for static docs/blog rendering when CI does not inject one.
 process.env.APP_URL ??= 'https://multipost.app';
-
-const sentryAuthToken = process.env.SENTRY_AUTH_TOKEN;
-const sentryOrg = process.env.SENTRY_ORG;
-const sentryProject = process.env.SENTRY_PROJECT;
-const sentryRelease = process.env.SENTRY_RELEASE;
-
-const sentrySourceMapsEnabled = Boolean(sentryAuthToken && sentryOrg && sentryProject && sentryRelease);
 
 const docsAndBlogPrerenderPages = Array.from(new Set([...getDocsPrerenderPaths(), ...getBlogPrerenderPaths()])).map(
   (pagePath) => ({
@@ -85,28 +77,6 @@ function injectorsEmitPlugin(): Plugin {
   };
 }
 
-function createSentryPlugins() {
-  if (!sentrySourceMapsEnabled) return [];
-
-  return sentryVitePlugin({
-    authToken: sentryAuthToken,
-    org: sentryOrg,
-    project: sentryProject,
-    url: process.env.SENTRY_URL,
-    telemetry: false,
-    release: {
-      name: sentryRelease,
-      inject: true,
-      create: true,
-      finalize: true,
-      setCommits: false,
-    },
-    sourcemaps: {
-      assets: ['./dist/**/*.{js,mjs,js.map,mjs.map}'],
-    },
-  });
-}
-
 export default defineConfig(async () => ({
   server: {
     port: 3000,
@@ -137,9 +107,8 @@ export default defineConfig(async () => ({
     tailwindcss(),
     tsConfigPaths({ projects: [path.join(webRoot, 'tsconfig.json')] }),
     injectorsEmitPlugin(),
-    // PostHog does not provide a clean Vite sourcemap plugin in this repo; keep
-    // any PostHog sourcemap upload as a separately gated CLI/CI step.
-    ...createSentryPlugins(),
+    // Sentry/PostHog uploads are release-pipeline responsibilities. The Docker
+    // builder only emits exact artifacts and injects PostHog chunk IDs.
   ],
   resolve: {
     alias: [

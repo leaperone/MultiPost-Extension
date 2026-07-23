@@ -4,7 +4,7 @@ function readClientEnv(name: string) {
 }
 
 export const POSTHOG_KEY = readClientEnv('NEXT_PUBLIC_POSTHOG_KEY');
-export const POSTHOG_HOST = readClientEnv('NEXT_PUBLIC_POSTHOG_HOST');
+export const POSTHOG_HOST = readClientEnv('NEXT_PUBLIC_POSTHOG_HOST') || 'https://t.multipost.app';
 export const POSTHOG_DISABLED = readClientEnv('NEXT_PUBLIC_POSTHOG_DISABLED') === '1';
 
 export function isPostHogClientEnabled() {

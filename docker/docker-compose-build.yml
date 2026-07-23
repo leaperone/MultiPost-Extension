@@ -7,18 +7,11 @@ services:
       dockerfile: ./docker/Dockerfile
       target: final
       args:
-        - POSTHOG_API_KEY=${POSTHOG_API_KEY}
-        - POSTHOG_MULTIPOST_ENV_ID=${POSTHOG_MULTIPOST_ENV_ID}
         - NEXT_PUBLIC_POSTHOG_KEY=${NEXT_PUBLIC_POSTHOG_KEY}
         - NEXT_PUBLIC_POSTHOG_HOST=${NEXT_PUBLIC_POSTHOG_HOST}
         - NEXT_PUBLIC_SENTRY_DSN=${NEXT_PUBLIC_SENTRY_DSN}
         - NEXT_PUBLIC_SENTRY_ENVIRONMENT=${NEXT_PUBLIC_SENTRY_ENVIRONMENT}
-        - SENTRY_URL=${SENTRY_URL}
-        - SENTRY_ORG=${SENTRY_ORG}
-        - SENTRY_PROJECT=${SENTRY_PROJECT}
         - SENTRY_RELEASE=${SENTRY_RELEASE}
-      secrets:
-        - sentry_auth_token
     environment:
       - NEXT_PUBLIC_BASE_PATH=https://multipost.app
 
@@ -35,7 +28,3 @@ services:
       context: ..
       dockerfile: ./docker/Dockerfile
       target: video-stt-worker
-
-secrets:
-  sentry_auth_token:
-    environment: SENTRY_AUTH_TOKEN

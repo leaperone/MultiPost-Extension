@@ -54,7 +54,7 @@ export function createSentryOptions({ runtime }: SentryRuntimeOptions) {
     dsn: SENTRY_DSN,
     enabled: Boolean(SENTRY_DSN),
     environment: getEnvironment(),
-    // Leave release unset until build/deploy wiring injects it.
+    release: nonEmptyEnv(readEnv('NEXT_PUBLIC_SENTRY_RELEASE'), readEnv('SENTRY_RELEASE')) || undefined,
     tracesSampleRate: getTracesSampleRate(),
     sendDefaultPii: false,
     // issue #259: silence only extension-*probe* timeouts (env check). User-initiated

@@ -329,9 +329,10 @@ addToast({
 
 ## PostHog Analytics
 
-- **Project ID**: 259332
+- **Project ID**: 3
 - **Project Name**: MultiPost
-- **Organization**: 0199e216-bb22-0000-9349-7facf8dca509
+- **Management Host**: https://ph.leaper.one
+- **Project Token**: provided through `NEXT_PUBLIC_POSTHOG_KEY`
 
 ## MCP Servers
 

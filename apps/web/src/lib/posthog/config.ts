@@ -3,5 +3,12 @@
  * @description PostHog 的 API Key 和 Host 配置
  */
 
-export const POSTHOG_KEY = "phc_szGHmzMPL2vkmxOkrB120T4pSqq5WJWZdALmf1KCzdi";
-export const POSTHOG_HOST = "https://t.2some.one";
+function readEnv(name: string) {
+  const viteValue = import.meta.env?.[name];
+  if (typeof viteValue === "string" && viteValue.trim()) return viteValue.trim();
+  const processValue = typeof process !== "undefined" ? process.env[name] : undefined;
+  return processValue?.trim() ?? "";
+}
+
+export const POSTHOG_KEY = readEnv("NEXT_PUBLIC_POSTHOG_KEY");
+export const POSTHOG_HOST = readEnv("NEXT_PUBLIC_POSTHOG_HOST") || "https://t.multipost.app";

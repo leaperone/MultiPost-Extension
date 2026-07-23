@@ -3,14 +3,6 @@ import * as Sentry from '@sentry/electron/main'
 import { getTelemetryEnabled } from '../appSettings'
 import { sanitizeSentryEvent, sanitizeBreadcrumb } from './redaction'
 
-/**
- * Public DSN for the multipost-desktop Sentry project. A DSN is not a secret —
- * it is meant to be embedded in the client — so a hardcoded fallback keeps
- * crash reporting working even when SENTRY_DSN_DESKTOP isn't injected at build
- * time. Empty DSN ⇒ Sentry simply never initializes (graceful degrade).
- */
-const FALLBACK_DSN = 'https://1ae6d7d1c91e44a9b32b2bd31a2b1b81@sentry.leaperone.cn/12'
-
 let initialized = false
 
 /**
@@ -34,7 +26,7 @@ export function setSentryTelemetryEnabled(enabled: boolean): void {
 export function initSentryMain(): void {
   if (initialized) return
 
-  const dsn = process.env.SENTRY_DSN_DESKTOP || FALLBACK_DSN
+  const dsn = process.env.SENTRY_DSN_DESKTOP?.trim()
   if (!dsn) return
 
   telemetryEnabled = getTelemetryEnabled()

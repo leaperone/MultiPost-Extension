@@ -21,36 +21,26 @@ RUN --mount=type=cache,id=pnpm-multipost,target=/pnpm/store pnpm install --froze
 FROM deps AS builder
 ENV NODE_OPTIONS="--max-old-space-size=8192"
 
-# PostHog source map upload configuration
-ARG POSTHOG_API_KEY
-ARG POSTHOG_MULTIPOST_ENV_ID
+# Self-hosted PostHog project 3 runtime configuration. The token remains build-injected.
 ARG NEXT_PUBLIC_POSTHOG_KEY
 ARG NEXT_PUBLIC_POSTHOG_HOST
-ENV POSTHOG_API_KEY=$POSTHOG_API_KEY
-ENV POSTHOG_MULTIPOST_ENV_ID=$POSTHOG_MULTIPOST_ENV_ID
 ENV NEXT_PUBLIC_POSTHOG_KEY=$NEXT_PUBLIC_POSTHOG_KEY
 ENV NEXT_PUBLIC_POSTHOG_HOST=$NEXT_PUBLIC_POSTHOG_HOST
 
-# Sentry source map and release configuration
+# Sentry runtime and release configuration. Upload happens outside this build.
 ARG NEXT_PUBLIC_SENTRY_DSN
 ARG NEXT_PUBLIC_SENTRY_ENVIRONMENT
-ARG SENTRY_URL
-ARG SENTRY_ORG
-ARG SENTRY_PROJECT
 ARG SENTRY_RELEASE
 
 ENV NEXT_PUBLIC_SENTRY_DSN=$NEXT_PUBLIC_SENTRY_DSN \
     NEXT_PUBLIC_SENTRY_ENVIRONMENT=$NEXT_PUBLIC_SENTRY_ENVIRONMENT \
-    SENTRY_URL=$SENTRY_URL \
-    SENTRY_ORG=$SENTRY_ORG \
-    SENTRY_PROJECT=$SENTRY_PROJECT \
+    NEXT_PUBLIC_SENTRY_RELEASE=$SENTRY_RELEASE \
     SENTRY_RELEASE=$SENTRY_RELEASE
 
-RUN --mount=type=secret,id=sentry_auth_token \
-    if [ -f /run/secrets/sentry_auth_token ]; then \
-      export SENTRY_AUTH_TOKEN="$(cat /run/secrets/sentry_auth_token)"; \
-    fi && \
-    pnpm --filter multipost-web build
+RUN pnpm --filter multipost-web build && \
+    pnpm dlx @posthog/cli@0.4.4 sourcemap inject \
+      --directory /app/apps/web/dist && \
+    test -n "$(grep -RIl --include='*.js' --include='*.mjs' '//# chunkId=' /app/apps/web/dist | head -n 1 || true)"
 
 FROM scratch AS sourcemaps
 COPY --from=builder /app/apps/web/dist /dist
@@ -91,8 +81,10 @@ COPY --from=builder /app/apps/web/package.json ./apps/web/package.json
 COPY --from=builder /app/apps/web/node_modules ./apps/web/node_modules
 COPY --from=builder /app/apps/web/dist ./apps/web/dist
 COPY --from=builder /app/apps/web/public ./apps/web/public
-RUN if [ -d /app/apps/web/dist/client ]; then \
-      find /app/apps/web/dist/client -name '*.map' -delete; \
+RUN find /app/apps/web/dist -type f -name '*.map' -delete && \
+    if find /app/apps/web/dist -type f -name '*.map' | grep -q .; then \
+      echo "ERROR: source maps remain in the runtime image" >&2; \
+      exit 1; \
     fi
 WORKDIR /app/apps/web
 EXPOSE 3000
