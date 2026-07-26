@@ -169,7 +169,7 @@ function AboutPage() {
             </div>
             <div>
               <p className="text-sm text-foreground/60">QQ 群</p>
-              <p className="font-medium">867578227</p>
+              <p className="font-medium">921137242</p>
             </div>
           </div>
 
