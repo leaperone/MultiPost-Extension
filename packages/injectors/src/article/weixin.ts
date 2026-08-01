@@ -210,6 +210,36 @@ export async function ArticleWeixin(data: SyncData) {
     };
   }
 
+  async function uploadImageBySource(sourceUrl: string): Promise<WeixinUploadResult | null> {
+    const url = new URL("https://mp.weixin.qq.com/cgi-bin/uploadimg2cdn");
+    url.searchParams.append("lang", "zh_CN");
+    url.searchParams.append("token", token);
+    url.searchParams.append("t", Math.random().toString());
+
+    const formData = new FormData();
+    formData.append("imgurl", sourceUrl);
+    formData.append("t", "ajax-editor-upload-img");
+    formData.append("token", token);
+    formData.append("lang", "zh_CN");
+    formData.append("f", "json");
+    formData.append("ajax", "1");
+
+    try {
+      const response = await fetch(url.toString(), { method: "POST", body: formData });
+      const result = await response.json();
+      console.debug("uploadImageBySource res", result);
+      if (result.errcode !== 0 || !result.url) return null;
+
+      return {
+        fileId: Number(result.file_id) || 0,
+        url: result.url,
+      };
+    } catch (error) {
+      console.debug("uploadImageBySource failed", error);
+      return null;
+    }
+  }
+
   // 裁剪图片
   async function cropImage(image: WeixinUploadResult, cropConfigs: CropConfig[]): Promise<CropedImage[]> {
     const formData = new FormData();
@@ -277,7 +307,7 @@ export async function ArticleWeixin(data: SyncData) {
     formData.append("writerid0", "0");
     formData.append("fileid0", "");
     formData.append("digest0", articleData.digest?.slice(0, 120) || "");
-    formData.append("auto_gen_digest0", "1");
+    formData.append("auto_gen_digest0", articleData.digest?.trim() ? "0" : "1");
     formData.append("content0", content || "");
     formData.append("sourceurl0", "");
     formData.append("need_open_comment0", "1");
@@ -421,6 +451,12 @@ export async function ArticleWeixin(data: SyncData) {
     const doc = parser.parseFromString(content, "text/html");
     const images = doc.getElementsByTagName("img");
 
+    doc.querySelectorAll("a").forEach((link) => {
+      const replacement = doc.createElement("span");
+      replacement.innerHTML = link.innerHTML;
+      link.replaceWith(replacement);
+    });
+
     console.debug("images", images);
 
     for (let i = 0; i < images.length; i++) {
@@ -429,7 +465,7 @@ export async function ArticleWeixin(data: SyncData) {
       const src = img.getAttribute("src");
       if (src) {
         console.debug("try replace ", src);
-        const result = await uploadImage({ url: src });
+        const result = (await uploadImageBySource(src)) ?? (await uploadImage({ url: src }));
         if (result) {
           img.setAttribute("src", result.url);
         }

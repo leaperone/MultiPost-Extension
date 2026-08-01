@@ -4,10 +4,11 @@
 //
 // Migrated from extension src/contents/helper.ts. The Plasmo `config` export
 // (content-script matches/world metadata) is intentionally dropped: desktop
-// injects this directly and esbuild tree-shakes the unused export anyway, so the
-// runtime behavior (createElement hook + message listeners) is unchanged.
+// injects this directly and esbuild tree-shakes the unused export anyway. Keep
+// the shared handlers aligned with the extension's MAIN-world helper.
 import { handleBilibiliImageUpload } from "./helper/bilibili";
 import { handleBlueskyImageUpload, handleBlueskyVideoUpload } from "./helper/bluesky";
+import { handleWeiboVideoUpload, prepareWeiboVideoInput } from "./helper/weibo";
 import { handleXiaoheiheImageUpload, handleXiaoheiheVideoUpload } from "./helper/xiaoheihe";
 
 interface CodeMirrorElement extends HTMLDivElement {
@@ -24,12 +25,17 @@ document.createElement = (tagName, options) => {
 
   if (tagName.toLowerCase() === "input") {
     createdInputs.push(element);
+    prepareWeiboVideoInput(element);
     console.log("element", element);
   }
   return element;
 };
 
 function handleMessage(event: MessageEvent) {
+  if (event.source !== window || !event.data || typeof event.data !== "object") {
+    return;
+  }
+
   const data = event.data;
 
   if (data.type === "BILIBILI_DYNAMIC_UPLOAD_IMAGES") {
@@ -47,6 +53,8 @@ function handleMessage(event: MessageEvent) {
     handleXiaoheiheImageUpload(event);
   } else if (data.type === "XIAOHEIHE_VIDEO_UPLOAD") {
     handleXiaoheiheVideoUpload(event);
+  } else if (data.type === "WEIBO_UPLOAD_VIDEO") {
+    handleWeiboVideoUpload(event);
   }
 }
 

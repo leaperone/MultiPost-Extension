@@ -63,10 +63,10 @@ export async function VideoYoutube(data: SyncData) {
   }
   try {
     const videoData = data.data as VideoData;
-
-    if (videoData.tags && videoData.tags.length > 0) {
-      videoData.title = `${videoData.title} ${videoData.tags.map((tag) => `#${tag}`).join(" ")}`;
-    }
+    const originalTitle = videoData.title;
+    const displayTitle = videoData.tags?.length
+      ? `${originalTitle} ${videoData.tags.map((tag) => `#${tag}`).join(" ")}`
+      : originalTitle;
 
     // 等待上传按钮出现并点击
     const uploadIcon = await waitForElement("ytcp-icon-button#upload-icon");
@@ -95,7 +95,7 @@ export async function VideoYoutube(data: SyncData) {
     const response = await fetch(videoData.video.url);
     const arrayBuffer = await response.arrayBuffer();
     const extension = videoData.video.name.split(".").pop();
-    const fileName = `${videoData.title}.${extension}`;
+    const fileName = `${originalTitle}.${extension}`;
     const videoFile = new File([arrayBuffer], fileName, { type: videoData.video.type });
 
     const dataTransfer = new DataTransfer();
@@ -135,7 +135,7 @@ export async function VideoYoutube(data: SyncData) {
       cancelable: true,
       clipboardData: new DataTransfer(),
     });
-    titlePasteEvent.clipboardData!.setData("text/plain", videoData.title || "");
+    titlePasteEvent.clipboardData!.setData("text/plain", displayTitle || "");
     titleInput.dispatchEvent(titlePasteEvent);
     await new Promise((resolve) => setTimeout(resolve, 1000));
     titleInput.blur();

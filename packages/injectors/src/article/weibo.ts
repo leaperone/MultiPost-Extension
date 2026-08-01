@@ -3,6 +3,7 @@ import type { ArticleData, FileData, SyncData } from "../types";
 
 interface WeiboDraftEndpoint {
   version: string;
+  editorUrl: string;
   createUrl: string;
   saveUrl: string;
 }
@@ -14,38 +15,41 @@ interface DraftRequestResult {
 }
 
 const WEIBO_DRAFT_SUCCESS_CODE = 100000;
-const WEIBO_V3_EDITOR_URL = "https://card.weibo.com/article/v3/editor";
 
 export async function ArticleWeibo(data: SyncData) {
   const articleData = data.data as ArticleData;
   const draftEndpoints: WeiboDraftEndpoint[] = [
     {
       version: "v5",
+      editorUrl: "https://card.weibo.com/article/v5/editor",
       createUrl: "https://card.weibo.com/article/v5/aj/editor/draft/create",
       saveUrl: "https://card.weibo.com/article/v5/aj/editor/draft/save",
     },
     {
       version: "v3",
+      editorUrl: "https://card.weibo.com/article/v3/editor",
       createUrl: "https://card.weibo.com/article/v3/aj/editor/draft/create",
       saveUrl: "https://card.weibo.com/article/v3/aj/editor/draft/save",
     },
   ];
 
   async function getAccountId() {
-    try {
-      const res = await fetch(WEIBO_V3_EDITOR_URL);
-      if (!res.ok) {
-        console.debug(`v3 editor request failed: ${res.status} ${res.statusText}`);
-        return null;
-      }
+    for (const endpoint of draftEndpoints) {
+      try {
+        const res = await fetch(endpoint.editorUrl);
+        if (!res.ok) {
+          console.debug(`${endpoint.version} editor request failed: ${res.status} ${res.statusText}`);
+          continue;
+        }
 
-      const html = await res.text();
-      const match = html.match(/\$CONFIG\['uid'\]\s*=\s*(\d+);/);
-      return match ? match[1] : null;
-    } catch (error) {
-      console.debug("v3 editor request failed:", error);
-      return null;
+        const html = await res.text();
+        const match = html.match(/\$CONFIG\['uid'\]\s*=\s*(\d+);/);
+        if (match) return match[1];
+      } catch (error) {
+        console.debug(`${endpoint.version} editor request failed:`, error);
+      }
     }
+    return null;
   }
 
   const accountId = await getAccountId();
@@ -189,7 +193,12 @@ export async function ArticleWeibo(data: SyncData) {
     return doc.body.innerHTML;
   }
 
-  function buildDraftFormData(processedData: ArticleData, coverUrl: string | null, draftId: string) {
+  function buildDraftFormData(
+    endpoint: WeiboDraftEndpoint,
+    processedData: ArticleData,
+    coverUrl: string | null,
+    draftId: string,
+  ) {
     const formData = new FormData();
 
     formData.append("title", processedData.title?.slice(0, 32) || "");
@@ -230,7 +239,7 @@ export async function ArticleWeibo(data: SyncData) {
     formData.append("isreward_tips", "");
     formData.append(
       "isreward_tips_url",
-      `https://card.weibo.com/article/v3/aj/editor/draft/applyisrewardtips?uid${accountId}`,
+      `https://card.weibo.com/article/${endpoint.version}/aj/editor/draft/applyisrewardtips?uid=${accountId || ""}`,
     );
     formData.append("pay_setting", JSON.stringify([]));
     formData.append("source", "0");
@@ -307,7 +316,7 @@ export async function ArticleWeibo(data: SyncData) {
     saveUrl.searchParams.set("id", draftId);
     saveUrl.searchParams.set("_rid", new Date().getTime().toString());
 
-    const formData = buildDraftFormData(processedData, coverUrl, draftId);
+    const formData = buildDraftFormData(endpoint, processedData, coverUrl, draftId);
     console.debug(`${endpoint.version} formData`, formData);
 
     const saveResult = await requestDraftJson(
@@ -396,6 +405,194 @@ export async function ArticleWeibo(data: SyncData) {
     }
   }
 
+  function waitForElement<T extends Element>(
+    selector: string,
+    timeout = 15000,
+    root: ParentNode = document,
+  ): Promise<T> {
+    return new Promise((resolve, reject) => {
+      const existing = root.querySelector<T>(selector);
+      if (existing) {
+        resolve(existing);
+        return;
+      }
+
+      const observer = new MutationObserver(() => {
+        const element = root.querySelector<T>(selector);
+        if (element) {
+          observer.disconnect();
+          resolve(element);
+        }
+      });
+      const observationRoot = root instanceof Document ? root.documentElement : root;
+      if (!observationRoot) {
+        reject(new Error(`Cannot observe selector "${selector}" before the document root is ready`));
+        return;
+      }
+      observer.observe(observationRoot, { childList: true, subtree: true });
+
+      setTimeout(() => {
+        observer.disconnect();
+        reject(new Error(`Element with selector "${selector}" not found within ${timeout}ms`));
+      }, timeout);
+    });
+  }
+
+  function setNativeInputValue(element: HTMLInputElement | HTMLTextAreaElement, value: string) {
+    const prototype =
+      element instanceof HTMLTextAreaElement ? HTMLTextAreaElement.prototype : HTMLInputElement.prototype;
+    const setter = Object.getOwnPropertyDescriptor(prototype, "value")?.set;
+    if (!setter) {
+      throw new Error("未找到输入框原生 value setter");
+    }
+    setter.call(element, value);
+    element.dispatchEvent(new Event("input", { bubbles: true }));
+    element.dispatchEvent(new Event("change", { bubbles: true }));
+  }
+
+  function getEnabledActionTarget(element: HTMLElement | null): HTMLElement | null {
+    if (!element) return null;
+    const target = element.closest<HTMLButtonElement>("button") || element;
+    const disabled =
+      (target instanceof HTMLButtonElement && target.disabled) ||
+      target.getAttribute("aria-disabled") === "true" ||
+      target.classList.contains("disabled") ||
+      target.classList.contains("is-disabled");
+    return disabled ? null : target;
+  }
+
+  function editorHasContent(editor: HTMLElement, previousHtml: string): boolean {
+    return editor.innerHTML !== previousHtml && editor.innerHTML.trim().length > 0;
+  }
+
+  async function publishWithDomFallback(processedData: ArticleData): Promise<boolean> {
+    try {
+      let editorRoot = await waitForElement<HTMLElement>("div.WB_editor_box");
+
+      const createLink = Array.from(editorRoot.querySelectorAll("a")).find((element) =>
+        element.textContent?.includes("创作一篇新文章"),
+      );
+      if (createLink) {
+        createLink.dispatchEvent(new MouseEvent("click", { bubbles: true, cancelable: true }));
+        await new Promise((resolve) => setTimeout(resolve, 3000));
+      }
+
+      const titleInput = await waitForElement<HTMLTextAreaElement>(
+        'div.WB_editor_box textarea[placeholder="请输入标题"]',
+      );
+      editorRoot = titleInput.closest<HTMLElement>("div.WB_editor_box") || editorRoot;
+      const editor = editorRoot.querySelector<HTMLElement>(
+        '.ProseMirror[contenteditable="true"], .ql-editor[contenteditable="true"], [contenteditable="true"][role="textbox"], div[contenteditable="true"]',
+      );
+      if (!editor) return false;
+
+      const expectedTitle = processedData.title?.slice(0, 32) || "";
+      setNativeInputValue(titleInput, expectedTitle);
+      await new Promise((resolve) => setTimeout(resolve, 100));
+      if (titleInput.value !== expectedTitle) return false;
+
+      editor.focus();
+      const previousEditorHtml = editor.innerHTML;
+      const expectedBody = processedData.htmlContent || processedData.markdownContent || processedData.digest || "";
+      const clipboardData = new DataTransfer();
+      clipboardData.setData("text/html", processedData.htmlContent || "");
+      clipboardData.setData("text/plain", processedData.markdownContent || processedData.digest || "");
+      const pasteEvent = new ClipboardEvent("paste", {
+        bubbles: true,
+        cancelable: true,
+        clipboardData,
+      });
+      editor.dispatchEvent(pasteEvent);
+      editor.dispatchEvent(new Event("input", { bubbles: true }));
+      editor.dispatchEvent(new Event("change", { bubbles: true }));
+      await new Promise((resolve) => setTimeout(resolve, 2000));
+      if (expectedBody && !editorHasContent(editor, previousEditorHtml)) {
+        return false;
+      }
+
+      if (processedData.cover) {
+        editorRoot.querySelectorAll<HTMLElement>(".article-cover-delete").forEach((button) => button.click());
+        const addCover = editorRoot.querySelector<HTMLElement>("div.article-cover-add");
+        if (addCover) {
+          addCover.click();
+          await new Promise((resolve) => setTimeout(resolve, 1000));
+
+          const uploadDialog = Array.from(
+            document.querySelectorAll<HTMLElement>(
+              '[role="dialog"]:not([aria-hidden="true"]), .byte-modal-wrapper:not([aria-hidden="true"])',
+            ),
+          ).find((dialog) =>
+            Array.from(dialog.querySelectorAll<HTMLElement>("div.byte-tabs-header-title")).some((element) =>
+              element.textContent?.includes("上传图片"),
+            ),
+          );
+          const uploadTab = Array.from(
+            uploadDialog?.querySelectorAll<HTMLElement>("div.byte-tabs-header-title") || [],
+          ).find((element) => element.textContent?.includes("上传图片"));
+          uploadTab?.click();
+          await new Promise((resolve) => setTimeout(resolve, 500));
+
+          const fileInput =
+            uploadDialog?.querySelector<HTMLInputElement>('input[type="file"][accept*="image"]') ||
+            document.querySelector<HTMLInputElement>(
+              '.byte-modal-wrapper input[type="file"][accept*="image"], [role="dialog"] input[type="file"][accept*="image"]',
+            );
+          if (fileInput) {
+            const blob = await (await fetch(processedData.cover.url)).blob();
+            const coverFile = new File([blob], processedData.cover.name, {
+              type: processedData.cover.type || blob.type,
+            });
+            const dataTransfer = new DataTransfer();
+            dataTransfer.items.add(coverFile);
+            fileInput.files = dataTransfer.files;
+            fileInput.dispatchEvent(new Event("change", { bubbles: true }));
+            fileInput.dispatchEvent(new Event("input", { bubbles: true }));
+            await new Promise((resolve) => setTimeout(resolve, 3000));
+            const confirmButton = getEnabledActionTarget(
+              uploadDialog?.querySelector<HTMLElement>('button[data-e2e="imageUploadConfirm-btn"]') ||
+                document.querySelector<HTMLElement>(
+                  '[role="dialog"] button[data-e2e="imageUploadConfirm-btn"], .byte-modal-wrapper button[data-e2e="imageUploadConfirm-btn"]',
+                ),
+            );
+            if (!confirmButton) return false;
+            confirmButton.click();
+            await new Promise((resolve) => setTimeout(resolve, 1000));
+          } else if (data.isAutoPublish) {
+            return false;
+          }
+        } else if (data.isAutoPublish) return false;
+      }
+
+      if (!data.isAutoPublish) {
+        updateTip("内容已填入，请继续操作...");
+        return true;
+      }
+
+      if (titleInput.value !== expectedTitle || !editorHasContent(editor, previousEditorHtml)) return false;
+
+      const nextButton = getEnabledActionTarget(
+        Array.from(editorRoot.querySelectorAll<HTMLElement>("span.next")).find((element) =>
+          element.textContent?.includes("下一步"),
+        ) || null,
+      );
+      if (!nextButton) return false;
+      nextButton.click();
+      await new Promise((resolve) => setTimeout(resolve, 3000));
+
+      const publishButton = getEnabledActionTarget(
+        Array.from(document.querySelectorAll<HTMLButtonElement>("button.publish_dialog_publish")).find((element) =>
+          element.textContent?.includes("发布"),
+        ) || null,
+      );
+      if (!publishButton) return false;
+      publishButton.click();
+      return true;
+    } catch (error) {
+      console.debug("微博文章 DOM 兜底失败:", error);
+      return false;
+    }
+  }
+
   // Main flow.
   const host = document.createElement("div") as HTMLDivElement;
   const tip = document.createElement("div") as HTMLDivElement;
@@ -444,6 +641,13 @@ export async function ArticleWeibo(data: SyncData) {
         // Upload and replace article inline images.
         articleData.htmlContent = await processContent(articleData.htmlContent, articleData.images || [], updateTip);
 
+        if (data.isAutoPublish) {
+          updateTip("正在填充页面并准备发布...");
+          const published = await publishWithDomFallback(articleData);
+          if (!published) console.error("微博文章自动发布失败");
+          return published;
+        }
+
         // Cover upload is optional; missing cover should not block draft creation.
         let coverUrl: string | null = null;
         if (articleData.cover) {
@@ -463,17 +667,19 @@ export async function ArticleWeibo(data: SyncData) {
         if (draftId) {
           updateTip("草稿发布成功，请预览...");
 
-          if (!data.isAutoPublish) {
-            const draftUrl = "https://card.weibo.com/article/v3/editor";
-            console.debug("draftUrl", draftUrl);
-            window.location.href = draftUrl;
-          }
+          const draftUrl = draftEndpoints[0].editorUrl;
+          console.debug("draftUrl", draftUrl);
+          window.location.href = draftUrl;
           return true;
         }
 
-        // TODO: Add the DOM fallback publish path after live verification.
-        updateTip("草稿创建失败，请手动操作");
-        return false;
+        updateTip("接口创建草稿失败，正在尝试页面填充...");
+        const fallbackSucceeded = await publishWithDomFallback(articleData);
+        if (!fallbackSucceeded) {
+          updateTip("草稿创建失败，请手动操作");
+          console.error("微博文章页面填充失败");
+        }
+        return fallbackSucceeded;
       } catch (error) {
         console.error("发布文章失败:", error);
         return false;

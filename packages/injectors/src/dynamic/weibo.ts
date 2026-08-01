@@ -151,7 +151,20 @@ export async function DynamicWeibo(data: SyncData) {
       if (sendButton) {
         console.log("点击发送按钮");
         await new Promise((resolve) => setTimeout(resolve, 10000));
-        (sendButton as HTMLElement).click();
+        let submitted = false;
+        for (let attempt = 0; attempt < 20; attempt++) {
+          (sendButton as HTMLElement).click();
+          await new Promise((resolve) => setTimeout(resolve, 800));
+          const uploadingNotice = Array.from(document.querySelectorAll("div")).find(
+            (element) => element.textContent === "素材正在上传中，请稍后",
+          );
+          if (!uploadingNotice) {
+            submitted = true;
+            break;
+          }
+          await new Promise((resolve) => setTimeout(resolve, 3000));
+        }
+        if (!submitted) throw new Error("微博素材上传未完成，已停止自动发布");
         await new Promise((resolve) => setTimeout(resolve, 3000));
         window.location.reload();
       } else {

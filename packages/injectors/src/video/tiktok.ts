@@ -107,8 +107,12 @@ export async function VideoTiktok(data: SyncData) {
       title,
       tags = [],
       cover,
+      horizontalCover,
       description,
-    } = data.data as VideoData & { cover?: { url: string; name: string; type: string } };
+    } = data.data as VideoData & {
+      cover?: { url: string; name: string; type: string };
+      horizontalCover?: { url: string; name: string; type: string };
+    };
 
     // 处理视频上传
     if (video) {
@@ -145,8 +149,9 @@ ${tags.map((tag) => `#${tag}`).join(" ")}`;
       await new Promise((resolve) => setTimeout(resolve, 1000));
     }
 
-    if (cover) {
-      await uploadCover(cover);
+    const coverToUpload = cover ?? horizontalCover;
+    if (coverToUpload) {
+      await uploadCover(coverToUpload);
     }
 
     // 等待内容填写完成

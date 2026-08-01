@@ -152,7 +152,8 @@ export async function VideoIqiyi(data: SyncData) {
     }
 
     // Fill description.
-    const descTextarea = document.querySelector('textarea[placeholder="输入视频简介"]') as HTMLTextAreaElement | null;
+    const descTextarea = (document.querySelector('textarea[placeholder="输入视频简介"]') ||
+      findVisibleElement<HTMLTextAreaElement>("textarea")) as HTMLTextAreaElement | null;
     if (descTextarea) {
       descTextarea.focus();
       descTextarea.value = description || content || "";

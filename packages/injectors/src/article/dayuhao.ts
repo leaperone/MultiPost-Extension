@@ -170,6 +170,14 @@ export async function ArticleDaYuHao(data: SyncData) {
       console.debug("Dayuhao iframe body editor not found or content is empty");
     }
 
+    const singleCoverLabel = Array.from(
+      document.querySelectorAll<HTMLElement>("span.article-write-article-cover_normal-option-text"),
+    ).find((element) => element.textContent?.trim() === "单封面");
+    (singleCoverLabel?.previousElementSibling as HTMLElement | null)?.click();
+
+    const opinionRadio = document.querySelector<HTMLInputElement>('input.ant-radio-input[value="个人观点"]');
+    if (opinionRadio && !opinionRadio.checked) opinionRadio.click();
+
     clickPublishIfRequested(required);
   } catch (error) {
     console.error("Dayuhao article publish failed:", error);

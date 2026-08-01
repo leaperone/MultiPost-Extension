@@ -1,7 +1,7 @@
 import type { SyncData, VideoData } from "../types";
 
 export async function VideoWeibo(data: SyncData) {
-  const { content, video, title, tags, cover } = data.data as VideoData;
+  const { content, video, title, tags, cover, horizontalCover } = data.data as VideoData;
 
   function waitForElement(selector: string, timeout = 10000): Promise<Element> {
     return new Promise((resolve, reject) => {
@@ -41,35 +41,62 @@ export async function VideoWeibo(data: SyncData) {
     dropTarget.dispatchEvent(drop);
   }
 
-  try {
-    // 等待文件上传按钮出现
-    await waitForElement('input[type="file"]');
+  function uploadViaPageFileInput(file: File): Promise<boolean> {
+    return new Promise((resolve) => {
+      const requestId = crypto.randomUUID();
+      let settled = false;
 
+      const finish = (success: boolean) => {
+        if (settled) return;
+        settled = true;
+        window.removeEventListener("message", handleResult);
+        resolve(success);
+      };
+
+      const handleResult = (event: MessageEvent) => {
+        if (
+          event.source === window &&
+          event.data?.type === "WEIBO_UPLOAD_VIDEO_RESULT" &&
+          event.data?.requestId === requestId
+        ) {
+          finish(event.data.success === true);
+        }
+      };
+
+      window.addEventListener("message", handleResult);
+      window.postMessage({ type: "WEIBO_UPLOAD_VIDEO", requestId, files: [file] }, "*");
+      setTimeout(() => finish(false), 8000);
+    });
+  }
+
+  try {
     // 处理视频上传
     if (video) {
+      await waitForElement("button[id^='video_button_upload_']");
+
       const response = await fetch(video.url);
       const arrayBuffer = await response.arrayBuffer();
       const videoFile = new File([arrayBuffer], video.name, { type: video.type });
       console.log(`文件: ${videoFile.name} ${videoFile.type} ${videoFile.size}`);
 
-      // 查找上传视频按钮
-      const buttons = document.querySelectorAll("button");
-      const uploadVideoButton = Array.from(buttons).find((button) => button.textContent?.includes("上传视频"));
+      const uploadedViaPageInput = await uploadViaPageFileInput(videoFile);
+      if (!uploadedViaPageInput) {
+        const buttons = document.querySelectorAll("button");
+        const uploadVideoButton = Array.from(buttons).find((button) => button.textContent?.includes("上传视频"));
 
-      if (!uploadVideoButton) {
-        throw new Error('未找到"上传视频"按钮');
+        if (!uploadVideoButton) {
+          throw new Error('未找到"上传视频"按钮');
+        }
+
+        const dragArea = uploadVideoButton.parentElement?.parentElement;
+        if (!dragArea) {
+          throw new Error("未找到拖拽区域");
+        }
+
+        const dataTransfer = new DataTransfer();
+        dataTransfer.items.add(videoFile);
+        simulateDragAndDrop(dragArea, dataTransfer);
       }
-
-      // 获取拖拽区域
-      const dragArea = uploadVideoButton.parentElement?.parentElement;
-      if (!dragArea) {
-        throw new Error("未找到拖拽区域");
-      }
-
-      // 创建 DataTransfer 对象并模拟拖拽
-      const dataTransfer = new DataTransfer();
-      dataTransfer.items.add(videoFile);
-      simulateDragAndDrop(dragArea, dataTransfer);
 
       // 等待上传完成
       await new Promise((resolve) => setTimeout(resolve, 3000));
@@ -172,8 +199,9 @@ export async function VideoWeibo(data: SyncData) {
       }
     }
 
-    if (cover) {
-      await uploadCover(cover);
+    const selectedCover = cover || horizontalCover;
+    if (selectedCover) {
+      await uploadCover(selectedCover);
     }
 
     // 处理自动发布

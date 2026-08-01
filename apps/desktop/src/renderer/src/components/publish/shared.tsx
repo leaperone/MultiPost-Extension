@@ -146,6 +146,7 @@ export const PLATFORM_CATEGORIES: PlatformCategory[] = [
       'wordpress',
       'aliyun',
       'tencentyun',
+      'volcengine',
       'medium',
       'oschina',
       'infoq',

@@ -140,6 +140,7 @@ export async function DynamicX(data: SyncData) {
     } else {
       // 如果没找到发布按钮，尝试使用快捷键发布
       console.debug("未找到'发送'按钮");
+      const isMac = /Mac|macOS/.test(navigator.userAgent);
       const keyEvent = new KeyboardEvent("keydown", {
         bubbles: true,
         cancelable: true,
@@ -147,14 +148,15 @@ export async function DynamicX(data: SyncData) {
         code: "Enter",
         keyCode: 13,
         which: 13,
-        metaKey: true,
+        metaKey: isMac,
+        ctrlKey: !isMac,
         composed: true,
       });
 
       // 再次聚焦编辑器并发送快捷键
       (editor as HTMLElement).focus();
       editor.dispatchEvent(keyEvent);
-      console.debug("CMD+Enter 事件触发完成");
+      console.debug(`${isMac ? "CMD" : "CTRL"}+Enter 事件触发完成`);
     }
   } catch (error) {
     console.error("X 发布过程中出错:", error);

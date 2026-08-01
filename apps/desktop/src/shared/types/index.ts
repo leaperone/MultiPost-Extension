@@ -60,6 +60,7 @@ export type PlatformType =
   | 'wordpress'
   | 'aliyun'
   | 'tencentyun'
+  | 'volcengine'
   | 'medium'
   | 'oschina'
   | 'infoq'

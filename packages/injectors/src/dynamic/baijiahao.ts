@@ -34,23 +34,33 @@ export async function DynamicBaijiahao(data: SyncData) {
     const { content, images, title, tags } = data.data as DynamicData;
 
     // 等待编辑器出现并输入内容
-    await waitForElement("textarea#content");
+    await waitForElement('div[contenteditable="true"], textarea#content');
     await new Promise((resolve) => setTimeout(resolve, 1000));
 
     // 更新编辑器内容
-    const editor = document.querySelector("textarea#content") as HTMLTextAreaElement;
+    const editor = document.querySelector<HTMLElement>('div[contenteditable="true"], textarea#content');
     if (editor) {
       const tagSuffix = tags?.length ? ` ${tags.map((t) => `#${t}`).join(" ")}` : "";
       const combinedContent = `${title ? `${title}\n\n` : ""}${content || ""}${tagSuffix}`;
-      editor.value = combinedContent;
-      editor.dispatchEvent(new Event("input", { bubbles: true }));
-      editor.dispatchEvent(new Event("change", { bubbles: true }));
-      console.debug("titleTextarea", editor, editor?.value, combinedContent);
+      if (editor instanceof HTMLTextAreaElement) {
+        editor.value = combinedContent;
+        editor.dispatchEvent(new Event("input", { bubbles: true }));
+        editor.dispatchEvent(new Event("change", { bubbles: true }));
+      } else {
+        const pasteEvent = new ClipboardEvent("paste", {
+          bubbles: true,
+          cancelable: true,
+          clipboardData: new DataTransfer(),
+        });
+        pasteEvent.clipboardData?.setData("text/plain", combinedContent);
+        editor.dispatchEvent(pasteEvent);
+      }
+      console.debug("contentEditor", editor, combinedContent);
     }
 
     // 处理图片上传
     if (images.length > 0) {
-      const uploadButton = document.querySelector("div.uploader-plus") as HTMLElement;
+      const uploadButton = document.querySelector<HTMLElement>('div[class*="-empty"], div.uploader-plus');
       if (uploadButton) {
         console.debug("Found upload image button", uploadButton);
         uploadButton.dispatchEvent(new Event("click", { bubbles: true }));
@@ -77,7 +87,7 @@ export async function DynamicBaijiahao(data: SyncData) {
 
         const dataTransfer = new DataTransfer();
 
-        for (const image of images) {
+        for (const image of images.slice(0, 9)) {
           if (!image.type.startsWith("image/")) {
             console.debug("Skipping non-image file:", image);
             continue;

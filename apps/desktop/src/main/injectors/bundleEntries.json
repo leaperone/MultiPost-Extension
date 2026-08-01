@@ -23,7 +23,7 @@
     "extensionKey": "ARTICLE_WEIBO",
     "source": "article/weibo.ts",
     "exportName": "ArticleWeibo",
-    "injectUrl": "https://card.weibo.com/article/v3/editor",
+    "injectUrl": "https://card.weibo.com/article/v5/editor",
     "accountKey": "weibo"
   },
   {
@@ -655,6 +655,15 @@
     "exportName": "ArticleTencentyun",
     "injectUrl": "https://cloud.tencent.com/developer/article/write-new",
     "accountKey": "tencentyun"
+  },
+  {
+    "desktopPlatform": "volcengine",
+    "contentType": "ARTICLE",
+    "extensionKey": "ARTICLE_VOLCENGINE",
+    "source": "article/volcengine.ts",
+    "exportName": "ArticleVolcengine",
+    "injectUrl": "https://developer.volcengine.com/articles/draft",
+    "accountKey": "volcengine"
   },
   {
     "desktopPlatform": "qie",

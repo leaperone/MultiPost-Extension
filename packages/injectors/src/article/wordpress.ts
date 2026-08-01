@@ -41,6 +41,12 @@ export async function ArticleWordpress(data: SyncData) {
     );
   }
 
+  function getRestNonce(): string | undefined {
+    const pageHtml = `${document.body?.innerHTML ?? ""}\n${document.head?.innerHTML ?? ""}`;
+    const nonceQuote = pageHtml.match(/wp\.apiFetch\.createNonceMiddleware\(([^)]+)\)/)?.[1];
+    return nonceQuote?.match(/"([^"]+)"/)?.[1];
+  }
+
   // Upload media through the classic editor endpoint.
   async function uploadMediaClassic(fileData: FileData, postId: string): Promise<string | undefined> {
     console.debug("uploadMediaClassic", fileData);
@@ -89,10 +95,7 @@ export async function ArticleWordpress(data: SyncData) {
     console.debug("uploadMediaApi", fileData);
 
     // Read the REST nonce from the block editor page.
-    const nonceMatch = document.body.innerHTML.match(/wp\.apiFetch\.createNonceMiddleware\(([^)]+)\)/);
-    const nonceQuote = nonceMatch?.[1];
-    console.debug("nonceQuote", nonceQuote);
-    const nonce = nonceQuote?.match(/"([^"]+)"/)?.[1];
+    const nonce = getRestNonce();
     console.debug("nonce", nonce);
 
     const uploadUrl = `${window.location.origin}/wp-json/wp/v2/media?_locale=user`;
@@ -221,9 +224,7 @@ export async function ArticleWordpress(data: SyncData) {
   async function publishDraftApi(articleData: ArticleData, postId: string): Promise<boolean> {
     console.debug("publishDraftApi");
 
-    const nonceMatch = document.body.innerHTML.match(/wp\.apiFetch\.createNonceMiddleware\(([^)]+)\)/);
-    const nonceQuote = nonceMatch?.[1];
-    const nonce = nonceQuote?.match(/"([^"]+)"/)?.[1];
+    const nonce = getRestNonce();
 
     const apiUrl = `${window.location.origin}/wp-json/wp/v2/posts/${postId}?_locale=user`;
 

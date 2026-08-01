@@ -1,14 +1,48 @@
-import type { ArticleData, SyncData } from "../types";
+import type { ArticleData, FileData, SyncData } from "../types";
 
 export async function ArticleEastmoney(data: SyncData) {
+  function getCookie(name: string): string {
+    return (
+      document.cookie
+        .split("; ")
+        .find((item) => item.startsWith(`${name}=`))
+        ?.split("=")[1] || ""
+    );
+  }
+
+  async function uploadImage(fileData: FileData): Promise<string | null> {
+    const source = await fetch(fileData.url);
+    const blob = await source.blob();
+    const formData = new FormData();
+    formData.append("file", new File([blob], fileData.name, { type: fileData.type || blob.type }));
+    formData.append("ctoken", getCookie("ct"));
+    formData.append("utoken", getCookie("ut"));
+
+    try {
+      const response = await fetch("https://gbapi.eastmoney.com/iimage/image?platform=", {
+        method: "POST",
+        body: formData,
+      });
+      if (!response.ok) return null;
+      const result = await response.json();
+      return result?.data?.url || null;
+    } catch (error) {
+      console.debug("正文图片上传失败:", error);
+      return null;
+    }
+  }
+
   // 处理文章内容中的图片
-  async function processContent(htmlContent: string): Promise<string> {
+  async function processContent(htmlContent: string, imageFiles: FileData[]): Promise<string> {
     const parser = new DOMParser();
     const doc = parser.parseFromString(htmlContent, "text/html");
-    const images = doc.getElementsByTagName("img");
 
-    for (const img of images) {
-      img.remove();
+    for (const image of Array.from(doc.getElementsByTagName("img"))) {
+      const sourceUrl = image.getAttribute("src");
+      const fileData = imageFiles.find((file) => file.url === sourceUrl);
+      if (!fileData) continue;
+      const uploadedUrl = await uploadImage(fileData);
+      if (uploadedUrl) image.setAttribute("src", uploadedUrl);
     }
     return doc.body.innerHTML;
   }
@@ -45,7 +79,7 @@ export async function ArticleEastmoney(data: SyncData) {
   // 发布文章
   async function publishArticle(syncData: SyncData, updateTipFn: (message: string) => void): Promise<void> {
     const articleData = syncData.data as ArticleData;
-    articleData.htmlContent = await processContent(articleData.htmlContent);
+    articleData.htmlContent = await processContent(articleData.htmlContent, articleData.images || []);
 
     // 等待标题输入框加载
     await waitForElement('input[placeholder="标题(1-64字)"]');
@@ -137,7 +171,7 @@ export async function ArticleEastmoney(data: SyncData) {
     }
 
     // 勾选阅读协议
-    const checkIcon = document.querySelector("footer.read_item > i.check-icon") as HTMLElement;
+    const checkIcon = document.querySelector("footer.read_item > i.check-icon:not(.on)") as HTMLElement;
     console.debug("checkIcon", checkIcon);
     if (checkIcon) {
       checkIcon.click();

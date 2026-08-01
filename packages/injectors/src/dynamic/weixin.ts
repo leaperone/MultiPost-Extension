@@ -3,20 +3,15 @@ import type { DynamicData, SyncData } from "../types";
 interface WeixinUploadResult {
   fileId: number;
   url: string;
-}
-
-interface CropConfig {
-  x1: number;
-  y1: number;
-  x2: number;
-  y2: number;
+  width?: number;
+  height?: number;
 }
 
 export async function DynamicWeixin(data: SyncData) {
   // 从URL中提取token
   await new Promise((resolve) => setTimeout(resolve, 1000));
 
-  async function readInfo(): Promise<{ token: string; nickname: string }> {
+  async function readInfo(): Promise<{ token: string; nickname: string; ticket: string; userName: string }> {
     const response = await fetch("https://mp.weixin.qq.com/");
     const html = await response.text();
 
@@ -26,7 +21,12 @@ export async function DynamicWeixin(data: SyncData) {
       const token = html.match(/"&token\s*=\s*([^"]+)"/)?.[1] || "";
       const nickname = html.match(/nick_name\s*:\s*"([^"]+)",/)?.[1] || "";
       if (!token) throw new Error("无法获取微信公众号信息");
-      return { token, nickname: decodeURIComponent(nickname) };
+      return {
+        token,
+        nickname: decodeURIComponent(nickname),
+        ticket: html.match(/ticket\s*:\s*"(\w+)",/)?.[1] || "",
+        userName: html.match(/user_name\s*:\s*"(\w+)",/)?.[1] || "",
+      };
     }
 
     // 提取 token 和 nickname
@@ -42,73 +42,16 @@ export async function DynamicWeixin(data: SyncData) {
 
     console.log("提取的数据:", { token, nickname });
 
-    return { token, nickname };
-  }
-
-  const { token } = await readInfo();
-  const dynamicData = data.data as DynamicData;
-
-  // 计算裁剪配置
-  function calculateCropConfig(ratio: number, width: number, height: number): CropConfig {
-    let x1;
-    let y1;
-    let x2;
-    let y2;
-
-    if (width / height > ratio) {
-      // 图片太宽,需要裁剪两边
-      const targetWidth = height * ratio;
-      const cropPercent = (width - targetWidth) / 2 / width;
-      x1 = cropPercent;
-      y1 = 0;
-      x2 = 1 - cropPercent;
-      y2 = 1;
-    } else {
-      // 图片太高,需要裁剪上下
-      const targetHeight = width / ratio;
-      const cropPercent = (height - targetHeight) / 2 / height;
-      x1 = 0;
-      y1 = cropPercent;
-      x2 = 1;
-      y2 = 1 - cropPercent;
-    }
-
-    return { x1, y1, x2, y2 };
-  }
-
-  // 裁剪图片
-  async function cropImage(image: WeixinUploadResult, config: CropConfig): Promise<WeixinUploadResult | null> {
-    const formData = new FormData();
-    formData.append("imgurl", image.url);
-    formData.append("size_count", "1");
-    formData.append("size0_x1", config.x1.toString());
-    formData.append("size0_y1", config.y1.toString());
-    formData.append("size0_x2", config.x2.toString());
-    formData.append("size0_y2", config.y2.toString());
-    formData.append("token", token);
-    formData.append("lang", "zh_CN");
-    formData.append("f", "json");
-    formData.append("ajax", "1");
-
-    const url = new URL("https://mp.weixin.qq.com/cgi-bin/cropimage");
-    url.searchParams.set("action", "crop_multi");
-    url.searchParams.set("token", token);
-    url.searchParams.set("lang", "zh_CN");
-
-    const response = await fetch(url.toString(), {
-      method: "POST",
-      body: formData,
-    });
-
-    const result = await response.json();
-    if (result.base_resp.err_msg !== "ok") return null;
-
-    const cropResult = result.result[0];
     return {
-      fileId: cropResult.file_id,
-      url: cropResult.cdnurl,
+      token,
+      nickname,
+      ticket: html.match(/ticket\s*:\s*"(\w+)",/)?.[1] || "",
+      userName: html.match(/user_name\s*:\s*"(\w+)",/)?.[1] || "",
     };
   }
+
+  const { token, ticket, userName } = await readInfo();
+  const dynamicData = data.data as DynamicData;
 
   // 上传图片
   async function uploadImage(file: File): Promise<WeixinUploadResult | null> {
@@ -126,8 +69,13 @@ export async function DynamicWeixin(data: SyncData) {
     url.searchParams.set("scene", "5"); // 动态场景使用5
     url.searchParams.set("writetype", "doublewrite");
     url.searchParams.set("groupid", "1");
+    url.searchParams.set("ticket_id", userName);
+    url.searchParams.set("ticket", ticket);
+    url.searchParams.set("svr_time", Math.floor(Date.now() / 1000).toString());
     url.searchParams.set("token", token);
     url.searchParams.set("lang", "zh_CN");
+    url.searchParams.set("seq", Date.now().toString());
+    url.searchParams.set("t", Math.random().toString());
 
     const response = await fetch(url.toString(), {
       method: "POST",
@@ -146,7 +94,8 @@ export async function DynamicWeixin(data: SyncData) {
   // 创建动态
   async function createDynamic(content: string, images: WeixinUploadResult[]) {
     const formData = new FormData();
-    const title = dynamicData.title || content?.trim().split("\n")[0].slice(0, 32) || "";
+    const title = dynamicData.title?.slice(0, 64) || content?.trim().split("\n")[0].slice(0, 64) || "";
+    const normalizedContent = content.slice(0, 1000);
 
     // 基本信息
     formData.append("token", token);
@@ -177,7 +126,7 @@ export async function DynamicWeixin(data: SyncData) {
     formData.append("digest0", "");
     formData.append("auto_gen_digest0", "1");
     const tagSuffix = dynamicData.tags?.length ? ` ${dynamicData.tags.map((t) => `#${t}`).join(" ")}` : "";
-    formData.append("content0", `${content}${tagSuffix}`);
+    formData.append("content0", `${normalizedContent}${tagSuffix}`.slice(0, 1000));
     formData.append("sourceurl0", "");
     formData.append("need_open_comment0", "1");
     formData.append("only_fans_can_comment0", "0");
@@ -192,6 +141,11 @@ export async function DynamicWeixin(data: SyncData) {
     const imageInfos = images.map((img) => ({
       url: img.url,
       file_id: img.fileId,
+      height: img.height,
+      width: img.width,
+      theme_color: "rgb(187,166,135)",
+      disable_theme: 0,
+      disable_live: 0,
       cdn_url: img.url,
     }));
 
@@ -218,7 +172,7 @@ export async function DynamicWeixin(data: SyncData) {
     formData.append("free_content0", "");
     formData.append("fee0", "0");
     formData.append("ad_id0", "");
-    formData.append("guide_words0", content);
+    formData.append("guide_words0", normalizedContent);
     formData.append("is_share_copyright0", "0");
     formData.append("share_copyright_url0", "");
     formData.append("source_article_type0", "");
@@ -320,8 +274,6 @@ export async function DynamicWeixin(data: SyncData) {
 
     // 上传图片
     const uploadedImages: WeixinUploadResult[] = [];
-    const ratios = [16 / 9, 1, 3 / 4]; // 支持的裁剪比例
-
     let imageCount = 0;
     for (const fileData of dynamicData.images) {
       const file = await fetch(fileData.url).then((r) => r.blob());
@@ -350,19 +302,7 @@ export async function DynamicWeixin(data: SyncData) {
           img.src = objectUrl;
         });
 
-        // 对每个上传的图片进行裁剪
-        const cropConfigs = ratios.map((ratio) =>
-          calculateCropConfig(ratio, imageDimensions.width, imageDimensions.height),
-        );
-        const croppedImages = await Promise.all(cropConfigs.map((config) => cropImage(uploadResult, config)));
-
-        // 使用第一个成功裁剪的图片
-        const croppedImage = croppedImages.find((img) => img !== null);
-        if (croppedImage) {
-          uploadedImages.push(croppedImage);
-        } else {
-          uploadedImages.push(uploadResult);
-        }
+        uploadedImages.push({ ...uploadResult, ...imageDimensions });
       }
     }
 

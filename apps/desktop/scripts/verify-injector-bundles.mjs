@@ -4,7 +4,7 @@ import {
   INJECTOR_GLOBAL_NAME
 } from './injector-bundles.mjs'
 
-const EXPECTED_INJECTOR_COUNT = 106
+const EXPECTED_INJECTOR_COUNT = 107
 
 function fail(message) {
   console.error(`[verify:injectors] ${message}`)
@@ -42,6 +42,9 @@ if (typeof helperResult.iife !== 'string' || helperResult.iife.length === 0) {
   // 必须含 createElement 劫持 + B 站图片消息监听,且不得残留 Plasmo 运行时依赖。
   if (!helperResult.iife.includes('BILIBILI_DYNAMIC_UPLOAD_IMAGES')) {
     fail('content-helper bundle missing BILIBILI_DYNAMIC_UPLOAD_IMAGES listener')
+  }
+  if (!helperResult.iife.includes('WEIBO_UPLOAD_VIDEO')) {
+    fail('content-helper bundle missing WEIBO_UPLOAD_VIDEO listener')
   }
   if (!helperResult.iife.includes('createElement')) {
     fail('content-helper bundle missing document.createElement hook')

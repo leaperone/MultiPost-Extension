@@ -1,6 +1,5 @@
 import type { DynamicData, SyncData } from "../types";
 
-// 只支持图文，不支持视频
 export async function DynamicThreads(data: SyncData) {
   const { title, content, images, videos, tags } = data.data as DynamicData;
 
@@ -132,8 +131,8 @@ export async function DynamicThreads(data: SyncData) {
 
     console.debug("成功填入Threads内容");
 
-    const requestedMediaCount = (images?.length ?? 0) + (videos?.length ?? 0);
-    const mediaFiles = [...(images || []), ...(videos?.[0] ? [videos[0]] : [])].slice(0, 20);
+    const mediaFiles = [...(images || []), ...(videos || [])].slice(0, 20);
+    const requestedMediaCount = mediaFiles.length;
     let attachedMediaCount = 0;
     if (mediaFiles.length > 0) {
       const fileInput = await findMediaFileInput();
@@ -172,7 +171,7 @@ export async function DynamicThreads(data: SyncData) {
       }
     }
 
-    console.debug("成功填入Threads内容和图片");
+    console.debug("成功填入Threads内容和媒体");
 
     // Wait briefly before trying to publish.
     await new Promise((resolve) => setTimeout(resolve, 5000));
@@ -192,6 +191,6 @@ export async function DynamicThreads(data: SyncData) {
       }
     }
   } catch (error) {
-    console.error("填入Threads内容或上传图片时出错:", error);
+    console.error("填入Threads内容或上传媒体时出错:", error);
   }
 }

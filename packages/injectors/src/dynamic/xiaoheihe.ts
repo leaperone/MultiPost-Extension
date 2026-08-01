@@ -31,19 +31,28 @@ export async function DynamicXiaoheihe(data: SyncData) {
     });
   }
 
+  async function waitForAnyElement(selectors: string[], timeout = 10000): Promise<Element> {
+    return waitForElement(selectors.join(", "), timeout);
+  }
+
   try {
-    const titleEditorSelector = "div.hb-cpt__editor-title .ProseMirror.hb-editor";
-    const contentEditorSelector = "div.image-text__edit-content .ProseMirror.hb-editor";
+    const titleEditorSelectors = [
+      'div.editor-title__container > div[contenteditable="true"]',
+      "div.hb-cpt__editor-title .ProseMirror.hb-editor",
+    ];
+    const contentEditorSelectors = [
+      'div.image-text__edit-content--inner > div[contenteditable="true"]',
+      "div.image-text__edit-content .ProseMirror.hb-editor",
+    ];
 
     // 等待编辑器元素出现
-    await waitForElement(contentEditorSelector);
+    const contentEditor = await waitForAnyElement(contentEditorSelectors);
     await new Promise((resolve) => setTimeout(resolve, 1000));
 
     // 填写标题
     if (title) {
       try {
-        await waitForElement(titleEditorSelector);
-        const titleEditor = document.querySelector(titleEditorSelector);
+        const titleEditor = await waitForAnyElement(titleEditorSelectors);
         if (titleEditor) {
           (titleEditor as HTMLElement).focus();
           const titlePasteEvent = new ClipboardEvent("paste", {
@@ -61,7 +70,6 @@ export async function DynamicXiaoheihe(data: SyncData) {
     }
 
     // 填写正文
-    const contentEditor = document.querySelector(contentEditorSelector);
     if (!contentEditor) {
       console.debug("未找到正文编辑器元素");
       return;
@@ -75,6 +83,8 @@ export async function DynamicXiaoheihe(data: SyncData) {
       clipboardData: new DataTransfer(),
     });
     const tagSuffix = tags?.length ? ` ${tags.map((t) => `#${t}`).join(" ")}` : "";
+    const htmlContent = `${content || ""}${tagSuffix}`.replace(/\n/g, "<br />");
+    contentPasteEvent.clipboardData!.setData("text/html", htmlContent);
     contentPasteEvent.clipboardData!.setData("text/plain", `${content || ""}${tagSuffix}`);
     contentEditor.dispatchEvent(contentPasteEvent);
 
@@ -100,7 +110,9 @@ export async function DynamicXiaoheihe(data: SyncData) {
     await new Promise((resolve) => setTimeout(resolve, 3000));
 
     // 查找发布按钮
-    const publishButton = document.querySelector<HTMLButtonElement>("button.editor-publish__btn");
+    const publishButton = document.querySelector<HTMLButtonElement>(
+      "button.editor-publish__btn.main-btn, button.editor-publish__btn",
+    );
 
     console.debug("sendButton", publishButton);
 

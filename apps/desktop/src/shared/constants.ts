@@ -529,6 +529,15 @@ export const PLATFORMS: Record<string, PlatformInfo> = {
     loginUrl: 'https://cloud.tencent.com/login',
     supportedContentTypes: ['ARTICLE']
   },
+  volcengine: {
+    id: 'volcengine',
+    name: '火山引擎',
+    icon: 'volcengine',
+    faviconUrl: 'https://lf1-cdn-tos.bytegoofy.com/goofy/tech-fe/fav.png',
+    url: 'https://developer.volcengine.com',
+    loginUrl: 'https://developer.volcengine.com',
+    supportedContentTypes: ['ARTICLE']
+  },
   medium: {
     id: 'medium',
     name: 'Medium',
@@ -741,7 +750,7 @@ export const PLATFORM_PUBLISH_URLS: Record<string, Partial<Record<SyncContentTyp
   weibo: {
     DYNAMIC: 'https://weibo.com',
     VIDEO: 'https://weibo.com/upload/channel',
-    ARTICLE: 'https://card.weibo.com/article/v3/editor'
+    ARTICLE: 'https://card.weibo.com/article/v5/editor'
   },
   xiaohongshu: {
     DYNAMIC: 'https://creator.xiaohongshu.com/publish/publish?target=image',
@@ -940,6 +949,9 @@ export const PLATFORM_PUBLISH_URLS: Record<string, Partial<Record<SyncContentTyp
   },
   tencentyun: {
     ARTICLE: 'https://cloud.tencent.com/developer/article/write-new'
+  },
+  volcengine: {
+    ARTICLE: 'https://developer.volcengine.com/articles/draft'
   },
   medium: {
     ARTICLE: 'https://medium.com/new-story'
