@@ -1,4 +1,5 @@
 import { createFileRoute } from '@tanstack/react-router';
+import type { JsonValue } from '@db/helpers';
 import { Draft, ExtensionClient, ExtensionTask } from '@db/schema/schema';
 import { and, eq, isNull } from 'drizzle-orm';
 
@@ -6,7 +7,7 @@ import { authKey } from '../../../lib/authKey';
 import { preflightResponse, withCors } from '../../../lib/cors';
 import { db } from '../../../lib/db';
 import { errorResponse, successResponse, unauthenticatedResponse } from '../../../lib/response';
-import { DraftPostData, taskSchema, TaskStatus, TaskType } from './-types';
+import { taskSchema, TaskStatus, TaskType } from './-types';
 
 export const Route = createFileRoute('/api/extension/task')({
   server: {
@@ -44,13 +45,10 @@ async function POST({ request }: { request: Request }) {
     }
 
     if (validatedData.taskType === TaskType.DRAFT_POST) {
-      if (!('draftId' in validatedData.taskData)) {
-        throw new Error('DRAFT_ID_REQUIRED');
-      }
       const [draft] = await db
         .select()
         .from(Draft)
-        .where(and(eq(Draft.id, (validatedData.taskData as DraftPostData).draftId), eq(Draft.userId, userId)))
+        .where(and(eq(Draft.id, validatedData.taskData.draftId), eq(Draft.userId, userId)))
         .limit(1);
       if (!draft) {
         throw new Error('DRAFT_NOT_FOUND');
@@ -63,7 +61,7 @@ async function POST({ request }: { request: Request }) {
         userId,
         targetClientId: validatedData.targetClientId,
         taskType: validatedData.taskType,
-        taskData: body.taskData,
+        taskData: validatedData.taskData as JsonValue,
         status: TaskStatus.PENDING,
       })
       .returning();

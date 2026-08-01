@@ -1,22 +1,49 @@
 {
-  "error": {
-    "title": "Error",
-    "task_id_required": "Task ID is required",
-    "fetch_failed": "Failed to fetch task data"
+  "states": {
+    "loading": {
+      "title": "Receiving publish task",
+      "description": "MultiPost is verifying the task and connecting to the browser extension."
+    },
+    "waiting": {
+      "title": "Task ready",
+      "description": "The publish window will open in {{countdown}}. Keep this page open."
+    },
+    "publishing": {
+      "title": "Opening publish window",
+      "description": "The browser extension is creating platform tabs. Do not close this page yet."
+    },
+    "done": {
+      "title": "Publish window opened",
+      "description": "The browser extension has accepted the task. Continue in the newly opened platform tabs."
+    },
+    "failed": {
+      "title": "Publish task could not start",
+      "next_step": "Make sure the MultiPost extension is enabled and the client is online, then create a new task from the caller."
+    },
+    "already_handled": {
+      "title": "Task is already being handled",
+      "description": "This page will not run it again, which prevents duplicate publishing. You can close this page."
+    }
   },
-  "not_found": {
-    "title": "Task Not Found",
-    "message": "No task found with ID {{taskId}}"
+  "errors": {
+    "TASK_ID_REQUIRED": "The task link is missing required information.",
+    "UNAUTHORIZED": "The handoff credential has expired, or the current account cannot access this task.",
+    "NOT_FOUND": "This task could not be found and may have been deleted.",
+    "INVALID_TASK": "The task data is incomplete or invalid, so processing was stopped to prevent an incorrect publish.",
+    "DRAFT_NOT_FOUND": "The draft linked to this task does not exist or has been deleted.",
+    "EXTENSION_NOT_INSTALLED": "The MultiPost browser extension could not be detected.",
+    "EXTENSION_TIMEOUT": "The browser extension timed out before the publish window opened.",
+    "PUBLISH_FAILED": "The browser extension did not accept this publish task.",
+    "STATUS_UPDATE_FAILED": "The publish flow encountered an error and the task status could not be synchronized. Contact support to inspect the task.",
+    "FETCH_FAILED": "The task could not be loaded. Create a new task and try again."
   },
   "task_details": {
-    "title": "Task Details",
     "fields": {
       "task_id": "Task ID",
       "task_type": "Task Type",
       "status": "Status",
       "created_at": "Created At",
-      "updated_at": "Updated At",
-      "task_data": "Task Data"
+      "task_data": "View Task Data"
     }
   }
 }

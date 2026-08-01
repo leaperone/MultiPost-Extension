@@ -8,6 +8,8 @@
     "generate-routes": "tsr generate",
     "build": "vite build",
     "start": "node dist/server/server.js",
+    "test:extension-task": "tsx scripts/extension-task-schema.test.ts && tsx scripts/task-handoff-token.test.ts",
+    "test:migration-regressions": "tsx scripts/migration-regressions.test.ts",
     "test:sentry-regressions": "tsx scripts/sentry-regressions.test.ts",
     "lint": "../../node_modules/.bin/eslint .",
     "lint:fix": "../../node_modules/.bin/eslint . --fix"

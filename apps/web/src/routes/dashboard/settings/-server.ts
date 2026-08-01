@@ -6,6 +6,8 @@ import { z } from 'zod';
 import { db } from '../../../lib/db';
 import { getSession } from '../../../lib/session';
 
+const CLIENT_ONLINE_WINDOW_MS = 2 * 60 * 1000;
+
 const clientIdSchema = z.object({
   clientId: z.string().min(1),
 });
@@ -37,6 +39,7 @@ export const getClientSettingsData = createServerFn({ method: 'GET' }).handler(a
     return {
       clients: [],
       clientCount: 0,
+      activeClientCount: 0,
     };
   }
 
@@ -54,6 +57,8 @@ export const getClientSettingsData = createServerFn({ method: 'GET' }).handler(a
 
   return {
     clientCount: clientCount[0]?.value ?? 0,
+    activeClientCount: clients.filter((client) => client.updatedAt.getTime() >= Date.now() - CLIENT_ONLINE_WINDOW_MS)
+      .length,
     clients: clients.map((client) => ({
       id: client.id,
       name: client.name,
@@ -167,12 +172,7 @@ export const getClientDetails = createServerFn({ method: 'GET' })
     const tasks = await db
       .select()
       .from(ExtensionTask)
-      .where(
-        and(
-          eq(ExtensionTask.targetClientId, data.clientId),
-          eq(ExtensionTask.userId, session.user.id),
-        ),
-      )
+      .where(and(eq(ExtensionTask.targetClientId, data.clientId), eq(ExtensionTask.userId, session.user.id)))
       .orderBy(desc(ExtensionTask.createdAt));
 
     const tasksWithDisplayInfo = await Promise.all(

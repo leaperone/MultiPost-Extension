@@ -1,22 +1,49 @@
 {
-  "error": {
-    "title": "错误",
-    "task_id_required": "任务ID不能为空",
-    "fetch_failed": "获取任务数据失败"
+  "states": {
+    "loading": {
+      "title": "正在接收发布任务",
+      "description": "请稍候，MultiPost 正在核对任务并连接浏览器扩展。"
+    },
+    "waiting": {
+      "title": "任务已就绪",
+      "description": "将在 {{countdown}} 后打开发布窗口，请保持此页面开启。"
+    },
+    "publishing": {
+      "title": "正在打开发布窗口",
+      "description": "浏览器扩展正在创建平台标签页，请不要关闭此页面。"
+    },
+    "done": {
+      "title": "发布窗口已打开",
+      "description": "任务已交给浏览器扩展处理，你可以在新打开的平台标签页中继续确认。"
+    },
+    "failed": {
+      "title": "发布任务未能启动",
+      "next_step": "请确认 MultiPost 扩展已启用并保持客户端在线，然后回到调用端重新创建任务。"
+    },
+    "already_handled": {
+      "title": "任务已在其他窗口处理中",
+      "description": "为避免重复发布，此页面不会再次执行任务。你可以关闭当前页面。"
+    }
   },
-  "not_found": {
-    "title": "未找到任务",
-    "message": "没有找到ID为 {{taskId}} 的任务数据"
+  "errors": {
+    "TASK_ID_REQUIRED": "任务链接缺少必要信息，无法开始处理。",
+    "UNAUTHORIZED": "任务交接凭证已失效，或当前账号无权处理这个任务。",
+    "NOT_FOUND": "没有找到这个任务，它可能已被删除。",
+    "INVALID_TASK": "任务内容不完整或格式不正确，已停止处理以避免错误发布。",
+    "DRAFT_NOT_FOUND": "任务关联的草稿不存在，或已被删除。",
+    "EXTENSION_NOT_INSTALLED": "没有检测到 MultiPost 浏览器扩展。",
+    "EXTENSION_TIMEOUT": "浏览器扩展响应超时，发布窗口没有成功打开。",
+    "PUBLISH_FAILED": "浏览器扩展没有接受这个发布任务。",
+    "STATUS_UPDATE_FAILED": "发布流程发生异常，且任务状态未能同步，请联系支持人员检查任务。",
+    "FETCH_FAILED": "读取任务时发生异常，请稍后重新创建任务。"
   },
   "task_details": {
-    "title": "任务详情",
     "fields": {
       "task_id": "任务ID",
       "task_type": "任务类型",
       "status": "任务状态",
       "created_at": "创建时间",
-      "updated_at": "更新时间",
-      "task_data": "任务数据"
+      "task_data": "查看任务数据"
     }
   }
 }

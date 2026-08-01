@@ -15,13 +15,13 @@ POST https://api.multipost.app/extension/task
 
 `application/json`
 
-| 字段 | 类型 | 必填 | 说明 |
-|---|---|---|---|
-| targetClientId | string | ✓ |  |
-| taskType | enum(PUBLISH_POST, SCHEDULE_PUBLISH_POST) | ✓ |  |
-| taskData | PublishPost \| SchedulePublishPost \| DraftPost | ✓ |  |
+| 字段           | 类型                                                  | 必填 | 说明                       |
+| -------------- | ----------------------------------------------------- | ---- | -------------------------- |
+| targetClientId | string                                                | ✓    |                            |
+| taskType       | enum(PUBLISH_POST, SCHEDULE_PUBLISH_POST, DRAFT_POST) | ✓    | 必须与 taskData 的结构匹配 |
+| taskData       | PublishPost \| SchedulePublishPost \| DraftPost       | ✓    |                            |
 
-## 请求示例
+## 发布已有草稿
 
 ```bash
 curl -X POST 'https://api.multipost.app/extension/task' \
@@ -34,13 +34,35 @@ curl -X POST 'https://api.multipost.app/extension/task' \
     "draftId": "cmd5r2t560001itqgy7n7o0tt",
     "platforms": [
       {
-        "name": "DYNAMIC_X"
+        "name": "DYNAMIC_FACEBOOK"
       }
-    ],
-    "timestamp": 27474647
+    ]
   }
 }'
 ```
+
+不传 `timestamp` 时会立即处理。计划发布请传入 JavaScript 毫秒时间戳，例如通过 `Date.now()` 计算得到的 13 位整数。
+
+## 直接发布内容
+
+```json
+{
+  "targetClientId": "cmd5qsrfd00036hsmokswv5ye",
+  "taskType": "PUBLISH_POST",
+  "taskData": {
+    "platforms": [{ "name": "DYNAMIC_FACEBOOK" }],
+    "isAutoPublish": false,
+    "data": {
+      "title": "测试内容",
+      "content": "这是一条测试内容",
+      "images": [],
+      "videos": []
+    }
+  }
+}
+```
+
+`PUBLISH_POST` 不接受 `draftId`；如需按时间执行直接发布，请使用 `SCHEDULE_PUBLISH_POST` 并在 `taskData.timestamp` 中传入毫秒时间戳。
 
 ## 响应
 
@@ -48,7 +70,7 @@ curl -X POST 'https://api.multipost.app/extension/task' \
 
 ```json
 {
-  "success": false,
+  "success": true,
   "data": {
     "taskId": "string",
     "status": "PENDING"

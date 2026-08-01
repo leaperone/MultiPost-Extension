@@ -13,24 +13,24 @@ GET https://api.multipost.app/extension/task
 
 ## Query parameters
 
-| Field | Type | Required | Description |
-|---|---|---|---|
-| taskId | string | ✓ | 任务ID |
+| Field  | Type   | Required | Description |
+| ------ | ------ | -------- | ----------- |
+| taskId | string | ✓        | Task ID     |
 
 ## Request example
 
 ```bash
-curl -X GET 'https://api.multipost.app/extension/task' \
+curl -X GET 'https://api.multipost.app/extension/task?taskId=YOUR_TASK_ID' \
   -H "Authorization: Bearer YOUR_API_KEY"
 ```
 
 ## Response
 
-**200** — 成功获取任务详情
+**200** — Task details retrieved successfully
 
 ```json
 {
-  "success": false,
+  "success": true,
   "data": {
     "id": "string",
     "taskType": "PUBLISH_POST",
@@ -42,7 +42,7 @@ curl -X GET 'https://api.multipost.app/extension/task' \
 }
 ```
 
-**401** — 未授权
+**401** — Unauthorized
 
 ```json
 {

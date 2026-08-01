@@ -1,9 +1,15 @@
 {
   "title": "MultiPost Extension",
+  "description": "Check the browser extension connection, then start publishing to your platforms once it is installed.",
+  "checking": "Checking the extension…",
+  "checking_description": "Please wait while MultiPost confirms that the browser extension is enabled.",
   "extension_ready": "Extension is Ready!",
+  "ready_description": "The browser extension is connected and ready to publish.",
   "extension_not_detected": "Extension Not Detected",
+  "install_description": "Install and enable the MultiPost extension, then check the connection again.",
   "open_extension": "Open Extension",
   "start_publishing": "Start Publishing",
+  "recheck": "Check again",
   "chrome_store": "Chrome Store",
   "edge_store": "Edge Store",
   "pin_tip": "After installation, click the puzzle icon in your browser's toolbar, then click the pin icon next to MultiPost to keep it easily accessible."

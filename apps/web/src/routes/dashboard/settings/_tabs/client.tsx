@@ -28,7 +28,7 @@ export const Route = createFileRoute('/dashboard/settings/_tabs/client')({
 });
 
 function ClientsPage() {
-  const { clients, clientCount } = Route.useLoaderData();
+  const { clients, clientCount, activeClientCount } = Route.useLoaderData();
   const { t } = useTranslation('publish');
 
   return (
@@ -61,8 +61,8 @@ function ClientsPage() {
             <div>
               <p className="text-sm text-muted-foreground">{t('client.page.active_status')}</p>
               <p className="text-2xl font-bold text-foreground">
-                {clientCount > 0
-                  ? t('client.page.online', { count: clientCount })
+                {activeClientCount > 0
+                  ? t('client.page.online', { count: activeClientCount })
                   : t('client.page.offline')}
               </p>
             </div>

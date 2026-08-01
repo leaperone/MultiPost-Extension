@@ -13,14 +13,14 @@ GET https://api.multipost.app/extension/task
 
 ## 查询参数
 
-| 字段 | 类型 | 必填 | 说明 |
-|---|---|---|---|
-| taskId | string | ✓ | 任务ID |
+| 字段   | 类型   | 必填 | 说明   |
+| ------ | ------ | ---- | ------ |
+| taskId | string | ✓    | 任务ID |
 
 ## 请求示例
 
 ```bash
-curl -X GET 'https://api.multipost.app/extension/task' \
+curl -X GET 'https://api.multipost.app/extension/task?taskId=YOUR_TASK_ID' \
   -H "Authorization: Bearer YOUR_API_KEY"
 ```
 
@@ -30,7 +30,7 @@ curl -X GET 'https://api.multipost.app/extension/task' \
 
 ```json
 {
-  "success": false,
+  "success": true,
   "data": {
     "id": "string",
     "taskType": "PUBLISH_POST",

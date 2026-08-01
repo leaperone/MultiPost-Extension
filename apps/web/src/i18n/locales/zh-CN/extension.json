@@ -1,9 +1,15 @@
 {
   "title": "MultiPost 扩展",
+  "description": "检查浏览器扩展的连接状态，安装完成后即可把内容发布到各个平台。",
+  "checking": "正在检查扩展…",
+  "checking_description": "请稍候，正在确认 MultiPost 扩展是否已启用。",
   "extension_ready": "扩展已准备好！",
+  "ready_description": "浏览器扩展连接正常，可以开始发布内容。",
   "extension_not_detected": "未检测到扩展",
+  "install_description": "请安装并启用 MultiPost 扩展，然后重新检查连接状态。",
   "open_extension": "打开扩展",
   "start_publishing": "开始发布",
+  "recheck": "重新检查",
   "chrome_store": "Chrome商店",
   "edge_store": "Edge商店",
   "pin_tip": "安装后，请点击浏览器工具栏中的拼图图标，然后点击MultiPost旁边的固定图标，以便轻松访问。"

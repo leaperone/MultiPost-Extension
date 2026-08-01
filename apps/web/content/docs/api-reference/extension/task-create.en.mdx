@@ -15,13 +15,13 @@ POST https://api.multipost.app/extension/task
 
 `application/json`
 
-| Field | Type | Required | Description |
-|---|---|---|---|
-| targetClientId | string | ✓ |  |
-| taskType | enum(PUBLISH_POST, SCHEDULE_PUBLISH_POST) | ✓ |  |
-| taskData | PublishPost \| SchedulePublishPost \| DraftPost | ✓ |  |
+| Field          | Type                                                  | Required | Description                   |
+| -------------- | ----------------------------------------------------- | -------- | ----------------------------- |
+| targetClientId | string                                                | ✓        |                               |
+| taskType       | enum(PUBLISH_POST, SCHEDULE_PUBLISH_POST, DRAFT_POST) | ✓        | Must match the taskData shape |
+| taskData       | PublishPost \| SchedulePublishPost \| DraftPost       | ✓        |                               |
 
-## Request example
+## Publish an existing draft
 
 ```bash
 curl -X POST 'https://api.multipost.app/extension/task' \
@@ -34,21 +34,43 @@ curl -X POST 'https://api.multipost.app/extension/task' \
     "draftId": "cmd5r2t560001itqgy7n7o0tt",
     "platforms": [
       {
-        "name": "DYNAMIC_X"
+        "name": "DYNAMIC_FACEBOOK"
       }
-    ],
-    "timestamp": 27474647
+    ]
   }
 }'
 ```
 
-## Response
+The task is processed immediately when `timestamp` is omitted. For scheduled publishing, provide a 13-digit JavaScript timestamp in milliseconds, normally calculated with `Date.now()`.
 
-**200** — 成功创建任务
+## Publish content directly
 
 ```json
 {
-  "success": false,
+  "targetClientId": "cmd5qsrfd00036hsmokswv5ye",
+  "taskType": "PUBLISH_POST",
+  "taskData": {
+    "platforms": [{ "name": "DYNAMIC_FACEBOOK" }],
+    "isAutoPublish": false,
+    "data": {
+      "title": "Test post",
+      "content": "This is a test post",
+      "images": [],
+      "videos": []
+    }
+  }
+}
+```
+
+`PUBLISH_POST` does not accept `draftId`. To schedule direct content, use `SCHEDULE_PUBLISH_POST` and provide `taskData.timestamp` in milliseconds.
+
+## Response
+
+**200** — Task created successfully
+
+```json
+{
+  "success": true,
   "data": {
     "taskId": "string",
     "status": "PENDING"
@@ -56,7 +78,7 @@ curl -X POST 'https://api.multipost.app/extension/task' \
 }
 ```
 
-**400** — 无效的请求数据
+**400** — Invalid request data
 
 ```json
 {
@@ -65,7 +87,7 @@ curl -X POST 'https://api.multipost.app/extension/task' \
 }
 ```
 
-**401** — 未授权
+**401** — Unauthorized
 
 ```json
 {

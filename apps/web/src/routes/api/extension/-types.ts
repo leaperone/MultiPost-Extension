@@ -15,7 +15,7 @@ export const TaskType = {
 
 // Zod schemas
 export const platformSchema = z.object({
-  name: z.string(),
+  name: z.string().min(1),
   injectUrl: z.string().url().optional(),
   extraConfig: z.unknown().optional(),
 });
@@ -77,12 +77,12 @@ export const podcastDataSchema = z.object({
 
 export const draftPostSchema = z.object({
   draftId: z.string(),
-  platforms: z.array(platformSchema),
+  platforms: z.array(platformSchema).min(1),
   timestamp: z.number().int().positive().default(Date.now()),
 });
 
 export const publishPostSchema = z.object({
-  platforms: z.array(platformSchema),
+  platforms: z.array(platformSchema).min(1),
   isAutoPublish: z.boolean().default(false),
   data: z.union([dynamicDataSchema, articleDataSchema, videoDataSchema, podcastDataSchema]),
 });
@@ -91,11 +91,23 @@ export const schedulePublishPostSchema = publishPostSchema.extend({
   timestamp: z.number().int().positive(),
 });
 
-export const taskSchema = z.object({
-  targetClientId: z.string(),
-  taskType: z.enum([TaskType.PUBLISH_POST, TaskType.SCHEDULE_PUBLISH_POST, TaskType.DRAFT_POST]),
-  taskData: z.union([publishPostSchema, schedulePublishPostSchema, draftPostSchema]),
-});
+export const taskSchema = z.discriminatedUnion('taskType', [
+  z.object({
+    targetClientId: z.string().min(1),
+    taskType: z.literal(TaskType.PUBLISH_POST),
+    taskData: publishPostSchema,
+  }),
+  z.object({
+    targetClientId: z.string().min(1),
+    taskType: z.literal(TaskType.SCHEDULE_PUBLISH_POST),
+    taskData: schedulePublishPostSchema,
+  }),
+  z.object({
+    targetClientId: z.string().min(1),
+    taskType: z.literal(TaskType.DRAFT_POST),
+    taskData: draftPostSchema,
+  }),
+]);
 
 export type TaskData = z.infer<typeof taskSchema>;
 export type PublishPostData = z.infer<typeof publishPostSchema>;
