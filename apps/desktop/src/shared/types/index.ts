@@ -142,6 +142,22 @@ export interface FileData {
 
 export function createLocalFileUrl(filePath: string): string {
   const normalizedPath = filePath.replace(/\\/g, '/')
+
+  // Keep both leading slashes in the pathname so Windows UNC shares round-trip.
+  if (normalizedPath.startsWith('//')) {
+    const encodedPath = normalizedPath.slice(2).split('/').map(encodeURIComponent).join('/')
+    return `local-file:////${encodedPath}`
+  }
+
+  // A Windows drive cannot be encoded as a URL host: `C%3A` makes Chromium
+  // reject the request before Electron's custom protocol handler can see it.
+  // Keep the drive separator in the pathname instead (`local-file:///C:/...`).
+  if (/^[A-Za-z]:\//.test(normalizedPath)) {
+    const drive = normalizedPath.slice(0, 2)
+    const encodedPath = normalizedPath.slice(3).split('/').map(encodeURIComponent).join('/')
+    return `local-file:///${drive}/${encodedPath}`
+  }
+
   const pathWithoutLeadingSlash = normalizedPath.startsWith('/')
     ? normalizedPath.slice(1)
     : normalizedPath

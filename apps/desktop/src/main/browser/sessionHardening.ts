@@ -270,7 +270,7 @@ function getHostUserAgentOsToken(): string {
 
 function getLocalFilePath(urlString: string): string {
   const url = new URL(urlString)
-  const filePath = decodeURIComponent('/' + url.host + url.pathname)
+  const filePath = decodeURIComponent(url.host ? `/${url.host}${url.pathname}` : url.pathname)
   if (process.platform === 'win32' && /^\/[A-Za-z]:\//.test(filePath)) {
     return filePath.slice(1)
   }
