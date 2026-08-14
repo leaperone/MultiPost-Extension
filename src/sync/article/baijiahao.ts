@@ -43,6 +43,7 @@ export async function ArticleBaijiahao(data: SyncData) {
       if (result?.ret?.https_url) {
         return result.ret.https_url;
       }
+      console.error("上传图片返回异常:", result?.errno, result?.errmsg);
       return null;
     } catch (error) {
       console.error("上传图片失败:", error);
@@ -54,6 +55,19 @@ export async function ArticleBaijiahao(data: SyncData) {
   function getEditToken(): string {
     const token = localStorage.getItem("edit-token")?.replace(/"/g, "");
     return token || "";
+  }
+
+  // 等待编辑器 SPA 写入 edit-token：
+  // 注入脚本在标签页 status==="complete" 时即执行，早于编辑器 JS 初始化，
+  // 此时 localStorage 里还没有 edit-token，直接读会拿到空 token 导致保存被拒（errno 20040001）
+  async function waitForEditToken(timeoutMs = 10000): Promise<string> {
+    const deadline = Date.now() + timeoutMs;
+    while (Date.now() < deadline) {
+      const token = getEditToken();
+      if (token) return token;
+      await new Promise((resolve) => setTimeout(resolve, 300));
+    }
+    return "";
   }
 
   // 裁剪图片
@@ -172,8 +186,7 @@ export async function ArticleBaijiahao(data: SyncData) {
     if (articleData.cover) {
       coverResults = await processCover(articleData.cover);
       if (!coverResults) {
-        console.error("封面处理失败");
-        return null;
+        throw new Error("封面图片上传失败，请检查百家号登录态后重试");
       }
     }
 
@@ -261,11 +274,12 @@ export async function ArticleBaijiahao(data: SyncData) {
         console.log("文章发布成功，ID:", result.ret?.id);
         return result.ret?.id;
       }
-      console.error("发布失败:", result.message);
-      return null;
+      // 百家号返回的错误字段是 errmsg（实测 {errno, errmsg}），原实现读 message 永远 undefined；
+      // 直接抛出，让浮层显示明确失败原因，而不是永久停在"正在同步"。
+      throw new Error(`百家号保存失败 errno=${result.errno} errmsg=${result.errmsg || "未知错误"}`);
     } catch (error) {
       console.error("发布过程出错:", error);
-      return null;
+      throw error;
     }
   }
 
@@ -331,6 +345,12 @@ export async function ArticleBaijiahao(data: SyncData) {
     `;
     shadow.appendChild(tip);
 
+    // 等编辑器 SPA 初始化完成并写入 edit-token，避免注入早于登录态就绪
+    const editToken = await waitForEditToken();
+    if (!editToken) {
+      throw new Error("未获取到百家号登录态（edit-token 缺失），请先在百家号登录后重试");
+    }
+
     const articleId = await publishArticle(articleData);
 
     if (articleId) {
@@ -347,12 +367,13 @@ export async function ArticleBaijiahao(data: SyncData) {
   } catch (error) {
     if (document.body.contains(host)) {
       const floatTip = tip.querySelector(".float-tip") as HTMLDivElement;
-      floatTip.textContent = "同步失败，请重试";
+      const reason = error instanceof Error ? error.message : String(error);
+      floatTip.textContent = `同步失败：${reason}`;
       floatTip.style.backgroundColor = "#dc2626";
 
       setTimeout(() => {
         document.body.removeChild(host);
-      }, 3000);
+      }, 8000);
     }
 
     console.error("发布文章失败:", error);
