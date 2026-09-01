@@ -20,6 +20,7 @@ if (!recoveredRoot) {
 }
 
 const sourceRoot = path.resolve(path.dirname(new URL(import.meta.url).pathname), "../src");
+const monorepoRoot = path.resolve(sourceRoot, "../../..");
 const publisherRoot = path.join(path.resolve(recoveredRoot), "publisher", "publishers");
 
 // Names in the built extension describe products, while our source tree uses
@@ -80,3 +81,47 @@ if (missing.length) {
   process.exit(1);
 }
 console.log("Publisher coverage: OK");
+
+// The scraper bundle uses pluralized names and a couple of legacy aliases.
+// Keep this mapping explicit so a newly shipped scraper cannot silently be
+// omitted from the maintained Extension source tree.
+const scraperAliases = {
+  preprocessor: "preprocessor.ts",
+  spidersall: "default.ts",
+  spiders163: "netease.ts",
+  spidersbaijiahao: "baijiahao.ts",
+  spiderscaifuhao: "eastmoney.ts",
+  spiderscsdn: "csdn.ts",
+  spidersifeng: "ifeng.ts",
+  spidersjianshu: "jianshu.ts",
+  spidersjuejin: "juejin.ts",
+  spidersnotionsite: "notion.ts",
+  spidersqq: "qq.ts",
+  spiderssohu: "sohu.ts",
+  spiderstonghuashun: "tonghuashun.ts",
+  spiderstoutiao: "toutiao.ts",
+  spidersweixin: "wechat.ts",
+  spidersx: "x.ts",
+  spidersxueqiu: "xueqiu.ts",
+  spidersyuque: "yuque.ts",
+  spiderszhihuzhuanlan: "zhihu.ts",
+};
+const scraperRoot = path.join(path.resolve(recoveredRoot), "spider", "spiders");
+const scraperSources = new Set(
+  fs.readdirSync(path.join(monorepoRoot, "apps/extension/src/contents/scraper")),
+);
+const scraperFiles = fs
+  .readdirSync(scraperRoot)
+  .filter((file) => file.endsWith(".js"))
+  .map((file) => file.slice(0, -3))
+  .sort();
+const missingScrapers = scraperFiles.filter(
+  (name) => !scraperAliases[name] || !scraperSources.has(scraperAliases[name]),
+);
+console.log(`Reference scrapers: ${scraperFiles.length}`);
+for (const name of scraperFiles) console.log(`  ${name} -> ${scraperAliases[name] || "MISSING"}`);
+if (missingScrapers.length) {
+  console.error(`Missing scraper source for ${missingScrapers.length} scraper(s): ${missingScrapers.join(", ")}`);
+  process.exit(1);
+}
+console.log("Scraper coverage: OK");
