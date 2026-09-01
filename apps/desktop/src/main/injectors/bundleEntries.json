@@ -9,6 +9,15 @@
     "accountKey": "weibo"
   },
   {
+    "desktopPlatform": "cnblogs",
+    "contentType": "ARTICLE",
+    "extensionKey": "ARTICLE_CNBLOGS",
+    "source": "article/cnblogs.ts",
+    "exportName": "ArticleCnblogs",
+    "injectUrl": "https://i.cnblogs.com/articles/edit",
+    "accountKey": "cnblogs"
+  },
+  {
     "desktopPlatform": "weibo",
     "contentType": "VIDEO",
     "extensionKey": "VIDEO_WEIBO",

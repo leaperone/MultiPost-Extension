@@ -4,7 +4,7 @@ import {
   INJECTOR_GLOBAL_NAME
 } from './injector-bundles.mjs'
 
-const EXPECTED_INJECTOR_COUNT = 107
+const EXPECTED_INJECTOR_COUNT = 108
 
 function fail(message) {
   console.error(`[verify:injectors] ${message}`)

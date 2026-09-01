@@ -4,7 +4,7 @@ MultiPost 平台注入脚本的**单一事实源**,由 desktop 与 web 共享。
 
 ## 目录
 
-- `src/{article,dynamic,video,podcast}/*.ts` — 107 个平台的发布注入脚本(对平台创作页 DOM 填表发布)。
+- `src/{article,dynamic,video,podcast}/*.ts` — 108 个平台的发布注入脚本(对平台创作页 DOM 填表发布)。
 - `src/types.ts` — 脚本共享的 `SyncData` / `ArticleData` / `VideoData` 等纯类型(脚本一律 `import type`)。
 - `src/helper.ts` + `src/helper/*` — MAIN-world content helper(B 站动态图片上传等)。
 - `build/index.mjs` — 参数化的 esbuild 编译管线(Node-only)。desktop 与 web 各自调用,只是源根/工作目录不同。
@@ -52,4 +52,4 @@ node packages/injectors/scripts/check-extension-drift.mjs
 
 ## 范围说明
 
-本包含全部 107 个平台脚本(extension `sync/{article,dynamic,video,podcast}` 四类全集),以 `apps/desktop/.../bundleEntries.json` 为准。`article/aliyun.ts` 用 `turndown`(已加入本包依赖);日后新增平台时一并迁入本包并按需补依赖。
+本包含全部 108 个平台脚本(extension `sync/{article,dynamic,video,podcast}` 四类全集),以 `apps/desktop/.../bundleEntries.json` 为准。`article/aliyun.ts` 用 `turndown`(已加入本包依赖);日后新增平台时一并迁入本包并按需补依赖。

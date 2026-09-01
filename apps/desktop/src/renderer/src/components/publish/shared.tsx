@@ -93,7 +93,8 @@ export const PLATFORM_CATEGORIES: PlatformCategory[] = [
       'zsxq',
       'xiaoheihe',
       'maimai',
-      'juejin'
+      'juejin',
+      'cnblogs'
     ]
   },
   {

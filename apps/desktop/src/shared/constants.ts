@@ -665,6 +665,15 @@ export const PLATFORMS: Record<string, PlatformInfo> = {
     loginUrl: 'https://kuaichuan.360kuai.com',
     supportedContentTypes: ['ARTICLE']
   },
+  cnblogs: {
+    id: 'cnblogs',
+    name: '博客园',
+    icon: 'cnblogs',
+    faviconUrl: 'https://common.cnblogs.com/favicon.ico',
+    url: 'https://www.cnblogs.com',
+    loginUrl: 'https://account.cnblogs.com/signin',
+    supportedContentTypes: ['ARTICLE']
+  },
 
   // ========== 播客平台 ==========
   qqmusic: {
@@ -808,6 +817,9 @@ export const PLATFORM_PUBLISH_URLS: Record<string, Partial<Record<SyncContentTyp
   weixinchannel: {
     DYNAMIC: 'https://channels.weixin.qq.com/platform/post/finderNewLifeCreate',
     VIDEO: 'https://channels.weixin.qq.com/platform/post/create'
+  },
+  cnblogs: {
+    ARTICLE: 'https://i.cnblogs.com/articles/edit'
   },
   v2ex: {
     DYNAMIC: 'https://www.v2ex.com/write'
@@ -1044,6 +1056,9 @@ export const PLATFORM_PUBLISH_TARGET_LABELS: Record<
   weixinchannel: {
     DYNAMIC: '视频号动态',
     VIDEO: '视频号视频'
+  },
+  cnblogs: {
+    ARTICLE: '博客园文章'
   },
   qie: {
     VIDEO: '企鹅号视频',

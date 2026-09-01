@@ -75,6 +75,7 @@ export type PlatformType =
   | 'dongchedi'
   | 'dingduanhao'
   | 'kuaichuanhao'
+  | 'cnblogs'
   // 播客平台
   | 'qqmusic'
   | 'lizhi'
