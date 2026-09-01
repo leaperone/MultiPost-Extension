@@ -272,6 +272,20 @@ export const PLATFORMS: Record<string, PlatformInfo> = {
     loginUrl: 'https://multipost.app/',
     supportedContentTypes: ['DYNAMIC']
   },
+  pinterest: {
+    id: 'pinterest', name: 'Pinterest', icon: 'pinterest', iconifyIcon: 'simple-icons:pinterest',
+    faviconUrl: 'https://www.pinterest.com/favicon.ico', url: 'https://www.pinterest.com',
+    loginUrl: 'https://www.pinterest.com/login/', supportedContentTypes: ['DYNAMIC']
+  },
+  x: {
+    id: 'x', name: 'X', icon: 'twitter', iconifyIcon: 'simple-icons:x', faviconUrl: 'https://x.com/favicon.ico',
+    url: 'https://x.com', loginUrl: 'https://x.com/i/flow/login', supportedContentTypes: ['DYNAMIC', 'ARTICLE']
+  },
+  rednote: {
+    id: 'rednote', name: '小红书', icon: 'xiaohongshu', iconifyIcon: 'simple-icons:xiaohongshu',
+    faviconUrl: 'https://www.xiaohongshu.com/favicon.ico', url: 'https://www.xiaohongshu.com',
+    loginUrl: 'https://www.xiaohongshu.com/login', supportedContentTypes: ['DYNAMIC', 'VIDEO']
+  },
   youtube: {
     id: 'youtube',
     name: 'YouTube',
@@ -520,6 +534,76 @@ export const PLATFORMS: Record<string, PlatformInfo> = {
     url: 'https://www.autohome.com.cn',
     loginUrl: 'https://www.autohome.com.cn/',
     supportedContentTypes: ['ARTICLE']
+  },
+  aliyun: {
+    id: 'aliyun', name: '阿里云开发者', icon: 'aliyun',
+    faviconUrl: 'https://developer.aliyun.com/favicon.ico', url: 'https://developer.aliyun.com',
+    loginUrl: 'https://account.aliyun.com/login/login.htm', supportedContentTypes: ['ARTICLE']
+  },
+  cnblogs: {
+    id: 'cnblogs', name: '博客园', icon: 'cnblogs',
+    faviconUrl: 'https://common.cnblogs.com/favicon.ico', url: 'https://www.cnblogs.com',
+    loginUrl: 'https://account.cnblogs.com/signin', supportedContentTypes: ['ARTICLE']
+  },
+  dayuhao: {
+    id: 'dayuhao', name: '大鱼号', icon: 'dayuhao', faviconUrl: 'https://mp.dayu.com/favicon.ico',
+    url: 'https://mp.dayu.com', loginUrl: 'https://mp.dayu.com', supportedContentTypes: ['ARTICLE']
+  },
+  dingduanhao: {
+    id: 'dingduanhao', name: '顶端号', icon: 'dingduanhao', faviconUrl: 'https://mp.topnews.cn/favicon.ico',
+    url: 'https://mp.topnews.cn', loginUrl: 'https://mp.topnews.cn', supportedContentTypes: ['ARTICLE']
+  },
+  dongchedi: {
+    id: 'dongchedi', name: '懂车帝', icon: 'dongchedi', faviconUrl: 'https://mp.dcdapp.com/favicon.ico',
+    url: 'https://mp.dcdapp.com', loginUrl: 'https://mp.dcdapp.com', supportedContentTypes: ['ARTICLE']
+  },
+  gelonghui: {
+    id: 'gelonghui', name: '格隆汇', icon: 'gelonghui', faviconUrl: 'https://www.gelonghui.com/favicon.ico',
+    url: 'https://www.gelonghui.com', loginUrl: 'https://www.gelonghui.com/login', supportedContentTypes: ['ARTICLE']
+  },
+  jiankangjie: {
+    id: 'jiankangjie', name: '健康界', icon: 'jiankangjie', faviconUrl: 'https://ucenter.cn-healthcare.com/favicon.ico',
+    url: 'https://www.cn-healthcare.com', loginUrl: 'https://ucenter.cn-healthcare.com', supportedContentTypes: ['ARTICLE']
+  },
+  jianpian: {
+    id: 'jianpian', name: '简篇', icon: 'jianpian', faviconUrl: 'https://www.jianpian.cn/favicon.ico',
+    url: 'https://www.jianpian.cn', loginUrl: 'https://www.jianpian.cn', supportedContentTypes: ['ARTICLE']
+  },
+  kaidiwang: {
+    id: 'kaidiwang', name: '凯迪网', icon: 'kaidiwang', faviconUrl: 'https://www.9kd.com/favicon.ico',
+    url: 'https://www.9kd.com', loginUrl: 'https://www.9kd.com/login', supportedContentTypes: ['ARTICLE']
+  },
+  kuaichuanhao: {
+    id: 'kuaichuanhao', name: '快传号', icon: 'kuaichuanhao', faviconUrl: 'https://kuaichuan.360kuai.com/favicon.ico',
+    url: 'https://kuaichuan.360kuai.com', loginUrl: 'https://kuaichuan.360kuai.com', supportedContentTypes: ['ARTICLE']
+  },
+  qq: {
+    id: 'qq', name: '企鹅号', icon: 'qq', faviconUrl: 'https://om.qq.com/favicon.ico',
+    url: 'https://om.qq.com', loginUrl: 'https://om.qq.com', supportedContentTypes: ['ARTICLE']
+  },
+  tencentyun: {
+    id: 'tencentyun', name: '腾讯云开发者', icon: 'tencentyun', faviconUrl: 'https://cloud.tencent.com/favicon.ico',
+    url: 'https://cloud.tencent.com/developer', loginUrl: 'https://cloud.tencent.com/login', supportedContentTypes: ['ARTICLE']
+  },
+  tonghuashun: {
+    id: 'tonghuashun', name: '同花顺', icon: 'tonghuashun', faviconUrl: 'https://t.10jqka.com.cn/circle/images/favicon.ico',
+    url: 'https://t.10jqka.com.cn', loginUrl: 'https://t.10jqka.com.cn', supportedContentTypes: ['ARTICLE']
+  },
+  volcengine: {
+    id: 'volcengine', name: '火山引擎', icon: 'volcengine', faviconUrl: 'https://developer.volcengine.com/favicon.ico',
+    url: 'https://developer.volcengine.com', loginUrl: 'https://developer.volcengine.com', supportedContentTypes: ['ARTICLE']
+  },
+  weixin: {
+    id: 'weixin', name: '微信文章', icon: 'weixin', faviconUrl: 'https://mp.weixin.qq.com/favicon.ico',
+    url: 'https://mp.weixin.qq.com', loginUrl: 'https://mp.weixin.qq.com/cgi-bin/loginpage', supportedContentTypes: ['ARTICLE']
+  },
+  xarticle: {
+    id: 'xarticle', name: 'X 文章', icon: 'x', faviconUrl: 'https://x.com/favicon.ico',
+    url: 'https://x.com', loginUrl: 'https://x.com/i/flow/login', supportedContentTypes: ['ARTICLE']
+  },
+  yidianzixun: {
+    id: 'yidianzixun', name: '一点资讯', icon: 'yidianzixun', faviconUrl: 'https://www.yidianzixun.com/favicon.ico',
+    url: 'https://mp.yidianzixun.com', loginUrl: 'https://mp.yidianzixun.com', supportedContentTypes: ['ARTICLE']
   },
   qqmusic: {
     id: 'qqmusic',
