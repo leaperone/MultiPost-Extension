@@ -71,7 +71,8 @@ export async function getPresignedUploadUrl(key: string, expiresIn: number = 15 
     method: 'PUT',
   });
 
-  return cdnUrl(formatUrl(await s3Presigner.presign(request, { expiresIn })));
+  // SigV4 signs the Host header, so a presigned URL must keep the origin host.
+  return formatUrl(await s3Presigner.presign(request, { expiresIn }));
 }
 
 export async function getPresignedDownloadUrl(
@@ -89,7 +90,8 @@ export async function getPresignedDownloadUrl(
     objectUrl.query = customQuery;
   }
 
-  return cdnUrl(formatUrl(await s3Presigner.presign(new HttpRequest(objectUrl), { expiresIn })));
+  // Keep signed downloads on the origin for the same Host-bound signature guarantee.
+  return formatUrl(await s3Presigner.presign(new HttpRequest(objectUrl), { expiresIn }));
 }
 
 export async function headObject(key: string): Promise<HeadObjectCommandOutput> {
