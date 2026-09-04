@@ -1,7 +1,7 @@
 FROM node:20.19.0-alpine3.20 AS base
 ENV PNPM_HOME="/pnpm"
 ENV PATH="$PNPM_HOME:$PATH"
-RUN npm install -g pnpm
+RUN npm install -g pnpm@10.32.1
 RUN apk update --no-cache && apk add --no-cache \
     tzdata \
     python3 \
