@@ -1151,5 +1151,23 @@
   "platformTencentVideo": {
     "message": "腾讯视频",
     "description": "腾讯视频 平台名称"
+  },
+  "publishImageRepairTitle": {
+    "message": "部分图片处理失败"
+  },
+  "publishImageRepairHint": {
+    "message": "这些图片的源站存在访问限制（防盗链或需要登录），发布后可能无法带上原图。你可以从本地选择图片替换，或跳过后继续发布。"
+  },
+  "publishImageRepairPick": {
+    "message": "替换本地图片"
+  },
+  "publishImageRepairSkip": {
+    "message": "跳过，直接发布"
+  },
+  "publishImageRepairContinue": {
+    "message": "继续发布"
+  },
+  "publishImageRepairReplaced": {
+    "message": "已替换 $1 张图片"
   }
 }

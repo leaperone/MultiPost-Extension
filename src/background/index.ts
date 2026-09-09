@@ -8,6 +8,7 @@ import {
   getPlatformInfos,
 } from "~sync/common";
 import QuantumEntanglementKeepAlive from "../utils/keep-alive";
+import { syncAntiHotlinkRules } from "./services/anti-hotlink";
 import { linkExtensionMessageHandler, starter } from "./services/api";
 import {
   addTabsManagerMessages,
@@ -38,6 +39,7 @@ chrome.runtime.onInstalled.addListener((object) => {
     chrome.tabs.create({ url: "https://multipost.app/on-install" });
   }
   initDefaultTrustedDomains();
+  syncAntiHotlinkRules();
   chrome.sidePanel.setPanelBehavior({ openPanelOnActionClick: false });
 });
 

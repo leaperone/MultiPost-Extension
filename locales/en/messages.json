@@ -1177,5 +1177,23 @@
   "platformTencentVideo": {
     "message": "Tencent Video",
     "description": "Tencent Video platform name"
+  },
+  "publishImageRepairTitle": {
+    "message": "Some images failed to process"
+  },
+  "publishImageRepairHint": {
+    "message": "These images are blocked by their source site (anti-hotlinking or login required) and may be missing after publishing. You can pick local replacements, or skip and continue."
+  },
+  "publishImageRepairPick": {
+    "message": "Replace with local image"
+  },
+  "publishImageRepairSkip": {
+    "message": "Skip and publish"
+  },
+  "publishImageRepairContinue": {
+    "message": "Continue publishing"
+  },
+  "publishImageRepairReplaced": {
+    "message": "$1 image(s) replaced"
   }
 }

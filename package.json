@@ -11,6 +11,7 @@
     "lint": "biome check",
     "lint:fix": "biome check --fix",
     "format": "biome format --write",
+    "test": "vitest run",
     "lint:staged": "lint-staged",
     "prepare": "husky"
   },
@@ -41,7 +42,8 @@
     "husky": "^9.1.6",
     "lint-staged": "^15.2.10",
     "postcss": "8.4.31",
-    "typescript": "5.2.2"
+    "typescript": "5.2.2",
+    "vitest": "^5.0.0"
   },
   "pnpm": {
     "overrides": {
@@ -74,7 +76,16 @@
       "matches": ["https://paiban.md/*", "http://localhost:2663/*"]
     },
     "host_permissions": ["https://*/*"],
-    "permissions": ["activeTab", "tabs", "scripting", "tabGroups", "sidePanel", "clipboardWrite", "clipboardRead"],
+    "permissions": [
+      "activeTab",
+      "tabs",
+      "scripting",
+      "tabGroups",
+      "sidePanel",
+      "clipboardWrite",
+      "clipboardRead",
+      "declarativeNetRequest"
+    ],
     "web_accessible_resources": [
       {
         "resources": ["assets/icon.png"],

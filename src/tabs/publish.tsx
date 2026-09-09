@@ -15,6 +15,7 @@ import {
   type VideoData,
   injectScriptsToTabs,
 } from "~sync/common";
+import { replaceMarkdownImageUrl } from "~utils/markdown-image";
 
 const storage = new Storage({
   area: "local",
@@ -59,6 +60,13 @@ export default function Publish() {
   const [isProcessing, setIsProcessing] = useState<boolean>(true);
   const [data, setData] = useState<SyncData | null>(null);
   const [errors, setErrors] = useState<string[]>([]);
+  // 处理失败的图片（源站防盗链/需登录等），非空时暂停自动发布等待本地替换
+  const failedImageUrlsRef = useRef<string[]>([]);
+  const [failedImageUrls, setFailedImageUrls] = useState<string[]>([]);
+  const [awaitingRepair, setAwaitingRepair] = useState<boolean>(false);
+  const [repairedCount, setRepairedCount] = useState<number>(0);
+  const repairInputRef = useRef<HTMLInputElement>(null);
+  const repairTargetRef = useRef<string | null>(null);
   const [publishedTabs, setPublishedTabs] = useState<
     Array<{
       tab: chrome.tabs.Tab;
@@ -95,8 +103,8 @@ export default function Publish() {
     // 处理所有图片
     if (Array.isArray(imgElements) && imgElements.length > 0) {
       for (const img of imgElements) {
+        const originalUrl = img.src;
         try {
-          const originalUrl = img.src;
           // 跳过已经是 blob URL 的图片
           if (originalUrl.startsWith("blob:")) continue;
 
@@ -126,6 +134,8 @@ export default function Publish() {
         } catch (error) {
           console.error("处理图片时出错:", error);
           // 继续处理下一张图片
+          failedImageUrlsRef.current = [...failedImageUrlsRef.current, originalUrl];
+          setFailedImageUrls(failedImageUrlsRef.current);
           setNotice(chrome.i18n.getMessage("errorProcessImage", [img.src]));
           setErrors((prev) => [...prev, chrome.i18n.getMessage("errorProcessImage", [img.src])]);
         }
@@ -554,6 +564,16 @@ export default function Publish() {
 
         console.log(processedData);
 
+        // 文章图片有处理失败的：暂停自动发布，等待用户本地替换或选择跳过
+        if (
+          data?.platforms.some((platform) => platform.name.includes("ARTICLE")) &&
+          failedImageUrlsRef.current.length > 0
+        ) {
+          setAwaitingRepair(true);
+          setIsProcessing(false);
+          return;
+        }
+
         setTimeout(async () => {
           await focusMainWindow();
           chrome.runtime.sendMessage(
@@ -573,6 +593,66 @@ export default function Publish() {
       chrome.tabs.onRemoved.removeListener(handleTabRemoved);
     };
   }, []);
+
+  const openRepairPicker = (url: string) => {
+    repairTargetRef.current = url;
+    repairInputRef.current?.click();
+  };
+
+  // 用本地图片替换处理失败的图片：改写 HTML 与 markdown 中的引用并补充 FileData
+  const handleLocalReplace = (file: File | null | undefined) => {
+    const failedUrl = repairTargetRef.current;
+    if (!file || !failedUrl || !data) {
+      return;
+    }
+    const blobUrl = URL.createObjectURL(file);
+    const fileData: FileData = {
+      name: file.name,
+      type: file.type,
+      size: file.size,
+      url: blobUrl,
+    };
+    setData((prev) => {
+      if (!prev) {
+        return prev;
+      }
+      const articleData = prev.data as ArticleData;
+      const doc = new DOMParser().parseFromString(articleData.htmlContent, "text/html");
+      doc.querySelectorAll("img").forEach((img) => {
+        if (img.src === failedUrl) {
+          img.src = blobUrl;
+        }
+      });
+      return {
+        ...prev,
+        data: {
+          ...articleData,
+          htmlContent: doc.documentElement.outerHTML,
+          markdownContent: replaceMarkdownImageUrl(articleData.markdownContent, failedUrl, blobUrl),
+          images: [...(articleData.images ?? []), fileData],
+        },
+      };
+    });
+    setFailedImageUrls((prev) => prev.filter((item) => item !== failedUrl));
+    setRepairedCount((count) => count + 1);
+    repairTargetRef.current = null;
+    if (repairInputRef.current) {
+      repairInputRef.current.value = "";
+    }
+  };
+
+  // 替换完成或用户选择跳过后，继续走自动发布
+  const continuePublish = () => {
+    if (!data) {
+      return;
+    }
+    setAwaitingRepair(false);
+    setIsProcessing(true);
+    setTimeout(async () => {
+      await focusMainWindow();
+      chrome.runtime.sendMessage({ action: "MULTIPOST_EXTENSION_PUBLISH_NOW", data }, handlePublishComplete);
+    }, 1000 * 1);
+  };
 
   return (
     <HeroUIProvider>
@@ -602,6 +682,45 @@ export default function Publish() {
                   <li key={index}>{error}</li>
                 ))}
               </ul>
+            </div>
+          )}
+
+          {awaitingRepair && (
+            <div className="p-3 space-y-2 rounded-lg border border-orange-200 bg-orange-50">
+              <p className="text-sm font-medium text-foreground">{chrome.i18n.getMessage("publishImageRepairTitle")}</p>
+              <p className="text-xs text-muted-foreground">{chrome.i18n.getMessage("publishImageRepairHint")}</p>
+              <ul className="space-y-1">
+                {failedImageUrls.map((url) => (
+                  <li key={url} className="flex items-center justify-between gap-2">
+                    <span className="truncate text-xs text-muted-foreground" title={url}>
+                      {url}
+                    </span>
+                    <Button size="sm" variant="light" onPress={() => openRepairPicker(url)}>
+                      {chrome.i18n.getMessage("publishImageRepairPick")}
+                    </Button>
+                  </li>
+                ))}
+              </ul>
+              {repairedCount > 0 && (
+                <p className="text-xs text-green-600">
+                  {chrome.i18n.getMessage("publishImageRepairReplaced", [String(repairedCount)])}
+                </p>
+              )}
+              <input
+                hidden
+                ref={repairInputRef}
+                type="file"
+                accept="image/*"
+                aria-label={chrome.i18n.getMessage("publishImageRepairPick")}
+                onChange={(e) => handleLocalReplace(e.target.files?.[0])}
+              />
+              <div className="flex justify-end">
+                <Button size="sm" color="primary" variant="solid" onPress={continuePublish}>
+                  {chrome.i18n.getMessage(
+                    failedImageUrls.length > 0 ? "publishImageRepairSkip" : "publishImageRepairContinue",
+                  )}
+                </Button>
+              </div>
             </div>
           )}
           <div className="space-y-2">
