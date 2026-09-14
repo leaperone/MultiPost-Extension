@@ -4,7 +4,7 @@ import {
   INJECTOR_GLOBAL_NAME
 } from './injector-bundles.mjs'
 
-const EXPECTED_INJECTOR_COUNT = 108
+const EXPECTED_INJECTOR_COUNT = 110
 
 function fail(message) {
   console.error(`[verify:injectors] ${message}`)
@@ -45,6 +45,9 @@ if (typeof helperResult.iife !== 'string' || helperResult.iife.length === 0) {
   }
   if (!helperResult.iife.includes('WEIBO_UPLOAD_VIDEO')) {
     fail('content-helper bundle missing WEIBO_UPLOAD_VIDEO listener')
+  }
+  if (!helperResult.iife.includes('JIANPIAN_UPLOAD')) {
+    fail('content-helper bundle missing JIANPIAN_UPLOAD listener')
   }
   if (!helperResult.iife.includes('createElement')) {
     fail('content-helper bundle missing document.createElement hook')

@@ -1,6 +1,6 @@
 {
   "name": "multipost-desktop",
-  "version": "0.3.8",
+  "version": "0.3.9",
   "description": "MultiPost Desktop - Social Media Multi-Platform Publishing",
   "main": "./out/main/index.js",
   "author": "MultiPost Team",

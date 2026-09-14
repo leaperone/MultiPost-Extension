@@ -124,6 +124,7 @@ export const PLATFORM_CATEGORIES: PlatformCategory[] = [
       'dewu',
       'yiche',
       'sohu',
+      'sohutv',
       'netease',
       'dayu',
       'alipay',

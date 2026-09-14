@@ -249,6 +249,13 @@ const PLATFORM_CONFIGS: Record<string, PlatformConfig> = {
     contentSelector: 'textarea',
     submitTexts: ['发布', '上传']
   },
+  sohutv: {
+    cookieDomain: '.sohu.com',
+    cookieName: 'SUV',
+    titleSelector: 'input[type="text"]',
+    contentSelector: 'textarea, div[contenteditable="true"]',
+    submitTexts: ['发布', '上传']
+  },
   netease: {
     cookieDomain: '.163.com',
     cookieName: 'NTES_SESS',

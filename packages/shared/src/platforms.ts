@@ -354,6 +354,16 @@ export const PLATFORMS: Record<string, PlatformInfo> = {
     loginUrl: 'https://mp.sohu.com/',
     supportedContentTypes: ['VIDEO']
   },
+  sohutv: {
+    id: 'sohutv',
+    name: '搜狐视频',
+    icon: 'sohu',
+    accountKey: 'sohu',
+    faviconUrl: 'https://tv.sohu.com/favicon.ico',
+    url: 'https://tv.sohu.com',
+    loginUrl: 'https://tv.sohu.com/s/center/',
+    supportedContentTypes: ['DYNAMIC', 'VIDEO']
+  },
   netease: {
     id: 'netease',
     name: '网易',

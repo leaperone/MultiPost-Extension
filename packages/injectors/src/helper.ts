@@ -8,6 +8,7 @@
 // the shared handlers aligned with the extension's MAIN-world helper.
 import { handleBilibiliImageUpload } from "./helper/bilibili";
 import { handleBlueskyImageUpload, handleBlueskyVideoUpload } from "./helper/bluesky";
+import { handleJianpianUpload, prepareJianpianInput } from "./helper/jianpian";
 import { handleWeiboVideoUpload, prepareWeiboVideoInput } from "./helper/weibo";
 import { handleXiaoheiheImageUpload, handleXiaoheiheVideoUpload } from "./helper/xiaoheihe";
 
@@ -26,7 +27,7 @@ document.createElement = (tagName, options) => {
   if (tagName.toLowerCase() === "input") {
     createdInputs.push(element);
     prepareWeiboVideoInput(element);
-    console.log("element", element);
+    prepareJianpianInput(element);
   }
   return element;
 };
@@ -55,6 +56,8 @@ function handleMessage(event: MessageEvent) {
     handleXiaoheiheVideoUpload(event);
   } else if (data.type === "WEIBO_UPLOAD_VIDEO") {
     handleWeiboVideoUpload(event);
+  } else if (data.type === "JIANPIAN_UPLOAD") {
+    handleJianpianUpload(event);
   }
 }
 

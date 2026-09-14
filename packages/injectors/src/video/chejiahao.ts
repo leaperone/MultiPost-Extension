@@ -1122,12 +1122,10 @@ export async function VideoChejiahao(data: SyncData): Promise<void> {
         }
 
         await this.sleep(5000);
-        const fuzzyPublishButton = Array.from(document.querySelectorAll<HTMLButtonElement>("button")).find(
-          (button) => {
-            const visibleText = button.innerText || button.textContent || "";
-            return this.isElementVisible(button) && visibleText.includes("发布");
-          },
-        );
+        const fuzzyPublishButton = Array.from(document.querySelectorAll<HTMLButtonElement>("button")).find((button) => {
+          const visibleText = button.innerText || button.textContent || "";
+          return this.isElementVisible(button) && visibleText.includes("发布");
+        });
         const exactPublishButton = document.querySelector(
           "div.button_publish.item.editor-btn.editor-main-btn",
         ) as HTMLElement | null;

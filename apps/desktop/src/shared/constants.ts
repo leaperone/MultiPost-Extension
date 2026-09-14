@@ -378,6 +378,16 @@ export const PLATFORMS: Record<string, PlatformInfo> = {
     loginUrl: 'https://mp.sohu.com/',
     supportedContentTypes: ['VIDEO', 'ARTICLE']
   },
+  sohutv: {
+    id: 'sohutv',
+    name: '搜狐视频',
+    icon: 'sohu',
+    accountKey: 'sohu',
+    faviconUrl: 'https://tv.sohu.com/favicon.ico',
+    url: 'https://tv.sohu.com',
+    loginUrl: 'https://tv.sohu.com/s/center/',
+    supportedContentTypes: ['DYNAMIC', 'VIDEO']
+  },
   netease: {
     id: 'netease',
     name: '网易',
@@ -905,6 +915,10 @@ export const PLATFORM_PUBLISH_URLS: Record<string, Partial<Record<SyncContentTyp
   sohu: {
     VIDEO: 'https://mp.sohu.com/mpfe/v4/contentManagement/news/addvideo',
     ARTICLE: 'https://mp.sohu.com/mpfe/v4/contentManagement/news/addarticle'
+  },
+  sohutv: {
+    DYNAMIC: 'https://tv.sohu.com/s/center/',
+    VIDEO: 'https://tv.sohu.com/s/center/'
   },
   netease: {
     VIDEO: 'http://mp.163.com/subscribe_v4/index.html#/home',

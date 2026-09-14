@@ -42,6 +42,7 @@ export type PlatformType =
   | 'dewu'
   | 'yiche'
   | 'sohu'
+  | 'sohutv'
   | 'netease'
   | 'dayu'
   | 'alipay'
@@ -222,6 +223,7 @@ export interface ArticleData {
   category?: string | number
   original?: boolean
   allowComment?: boolean
+  wordFileData?: FileData
   scheduledPublishTime?: number
 }
 

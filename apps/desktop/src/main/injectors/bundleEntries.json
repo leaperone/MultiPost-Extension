@@ -522,6 +522,24 @@
     "accountKey": "sohu"
   },
   {
+    "desktopPlatform": "sohutv",
+    "contentType": "DYNAMIC",
+    "extensionKey": "DYNAMIC_SOHUTV",
+    "source": "dynamic/sohutv.ts",
+    "exportName": "DynamicSohuTv",
+    "injectUrl": "https://tv.sohu.com/s/center/",
+    "accountKey": "sohu"
+  },
+  {
+    "desktopPlatform": "sohutv",
+    "contentType": "VIDEO",
+    "extensionKey": "VIDEO_SOHUTV",
+    "source": "video/sohutv.ts",
+    "exportName": "VideoSohuTv",
+    "injectUrl": "https://tv.sohu.com/s/center/",
+    "accountKey": "sohu"
+  },
+  {
     "desktopPlatform": "sspai",
     "contentType": "ARTICLE",
     "extensionKey": "ARTICLE_SSPAI",

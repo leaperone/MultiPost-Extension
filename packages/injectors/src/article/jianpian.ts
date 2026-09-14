@@ -73,6 +73,20 @@ export async function ArticleJianpian(data: SyncData) {
     titleEditor.dispatchEvent(new Event("input", { bubbles: true }));
     titleEditor.dispatchEvent(new Event("change", { bubbles: true }));
 
+    if (articleData.wordFileData) {
+      const response = await fetch(articleData.wordFileData.url);
+      if (!response.ok) {
+        console.error(`简篇 Word 文件读取失败：HTTP ${response.status}`);
+        return;
+      }
+      const blob = await response.blob();
+      const file = new File([blob], articleData.wordFileData.name, {
+        type: articleData.wordFileData.type || blob.type || "application/octet-stream",
+      });
+      window.postMessage({ type: "JIANPIAN_UPLOAD", files: [file] }, "*");
+      return;
+    }
+
     const contentEditor = await waitForContentEditor(titleEditor);
     if (!contentEditor) {
       console.debug("美篇/简篇:未找到正文编辑器元素");

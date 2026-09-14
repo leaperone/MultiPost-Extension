@@ -58,6 +58,7 @@ export interface ArticleData {
   category?: string | number; // 平台分类 ID 或名称
   original?: boolean; // 原创声明
   allowComment?: boolean;
+  wordFileData?: FileData;
   scheduledPublishTime?: number;
 }
 

@@ -36,7 +36,8 @@ const aliases = {
   neteasecloudmusic: "podcast/netease.ts",
   pintererst: "dynamic/pinterest.ts",
   shipinhao: "video/weixinchannel.ts",
-  sohutv: "video/sohu.ts",
+  // tv.sohu.com exposes both image-text and short-video publishing entries.
+  sohutv: ["dynamic/sohutv.ts", "video/sohutv.ts"],
   // The built-in demo component is bundled under publishers but is not a
   // publishing adapter and therefore has no maintained injector counterpart.
   plasmo: null,
@@ -65,11 +66,14 @@ const resolved = files.map((name) => {
     nonPublishers.push(name);
     return { name, source: "(bundled demo component; not an adapter)" };
   }
-  const candidate = aliases[name] || ["article", "dynamic", "podcast", "video"]
+  const alias = aliases[name];
+  const candidate = alias || ["article", "dynamic", "podcast", "video"]
     .map((category) => `${category}/${name}.ts`)
     .find((file) => sourceFiles.has(file));
-  if (!candidate) missing.push(name);
-  return { name, source: candidate || null };
+  const sources = Array.isArray(candidate) ? candidate : candidate ? [candidate] : [];
+  const missingSource = sources.some((file) => !sourceFiles.has(file));
+  if (!sources.length || missingSource) missing.push(name);
+  return { name, source: sources.length ? sources.join(", ") : null };
 });
 
 console.log(`Reference publishers: ${files.length}`);
