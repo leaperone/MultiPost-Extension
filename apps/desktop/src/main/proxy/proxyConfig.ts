@@ -4,6 +4,18 @@ import type { ProxyConfig } from '../../shared/types'
 
 const proxyProtocols = new Set<ProxyConfig['protocol']>(['http', 'https', 'socks5'])
 
+export function assertCompleteProxyCredentials(
+  username: string | undefined,
+  password: string | undefined
+): boolean {
+  const hasUsername = Boolean(username)
+  const hasPassword = Boolean(password)
+  if (hasUsername !== hasPassword) {
+    throw new Error('Proxy credentials are incomplete; enter both username and password')
+  }
+  return hasUsername && hasPassword
+}
+
 export function hasDisallowedHostChar(value: string): boolean {
   for (const char of value) {
     const code = char.charCodeAt(0)

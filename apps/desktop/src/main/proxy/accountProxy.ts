@@ -1,6 +1,11 @@
 import type { Session, WebContents } from 'electron'
 import type { Account, ProxyConfig } from '../../shared/types'
-import { formatProxyHost, getProxyRules, normalizeProxyConfig } from './proxyConfig'
+import {
+  assertCompleteProxyCredentials,
+  formatProxyHost,
+  getProxyRules,
+  normalizeProxyConfig
+} from './proxyConfig'
 
 interface AccountProxySessionState {
   key: string
@@ -96,7 +101,7 @@ function getProxyConfigKey(
 }
 
 function hasProxyCredentials(proxyConfig: ProxyConfig): boolean {
-  return Boolean(proxyConfig.username || proxyConfig.password)
+  return assertCompleteProxyCredentials(proxyConfig.username, proxyConfig.password)
 }
 
 function getCredentialedProxyUrl(proxyConfig: ProxyConfig): string {
@@ -138,10 +143,13 @@ async function applyAccountProxyLocked(
 
   let nextProxyRules: string | undefined
   let nextAnonymizedProxyUrl: string | undefined
+  let authenticated = false
 
   try {
     if (proxyConfig) {
-      if (hasProxyCredentials(proxyConfig)) {
+      const hasCredentials = hasProxyCredentials(proxyConfig)
+      authenticated = hasCredentials
+      if (hasCredentials) {
         const proxyChain = await loadProxyChain()
         // proxy-chain exposes an unauthenticated loopback proxy for credentialed
         // upstreams (Chromium cannot do SOCKS5 auth natively). The listener is
@@ -198,6 +206,14 @@ async function applyAccountProxyLocked(
     })
 
     await ses.closeAllConnections()
+
+    console.info('[AccountProxy] Applied proxy:', {
+      accountId,
+      protocol: proxyConfig?.protocol ?? 'direct',
+      host: proxyConfig?.host,
+      port: proxyConfig?.port,
+      authenticated
+    })
 
     if (previousState?.anonymizedProxyUrl) {
       await closeAnonymizedProxy(previousState.anonymizedProxyUrl)

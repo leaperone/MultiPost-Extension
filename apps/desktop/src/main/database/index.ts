@@ -765,6 +765,20 @@ export class DatabaseService {
     const existing = this.getProxyRow(id)
     if (!existing) return null
 
+    const endpointChanged =
+      (input.protocol !== undefined && input.protocol !== existing.protocol) ||
+      (input.host !== undefined && input.host !== existing.host) ||
+      (input.port !== undefined && input.port !== existing.port) ||
+      (input.username !== undefined && input.username !== (existing.username ?? ''))
+    const existingHasCredentials = Boolean(existing.username || existing.encrypted_password)
+    if (
+      endpointChanged &&
+      existingHasCredentials &&
+      !(typeof input.password === 'string' && input.password.length > 0)
+    ) {
+      throw new Error('修改代理地址、端口或用户名时必须重新输入代理密码')
+    }
+
     const proxyConfig = this.normalizeProxyProfileInput({
       name: input.name ?? existing.name,
       protocol: input.protocol ?? (existing.protocol as ProxyProfileInput['protocol']),
@@ -1437,19 +1451,27 @@ export class DatabaseService {
   }
 
   private serializeProxyPassword(password: string | undefined): string | null {
-    if (password && safeStorage.isEncryptionAvailable()) {
-      return safeStorage.encryptString(password).toString('base64')
+    if (!password) {
+      return null
     }
 
-    return null
+    if (!safeStorage.isEncryptionAvailable()) {
+      throw new Error('系统安全存储不可用，无法安全保存代理密码；请先解锁系统钥匙串后重试')
+    }
+
+    return safeStorage.encryptString(password).toString('base64')
   }
 
   private decryptProxyPassword(encryptedPassword: string, proxyId: string): string | undefined {
+    if (!safeStorage.isEncryptionAvailable()) {
+      throw new Error(`代理 ${proxyId} 的密码无法读取：系统安全存储不可用`)
+    }
+
     try {
       return safeStorage.decryptString(Buffer.from(encryptedPassword, 'base64'))
     } catch (error) {
       console.warn(`[Database] Failed to decrypt proxy password for ${proxyId}:`, error)
-      return undefined
+      throw new Error(`代理 ${proxyId} 的密码无法解密，请重新输入代理密码`)
     }
   }
 
