@@ -42,9 +42,22 @@ function normalizeProxyProfileInput(input: ProxyProfileInput): ProxyConfig {
 }
 
 function formatProxyTestError(error: unknown): string {
+  const rawMessage = error instanceof Error ? error.message : String(error)
+  if (/ERR_PROXY_CONNECTION_FAILED|ERR_TUNNEL_CONNECTION_FAILED|ERR_CONNECTION_TIMED_OUT/i.test(rawMessage)) {
+    return `代理连接失败：${rawMessage}`
+  }
+  if (/ERR_PROXY_AUTH_UNSUPPORTED|407|authentication|auth/i.test(rawMessage)) {
+    return `代理认证失败，请检查用户名和密码：${rawMessage}`
+  }
+  if (/ERR_NAME_NOT_RESOLVED|ERR_DNS/i.test(rawMessage)) {
+    return `代理或目标域名解析失败：${rawMessage}`
+  }
+  if (/ERR_CERT|SSL|TLS/i.test(rawMessage)) {
+    return `代理 TLS 连接失败：${rawMessage}`
+  }
   if (error instanceof Error) {
     if (error.name === 'AbortError') {
-      return 'Proxy test timed out'
+      return '代理测试超时，请检查代理地址、端口和网络'
     }
     return error.message
   }
@@ -75,15 +88,21 @@ async function reapplyAccounts(
     return
   }
 
+  const failures: Array<{ accountId: string; error: unknown }> = []
   await Promise.all(
     accountIds.map(async (accountId) => {
       try {
         await reapplyAccountProxy(accountId)
       } catch (error) {
+        failures.push({ accountId, error })
         console.warn('[ProxyManager] Failed to reapply account proxy:', { accountId, error })
       }
     })
   )
+
+  if (failures.length > 0) {
+    throw new Error(`Failed to apply proxy to ${failures.length} account session(s)`)
+  }
 }
 
 export function getAffectedAccountIds(proxyId: string): string[] {
@@ -100,11 +119,7 @@ export function resolveAccountProxyConfig(account: AccountProxyTarget): ProxyCon
   if (account.proxyId) {
     const proxyConfig = DatabaseService.getInstance().getProxyConfig(account.proxyId)
     if (!proxyConfig) {
-      console.warn('[ProxyManager] Account proxy profile missing; using direct connection:', {
-        accountId: account.id,
-        proxyId: account.proxyId
-      })
-      return undefined
+      throw new Error(`Proxy profile ${account.proxyId} is unavailable; refusing direct fallback`)
     }
     return proxyConfig
   }
@@ -139,9 +154,7 @@ export async function applyGlobalProxyToSession(ses: Session): Promise<void> {
   const proxyConfig = proxyId ? DatabaseService.getInstance().getProxyConfig(proxyId) : undefined
 
   if (proxyId && !proxyConfig) {
-    console.warn('[ProxyManager] Global proxy profile missing; using direct connection:', {
-      proxyId
-    })
+    throw new Error(`Global proxy profile ${proxyId} is unavailable; refusing direct fallback`)
   }
 
   await applyAccountProxy(

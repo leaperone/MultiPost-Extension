@@ -268,7 +268,7 @@ export function ProxyProfileFormDialog({
         <DialogHeader>
           <DialogTitle>{profile ? '编辑代理' : '新建代理'}</DialogTitle>
           <DialogDescription>
-            代理凭证只保存在本机，密码不会显示在界面中。
+            代理凭证只保存在本机，密码不会显示在界面中。连通性测试只验证基础 HTTPS 出口，不能保证具体平台允许登录。
           </DialogDescription>
         </DialogHeader>
 
@@ -307,7 +307,9 @@ export function ProxyProfileFormDialog({
             label="Password"
             type="password"
             value={draft.password}
-            placeholder={hasSavedPassword ? '已保存，留空则不修改' : undefined}
+            placeholder={
+              hasSavedPassword ? '已保存；修改地址、端口或用户名需重填' : undefined
+            }
             onChange={(event) => updateDraft({ password: event.target.value })}
           />
         </div>
