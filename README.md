@@ -36,7 +36,7 @@ This extension solves the pain points of content creators when publishing across
 
 ## Star History
 
-[![Star History Chart](https://api.star-history.com/svg?repos=leaperone/multipost-wechat-markdown-editor,leaperone/MultiPost-Extension&type=Date)](https://www.star-history.com/#leaperone/multipost-wechat-markdown-editor&leaperone/MultiPost-Extension&Date)
+[![Star History Chart](https://star-history.dera.page/svg?repos=leaperone/multipost-wechat-markdown-editor,leaperone/MultiPost-Extension&type=Date)](https://star-history.dera.page/#leaperone/multipost-wechat-markdown-editor&leaperone/MultiPost-Extension&Date)
 
 ## Contact Us
 - [Discord](https://discord.gg/GNsCX9zFwQ)
