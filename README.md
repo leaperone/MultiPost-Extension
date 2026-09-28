@@ -13,11 +13,11 @@
 ⭐ If you find this project helpful, please consider giving it a star! Your support helps us grow and improve! ⭐
 </div>
 
-## Community source / 社区源码
+## Open-source snapshot / 开源部分
 
-This repository contains the Apache-2.0 community extension. Official store packages are built in the MultiPost monorepo and may include proprietary features that are not part of this source snapshot. You can build and modify the community extension independently with `pnpm install` and `pnpm build`.
+This repository contains the Apache-2.0 open-source components of the MultiPost extension. The MultiPost monorepo builds and publishes the official Chrome and Edge packages, which also include the proprietary Agent module. This repository maintains source code only and does not run release workflows.
 
-本目录是 Apache-2.0 社区扩展源码。官方商店版本由 MultiPost 主仓库构建；社区源码快照不包含官方版本的闭源功能。社区版可独立构建和修改，公开仓库不再负责官方商店发布。
+本仓库维护 MultiPost 扩展的 Apache-2.0 开源部分。Chrome 和 Edge 商店中的 MultiPost 扩展由主仓库构建和发布，包含未在本仓库公开的 Agent 模块。本仓库只维护源码，不运行发布流水线。
 
 ## 主要功能 / Key Features
 - 一键发布内容（文本、图片、视频等）到多个平台。（支持知乎、微博、小红书、抖音等10多个主流平台）无需登录、无需注册、无需API Key。完全免费！
@@ -50,7 +50,7 @@ This extension solves the pain points of content creators when publishing across
   - 微信扫一扫加入 MultiPost 微信群
     <img src="docs/multipost-wechat-group.jpg" width="350" alt="MultiPost WeChat Group QR Code" />
 - [点击加入腾讯频道【MultiPost】](https://pd.qq.com/s/ajj47bgjb) ，频道号：multipostapp
-- Email: [support@undersky.ai](mailto:support@undersky.ai)（UnderSky / Agent 模型账户；MultiPost 社区问题请用 GitHub Issues）
+- Email: [support@undersky.ai](mailto:support@undersky.ai)（UnderSky / Agent 模型账户；MultiPost 扩展问题请用 GitHub Issues）
 - [GitHub Issues](https://github.com/leaperone/MultiPost-Extension/issues)
 - 腾讯频道
   - 微信扫一扫
