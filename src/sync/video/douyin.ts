@@ -153,7 +153,7 @@ export async function VideoDouyin(data: SyncData) {
     // 处理标题输入
     const titleInput = (await waitForElement('input[placeholder*="作品标题"]')) as HTMLInputElement;
     if (titleInput) {
-      titleInput.value = title || content.slice(0, 20);
+      titleInput.value = title || "";
       titleInput.dispatchEvent(new Event("input", { bubbles: true }));
       console.log("标题已填写:", titleInput.value);
     }
