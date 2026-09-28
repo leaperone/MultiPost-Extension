@@ -1,4 +1,4 @@
-import { Storage } from "@plasmohq/storage";
+/* Modified for the MultiPost Professional build; original extension code remains Apache-2.0 licensed. */
 import type { PlasmoCSConfig } from "plasmo";
 import type { ExtensionExternalRequest, ExtensionExternalResponse } from "~types/external";
 
@@ -7,11 +7,14 @@ export const config: PlasmoCSConfig = {
   run_at: "document_start",
 };
 
-const storage = new Storage({
-  area: "local",
-});
-
 const ACTIONS_NOT_NEED_TRUST_DOMAIN = ["MULTIPOST_EXTENSION_REQUEST_TRUST_DOMAIN"];
+const AUTHORIZE_EXTERNAL_REQUEST = "MULTIPOST_EXTENSION_AUTHORIZE_EXTERNAL_REQUEST";
+
+function isExternalRequest(value: unknown): value is ExtensionExternalRequest<unknown> {
+  if (typeof value !== "object" || value === null) return false;
+  const request = value as Partial<ExtensionExternalRequest<unknown>>;
+  return request.type === "request" && typeof request.traceId === "string" && typeof request.action === "string";
+}
 
 function getRightAction(action: string) {
   if (action.startsWith("MUTLIPOST")) {
@@ -20,47 +23,44 @@ function getRightAction(action: string) {
   return action;
 }
 
-async function isOriginTrusted(origin: string, action: string): Promise<boolean> {
-  if (ACTIONS_NOT_NEED_TRUST_DOMAIN.includes(action)) {
-    return true;
-  }
+function postResponse(event: MessageEvent, response: ExtensionExternalResponse<unknown>): void {
+  if (event.source !== window) return;
+  const targetOrigin = event.origin === "null" ? "*" : event.origin;
+  window.postMessage(response, targetOrigin);
+}
 
-  let hostname: string;
+async function authorizeRequest(request: ExtensionExternalRequest<unknown>, event: MessageEvent): Promise<boolean> {
+  if (ACTIONS_NOT_NEED_TRUST_DOMAIN.includes(getRightAction(request.action))) return true;
+
   try {
-    hostname = new URL(origin).hostname;
+    const response = await chrome.runtime.sendMessage({
+      action: AUTHORIZE_EXTERNAL_REQUEST,
+      data: { action: getRightAction(request.action) },
+    });
+    return response?.authorized === true;
   } catch {
     return false;
   }
-
-  const trustedDomains = (await storage.get<Array<{ domain: string }>>("trustedDomains")) || [];
-
-  return trustedDomains.some(({ domain }) => {
-    if (domain.startsWith("*.")) {
-      const wildCardDomain = domain.slice(2);
-      return hostname === wildCardDomain || hostname.endsWith(`.${wildCardDomain}`);
-    }
-    return hostname === domain;
-  });
 }
 
 window.addEventListener("message", async (event) => {
-  const request: ExtensionExternalRequest<unknown> = event.data;
+  if (event.source !== window || !isExternalRequest(event.data)) return;
+  const request = event.data;
+  const action = getRightAction(request.action);
 
-  if (request.type !== "request" || !getRightAction(request.action).startsWith("MULTIPOST")) {
-    return;
-  }
+  if (!action.startsWith("MULTIPOST")) return;
 
-  // 验证来源是否可信
-  const isTrusted = await isOriginTrusted(event.origin, getRightAction(request.action));
-  if (!isTrusted) {
-    event.source.postMessage({
+  // The service worker derives the caller origin from the content-script sender.
+  // The page cannot choose or read the trusted-domain list in this context.
+  if (!(await authorizeRequest(request, event))) {
+    postResponse(event, {
       type: "response",
       traceId: request.traceId,
       action: request.action,
       code: 403,
       message: "Untrusted origin",
       data: null,
-    } as ExtensionExternalResponse<null>);
+    });
     return;
   }
 
@@ -76,10 +76,10 @@ function defaultHandler<T>(request: ExtensionExternalRequest<T>, event: MessageE
   chrome.runtime
     .sendMessage(newRequest)
     .then((response) => {
-      event.source.postMessage(successResponse(request, response));
+      postResponse(event, successResponse(request, response));
     })
     .catch((err) => {
-      event.source?.postMessage({
+      postResponse(event, {
         type: "response",
         traceId: request.traceId,
         action: request.action,

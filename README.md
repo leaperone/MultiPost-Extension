@@ -13,6 +13,12 @@
 ⭐ If you find this project helpful, please consider giving it a star! Your support helps us grow and improve! ⭐
 </div>
 
+## Community source / 社区源码
+
+This repository contains the Apache-2.0 community extension. Official store packages are built in the MultiPost monorepo and may include proprietary features that are not part of this source snapshot. You can build and modify the community extension independently with `pnpm install` and `pnpm build`.
+
+本目录是 Apache-2.0 社区扩展源码。官方商店版本由 MultiPost 主仓库构建；社区源码快照不包含官方版本的闭源功能。社区版可独立构建和修改，公开仓库不再负责官方商店发布。
+
 ## 主要功能 / Key Features
 - 一键发布内容（文本、图片、视频等）到多个平台。（支持知乎、微博、小红书、抖音等10多个主流平台）无需登录、无需注册、无需API Key。完全免费！
   Post your content (text, images, videos, etc.) to multiple platforms with one click. (Over 10 mainstream platforms including TikTok, YouTube Zhihu, Weibo, Xiaohongshu, TikTok, etc.) No login, no registration, no API Key required. Free!
@@ -27,7 +33,7 @@ This extension solves the pain points of content creators when publishing across
 
 ## How to start
 - [multipost.app](https://multipost.app) - Official website
-- [Documentation | 文档](https://docs.multipost.app) - ![MultiPost doc uptime](https://monitor-admin.leaper.one/api/badge/5/status)
+- [Documentation | 文档](https://docs.multipost.app)
 - [Developer Documentation | 开发者文档](https://multipost.app/docs/development)
 - [MultiPost Article Editor](https://md.multipost.app/) - [(Repo)](https://github.com/leaperone/multipost-wechat-markdown-editor) - Online editor for creating and publishing content to multiple platforms.
 - [Chrome extension - ![Chrome Web Store Version Chrome网上商店版本](https://img.shields.io/chrome-web-store/v/dhohkaclnjgcikfoaacfgijgjgceofih)](https://chromewebstore.google.com/detail/multipost/dhohkaclnjgcikfoaacfgijgjgceofih) ![Chrome Web Store Users Chrome网上商店用户](https://img.shields.io/chrome-web-store/users/dhohkaclnjgcikfoaacfgijgjgceofih) ![Chrome Web Store Last Updated](https://img.shields.io/chrome-web-store/last-updated/dhohkaclnjgcikfoaacfgijgjgceofih)
@@ -44,7 +50,7 @@ This extension solves the pain points of content creators when publishing across
   - 微信扫一扫加入 MultiPost 微信群
     <img src="docs/multipost-wechat-group.jpg" width="350" alt="MultiPost WeChat Group QR Code" />
 - [点击加入腾讯频道【MultiPost】](https://pd.qq.com/s/ajj47bgjb) ，频道号：multipostapp
-- Email: [support@leaper.one](mailto:support@leaper.one)
+- Email: [support@undersky.ai](mailto:support@undersky.ai)（UnderSky / Agent 模型账户；MultiPost 社区问题请用 GitHub Issues）
 - [GitHub Issues](https://github.com/leaperone/MultiPost-Extension/issues)
 - 腾讯频道
   - 微信扫一扫

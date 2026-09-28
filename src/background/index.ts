@@ -63,7 +63,7 @@ let currentSyncData: SyncData | null = null;
 let currentPublishPopup: chrome.windows.Window | null = null;
 const defaultMessageHandler = (request, _sender, sendResponse) => {
   if (request.action === "MULTIPOST_EXTENSION_CHECK_SERVICE_STATUS") {
-    sendResponse({ extensionId: chrome.runtime.id });
+    sendResponse({ extensionId: chrome.runtime.id, extensionVersion: chrome.runtime.getManifest().version, edition: "community" });
     return true;
   }
   if (request.action === "MULTIPOST_EXTENSION_PUBLISH") {

@@ -180,7 +180,7 @@ export async function VideoRednote(data: SyncData) {
   // 填写标题
   const titleInput = document.querySelector('input[type="text"]') as HTMLInputElement;
   if (titleInput) {
-    const finalTitle = title?.slice(0, 20) || content?.slice(0, 20) || "";
+    const finalTitle = title?.slice(0, 20) || "";
     titleInput.value = finalTitle;
     titleInput.dispatchEvent(new Event("input", { bubbles: true }));
   }

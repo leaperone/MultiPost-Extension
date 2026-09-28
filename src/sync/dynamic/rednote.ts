@@ -93,7 +93,7 @@ export async function DynamicRednote(data: SyncData) {
     // 填写标题
     const titleInput = (await waitForElement('input[type="text"]')) as HTMLInputElement;
     if (titleInput) {
-      const titleText = title || content?.slice(0, 20) || "";
+      const titleText = title || "";
       titleInput.value = titleText;
       titleInput.dispatchEvent(new Event("input", { bubbles: true }));
     }
