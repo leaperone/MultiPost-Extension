@@ -307,6 +307,22 @@
     "message": "Tabs Manager",
     "description": "Title for the Tabs Manager tab in the side panel"
   },
+  "sidepanelTabSummary": {
+    "message": "$1 tabs in $2 groups",
+    "description": "Summary of tabs and groups in the side panel"
+  },
+  "sidepanelLoading": {
+    "message": "Loading tabs…",
+    "description": "Loading state in the side panel"
+  },
+  "sidepanelLoadError": {
+    "message": "Unable to load tabs",
+    "description": "Error state in the side panel"
+  },
+  "sidepanelRetry": {
+    "message": "Try again",
+    "description": "Retry button in the side panel"
+  },
   "sidepanelContentManager": {
     "message": "Note Collection",
     "description": "Title for the Content Manager tab in the side panel"
