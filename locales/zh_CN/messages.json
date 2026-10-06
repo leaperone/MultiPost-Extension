@@ -314,6 +314,22 @@
     "message": "标签管理",
     "description": "侧边栏标签管理器选项卡的标题"
   },
+  "sidepanelTabSummary": {
+    "message": "$1 个标签页，$2 个分组",
+    "description": "侧边栏中的标签页和分组数量"
+  },
+  "sidepanelLoading": {
+    "message": "正在加载标签页…",
+    "description": "侧边栏加载状态"
+  },
+  "sidepanelLoadError": {
+    "message": "无法加载标签页",
+    "description": "侧边栏错误状态"
+  },
+  "sidepanelRetry": {
+    "message": "重试",
+    "description": "侧边栏重试按钮"
+  },
   "sidepanelContentManager": {
     "message": "笔记收藏",
     "description": "侧边栏内容管理器选项卡的标题"

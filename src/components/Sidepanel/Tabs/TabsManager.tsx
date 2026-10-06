@@ -60,7 +60,7 @@ function TabsManager() {
           </h1>
           <p className="mt-1 text-sm text-default-500">
             {tabCount > 0
-              ? `${tabCount} ${tabCount === 1 ? "tab" : "tabs"} in ${nonEmptyGroups.length} ${nonEmptyGroups.length === 1 ? "group" : "groups"}`
+              ? chrome.i18n.getMessage("sidepanelTabSummary", [`${tabCount}`, `${nonEmptyGroups.length}`])
               : chrome.i18n.getMessage("sidepanelNoTabsMessage")}
           </p>
         </div>
@@ -79,13 +79,13 @@ function TabsManager() {
       {loadState === "loading" ? (
         <div className="flex flex-col items-center gap-3 rounded-xl border border-default-200 bg-content1 px-4 py-12 text-center shadow-sm">
           <Spinner size="sm" />
-          <p className="text-sm text-default-500">Loading tabs…</p>
+          <p className="text-sm text-default-500">{chrome.i18n.getMessage("sidepanelLoading")}</p>
         </div>
       ) : loadState === "error" ? (
         <div className="rounded-xl border border-danger-200 bg-danger-50 px-4 py-8 text-center">
-          <p className="font-medium text-danger">Unable to load tabs</p>
+          <p className="font-medium text-danger">{chrome.i18n.getMessage("sidepanelLoadError")}</p>
           <Button className="mt-4" size="sm" color="danger" variant="flat" onPress={refreshTabs}>
-            Try again
+            {chrome.i18n.getMessage("sidepanelRetry")}
           </Button>
         </div>
       ) : nonEmptyGroups.length > 0 ? (
