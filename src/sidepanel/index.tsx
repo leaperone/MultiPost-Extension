@@ -44,7 +44,7 @@ function SidePanel() {
 
   return (
     <HeroUIProvider>
-      <div className="p-4 mx-auto min-h-screen">
+      <div className="min-h-screen bg-default-50">
         <TabsManager />
       </div>
     </HeroUIProvider>
