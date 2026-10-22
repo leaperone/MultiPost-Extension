@@ -29,7 +29,7 @@ function postResponse(event: MessageEvent, response: ExtensionExternalResponse<u
   window.postMessage(response, targetOrigin);
 }
 
-async function authorizeRequest(request: ExtensionExternalRequest<unknown>, event: MessageEvent): Promise<boolean> {
+async function authorizeRequest(request: ExtensionExternalRequest<unknown>, _event: MessageEvent): Promise<boolean> {
   if (ACTIONS_NOT_NEED_TRUST_DOMAIN.includes(getRightAction(request.action))) return true;
 
   try {

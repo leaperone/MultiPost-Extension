@@ -144,7 +144,11 @@ export const trustDomainMessageHandler = (request: unknown, sender: chrome.runti
         const encodedParams = btoa(JSON.stringify(params));
 
         const trustDomainListener = (message, authSender, authSendResponse) => {
-          if (isRecord(message) && message.type === "MULTIPOST_EXTENSION_TRUST_DOMAIN_CONFIRM" && isExtensionPage(authSender)) {
+          if (
+            isRecord(message) &&
+            message.type === "MULTIPOST_EXTENSION_TRUST_DOMAIN_CONFIRM" &&
+            isExtensionPage(authSender)
+          ) {
             const { trusted, status } = message;
             sendResponse({ trusted, status });
             authSendResponse("success");
