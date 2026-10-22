@@ -40,7 +40,7 @@
     "@types/react-dom": "18.2.15",
     "husky": "^9.1.6",
     "lint-staged": "^15.2.10",
-    "postcss": "8.4.31",
+    "postcss": "8.5.18",
     "typescript": "5.2.2"
   },
   "pnpm": {
@@ -65,43 +65,25 @@
       "ajv": ">=8.18.0",
       "devalue": ">=5.6.3",
       "@babel/runtime": ">=7.26.10",
-      "@babel/helpers": ">=7.26.10"
+      "@babel/helpers": ">=7.26.10",
+      "postcss": ">=8.5.18"
     }
   },
   "manifest": {
     "default_locale": "zh_CN",
     "externally_connectable": {
-      "matches": [
-        "https://paiban.md/*",
-        "http://localhost:2663/*"
-      ]
+      "matches": ["https://paiban.md/*", "http://localhost:2663/*"]
     },
-    "host_permissions": [
-      "https://*/*"
-    ],
-    "permissions": [
-      "activeTab",
-      "tabs",
-      "scripting",
-      "tabGroups",
-      "sidePanel",
-      "clipboardWrite",
-      "clipboardRead"
-    ],
+    "host_permissions": ["https://*/*"],
+    "permissions": ["activeTab", "tabs", "scripting", "tabGroups", "sidePanel", "clipboardWrite", "clipboardRead"],
     "web_accessible_resources": [
       {
-        "resources": [
-          "assets/icon.png"
-        ],
-        "matches": [
-          "https://www.plasmo.com/*"
-        ]
+        "resources": ["assets/icon.png"],
+        "matches": ["https://www.plasmo.com/*"]
       }
     ]
   },
   "lint-staged": {
-    "*.{js,ts,cjs,mjs,d.cts,d.mts,jsx,tsx,json,jsonc}": [
-      "biome check --write --unsafe --no-errors-on-unmatched"
-    ]
+    "*.{js,ts,cjs,mjs,d.cts,d.mts,jsx,tsx,json,jsonc}": ["biome check --write --unsafe --no-errors-on-unmatched"]
   }
 }
