@@ -12,23 +12,9 @@
 
 ## Fonctionnalités principales
 
-- Prise en charge de la publication synchrone sur plus de 10 plateformes principales, notamment Zhihu, Weibo, Xiaohongshu, TikTok, etc.
-- Pas de connexion, pas d'inscription, pas de clé API requise. Gratuit !
-- Prise en charge de plusieurs types de contenu, y compris le texte, les images et les vidéos
-- Deux types d'interfaces API :
-  - API d'extension : pour appeler l'API de l'extension pour publier du contenu depuis votre propre application web
-  - API RESTful : pour appeler l'API RESTful pour publier du contenu depuis votre script ou serveur
-- Analyse de données : suivez les performances de votre contenu sur différentes plateformes. Possibilité de surveiller vos sites web et comptes de médias sociaux
-- Fonctionnalités d'extraction de contenu :
-  - Lecteur : lit le contenu des pages web et le retourne au format Markdown ou Json
-  - Résultats de moteurs de recherche : obtient les résultats des moteurs de recherche
-  - Médias sociaux : récupère le contenu des plateformes de médias sociaux
-- Prise en charge de l'intégration web, permettant de développer vos propres pages web et de configurer l'automatisation en utilisant les fonctionnalités de publication de l'extension, comme :
-  - Capture automatique du contenu web et publication sur plusieurs plateformes
-  - Planification des publications
-  - Intégration de la génération de contenu par IA
-
-Cette extension résout les difficultés des créateurs de contenu lors de la publication sur plusieurs plateformes. Grâce à une seule édition, le contenu peut être synchronisé sur toutes les plateformes, améliorant considérablement l'efficacité du travail.
+- Publiez des textes, images, articles, vidéos et podcasts sur plusieurs plateformes.
+- Utilisez les comptes de plateforme et les interfaces de publication existantes.
+- La création de visuels est disponible dans le module Affiches de MultiPost.
 
 ## Pour commencer
 - [multipost.app](https://multipost.app) - Site officiel
