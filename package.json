@@ -12,12 +12,12 @@
     "lint:fix": "biome check --fix",
     "format": "biome format --write",
     "lint:staged": "lint-staged",
-    "prepare": "husky"
+    "prepare": "husky",
+    "typecheck": "tsc --noEmit"
   },
   "dependencies": {
     "@heroui/react": "2.7.8",
     "@heroui/theme": "2.4.6",
-    "@mozilla/readability": "^0.6.0",
     "@plasmohq/storage": "^1.11.0",
     "lucide-react": "^0.447.0",
     "plasmo": "0.90.5",
