@@ -38,9 +38,6 @@ importers:
       '@heroui/theme':
         specifier: 2.4.6
         version: 2.4.6(tailwindcss@3.3.5)
-      '@mozilla/readability':
-        specifier: ^0.6.0
-        version: 0.6.0
       '@plasmohq/storage':
         specifier: ^1.11.0
         version: 1.11.0(react@18.2.0)
@@ -1439,9 +1436,6 @@ packages:
   '@mixmark-io/domino@2.2.0':
     resolution: {integrity: sha512-Y28PR25bHXUg88kCV7nivXrP2Nj2RueZ3/l/jdx6J9f8J4nsEGcgX0Qe6lt7Pa+J79+kPiJU3LguR6O/6zrLOw==}
 
-  '@mozilla/readability@0.6.0':
-    resolution: {integrity: sha512-juG5VWh4qAivzTAeMzvY9xs9HY5rAcr2E4I7tiSSCokRFi7XIZCAu92ZkSTsIj1OPceCifL3cpfteP3pDT9/QQ==}
-    engines: {node: '>=14.0.0'}
 
   '@msgpackr-extract/msgpackr-extract-darwin-arm64@3.0.3':
     resolution: {integrity: sha512-QZHtlVgbAdy2zAqNA9Gu1UpIuI8Xvsd1v8ic6B2pZmeFnFcMWiPLfWXh7TVw4eGEZ/C9TH281KwhVoeQUKbyjw==}
@@ -7041,7 +7035,6 @@ snapshots:
 
   '@mixmark-io/domino@2.2.0': {}
 
-  '@mozilla/readability@0.6.0': {}
 
   '@msgpackr-extract/msgpackr-extract-darwin-arm64@3.0.3':
     optional: true
