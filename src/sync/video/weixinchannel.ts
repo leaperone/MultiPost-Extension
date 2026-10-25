@@ -6,6 +6,7 @@
  */
 
 import type { FileData, SyncData, VideoData } from "../common";
+import type { CoverImageSource, CoverMaterial, CoverUploadResult, SavedCoverPreview } from "./cover-types";
 
 /**
  * 微信视频号视频发布处理函数
@@ -266,114 +267,211 @@ export async function VideoWeiXinChannel(data: SyncData) {
     }
   }
 
-  /**
-   * 把图片文件塞进指定的 file input 并触发 change/input
-   * @param fileInput - 目标 input[type=file]
-   * @param cover - 封面图片信息
-   * @returns 是否成功设置文件
-   */
-  async function setCoverFile(fileInput: HTMLInputElement, cover: FileData): Promise<boolean> {
-    if (!cover.type?.includes("image/")) return false;
-    const response = await fetch(cover.url);
-    const arrayBuffer = await response.arrayBuffer();
-    const imageFile = new File([arrayBuffer], cover.name, { type: cover.type });
-    const dataTransfer = new DataTransfer();
-    dataTransfer.items.add(imageFile);
-    if (dataTransfer.files.length === 0) return false;
-    fileInput.files = dataTransfer.files;
-    fileInput.dispatchEvent(new Event("change", { bubbles: true }));
-    fileInput.dispatchEvent(new Event("input", { bubbles: true }));
-    return true;
-  }
-
-  /**
-   * 上传竖封面（主封面）。：入口 div.cover-preview-wrap，等待竖封面蒙层消失后上传
-   * @param cover - 封面图片信息
-   * @param root - 根节点（Document 或 ShadowRoot）
-   */
-  async function uploadCover(cover: FileData, root: Document | ShadowRoot): Promise<void> {
-    try {
-      console.debug("tryCover", cover);
-      const coverUploadButton = root.querySelector("div.cover-preview-wrap > div") as HTMLElement | null;
-      console.debug("coverUpload -->", coverUploadButton);
-      if (!coverUploadButton) return;
-
-      // 视频未处理完时封面区会有竖封面蒙层，等它消失再点
-      for (let i = 0; i < 20; i++) {
-        const mask = root.querySelector("div.vertical-mask-layer");
-        if (!mask) break;
-        console.debug("mask is found, wait 3s");
-        await new Promise((resolve) => setTimeout(resolve, 3000));
+  async function uploadCovers(covers: Pick<VideoData, "cover" | "verticalCover" | "horizontalCover">) {
+    const platform = "weixinchannel";
+    const request = { data: covers };
+    const result: CoverUploadResult = { version: 1, status: "failed", mutationStarted: false, slots: [], stages: [] };
+    const visible = <T extends Element>(e: T | null | undefined): e is T =>
+      !!e && e.getClientRects().length > 0 && getComputedStyle(e).visibility !== "hidden";
+    const all = <T extends Element = HTMLElement>(root: ParentNode, selector: string): T[] =>
+      Array.from(root.querySelectorAll<T>(selector));
+    const text = (e: Element | null | undefined): string => (e?.textContent || "").trim();
+    const exact = (root: ParentNode, label: string): HTMLElement | undefined =>
+      all(root, "button,span,div")
+        .filter(visible)
+        .find(
+          (e) =>
+            text(e) === label && !all(e, "button,span,div").some((child) => visible(child) && text(child) === label),
+        );
+    const wait = async <T>(
+      check: () => T | Promise<T>,
+      label: string,
+      ms = 20000,
+    ): Promise<Exclude<NonNullable<T>, false>> => {
+      const end = Date.now() + ms;
+      while (Date.now() < end) {
+        const value = await check();
+        if (value) return value as Exclude<NonNullable<T>, false>;
+        await new Promise<void>((resolve) => setTimeout(resolve, 200));
       }
-
-      coverUploadButton.click();
-      await waitForElementOptional("div.cover-control-wrap");
-
-      const fileInput = root.querySelector("div.cover-control-wrap input[type='file']") as HTMLInputElement | null;
-      if (!fileInput) {
-        console.error("封面上传文件输入框未找到");
-        return;
+      throw Error(`\u7B49\u5F85\u8D85\u65F6\uFF1A${label}`);
+    };
+    const enabled = (e: HTMLElement | null | undefined): e is HTMLElement =>
+      visible(e) && !(e as HTMLButtonElement).disabled && e.getAttribute("aria-disabled") !== "true";
+    const click = (e: HTMLElement | null | undefined): void => {
+      const control = e?.closest<HTMLElement>('button,[role="button"],a[href],input,.button,.cover-empty-pill') || e;
+      if (!enabled(e) || !enabled(control) || e.closest('[disabled],[aria-disabled="true"]'))
+        throw Error("\u5C01\u9762\u63A7\u4EF6\u4E0D\u53EF\u7528");
+      control.click();
+    };
+    const root: ParentNode = document.querySelector<HTMLElement>("wujie-app")?.shadowRoot || document;
+    const stamp = (stage: string, ratio?: string): number =>
+      result.stages.push({ stage, ratio, at: new Date().toISOString() });
+    const media = () =>
+      all<HTMLVideoElement>(root, "video").find(
+        (e) => e.readyState >= 2 && Number.isFinite(e.duration) && e.duration > 0,
+      );
+    const imageSource = (element: HTMLElement | null | undefined): CoverImageSource | null => {
+      if (!element) return null;
+      for (const node of [element, ...all(element, "img,[style]")]) {
+        if (node.tagName === "IMG") {
+          const img = node as HTMLImageElement;
+          if (img.complete && img.naturalWidth && /^https:/.test(img.currentSrc || img.src))
+            return { url: img.currentSrc || img.src, width: img.naturalWidth, height: img.naturalHeight };
+        }
+        const match = (node.style.backgroundImage || "").match(/url\(["']?(https:\/\/[^"')]+)["']?\)/);
+        if (match) return { url: match[1] };
       }
-
-      const ok = await setCoverFile(fileInput, cover);
-      if (!ok) return;
-      console.debug("竖封面上传操作触发");
-
-      await new Promise((resolve) => setTimeout(resolve, 2000));
-
-      const buttons = root.querySelectorAll("div.finder-dialog-footer button");
-      const confirmButton = Array.from(buttons).find((b) => b.textContent === "确认") as HTMLButtonElement | undefined;
-      if (confirmButton) {
-        confirmButton.click();
-        await new Promise((resolve) => setTimeout(resolve, 1000));
-      }
-    } catch (error) {
-      console.error("uploadCover failed:", error);
+      return null;
+    };
+    const signature = (root: ParentNode): string =>
+      all(root, "img,canvas,[style]")
+        .map((node) => {
+          if (node.tagName === "IMG") {
+            const image = node as HTMLImageElement;
+            return image.currentSrc || image.src;
+          }
+          if (node.tagName === "CANVAS") {
+            try {
+              return (node as HTMLCanvasElement).toDataURL();
+            } catch {
+              return "";
+            }
+          }
+          return node.style.backgroundImage || "";
+        })
+        .join("|");
+    async function material(file: FileData, ratio: string): Promise<CoverMaterial> {
+      if (!file?.url) throw Error(`缺少${ratio}封面`);
+      const response = await fetch(file.url, { signal: AbortSignal.timeout(15000) });
+      if (!response.ok) throw Error(`封面读取HTTP ${response.status}`);
+      const responseType = response.headers.get("content-type")?.split(";")[0];
+      const mime = responseType?.startsWith("image/") ? responseType : file.type;
+      if (!mime?.startsWith("image/")) throw Error("Cover response is not an image");
+      const bytes = await response.arrayBuffer();
+      const sha256 = Array.from(new Uint8Array(await crypto.subtle.digest("SHA-256", bytes)))
+        .map((v) => v.toString(16).padStart(2, "0"))
+        .join("");
+      const blob = new Blob([bytes], { type: mime });
+      const bitmap = await createImageBitmap(blob);
+      bitmap.close();
+      return { file: new File([blob], file.name, { type: mime }), sha256 };
     }
-  }
-
-  /**
-   * 上传横封面。：入口 div.horizon-img-wrap div.edit-btn → 直接编辑按钮 → 上传
-   * @param cover - 横封面图片信息
-   * @param root - 根节点（Document 或 ShadowRoot）
-   */
-  async function uploadCoverHorizontal(cover: FileData, root: Document | ShadowRoot): Promise<void> {
-    try {
-      console.debug("tryCoverHorizon", cover);
-      const editButton = root.querySelector("div.horizon-img-wrap div.edit-btn") as HTMLElement | null;
-      console.debug("coverUpload -->", editButton);
-      if (!editButton) return;
-
-      editButton.click();
-      await waitForElementOptional("div.btn-directly-edit");
-
-      const directlyEditButton = root.querySelector("div.btn-directly-edit > button") as HTMLButtonElement | null;
-      console.debug("editBtn -->", directlyEditButton);
-      if (!directlyEditButton) return;
-
-      directlyEditButton.click();
-      await waitForElementOptional("div.cover-control-wrap");
-
-      const fileInput = root.querySelector("div.cover-control-wrap input[type='file']") as HTMLInputElement | null;
-      if (!fileInput) {
-        console.error("横封面上传文件输入框未找到");
-        return;
-      }
-
-      const ok = await setCoverFile(fileInput, cover);
-      if (!ok) return;
-      console.debug("横封面上传操作触发");
-
-      await new Promise((resolve) => setTimeout(resolve, 2000));
-
-      const buttons = root.querySelectorAll("div.finder-dialog-footer button");
-      const confirmButton = Array.from(buttons).find((b) => b.textContent === "确认") as HTMLButtonElement | undefined;
-      if (confirmButton) {
-        confirmButton.click();
-      }
-    } catch (error) {
-      console.error("uploadCoverHorizontal failed:", error);
+    async function change(
+      input: HTMLInputElement,
+      image: CoverMaterial,
+      editor: ParentNode,
+      ratio: string,
+    ): Promise<void> {
+      if (!input || input.type !== "file" || !input.accept.includes("image")) throw Error("没有当前封面图片input");
+      const before = signature(editor);
+      const dt = new DataTransfer();
+      dt.items.add(image.file);
+      result.mutationStarted = true;
+      input.files = dt.files;
+      input.dispatchEvent(new Event("change", { bubbles: true }));
+      input.dispatchEvent(new Event("input", { bubbles: true }));
+      stamp("input_changed", ratio);
+      await wait(() => {
+        const after = signature(editor);
+        return after && after !== before;
+      }, "图片裁剪更新");
+      stamp("crop_preview_changed", ratio);
     }
+    async function saved(area: () => HTMLElement | null, ratio: string, before?: string): Promise<SavedCoverPreview> {
+      const source = await wait(() => {
+        const v = imageSource(area());
+        return v && v.url !== before ? v : null;
+      }, `${ratio}保存后的封面`);
+      if (!source.width || !source.height) {
+        const img = new Image();
+        img.src = source.url;
+        await img.decode();
+        source.width = img.naturalWidth;
+        source.height = img.naturalHeight;
+      }
+      if (ratio.includes("x")) {
+        const [w, h] = ratio.split("x").map(Number);
+        if (Math.abs(source.width / source.height - w / h) > 0.015) throw Error(`Saved cover ratio mismatch: ${ratio}`);
+      }
+      return { ratio, width: source.width, height: source.height, previewUrl: source.url, saved: true };
+    }
+    if (!covers.cover && !covers.verticalCover && !covers.horizontalCover) return { ...result, status: "skipped" };
+    try {
+      const host = { rednote: "creator.xiaohongshu.com", weixinchannel: "channels.weixin.qq.com" }[platform];
+      if (location.hostname !== host) throw Error("Unexpected cover upload origin");
+      const player = await wait(media, "已上传视频就绪", 60000);
+      const videoSrc = player.currentSrc || player.src;
+      const duration = player.duration;
+      stamp("draft_verified");
+      const verify = () => {
+        const p = media();
+        if (!p || (p.currentSrc || p.src) !== videoSrc || Math.abs(p.duration - duration) > 1)
+          throw Error("已上传视频身份变化");
+      };
+      const items = [
+        {
+          ratio: "3x4",
+          file: request.data.verticalCover || request.data.cover,
+          area: () => root.querySelector<HTMLElement>(".vertical-cover-wrap"),
+          entry: () => root.querySelector<HTMLElement>(".vertical-cover-wrap"),
+        },
+        {
+          ratio: "4x3",
+          file: request.data.cover || request.data.horizontalCover,
+          area: () => root.querySelector<HTMLElement>(".horizon-img-wrap"),
+          entry: () => root.querySelector<HTMLElement>(".horizon-img-wrap .edit-btn"),
+        },
+      ];
+      for (const item of items.filter((item) => item.file)) {
+        verify();
+        const image = await material(item.file, item.ratio);
+        const previous = imageSource(item.area())?.url;
+        click(item.entry());
+        const direct = await wait(
+          () => exact(root, "直接编辑") || all(root, ".cover-control-wrap").find(visible),
+          "视频号封面窗口",
+        );
+        if (text(direct) === "直接编辑") click(direct);
+        const editor = await wait(() => all(root, ".cover-control-wrap").find(visible), "视频号当前封面编辑器");
+        const input: HTMLInputElement = await wait(
+          () => editor.querySelector<HTMLInputElement>("input[type=file][accept*=image]"),
+          "视频号图片input",
+        );
+        await change(input, image, editor, item.ratio);
+        const confirm = await wait(
+          () =>
+            all<HTMLButtonElement>(root, ".finder-dialog-footer button").find(
+              (e) => visible(e) && text(e) === "确认" && !e.disabled,
+            ),
+          "视频号确认按钮",
+        );
+        click(confirm);
+        await wait(() => !visible(editor), "视频号封面保存");
+        verify();
+        result.slots.push({ ...(await saved(item.area, item.ratio, previous)), sha256: image.sha256 });
+      }
+      for (const item of items.filter((item) => item.file)) {
+        const final = await saved(item.area, item.ratio, "");
+        if (final.previewUrl !== result.slots.find((s) => s.ratio === item.ratio).previewUrl)
+          throw Error("保存第二槽后第一槽改变");
+      }
+      verify();
+      result.status = "saved";
+      stamp("all_slots_saved");
+    } catch (error) {
+      result.status = result.mutationStarted ? "needs_attention" : "failed";
+      result.error = String(error?.message || error);
+    }
+    console.info(
+      "[MultiPost covers]",
+      JSON.stringify({
+        status: result.status,
+        slots: result.slots.map(({ ratio, width, height }) => ({ ratio, width, height })),
+        error: result.error,
+      }),
+    );
+    return result;
   }
 
   try {
@@ -504,14 +602,7 @@ export async function VideoWeiXinChannel(data: SyncData) {
     }
 
     // 处理封面：，竖封面 + 横封面分别上传
-    const mainCover = cover || verticalCover;
-    if (mainCover) {
-      await uploadCover(mainCover, root);
-      await new Promise((resolve) => setTimeout(resolve, 2000));
-    }
-    if (horizontalCover) {
-      await uploadCoverHorizontal(horizontalCover, root);
-    }
+    await uploadCovers({ cover, verticalCover, horizontalCover });
 
     if (data.isAutoPublish === true) {
       await new Promise((resolve) => setTimeout(resolve, 5000));

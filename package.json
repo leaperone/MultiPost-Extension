@@ -13,7 +13,8 @@
     "format": "biome format --write",
     "lint:staged": "lint-staged",
     "prepare": "husky",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "test:video-covers": "node --test tests/video-covers.test.mjs"
   },
   "dependencies": {
     "@heroui/react": "2.7.8",

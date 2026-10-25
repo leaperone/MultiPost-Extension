@@ -1,4 +1,5 @@
-import type { SyncData, VideoData } from "../common";
+import type { FileData, SyncData, VideoData } from "../common";
+import type { CoverImageSource, CoverMaterial, CoverUploadResult, SavedCoverPreview } from "./cover-types";
 
 export async function VideoRednote(data: SyncData) {
   const { content, video, title, tags, cover, scheduledPublishTime } = data.data as VideoData;
@@ -103,66 +104,244 @@ export async function VideoRednote(data: SyncData) {
     }
   }
 
-  // 辅助函数：上传封面
-  async function uploadCover(coverFile: NonNullable<VideoData["cover"]>) {
-    console.debug("tryCover", coverFile);
-    const coverUploadTrigger = document.querySelector("div.noCover.uploadCover") as HTMLElement;
-    console.debug("coverUpload", coverUploadTrigger);
-    if (!coverUploadTrigger) {
-      console.error("未找到封面上传触发器: div.noCover.uploadCover");
-      return;
+  async function uploadCovers(covers: Pick<VideoData, "cover" | "verticalCover" | "horizontalCover">) {
+    const platform = "rednote";
+    const request = { data: covers };
+    const result: CoverUploadResult = { version: 1, status: "failed", mutationStarted: false, slots: [], stages: [] };
+    const visible = <T extends Element>(e: T | null | undefined): e is T =>
+      !!e && e.getClientRects().length > 0 && getComputedStyle(e).visibility !== "hidden";
+    const all = <T extends Element = HTMLElement>(root: ParentNode, selector: string): T[] =>
+      Array.from(root.querySelectorAll<T>(selector));
+    const text = (e: Element | null | undefined): string => (e?.textContent || "").trim();
+    const exact = (root: ParentNode, label: string): HTMLElement | undefined =>
+      all(root, "button,span,div")
+        .filter(visible)
+        .find(
+          (e) =>
+            text(e) === label && !all(e, "button,span,div").some((child) => visible(child) && text(child) === label),
+        );
+    const wait = async <T>(
+      check: () => T | Promise<T>,
+      label: string,
+      ms = 20000,
+    ): Promise<Exclude<NonNullable<T>, false>> => {
+      const end = Date.now() + ms;
+      while (Date.now() < end) {
+        const value = await check();
+        if (value) return value as Exclude<NonNullable<T>, false>;
+        await new Promise<void>((resolve) => setTimeout(resolve, 200));
+      }
+      throw Error(`\u7B49\u5F85\u8D85\u65F6\uFF1A${label}`);
+    };
+    const enabled = (e: HTMLElement | null | undefined): e is HTMLElement =>
+      visible(e) && !(e as HTMLButtonElement).disabled && e.getAttribute("aria-disabled") !== "true";
+    const click = (e: HTMLElement | null | undefined): void => {
+      const control = e?.closest<HTMLElement>('button,[role="button"],a[href],input,.button,.cover-empty-pill') || e;
+      if (!enabled(e) || !enabled(control) || e.closest('[disabled],[aria-disabled="true"]'))
+        throw Error("\u5C01\u9762\u63A7\u4EF6\u4E0D\u53EF\u7528");
+      control.click();
+    };
+    const root: ParentNode = document;
+    const stamp = (stage: string, ratio?: string): number =>
+      result.stages.push({ stage, ratio, at: new Date().toISOString() });
+    const media = () =>
+      all<HTMLVideoElement>(root, "video").find(
+        (e) => e.readyState >= 2 && Number.isFinite(e.duration) && e.duration > 0,
+      );
+    const imageSource = (element: HTMLElement | null | undefined): CoverImageSource | null => {
+      if (!element) return null;
+      for (const node of [element, ...all(element, "img,[style]")]) {
+        if (node.tagName === "IMG") {
+          const img = node as HTMLImageElement;
+          if (img.complete && img.naturalWidth && /^https:/.test(img.currentSrc || img.src))
+            return { url: img.currentSrc || img.src, width: img.naturalWidth, height: img.naturalHeight };
+        }
+        const match = (node.style.backgroundImage || "").match(/url\(["']?(https:\/\/[^"')]+)["']?\)/);
+        if (match) return { url: match[1] };
+      }
+      return null;
+    };
+    const signature = (root: ParentNode): string =>
+      all(root, "img,canvas,[style]")
+        .map((node) => {
+          if (node.tagName === "IMG") {
+            const image = node as HTMLImageElement;
+            return image.currentSrc || image.src;
+          }
+          if (node.tagName === "CANVAS") {
+            try {
+              return (node as HTMLCanvasElement).toDataURL();
+            } catch {
+              return "";
+            }
+          }
+          return node.style.backgroundImage || "";
+        })
+        .join("|");
+    async function material(file: FileData, ratio: string): Promise<CoverMaterial> {
+      if (!file?.url) throw Error(`缺少${ratio}封面`);
+      const response = await fetch(file.url, { signal: AbortSignal.timeout(15000) });
+      if (!response.ok) throw Error(`封面读取HTTP ${response.status}`);
+      const responseType = response.headers.get("content-type")?.split(";")[0];
+      const mime = responseType?.startsWith("image/") ? responseType : file.type;
+      if (!mime?.startsWith("image/")) throw Error("Cover response is not an image");
+      const bytes = await response.arrayBuffer();
+      const sha256 = Array.from(new Uint8Array(await crypto.subtle.digest("SHA-256", bytes)))
+        .map((v) => v.toString(16).padStart(2, "0"))
+        .join("");
+      const blob = new Blob([bytes], { type: mime });
+      const bitmap = await createImageBitmap(blob);
+      bitmap.close();
+      return { file: new File([blob], file.name, { type: mime }), sha256 };
     }
-    coverUploadTrigger.click();
-
-    const fileInputSelector = "input[accept='image/png, image/jpeg, image/*']";
+    async function change(
+      input: HTMLInputElement,
+      image: CoverMaterial,
+      editor: ParentNode,
+      ratio: string,
+    ): Promise<void> {
+      if (!input || input.type !== "file" || !input.accept.includes("image")) throw Error("没有当前封面图片input");
+      const before = signature(editor);
+      const dt = new DataTransfer();
+      dt.items.add(image.file);
+      result.mutationStarted = true;
+      input.files = dt.files;
+      input.dispatchEvent(new Event("change", { bubbles: true }));
+      input.dispatchEvent(new Event("input", { bubbles: true }));
+      stamp("input_changed", ratio);
+      await wait(() => {
+        const after = signature(editor);
+        return after && after !== before;
+      }, "图片裁剪更新");
+      stamp("crop_preview_changed", ratio);
+    }
+    async function saved(area: () => HTMLElement | null, ratio: string, before?: string): Promise<SavedCoverPreview> {
+      const source = await wait(() => {
+        const v = imageSource(area());
+        return v && v.url !== before ? v : null;
+      }, `${ratio}保存后的封面`);
+      if (!source.width || !source.height) {
+        const img = new Image();
+        img.src = source.url;
+        await img.decode();
+        source.width = img.naturalWidth;
+        source.height = img.naturalHeight;
+      }
+      if (ratio.includes("x")) {
+        const [w, h] = ratio.split("x").map(Number);
+        if (Math.abs(source.width / source.height - w / h) > 0.015) throw Error(`Saved cover ratio mismatch: ${ratio}`);
+      }
+      return { ratio, width: source.width, height: source.height, previewUrl: source.url, saved: true };
+    }
+    if (!covers.cover) return { ...result, status: "skipped" };
     try {
-      await waitForElement(fileInputSelector);
-    } catch (e) {
-      console.error(`等待元素 ${fileInputSelector} 超时`, e);
-      return;
-    }
-
-    const fileInput = document.querySelector(fileInputSelector) as HTMLInputElement;
-    console.debug("fileInput", fileInput);
-    if (!fileInput) {
-      console.error("未找到封面上传的文件输入元素");
-      return;
-    }
-
-    const dataTransfer = new DataTransfer();
-    console.debug("try upload file", coverFile);
-    if (!coverFile.type.includes("image/")) {
-      console.error("提供的封面文件不是图片");
-      return;
-    }
-
-    try {
-      const response = await fetch(coverFile.url);
-      const arrayBuffer = await response.arrayBuffer();
-      const file = new File([arrayBuffer], coverFile.name, { type: coverFile.type });
-      dataTransfer.items.add(file);
+      const host = { rednote: "creator.xiaohongshu.com", weixinchannel: "channels.weixin.qq.com" }[platform];
+      if (location.hostname !== host) throw Error("Unexpected cover upload origin");
+      const player = await wait(media, "已上传视频就绪", 60000);
+      const videoSrc = player.currentSrc || player.src;
+      const duration = player.duration;
+      stamp("draft_verified");
+      const verify = () => {
+        const p = media();
+        if (!p || (p.currentSrc || p.src) !== videoSrc || Math.abs(p.duration - duration) > 1)
+          throw Error("已上传视频身份变化");
+      };
+      const image = await material(request.data.cover, "cover");
+      const area = () => root.querySelector<HTMLElement>(".default.row");
+      const previous = imageSource(area())?.url;
+      const oldEntry = root.querySelector<HTMLElement>("div.noCover.uploadCover");
+      if (visible(oldEntry)) click(oldEntry);
+      else {
+        const card = area();
+        const entry = card?.querySelector<HTMLElement>(".cover-edit-entry-text");
+        if (!visible(card) || text(entry) !== "编辑封面") throw Error("没有可见封面卡片内的编辑封面控件");
+        entry.click();
+      }
+      const editor = await wait(() => {
+        const modern = root.querySelector<HTMLElement>(".main-cover-editor-modal");
+        if (visible(modern)) return modern;
+        for (const input of all<HTMLInputElement>(root, "input[type=file][accept*=image]")) {
+          let p = input.parentElement;
+          while (p && p !== document.body) {
+            if (visible(p) && exact(p, "完成") && p.querySelector<HTMLImageElement>("img,canvas")) return p;
+            p = p.parentElement;
+          }
+        }
+        return null;
+      }, "小红书设置封面窗口");
+      const edit = all<HTMLButtonElement>(editor, "button.video-panel-switch-item").find(
+        (e) => visible(e) && text(e) === "编辑",
+      );
+      if (edit) click(edit);
+      const readCanvas = () => {
+        const canvases = all<HTMLCanvasElement>(editor, "canvas.canvas-gl").filter(visible);
+        if (canvases.length !== 1) return null;
+        try {
+          return canvases[0].toDataURL();
+        } catch {
+          throw Error("无法读取小红书主画布");
+        }
+      };
+      const mainBefore = editor.matches(".main-cover-editor-modal") ? await wait(readCanvas, "小红书主画布就绪") : null;
+      const input: HTMLInputElement = await wait(
+        () =>
+          editor.querySelector<HTMLInputElement>(".cover-container-video input[type=file][accept*=image]") ||
+          editor.querySelector<HTMLInputElement>("input[type=file][accept*=image]"),
+        "小红书当前封面图片input",
+      );
+      await change(input, image, editor, "cover");
+      if (editor.matches(".main-cover-editor-modal")) {
+        const thumb = await wait(() => {
+          const thumbs = all<HTMLButtonElement>(editor, "button.uploaded-thumbnail").filter(visible);
+          if (thumbs.length !== 1) return null;
+          const img = thumbs[0].querySelector<HTMLImageElement>("img.uploaded-thumbnail-img");
+          return img?.complete && img.naturalWidth && img.naturalHeight > 0 ? thumbs[0] : null;
+        }, "唯一已上传4:3缩略图解码");
+        if (thumb.querySelector<HTMLElement>(".uploaded-thumbnail-inactive-mask"))
+          click(thumb.querySelector<HTMLImageElement>("img.uploaded-thumbnail-img"));
+        await wait(() => {
+          const current = readCanvas();
+          return (
+            !thumb.querySelector<HTMLElement>(".uploaded-thumbnail-inactive-mask") && current && current !== mainBefore
+          );
+        }, "已上传封面选中且主画布更新");
+        stamp("main_crop_preview_changed", "cover");
+      }
+      const complete = await wait(
+        () => {
+          const e = exact(editor, "完成");
+          const button = e?.closest?.<HTMLButtonElement>("button") || e;
+          return visible(e) &&
+            enabled(button) &&
+            button.getAttribute?.("aria-disabled") !== "true" &&
+            !button.classList?.contains("loading")
+            ? e
+            : null;
+        },
+        "小红书完成按钮可用",
+        45000,
+      );
+      click(complete);
+      stamp("complete_clicked", "cover");
+      await wait(() => !editor.isConnected || !visible(editor), "小红书封面保存", 45000);
+      verify();
+      result.slots.push({ ...(await saved(area, "cover", previous)), sha256: image.sha256 });
+      verify();
+      result.status = "saved";
+      stamp("all_slots_saved");
     } catch (error) {
-      console.error(`上传封面 ${coverFile.url} 失败:`, error);
-      return;
+      result.status = result.mutationStarted ? "needs_attention" : "failed";
+      result.error = String(error?.message || error);
     }
-
-    if (dataTransfer.files.length === 0) {
-      return;
-    }
-
-    fileInput.files = dataTransfer.files;
-    fileInput.dispatchEvent(new Event("change", { bubbles: true }));
-    fileInput.dispatchEvent(new Event("input", { bubbles: true }));
-    console.debug("文件上传操作触发");
-    await new Promise((resolve) => setTimeout(resolve, 3000));
-
-    const doneButtons = document.querySelectorAll("span");
-    console.debug("doneButtons", doneButtons);
-    const doneButton = Array.from(doneButtons).find((btn) => btn.textContent?.trim() === "确定");
-    console.debug("doneButton", doneButton);
-    if (doneButton) {
-      (doneButton as HTMLElement).click();
-    }
+    console.info(
+      "[MultiPost covers]",
+      JSON.stringify({
+        status: result.status,
+        slots: result.slots.map(({ ratio, width, height }) => ({ ratio, width, height })),
+        error: result.error,
+      }),
+    );
+    return result;
   }
 
   // 等待页面加载
@@ -233,7 +412,7 @@ export async function VideoRednote(data: SyncData) {
 
   // 上传封面
   if (cover) {
-    await uploadCover(cover);
+    await uploadCovers({ cover });
   }
 
   // 处理定时发布
